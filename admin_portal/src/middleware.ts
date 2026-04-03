@@ -4,11 +4,11 @@ import { routing } from './i18n/routing';
 export default createMiddleware(routing);
 
 export const config = {
-    // Match only internationalized pathnames
-    matcher: [
-        '/',
-        '/(tr|en|de|it|fr|es|nl)/:path*',
-        // Enable redirects that add missing locales (e.g. `/login` -> `/tr/login`)
-        '/((?!api|_next|_vercel|.*\\..*).*)'
-    ]
+ // Match only internationalized pathnames
+ matcher: [
+ '/',
+ '/(tr|en|de|it|fr|es|nl)/:path*',
+ // Enable redirects that add missing locales (e.g. `/login` -> `/tr/login`)
+ '/((?!api|_next|_vercel|.*\\..*).*)'
+ ]
 };

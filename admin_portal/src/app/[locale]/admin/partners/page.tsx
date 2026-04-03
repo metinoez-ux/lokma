@@ -3,5 +3,5 @@
 import { redirect } from 'next/navigation';
 
 export default function PartnersPage() {
-    redirect('/admin/dashboard?filter=admins');
+ redirect('/admin/dashboard?filter=admins');
 }

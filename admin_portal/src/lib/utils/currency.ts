@@ -4,8 +4,8 @@ import { getCountryConfig, DEFAULT_COUNTRY_CODE, DEFAULT_CURRENCY, SUPPORTED_COU
  * Helper to find the best locale for a given currency code.
  */
 function getLocaleForCurrency(currencyCode: string): string {
-    const country = Object.values(SUPPORTED_COUNTRIES).find(c => c.currency === currencyCode);
-    return country ? country.locale : 'de-DE'; // Default to German locale if not found
+ const country = Object.values(SUPPORTED_COUNTRIES).find(c => c.currency === currencyCode);
+ return country ? country.locale : 'de-DE'; // Default to German locale if not found
 }
 
 /**
@@ -15,12 +15,12 @@ function getLocaleForCurrency(currencyCode: string): string {
  * @returns Formatted currency string (e.g., "1.234,56 €", "₺1.234,56")
  */
 export function formatCurrency(amount: number, currencyCode: string = DEFAULT_CURRENCY): string {
-    return new Intl.NumberFormat(getLocaleForCurrency(currencyCode), {
-        style: 'currency',
-        currency: currencyCode,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(amount);
+ return new Intl.NumberFormat(getLocaleForCurrency(currencyCode), {
+ style: 'currency',
+ currency: currencyCode,
+ minimumFractionDigits: 2,
+ maximumFractionDigits: 2,
+ }).format(amount);
 }
 
 /**
@@ -29,7 +29,7 @@ export function formatCurrency(amount: number, currencyCode: string = DEFAULT_CU
  * @returns The currency symbol (e.g., '€', '₺').
  */
 export function getCurrencySymbol(countryCode: string = DEFAULT_COUNTRY_CODE): string {
-    return getCountryConfig(countryCode).symbol;
+ return getCountryConfig(countryCode).symbol;
 }
 
 /**
@@ -38,5 +38,5 @@ export function getCurrencySymbol(countryCode: string = DEFAULT_COUNTRY_CODE): s
  * @returns The currency code (e.g., 'EUR', 'TRY').
  */
 export function getCurrencyCode(countryCode: string = DEFAULT_COUNTRY_CODE): string {
-    return getCountryConfig(countryCode).currency;
+ return getCountryConfig(countryCode).currency;
 }

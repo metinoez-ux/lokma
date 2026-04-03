@@ -6,339 +6,339 @@ import { db } from '@/lib/firebase';
 import { useTranslations } from 'next-intl';
 
 interface DeliveryRecord {
-    id: string;
-    orderNumber?: string;
-    courierId: string;
-    courierName: string;
-    deliveredAt: Date;
-    totalAmount: number;
-    paymentMethod: string;
-    deliveryProof?: {
-        type: string;
-        distanceKm?: number;
-        gps?: {
-            latitude: number;
-            longitude: number;
-            isApproximate?: boolean;
-        };
-    };
+ id: string;
+ orderNumber?: string;
+ courierId: string;
+ courierName: string;
+ deliveredAt: Date;
+ totalAmount: number;
+ paymentMethod: string;
+ deliveryProof?: {
+ type: string;
+ distanceKm?: number;
+ gps?: {
+ latitude: number;
+ longitude: number;
+ isApproximate?: boolean;
+ };
+ };
 }
 
 interface DriverStats {
-    courierId: string;
-    courierName: string;
-    deliveryCount: number;
-    totalKm: number;
-    cashTotal: number;
-    cardTotal: number;
-    lastDeliveryAt?: Date;
+ courierId: string;
+ courierName: string;
+ deliveryCount: number;
+ totalKm: number;
+ cashTotal: number;
+ cardTotal: number;
+ lastDeliveryAt?: Date;
 }
 
 export default function DriverPerformancePage() {
-    
-  const t = useTranslations('AdminDriversPerformance');
+ 
+ const t = useTranslations('AdminDriversPerformance');
 const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState<string>(
-        new Date().toISOString().split('T')[0]
-    );
-    const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+ const [loading, setLoading] = useState(true);
+ const [selectedDate, setSelectedDate] = useState<string>(
+ new Date().toISOString().split('T')[0]
+ );
+ const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
-    // Calculate date range based on view mode
-    const dateRange = useMemo(() => {
-        const selected = new Date(selectedDate);
-        const start = new Date(selected);
-        const end = new Date(selected);
+ // Calculate date range based on view mode
+ const dateRange = useMemo(() => {
+ const selected = new Date(selectedDate);
+ const start = new Date(selected);
+ const end = new Date(selected);
 
-        if (viewMode === 'daily') {
-            start.setHours(0, 0, 0, 0);
-            end.setHours(23, 59, 59, 999);
-        } else if (viewMode === 'weekly') {
-            // Start of week (Monday)
-            const day = start.getDay();
-            const diff = start.getDate() - day + (day === 0 ? -6 : 1);
-            start.setDate(diff);
-            start.setHours(0, 0, 0, 0);
-            end.setDate(start.getDate() + 6);
-            end.setHours(23, 59, 59, 999);
-        } else {
-            // Monthly
-            start.setDate(1);
-            start.setHours(0, 0, 0, 0);
-            end.setMonth(end.getMonth() + 1);
-            end.setDate(0);
-            end.setHours(23, 59, 59, 999);
-        }
+ if (viewMode === 'daily') {
+ start.setHours(0, 0, 0, 0);
+ end.setHours(23, 59, 59, 999);
+ } else if (viewMode === 'weekly') {
+ // Start of week (Monday)
+ const day = start.getDay();
+ const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+ start.setDate(diff);
+ start.setHours(0, 0, 0, 0);
+ end.setDate(start.getDate() + 6);
+ end.setHours(23, 59, 59, 999);
+ } else {
+ // Monthly
+ start.setDate(1);
+ start.setHours(0, 0, 0, 0);
+ end.setMonth(end.getMonth() + 1);
+ end.setDate(0);
+ end.setHours(23, 59, 59, 999);
+ }
 
-        return { start, end };
-    }, [selectedDate, viewMode]);
+ return { start, end };
+ }, [selectedDate, viewMode]);
 
-    const [error, setError] = useState<string | null>(null);
+ const [error, setError] = useState<string | null>(null);
 
-    // Fetch completed deliveries
-    useEffect(() => {
-        setError(null);
-        const q = query(
-            collection(db, 'meat_orders'),
-            where('status', '==', 'delivered'),
-            where('deliveredAt', '>=', Timestamp.fromDate(dateRange.start)),
-            where('deliveredAt', '<=', Timestamp.fromDate(dateRange.end)),
-            orderBy('deliveredAt', 'desc')
-        );
+ // Fetch completed deliveries
+ useEffect(() => {
+ setError(null);
+ const q = query(
+ collection(db, 'meat_orders'),
+ where('status', '==', 'delivered'),
+ where('deliveredAt', '>=', Timestamp.fromDate(dateRange.start)),
+ where('deliveredAt', '<=', Timestamp.fromDate(dateRange.end)),
+ orderBy('deliveredAt', 'desc')
+ );
 
-        const unsub = onSnapshot(q, (snapshot) => {
-            const records: DeliveryRecord[] = [];
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.courierId) {
-                    records.push({
-                        id: doc.id,
-                        orderNumber: data.orderNumber,
-                        courierId: data.courierId,
-                        courierName: data.courierName || 'Bilinmiyor',
-                        deliveredAt: data.deliveredAt?.toDate() || new Date(),
-                        totalAmount: data.totalAmount || 0,
-                        paymentMethod: data.paymentMethod || '',
-                        deliveryProof: data.deliveryProof,
-                    });
-                }
-            });
-            setDeliveries(records);
-            setLoading(false);
-        }, (err) => {
-            console.error('Error fetching deliveries:', err);
-            setError(t('teslimat_verileri_yuklenemedi_lutfen_say'));
-            setLoading(false);
-        });
+ const unsub = onSnapshot(q, (snapshot) => {
+ const records: DeliveryRecord[] = [];
+ snapshot.forEach((doc) => {
+ const data = doc.data();
+ if (data.courierId) {
+ records.push({
+ id: doc.id,
+ orderNumber: data.orderNumber,
+ courierId: data.courierId,
+ courierName: data.courierName || 'Bilinmiyor',
+ deliveredAt: data.deliveredAt?.toDate() || new Date(),
+ totalAmount: data.totalAmount || 0,
+ paymentMethod: data.paymentMethod || '',
+ deliveryProof: data.deliveryProof,
+ });
+ }
+ });
+ setDeliveries(records);
+ setLoading(false);
+ }, (err) => {
+ console.error('Error fetching deliveries:', err);
+ setError(t('teslimat_verileri_yuklenemedi_lutfen_say'));
+ setLoading(false);
+ });
 
-        return () => unsub();
-    }, [dateRange]);
+ return () => unsub();
+ }, [dateRange]);
 
-    // Aggregate stats by driver
-    const driverStats = useMemo<DriverStats[]>(() => {
-        const statsMap = new Map<string, DriverStats>();
+ // Aggregate stats by driver
+ const driverStats = useMemo<DriverStats[]>(() => {
+ const statsMap = new Map<string, DriverStats>();
 
-        deliveries.forEach((d) => {
-            const existing = statsMap.get(d.courierId);
-            const isCash = d.paymentMethod === 'cash' || d.paymentMethod === 'nakit';
-            const distanceKm = d.deliveryProof?.distanceKm || 0;
+ deliveries.forEach((d) => {
+ const existing = statsMap.get(d.courierId);
+ const isCash = d.paymentMethod === 'cash' || d.paymentMethod === 'nakit';
+ const distanceKm = d.deliveryProof?.distanceKm || 0;
 
-            if (existing) {
-                existing.deliveryCount++;
-                existing.totalKm += distanceKm;
-                if (isCash) {
-                    existing.cashTotal += d.totalAmount;
-                } else {
-                    existing.cardTotal += d.totalAmount;
-                }
-                if (!existing.lastDeliveryAt || d.deliveredAt > existing.lastDeliveryAt) {
-                    existing.lastDeliveryAt = d.deliveredAt;
-                }
-            } else {
-                statsMap.set(d.courierId, {
-                    courierId: d.courierId,
-                    courierName: d.courierName,
-                    deliveryCount: 1,
-                    totalKm: distanceKm,
-                    cashTotal: isCash ? d.totalAmount : 0,
-                    cardTotal: isCash ? 0 : d.totalAmount,
-                    lastDeliveryAt: d.deliveredAt,
-                });
-            }
-        });
+ if (existing) {
+ existing.deliveryCount++;
+ existing.totalKm += distanceKm;
+ if (isCash) {
+ existing.cashTotal += d.totalAmount;
+ } else {
+ existing.cardTotal += d.totalAmount;
+ }
+ if (!existing.lastDeliveryAt || d.deliveredAt > existing.lastDeliveryAt) {
+ existing.lastDeliveryAt = d.deliveredAt;
+ }
+ } else {
+ statsMap.set(d.courierId, {
+ courierId: d.courierId,
+ courierName: d.courierName,
+ deliveryCount: 1,
+ totalKm: distanceKm,
+ cashTotal: isCash ? d.totalAmount : 0,
+ cardTotal: isCash ? 0 : d.totalAmount,
+ lastDeliveryAt: d.deliveredAt,
+ });
+ }
+ });
 
-        return Array.from(statsMap.values()).sort(
-            (a, b) => b.deliveryCount - a.deliveryCount
-        );
-    }, [deliveries]);
+ return Array.from(statsMap.values()).sort(
+ (a, b) => b.deliveryCount - a.deliveryCount
+ );
+ }, [deliveries]);
 
-    // Totals
-    const totals = useMemo(() => {
-        return driverStats.reduce(
-            (acc, d) => ({
-                deliveries: acc.deliveries + d.deliveryCount,
-                km: acc.km + d.totalKm,
-                cash: acc.cash + d.cashTotal,
-                card: acc.card + d.cardTotal,
-            }),
-            { deliveries: 0, km: 0, cash: 0, card: 0 }
-        );
-    }, [driverStats]);
+ // Totals
+ const totals = useMemo(() => {
+ return driverStats.reduce(
+ (acc, d) => ({
+ deliveries: acc.deliveries + d.deliveryCount,
+ km: acc.km + d.totalKm,
+ cash: acc.cash + d.cashTotal,
+ card: acc.card + d.cardTotal,
+ }),
+ { deliveries: 0, km: 0, cash: 0, card: 0 }
+ );
+ }, [driverStats]);
 
-    const formatDate = (date: Date) =>
-        date.toLocaleDateString('de-DE', {
-            day: '2-digit',
-            month: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
+ const formatDate = (date: Date) =>
+ date.toLocaleDateString('de-DE', {
+ day: '2-digit',
+ month: '2-digit',
+ hour: '2-digit',
+ minute: '2-digit',
+ });
 
-    return (
-        <div className="min-h-screen bg-background p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-foreground">
-                        {t('surucu_performans_raporu')}
-                    </h1>
-                    <p className="text-muted-foreground mt-1">
-                        {t('teslimat_sayisi_km_nakit_ve_kart_tahsila')}
-                    </p>
-                </div>
+ return (
+ <div className="min-h-screen bg-background p-6">
+ <div className="max-w-7xl mx-auto">
+ {/* Header */}
+ <div className="mb-6">
+ <h1 className="text-2xl font-bold text-foreground">
+ {t('surucu_performans_raporu')}
+ </h1>
+ <p className="text-muted-foreground mt-1">
+ {t('teslimat_sayisi_km_nakit_ve_kart_tahsila')}
+ </p>
+ </div>
 
-                {/* Filters */}
-                <div className="bg-card rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center border border-border">
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-1">
-                            {t('tarih')}
-                        </label>
-                        <input
-                            type="date"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
-                            className="bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-1">
-                            {t('gorunum')}
-                        </label>
-                        <div className="flex rounded-lg overflow-hidden border border-gray-600">
-                            {(['daily', 'weekly', 'monthly'] as const).map((mode) => (
-                                <button
-                                    key={mode}
-                                    onClick={() => setViewMode(mode)}
-                                    className={`px-4 py-2 text-sm font-medium ${viewMode === mode
-                                        ? 'bg-amber-500 text-white'
-                                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
-                                        }`}
-                                >
-                                    {mode === 'daily' && t('gunluk')}
-                                    {mode === 'weekly' && t('haftalik')}
-                                    {mode === 'monthly' && t('aylik')}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+ {/* Filters */}
+ <div className="bg-card rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center border border-border">
+ <div>
+ <label className="block text-sm font-medium text-foreground mb-1">
+ {t('tarih')}
+ </label>
+ <input
+ type="date"
+ value={selectedDate}
+ onChange={(e) => setSelectedDate(e.target.value)}
+ className="bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500"
+ />
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-foreground mb-1">
+ {t('gorunum')}
+ </label>
+ <div className="flex rounded-lg overflow-hidden border border-gray-600">
+ {(['daily', 'weekly', 'monthly'] as const).map((mode) => (
+ <button
+ key={mode}
+ onClick={() => setViewMode(mode)}
+ className={`px-4 py-2 text-sm font-medium ${viewMode === mode
+ ? 'bg-amber-500 text-white'
+ : 'bg-muted/50 text-foreground/90 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
+ }`}
+ >
+ {mode === 'daily' && t('gunluk')}
+ {mode === 'weekly' && t('haftalik')}
+ {mode === 'monthly' && t('aylik')}
+ </button>
+ ))}
+ </div>
+ </div>
+ </div>
 
-                {/* Error Banner */}
-                {error && (
-                    <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4 mb-6 flex items-center gap-3">
-                        <span className="text-red-800 dark:text-red-400 text-xl">⚠️</span>
-                        <p className="text-red-300 text-sm font-medium">{error}</p>
-                    </div>
-                )}
+ {/* Error Banner */}
+ {error && (
+ <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4 mb-6 flex items-center gap-3">
+ <span className="text-red-800 dark:text-red-400 text-xl">⚠️</span>
+ <p className="text-red-300 text-sm font-medium">{error}</p>
+ </div>
+ )}
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-card rounded-lg shadow p-4 border border-border">
-                        <div className="text-sm text-muted-foreground">{t('toplam_teslimat')}</div>
-                        <div className="text-2xl font-bold text-foreground">
-                            {totals.deliveries}
-                        </div>
-                    </div>
-                    <div className="bg-card rounded-lg shadow p-4 border border-border">
-                        <div className="text-sm text-muted-foreground">{t('toplam_km')}</div>
-                        <div className="text-2xl font-bold text-blue-600">
-                            🛣️ {totals.km.toFixed(1)} km
-                        </div>
-                    </div>
-                    <div className="bg-card rounded-lg shadow p-4 border border-border">
-                        <div className="text-sm text-muted-foreground">Nakit Tahsilat</div>
-                        <div className="text-2xl font-bold text-green-600">
-                            💰 {totals.cash.toFixed(2)}€
-                        </div>
-                    </div>
-                    <div className="bg-card rounded-lg shadow p-4 border border-border">
-                        <div className="text-sm text-muted-foreground">Kart Tahsilat</div>
-                        <div className="text-2xl font-bold text-purple-600">
-                            💳 {totals.card.toFixed(2)}€
-                        </div>
-                    </div>
-                </div>
+ {/* Summary Cards */}
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+ <div className="bg-card rounded-lg shadow p-4 border border-border">
+ <div className="text-sm text-muted-foreground">{t('toplam_teslimat')}</div>
+ <div className="text-2xl font-bold text-foreground">
+ {totals.deliveries}
+ </div>
+ </div>
+ <div className="bg-card rounded-lg shadow p-4 border border-border">
+ <div className="text-sm text-muted-foreground">{t('toplam_km')}</div>
+ <div className="text-2xl font-bold text-blue-600">
+ 🛣️ {totals.km.toFixed(1)} km
+ </div>
+ </div>
+ <div className="bg-card rounded-lg shadow p-4 border border-border">
+ <div className="text-sm text-muted-foreground">Nakit Tahsilat</div>
+ <div className="text-2xl font-bold text-green-600">
+ 💰 {totals.cash.toFixed(2)}€
+ </div>
+ </div>
+ <div className="bg-card rounded-lg shadow p-4 border border-border">
+ <div className="text-sm text-muted-foreground">Kart Tahsilat</div>
+ <div className="text-2xl font-bold text-purple-600">
+ 💳 {totals.card.toFixed(2)}€
+ </div>
+ </div>
+ </div>
 
-                {/* Driver Stats Table */}
-                <div className="bg-card rounded-lg shadow overflow-hidden border border-border">
-                    <table className="min-w-full">
-                        <thead className="bg-gray-700/50 border-b border-gray-600">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
-                                    {t('surucu')}
-                                </th>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">
-                                    Teslimat
-                                </th>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">
-                                    KM
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
-                                    Nakit
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
-                                    Kart
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
-                                    Son Teslimat
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                                        {t('yukleniyor')}
-                                    </td>
-                                </tr>
-                            ) : driverStats.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                                        {t('bu_donemde_teslimat_bulunamadi')}
-                                    </td>
-                                </tr>
-                            ) : (
-                                driverStats.map((driver) => (
-                                    <tr key={driver.courierId} className="hover:bg-gray-700/50">
-                                        <td className="px-4 py-3">
-                                            <div className="font-medium text-foreground">
-                                                {driver.courierName}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-400 font-bold">
-                                                {driver.deliveryCount}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-center text-blue-600 font-medium">
-                                            {driver.totalKm > 0 ? `${driver.totalKm.toFixed(1)} km` : '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-green-600 font-medium">
-                                            {driver.cashTotal > 0
-                                                ? `${driver.cashTotal.toFixed(2)}€`
-                                                : '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-purple-600 font-medium">
-                                            {driver.cardTotal > 0
-                                                ? `${driver.cardTotal.toFixed(2)}€`
-                                                : '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-muted-foreground text-sm">
-                                            {driver.lastDeliveryAt
-                                                ? formatDate(driver.lastDeliveryAt)
-                                                : '-'}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+ {/* Driver Stats Table */}
+ <div className="bg-card rounded-lg shadow overflow-hidden border border-border">
+ <table className="min-w-full">
+ <thead className="bg-gray-700/50 border-b border-gray-600">
+ <tr>
+ <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+ {t('surucu')}
+ </th>
+ <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">
+ Teslimat
+ </th>
+ <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">
+ KM
+ </th>
+ <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
+ Nakit
+ </th>
+ <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
+ Kart
+ </th>
+ <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
+ Son Teslimat
+ </th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-border">
+ {loading ? (
+ <tr>
+ <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+ {t('yukleniyor')}
+ </td>
+ </tr>
+ ) : driverStats.length === 0 ? (
+ <tr>
+ <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+ {t('bu_donemde_teslimat_bulunamadi')}
+ </td>
+ </tr>
+ ) : (
+ driverStats.map((driver) => (
+ <tr key={driver.courierId} className="hover:bg-gray-700/50">
+ <td className="px-4 py-3">
+ <div className="font-medium text-foreground">
+ {driver.courierName}
+ </div>
+ </td>
+ <td className="px-4 py-3 text-center">
+ <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-400 font-bold">
+ {driver.deliveryCount}
+ </span>
+ </td>
+ <td className="px-4 py-3 text-center text-blue-600 font-medium">
+ {driver.totalKm > 0 ? `${driver.totalKm.toFixed(1)} km` : '-'}
+ </td>
+ <td className="px-4 py-3 text-right text-green-600 font-medium">
+ {driver.cashTotal > 0
+ ? `${driver.cashTotal.toFixed(2)}€`
+ : '-'}
+ </td>
+ <td className="px-4 py-3 text-right text-purple-600 font-medium">
+ {driver.cardTotal > 0
+ ? `${driver.cardTotal.toFixed(2)}€`
+ : '-'}
+ </td>
+ <td className="px-4 py-3 text-right text-muted-foreground text-sm">
+ {driver.lastDeliveryAt
+ ? formatDate(driver.lastDeliveryAt)
+ : '-'}
+ </td>
+ </tr>
+ ))
+ )}
+ </tbody>
+ </table>
+ </div>
 
-                {/* Privacy Notice */}
-                <div className="mt-4 text-center text-xs text-muted-foreground">
-                    {t('gizlilik_musteri_adres_ve_telefon_bilgil')}
-                </div>
-            </div>
-        </div>
-    );
+ {/* Privacy Notice */}
+ <div className="mt-4 text-center text-xs text-muted-foreground">
+ {t('gizlilik_musteri_adres_ve_telefon_bilgil')}
+ </div>
+ </div>
+ </div>
+ );
 }

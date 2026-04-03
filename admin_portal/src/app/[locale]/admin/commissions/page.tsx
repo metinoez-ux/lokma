@@ -9,753 +9,753 @@ import { useTranslations } from 'next-intl';
 
 // Types
 interface CommissionRecord {
-    id: string;
-    orderId: string;
-    businessId: string;
-    businessName: string;
-    planId: string;
-    planName: string;
-    orderTotal: number;
-    courierType: 'click_collect' | 'own_courier' | 'lokma_courier';
-    commissionRate: number;
-    commissionAmount: number;
-    perOrderFee: number;
-    totalCommission: number;
-    netCommission: number;
-    vatAmount: number;
-    vatRate: number;
-    paymentMethod: string;
-    collectionStatus: 'auto_collected' | 'pending' | 'invoiced' | 'paid';
-    period: string;
-    createdAt: Date;
-    orderNumber?: string;
+ id: string;
+ orderId: string;
+ businessId: string;
+ businessName: string;
+ planId: string;
+ planName: string;
+ orderTotal: number;
+ courierType: 'click_collect' | 'own_courier' | 'lokma_courier';
+ commissionRate: number;
+ commissionAmount: number;
+ perOrderFee: number;
+ totalCommission: number;
+ netCommission: number;
+ vatAmount: number;
+ vatRate: number;
+ paymentMethod: string;
+ collectionStatus: 'auto_collected' | 'pending' | 'invoiced' | 'paid';
+ period: string;
+ createdAt: Date;
+ orderNumber?: string;
 }
 
 interface BusinessSummary {
-    businessId: string;
-    businessName: string;
-    planName: string;
-    commissionRate: number;
-    totalOrders: number;
-    totalOrderAmount: number;
-    totalCommission: number;
-    cardCommission: number;
-    cashCommission: number;
-    pendingAmount: number;
-    collectedAmount: number;
+ businessId: string;
+ businessName: string;
+ planName: string;
+ commissionRate: number;
+ totalOrders: number;
+ totalOrderAmount: number;
+ totalCommission: number;
+ cardCommission: number;
+ cashCommission: number;
+ pendingAmount: number;
+ collectedAmount: number;
 }
 
 const courierLabels: Record<string, string> = {
-    click_collect: '🛒 Gel-Al',
-    own_courier: '🏪 Kendi Kurye',
-    lokma_courier: '🚗 LOKMA Kurye',
+ click_collect: '🛒 Gel-Al',
+ own_courier: '🏪 Kendi Kurye',
+ lokma_courier: '🚗 LOKMA Kurye',
 };
 
 const statusColors: Record<string, string> = {
-    auto_collected: 'bg-green-600',
-    pending: 'bg-yellow-600',
-    invoiced: 'bg-blue-600',
-    paid: 'bg-emerald-600',
+ auto_collected: 'bg-green-600',
+ pending: 'bg-yellow-600',
+ invoiced: 'bg-blue-600',
+ paid: 'bg-emerald-600',
 };
 
 const statusLabels: Record<string, string> = {
-    auto_collected: 'Otomatik Tahsil',
-    pending: 'Bekliyor',
-    invoiced: 'Faturalandı',
-    paid: 'Ödendi',
+ auto_collected: 'Otomatik Tahsil',
+ pending: 'Bekliyor',
+ invoiced: 'Faturalandı',
+ paid: 'Ödendi',
 };
 
 export default function CommissionsPage() {
-    
-  const t = useTranslations('AdminCommissions');
+ 
+ const t = useTranslations('AdminCommissions');
 const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [records, setRecords] = useState<CommissionRecord[]>([]);
-    const [filterPeriod, setFilterPeriod] = useState<string>('');
-    const [filterBusiness, setFilterBusiness] = useState<string>('all');
-    const [filterStatus, setFilterStatus] = useState<string>('all');
-    const [viewMode, setViewMode] = useState<'summary' | 'detail'>('summary');
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
-    const [orderLoading, setOrderLoading] = useState(false);
+ const [loading, setLoading] = useState(true);
+ const [records, setRecords] = useState<CommissionRecord[]>([]);
+ const [filterPeriod, setFilterPeriod] = useState<string>('');
+ const [filterBusiness, setFilterBusiness] = useState<string>('all');
+ const [filterStatus, setFilterStatus] = useState<string>('all');
+ const [viewMode, setViewMode] = useState<'summary' | 'detail'>('summary');
+ const [selectedOrder, setSelectedOrder] = useState<any>(null);
+ const [orderLoading, setOrderLoading] = useState(false);
 
-    // Fetch full order details from meat_orders
-    const loadOrderDetail = useCallback(async (orderId: string, commissionRecord: CommissionRecord) => {
-        setOrderLoading(true);
-        try {
-            const orderDoc = await getDoc(doc(db, 'meat_orders', orderId));
-            if (orderDoc.exists()) {
-                const data = orderDoc.data();
-                setSelectedOrder({
-                    ...data,
-                    id: orderDoc.id,
-                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt ? new Date(data.createdAt) : null,
-                    deliveredAt: data.deliveredAt?.toDate ? data.deliveredAt.toDate() : data.deliveredAt ? new Date(data.deliveredAt) : null,
-                    claimedAt: data.claimedAt?.toDate ? data.claimedAt.toDate() : data.claimedAt ? new Date(data.claimedAt) : null,
-                    updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
-                    commission: commissionRecord,
-                });
-            } else {
-                // Order not found, show commission data only
-                setSelectedOrder({ id: orderId, notFound: true, commission: commissionRecord });
-            }
-        } catch (error) {
-            console.error('Error loading order detail:', error);
-            setSelectedOrder({ id: orderId, notFound: true, commission: commissionRecord });
-        } finally {
-            setOrderLoading(false);
-        }
-    }, []);
+ // Fetch full order details from meat_orders
+ const loadOrderDetail = useCallback(async (orderId: string, commissionRecord: CommissionRecord) => {
+ setOrderLoading(true);
+ try {
+ const orderDoc = await getDoc(doc(db, 'meat_orders', orderId));
+ if (orderDoc.exists()) {
+ const data = orderDoc.data();
+ setSelectedOrder({
+ ...data,
+ id: orderDoc.id,
+ createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt ? new Date(data.createdAt) : null,
+ deliveredAt: data.deliveredAt?.toDate ? data.deliveredAt.toDate() : data.deliveredAt ? new Date(data.deliveredAt) : null,
+ claimedAt: data.claimedAt?.toDate ? data.claimedAt.toDate() : data.claimedAt ? new Date(data.claimedAt) : null,
+ updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+ commission: commissionRecord,
+ });
+ } else {
+ // Order not found, show commission data only
+ setSelectedOrder({ id: orderId, notFound: true, commission: commissionRecord });
+ }
+ } catch (error) {
+ console.error('Error loading order detail:', error);
+ setSelectedOrder({ id: orderId, notFound: true, commission: commissionRecord });
+ } finally {
+ setOrderLoading(false);
+ }
+ }, []);
 
-    // Auth
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                router.push('/login');
-                return;
-            }
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    }, [router]);
+ // Auth
+ useEffect(() => {
+ const unsubscribe = onAuthStateChanged(auth, (user) => {
+ if (!user) {
+ router.push('/login');
+ return;
+ }
+ setLoading(false);
+ });
+ return () => unsubscribe();
+ }, [router]);
 
-    // Load commission records
-    const loadRecords = useCallback(async () => {
-        try {
-            const q = query(
-                collection(db, 'commission_records'),
-                orderBy('createdAt', 'desc'),
-                limit(500)
-            );
-            const snapshot = await getDocs(q);
-            const list: CommissionRecord[] = [];
-            snapshot.forEach((d) => {
-                const data = d.data();
-                list.push({
-                    id: d.id,
-                    ...data,
-                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
-                } as CommissionRecord);
-            });
+ // Load commission records
+ const loadRecords = useCallback(async () => {
+ try {
+ const q = query(
+ collection(db, 'commission_records'),
+ orderBy('createdAt', 'desc'),
+ limit(500)
+ );
+ const snapshot = await getDocs(q);
+ const list: CommissionRecord[] = [];
+ snapshot.forEach((d) => {
+ const data = d.data();
+ list.push({
+ id: d.id,
+ ...data,
+ createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+ } as CommissionRecord);
+ });
 
-            // Resolve generic "İşletme" names from businesses collection
-            const genericRecords = list.filter(r => r.businessName === t('i_sletme') || !r.businessName);
-            if (genericRecords.length > 0) {
-                const uniqueIds = [...new Set(genericRecords.map(r => r.businessId))];
-                for (const bizId of uniqueIds) {
-                    try {
-                        const bizDoc = await getDoc(doc(db, 'businesses', bizId));
-                        if (bizDoc.exists()) {
-                            const bizData = bizDoc.data();
-                            const realName = bizData.companyName || bizData.name || bizData.businessName || bizData.brand || t('i_sletme');
-                            list.forEach(r => {
-                                if (r.businessId === bizId && (r.businessName === t('i_sletme') || !r.businessName)) {
-                                    r.businessName = realName;
-                                }
-                            });
-                        }
-                    } catch (e) { /* skip */ }
-                }
-            }
+ // Resolve generic "İşletme" names from businesses collection
+ const genericRecords = list.filter(r => r.businessName === t('i_sletme') || !r.businessName);
+ if (genericRecords.length > 0) {
+ const uniqueIds = [...new Set(genericRecords.map(r => r.businessId))];
+ for (const bizId of uniqueIds) {
+ try {
+ const bizDoc = await getDoc(doc(db, 'businesses', bizId));
+ if (bizDoc.exists()) {
+ const bizData = bizDoc.data();
+ const realName = bizData.companyName || bizData.name || bizData.businessName || bizData.brand || t('i_sletme');
+ list.forEach(r => {
+ if (r.businessId === bizId && (r.businessName === t('i_sletme') || !r.businessName)) {
+ r.businessName = realName;
+ }
+ });
+ }
+ } catch (e) { /* skip */ }
+ }
+ }
 
-            setRecords(list);
-        } catch (error) {
-            console.error('Commission records loading error:', error);
-        }
-    }, []);
+ setRecords(list);
+ } catch (error) {
+ console.error('Commission records loading error:', error);
+ }
+ }, []);
 
-    useEffect(() => {
-        if (!loading) loadRecords();
-    }, [loading, loadRecords]);
+ useEffect(() => {
+ if (!loading) loadRecords();
+ }, [loading, loadRecords]);
 
-    // Set default period to current month
-    useEffect(() => {
-        const now = new Date();
-        setFilterPeriod(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
-    }, []);
+ // Set default period to current month
+ useEffect(() => {
+ const now = new Date();
+ setFilterPeriod(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+ }, []);
 
-    // Filtered records
-    const filteredRecords = useMemo(() => {
-        return records.filter(r => {
-            if (filterPeriod && r.period !== filterPeriod) return false;
-            if (filterBusiness !== 'all' && r.businessId !== filterBusiness) return false;
-            if (filterStatus !== 'all' && r.collectionStatus !== filterStatus) return false;
-            return true;
-        });
-    }, [records, filterPeriod, filterBusiness, filterStatus]);
+ // Filtered records
+ const filteredRecords = useMemo(() => {
+ return records.filter(r => {
+ if (filterPeriod && r.period !== filterPeriod) return false;
+ if (filterBusiness !== 'all' && r.businessId !== filterBusiness) return false;
+ if (filterStatus !== 'all' && r.collectionStatus !== filterStatus) return false;
+ return true;
+ });
+ }, [records, filterPeriod, filterBusiness, filterStatus]);
 
-    // Business summaries
-    const businessSummaries = useMemo(() => {
-        const map = new Map<string, BusinessSummary>();
-        filteredRecords.forEach(r => {
-            const existing = map.get(r.businessId) || {
-                businessId: r.businessId,
-                businessName: r.businessName,
-                planName: r.planName,
-                commissionRate: r.commissionRate,
-                totalOrders: 0,
-                totalOrderAmount: 0,
-                totalCommission: 0,
-                cardCommission: 0,
-                cashCommission: 0,
-                pendingAmount: 0,
-                collectedAmount: 0,
-            };
-            existing.totalOrders++;
-            existing.totalOrderAmount += r.orderTotal;
-            existing.totalCommission += r.totalCommission;
-            const isCard = r.paymentMethod === 'card' || r.paymentMethod === 'stripe';
-            if (isCard) {
-                existing.cardCommission += r.totalCommission;
-                existing.collectedAmount += r.totalCommission;
-            } else {
-                existing.cashCommission += r.totalCommission;
-                if (r.collectionStatus === 'pending') {
-                    existing.pendingAmount += r.totalCommission;
-                } else {
-                    existing.collectedAmount += r.totalCommission;
-                }
-            }
-            map.set(r.businessId, existing);
-        });
-        return Array.from(map.values()).sort((a, b) => b.totalCommission - a.totalCommission);
-    }, [filteredRecords]);
+ // Business summaries
+ const businessSummaries = useMemo(() => {
+ const map = new Map<string, BusinessSummary>();
+ filteredRecords.forEach(r => {
+ const existing = map.get(r.businessId) || {
+ businessId: r.businessId,
+ businessName: r.businessName,
+ planName: r.planName,
+ commissionRate: r.commissionRate,
+ totalOrders: 0,
+ totalOrderAmount: 0,
+ totalCommission: 0,
+ cardCommission: 0,
+ cashCommission: 0,
+ pendingAmount: 0,
+ collectedAmount: 0,
+ };
+ existing.totalOrders++;
+ existing.totalOrderAmount += r.orderTotal;
+ existing.totalCommission += r.totalCommission;
+ const isCard = r.paymentMethod === 'card' || r.paymentMethod === 'stripe';
+ if (isCard) {
+ existing.cardCommission += r.totalCommission;
+ existing.collectedAmount += r.totalCommission;
+ } else {
+ existing.cashCommission += r.totalCommission;
+ if (r.collectionStatus === 'pending') {
+ existing.pendingAmount += r.totalCommission;
+ } else {
+ existing.collectedAmount += r.totalCommission;
+ }
+ }
+ map.set(r.businessId, existing);
+ });
+ return Array.from(map.values()).sort((a, b) => b.totalCommission - a.totalCommission);
+ }, [filteredRecords]);
 
-    // Unique businesses for filter
-    const uniqueBusinesses = useMemo(() => {
-        const map = new Map<string, string>();
-        records.forEach(r => map.set(r.businessId, r.businessName));
-        return Array.from(map.entries());
-    }, [records]);
+ // Unique businesses for filter
+ const uniqueBusinesses = useMemo(() => {
+ const map = new Map<string, string>();
+ records.forEach(r => map.set(r.businessId, r.businessName));
+ return Array.from(map.entries());
+ }, [records]);
 
-    // Overall stats
-    const stats = useMemo(() => {
-        const totalCommission = filteredRecords.reduce((s, r) => s + r.totalCommission, 0);
-        const totalOrders = filteredRecords.length;
-        const totalOrderAmount = filteredRecords.reduce((s, r) => s + r.orderTotal, 0);
-        const pendingAmount = filteredRecords
-            .filter(r => r.collectionStatus === 'pending')
-            .reduce((s, r) => s + r.totalCommission, 0);
-        const collectedAmount = filteredRecords
-            .filter(r => r.collectionStatus === 'auto_collected' || r.collectionStatus === 'paid')
-            .reduce((s, r) => s + r.totalCommission, 0);
-        const cardCommission = filteredRecords
-            .filter(r => r.paymentMethod === 'card' || r.paymentMethod === 'stripe')
-            .reduce((s, r) => s + r.totalCommission, 0);
-        const cashCommission = filteredRecords
-            .filter(r => r.paymentMethod === 'cash')
-            .reduce((s, r) => s + r.totalCommission, 0);
-        const vatTotal = filteredRecords.reduce((s, r) => s + r.vatAmount, 0);
+ // Overall stats
+ const stats = useMemo(() => {
+ const totalCommission = filteredRecords.reduce((s, r) => s + r.totalCommission, 0);
+ const totalOrders = filteredRecords.length;
+ const totalOrderAmount = filteredRecords.reduce((s, r) => s + r.orderTotal, 0);
+ const pendingAmount = filteredRecords
+ .filter(r => r.collectionStatus === 'pending')
+ .reduce((s, r) => s + r.totalCommission, 0);
+ const collectedAmount = filteredRecords
+ .filter(r => r.collectionStatus === 'auto_collected' || r.collectionStatus === 'paid')
+ .reduce((s, r) => s + r.totalCommission, 0);
+ const cardCommission = filteredRecords
+ .filter(r => r.paymentMethod === 'card' || r.paymentMethod === 'stripe')
+ .reduce((s, r) => s + r.totalCommission, 0);
+ const cashCommission = filteredRecords
+ .filter(r => r.paymentMethod === 'cash')
+ .reduce((s, r) => s + r.totalCommission, 0);
+ const vatTotal = filteredRecords.reduce((s, r) => s + r.vatAmount, 0);
 
-        return { totalCommission, totalOrders, totalOrderAmount, pendingAmount, collectedAmount, cardCommission, cashCommission, vatTotal };
-    }, [filteredRecords]);
+ return { totalCommission, totalOrders, totalOrderAmount, pendingAmount, collectedAmount, cardCommission, cashCommission, vatTotal };
+ }, [filteredRecords]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-foreground">{t('yukleniyor')}</div>
-            </div>
-        );
-    }
+ if (loading) {
+ return (
+ <div className="min-h-screen bg-background flex items-center justify-center">
+ <div className="text-foreground">{t('yukleniyor')}</div>
+ </div>
+ );
+ }
 
-    return (
-        <div className="min-h-screen bg-background">
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                {/* Page Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-2xl font-bold text-foreground">💰 Provizyon Raporu</h1>
-                        <p className="text-muted-foreground text-sm">{t('i_sletme_bazli_provizyon_takibi_ve_rapor')}</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setViewMode(viewMode === 'summary' ? 'detail' : 'summary')}
-                            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm"
-                        >
-                            {viewMode === 'summary' ? t('detay_gorunumu') : t('ozet_gorunumu')}
-                        </button>
-                        <button
-                            onClick={loadRecords}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
-                        >
-                            🔄 Yenile
-                        </button>
-                    </div>
-                </div>
+ return (
+ <div className="min-h-screen bg-background">
+ <div className="max-w-7xl mx-auto px-4 py-6">
+ {/* Page Header */}
+ <div className="flex justify-between items-center mb-6">
+ <div>
+ <h1 className="text-2xl font-bold text-foreground">💰 Provizyon Raporu</h1>
+ <p className="text-muted-foreground text-sm">{t('i_sletme_bazli_provizyon_takibi_ve_rapor')}</p>
+ </div>
+ <div className="flex gap-2">
+ <button
+ onClick={() => setViewMode(viewMode === 'summary' ? 'detail' : 'summary')}
+ className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm"
+ >
+ {viewMode === 'summary' ? t('detay_gorunumu') : t('ozet_gorunumu')}
+ </button>
+ <button
+ onClick={loadRecords}
+ className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
+ >
+ 🔄 Yenile
+ </button>
+ </div>
+ </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-                    <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-foreground">{stats.totalOrders}</p>
-                        <p className="text-muted-foreground text-xs">{t('siparis')}</p>
-                    </div>
-                    <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-foreground">€{stats.totalOrderAmount.toFixed(0)}</p>
-                        <p className="text-muted-foreground text-xs">{t('ciro')}</p>
-                    </div>
-                    <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">{t('toplam_provizyon')}</p>
-                    </div>
-                    <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-green-800 dark:text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">{t('tahsil_edilen')}</p>
-                    </div>
-                    <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">{t('bekleyen_nakit')}</p>
-                    </div>
-                    <div className="bg-blue-600/20 border border-blue-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">€{stats.cardCommission.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">{t('kart_provizyon')}</p>
-                    </div>
-                    <div className="bg-purple-600/20 border border-purple-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-purple-800 dark:text-purple-400">€{stats.cashCommission.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">{t('nakit_provizyon')}</p>
-                    </div>
-                    <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-foreground">€{stats.vatTotal.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">{t('kdv_toplam')}</p>
-                    </div>
-                </div>
+ {/* Stats Cards */}
+ <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
+ <div className="bg-card rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-foreground">{stats.totalOrders}</p>
+ <p className="text-muted-foreground text-xs">{t('siparis')}</p>
+ </div>
+ <div className="bg-card rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-foreground">€{stats.totalOrderAmount.toFixed(0)}</p>
+ <p className="text-muted-foreground text-xs">{t('ciro')}</p>
+ </div>
+ <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
+ <p className="text-muted-foreground text-xs">{t('toplam_provizyon')}</p>
+ </div>
+ <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-green-800 dark:text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
+ <p className="text-muted-foreground text-xs">{t('tahsil_edilen')}</p>
+ </div>
+ <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
+ <p className="text-muted-foreground text-xs">{t('bekleyen_nakit')}</p>
+ </div>
+ <div className="bg-blue-600/20 border border-blue-600/30 rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">€{stats.cardCommission.toFixed(2)}</p>
+ <p className="text-muted-foreground text-xs">{t('kart_provizyon')}</p>
+ </div>
+ <div className="bg-purple-600/20 border border-purple-600/30 rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-purple-800 dark:text-purple-400">€{stats.cashCommission.toFixed(2)}</p>
+ <p className="text-muted-foreground text-xs">{t('nakit_provizyon')}</p>
+ </div>
+ <div className="bg-card rounded-xl p-4 text-center">
+ <p className="text-2xl font-bold text-foreground">€{stats.vatTotal.toFixed(2)}</p>
+ <p className="text-muted-foreground text-xs">{t('kdv_toplam')}</p>
+ </div>
+ </div>
 
-                {/* Filters */}
-                <div className="bg-card rounded-xl p-4 mb-6">
-                    <div className="flex flex-wrap gap-4 items-center">
-                        <div>
-                            <label className="block text-muted-foreground text-xs mb-1">{t('donem')}</label>
-                            <input
-                                type="month"
-                                value={filterPeriod}
-                                onChange={(e) => setFilterPeriod(e.target.value)}
-                                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-muted-foreground text-xs mb-1">{t('i_sletme')}</label>
-                            <select
-                                value={filterBusiness}
-                                onChange={(e) => setFilterBusiness(e.target.value)}
-                                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                            >
-                                <option value="all">{t('tumu')}</option>
-                                {uniqueBusinesses.map(([id, name]) => (
-                                    <option key={id} value={id}>{name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-muted-foreground text-xs mb-1">Tahsilat Durumu</label>
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                            >
-                                <option value="all">{t('tumu')}</option>
-                                <option value="auto_collected">Otomatik Tahsil</option>
-                                <option value="pending">Bekliyor</option>
-                                <option value="invoiced">{t('faturalandi')}</option>
-                                <option value="paid">{t('odendi')}</option>
-                            </select>
-                        </div>
-                        <button
-                            onClick={() => { setFilterPeriod(''); setFilterBusiness('all'); setFilterStatus('all'); }}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 mt-5"
-                        >
-                            {t('temizle')}
-                        </button>
-                    </div>
-                </div>
+ {/* Filters */}
+ <div className="bg-card rounded-xl p-4 mb-6">
+ <div className="flex flex-wrap gap-4 items-center">
+ <div>
+ <label className="block text-muted-foreground text-xs mb-1">{t('donem')}</label>
+ <input
+ type="month"
+ value={filterPeriod}
+ onChange={(e) => setFilterPeriod(e.target.value)}
+ className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
+ />
+ </div>
+ <div>
+ <label className="block text-muted-foreground text-xs mb-1">{t('i_sletme')}</label>
+ <select
+ value={filterBusiness}
+ onChange={(e) => setFilterBusiness(e.target.value)}
+ className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
+ >
+ <option value="all">{t('tumu')}</option>
+ {uniqueBusinesses.map(([id, name]) => (
+ <option key={id} value={id}>{name}</option>
+ ))}
+ </select>
+ </div>
+ <div>
+ <label className="block text-muted-foreground text-xs mb-1">Tahsilat Durumu</label>
+ <select
+ value={filterStatus}
+ onChange={(e) => setFilterStatus(e.target.value)}
+ className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
+ >
+ <option value="all">{t('tumu')}</option>
+ <option value="auto_collected">Otomatik Tahsil</option>
+ <option value="pending">Bekliyor</option>
+ <option value="invoiced">{t('faturalandi')}</option>
+ <option value="paid">{t('odendi')}</option>
+ </select>
+ </div>
+ <button
+ onClick={() => { setFilterPeriod(''); setFilterBusiness('all'); setFilterStatus('all'); }}
+ className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 mt-5"
+ >
+ {t('temizle')}
+ </button>
+ </div>
+ </div>
 
-                {/* Summary View */}
-                {viewMode === 'summary' ? (
-                    <div className="bg-card rounded-xl overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-gray-700">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-foreground text-sm">{t('i_sletme')}</th>
-                                    <th className="px-4 py-3 text-left text-foreground text-sm">{t('plan')}</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('siparis')}</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('ciro')}</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('provizyon')}</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('kart')}</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('nakit')}</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('bekleyen')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {businessSummaries.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
-                                            {t('bu_donemde_provizyon_kaydi_bulunmuyor')}
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    businessSummaries.map((bs) => (
-                                        <tr
-                                            key={bs.businessId}
-                                            className="hover:bg-gray-700/50 cursor-pointer"
-                                            onClick={() => {
-                                                setFilterBusiness(bs.businessId);
-                                                setViewMode('detail');
-                                            }}
-                                        >
-                                            <td className="px-4 py-3">
-                                                <span className="text-foreground font-medium">{bs.businessName}</span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className="text-muted-foreground text-sm">{bs.planName}</span>
-                                                <span className="text-amber-800 dark:text-amber-400 text-xs ml-1">%{bs.commissionRate}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right text-white">{bs.totalOrders}</td>
-                                            <td className="px-4 py-3 text-right text-white">€{bs.totalOrderAmount.toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-right">
-                                                <span className="text-amber-800 dark:text-amber-400 font-bold">€{bs.totalCommission.toFixed(2)}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right text-blue-800 dark:text-blue-400">€{bs.cardCommission.toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-right text-purple-800 dark:text-purple-400">€{bs.cashCommission.toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-right">
-                                                {bs.pendingAmount > 0 ? (
-                                                    <span className="text-yellow-800 dark:text-yellow-400 font-bold">€{bs.pendingAmount.toFixed(2)}</span>
-                                                ) : (
-                                                    <span className="text-green-800 dark:text-green-400">✓ Tahsil</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                            {/* Footer totals */}
-                            {businessSummaries.length > 0 && (
-                                <tfoot className="bg-background border-t-2 border-gray-600">
-                                    <tr>
-                                        <td className="px-4 py-3 text-foreground font-bold" colSpan={2}>{t('toplam')}</td>
-                                        <td className="px-4 py-3 text-right text-foreground font-bold">{stats.totalOrders}</td>
-                                        <td className="px-4 py-3 text-right text-foreground font-bold">€{stats.totalOrderAmount.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-amber-800 dark:text-amber-400 font-bold">€{stats.totalCommission.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-blue-800 dark:text-blue-400 font-bold">€{stats.cardCommission.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-purple-800 dark:text-purple-400 font-bold">€{stats.cashCommission.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-yellow-800 dark:text-yellow-400 font-bold">€{stats.pendingAmount.toFixed(2)}</td>
-                                    </tr>
-                                </tfoot>
-                            )}
-                        </table>
-                    </div>
-                ) : (
-                    /* Detail View */
-                    <div className="bg-card rounded-xl overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-gray-700">
-                                <tr>
-                                    <th className="px-3 py-3 text-left text-foreground text-xs">{t('siparis')}</th>
-                                    <th className="px-3 py-3 text-left text-foreground text-xs">{t('i_sletme')}</th>
-                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('teslimat')}</th>
-                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('tutar')}</th>
-                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('oran')}</th>
-                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('provizyon')}</th>
-                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('net_kdv')}</th>
-                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('odeme')}</th>
-                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('durum')}</th>
-                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('tarih')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {filteredRecords.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={10} className="px-4 py-12 text-center text-gray-500">
-                                            {t('provizyon_kaydi_bulunmuyor')}
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredRecords.map((r) => (
-                                        <tr key={r.id} className="hover:bg-gray-700/50 text-sm cursor-pointer" onClick={() => loadOrderDetail(r.orderId, r)}>
-                                            <td className="px-3 py-2">
-                                                <span className="text-foreground font-mono text-xs">#{r.orderNumber || r.orderId.slice(0, 6)}</span>
-                                            </td>
-                                            <td className="px-3 py-2">
-                                                <span className="text-white text-xs">{r.businessName}</span>
-                                            </td>
-                                            <td className="px-3 py-2 text-center">
-                                                <span className="text-foreground text-xs">{courierLabels[r.courierType] || r.courierType}</span>
-                                            </td>
-                                            <td className="px-3 py-2 text-right text-white">€{r.orderTotal.toFixed(2)}</td>
-                                            <td className="px-3 py-2 text-right text-muted-foreground">%{r.commissionRate}</td>
-                                            <td className="px-3 py-2 text-right">
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-amber-800 dark:text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
-                                                    {r.perOrderFee > 0 && (
-                                                        <span className="text-[10px] text-yellow-800 dark:text-yellow-400/70">+€{r.perOrderFee.toFixed(2)} {t('ucret')}</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-3 py-2 text-right">
-                                                <span className="text-foreground text-xs">
-                                                    €{r.netCommission.toFixed(2)} + €{r.vatAmount.toFixed(2)}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-2 text-center">
-                                                <span className={`px-2 py-0.5 rounded text-xs ${r.paymentMethod === 'card' || r.paymentMethod === 'stripe' ? 'bg-blue-600/30 text-blue-300' : 'bg-purple-600/30 text-purple-300'}`}>
-                                                    {r.paymentMethod === 'card' || r.paymentMethod === 'stripe' ? '💳 Kart' : '💵 Nakit'}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-2 text-center">
-                                                <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColors[r.collectionStatus]}`}>
-                                                    {statusLabels[r.collectionStatus]}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-2 text-center text-muted-foreground text-xs">
-                                                {r.createdAt.toLocaleDateString('de-DE')}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+ {/* Summary View */}
+ {viewMode === 'summary' ? (
+ <div className="bg-card rounded-xl overflow-hidden">
+ <table className="w-full">
+ <thead className="bg-gray-700">
+ <tr>
+ <th className="px-4 py-3 text-left text-foreground text-sm">{t('i_sletme')}</th>
+ <th className="px-4 py-3 text-left text-foreground text-sm">{t('plan')}</th>
+ <th className="px-4 py-3 text-right text-foreground text-sm">{t('siparis')}</th>
+ <th className="px-4 py-3 text-right text-foreground text-sm">{t('ciro')}</th>
+ <th className="px-4 py-3 text-right text-foreground text-sm">{t('provizyon')}</th>
+ <th className="px-4 py-3 text-right text-foreground text-sm">{t('kart')}</th>
+ <th className="px-4 py-3 text-right text-foreground text-sm">{t('nakit')}</th>
+ <th className="px-4 py-3 text-right text-foreground text-sm">{t('bekleyen')}</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-border">
+ {businessSummaries.length === 0 ? (
+ <tr>
+ <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground/80">
+ {t('bu_donemde_provizyon_kaydi_bulunmuyor')}
+ </td>
+ </tr>
+ ) : (
+ businessSummaries.map((bs) => (
+ <tr
+ key={bs.businessId}
+ className="hover:bg-gray-700/50 cursor-pointer"
+ onClick={() => {
+ setFilterBusiness(bs.businessId);
+ setViewMode('detail');
+ }}
+ >
+ <td className="px-4 py-3">
+ <span className="text-foreground font-medium">{bs.businessName}</span>
+ </td>
+ <td className="px-4 py-3">
+ <span className="text-muted-foreground text-sm">{bs.planName}</span>
+ <span className="text-amber-800 dark:text-amber-400 text-xs ml-1">%{bs.commissionRate}</span>
+ </td>
+ <td className="px-4 py-3 text-right text-white">{bs.totalOrders}</td>
+ <td className="px-4 py-3 text-right text-white">€{bs.totalOrderAmount.toFixed(2)}</td>
+ <td className="px-4 py-3 text-right">
+ <span className="text-amber-800 dark:text-amber-400 font-bold">€{bs.totalCommission.toFixed(2)}</span>
+ </td>
+ <td className="px-4 py-3 text-right text-blue-800 dark:text-blue-400">€{bs.cardCommission.toFixed(2)}</td>
+ <td className="px-4 py-3 text-right text-purple-800 dark:text-purple-400">€{bs.cashCommission.toFixed(2)}</td>
+ <td className="px-4 py-3 text-right">
+ {bs.pendingAmount > 0 ? (
+ <span className="text-yellow-800 dark:text-yellow-400 font-bold">€{bs.pendingAmount.toFixed(2)}</span>
+ ) : (
+ <span className="text-green-800 dark:text-green-400">✓ Tahsil</span>
+ )}
+ </td>
+ </tr>
+ ))
+ )}
+ </tbody>
+ {/* Footer totals */}
+ {businessSummaries.length > 0 && (
+ <tfoot className="bg-background border-t-2 border-gray-600">
+ <tr>
+ <td className="px-4 py-3 text-foreground font-bold" colSpan={2}>{t('toplam')}</td>
+ <td className="px-4 py-3 text-right text-foreground font-bold">{stats.totalOrders}</td>
+ <td className="px-4 py-3 text-right text-foreground font-bold">€{stats.totalOrderAmount.toFixed(2)}</td>
+ <td className="px-4 py-3 text-right text-amber-800 dark:text-amber-400 font-bold">€{stats.totalCommission.toFixed(2)}</td>
+ <td className="px-4 py-3 text-right text-blue-800 dark:text-blue-400 font-bold">€{stats.cardCommission.toFixed(2)}</td>
+ <td className="px-4 py-3 text-right text-purple-800 dark:text-purple-400 font-bold">€{stats.cashCommission.toFixed(2)}</td>
+ <td className="px-4 py-3 text-right text-yellow-800 dark:text-yellow-400 font-bold">€{stats.pendingAmount.toFixed(2)}</td>
+ </tr>
+ </tfoot>
+ )}
+ </table>
+ </div>
+ ) : (
+ /* Detail View */
+ <div className="bg-card rounded-xl overflow-hidden">
+ <table className="w-full">
+ <thead className="bg-gray-700">
+ <tr>
+ <th className="px-3 py-3 text-left text-foreground text-xs">{t('siparis')}</th>
+ <th className="px-3 py-3 text-left text-foreground text-xs">{t('i_sletme')}</th>
+ <th className="px-3 py-3 text-center text-foreground text-xs">{t('teslimat')}</th>
+ <th className="px-3 py-3 text-right text-foreground text-xs">{t('tutar')}</th>
+ <th className="px-3 py-3 text-right text-foreground text-xs">{t('oran')}</th>
+ <th className="px-3 py-3 text-right text-foreground text-xs">{t('provizyon')}</th>
+ <th className="px-3 py-3 text-right text-foreground text-xs">{t('net_kdv')}</th>
+ <th className="px-3 py-3 text-center text-foreground text-xs">{t('odeme')}</th>
+ <th className="px-3 py-3 text-center text-foreground text-xs">{t('durum')}</th>
+ <th className="px-3 py-3 text-center text-foreground text-xs">{t('tarih')}</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-border">
+ {filteredRecords.length === 0 ? (
+ <tr>
+ <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground/80">
+ {t('provizyon_kaydi_bulunmuyor')}
+ </td>
+ </tr>
+ ) : (
+ filteredRecords.map((r) => (
+ <tr key={r.id} className="hover:bg-gray-700/50 text-sm cursor-pointer" onClick={() => loadOrderDetail(r.orderId, r)}>
+ <td className="px-3 py-2">
+ <span className="text-foreground font-mono text-xs">#{r.orderNumber || r.orderId.slice(0, 6)}</span>
+ </td>
+ <td className="px-3 py-2">
+ <span className="text-white text-xs">{r.businessName}</span>
+ </td>
+ <td className="px-3 py-2 text-center">
+ <span className="text-foreground text-xs">{courierLabels[r.courierType] || r.courierType}</span>
+ </td>
+ <td className="px-3 py-2 text-right text-white">€{r.orderTotal.toFixed(2)}</td>
+ <td className="px-3 py-2 text-right text-muted-foreground">%{r.commissionRate}</td>
+ <td className="px-3 py-2 text-right">
+ <div className="flex flex-col items-end">
+ <span className="text-amber-800 dark:text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
+ {r.perOrderFee > 0 && (
+ <span className="text-[10px] text-yellow-800 dark:text-yellow-400/70">+€{r.perOrderFee.toFixed(2)} {t('ucret')}</span>
+ )}
+ </div>
+ </td>
+ <td className="px-3 py-2 text-right">
+ <span className="text-foreground text-xs">
+ €{r.netCommission.toFixed(2)} + €{r.vatAmount.toFixed(2)}
+ </span>
+ </td>
+ <td className="px-3 py-2 text-center">
+ <span className={`px-2 py-0.5 rounded text-xs ${r.paymentMethod === 'card' || r.paymentMethod === 'stripe' ? 'bg-blue-600/30 text-blue-300' : 'bg-purple-600/30 text-purple-300'}`}>
+ {r.paymentMethod === 'card' || r.paymentMethod === 'stripe' ? '💳 Kart' : '💵 Nakit'}
+ </span>
+ </td>
+ <td className="px-3 py-2 text-center">
+ <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColors[r.collectionStatus]}`}>
+ {statusLabels[r.collectionStatus]}
+ </span>
+ </td>
+ <td className="px-3 py-2 text-center text-muted-foreground text-xs">
+ {r.createdAt.toLocaleDateString('de-DE')}
+ </td>
+ </tr>
+ ))
+ )}
+ </tbody>
+ </table>
+ </div>
+ )}
 
-                {/* Order Detail Modal */}
-                {(selectedOrder || orderLoading) && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
-                        <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
-                            {orderLoading ? (
-                                <div className="p-12 text-center">
-                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto mb-4"></div>
-                                    <p className="text-muted-foreground">{t('siparis_detaylari_yukleniyor')}</p>
-                                </div>
-                            ) : selectedOrder?.notFound ? (
-                                <div className="p-6">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-bold text-foreground">{t('siparis')}{selectedOrder.commission?.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
-                                        <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-white text-xl">✕</button>
-                                    </div>
-                                    <p className="text-muted-foreground">{t('siparis_detayi_bulunamadi_sadece_provizy')}</p>
-                                    {selectedOrder.commission && (
-                                        <div className="mt-4 bg-background/50 rounded-lg p-4">
-                                            <p className="text-foreground text-sm">💰 Provizyon: <span className="text-amber-800 dark:text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
-                                            <p className="text-foreground text-sm">{t('tutar')}{selectedOrder.commission.orderTotal.toFixed(2)}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : selectedOrder && (
-                                <div className="p-6">
-                                    {/* Header */}
-                                    <div className="flex justify-between items-start mb-5">
-                                        <div>
-                                            <h3 className="text-lg font-bold text-foreground">{t('siparis')}{selectedOrder.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
-                                            <p className="text-muted-foreground text-sm mt-0.5">{selectedOrder.butcherName || selectedOrder.businessName || selectedOrder.commission?.businessName}</p>
-                                        </div>
-                                        <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-foreground text-2xl leading-none">✕</button>
-                                    </div>
+ {/* Order Detail Modal */}
+ {(selectedOrder || orderLoading) && (
+ <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
+ <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+ {orderLoading ? (
+ <div className="p-12 text-center">
+ <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto mb-4"></div>
+ <p className="text-muted-foreground">{t('siparis_detaylari_yukleniyor')}</p>
+ </div>
+ ) : selectedOrder?.notFound ? (
+ <div className="p-6">
+ <div className="flex justify-between items-center mb-4">
+ <h3 className="text-lg font-bold text-foreground">{t('siparis')}{selectedOrder.commission?.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
+ <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-white text-xl">✕</button>
+ </div>
+ <p className="text-muted-foreground">{t('siparis_detayi_bulunamadi_sadece_provizy')}</p>
+ {selectedOrder.commission && (
+ <div className="mt-4 bg-background/50 rounded-lg p-4">
+ <p className="text-foreground text-sm">💰 Provizyon: <span className="text-amber-800 dark:text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
+ <p className="text-foreground text-sm">{t('tutar')}{selectedOrder.commission.orderTotal.toFixed(2)}</p>
+ </div>
+ )}
+ </div>
+ ) : selectedOrder && (
+ <div className="p-6">
+ {/* Header */}
+ <div className="flex justify-between items-start mb-5">
+ <div>
+ <h3 className="text-lg font-bold text-foreground">{t('siparis')}{selectedOrder.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
+ <p className="text-muted-foreground text-sm mt-0.5">{selectedOrder.butcherName || selectedOrder.businessName || selectedOrder.commission?.businessName}</p>
+ </div>
+ <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-foreground text-2xl leading-none">✕</button>
+ </div>
 
-                                    {/* Status Badge */}
-                                    <div className="mb-5">
-                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedOrder.status === 'delivered' ? 'bg-green-600/30 text-green-300' :
-                                            selectedOrder.status === 'cancelled' ? 'bg-red-600/30 text-red-300' :
-                                                selectedOrder.status === 'ready' ? 'bg-blue-600/30 text-blue-300' :
-                                                    selectedOrder.status === 'preparing' ? 'bg-yellow-600/30 text-yellow-300' :
-                                                        'bg-gray-600/30 text-foreground'
-                                            }`}>
-                                            {selectedOrder.status === 'delivered' ? '✅ Teslim Edildi' :
-                                                selectedOrder.status === 'cancelled' ? '❌ İptal' :
-                                                    selectedOrder.status === 'ready' ? t('hazir') :
-                                                        selectedOrder.status === 'preparing' ? t('hazirlaniyor') :
-                                                            selectedOrder.status === 'pending' ? '⏳ Bekliyor' :
-                                                                selectedOrder.status}
-                                        </span>
-                                        <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${selectedOrder.deliveryMethod === 'delivery' ? 'bg-purple-600/30 text-purple-300' : 'bg-cyan-600/30 text-cyan-300'
-                                            }`}>
-                                            {selectedOrder.deliveryMethod === 'delivery' ? t('kurye_ile_teslimat') : '🛒 Gel-Al'}
-                                        </span>
-                                    </div>
+ {/* Status Badge */}
+ <div className="mb-5">
+ <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedOrder.status === 'delivered' ? 'bg-green-600/30 text-green-300' :
+ selectedOrder.status === 'cancelled' ? 'bg-red-600/30 text-red-300' :
+ selectedOrder.status === 'ready' ? 'bg-blue-600/30 text-blue-300' :
+ selectedOrder.status === 'preparing' ? 'bg-yellow-600/30 text-yellow-300' :
+ 'bg-gray-600/30 text-foreground'
+ }`}>
+ {selectedOrder.status === 'delivered' ? '✅ Teslim Edildi' :
+ selectedOrder.status === 'cancelled' ? '❌ İptal' :
+ selectedOrder.status === 'ready' ? t('hazir') :
+ selectedOrder.status === 'preparing' ? t('hazirlaniyor') :
+ selectedOrder.status === 'pending' ? '⏳ Bekliyor' :
+ selectedOrder.status}
+ </span>
+ <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${selectedOrder.deliveryMethod === 'delivery' ? 'bg-purple-600/30 text-purple-300' : 'bg-cyan-600/30 text-cyan-300'
+ }`}>
+ {selectedOrder.deliveryMethod === 'delivery' ? t('kurye_ile_teslimat') : '🛒 Gel-Al'}
+ </span>
+ </div>
 
-                                    {/* Customer Info */}
-                                    <div className="bg-background/50 rounded-xl p-4 mb-4">
-                                        <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('musteri_bilgileri')}</h4>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <p className="text-gray-500 text-xs">{t('ad_soyad')}</p>
-                                                <p className="text-foreground text-sm font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-gray-500 text-xs">{t('telefon')}</p>
-                                                <p className="text-foreground text-sm">{selectedOrder.customerPhone || selectedOrder.userPhone || '-'}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-gray-500 text-xs">{t('eposta')}</p>
-                                                <p className="text-foreground text-sm">{selectedOrder.userEmail || '-'}</p>
-                                            </div>
-                                            {selectedOrder.deliveryAddress && (
-                                                <div>
-                                                    <p className="text-gray-500 text-xs">{t('teslimat_adresi')}</p>
-                                                    <p className="text-foreground text-sm">{selectedOrder.deliveryAddress}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+ {/* Customer Info */}
+ <div className="bg-background/50 rounded-xl p-4 mb-4">
+ <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('musteri_bilgileri')}</h4>
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <p className="text-muted-foreground/80 text-xs">{t('ad_soyad')}</p>
+ <p className="text-foreground text-sm font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
+ </div>
+ <div>
+ <p className="text-muted-foreground/80 text-xs">{t('telefon')}</p>
+ <p className="text-foreground text-sm">{selectedOrder.customerPhone || selectedOrder.userPhone || '-'}</p>
+ </div>
+ <div>
+ <p className="text-muted-foreground/80 text-xs">{t('eposta')}</p>
+ <p className="text-foreground text-sm">{selectedOrder.userEmail || '-'}</p>
+ </div>
+ {selectedOrder.deliveryAddress && (
+ <div>
+ <p className="text-muted-foreground/80 text-xs">{t('teslimat_adresi')}</p>
+ <p className="text-foreground text-sm">{selectedOrder.deliveryAddress}</p>
+ </div>
+ )}
+ </div>
+ </div>
 
-                                    {/* Order Items */}
-                                    {selectedOrder.items && selectedOrder.items.length > 0 && (
-                                        <div className="bg-background/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('siparis_icerigi')}</h4>
-                                            <div className="space-y-2">
-                                                {selectedOrder.items.map((item: any, idx: number) => (
-                                                    <div key={idx} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
-                                                        <div className="flex-1">
-                                                            <p className="text-foreground text-sm font-medium">{item.productName || item.name}</p>
-                                                            <p className="text-muted-foreground text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || t('adet')}</p>
-                                                        </div>
-                                                        <p className="text-amber-800 dark:text-amber-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="mt-3 pt-3 border-t border-border flex justify-between">
-                                                <span className="text-foreground font-bold">{t('toplam')}</span>
-                                                <span className="text-amber-800 dark:text-amber-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
-                                            </div>
-                                        </div>
-                                    )}
+ {/* Order Items */}
+ {selectedOrder.items && selectedOrder.items.length > 0 && (
+ <div className="bg-background/50 rounded-xl p-4 mb-4">
+ <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('siparis_icerigi')}</h4>
+ <div className="space-y-2">
+ {selectedOrder.items.map((item: any, idx: number) => (
+ <div key={idx} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
+ <div className="flex-1">
+ <p className="text-foreground text-sm font-medium">{item.productName || item.name}</p>
+ <p className="text-muted-foreground text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || t('adet')}</p>
+ </div>
+ <p className="text-amber-800 dark:text-amber-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
+ </div>
+ ))}
+ </div>
+ <div className="mt-3 pt-3 border-t border-border flex justify-between">
+ <span className="text-foreground font-bold">{t('toplam')}</span>
+ <span className="text-amber-800 dark:text-amber-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
+ </div>
+ </div>
+ )}
 
-                                    {/* Courier Info */}
-                                    {(selectedOrder.courierName || selectedOrder.courierId) && (
-                                        <div className="bg-background/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('kurye_bilgileri')}</h4>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <p className="text-gray-500 text-xs">{t('kurye_adi')}</p>
-                                                    <p className="text-foreground text-sm font-medium">{selectedOrder.courierName || '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-500 text-xs">{t('kurye_telefon')}</p>
-                                                    <p className="text-foreground text-sm">{selectedOrder.courierPhone || '-'}</p>
-                                                </div>
-                                                {selectedOrder.deliveryProof && (
-                                                    <div className="col-span-2">
-                                                        <p className="text-gray-500 text-xs">{t('teslimat_kaniti')}</p>
-                                                        <p className="text-foreground text-sm">
-                                                            {selectedOrder.deliveryProof.type === 'personal_handoff' ? '🤝 Elden Teslim' :
-                                                                selectedOrder.deliveryProof.type === 'left_at_door' ? t('kapida_birakildi') :
-                                                                    selectedOrder.deliveryProof.type || '-'}
-                                                            {selectedOrder.deliveryProof.distanceKm !== undefined && (
-                                                                <span className="text-muted-foreground ml-2">({selectedOrder.deliveryProof.distanceKm.toFixed(1)} km)</span>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+ {/* Courier Info */}
+ {(selectedOrder.courierName || selectedOrder.courierId) && (
+ <div className="bg-background/50 rounded-xl p-4 mb-4">
+ <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('kurye_bilgileri')}</h4>
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <p className="text-muted-foreground/80 text-xs">{t('kurye_adi')}</p>
+ <p className="text-foreground text-sm font-medium">{selectedOrder.courierName || '-'}</p>
+ </div>
+ <div>
+ <p className="text-muted-foreground/80 text-xs">{t('kurye_telefon')}</p>
+ <p className="text-foreground text-sm">{selectedOrder.courierPhone || '-'}</p>
+ </div>
+ {selectedOrder.deliveryProof && (
+ <div className="col-span-2">
+ <p className="text-muted-foreground/80 text-xs">{t('teslimat_kaniti')}</p>
+ <p className="text-foreground text-sm">
+ {selectedOrder.deliveryProof.type === 'personal_handoff' ? '🤝 Elden Teslim' :
+ selectedOrder.deliveryProof.type === 'left_at_door' ? t('kapida_birakildi') :
+ selectedOrder.deliveryProof.type || '-'}
+ {selectedOrder.deliveryProof.distanceKm !== undefined && (
+ <span className="text-muted-foreground ml-2">({selectedOrder.deliveryProof.distanceKm.toFixed(1)} km)</span>
+ )}
+ </p>
+ </div>
+ )}
+ </div>
+ </div>
+ )}
 
-                                    {/* Timestamps */}
-                                    <div className="bg-background/50 rounded-xl p-4 mb-4">
-                                        <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('zaman_cizelgesi')}</h4>
-                                        <div className="space-y-2">
-                                            {selectedOrder.createdAt && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground text-sm">{t('siparis_olusturuldu')}</span>
-                                                    <span className="text-foreground text-sm">{selectedOrder.createdAt.toLocaleString('de-DE')}</span>
-                                                </div>
-                                            )}
-                                            {selectedOrder.statusHistory?.ready && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground text-sm">{t('hazir')}</span>
-                                                    <span className="text-foreground text-sm">{(selectedOrder.statusHistory.ready.toDate ? selectedOrder.statusHistory.ready.toDate() : new Date(selectedOrder.statusHistory.ready)).toLocaleString('de-DE')}</span>
-                                                </div>
-                                            )}
-                                            {selectedOrder.claimedAt && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground text-sm">{t('kurye_aldi')}</span>
-                                                    <span className="text-foreground text-sm">{selectedOrder.claimedAt.toLocaleString('de-DE')}</span>
-                                                </div>
-                                            )}
-                                            {selectedOrder.deliveredAt && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground text-sm">✅ Teslim Edildi</span>
-                                                    <span className="text-foreground text-sm">{selectedOrder.deliveredAt.toLocaleString('de-DE')}</span>
-                                                </div>
-                                            )}
-                                            {selectedOrder.createdAt && selectedOrder.deliveredAt && (
-                                                <div className="flex justify-between pt-2 border-t border-border/50">
-                                                    <span className="text-muted-foreground text-sm">{t('toplam_sure')}</span>
-                                                    <span className="text-amber-800 dark:text-amber-400 text-sm font-medium">
-                                                        {Math.round((selectedOrder.deliveredAt.getTime() - selectedOrder.createdAt.getTime()) / 60000)} dk
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+ {/* Timestamps */}
+ <div className="bg-background/50 rounded-xl p-4 mb-4">
+ <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('zaman_cizelgesi')}</h4>
+ <div className="space-y-2">
+ {selectedOrder.createdAt && (
+ <div className="flex justify-between">
+ <span className="text-muted-foreground text-sm">{t('siparis_olusturuldu')}</span>
+ <span className="text-foreground text-sm">{selectedOrder.createdAt.toLocaleString('de-DE')}</span>
+ </div>
+ )}
+ {selectedOrder.statusHistory?.ready && (
+ <div className="flex justify-between">
+ <span className="text-muted-foreground text-sm">{t('hazir')}</span>
+ <span className="text-foreground text-sm">{(selectedOrder.statusHistory.ready.toDate ? selectedOrder.statusHistory.ready.toDate() : new Date(selectedOrder.statusHistory.ready)).toLocaleString('de-DE')}</span>
+ </div>
+ )}
+ {selectedOrder.claimedAt && (
+ <div className="flex justify-between">
+ <span className="text-muted-foreground text-sm">{t('kurye_aldi')}</span>
+ <span className="text-foreground text-sm">{selectedOrder.claimedAt.toLocaleString('de-DE')}</span>
+ </div>
+ )}
+ {selectedOrder.deliveredAt && (
+ <div className="flex justify-between">
+ <span className="text-muted-foreground text-sm">✅ Teslim Edildi</span>
+ <span className="text-foreground text-sm">{selectedOrder.deliveredAt.toLocaleString('de-DE')}</span>
+ </div>
+ )}
+ {selectedOrder.createdAt && selectedOrder.deliveredAt && (
+ <div className="flex justify-between pt-2 border-t border-border/50">
+ <span className="text-muted-foreground text-sm">{t('toplam_sure')}</span>
+ <span className="text-amber-800 dark:text-amber-400 text-sm font-medium">
+ {Math.round((selectedOrder.deliveredAt.getTime() - selectedOrder.createdAt.getTime()) / 60000)} dk
+ </span>
+ </div>
+ )}
+ </div>
+ </div>
 
-                                    {/* Commission & Payment */}
-                                    {selectedOrder.commission && (
-                                        <div className="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4">
-                                            <h4 className="text-amber-800 dark:text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('provizyon_detayi')}</h4>
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between">
-                                                    <span className="text-foreground text-sm">{t('siparis_tutari')}</span>
-                                                    <span className="text-foreground text-sm">€{selectedOrder.commission.orderTotal.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-foreground text-sm">Oran ({selectedOrder.commission.courierType === 'click_collect' ? 'Gel-Al' : selectedOrder.commission.courierType === 'own_courier' ? t('kendi_kurye') : t('lokma_kurye')})</span>
-                                                    <span className="text-foreground text-sm">%{selectedOrder.commission.commissionRate}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-foreground text-sm">Provizyon</span>
-                                                    <span className="text-amber-800 dark:text-amber-400 text-sm font-bold">€{selectedOrder.commission.commissionAmount.toFixed(2)}</span>
-                                                </div>
-                                                {selectedOrder.commission.perOrderFee > 0 && (
-                                                    <div className="flex justify-between">
-                                                        <span className="text-foreground text-sm">{t('siparis_basi_ucret')}</span>
-                                                        <span className="text-foreground text-sm">€{selectedOrder.commission.perOrderFee.toFixed(2)}</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex justify-between pt-2 border-t border-amber-200 dark:border-amber-700/30">
-                                                    <span className="text-foreground text-sm">Net Provizyon</span>
-                                                    <span className="text-foreground text-sm">€{selectedOrder.commission.netCommission.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-foreground text-sm">KDV (%{selectedOrder.commission.vatRate})</span>
-                                                    <span className="text-foreground text-sm">€{selectedOrder.commission.vatAmount.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between pt-2 border-t border-amber-200 dark:border-amber-700/30">
-                                                    <span className="text-foreground text-sm font-bold">{t('toplam_provizyon')}</span>
-                                                    <span className="text-amber-800 dark:text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between items-center mt-2">
-                                                    <span className="text-foreground text-sm">{t('odeme')}</span>
-                                                    <span className={`px-2 py-0.5 rounded text-xs ${selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? 'bg-blue-600/30 text-blue-300' : 'bg-purple-600/30 text-purple-300'}`}>
-                                                        {selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? '💳 Kart' : '💵 Nakit'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-foreground text-sm">Tahsilat</span>
-                                                    <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColors[selectedOrder.commission.collectionStatus]}`}>
-                                                        {statusLabels[selectedOrder.commission.collectionStatus]}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+ {/* Commission & Payment */}
+ {selectedOrder.commission && (
+ <div className="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4">
+ <h4 className="text-amber-800 dark:text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('provizyon_detayi')}</h4>
+ <div className="space-y-2">
+ <div className="flex justify-between">
+ <span className="text-foreground text-sm">{t('siparis_tutari')}</span>
+ <span className="text-foreground text-sm">€{selectedOrder.commission.orderTotal.toFixed(2)}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-foreground text-sm">Oran ({selectedOrder.commission.courierType === 'click_collect' ? 'Gel-Al' : selectedOrder.commission.courierType === 'own_courier' ? t('kendi_kurye') : t('lokma_kurye')})</span>
+ <span className="text-foreground text-sm">%{selectedOrder.commission.commissionRate}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-foreground text-sm">Provizyon</span>
+ <span className="text-amber-800 dark:text-amber-400 text-sm font-bold">€{selectedOrder.commission.commissionAmount.toFixed(2)}</span>
+ </div>
+ {selectedOrder.commission.perOrderFee > 0 && (
+ <div className="flex justify-between">
+ <span className="text-foreground text-sm">{t('siparis_basi_ucret')}</span>
+ <span className="text-foreground text-sm">€{selectedOrder.commission.perOrderFee.toFixed(2)}</span>
+ </div>
+ )}
+ <div className="flex justify-between pt-2 border-t border-amber-200 dark:border-amber-700/30">
+ <span className="text-foreground text-sm">Net Provizyon</span>
+ <span className="text-foreground text-sm">€{selectedOrder.commission.netCommission.toFixed(2)}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-foreground text-sm">KDV (%{selectedOrder.commission.vatRate})</span>
+ <span className="text-foreground text-sm">€{selectedOrder.commission.vatAmount.toFixed(2)}</span>
+ </div>
+ <div className="flex justify-between pt-2 border-t border-amber-200 dark:border-amber-700/30">
+ <span className="text-foreground text-sm font-bold">{t('toplam_provizyon')}</span>
+ <span className="text-amber-800 dark:text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
+ </div>
+ <div className="flex justify-between items-center mt-2">
+ <span className="text-foreground text-sm">{t('odeme')}</span>
+ <span className={`px-2 py-0.5 rounded text-xs ${selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? 'bg-blue-600/30 text-blue-300' : 'bg-purple-600/30 text-purple-300'}`}>
+ {selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? '💳 Kart' : '💵 Nakit'}
+ </span>
+ </div>
+ <div className="flex justify-between items-center">
+ <span className="text-foreground text-sm">Tahsilat</span>
+ <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColors[selectedOrder.commission.collectionStatus]}`}>
+ {statusLabels[selectedOrder.commission.collectionStatus]}
+ </span>
+ </div>
+ </div>
+ </div>
+ )}
 
-                                    {/* Order Note */}
-                                    {selectedOrder.notes && (
-                                        <div className="bg-background/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-muted-foreground text-xs font-medium mb-2 uppercase tracking-wider">{t('siparis_notu')}</h4>
-                                            <p className="text-foreground text-sm">{selectedOrder.notes}</p>
-                                        </div>
-                                    )}
+ {/* Order Note */}
+ {selectedOrder.notes && (
+ <div className="bg-background/50 rounded-xl p-4 mb-4">
+ <h4 className="text-muted-foreground text-xs font-medium mb-2 uppercase tracking-wider">{t('siparis_notu')}</h4>
+ <p className="text-foreground text-sm">{selectedOrder.notes}</p>
+ </div>
+ )}
 
-                                    {/* Close Button */}
-                                    <button
-                                        onClick={() => setSelectedOrder(null)}
-                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors"
-                                    >
-                                        {t('kapat')}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+ {/* Close Button */}
+ <button
+ onClick={() => setSelectedOrder(null)}
+ className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors"
+ >
+ {t('kapat')}
+ </button>
+ </div>
+ )}
+ </div>
+ </div>
+ )}
+ </div>
+ </div>
+ );
 }

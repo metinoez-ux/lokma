@@ -4,11 +4,11 @@ import { useAdminBusinessId } from './useAdminBusinessId';
 import { useBusiness, type BusinessData } from './useBusiness';
 
 interface UseBusinessDataReturn {
-  businessId: string | null;
-  business: BusinessData | null;
-  loading: boolean;
-  error: string | null;
-  refresh: () => Promise<void>;
+ businessId: string | null;
+ business: BusinessData | null;
+ loading: boolean;
+ error: string | null;
+ refresh: () => Promise<void>;
 }
 
 /**
@@ -18,11 +18,11 @@ interface UseBusinessDataReturn {
  * Admin'in businessId cozumlemesi + isletme verisi tek hook'ta.
  *
  * Kullanim:
- *   const { businessId, business, loading } = useBusinessData();
+ * const { businessId, business, loading } = useBusinessData();
  */
 export function useBusinessData(): UseBusinessDataReturn {
-  const businessId = useAdminBusinessId();
-  const { business, loading, error, refresh } = useBusiness(businessId);
+ const businessId = useAdminBusinessId();
+ const { business, loading, error, refresh } = useBusiness(businessId);
 
-  return { businessId, business, loading, error, refresh };
+ return { businessId, business, loading, error, refresh };
 }

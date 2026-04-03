@@ -7,16 +7,16 @@ import { useEffect } from 'react';
  * Boylece kullanici "0" degerini elle silmek zorunda kalmaz.
  */
 export default function NumberInputAutoSelect() {
-    useEffect(() => {
-        const handler = (e: FocusEvent) => {
-            const target = e.target as HTMLInputElement;
-            if (target.tagName === 'INPUT' && target.type === 'number') {
-                target.select();
-            }
-        };
-        document.addEventListener('focusin', handler);
-        return () => document.removeEventListener('focusin', handler);
-    }, []);
+ useEffect(() => {
+ const handler = (e: FocusEvent) => {
+ const target = e.target as HTMLInputElement;
+ if (target.tagName === 'INPUT' && target.type === 'number') {
+ target.select();
+ }
+ };
+ document.addEventListener('focusin', handler);
+ return () => document.removeEventListener('focusin', handler);
+ }, []);
 
-    return null;
+ return null;
 }

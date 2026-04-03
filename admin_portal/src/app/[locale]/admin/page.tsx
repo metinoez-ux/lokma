@@ -13,44 +13,44 @@ import { useTranslations } from 'next-intl';
  * Otomatik olarak uygun sayfaya yönlendirir
  */
 export default function AdminIndexPage() {
-    const tAdminDashboard = useTranslations('AdminDashboard');
-    const router = useRouter();
+ const tAdminDashboard = useTranslations('AdminDashboard');
+ const router = useRouter();
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                // Not logged in - redirect to login with return URL
-                router.push('/login?returnUrl=/admin/dashboard');
-                return;
-            }
+ useEffect(() => {
+ const unsubscribe = onAuthStateChanged(auth, async (user) => {
+ if (!user) {
+ // Not logged in - redirect to login with return URL
+ router.push('/login?returnUrl=/admin/dashboard');
+ return;
+ }
 
-            // Check email whitelist first
-            if (isSuperAdmin(user.email)) {
-                // Super admin - go to dashboard
-                router.push('/admin/dashboard');
-                return;
-            }
+ // Check email whitelist first
+ if (isSuperAdmin(user.email)) {
+ // Super admin - go to dashboard
+ router.push('/admin/dashboard');
+ return;
+ }
 
-            // Check Firestore for admin role
-            const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-            if (adminDoc.exists() && adminDoc.data().role === 'super_admin') {
-                router.push('/admin/dashboard');
-                return;
-            }
+ // Check Firestore for admin role
+ const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+ if (adminDoc.exists() && adminDoc.data().role === 'super_admin') {
+ router.push('/admin/dashboard');
+ return;
+ }
 
-            // Not authorized - redirect to login
-            router.push('/login');
-        });
+ // Not authorized - redirect to login
+ router.push('/login');
+ });
 
-        return () => unsubscribe();
-    }, [router]);
+ return () => unsubscribe();
+ }, [router]);
 
-    return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
-            <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-500 mx-auto mb-4"></div>
-                <p className="text-muted-foreground">{tAdminDashboard('yonlendiriliyor')}</p>
-            </div>
-        </div>
-    );
+ return (
+ <div className="min-h-screen bg-background flex items-center justify-center">
+ <div className="text-center">
+ <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-500 mx-auto mb-4"></div>
+ <p className="text-muted-foreground">{tAdminDashboard('yonlendiriliyor')}</p>
+ </div>
+ </div>
+ );
 }

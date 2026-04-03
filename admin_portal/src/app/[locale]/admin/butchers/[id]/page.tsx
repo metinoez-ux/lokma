@@ -9,22 +9,22 @@ import { useTranslations } from 'next-intl';
  * All butcher detail now uses unified /admin/business/[id]
  */
 export default function ButcherDetailRedirect() {
-  
-  const t = useTranslations('AdminButchersDetail');
+ 
+ const t = useTranslations('AdminButchersDetail');
 const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
+ const params = useParams();
+ const id = params.id as string;
 
-  useEffect(() => {
-    router.replace(`/admin/business/${id}`);
-  }, [router, id]);
+ useEffect(() => {
+ router.replace(`/admin/business/${id}`);
+ }, [router, id]);
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
-        <p className="text-muted-foreground">{t('yonlendiriliyor')}</p>
-      </div>
-    </div>
-  );
+ return (
+ <div className="min-h-screen bg-background flex items-center justify-center">
+ <div className="text-center">
+ <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
+ <p className="text-muted-foreground">{t('yonlendiriliyor')}</p>
+ </div>
+ </div>
+ );
 }

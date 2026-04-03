@@ -7,373 +7,373 @@ import { useTranslations } from 'next-intl';
 
 // Asia Express Food Categories with counts
 const CATEGORIES = [
-    { id: 'tiefkuhlprodukte', name: 'Tiefkühlprodukte', slug: 'tiefkuhlprodukte', count: 954, lokmaCategory: 'Dondurulmuş Ürünler' },
-    { id: 'krauter-gewurze', name: 'Kräuter & Gewürze', slug: 'krauter-gewurze', count: 548, lokmaCategory: 'Baharatlar' },
-    { id: 'getranke', name: 'Getränke', slug: 'getranke', count: 546, lokmaCategory: 'İçecekler' },
-    { id: 'nudeln-instantprodukte', name: 'Nudeln & Instantprodukte', slug: 'nudeln-instantprodukte', count: 447, lokmaCategory: 'Makarna & Hazır Ürünler' },
-    { id: 'sussigkeiten-snacks', name: 'Süßigkeiten & Snacks', slug: 'sussigkeiten-snacks', count: 434, lokmaCategory: 'Atıştırmalıklar' },
-    { id: 'saucen', name: 'Saucen', slug: 'saucen', count: 376, lokmaCategory: 'Soslar' },
-    { id: 'konservierte-produkte', name: 'Konservierte Produkte', slug: 'konservierte-produkte', count: 190, lokmaCategory: 'Konserve Ürünler' },
-    { id: 'mehl-starke-panko', name: 'Mehl, Stärke & Panko', slug: 'mehl-starke-panko', count: 176, lokmaCategory: 'Un & Nişasta' },
-    { id: 'frische-produkte', name: 'Frische Produkte', slug: 'frische-produkte', count: 167, lokmaCategory: 'Taze Ürünler' },
-    { id: 'kosmetik-haare', name: 'Kosmetik & Haare', slug: 'kosmetik-haare', count: 154, lokmaCategory: 'Kozmetik' },
-    { id: 'getrocknete-produkte', name: 'Getrocknete Produkte', slug: 'getrocknete-produkte', count: 143, lokmaCategory: 'Kurutulmuş Ürünler' },
-    { id: 'reis', name: 'Reis', slug: 'reis', count: 140, lokmaCategory: 'Pirinç & Tahıllar' },
-    { id: 'halb-frisch', name: 'Halb Frisch', slug: 'halb-frisch', count: 118, lokmaCategory: 'Yarı Taze Ürünler' },
-    { id: 'non-food', name: 'Non-Food', slug: 'non-food', count: 67, lokmaCategory: 'Diğer' },
-    { id: 'kokosmilch-sahne-pulver', name: 'Kokosmilch, Sahne & Pulver', slug: 'kokosmilch-sahne-pulver', count: 36, lokmaCategory: 'Hindistan Cevizi Ürünleri' },
-    { id: 'ole-butter', name: 'Öle & Butter', slug: 'ole-butter', count: 23, lokmaCategory: 'Yağlar' },
-    { id: 'milch-milchpulver', name: 'Milch & Milchpulver', slug: 'milch-milchpulver', count: 21, lokmaCategory: 'Süt & Süt Ürünleri' }
+ { id: 'tiefkuhlprodukte', name: 'Tiefkühlprodukte', slug: 'tiefkuhlprodukte', count: 954, lokmaCategory: 'Dondurulmuş Ürünler' },
+ { id: 'krauter-gewurze', name: 'Kräuter & Gewürze', slug: 'krauter-gewurze', count: 548, lokmaCategory: 'Baharatlar' },
+ { id: 'getranke', name: 'Getränke', slug: 'getranke', count: 546, lokmaCategory: 'İçecekler' },
+ { id: 'nudeln-instantprodukte', name: 'Nudeln & Instantprodukte', slug: 'nudeln-instantprodukte', count: 447, lokmaCategory: 'Makarna & Hazır Ürünler' },
+ { id: 'sussigkeiten-snacks', name: 'Süßigkeiten & Snacks', slug: 'sussigkeiten-snacks', count: 434, lokmaCategory: 'Atıştırmalıklar' },
+ { id: 'saucen', name: 'Saucen', slug: 'saucen', count: 376, lokmaCategory: 'Soslar' },
+ { id: 'konservierte-produkte', name: 'Konservierte Produkte', slug: 'konservierte-produkte', count: 190, lokmaCategory: 'Konserve Ürünler' },
+ { id: 'mehl-starke-panko', name: 'Mehl, Stärke & Panko', slug: 'mehl-starke-panko', count: 176, lokmaCategory: 'Un & Nişasta' },
+ { id: 'frische-produkte', name: 'Frische Produkte', slug: 'frische-produkte', count: 167, lokmaCategory: 'Taze Ürünler' },
+ { id: 'kosmetik-haare', name: 'Kosmetik & Haare', slug: 'kosmetik-haare', count: 154, lokmaCategory: 'Kozmetik' },
+ { id: 'getrocknete-produkte', name: 'Getrocknete Produkte', slug: 'getrocknete-produkte', count: 143, lokmaCategory: 'Kurutulmuş Ürünler' },
+ { id: 'reis', name: 'Reis', slug: 'reis', count: 140, lokmaCategory: 'Pirinç & Tahıllar' },
+ { id: 'halb-frisch', name: 'Halb Frisch', slug: 'halb-frisch', count: 118, lokmaCategory: 'Yarı Taze Ürünler' },
+ { id: 'non-food', name: 'Non-Food', slug: 'non-food', count: 67, lokmaCategory: 'Diğer' },
+ { id: 'kokosmilch-sahne-pulver', name: 'Kokosmilch, Sahne & Pulver', slug: 'kokosmilch-sahne-pulver', count: 36, lokmaCategory: 'Hindistan Cevizi Ürünleri' },
+ { id: 'ole-butter', name: 'Öle & Butter', slug: 'ole-butter', count: 23, lokmaCategory: 'Yağlar' },
+ { id: 'milch-milchpulver', name: 'Milch & Milchpulver', slug: 'milch-milchpulver', count: 21, lokmaCategory: 'Süt & Süt Ürünleri' }
 ];
 
 const BASE_URL = 'https://order.asiaexpressfood.nl/de/assortiment';
 const PRODUCTS_PER_PAGE = 48;
 
 interface ScrapedProduct {
-    name: string;
-    brand: string | null;
-    content: string | null;
-    articleNumber: string | null;
-    imageUrl: string | null;
-    url: string | null;
-    category: string;
-    lokmaCategory: string;
+ name: string;
+ brand: string | null;
+ content: string | null;
+ articleNumber: string | null;
+ imageUrl: string | null;
+ url: string | null;
+ category: string;
+ lokmaCategory: string;
 }
 
 interface ImportStats {
-    total: number;
-    imported: number;
-    skipped: number;
-    errors: number;
+ total: number;
+ imported: number;
+ skipped: number;
+ errors: number;
 }
 
 export default function AsiaExpressImportPage() {
 
-    const t = useTranslations('AdminImportsAsiaExpress');
-    const [selectedCategories, setSelectedCategories] = useState<string[]>(CATEGORIES.map(c => c.id));
-    const [isImporting, setIsImporting] = useState(false);
-    const [isScraping, setIsScraping] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [currentCategory, setCurrentCategory] = useState('');
-    const [scrapedProducts, setScrapedProducts] = useState<ScrapedProduct[]>([]);
-    const [stats, setStats] = useState<ImportStats>({ total: 0, imported: 0, skipped: 0, errors: 0 });
-    const [logs, setLogs] = useState<{ type: 'info' | 'success' | 'error' | 'warning'; message: string }[]>([]);
-    const [scrapingInstructions, setScrapingInstructions] = useState(false);
+ const t = useTranslations('AdminImportsAsiaExpress');
+ const [selectedCategories, setSelectedCategories] = useState<string[]>(CATEGORIES.map(c => c.id));
+ const [isImporting, setIsImporting] = useState(false);
+ const [isScraping, setIsScraping] = useState(false);
+ const [progress, setProgress] = useState(0);
+ const [currentCategory, setCurrentCategory] = useState('');
+ const [scrapedProducts, setScrapedProducts] = useState<ScrapedProduct[]>([]);
+ const [stats, setStats] = useState<ImportStats>({ total: 0, imported: 0, skipped: 0, errors: 0 });
+ const [logs, setLogs] = useState<{ type: 'info' | 'success' | 'error' | 'warning'; message: string }[]>([]);
+ const [scrapingInstructions, setScrapingInstructions] = useState(false);
 
-    const addLog = useCallback((type: 'info' | 'success' | 'error' | 'warning', message: string) => {
-        setLogs(prev => [...prev.slice(-100), { type, message }]);
-    }, []);
+ const addLog = useCallback((type: 'info' | 'success' | 'error' | 'warning', message: string) => {
+ setLogs(prev => [...prev.slice(-100), { type, message }]);
+ }, []);
 
-    const getTotalSelected = () => {
-        return CATEGORIES.filter(c => selectedCategories.includes(c.id)).reduce((sum, c) => sum + c.count, 0);
-    };
+ const getTotalSelected = () => {
+ return CATEGORIES.filter(c => selectedCategories.includes(c.id)).reduce((sum, c) => sum + c.count, 0);
+ };
 
-    const toggleCategory = (id: string) => {
-        setSelectedCategories(prev =>
-            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
-        );
-    };
+ const toggleCategory = (id: string) => {
+ setSelectedCategories(prev =>
+ prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+ );
+ };
 
-    const selectAll = () => setSelectedCategories(CATEGORIES.map(c => c.id));
-    const selectNone = () => setSelectedCategories([]);
+ const selectAll = () => setSelectedCategories(CATEGORIES.map(c => c.id));
+ const selectNone = () => setSelectedCategories([]);
 
-    // Generate SKU from article number
-    const generateSKU = (articleNumber: string | null, index: number): string => {
-        if (articleNumber) {
-            return `AEF-${articleNumber}`;
-        }
-        return `AEF-AUTO-${index.toString().padStart(5, '0')}`;
-    };
+ // Generate SKU from article number
+ const generateSKU = (articleNumber: string | null, index: number): string => {
+ if (articleNumber) {
+ return `AEF-${articleNumber}`;
+ }
+ return `AEF-AUTO-${index.toString().padStart(5, '0')}`;
+ };
 
-    // Show scraping instructions
-    const showScrapingInstructions = () => {
-        setScrapingInstructions(true);
-    };
+ // Show scraping instructions
+ const showScrapingInstructions = () => {
+ setScrapingInstructions(true);
+ };
 
-    // Import products to Firestore
-    const importToFirestore = async () => {
-        if (scrapedProducts.length === 0) {
-            addLog('error', t('once_urunleri_scrape_etmeniz_gerekiyor'));
-            return;
-        }
+ // Import products to Firestore
+ const importToFirestore = async () => {
+ if (scrapedProducts.length === 0) {
+ addLog('error', t('once_urunleri_scrape_etmeniz_gerekiyor'));
+ return;
+ }
 
-        setIsImporting(true);
-        const newStats = { total: scrapedProducts.length, imported: 0, skipped: 0, errors: 0 };
+ setIsImporting(true);
+ const newStats = { total: scrapedProducts.length, imported: 0, skipped: 0, errors: 0 };
 
-        for (let i = 0; i < scrapedProducts.length; i++) {
-            const product = scrapedProducts[i];
-            setProgress(Math.round((i / scrapedProducts.length) * 100));
-            setCurrentCategory(`${i + 1}/${scrapedProducts.length}: ${product.name?.substring(0, 30)}...`);
+ for (let i = 0; i < scrapedProducts.length; i++) {
+ const product = scrapedProducts[i];
+ setProgress(Math.round((i / scrapedProducts.length) * 100));
+ setCurrentCategory(`${i + 1}/${scrapedProducts.length}: ${product.name?.substring(0, 30)}...`);
 
-            try {
-                // Check if product already exists
-                const sku = generateSKU(product.articleNumber, i);
-                const existingQuery = query(
-                    collection(db, 'master_products'),
-                    where('sku', '==', sku)
-                );
-                const existing = await getDocs(existingQuery);
+ try {
+ // Check if product already exists
+ const sku = generateSKU(product.articleNumber, i);
+ const existingQuery = query(
+ collection(db, 'master_products'),
+ where('sku', '==', sku)
+ );
+ const existing = await getDocs(existingQuery);
 
-                if (!existing.empty) {
-                    newStats.skipped++;
-                    addLog('warning', `⏭️ Atlandı (mevcut): ${product.name}`);
-                    continue;
-                }
+ if (!existing.empty) {
+ newStats.skipped++;
+ addLog('warning', `⏭️ Atlandı (mevcut): ${product.name}`);
+ continue;
+ }
 
-                // Create product document
-                const productDoc = {
-                    masterProductId: `aef_${product.articleNumber || `auto_${i}`}`,
-                    sku: sku,
-                    name: product.name || t('bilinmeyen_urun'),
-                    description: product.content || '',
-                    category: product.lokmaCategory,
-                    originalCategory: product.category,
-                    brand: product.brand || '',
-                    unit: t('adet'),
-                    price: 0,
-                    isActive: true,
-                    taxRate: 7,
-                    availableForDelivery: true,
-                    availableForPickup: true,
-                    imageUrl: product.imageUrl || '',
-                    sourceUrl: product.url || '',
-                    source: 'asia_express_food',
-                    visibility: 'super_admin_only',
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now()
-                };
+ // Create product document
+ const productDoc = {
+ masterProductId: `aef_${product.articleNumber || `auto_${i}`}`,
+ sku: sku,
+ name: product.name || t('bilinmeyen_urun'),
+ description: product.content || '',
+ category: product.lokmaCategory,
+ originalCategory: product.category,
+ brand: product.brand || '',
+ unit: t('adet'),
+ price: 0,
+ isActive: true,
+ taxRate: 7,
+ availableForDelivery: true,
+ availableForPickup: true,
+ imageUrl: product.imageUrl || '',
+ sourceUrl: product.url || '',
+ source: 'asia_express_food',
+ visibility: 'super_admin_only',
+ createdAt: Timestamp.now(),
+ updatedAt: Timestamp.now()
+ };
 
-                await addDoc(collection(db, 'master_products'), productDoc);
-                newStats.imported++;
-                addLog('success', `✅ Eklendi: ${product.name}`);
-            } catch (error) {
-                newStats.errors++;
-                addLog('error', `❌ Hata: ${product.name} - ${error}`);
-            }
-        }
+ await addDoc(collection(db, 'master_products'), productDoc);
+ newStats.imported++;
+ addLog('success', `✅ Eklendi: ${product.name}`);
+ } catch (error) {
+ newStats.errors++;
+ addLog('error', `❌ Hata: ${product.name} - ${error}`);
+ }
+ }
 
-        setStats(newStats);
-        setIsImporting(false);
-        setProgress(100);
-        addLog('info', `🎉 Import tamamlandı! ${newStats.imported} eklendi, ${newStats.skipped} atlandı, ${newStats.errors} hata`);
-    };
+ setStats(newStats);
+ setIsImporting(false);
+ setProgress(100);
+ addLog('info', `🎉 Import tamamlandı! ${newStats.imported} eklendi, ${newStats.skipped} atlandı, ${newStats.errors} hata`);
+ };
 
-    // Handle file upload for scraped data
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+ // Handle file upload for scraped data
+ const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+ const file = event.target.files?.[0];
+ if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target?.result as string);
-                setScrapedProducts(data);
-                addLog('success', `✅ ${data.length} ürün yüklendi`);
-            } catch (error) {
-                addLog('error', `❌ Dosya parse hatası: ${error}`);
-            }
-        };
-        reader.readAsText(file);
-    };
+ const reader = new FileReader();
+ reader.onload = (e) => {
+ try {
+ const data = JSON.parse(e.target?.result as string);
+ setScrapedProducts(data);
+ addLog('success', `✅ ${data.length} ürün yüklendi`);
+ } catch (error) {
+ addLog('error', `❌ Dosya parse hatası: ${error}`);
+ }
+ };
+ reader.readAsText(file);
+ };
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-amber-600 to-red-600 rounded-2xl p-6 mb-6 shadow-xl">
-                    <div className="flex items-center gap-4">
-                        <span className="text-4xl">🌏</span>
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">{t('asia_express_food_import')}</h1>
-                            <p className="text-amber-100">{t('asya_urunleri_master_kataloga_aktariliyo')}</p>
-                        </div>
-                    </div>
-                </div>
+ return (
+ <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+ <div className="max-w-7xl mx-auto">
+ {/* Header */}
+ <div className="bg-gradient-to-r from-amber-600 to-red-600 rounded-2xl p-6 mb-6 shadow-xl">
+ <div className="flex items-center gap-4">
+ <span className="text-4xl">🌏</span>
+ <div>
+ <h1 className="text-3xl font-bold text-foreground">{t('asia_express_food_import')}</h1>
+ <p className="text-amber-100">{t('asya_urunleri_master_kataloga_aktariliyo')}</p>
+ </div>
+ </div>
+ </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{CATEGORIES.reduce((sum, c) => sum + c.count, 0)}</div>
-                        <div className="text-sm text-foreground">{t('toplam_urun')}</div>
-                    </div>
-                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{CATEGORIES.length}</div>
-                        <div className="text-sm text-foreground">{t('kategori')}</div>
-                    </div>
-                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-green-800 dark:text-green-400">{scrapedProducts.length}</div>
-                        <div className="text-sm text-foreground">Scraped</div>
-                    </div>
-                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{stats.imported}</div>
-                        <div className="text-sm text-foreground">İmported</div>
-                    </div>
-                </div>
+ {/* Stats */}
+ <div className="grid grid-cols-4 gap-4 mb-6">
+ <div className="bg-card backdrop-blur rounded-xl p-4 text-center">
+ <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{CATEGORIES.reduce((sum, c) => sum + c.count, 0)}</div>
+ <div className="text-sm text-foreground">{t('toplam_urun')}</div>
+ </div>
+ <div className="bg-card backdrop-blur rounded-xl p-4 text-center">
+ <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{CATEGORIES.length}</div>
+ <div className="text-sm text-foreground">{t('kategori')}</div>
+ </div>
+ <div className="bg-card backdrop-blur rounded-xl p-4 text-center">
+ <div className="text-3xl font-bold text-green-800 dark:text-green-400">{scrapedProducts.length}</div>
+ <div className="text-sm text-foreground">Scraped</div>
+ </div>
+ <div className="bg-card backdrop-blur rounded-xl p-4 text-center">
+ <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{stats.imported}</div>
+ <div className="text-sm text-foreground">İmported</div>
+ </div>
+ </div>
 
-                {/* Categories */}
-                <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-6 mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-foreground">📦 Kategoriler</h2>
-                        <div className="flex gap-2">
-                            <button onClick={selectAll} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm">
-                                {t('tumunu_sec')}
-                            </button>
-                            <button onClick={selectNone} className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm">
-                                Temizle
-                            </button>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                        {CATEGORIES.map(cat => (
-                            <label key={cat.id} className="flex items-center gap-2 p-3 bg-card dark:bg-slate-800/5 rounded-lg cursor-pointer hover:bg-card dark:bg-slate-800/10">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedCategories.includes(cat.id)}
-                                    onChange={() => toggleCategory(cat.id)}
-                                    className="w-4 h-4"
-                                />
-                                <span className="text-foreground text-sm">{cat.name}</span>
-                                <span className="text-amber-800 dark:text-amber-400 text-xs ml-auto">({cat.count})</span>
-                            </label>
-                        ))}
-                    </div>
-                    <div className="mt-4 text-center text-foreground">
-                        {t('secili')} <span className="text-amber-800 dark:text-amber-400 font-bold">{getTotalSelected()}</span> {t('urun')}
-                    </div>
-                </div>
+ {/* Categories */}
+ <div className="bg-card backdrop-blur rounded-xl p-6 mb-6">
+ <div className="flex justify-between items-center mb-4">
+ <h2 className="text-xl font-bold text-foreground">📦 Kategoriler</h2>
+ <div className="flex gap-2">
+ <button onClick={selectAll} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm">
+ {t('tumunu_sec')}
+ </button>
+ <button onClick={selectNone} className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm">
+ Temizle
+ </button>
+ </div>
+ </div>
+ <div className="grid grid-cols-3 gap-3">
+ {CATEGORIES.map(cat => (
+ <label key={cat.id} className="flex items-center gap-2 p-3 bg-card rounded-lg cursor-pointer hover:bg-card ">
+ <input
+ type="checkbox"
+ checked={selectedCategories.includes(cat.id)}
+ onChange={() => toggleCategory(cat.id)}
+ className="w-4 h-4"
+ />
+ <span className="text-foreground text-sm">{cat.name}</span>
+ <span className="text-amber-800 dark:text-amber-400 text-xs ml-auto">({cat.count})</span>
+ </label>
+ ))}
+ </div>
+ <div className="mt-4 text-center text-foreground">
+ {t('secili')} <span className="text-amber-800 dark:text-amber-400 font-bold">{getTotalSelected()}</span> {t('urun')}
+ </div>
+ </div>
 
-                {/* Instructions Modal */}
-                {scrapingInstructions && (
-                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-card rounded-2xl p-6 max-w-3xl max-h-[80vh] overflow-y-auto">
-                            <h3 className="text-2xl font-bold text-foreground mb-4">{t('manuel_scraping_talimatlari')}</h3>
-                            <div className="text-foreground space-y-4">
-                                <p>{t('asia_express_food_sitesi_login_gerektird')}</p>
+ {/* Instructions Modal */}
+ {scrapingInstructions && (
+ <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+ <div className="bg-card rounded-2xl p-6 max-w-3xl max-h-[80vh] overflow-y-auto">
+ <h3 className="text-2xl font-bold text-foreground mb-4">{t('manuel_scraping_talimatlari')}</h3>
+ <div className="text-foreground space-y-4">
+ <p>{t('asia_express_food_sitesi_login_gerektird')}</p>
 
-                                <div className="bg-background p-4 rounded-lg">
-                                    <p className="text-amber-800 dark:text-amber-400 font-bold mb-2">{t('1_browser_devtools_u_acin_f12')}</p>
-                                    <p className="text-amber-800 dark:text-amber-400 font-bold mb-2">{t('2_console_a_bu_kodu_yapistirin')}</p>
-                                    <pre className="bg-black p-4 rounded text-green-800 dark:text-green-400 text-xs overflow-x-auto">
-                                        {`// Asia Express Food Scraper
+ <div className="bg-background p-4 rounded-lg">
+ <p className="text-amber-800 dark:text-amber-400 font-bold mb-2">{t('1_browser_devtools_u_acin_f12')}</p>
+ <p className="text-amber-800 dark:text-amber-400 font-bold mb-2">{t('2_console_a_bu_kodu_yapistirin')}</p>
+ <pre className="bg-black p-4 rounded text-green-800 dark:text-green-400 text-xs overflow-x-auto">
+ {`// Asia Express Food Scraper
 const products = [];
 document.querySelectorAll('.product-item').forEach((card) => {
-    products.push({
-        name: card.querySelector('.product-item-link')?.textContent?.trim(),
-        brand: card.querySelector('.product-item-brand span')?.textContent?.trim(),
-        content: card.querySelector('.product-item-unit')?.textContent?.trim(),
-        articleNumber: card.querySelector('.product-item-sku .value')?.textContent?.trim(),
-        imageUrl: card.querySelector('img.product-image-photo')?.src,
-        url: card.querySelector('a.product-item-link')?.href,
-        category: document.title.split(' - ')[0],
-        lokmaCategory: 'Diğer'
-    });
+ products.push({
+ name: card.querySelector('.product-item-link')?.textContent?.trim(),
+ brand: card.querySelector('.product-item-brand span')?.textContent?.trim(),
+ content: card.querySelector('.product-item-unit')?.textContent?.trim(),
+ articleNumber: card.querySelector('.product-item-sku .value')?.textContent?.trim(),
+ imageUrl: card.querySelector('img.product-image-photo')?.src,
+ url: card.querySelector('a.product-item-link')?.href,
+ category: document.title.split(' - ')[0],
+ lokmaCategory: 'Diğer'
+ });
 });
 console.log(JSON.stringify(products, null, 2));
 // Clipboard'a kopyala
 copy(products);
 console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
-                                    </pre>
-                                </div>
+ </pre>
+ </div>
 
-                                <p>{t('3_her_kategori_sayfasinda_bu_kodu_calist')}</p>
-                                <p>{t('4_tum_urunleri_bir_json_dosyasina_kayded')}</p>
-                                <p>{t('5_dosyayi_buraya_yukleyin')}</p>
-                            </div>
-                            <button
-                                onClick={() => setScrapingInstructions(false)}
-                                className="mt-6 w-full py-3 bg-amber-600 text-white rounded-lg font-bold"
-                            >
-                                {t('anladim')}
-                            </button>
-                        </div>
-                    </div>
-                )}
+ <p>{t('3_her_kategori_sayfasinda_bu_kodu_calist')}</p>
+ <p>{t('4_tum_urunleri_bir_json_dosyasina_kayded')}</p>
+ <p>{t('5_dosyayi_buraya_yukleyin')}</p>
+ </div>
+ <button
+ onClick={() => setScrapingInstructions(false)}
+ className="mt-6 w-full py-3 bg-amber-600 text-white rounded-lg font-bold"
+ >
+ {t('anladim')}
+ </button>
+ </div>
+ </div>
+ )}
 
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4">
-                        <h3 className="text-lg font-bold text-foreground mb-3">{t('scraped_data_yukle')}</h3>
-                        <input
-                            type="file"
-                            accept=".json"
-                            onChange={handleFileUpload}
-                            className="w-full p-2 bg-card dark:bg-slate-800/10 rounded-lg text-white"
-                        />
-                        <button
-                            onClick={showScrapingInstructions}
-                            className="mt-3 w-full py-2 bg-blue-600 text-white rounded-lg text-sm"
-                        >
-                            {t('nasil_scrape_edilir')}
-                        </button>
-                    </div>
-                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4">
-                        <h3 className="text-lg font-bold text-foreground mb-3">🚀 Firestore'a Aktar</h3>
-                        <button
-                            onClick={importToFirestore}
-                            disabled={isImporting || scrapedProducts.length === 0}
-                            className={`w-full py-3 rounded-lg font-bold ${isImporting || scrapedProducts.length === 0
-                                ? 'bg-gray-600 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700'
-                                } text-white`}
-                        >
-                            {isImporting ? '⏳ İmport ediliyor...' : `🚀 ${scrapedProducts.length} Ürünü İmport Et`}
-                        </button>
-                    </div>
-                </div>
+ {/* Actions */}
+ <div className="grid grid-cols-2 gap-4 mb-6">
+ <div className="bg-card backdrop-blur rounded-xl p-4">
+ <h3 className="text-lg font-bold text-foreground mb-3">{t('scraped_data_yukle')}</h3>
+ <input
+ type="file"
+ accept=".json"
+ onChange={handleFileUpload}
+ className="w-full p-2 bg-card rounded-lg text-white"
+ />
+ <button
+ onClick={showScrapingInstructions}
+ className="mt-3 w-full py-2 bg-blue-600 text-white rounded-lg text-sm"
+ >
+ {t('nasil_scrape_edilir')}
+ </button>
+ </div>
+ <div className="bg-card backdrop-blur rounded-xl p-4">
+ <h3 className="text-lg font-bold text-foreground mb-3">🚀 Firestore'a Aktar</h3>
+ <button
+ onClick={importToFirestore}
+ disabled={isImporting || scrapedProducts.length === 0}
+ className={`w-full py-3 rounded-lg font-bold ${isImporting || scrapedProducts.length === 0
+ ? 'bg-gray-600 cursor-not-allowed'
+ : 'bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700'
+ } text-white`}
+ >
+ {isImporting ? '⏳ İmport ediliyor...' : `🚀 ${scrapedProducts.length} Ürünü İmport Et`}
+ </button>
+ </div>
+ </div>
 
-                {/* Progress */}
-                {(isImporting || progress > 0) && (
-                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 mb-6">
-                        <div className="flex justify-between text-foreground mb-2">
-                            <span>{currentCategory}</span>
-                            <span>{progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-4">
-                            <div
-                                className="bg-gradient-to-r from-amber-500 to-red-500 h-4 rounded-full transition-all"
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                )}
+ {/* Progress */}
+ {(isImporting || progress > 0) && (
+ <div className="bg-card backdrop-blur rounded-xl p-4 mb-6">
+ <div className="flex justify-between text-foreground mb-2">
+ <span>{currentCategory}</span>
+ <span>{progress}%</span>
+ </div>
+ <div className="w-full bg-gray-700 rounded-full h-4">
+ <div
+ className="bg-gradient-to-r from-amber-500 to-red-500 h-4 rounded-full transition-all"
+ style={{ width: `${progress}%` }}
+ ></div>
+ </div>
+ </div>
+ )}
 
-                {/* Results */}
-                {(stats.imported > 0 || stats.skipped > 0 || stats.errors > 0) && (
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                        <div className="bg-green-600/20 border border-green-500 rounded-xl p-4 text-center">
-                            <div className="text-3xl font-bold text-green-800 dark:text-green-400">{stats.imported}</div>
-                            <div className="text-sm text-green-300">{t('basarili')}</div>
-                        </div>
-                        <div className="bg-yellow-600/20 border border-yellow-500 rounded-xl p-4 text-center">
-                            <div className="text-3xl font-bold text-yellow-800 dark:text-yellow-400">{stats.skipped}</div>
-                            <div className="text-sm text-yellow-300">{t('atlandi')}</div>
-                        </div>
-                        <div className="bg-red-600/20 border border-red-500 rounded-xl p-4 text-center">
-                            <div className="text-3xl font-bold text-red-800 dark:text-red-400">{stats.errors}</div>
-                            <div className="text-sm text-red-300">{t('hata')}</div>
-                        </div>
-                    </div>
-                )}
+ {/* Results */}
+ {(stats.imported > 0 || stats.skipped > 0 || stats.errors > 0) && (
+ <div className="grid grid-cols-3 gap-4 mb-6">
+ <div className="bg-green-600/20 border border-green-500 rounded-xl p-4 text-center">
+ <div className="text-3xl font-bold text-green-800 dark:text-green-400">{stats.imported}</div>
+ <div className="text-sm text-green-300">{t('basarili')}</div>
+ </div>
+ <div className="bg-yellow-600/20 border border-yellow-500 rounded-xl p-4 text-center">
+ <div className="text-3xl font-bold text-yellow-800 dark:text-yellow-400">{stats.skipped}</div>
+ <div className="text-sm text-yellow-300">{t('atlandi')}</div>
+ </div>
+ <div className="bg-red-600/20 border border-red-500 rounded-xl p-4 text-center">
+ <div className="text-3xl font-bold text-red-800 dark:text-red-400">{stats.errors}</div>
+ <div className="text-sm text-red-300">{t('hata')}</div>
+ </div>
+ </div>
+ )}
 
-                {/* Logs */}
-                {logs.length > 0 && (
-                    <div className="bg-black/50 rounded-xl p-4 max-h-96 overflow-y-auto">
-                        <h3 className="text-lg font-bold text-foreground mb-3">{t('import_log')}</h3>
-                        <div className="space-y-1 font-mono text-sm">
-                            {logs.map((log, i) => (
-                                <div key={i} className={`
-                                    ${log.type === 'success' ? 'text-green-800 dark:text-green-400' : ''}
-                                    ${log.type === 'error' ? 'text-red-800 dark:text-red-400' : ''}
-                                    ${log.type === 'warning' ? 'text-yellow-800 dark:text-yellow-400' : ''}
-                                    ${log.type === 'info' ? 'text-blue-800 dark:text-blue-400' : ''}
-                                `}>
-                                    {log.message}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+ {/* Logs */}
+ {logs.length > 0 && (
+ <div className="bg-black/50 rounded-xl p-4 max-h-96 overflow-y-auto">
+ <h3 className="text-lg font-bold text-foreground mb-3">{t('import_log')}</h3>
+ <div className="space-y-1 font-mono text-sm">
+ {logs.map((log, i) => (
+ <div key={i} className={`
+ ${log.type === 'success' ? 'text-green-800 dark:text-green-400' : ''}
+ ${log.type === 'error' ? 'text-red-800 dark:text-red-400' : ''}
+ ${log.type === 'warning' ? 'text-yellow-800 dark:text-yellow-400' : ''}
+ ${log.type === 'info' ? 'text-blue-800 dark:text-blue-400' : ''}
+ `}>
+ {log.message}
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+ </div>
+ </div>
+ );
 }
