@@ -110,7 +110,8 @@ class _KermesCardState extends State<KermesCard> {
     final Color textDark = const Color(0xFF2D3748);
     final Color primaryRose = const Color(0xFFE50914);
 
-    final String? imagePath = _getImagePath();
+    final String? _rawPath = _getImagePath();
+    final String? imagePath = (_rawPath != null && _rawPath.isNotEmpty) ? _rawPath : null;
     final bool isNetworkImage =
         imagePath != null && imagePath.startsWith('http');
 

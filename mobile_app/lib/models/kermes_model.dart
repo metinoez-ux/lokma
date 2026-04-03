@@ -231,14 +231,14 @@ class KermesMenuItem {
     return KermesMenuItem(
       name: _extractString(json['name']) ?? '',
       nameData: json['name'],
-      secondaryName: json['secondaryName'] as String?,
+      secondaryName: _extractString(json['secondaryName'], isNullable: true),
       price: (json['price'] ?? 0.0).toDouble(),
       description: _extractString(json['description'], isNullable: true),
       descriptionData: json['description'],
       detailedDescription: _extractString(json['detailedDescription'], isNullable: true),
       detailedDescriptionData: json['detailedDescription'],
-      imageUrl: json['imageUrl'] as String?,
-      imageUrls: (json['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [],
+      imageUrl: _safeStringOrNull(json['imageUrl']),
+      imageUrls: _safeImageUrls(json['imageUrls'], json['imageUrl']),
       category: _extractString(json['category'], isNullable: true),
       categoryData: json['category'],
       allergens: _parseStringList(json['allergens']),
@@ -246,7 +246,7 @@ class KermesMenuItem {
       hasPfand: json['hasPfand'] ?? false,
       isAvailable: json['isAvailable'] ?? true,
       optionGroups: _parseOptionGroups(json['optionGroups']),
-      prepZone: json['prepZone'] as String?,
+      prepZone: _safeStringOrNull(json['prepZone']),
     );
   }
 
@@ -270,6 +270,29 @@ class KermesMenuItem {
       if (data.values.isNotEmpty) return data.values.first.toString();
     }
     return isNullable ? null : '';
+  }
+
+  static String? _safeStringOrNull(dynamic data) {
+    if (data == null) return null;
+    if (data is String) return data.isNotEmpty ? data : null;
+    if (data is List) {
+      final first = data.whereType<String>().firstOrNull;
+      return (first != null && first.isNotEmpty) ? first : null;
+    }
+    return data.toString().isNotEmpty ? data.toString() : null;
+  }
+
+  static List<String> _safeImageUrls(dynamic imageUrlsData, dynamic imageUrlData) {
+    if (imageUrlsData is List && imageUrlsData.isNotEmpty) {
+      return imageUrlsData
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    // eski single-image fallback
+    final single = _safeStringOrNull(imageUrlData);
+    if (single != null) return [single];
+    return [];
   }
 
   static List<OptionGroup> _parseOptionGroups(dynamic value) {
