@@ -205,6 +205,144 @@ class KermesOrderService {
   }
 
   // ==========================================================
+  // KDS (Kitchen Display System) & POS METHODS
+  // Zone-bazli mutfak yonlendirme ve item-bazli statu yonetimi
+  // ==========================================================
+
+  /// Zone-bazli siparis stream (KDS ekraninda kullanilir)
+  /// Sadece belirli prepZone'a ait itemi olan aktif siparisleri dondurur
+  Stream<List<KermesOrder>> getOrdersByZone(String kermesId, String zone) {
+    return _ordersCollection
+        .where('kermesId', isEqualTo: kermesId)
+        .where('status', whereIn: [
+          KermesOrderStatus.pending.name,
+          KermesOrderStatus.preparing.name,
+        ])
+        .orderBy('createdAt', descending: false) // FIFO - ilk gelen ilk cikar
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => KermesOrder.fromDocument(doc))
+              .where((order) {
+                // Bu sipariste bu zone'a ait en az bir item var mi?
+                return order.items.any((item) => 
+                  item.prepZone == zone && item.itemStatus != KermesItemStatus.ready
+                );
+              })
+              .toList();
+        });
+  }
+
+  /// Tek bir item'in statusunu guncelle
+  /// KDS ekraninda "HAZIR" butonu basildiginda cagrilir
+  Future<void> updateItemStatus({
+    required String orderId,
+    required int itemIndex,
+    required KermesItemStatus newStatus,
+    String? zone,
+  }) async {
+    try {
+      final docRef = _ordersCollection.doc(orderId);
+      
+      await _firestore.runTransaction((transaction) async {
+        final doc = await transaction.get(docRef);
+        if (!doc.exists) throw Exception('Siparis bulunamadi');
+        
+        final data = doc.data() as Map<String, dynamic>;
+        final items = List<Map<String, dynamic>>.from(
+          (data['items'] as List<dynamic>).map((e) => Map<String, dynamic>.from(e as Map))
+        );
+        
+        if (itemIndex >= items.length) throw Exception('Gecersiz item index');
+        
+        // Item statusunu guncelle
+        items[itemIndex]['itemStatus'] = newStatus.name;
+        if (newStatus == KermesItemStatus.ready) {
+          items[itemIndex]['readyAt'] = Timestamp.fromDate(DateTime.now());
+          if (zone != null) items[itemIndex]['readyByZone'] = zone;
+        }
+        
+        // Tum itemlar hazir mi kontrol et
+        final allReady = items.every((item) => item['itemStatus'] == KermesItemStatus.ready.name);
+        
+        final updateData = <String, dynamic>{
+          'items': items,
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+        
+        // Tum itemlar hazir ise siparis statusunu otomatik "ready" yap
+        if (allReady) {
+          updateData['status'] = KermesOrderStatus.ready.name;
+        } else if (data['status'] == KermesOrderStatus.pending.name) {
+          // En az bir item isleme alindiysa "preparing" yap
+          updateData['status'] = KermesOrderStatus.preparing.name;
+        }
+        
+        transaction.update(docRef, updateData);
+      });
+    } catch (e) {
+      debugPrint('Item statu guncelleme hatasi: $e');
+      throw Exception('Item statusu guncellenemedi: $e');
+    }
+  }
+
+  /// Tum zone'lardaki KDS siparislerini getir (tum mutfaklar)
+  Stream<List<KermesOrder>> getKDSOrdersStream(String kermesId) {
+    return _ordersCollection
+        .where('kermesId', isEqualTo: kermesId)
+        .where('status', whereIn: [
+          KermesOrderStatus.pending.name,
+          KermesOrderStatus.preparing.name,
+        ])
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => KermesOrder.fromDocument(doc))
+            .toList());
+  }
+
+  /// POS ekrani icin aktif siparisler (garson gorunumu)
+  /// pending, preparing, ready statusundeki tum siparisler
+  Stream<List<KermesOrder>> getPOSActiveOrdersStream(String kermesId) {
+    return _ordersCollection
+        .where('kermesId', isEqualTo: kermesId)
+        .where('status', whereIn: [
+          KermesOrderStatus.pending.name,
+          KermesOrderStatus.preparing.name,
+          KermesOrderStatus.ready.name,
+        ])
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          final orders = snapshot.docs
+              .map((doc) => KermesOrder.fromDocument(doc))
+              .toList();
+          
+          // Hazir olanlar en uste
+          orders.sort((a, b) {
+            if (a.isFullyReady && !b.isFullyReady) return -1;
+            if (!a.isFullyReady && b.isFullyReady) return 1;
+            return b.createdAt.compareTo(a.createdAt);
+          });
+          
+          return orders;
+        });
+  }
+
+  /// Siparisi "teslim edildi" olarak isaretle (garson masaya goturdugunde)
+  Future<void> markAsDelivered(String orderId) async {
+    try {
+      await _ordersCollection.doc(orderId).update({
+        'status': KermesOrderStatus.delivered.name,
+        'completedAt': Timestamp.fromDate(DateTime.now()),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Teslim islemi basarisiz: $e');
+    }
+  }
+
+  // ==========================================================
   // COURIER / DELIVERY WORKFLOW
   // Extends identical functionality from OrderService
   // ==========================================================
