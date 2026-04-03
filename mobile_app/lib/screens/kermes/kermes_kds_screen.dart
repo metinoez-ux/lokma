@@ -28,7 +28,7 @@ class KermesKDSScreen extends ConsumerStatefulWidget {
 
 class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
   late String _activeZone;
-  int _previousOrderCount = 0;
+  Set<String> _previousOrderIds = {};
 
   // Renkler
   static const Color lokmaPink = Color(0xFFEA184A);
@@ -176,11 +176,12 @@ class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
 
           final orders = snapshot.data ?? [];
 
-          // Yeni siparis geldiyse haptic + ses
-          if (orders.length > _previousOrderCount && _previousOrderCount > 0) {
+          // Yeni siparis geldiyse haptic + ses (ID-bazli karsilastirma)
+          final currentIds = orders.map((o) => o.id).toSet();
+          if (_previousOrderIds.isNotEmpty && currentIds.difference(_previousOrderIds).isNotEmpty) {
             HapticFeedback.heavyImpact();
           }
-          _previousOrderCount = orders.length;
+          _previousOrderIds = currentIds;
 
           if (orders.isEmpty) {
             return Center(

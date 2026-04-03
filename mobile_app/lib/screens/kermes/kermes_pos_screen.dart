@@ -195,6 +195,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         items: orderItems,
         totalAmount: _totalCartAmount,
         paymentMethod: _paymentMethod,
+        // Kermes ortaminda nakit = aninda teslim. Kasiyer parayi alirken siparisi giriyor.
         isPaid: _paymentMethod == PaymentMethodType.cash,
         status: KermesOrderStatus.pending,
         createdAt: DateTime.now(),
@@ -254,7 +255,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           children: [
             Text('Kermes POS - ${widget.event.title}',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            Text(widget.event.title,
+            Text(widget.staffName ?? 'Kasiyer',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
           ],
         ),

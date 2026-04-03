@@ -255,6 +255,11 @@ class KermesOrderService {
         
         if (itemIndex >= items.length) throw Exception('Gecersiz item index');
         
+        // Zone dogrulama: bu item gercekten bu zone'a mi ait?
+        if (zone != null && items[itemIndex]['prepZone'] != null && items[itemIndex]['prepZone'] != zone) {
+          throw Exception('Bu item bu zone\'a ait degil');
+        }
+        
         // Item statusunu guncelle
         items[itemIndex]['itemStatus'] = newStatus.name;
         if (newStatus == KermesItemStatus.ready) {
