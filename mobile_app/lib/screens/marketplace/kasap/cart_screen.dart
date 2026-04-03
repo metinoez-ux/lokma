@@ -574,12 +574,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     setState(() => _isSubmitting = true);
 
     try {
-      showDialog(
-        context: context, 
-        barrierDismissible: false, 
-        builder: (c) => const Center(child: CircularProgressIndicator())
-      );
-
       // Get FCM token
       String? fcmToken;
       try {
@@ -657,7 +651,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       
       // Double-check userId is not empty
       if (userId.isEmpty) {
-        Navigator.pop(context); // Close loading dialog
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('cart.user_info_error'.tr())),
@@ -877,8 +870,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       }
       
       if (_paymentMethod == 'card') {
-        if (mounted) Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog (pushed on root navigator via showDialog)
-
         final paymentResult = await StripePaymentService.processPayment(
           amount: grandTotalWithDonation,
           businessId: cart.butcherId!,
@@ -904,8 +895,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           if (paymentResult.paymentIntentId != null) 'paymentIntentId': paymentResult.paymentIntentId,
           if (paymentResult.feeBreakdown != null) 'feeBreakdown': paymentResult.feeBreakdown!.toMap(),
         });
-      } else {
-        if (mounted) Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog (pushed on root navigator via showDialog)
       }
 
       // Show success dialog FIRST — cart clearing is handled ONLY after
@@ -959,8 +948,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       }
 
     } catch (e) {
-      // Try to close loading dialog — may already be dismissed for card payments
-      try { if (mounted) Navigator.of(context, rootNavigator: true).pop(); } catch (_) {}
       debugPrint('Order error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${'cart.order_error'.tr()}: $e')),

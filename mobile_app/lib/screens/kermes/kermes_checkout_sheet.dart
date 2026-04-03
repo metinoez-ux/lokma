@@ -374,10 +374,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       
       // Başarı - QR göster (kullanıcıya orderNumber göster)
       if (mounted) {
+        final rootNavContext = Navigator.of(context, rootNavigator: true).context;
         Navigator.pop(context); // Checkout sheet'i kapat
         
         showOrderQRDialog(
-          context,
+          rootNavContext,
           orderId: docId,
           orderNumber: orderNumber,
           kermesId: widget.event.id,

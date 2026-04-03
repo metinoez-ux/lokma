@@ -37,7 +37,7 @@ class KermesMenuScreen extends ConsumerStatefulWidget {
 }
 
 class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
-  String _selectedCategory = 'marketplace.category_all'.tr();
+  String _selectedCategory = '';
 
   // Scroll spy controller and keys
   final ScrollController _scrollController = ScrollController();
@@ -114,10 +114,6 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
       }
       _onMenuScroll();
     });
-
-    for (final category in _categoriesWithoutAll) {
-      _sectionKeys[category] = GlobalKey();
-    }
   }
 
   @override
@@ -614,6 +610,13 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_selectedCategory.isEmpty) {
+      _selectedCategory = 'marketplace.category_all'.tr();
+    }
+    for (final category in _categoriesWithoutAll) {
+      _sectionKeys.putIfAbsent(category, () => GlobalKey());
+    }
+
     // Watch cart state for updates
     ref.watch(kermesCartProvider);
 
