@@ -383,7 +383,14 @@ export default function KermesDetailPage() {
 
  // Dinamik kategorileri yükle
  if (data.customCategories && data.customCategories.length > 0) {
- setCategories([...DEFAULT_CATEGORIES, ...data.customCategories.filter(c => !DEFAULT_CATEGORIES.includes(c))]);
+ const localizedCustomCats = data.customCategories.map((c: any) => typeof c === "object" ? getLocalizedText(c, locale) : String(c));
+        setCategories(prev => {
+          const merged = [...prev];
+          localizedCustomCats.forEach((c: string) => {
+            if (!merged.includes(c)) merged.push(c);
+          });
+          return merged;
+        });
  }
 
  const startD = data.date?.toDate?.() || data.startDate?.toDate?.() || null;
@@ -463,7 +470,7 @@ export default function KermesDetailPage() {
  } finally {
  setLoading(false);
  }
- }, [kermesId, router]);
+ }, [kermesId, router, locale]);
 
  // Master katalog ürünlerini yükle
  const loadMasterProducts = async () => {
@@ -484,7 +491,10 @@ export default function KermesDetailPage() {
  try {
  const q = query(collection(db, 'kermes_categories'), orderBy('order'));
  const snapshot = await getDocs(q);
- const firebaseCats = snapshot.docs.map(d => d.data().name as string);
+ const firebaseCats = snapshot.docs.map(d => {
+        const name = d.data().name;
+        return typeof name === "object" ? getLocalizedText(name, locale) : String(name || "");
+      });
 
  // Default kategorileri Firebase'dekilerle birleştir
  const allCats = [...DEFAULT_CATEGORIES];
@@ -493,7 +503,11 @@ export default function KermesDetailPage() {
  allCats.push(cat);
  }
  });
- setCategories(allCats);
+ setCategories(prev => {
+        const cats = [...prev];
+        allCats.forEach(c => { if (!cats.includes(c)) cats.push(c); });
+        return cats;
+      });
 
  // Eğer Firebase'de kategori yoksa, default'ları kaydet
  if (snapshot.empty) {
@@ -618,16 +632,19 @@ export default function KermesDetailPage() {
  }
  setSearchingStaff(true);
  try {
- // Sadece role='admin' veya role='staff' olanları aramada filtreleyemeyebiliriz, client-side filtre
  const usersRef = collection(db, 'admins');
  const snapshot = await getDocs(usersRef);
  const results = snapshot.docs
  .map(doc => ({ id: doc.id, ...doc.data() } as any))
- .filter(user => 
- (user.name?.toLowerCase().includes(q.toLowerCase()) || 
- user.email?.toLowerCase().includes(q.toLowerCase())) &&
- !assignedStaff.includes(user.id)
- )
+ .filter(user => {
+ const qLower = q.toLowerCase();
+ const searchValues = [
+ user.name, user.displayName, user.firstName, user.lastName, 
+ user.email, user.phone, user.phoneNumber
+ ].filter(Boolean).map(v => String(v).toLowerCase());
+ 
+ return searchValues.some(val => val.includes(qLower)) && !assignedStaff.includes(user.id);
+ })
  .slice(0, 5); // Max 5 sonuç
  setStaffResults(results);
  } catch (error) {
@@ -650,12 +667,17 @@ export default function KermesDetailPage() {
  const snapshot = await getDocs(usersRef);
  const results = snapshot.docs
  .map(doc => ({ id: doc.id, ...doc.data() } as any))
- .filter(user => 
- (user.isDriver === true || user.role === 'driver') &&
- (user.name?.toLowerCase().includes(q.toLowerCase()) || 
- user.email?.toLowerCase().includes(q.toLowerCase())) &&
- !assignedDrivers.includes(user.id)
- )
+ .filter(user => {
+ const qLower = q.toLowerCase();
+ const searchValues = [
+ user.name, user.displayName, user.firstName, user.lastName, 
+ user.email, user.phone, user.phoneNumber
+ ].filter(Boolean).map(v => String(v).toLowerCase());
+ 
+ return (user.isDriver === true || user.role === 'driver') && 
+ searchValues.some(val => val.includes(qLower)) && 
+ !assignedDrivers.includes(user.id);
+ })
  .slice(0, 5);
  setDriverResults(results);
  } catch (error) {
@@ -1002,6 +1024,12 @@ export default function KermesDetailPage() {
 
  const data = await response.json();
  if (!response.ok) {
+ if (data.error?.includes('zaten kullanımda') || data.error?.includes('kullanımda')) {
+ throw new Error(
+ t('personel_zaten_var_uyari') || 
+ 'Bu e-posta veya telefon ile kayıtlı bir kullanıcı zaten var. Lütfen yeni kayıt oluşturmak yerine, önceki menüdeki arama kısmını kullanarak personeli bulun ve ekleyin.'
+ );
+ }
  throw new Error(data.error || t('bir_hata_olustu'));
  }
 
@@ -2818,7 +2846,7 @@ export default function KermesDetailPage() {
  <label className="text-muted-foreground text-xs block mb-1">{t('unit_label')}</label>
  <select value={editProduct.unit} onChange={(e) => setEditProduct({ ...editProduct, unit: e.target.value })}
  className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow">
- <option value={t('adet')}>{t(t('adet'))}</option>
+ <option value={t('adet')}>{t('adet')}</option>
  <option value="porsiyon">Porsiyon</option>
  <option value="bardak">Bardak</option>
  <option value="kase">Kase</option>
