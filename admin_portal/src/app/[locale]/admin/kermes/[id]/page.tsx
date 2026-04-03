@@ -383,7 +383,7 @@ export default function KermesDetailPage() {
  setKermes(data);
 
  // Dinamik kategorileri yükle
- if (data.customCategories && data.customCategories.length > 0) {
+ if (data.customCategories && Array.isArray(data.customCategories) && data.customCategories.length > 0) {
  const localizedCustomCats = data.customCategories.map((c: any) => typeof c === "object" ? getLocalizedText(c, locale) : String(c));
         setCategories(prev => {
           const merged = [...prev];
@@ -449,10 +449,10 @@ export default function KermesDetailPage() {
  selectedDonationFundId: data.selectedDonationFundId || '',
  selectedDonationFundName: data.selectedDonationFundName || '',
  });
- setEditFeatures(data.features || []);
- setEditCustomFeatures(data.customFeatures || []);
- setAssignedStaff(data.assignedStaff || []);
- setAssignedDrivers(data.assignedDrivers || []);
+ setEditFeatures(Array.isArray(data.features) ? data.features : []);
+ setEditCustomFeatures(Array.isArray(data.customFeatures) ? data.customFeatures : []);
+ setAssignedStaff(Array.isArray(data.assignedStaff) ? data.assignedStaff : []);
+ setAssignedDrivers(Array.isArray(data.assignedDrivers) ? data.assignedDrivers : []);
 
  const productsQuery = query(collection(db, 'kermes_events', kermesId, 'products'), orderBy('name'));
  const productsSnapshot = await getDocs(productsQuery);
@@ -568,7 +568,7 @@ export default function KermesDetailPage() {
  const docSnap = await getDoc(docRef);
  if (docSnap.exists()) {
  const data = docSnap.data();
- const activeFeatures = (data.features || []).filter((f: KermesFeature) => f.isActive);
+ const activeFeatures = (Array.isArray(data.features) ? data.features : []).filter((f: KermesFeature) => f.isActive);
  setEventFeatures(activeFeatures);
  }
 
@@ -821,7 +821,7 @@ export default function KermesDetailPage() {
  headerImage: editForm.headerImage || null,
  headerImageId: editForm.headerImageId || null,
  sponsor: editForm.sponsor !== 'none' ? editForm.sponsor : null,
- activeBadgeIds: editForm.activeBadgeIds || [],
+ activeBadgeIds: Array.isArray(editForm.activeBadgeIds) ? editForm.activeBadgeIds : [],
  acceptsDonations: editForm.acceptsDonations || false,
  selectedDonationFundId: editForm.selectedDonationFundId || null,
  selectedDonationFundName: editForm.selectedDonationFundName || null,
@@ -1729,7 +1729,7 @@ export default function KermesDetailPage() {
  )}
 
  {/* Features Display */}
- {kermes.features && kermes.features.length > 0 && (
+ {kermes.features && Array.isArray(kermes.features) && kermes.features.length > 0 && (
  <div className="pt-4 border-t border-border">
  <span className="text-muted-foreground/80 text-sm block mb-2">{t('ozellikler')}</span>
  <div className="flex flex-wrap gap-2">
