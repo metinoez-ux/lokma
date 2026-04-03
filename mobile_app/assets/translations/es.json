@@ -1720,8 +1720,10 @@
     "guest_benefit_1": "Teklifler ve indirimler alın",
     "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
     "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
-    "have_questions": "Sorularınız mı var?",
-    "we_are_here": "Sizin için buradayız"
+    "have_questions": "Tienes preguntas?",
+    "we_are_here": "Estamos aqui para ti",
+    "guest_description": "Inicia sesion para hacer seguimiento de tus pedidos, acumular puntos de fidelidad y obtener ofertas exclusivas.",
+    "login_register": "Iniciar sesion / Registrarse"
   },
   "reservation": {
     "title": "Reserva",

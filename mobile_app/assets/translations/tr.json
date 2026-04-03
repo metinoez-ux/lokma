@@ -1720,8 +1720,10 @@
     "guest_benefit_1": "Teklifler ve indirimler alın",
     "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
     "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
-    "have_questions": "Sorularınız mı var?",
-    "we_are_here": "Sizin için buradayız"
+    "have_questions": "Sorulariniz mi var?",
+    "we_are_here": "Sizin icin buradayiz",
+    "guest_description": "Siparislerinizi takip etmek, sadakat puanlari toplamak ve ozel firsatlardan yararlanmak icin giris yapin.",
+    "login_register": "Giris Yap / Kayit Ol"
   },
   "reservation": {
     "title": "Rezervasyon",

@@ -30,9 +30,7 @@ class _GuestProfileViewState extends ConsumerState<GuestProfileView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = Theme.of(context).colorScheme.onSurface;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
@@ -65,7 +63,7 @@ class _GuestProfileViewState extends ConsumerState<GuestProfileView> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text('🔓', style: TextStyle(fontSize: 32)),
+                        const Text('', style: TextStyle(fontSize: 32)),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -103,7 +101,7 @@ class _GuestProfileViewState extends ConsumerState<GuestProfileView> {
                       child: ElevatedButton(
                         onPressed: widget.onLoginTap,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEA5A0A), // Lieferando orange equivalent
+                          backgroundColor: const Color(0xFFEA5A0A),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -121,7 +119,7 @@ class _GuestProfileViewState extends ConsumerState<GuestProfileView> {
 
               // Du hast Fragen Box
               GestureDetector(
-                onTap: () => context.push('/help'), // Help center route
+                onTap: () => context.push('/help'),
                 child: Container(
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF3B332E) : const Color(0xFFF7F1E9),
@@ -153,7 +151,7 @@ class _GuestProfileViewState extends ConsumerState<GuestProfileView> {
                           ],
                         ),
                       ),
-                      const Text('❓', style: TextStyle(fontSize: 32)),
+                      const Text('', style: TextStyle(fontSize: 32)),
                     ],
                   ),
                 ),
@@ -189,7 +187,6 @@ class _GuestProfileViewState extends ConsumerState<GuestProfileView> {
                 'Sprache',
                 isDark,
                 onTap: () {
-                   // Or open regular language selector
                    showDialog(context: context, builder: (ctx) => const AlertDialog(content: Text('Sprache')));
                 },
               ),
@@ -214,16 +211,16 @@ class _GuestProfileViewState extends ConsumerState<GuestProfileView> {
                    await prefs.clear();
                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('App-Daten gelöscht.')));
-                      context.go('/splash'); // restart app flow logically
+                      context.go('/splash');
                    }
                 },
               ),
 
-              const SizedBox(height: 60),
+              // Extra bottom padding for glass nav bar
+              const SizedBox(height: 120),
             ],
           ),
         ),
-      ),
     );
   }
 

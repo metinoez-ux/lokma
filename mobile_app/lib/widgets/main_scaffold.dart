@@ -170,9 +170,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
         ],
       ),
       bottomNavigationBar: (isCartPage ||
-              !isBottomNavVisible ||
-              (currentPath == '/profile' &&
-                  FirebaseAuth.instance.currentUser == null))
+              !isBottomNavVisible)
           ? null
           : GlassBottomBar(
               currentIndex: selectedIndex,

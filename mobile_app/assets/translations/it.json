@@ -1720,8 +1720,10 @@
     "guest_benefit_1": "Teklifler ve indirimler alın",
     "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
     "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
-    "have_questions": "Sorularınız mı var?",
-    "we_are_here": "Sizin için buradayız"
+    "have_questions": "Hai delle domande?",
+    "we_are_here": "Siamo qui per te",
+    "guest_description": "Accedi per tracciare i tuoi ordini, raccogliere punti fedelta e ricevere offerte esclusive.",
+    "login_register": "Accedi / Registrati"
   },
   "reservation": {
     "title": "Prenotazione",

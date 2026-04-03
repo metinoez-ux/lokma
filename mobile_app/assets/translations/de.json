@@ -1730,7 +1730,9 @@
     "guest_benefit_2": "Bestelle schneller mit gespeicherten Infos",
     "guest_benefit_3": "Bestelle bequem erneut und verfolge deine Bestellung",
     "have_questions": "Du hast Fragen?",
-    "we_are_here": "Wir sind für dich da"
+    "we_are_here": "Wir sind für dich da",
+    "guest_description": "Melden Sie sich an, um Ihre Bestellungen zu verfolgen, Treuepunkte zu sammeln und exklusive Angebote zu erhalten.",
+    "login_register": "Anmelden / Registrieren"
   },
   "reservation": {
     "title": "Reservierung",
