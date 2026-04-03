@@ -14,6 +14,7 @@ import OrganizationSearchModal from '@/components/OrganizationSearchModal';
 import { useTranslations, useLocale } from 'next-intl';
 import { normalizeTimeString } from '@/utils/timeUtils';
 import { getLocalizedText } from '@/lib/utils';
+import TableManagementPanel from '@/components/TableManagementPanel';
 
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
 interface KermesFeature {
@@ -208,7 +209,7 @@ export default function KermesDetailPage() {
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
- const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel'>('bilgi');
+ const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'masalar'>('bilgi');
  const [eventFeatures, setEventFeatures] = useState<KermesFeature[]>(DEFAULT_FEATURES);
  const [availableBadges, setAvailableBadges] = useState<any[]>([]);
  const [donationFunds, setDonationFunds] = useState<{ id: string; name: string; description?: string }[]>([]);
@@ -1268,6 +1269,10 @@ export default function KermesDetailPage() {
  <button onClick={() => setActiveTab('personel')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  👥 Personel {(assignedStaff.length + assignedDrivers.length) > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{assignedStaff.length + assignedDrivers.length}</span>}
+ </button>
+ <button onClick={() => setActiveTab('masalar')}
+ className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ 🪑 Masalar
  </button>
  </div>
 
@@ -2482,6 +2487,27 @@ export default function KermesDetailPage() {
  </div>
  </div>
  )}
+
+  {/* Tab Content - Masalar */}
+  {activeTab === 'masalar' && (
+  <div className="space-y-4">
+  <div className="bg-card rounded-xl p-4 border border-amber-500/20">
+  <div className="flex items-center gap-3 mb-1">
+  <span className="w-8 h-8 rounded-lg bg-amber-600/20 flex items-center justify-center text-sm">🪑</span>
+  <div>
+  <h3 className="text-foreground font-bold">Masa Planı</h3>
+  <p className="text-xs text-muted-foreground">Bu Kermes etkinliği için masa düzenini, bölümleri ve QR kodlarını yönetin.</p>
+  </div>
+  </div>
+  </div>
+  <TableManagementPanel
+  businessId={kermesId}
+  businessName={kermes?.title || ''}
+  collectionPath="kermes_events"
+  qrBaseUrl="https://lokma.web.app/kermes"
+  />
+  </div>
+  )}
 
  {/* Tab Content - Menu */}
  {activeTab === 'menu' && (

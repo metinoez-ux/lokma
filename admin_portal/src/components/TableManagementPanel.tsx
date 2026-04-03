@@ -19,12 +19,18 @@ interface TableManagementPanelProps {
  businessId: string;
  businessName: string;
  country?: string;
+ /** Firestore koleksiyon yolu (varsayilan: "businesses") */
+ collectionPath?: string;
+ /** QR kod icin temel URL (varsayilan: "https://lokma.web.app/dinein") */
+ qrBaseUrl?: string;
 }
 
 export default function TableManagementPanel({
  businessId,
  businessName,
  country,
+ collectionPath = "businesses",
+ qrBaseUrl = "https://lokma.web.app/dinein",
 }: TableManagementPanelProps) {
  const t = useTranslations("AdminBusinessDetail");
 
@@ -47,7 +53,7 @@ export default function TableManagementPanel({
  const loadData = useCallback(async () => {
  setLoading(true);
  try {
- const bizDoc = await getDoc(doc(db, "businesses", businessId));
+ const bizDoc = await getDoc(doc(db, collectionPath, businessId));
  if (bizDoc.exists()) {
  const d = bizDoc.data();
  setTables(d.tables || []);
@@ -75,7 +81,7 @@ export default function TableManagementPanel({
  ) => {
  setSaving(true);
  try {
- await updateDoc(doc(db, "businesses", businessId), {
+ await updateDoc(doc(db, collectionPath, businessId), {
  tables: newTables,
  maxReservationTables: newMax,
  tableCapacity: newCapacity,
@@ -558,7 +564,7 @@ export default function TableManagementPanel({
  <button
  onClick={() => {
  for (const table of tables) {
- const tableQrTarget = `https://lokma.web.app/dinein/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
+ const tableQrTarget = `${qrBaseUrl}/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(tableQrTarget)}`;
  const link = document.createElement("a");
  link.href = qrUrl;
@@ -579,7 +585,7 @@ export default function TableManagementPanel({
  {/* Compact grid */}
  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
  {tables.map((table, idx) => {
- const qrData = `https://lokma.web.app/dinein/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
+ const qrData = `${qrBaseUrl}/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
  qrData
  )}`;
