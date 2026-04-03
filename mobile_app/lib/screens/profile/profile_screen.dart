@@ -18,6 +18,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../auth/login_screen.dart';
 import '../../providers/auth_provider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -207,17 +210,89 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
                           children: [
-                            Text(
-                              '${'profile.greeting'.tr()}, ${firstName.isNotEmpty ? firstName : displayName}',
-                              style: TextStyle(
-                                color:
-                                    Theme.of(context).colorScheme.onSurface,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
+                            GestureDetector(
+                              onTap: _showImagePickerBottomSheet,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.grey[800] 
+                                          : Colors.grey[200],
+                                      border: Border.all(
+                                        color: accent.withOpacity(0.3),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: _isUploadingPhoto
+                                          ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+                                          : (userData?['photoURL'] != null && userData!['photoURL'].toString().isNotEmpty)
+                                              ? Image.network(
+                                                  userData['photoURL'],
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) => Icon(
+                                                    Icons.person,
+                                                    size: 32,
+                                                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[400],
+                                                  ),
+                                                )
+                                              : Icon(
+                                                  Icons.person,
+                                                  size: 32,
+                                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[400],
+                                                ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: accent,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2C2C2E) : const Color(0xFFF5F0E8),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        size: 10,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${'profile.greeting'.tr()},',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                Text(
+                                  firstName.isNotEmpty ? firstName : displayName,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -681,6 +756,112 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text('Bir hata oluştu: $e')),
         );
+      }
+    }
+  }
+
+  void _showImagePickerBottomSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'profile.update_photo'.tr(),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.camera_alt, color: Colors.blue),
+                ),
+                title: Text('profile.camera'.tr(), style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUploadImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.photo_library, color: Colors.purple),
+                ),
+                title: Text('profile.gallery'.tr(), style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUploadImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadImage(ImageSource source) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final picker = ImagePicker();
+    try {
+      final pickedFile = await picker.pickImage(source: source, imageQuality: 70, maxWidth: 800, maxHeight: 800);
+      if (pickedFile == null) return;
+
+      setState(() {
+        _isUploadingPhoto = true;
+      });
+
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('user_profiles')
+          .child('${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      await ref.putFile(File(pickedFile.path));
+      final url = await ref.getDownloadURL();
+
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+        {'photoURL': url},
+        SetOptions(merge: true),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('profile.photo_updated'.tr())),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('profile.photo_error'.tr())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingPhoto = false;
+        });
       }
     }
   }

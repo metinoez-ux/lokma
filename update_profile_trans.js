@@ -21,7 +21,9 @@ const newProfileKeys = {
         delivery: "Teslimat",
         reservation: "Rezervasyon",
         version: "Versiyon",
-        error: "Hata"
+        error: "Hata",
+        update_photo: "Profil Fotoğrafını Güncelle",
+        photo_error: "Fotoğraf güncellenemedi."
     },
     en: {
         login_subtitle: "Log in to track your orders and enjoy special offers.",
@@ -39,7 +41,9 @@ const newProfileKeys = {
         delivery: "Delivery",
         reservation: "Reservation",
         version: "Version",
-        error: "Error"
+        error: "Error",
+        update_photo: "Update Profile Photo",
+        photo_error: "Failed to update photo."
     },
     de: {
         login_subtitle: "Melden Sie sich an, um Ihre Bestellungen zu verfolgen und Sonderangebote zu nutzen.",
@@ -57,7 +61,9 @@ const newProfileKeys = {
         delivery: "Lieferung",
         reservation: "Reservierung",
         version: "Version",
-        error: "Fehler"
+        error: "Fehler",
+        update_photo: "Profilfoto Aktualisieren",
+        photo_error: "Fehler beim Aktualisieren des Fotos."
     },
     fr: {
         login_subtitle: "Connectez-vous pour suivre vos commandes et profiter d'offres spéciales.",
@@ -75,7 +81,9 @@ const newProfileKeys = {
         delivery: "Livraison",
         reservation: "Réservation",
         version: "Version",
-        error: "Erreur"
+        error: "Erreur",
+        update_photo: "Mettre à jour la photo de profil",
+        photo_error: "Échec de la mise à jour de la photo."
     },
     it: {
         login_subtitle: "Accedi per tracciare i tuoi ordini e godere di offerte speciali.",
@@ -93,7 +101,9 @@ const newProfileKeys = {
         delivery: "Consegna",
         reservation: "Prenotazione",
         version: "Versione",
-        error: "Errore"
+        error: "Errore",
+        update_photo: "Aggiorna la foto del profilo",
+        photo_error: "Impossibile aggiornare la foto."
     },
     es: {
         login_subtitle: "Inicia sesión para rastrear tus pedidos y disfrutar de ofertas especiales.",
@@ -111,7 +121,9 @@ const newProfileKeys = {
         delivery: "Entrega",
         reservation: "Reserva",
         version: "Versión",
-        error: "Error"
+        error: "Error",
+        update_photo: "Actualizar foto de perfil",
+        photo_error: "Error al actualizar la foto."
     }
 };
 
