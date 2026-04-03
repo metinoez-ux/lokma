@@ -115,16 +115,18 @@ export default function TableManagementPanel({
  newTables: TableDef[],
  newMax: number,
  newCapacity: number,
- newSections: string[]
+ newSections: string[],
+ newDefs?: SectionDef[]
  ) => {
  setSaving(true);
  try {
+ const defsToSave = newDefs ?? sectionDefs;
  await updateDoc(doc(db, collectionPath, businessId), {
  tables: newTables,
  maxReservationTables: newMax,
  tableCapacity: newCapacity,
  tableSections: newSections,
- tableSectionsV2: sectionDefs,
+ tableSectionsV2: defsToSave,
  });
  showToast(t("kaydedildi"), "success");
  } catch (e) {
@@ -140,7 +142,8 @@ export default function TableManagementPanel({
  newTables?: TableDef[],
  newMax?: number,
  newCapacity?: number,
- newSections?: string[]
+ newSections?: string[],
+ newDefs?: SectionDef[]
  ) => {
  const t2 = newTables ?? tables;
  const m = newMax ?? maxReservationTables;
@@ -150,7 +153,7 @@ export default function TableManagementPanel({
  if (newMax !== undefined) setMaxReservationTables(m);
  if (newCapacity !== undefined) setTableCapacity(c);
  if (newSections !== undefined) setTableSections(s);
- saveData(t2, m, c, s);
+ saveData(t2, m, c, s, newDefs);
  };
 
  if (loading) {
