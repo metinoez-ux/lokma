@@ -246,7 +246,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                       text: 'Mit Google fortfahren', // Google ile devam et
                       isDark: isDark,
                       textColor: textColor,
-                      onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(isRegister: _isRegister),
+                      onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
                     ),
                     if (Platform.isIOS) ...[
                       const SizedBox(height: 16),

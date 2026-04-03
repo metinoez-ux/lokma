@@ -7,7 +7,7 @@ import 'tabs/shift_dashboard_tab.dart';
 import 'tabs/courier_tab.dart';
 import 'tabs/waiter_tables_tab.dart';
 import 'tabs/finance_wallet_tab.dart';
-import '../staff_reservations_screen.dart';
+import 'staff_reservations_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});

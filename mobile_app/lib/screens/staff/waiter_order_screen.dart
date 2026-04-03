@@ -1412,7 +1412,8 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             children: [
               const Icon(Icons.send, size: 20),
               const SizedBox(width: 8),
-                tr('staff.send_to_kitchen_count', namedArgs: {'count': _cartItemCount.toString()}) + '${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
+              Text(
+                '${tr('staff.send_to_kitchen_count', namedArgs: {'count': _cartItemCount.toString()})} ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ],
