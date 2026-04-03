@@ -236,7 +236,7 @@ export default function TableManagementPanel({
    const newSections = [...tableSections, newSectionName.trim()];
    const newDefs = [...sectionDefs, { name: newSectionName.trim(), genderRestriction: newSectionGender }];
    setSectionDefs(newDefs);
-   updateAndSave(undefined, undefined, undefined, newSections);
+   updateAndSave(undefined, undefined, undefined, newSections, newDefs);
    setNewSectionName("");
    setNewSectionGender('mixed');
    setShowSectionInput(false);
@@ -268,7 +268,7 @@ export default function TableManagementPanel({
   const newSections = [...tableSections, newSectionName.trim()];
   const newDefs = [...sectionDefs, { name: newSectionName.trim(), genderRestriction: newSectionGender }];
   setSectionDefs(newDefs);
-  updateAndSave(undefined, undefined, undefined, newSections);
+  updateAndSave(undefined, undefined, undefined, newSections, newDefs);
   setNewSectionName("");
   setNewSectionGender('mixed');
   setShowSectionInput(false);
@@ -311,7 +311,7 @@ export default function TableManagementPanel({
    const newSections = tableSections.filter((_, i) => i !== idx);
    const newDefs = sectionDefs.filter(d => d.name !== section);
    setSectionDefs(newDefs);
-   updateAndSave(undefined, undefined, undefined, newSections);
+   updateAndSave(undefined, undefined, undefined, newSections, newDefs);
    if (selectedBulkSection === section) setSelectedBulkSection(newSections[0] || "");
    }}
    className="ml-2 w-5 h-5 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition text-xs font-bold"
