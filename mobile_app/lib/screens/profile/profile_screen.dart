@@ -17,7 +17,7 @@ import '../../services/referral_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../auth/login_screen.dart';
-import 'widgets/guest_profile_view.dart';
+
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -42,24 +42,131 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     context.locale;
     final user = _auth.currentUser;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: _buildProfile(user),
-      ),
+    return SafeArea(
+      bottom: false,
+      child: _buildProfile(user),
     );
   }
 
   Widget _buildProfile(User? user) {
     final isGuest = user == null || user.isAnonymous;
 
+    if (isGuest) {
+      return _buildGuestProfile();
+    }
+
+    return _buildLoggedInProfile(user!);
+  }
+
+  // ========== GUEST PROFILE ==========
+  Widget _buildGuestProfile() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // === LOKMA LOGO HEADER ===
+          ClipPath(
+            clipper: ProfileHeaderClipper(),
+            child: Container(
+              width: double.infinity,
+              color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF5F0E8),
+            padding: const EdgeInsets.fromLTRB(32, 48, 32, 60),
+            child: Column(
+              children: [
+                // LOKMA Logo
+                Image.asset(
+                  isDark
+                      ? 'assets/images/lokma_logo_white.png'
+                      : 'assets/images/logo_lokma_red.png',
+                  height: 80,
+                ),
+                const SizedBox(height: 24),
+                // Description text
+                Text(
+                  'profile.guest_description'.tr(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Anmelden / Registrieren button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => context.push('/login'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEA184A),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(26),
+                      ),
+                    ),
+                    child: Text(
+                      'profile.login_register'.tr(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // === MEHR SECTION ===
+          _buildSectionTitle('profile.more'.tr()),
+          _buildSectionItem(Icons.help_outline, 'profile.help_center'.tr(),
+              () => context.push('/help')),
+          _buildSectionItem(Icons.article_outlined,
+              'profile.terms_and_data'.tr(), () {
+            context.push('/help');
+          }),
+          _buildSectionItem(
+              Icons.rate_review_outlined, 'profile.feedback'.tr(), () {
+            context.push('/feedback');
+          }),
+
+          const SizedBox(height: 24),
+
+          // === SPRACHE SECTION ===
+          _buildSectionTitle('profile.language'.tr()),
+          _buildLanguageSelector(context),
+
+          const SizedBox(height: 24),
+
+          // === ERSCHEINUNGSBILD SECTION ===
+          _buildSectionTitle('profile.appearance'.tr()),
+          _buildThemeSelector(),
+
+          const SizedBox(height: 32),
+
+          // === VERSION ===
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  // ========== LOGGED IN PROFILE ==========
+  Widget _buildLoggedInProfile(User user) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: isGuest 
-          ? const Stream.empty() 
-          : FirebaseFirestore.instance
-              .collection('users')
-              .doc(user!.uid)
-              .snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
       builder: (context, snapshot) {
         final userData = snapshot.data?.data() as Map<String, dynamic>?;
 
@@ -74,23 +181,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           }
         }
         if (displayName == 'profile.default_user'.tr() &&
-            user?.displayName != null &&
-            user!.displayName!.isNotEmpty) {
+            user.displayName != null &&
+            user.displayName!.isNotEmpty) {
           displayName = user.displayName!;
           firstName = displayName.split(' ').first;
         }
-
 
         return SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === YEMEKSEPETI-STYLE HEADER ===
-              Container(
-                color: Theme.of(context)
-                    .scaffoldBackgroundColor, // Pure background color
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              // === HEADER ===
+              ClipPath(
+                clipper: ProfileHeaderClipper(),
+                child: Container(
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2C2C2E) : const Color(0xFFF5F0E8),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 60),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -104,7 +211,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             Text(
                               '${'profile.greeting'.tr()}, ${firstName.isNotEmpty ? firstName : displayName}',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color:
+                                    Theme.of(context).colorScheme.onSurface,
                                 fontSize: 24,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -113,7 +221,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         // Notification bell icon
                         GestureDetector(
-                          onTap: () => context.push('/notification-history'),
+                          onTap: () =>
+                              context.push('/notification-history'),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -124,7 +233,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.notifications_outlined,
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[700], size: 22),
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[700],
+                                size: 22),
                           ),
                         ),
                       ],
@@ -132,17 +245,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 20),
 
                     // === QUICK ACCESS CHIPS ===
-                    // Check if user is staff
                     FutureBuilder<bool>(
                       future: StaffRoleService().checkStaffStatus(),
                       builder: (context, staffSnapshot) {
-
                         return Column(
                           children: [
-                            // First row: Standard chips
                             IntrinsicHeight(
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
                                 children: [
                                   _buildQuickAccessChip(
                                       Icons.receipt_long_outlined,
@@ -162,29 +273,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            // Second row: Reservations, Notifications, Personel Girisi
                             IntrinsicHeight(
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
                                 children: [
                                   _buildQuickAccessChip(
                                       Icons.table_restaurant,
                                       'profile.my_reservations'.tr(),
-                                      () => context.push('/my-reservations'),
-                                      svgAsset: 'assets/images/icon_masa_rezervasyon.svg'),
+                                      () => context
+                                          .push('/my-reservations'),
+                                      svgAsset:
+                                          'assets/images/icon_masa_rezervasyon.svg'),
                                   const SizedBox(width: 12),
                                   _buildQuickAccessChip(
-                                      Icons.notifications_active_outlined,
-                                      'profile.notification_settings'.tr(),
-                                      () =>
-                                          context.push('/notification-settings')),
+                                      Icons
+                                          .notifications_active_outlined,
+                                      'profile.notification_settings'
+                                          .tr(),
+                                      () => context.push(
+                                          '/notification-settings')),
                                   const SizedBox(width: 12),
                                   if (staffSnapshot.data == true ||
-                                      ref.watch(driverProvider).isDriver)
+                                      ref
+                                          .watch(driverProvider)
+                                          .isDriver)
                                     _buildQuickAccessChip(
                                         Icons.badge,
                                         'profile.staff_login'.tr(),
-                                        () => _handleStaffLogin(context))
+                                        () =>
+                                            _handleStaffLogin(context))
                                   else
                                     const Expanded(child: SizedBox()),
                                 ],
@@ -197,26 +315,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     // === WALLET BALANCE ===
                     Builder(
                       builder: (context) {
-                        final balance = (userData?['walletBalance'] as num?)?.toDouble() ?? 0.0;
-                        if (balance <= 0) return const SizedBox.shrink();
+                        final balance =
+                            (userData?['walletBalance'] as num?)
+                                    ?.toDouble() ??
+                                0.0;
+                        if (balance <= 0) {
+                          return const SizedBox.shrink();
+                        }
                         return Column(
                           children: [
                             const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 14, horizontal: 16),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFFFFD700), Color(0xFFFFA000)],
+                                  colors: [
+                                    Color(0xFFFFD700),
+                                    Color(0xFFFFA000)
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.account_balance_wallet, color: Colors.white, size: 22),
+                                  const Icon(
+                                      Icons.account_balance_wallet,
+                                      color: Colors.white,
+                                      size: 22),
                                   const SizedBox(width: 12),
                                   Text(
-                                    'profile.wallet_balance'.tr(namedArgs: {'amount': balance.toStringAsFixed(2)}),
+                                    'profile.wallet_balance'.tr(
+                                        namedArgs: {
+                                          'amount': balance
+                                              .toStringAsFixed(2)
+                                        }),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -230,17 +364,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         );
                       },
                     ),
-
-                    // === GUEST PROMO BOX (LIEFERANDO STYLE) ===
-                    if (isGuest) ...[
-                      const SizedBox(height: 24),
-                      _buildGuestPromoBox(context),
-                      const SizedBox(height: 16),
-                      _buildGuestHelpBox(context),
-                    ],
-
                   ],
                 ),
+              ),
               ),
 
               // === REFERRAL INVITE CARD ===
@@ -256,14 +382,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFEA184A), Color(0xFFE91E63)],
+                        colors: [
+                          Color(0xFFEA184A),
+                          Color(0xFFE91E63)
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFEA184A).withOpacity(0.3),
+                          color: const Color(0xFFEA184A)
+                              .withOpacity(0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -279,13 +409,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(
-                            child: Text('\ud83c\udf81', style: TextStyle(fontSize: 24)),
+                            child: Text('\ud83c\udf81',
+                                style: TextStyle(fontSize: 24)),
                           ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'profile.invite_friend'.tr(),
@@ -299,7 +431,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               Text(
                                 'profile.invite_reward'.tr(),
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
+                                  color:
+                                      Colors.white.withOpacity(0.85),
                                   fontSize: 12,
                                 ),
                               ),
@@ -307,7 +440,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                         Icon(Icons.share_rounded,
-                            color: Colors.white.withOpacity(0.9), size: 22),
+                            color: Colors.white.withOpacity(0.9),
+                            size: 22),
                       ],
                     ),
                   ),
@@ -316,156 +450,160 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               const SizedBox(height: 24),
 
-              // === DAHA FAZLA SECTION ===
+              // === MEHR SECTION ===
               _buildSectionTitle('profile.more'.tr()),
-              _buildSectionItem(Icons.help_outline, 'profile.help_center'.tr(),
+              _buildSectionItem(
+                  Icons.help_outline, 'profile.help_center'.tr(),
                   () => context.push('/help')),
               _buildSectionItem(Icons.article_outlined,
                   'profile.terms_and_data'.tr(), () {
                 context.push('/help');
               }),
-              _buildSectionItem(Icons.rate_review_outlined, 'profile.feedback'.tr(),
-                  () {
+              _buildSectionItem(Icons.rate_review_outlined,
+                  'profile.feedback'.tr(), () {
                 context.push('/feedback');
               }),
 
               const SizedBox(height: 24),
 
-              // === DİL / LANGUAGE SECTION ===
+              // === SPRACHE SECTION ===
               _buildSectionTitle('profile.language'.tr()),
               _buildLanguageSelector(context),
 
               const SizedBox(height: 24),
 
-              // === GÖRÜNÜM SECTION ===
+              // === ERSCHEINUNGSBILD SECTION ===
               _buildSectionTitle('profile.appearance'.tr()),
               _buildThemeSelector(),
 
               const SizedBox(height: 24),
 
               // === ACCOUNT ACTIONS ===
-              if (!isGuest)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      // Logout
-                      GestureDetector(
-                        onTap: () async {
-                          HapticFeedback.mediumImpact();
-                          await _googleSignIn.signOut();
-                          await _auth.signOut();
-                          if (context.mounted) {
-                            context.go('/login');
-                          }
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Row(
-                            children: [
-                              Icon(Icons.logout,
-                                  color: Colors.grey[600], size: 22),
-                              const SizedBox(width: 16),
-                              Text('profile.logout'.tr(),
-                                  style: TextStyle(
-                                      color: Colors.grey[800], fontSize: 15)),
-                            ],
-                          ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // Logout
+                    GestureDetector(
+                      onTap: () async {
+                        HapticFeedback.mediumImpact();
+                        await _googleSignIn.signOut();
+                        await _auth.signOut();
+                        if (context.mounted) {
+                          context.go('/login');
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout,
+                                color: Colors.grey[600], size: 22),
+                            const SizedBox(width: 16),
+                            Text('profile.logout'.tr(),
+                                style: TextStyle(
+                                    color: Colors.grey[800],
+                                    fontSize: 15)),
+                          ],
                         ),
                       ),
-
-                      // Delete Account
-                      GestureDetector(
-                        onTap: () {
-                          _showDeleteAccountDialog();
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline,
-                                  color: Colors.red[400], size: 22),
-                              const SizedBox(width: 16),
-                              Text('profile.delete_account'.tr(),
-                                  style: TextStyle(
-                                      color: Colors.grey[800], fontSize: 15)),
-                            ],
-                          ),
+                    ),
+                    // Delete Account
+                    GestureDetector(
+                      onTap: () {
+                        _showDeleteAccountDialog();
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline,
+                                color: Colors.red[400], size: 22),
+                            const SizedBox(width: 16),
+                            Text('profile.delete_account'.tr(),
+                                style: TextStyle(
+                                    color: Colors.grey[800],
+                                    fontSize: 15)),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
 
               const SizedBox(height: 24),
 
-              // === VERSION ===
-              Center(
-                child: FutureBuilder<String>(
-                  future: _getVersionString(),
-                  builder: (context, snap) => Text(
-                    snap.data ?? '${'profile.version'.tr()} ...',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w200,
-                      letterSpacing: 0.5,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // === DESIGNED & DEVELOPED BY OZSOFT ===
-              Center(
-                child: Builder(
-                  builder: (context) {
-                    final isDark = Theme.of(context).brightness == Brightness.dark;
-                    return GestureDetector(
-                      onTap: () {
-                        launchUrl(Uri.parse('https://ozsoft.net'), mode: LaunchMode.externalApplication);
-                      },
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Designed & Developed by',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w200,
-                              letterSpacing: 0.5,
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.35)
-                                  : Colors.grey[500],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          SvgPicture.asset(
-                            'assets/images/ozsoft_logo.svg',
-                            height: 20,
-                            colorFilter: ColorFilter.mode(
-                              isDark
-                                  ? Colors.white.withOpacity(0.45)
-                                  : Colors.grey.shade500,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
+              // === FOOTER ===
+              _buildFooter(),
             ],
           ),
         );
       },
+    );
+  }
+
+  // ========== FOOTER (Version + OZSOFT) ==========
+  Widget _buildFooter() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      children: [
+        Center(
+          child: FutureBuilder<String>(
+            future: _getVersionString(),
+            builder: (context, snap) => Text(
+              snap.data ?? '${'profile.version'.tr()} ...',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w200,
+                letterSpacing: 0.5,
+                color: Colors.grey[500],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              launchUrl(Uri.parse('https://ozsoft.net'),
+                  mode: LaunchMode.externalApplication);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Designed & Developed by',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w200,
+                    letterSpacing: 0.5,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.35)
+                        : Colors.grey[500],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SvgPicture.asset(
+                  'assets/images/ozsoft_logo.svg',
+                  height: 20,
+                  colorFilter: ColorFilter.mode(
+                    isDark
+                        ? Colors.white.withOpacity(0.45)
+                        : Colors.grey.shade500,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 40),
+      ],
     );
   }
 
@@ -641,7 +779,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: () => context.push('/simple-auth?register=true'),
+              onPressed: () => context.push('/login?register=true'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black87,
@@ -660,7 +798,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: () => context.push('/simple-auth'),
+              onPressed: () => context.push('/login'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
@@ -1068,4 +1206,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+}
+
+class ProfileHeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height - 40);
+    path.quadraticBezierTo(
+      size.width / 2, size.height,
+      size.width, size.height - 40,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
