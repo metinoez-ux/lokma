@@ -410,6 +410,13 @@ const { admin, loading: adminLoading } = useAdmin();
  Bagis Fonlari
  </Link>
  <Link
+ href="/admin/settings/kermes-gender-types"
+ className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
+ >
+ <span>⚤</span>
+ Bolum Tipleri
+ </Link>
+ <Link
  href="/admin/settings/kermes-stock-images"
  className="px-4 py-2.5 bg-gradient-to-r from-cyan-700 to-teal-700 hover:from-cyan-600 hover:to-teal-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-cyan-600"
  >
@@ -450,6 +457,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
  {/* Modality Filter */}
  <select
+ title="Siparis turu filtrele"
  value={selectedModality}
  onChange={(e) => setSelectedModality(e.target.value)}
  className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
@@ -463,6 +471,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
  {/* Badge Filter */}
  <select
+ title="Rozet filtrele"
  value={selectedBadge}
  onChange={(e) => setSelectedBadge(e.target.value)}
  className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
@@ -475,6 +484,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
  {/* Time Status Filter */}
  <select
+ title="Zaman durumu filtrele"
  value={timeStatusFilter}
  onChange={(e) => setTimeStatusFilter(e.target.value as 'all' | 'past' | 'active' | 'future' | 'archived')}
  className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"

@@ -17,25 +17,30 @@ interface TableDef {
 
 interface SectionDef {
  name: string;
- genderRestriction: 'women_only' | 'men_only' | 'mixed';
+ genderRestriction: string;
 }
 
-const GENDER_LABELS: Record<string, string> = {
- women_only: 'Kadin Bolumu',
- men_only: 'Erkek Bolumu',
- mixed: 'Karisik / Aile',
-};
+interface GenderTypeConfig {
+ key: string;
+ label: string;
+ icon: string;
+ color: string;
+ isDefault?: boolean;
+}
 
-const GENDER_ICONS: Record<string, string> = {
- women_only: 'K',
- men_only: 'E',
- mixed: 'A',
-};
+// Fallback - Super Admin Firestore'dan yuklenmezse kullanilir
+const FALLBACK_GENDER_TYPES: GenderTypeConfig[] = [
+ { key: 'mixed', label: 'Karisik / Aile', icon: 'A', color: 'bg-green-500/20 text-green-400 border-green-500/40', isDefault: true },
+ { key: 'women_only', label: 'Kadin Bolumu', icon: 'K', color: 'bg-pink-500/20 text-pink-400 border-pink-500/40', isDefault: true },
+ { key: 'men_only', label: 'Erkek Bolumu', icon: 'E', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40', isDefault: true },
+];
 
-const GENDER_COLORS: Record<string, string> = {
- women_only: 'bg-pink-500/20 text-pink-400 border-pink-500/40',
- men_only: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
- mixed: 'bg-green-500/20 text-green-400 border-green-500/40',
+const getGenderDisplay = (key: string, types: GenderTypeConfig[]) => {
+ const found = types.find(t => t.key === key);
+ if (found) return found;
+ // key dogrudan label olarak kullanilmis olabilir (legacy)
+ const byLabel = types.find(t => t.label === key);
+ return byLabel || { key, label: key, icon: key.charAt(0).toUpperCase(), color: 'bg-gray-500/20 text-gray-400 border-gray-500/40' };
 };
 
 interface TableManagementPanelProps {
@@ -69,7 +74,8 @@ export default function TableManagementPanel({
  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
  const [showSectionInput, setShowSectionInput] = useState(false);
  const [newSectionName, setNewSectionName] = useState("");
- const [newSectionGender, setNewSectionGender] = useState<'women_only' | 'men_only' | 'mixed'>('mixed');
+ const [newSectionGender, setNewSectionGender] = useState<string>('mixed');
+ const [genderTypes, setGenderTypes] = useState<GenderTypeConfig[]>(FALLBACK_GENDER_TYPES);
  const [showQuickSetup, setShowQuickSetup] = useState(false);
  const [quickSetupCount, setQuickSetupCount] = useState("");
 
@@ -82,29 +88,42 @@ export default function TableManagementPanel({
  const loadData = useCallback(async () => {
  setLoading(true);
  try {
- const bizDoc = await getDoc(doc(db, collectionPath, businessId));
- if (bizDoc.exists()) {
- const d = bizDoc.data();
- setTables(d.tables || []);
- setMaxReservationTables(d.maxReservationTables || 0);
- setTableCapacity(d.tableCapacity || 0);
- // V2 migration: eger tableSectionsV2 varsa onu kullan, yoksa eski tableSections'tan migrate et
- const v2 = d.tableSectionsV2 as SectionDef[] | undefined;
- if (v2 && v2.length > 0) {
-  setSectionDefs(v2);
-  setTableSections(v2.map((s: SectionDef) => s.name));
+ // Paralel yukle: isletme verisi + global gender tipleri
+ const [bizDoc, configDoc] = await Promise.all([
+  getDoc(doc(db, collectionPath, businessId)),
+  getDoc(doc(db, 'kermes_config', 'settings')),
+ ]);
+
+ // Global gender tipleri
+ if (configDoc.exists() && configDoc.data()?.gender_types) {
+  setGenderTypes(configDoc.data()!.gender_types as GenderTypeConfig[]);
+  setNewSectionGender(configDoc.data()!.gender_types[0]?.key || 'mixed');
  } else {
-  const legacy = (d.tableSections || []) as string[];
-  setTableSections(legacy);
-  setSectionDefs(legacy.map((name: string) => ({ name, genderRestriction: 'mixed' as const })));
+  setGenderTypes(FALLBACK_GENDER_TYPES);
  }
+
+ if (bizDoc.exists()) {
+  const d = bizDoc.data();
+  setTables(d.tables || []);
+  setMaxReservationTables(d.maxReservationTables || 0);
+  setTableCapacity(d.tableCapacity || 0);
+  // V2 migration: eger tableSectionsV2 varsa onu kullan, yoksa eski tableSections'tan migrate et
+  const v2 = d.tableSectionsV2 as SectionDef[] | undefined;
+  if (v2 && v2.length > 0) {
+   setSectionDefs(v2);
+   setTableSections(v2.map((s: SectionDef) => s.name));
+  } else {
+   const legacy = (d.tableSections || []) as string[];
+   setTableSections(legacy);
+   setSectionDefs(legacy.map((name: string) => ({ name, genderRestriction: 'mixed' as const })));
+  }
  }
  } catch (e) {
  console.error("Error loading table data:", e);
  } finally {
  setLoading(false);
  }
- }, [businessId]);
+ }, [businessId, collectionPath]);
 
  useEffect(() => {
  loadData();
@@ -238,7 +257,7 @@ export default function TableManagementPanel({
    setSectionDefs(newDefs);
    updateAndSave(undefined, undefined, undefined, newSections, newDefs);
    setNewSectionName("");
-   setNewSectionGender('mixed');
+   setNewSectionGender(genderTypes[0]?.key || 'mixed');
    setShowSectionInput(false);
   } else if (e.key === "Escape") {
   setNewSectionName("");
@@ -249,14 +268,14 @@ export default function TableManagementPanel({
   className="px-3 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 w-48"
   />
   <select
-  title="Bolum Tipi"
+  title="Bolum Cinsiyet Tipi"
   value={newSectionGender}
-  onChange={(e) => setNewSectionGender(e.target.value as 'women_only' | 'men_only' | 'mixed')}
+  onChange={(e) => setNewSectionGender(e.target.value)}
   className="px-2 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-amber-500"
   >
-  <option value="mixed">Karisik / Aile</option>
-  <option value="women_only">Kadin Bolumu</option>
-  <option value="men_only">Erkek Bolumu</option>
+  {genderTypes.map((gt) => (
+   <option key={gt.key} value={gt.key}>{gt.icon} {gt.label}</option>
+  ))}
   </select>
   <button
   onClick={() => {
@@ -270,7 +289,7 @@ export default function TableManagementPanel({
   setSectionDefs(newDefs);
   updateAndSave(undefined, undefined, undefined, newSections, newDefs);
   setNewSectionName("");
-  setNewSectionGender('mixed');
+  setNewSectionGender(genderTypes[0]?.key || 'mixed');
   setShowSectionInput(false);
   }}
   className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-500 text-white rounded-lg transition"
@@ -295,9 +314,10 @@ export default function TableManagementPanel({
    {tableSections.map((section, idx) => {
    const def = sectionDefs.find(d => d.name === section);
    const gr = def?.genderRestriction || 'mixed';
+   const gd = getGenderDisplay(gr, genderTypes);
    return (
-   <div key={idx} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-sm border ${GENDER_COLORS[gr] || 'bg-gray-700 border-gray-600'}`}>
-   <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center bg-black/20">{GENDER_ICONS[gr]}</span>
+   <div key={idx} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-sm border ${gd.color}`}>
+   <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center bg-black/20">{gd.icon}</span>
    <span className="text-white font-medium">{section}</span>
    <span className="text-gray-300 text-xs ml-0.5 font-normal">
    ({tables.filter((t) => t.section === section).length} {t("masa")})
