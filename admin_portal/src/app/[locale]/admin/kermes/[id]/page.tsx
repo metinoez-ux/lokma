@@ -1154,8 +1154,8 @@ export default function KermesDetailPage() {
  }
  
  const form = type === 'kermes_staff' ? newStaffForm : newDriverForm;
- if (!form.name || !form.phone || !form.gender) {
- showToast(t('isim_telefon_cinsiyet_zorunlu') || 'Isim, telefon ve cinsiyet zorunludur.', 'error');
+ if (!form.name || (!form.phone && !form.email) || !form.gender) {
+ showToast(t('isim_telefon_cinsiyet_zorunlu') || 'Isim, telefon veya e-posta ve cinsiyet zorunludur.', 'error');
  return;
  }
 
@@ -2760,7 +2760,7 @@ export default function KermesDetailPage() {
   <button
   type="button"
   onClick={() => handleCreateUser('kermes_staff')}
-  disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.gender}
+  disabled={isCreatingUser || !newStaffForm.name || (!newStaffForm.phone && !newStaffForm.email) || !newStaffForm.gender}
   className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
   >
   {isCreatingUser ? (t('olusturuluyor') || 'Olusturuluyor...') : (t('kaydet') || 'Yeni Kayit Olustur ve Ata')}
