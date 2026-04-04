@@ -242,6 +242,10 @@ export default function KermesDetailPage() {
  const { admin, loading: adminLoading } = useAdmin();
  const isSuperAdmin = admin?.adminType === 'super';
  const kermesId = params.id as string;
+ // Kermes Admin: bu kermes icin admin yetkisi olan kullanici
+ const adminUid = (admin as any)?.firebaseUid || admin?.id || '';
+ const [isKermesAdminOfThis, setIsKermesAdminOfThis] = useState(false);
+ const canManageStaff = isSuperAdmin || isKermesAdminOfThis;
 
  const [kermes, setKermes] = useState<KermesEvent | null>(null);
  const [products, setProducts] = useState<KermesProduct[]>([]);
@@ -528,6 +532,11 @@ export default function KermesDetailPage() {
  setAssignedDrivers(Array.isArray(data.assignedDrivers) ? data.assignedDrivers : []);
  setAssignedWaiters(Array.isArray(data.assignedWaiters) ? data.assignedWaiters : []);
  setKermesAdmins(Array.isArray((data as any).kermesAdmins) ? (data as any).kermesAdmins : []);
+ // Kermes Admin kontrolu: mevcut admin bu kermes'in admin listesinde mi?
+ const loadedKermesAdmins = Array.isArray((data as any).kermesAdmins) ? (data as any).kermesAdmins : [];
+ if (adminUid && loadedKermesAdmins.includes(adminUid)) {
+ setIsKermesAdminOfThis(true);
+ }
 
  // Bolum tanimlarini yukle (PrepZone hiyerarsisi)
  const rawSections = kermesDoc.data()?.tableSectionsV2;
@@ -2589,7 +2598,7 @@ export default function KermesDetailPage() {
  {isAddingStaff && (
   <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30 space-y-4">
   <h5 className="text-sm font-semibold text-foreground">
-  {isSuperAdmin ? 'Yeni Personel Ekle veya Mevcut Kullaniciyi Bul' : 'Personel Bilgileri'}
+  {canManageStaff ? 'Yeni Personel Ekle veya Mevcut Kullaniciyi Bul' : 'Personel Bilgileri'}
   </h5>
 
   {/* Telefon + Email alanlari - her ikisi icin de arama tetikler */}
@@ -2761,7 +2770,7 @@ export default function KermesDetailPage() {
  )}
 
  {/* Personel Arama - SADECE Super Admin */}
-  {isSuperAdmin && (
+  {canManageStaff && (
   <div className="relative mb-4">
   <label className="block text-xs font-medium text-muted-foreground mb-1.5">Mevcut kullanici listesinden ara (Ad, email veya telefon)</label>
   <input

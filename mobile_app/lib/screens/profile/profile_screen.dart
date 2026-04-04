@@ -544,6 +544,129 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               const SizedBox(height: 24),
 
+              // === KERMES ATAMALARI ===
+              FutureBuilder<List<KermesAssignment>>(
+                future: KermesAssignmentService.getActiveAssignedKermeses(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  final assignments = snapshot.data!;
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Kermes Gorevlerim',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ...assignments.map((a) => GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            final roleService = StaffRoleService();
+                            roleService.setOverrideWorkplace(a.id, a.title, 'kermes');
+                            context.push('/staff-hub');
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E2A2A) : const Color(0xFFE8F5F5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark ? const Color(0xFF2D4A4A) : const Color(0xFFB2DFDB),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF0E7C7C) : const Color(0xFF00897B),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(Icons.storefront, color: Colors.white, size: 20),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        a.title,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Wrap(
+                                        spacing: 6,
+                                        children: a.roles.map((r) {
+                                          Color bg;
+                                          Color fg;
+                                          String label;
+                                          switch (r) {
+                                            case 'personel':
+                                              bg = isDark ? const Color(0xFF164E63) : const Color(0xFFE0F2FE);
+                                              fg = isDark ? const Color(0xFF67E8F9) : const Color(0xFF0E7490);
+                                              label = 'Personel';
+                                              break;
+                                            case 'surucu':
+                                              bg = isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7);
+                                              fg = isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309);
+                                              label = 'Surucu';
+                                              break;
+                                            case 'garson':
+                                              bg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
+                                              fg = isDark ? const Color(0xFF6EE7B7) : const Color(0xFF065F46);
+                                              label = 'Garson';
+                                              break;
+                                            case 'kermes_admin':
+                                              bg = isDark ? const Color(0xFF3B0764) : const Color(0xFFF3E8FF);
+                                              fg = isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE);
+                                              label = 'K.Admin';
+                                              break;
+                                            default:
+                                              bg = Colors.grey;
+                                              fg = Colors.white;
+                                              label = r;
+                                          }
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: bg,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: fg)),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right, color: isDark ? Colors.grey[500] : Colors.grey[400], size: 20),
+                              ],
+                            ),
+                          ),
+                        )),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
               // === MEHR SECTION ===
               _buildSectionTitle('profile.more'.tr()),
               _buildSectionItem(
