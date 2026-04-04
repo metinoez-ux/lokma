@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
 
     try {
         const providerMap: Record<string, string[]> = {};
+        const photoUrlMap: Record<string, string> = {};
         
         // Fetch all users using pagination
         let pageToken: string | undefined = undefined;
@@ -50,13 +51,18 @@ export async function GET(request: NextRequest) {
                 if (providers.length > 0) {
                     providerMap[user.uid] = providers;
                 }
+
+                // Capture photoURL from Firebase Auth (e.g. Google profile pic)
+                if (user.photoURL) {
+                    photoUrlMap[user.uid] = user.photoURL;
+                }
             }
 
             pageToken = listUsersResult.pageToken;
             batchCount++;
         } while (pageToken && batchCount < maxBatches);
 
-        return NextResponse.json({ providerMap });
+        return NextResponse.json({ providerMap, photoUrlMap });
 
     } catch (error) {
         console.error('Fetch Auth Providers error:', error);

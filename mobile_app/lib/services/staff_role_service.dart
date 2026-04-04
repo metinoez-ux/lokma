@@ -55,7 +55,7 @@ class StaffRoleService {
     }
 
     try {
-      // Check admins collection
+      // Check admins collection first (traditional staff/business admin)
       final adminDoc = await _db.collection('admins').doc(user.uid).get();
       
       if (adminDoc.exists) {
@@ -76,6 +76,70 @@ class StaffRoleService {
         return true;
       }
       
+      // Fallback: Check if user is assigned as Kermes staff/driver/waiter
+      // Kermes staff are stored in assignedStaff/assignedDrivers/assignedWaiters arrays
+      final kermesQuery = await _db.collection('kermes_events')
+          .where('assignedStaff', arrayContains: user.uid)
+          .limit(1)
+          .get();
+
+      if (kermesQuery.docs.isNotEmpty) {
+        final kermesData = kermesQuery.docs.first.data();
+        _isStaff = true;
+        _businessId = kermesQuery.docs.first.id;
+        _businessName = kermesData['name'] ?? 'Kermes';
+        _businessType = 'kermes';
+        _staffName = user.displayName ?? 'Gonullu';
+        _role = 'kermes_staff';
+        _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
+        
+        await _registerFcmToken(user.uid);
+        debugPrint('[StaffRole] User is Kermes staff: $_staffName, kermesId: $_businessId');
+        return true;
+      }
+
+      // Also check assignedDrivers
+      final driverQuery = await _db.collection('kermes_events')
+          .where('assignedDrivers', arrayContains: user.uid)
+          .limit(1)
+          .get();
+
+      if (driverQuery.docs.isNotEmpty) {
+        final kermesData = driverQuery.docs.first.data();
+        _isStaff = true;
+        _businessId = driverQuery.docs.first.id;
+        _businessName = kermesData['name'] ?? 'Kermes';
+        _businessType = 'kermes';
+        _staffName = user.displayName ?? 'Surucu';
+        _role = 'kermes_driver';
+        _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
+        
+        await _registerFcmToken(user.uid);
+        debugPrint('[StaffRole] User is Kermes driver: $_staffName, kermesId: $_businessId');
+        return true;
+      }
+
+      // Also check assignedWaiters
+      final waiterQuery = await _db.collection('kermes_events')
+          .where('assignedWaiters', arrayContains: user.uid)
+          .limit(1)
+          .get();
+
+      if (waiterQuery.docs.isNotEmpty) {
+        final kermesData = waiterQuery.docs.first.data();
+        _isStaff = true;
+        _businessId = waiterQuery.docs.first.id;
+        _businessName = kermesData['name'] ?? 'Kermes';
+        _businessType = 'kermes';
+        _staffName = user.displayName ?? 'Garson';
+        _role = 'kermes_waiter';
+        _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
+
+        await _registerFcmToken(user.uid);
+        debugPrint('[StaffRole] User is Kermes waiter: $_staffName, kermesId: $_businessId');
+        return true;
+      }
+
       // Not a staff member
       _resetStatus();
       return false;

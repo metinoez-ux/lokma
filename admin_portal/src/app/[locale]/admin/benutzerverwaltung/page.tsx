@@ -31,6 +31,7 @@ export interface UnifiedUser {
  createdAt?: Date;
  isActive?: boolean;
  assignments?: Assignment[];
+ kermesAssignments?: string[];
 }
 
 export interface Business {
@@ -65,6 +66,8 @@ export default function BenutzerverwaltungPage() {
  const [searchQuery, setSearchQuery] = useState('');
  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
  const [showAddMenu, setShowAddMenu] = useState(false);
+ const [authProviderMap, setAuthProviderMap] = useState<Record<string, string[]>>({});
+ const [authPhotoUrlMap, setAuthPhotoUrlMap] = useState<Record<string, string>>({});
 
  // Business & Modal State
  const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -122,6 +125,11 @@ export default function BenutzerverwaltungPage() {
  useEffect(() => {
  if (!adminLoading && admin) {
  fetchData();
+  // Auth provider bilgilerini cek
+  fetch('/api/admin/auth-providers')
+   .then(r => r.json())
+   .then(d => { if (d.providerMap) setAuthProviderMap(d.providerMap); if (d.photoUrlMap) setAuthPhotoUrlMap(d.photoUrlMap); })
+   .catch(e => console.error('Auth providers fetch error:', e));
  }
  }, [adminLoading, admin]);
 
@@ -220,6 +228,7 @@ export default function BenutzerverwaltungPage() {
  kermesId: data.kermesId,
  isActive: data.isActive,
  assignments: data.assignments || [],
+ kermesAssignments: data.kermesAssignments || [],
  });
  }
  });
@@ -813,11 +822,32 @@ export default function BenutzerverwaltungPage() {
  🏪 Lokma #{user.businessId.slice(0,4)}
  </span>
  )}
- {user.kermesId && user.kermesId !== 'NONE' && (
- <span className="text-[10px] text-muted-foreground flex items-center gap-1">
- 🎪 Kermes #{user.kermesId.slice(0,4)}
+ {(user.kermesId && user.kermesId !== 'NONE') || (user.kermesAssignments && user.kermesAssignments.length > 0) ? (
+ <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-current/20">
+ Kermes Staff
  </span>
- )}
+ ) : null}
+  {/* Auth Provider Tags */}
+  {authProviderMap[user.id] && (
+  <div className="flex flex-wrap gap-1 mt-1">
+  {authProviderMap[user.id].includes('google.com') && (
+   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
+   <svg width="10" height="10" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+   Google
+   </span>
+  )}
+  {authProviderMap[user.id].includes('password') && (
+   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-gray-50 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400 border border-gray-200 dark:border-gray-500/20">
+   Email
+   </span>
+  )}
+  {authProviderMap[user.id].includes('phone') && (
+   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20">
+   SMS
+   </span>
+  )}
+  </div>
+  )}
  </div>
  </td>
 
