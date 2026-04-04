@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp, where, setDoc, documentId } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp, where, setDoc, documentId, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -162,6 +162,7 @@ interface KermesEvent {
  // Personel Atamaları
  assignedStaff?: any[];
  assignedDrivers?: any[];
+ assignedWaiters?: any[];
  // Park imkanları
  parkingLocations?: {
  street: string;
@@ -208,9 +209,19 @@ interface KermesProduct {
  barcode?: string;
  unit?: 'adet' | 'porsiyon' | 'litre' | 'kg' | 'gr' | 'bardak' | 'kase'; // Birim
  allergens?: string[]; // Alerjenler
- ingredients?: string[]; // İçerikler
- imageUrls?: string[]; // Görseller (max 3)
+ ingredients?: string[]; // Icerikler
+ imageUrls?: string[]; // Gorseller (max 3)
  prepZone?: string[];
+ // Mutfak operasyonu
+ serviceType?: 'instant' | 'prepped'; // instant=sicak/aninda, prepped=onceden hazir
+ counterAvailability?: 'all' | 'source'; // all=her tezgahta, source=sadece hazirlandigi yerde
+ // Stok takip
+ stockEnabled?: boolean;
+ initialStock?: number;
+ currentStock?: number;
+ lowStockThreshold?: number;
+ lastStockUpdateBy?: string;
+ lastStockUpdateAt?: any;
 }
 
 interface MasterProduct {
@@ -303,9 +314,10 @@ export default function KermesDetailPage() {
  const [mainMapOpen, setMainMapOpen] = useState(false); // Yeni Ana Adres icin
  const [showOrgSearchModal, setShowOrgSearchModal] = useState(false); // Dernek Sec modal
  
- // Personel & Sürücü Yönetimi
+ // Personel & Sürücü & Garson Yönetimi
  const [assignedStaff, setAssignedStaff] = useState<string[]>([]);
  const [assignedDrivers, setAssignedDrivers] = useState<string[]>([]);
+ const [assignedWaiters, setAssignedWaiters] = useState<string[]>([]);
  const [staffSearchQuery, setStaffSearchQuery] = useState('');
  const [driverSearchQuery, setDriverSearchQuery] = useState('');
  const [staffResults, setStaffResults] = useState<any[]>([]);
@@ -321,13 +333,16 @@ export default function KermesDetailPage() {
  const [kermesSectionDefs, setKermesSectionDefs] = useState<SectionDefForPZ[]>([]);
 
  // Otomatik kadro kaydetme fonksiyonu
- const saveTeamToDb = async (newStaff: string[], newDrivers: string[]) => {
+ const saveTeamToDb = async (newStaff: string[], newDrivers: string[], newWaiters?: string[]) => {
  if (!kermesId) return;
  try {
- await updateDoc(doc(db, 'kermes_events', kermesId as string), {
+ const updatePayload: any = {
  assignedStaff: newStaff,
- assignedDrivers: newDrivers
- });
+ assignedDrivers: newDrivers,
+ };
+ if (newWaiters !== undefined) updatePayload.assignedWaiters = newWaiters;
+ else updatePayload.assignedWaiters = assignedWaiters;
+ await updateDoc(doc(db, 'kermes_events', kermesId as string), updatePayload);
  showToast(t('kaydedildi') || 'Kadro güncellendi', 'success');
  } catch (error) {
  console.error('Kadro güncellenirken hata:', error);
@@ -356,7 +371,7 @@ export default function KermesDetailPage() {
  const [modalView, setModalView] = useState<'select' | 'catalog' | 'master' | 'custom'>('select');
  const [selectedCategory, setSelectedCategory] = useState('');
  const [searchQuery, setSearchQuery] = useState('');
- const [customProduct, setCustomProduct] = useState({ name: '', category: 'Ana Yemek', price: 0, prepZone: [] as string[] });
+ const [customProduct, setCustomProduct] = useState({ name: '', category: 'Ana Yemek', price: 0, prepZone: [] as string[], serviceType: 'prepped' as 'instant' | 'prepped', counterAvailability: 'all' as 'all' | 'source' });
 
  // Master katalog
  const [masterProducts, setMasterProducts] = useState<MasterProduct[]>([]);
@@ -373,6 +388,8 @@ export default function KermesDetailPage() {
  price: number;
  category: string;
  prepZone?: string[];
+ serviceType?: 'instant' | 'prepped';
+ counterAvailability?: 'all' | 'source';
  } | null>(null);
 
  // Mevcut ürün düzenleme modalı
@@ -391,10 +408,19 @@ export default function KermesDetailPage() {
  newAllergen: string;
  newIngredient: string;
  prepZone?: string[];
+ serviceType?: 'instant' | 'prepped';
+ counterAvailability?: 'all' | 'source';
  } | null>(null);
 
- // Silme onay modalı
+ // Silme onay modali
  const [deleteConfirm, setDeleteConfirm] = useState<KermesProduct | null>(null);
+
+ // Stok takip
+ const [editingStockId, setEditingStockId] = useState<string | null>(null);
+ const [editingStockValue, setEditingStockValue] = useState<string>('');
+ const [salesHistoryProduct, setSalesHistoryProduct] = useState<KermesProduct | null>(null);
+ const [salesHistoryData, setSalesHistoryData] = useState<any[]>([]);
+ const [loadingSalesHistory, setLoadingSalesHistory] = useState(false);
 
  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
  setToast({ message, type });
@@ -485,6 +511,7 @@ export default function KermesDetailPage() {
  setEditCustomFeatures(Array.isArray(data.customFeatures) ? data.customFeatures : []);
  setAssignedStaff(Array.isArray(data.assignedStaff) ? data.assignedStaff : []);
  setAssignedDrivers(Array.isArray(data.assignedDrivers) ? data.assignedDrivers : []);
+ setAssignedWaiters(Array.isArray(data.assignedWaiters) ? data.assignedWaiters : []);
 
  // Bolum tanimlarini yukle (PrepZone hiyerarsisi)
  const rawSections = kermesDoc.data()?.tableSectionsV2;
@@ -576,7 +603,7 @@ export default function KermesDetailPage() {
 
  useEffect(() => {
  const fetchTeamData = async () => {
- const allIds = [...new Set([...assignedStaff, ...assignedDrivers])];
+ const allIds = [...new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters])];
  if (allIds.length === 0) {
  setAssignedStaffDetails([]);
  setAssignedDriverDetails([]);
@@ -605,7 +632,7 @@ export default function KermesDetailPage() {
  }
  };
  fetchTeamData();
- }, [assignedStaff, assignedDrivers]);
+ }, [assignedStaff, assignedDrivers, assignedWaiters]);
 
  // Kermes özelliklerini ve Rozetleri Firestore'dan yükle
  useEffect(() => {
@@ -793,11 +820,13 @@ export default function KermesDetailPage() {
  // Remove from assignments first
  const newStaff = assignedStaff.filter(id => id !== personId);
  const newDrivers = assignedDrivers.filter(id => id !== personId);
+ const newWaiters = assignedWaiters.filter(id => id !== personId);
  setAssignedStaff(newStaff);
  setAssignedDrivers(newDrivers);
+ setAssignedWaiters(newWaiters);
  
  // First save the team to remove references in Kermes
- await saveTeamToDb(newStaff, newDrivers);
+ await saveTeamToDb(newStaff, newDrivers, newWaiters);
  
  // Delete from admins database 
  try {
@@ -881,6 +910,7 @@ export default function KermesDetailPage() {
  // Personel ve Sürücüler
  assignedStaff: assignedStaff,
  assignedDrivers: assignedDrivers,
+ assignedWaiters: assignedWaiters,
  // Sistem
  updatedAt: new Date(),
  };
@@ -984,6 +1014,8 @@ export default function KermesDetailPage() {
  masterSku: catalogItem.sku, name: catalogItem.name, description: catalogItem.description || null,
  category: editBeforeAdd.category, price: editBeforeAdd.price, isAvailable: true,
  prepZone: editBeforeAdd.prepZone || [],
+ serviceType: editBeforeAdd.serviceType || 'prepped',
+ counterAvailability: editBeforeAdd.counterAvailability || 'all',
  isCustom: false, sourceType: 'kermes_catalog', createdAt: new Date(), createdBy: admin?.id,
  };
  const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'products'), productData);
@@ -995,6 +1027,8 @@ export default function KermesDetailPage() {
  masterSku: masterItem.id, name: masterItem.name, description: undefined,
  category: editBeforeAdd.category, price: editBeforeAdd.price, isAvailable: true,
  prepZone: editBeforeAdd.prepZone || [],
+ serviceType: editBeforeAdd.serviceType || 'prepped',
+ counterAvailability: editBeforeAdd.counterAvailability || 'all',
  isCustom: false, sourceType: 'master' as const, barcode: masterItem.barcode || undefined,
  createdAt: new Date(), createdBy: admin?.id,
  };
@@ -1025,7 +1059,7 @@ export default function KermesDetailPage() {
  };
 
  // Inline Personel / Sürücü Oluşturma
- const handleCreateUser = async (type: 'kermes_staff' | 'kermes_driver') => {
+ const handleCreateUser = async (type: 'kermes_staff' | 'kermes_driver' | 'kermes_waiter') => {
  if (!kermes?.id) {
  showToast(t('isletme_bilgisi_bulunamadi') || 'İşletme bilgisi bulunamadı.', 'error');
  return;
@@ -1089,7 +1123,7 @@ export default function KermesDetailPage() {
 
  let successMsg = type === 'kermes_staff' ? 
  (t('personel_basariyla_olusturuldu') || 'Personel oluşturuldu.') : 
- (t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.');
+ (type === 'kermes_driver' ? (t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.') : (t('garson_basariyla_olusturuldu') || 'Garson oluşturuldu.'));
  
  if (data.notifications) {
  const { email, whatsapp, sms } = data.notifications;
@@ -1109,15 +1143,19 @@ export default function KermesDetailPage() {
  if (type === 'kermes_staff') {
  const newStaff = [...assignedStaff, data.uid];
  setAssignedStaff(newStaff);
- saveTeamToDb(newStaff, assignedDrivers);
+ saveTeamToDb(newStaff, assignedDrivers, assignedWaiters);
  setIsAddingStaff(false);
  setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
- } else {
+ } else if (type === 'kermes_driver') {
  const newDrivers = [...assignedDrivers, data.uid];
  setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers);
+ saveTeamToDb(assignedStaff, newDrivers, assignedWaiters);
  setIsAddingDriver(false);
  setNewDriverForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
+ } else {
+ const newWaiters = [...assignedWaiters, data.uid];
+ setAssignedWaiters(newWaiters);
+ saveTeamToDb(assignedStaff, assignedDrivers, newWaiters);
  }
  } catch (error: any) {
  console.error('Create user error:', error);
@@ -1145,6 +1183,8 @@ export default function KermesDetailPage() {
  ingredients: Array.isArray(editProduct.ingredients) ? editProduct.ingredients : [],
  imageUrls: editProduct.imageUrls || [],
  prepZone: editProduct.prepZone || [],
+ serviceType: editProduct.serviceType || 'prepped',
+ counterAvailability: editProduct.counterAvailability || 'all',
  updatedAt: new Date(),
  };
  await updateDoc(productRef, updateData);
@@ -1177,11 +1217,13 @@ export default function KermesDetailPage() {
  masterSku: sku, name: customProduct.name.trim(), category: customProduct.category,
  price: customProduct.price, isAvailable: true, isCustom: true, sourceType: 'custom',
  prepZone: customProduct.prepZone || [],
+ serviceType: customProduct.serviceType || 'prepped',
+ counterAvailability: customProduct.counterAvailability || 'all',
  createdAt: new Date(), createdBy: admin?.id,
  };
  const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'products'), productData);
  setProducts([...products, { id: docRef.id, ...productData } as KermesProduct]);
- setCustomProduct({ name: '', category: 'Ana Yemek', price: 0, prepZone: [] });
+ setCustomProduct({ name: '', category: 'Ana Yemek', price: 0, prepZone: [], serviceType: 'prepped', counterAvailability: 'all' });
  setShowAddModal(false);
  showToast(`✅ "${customProduct.name}" oluşturuldu`);
  } catch (error) {
@@ -1200,7 +1242,157 @@ export default function KermesDetailPage() {
  }
  };
 
- // Silme butonuna basınca modal aç
+ // Stok: Hizli artir/azalt
+ const handleStockAdjust = async (product: KermesProduct, delta: number) => {
+ const newStock = Math.max(0, (product.currentStock || 0) + delta);
+ const updatePayload: Record<string, any> = {
+ currentStock: newStock,
+ lastStockUpdateAt: new Date(),
+ lastStockUpdateBy: admin?.id || 'admin',
+ };
+ if (newStock <= 0) {
+ updatePayload.isAvailable = false;
+ } else if (!product.isAvailable && newStock > 0) {
+ updatePayload.isAvailable = true;
+ }
+ try {
+ await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), updatePayload);
+ setProducts(products.map(p => p.id === product.id ? { ...p, currentStock: newStock, isAvailable: newStock > 0 ? (product.isAvailable || newStock > 0) : false, ...updatePayload } : p));
+ } catch (error) {
+ showToast(t('hata'), 'error');
+ }
+ };
+
+ // Stok: Direkt sayi girisi
+ const handleStockSet = async (product: KermesProduct, value: number) => {
+ const newStock = Math.max(0, value);
+ const updatePayload: Record<string, any> = {
+ currentStock: newStock,
+ lastStockUpdateAt: new Date(),
+ lastStockUpdateBy: admin?.id || 'admin',
+ };
+ if (newStock <= 0) updatePayload.isAvailable = false;
+ try {
+ await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), updatePayload);
+ setProducts(products.map(p => p.id === product.id ? { ...p, ...updatePayload } : p));
+ setEditingStockId(null);
+ } catch (error) {
+ showToast(t('hata'), 'error');
+ }
+ };
+
+ // Stok: Tukendi (sifirla)
+ const handleMarkSoldOut = async (product: KermesProduct) => {
+ try {
+ await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), {
+ currentStock: 0, isAvailable: false,
+ lastStockUpdateAt: new Date(), lastStockUpdateBy: admin?.id || 'admin',
+ });
+ setProducts(products.map(p => p.id === product.id ? { ...p, currentStock: 0, isAvailable: false } : p));
+ showToast(`${product.name}: Tukendi olarak isaretlendi`);
+ } catch (error) {
+ showToast(t('hata'), 'error');
+ }
+ };
+
+ // Stok: Toggle stockEnabled
+ const handleToggleStockEnabled = async (product: KermesProduct) => {
+ const newEnabled = !product.stockEnabled;
+ const updatePayload: Record<string, any> = { stockEnabled: newEnabled };
+ if (newEnabled && !product.initialStock) {
+ updatePayload.initialStock = 0;
+ updatePayload.currentStock = 0;
+ updatePayload.lowStockThreshold = 5;
+ }
+ try {
+ await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), updatePayload);
+ setProducts(products.map(p => p.id === product.id ? { ...p, ...updatePayload, stockEnabled: newEnabled } : p));
+ } catch (error) {
+ showToast(t('hata'), 'error');
+ }
+ };
+
+ // Stok: Baslangic stok ayarla
+ const handleSetInitialStock = async (product: KermesProduct, value: number) => {
+ try {
+ await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), {
+ initialStock: value, currentStock: value, stockEnabled: true,
+ lowStockThreshold: product.lowStockThreshold || 5,
+ lastStockUpdateAt: new Date(), lastStockUpdateBy: admin?.id || 'admin',
+ });
+ setProducts(products.map(p => p.id === product.id ? { ...p, initialStock: value, currentStock: value, stockEnabled: true } : p));
+ showToast(`${product.name}: Baslangic stok ${value} olarak ayarlandi`);
+ } catch (error) {
+ showToast(t('hata'), 'error');
+ }
+ };
+
+ // Stok: Gun basla - tum urunleri initialStock'a resetle
+ const handleDayStart = async () => {
+ const stockProducts = products.filter(p => p.stockEnabled && p.initialStock && p.initialStock > 0);
+ if (stockProducts.length === 0) {
+ showToast('Stok takibi aktif urun yok');
+ return;
+ }
+ try {
+ const promises = stockProducts.map(p =>
+ updateDoc(doc(db, 'kermes_events', kermesId, 'products', p.id), {
+ currentStock: p.initialStock, isAvailable: true,
+ lastStockUpdateAt: new Date(), lastStockUpdateBy: admin?.id || 'admin',
+ })
+ );
+ await Promise.all(promises);
+ setProducts(products.map(p => {
+ if (p.stockEnabled && p.initialStock && p.initialStock > 0) {
+ return { ...p, currentStock: p.initialStock, isAvailable: true };
+ }
+ return p;
+ }));
+ showToast(`${stockProducts.length} urunun stogu sifirlandi (Gun Basla)`);
+ } catch (error) {
+ showToast(t('hata'), 'error');
+ }
+ };
+
+ // Satis gecmisi yukle
+ const handleLoadSalesHistory = async (product: KermesProduct) => {
+ setSalesHistoryProduct(product);
+ setLoadingSalesHistory(true);
+ setSalesHistoryData([]);
+ try {
+ // Root-level koleksiyondan tum kermesler boyunca bu urunun satislarini cek
+ const salesQuery = await getDocs(
+ query(
+ collection(db, 'kermes_product_sales'),
+ where('productName', '==', typeof product.name === 'object' ? (product.name as any).tr || Object.values(product.name)[0] : product.name),
+ orderBy('soldAt', 'desc'),
+ limit(500)
+ )
+ );
+ const sales = salesQuery.docs.map(d => ({ id: d.id, ...d.data() }));
+ setSalesHistoryData(sales);
+ } catch (error) {
+ console.error('Satis gecmisi yuklenemedi:', error);
+ // Fallback: sadece bu kermes'in satislarini cek
+ try {
+ const fallbackQuery = await getDocs(
+ query(
+ collection(db, 'kermes_events', kermesId, 'product_sales'),
+ where('productId', '==', product.id),
+ orderBy('soldAt', 'desc'),
+ limit(200)
+ )
+ );
+ setSalesHistoryData(fallbackQuery.docs.map(d => ({ id: d.id, ...d.data() })));
+ } catch (err2) {
+ console.error('Fallback satis gecmisi de yuklenemedi:', err2);
+ }
+ } finally {
+ setLoadingSalesHistory(false);
+ }
+ };
+
+ // Silme butonuna basinca modal ac
  const handleDeleteProduct = (product: KermesProduct) => {
  setDeleteConfirm(product);
  };
@@ -1321,7 +1513,7 @@ export default function KermesDetailPage() {
  </button>
  <button onClick={() => setActiveTab('personel')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 👥 Personel {new Set([...assignedStaff, ...assignedDrivers]).size > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{new Set([...assignedStaff, ...assignedDrivers]).size}</span>}
+ 👥 Personel {new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters]).size > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters]).size}</span>}
  </button>
  <button onClick={() => setActiveTab('mutfak')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
@@ -2345,20 +2537,45 @@ export default function KermesDetailPage() {
  {assignedDrivers.includes(staff.id) && (
  <span className="ml-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">Surucu</span>
  )}
+ {assignedWaiters.includes(staff.id) && (
+ <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded">Garson</span>
+ )}
  </div>
  </div>
  <div className="flex items-center gap-2">
  <button 
  type="button" 
  onClick={() => {
+ if (assignedWaiters.includes(staff.id)) {
+ const newWaiters = assignedWaiters.filter(id => id !== staff.id);
+ setAssignedWaiters(newWaiters);
+ saveTeamToDb(assignedStaff, assignedDrivers, newWaiters);
+ } else {
+ const newWaiters = [...assignedWaiters, staff.id];
+ setAssignedWaiters(newWaiters);
+ saveTeamToDb(assignedStaff, assignedDrivers, newWaiters);
+ }
+ }}
+ className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-semibold transition-colors ${
+ assignedWaiters.includes(staff.id)
+ ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+ : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600'
+ }`}
+ title={assignedWaiters.includes(staff.id) ? 'Garsonluktan Cikar' : 'Garson Olarak Ata'}
+ >
+ <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11h18M5 11V6a7 7 0 0 1 14 0v5"/><ellipse cx="12" cy="11" rx="10" ry="2"/><path d="M12 13v2"/><circle cx="12" cy="17" r="2"/></svg>
+ </button>
+ <button 
+ type="button" 
+ onClick={() => {
  if (assignedDrivers.includes(staff.id)) {
  const newDrivers = assignedDrivers.filter(id => id !== staff.id);
  setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers);
+ saveTeamToDb(assignedStaff, newDrivers, assignedWaiters);
  } else {
  const newDrivers = [...assignedDrivers, staff.id];
  setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers);
+ saveTeamToDb(assignedStaff, newDrivers, assignedWaiters);
  }
  }}
  className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-semibold transition-colors ${
@@ -2438,21 +2655,13 @@ export default function KermesDetailPage() {
    </div>
    </div>
 
-   {/* Info Banner */}
-   <div className="p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-   <p className="text-xs text-orange-700 dark:text-orange-400">
-   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1 -mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-   Masalar sekmesinde olusturdugumuz bolum ve PrepZone tanimlari burada listelenir. Yeni PrepZone eklemek icin Masalar sekmesine gidin.
-   </p>
-   </div>
-
    {kermesSectionDefs.length === 0 ? (
    <div className="text-center py-12 text-muted-foreground">
    <div className="text-4xl mb-3">
    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto opacity-40"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
    </div>
    <p className="text-sm font-medium">Henuz bolum tanimlanmamis</p>
-   <p className="text-xs mt-1">Once Masalar sekmesinden bolumleri ve hazirlik alanlarini olusturun.</p>
+   <p className="text-xs mt-1">Once Masalar sekmesinden bolumleri olusturun, sonra burada PrepZone ekleyebilirsiniz.</p>
    </div>
    ) : (
    <div className="space-y-4">
@@ -2463,12 +2672,12 @@ export default function KermesDetailPage() {
     ? 'border-pink-500/30 bg-pink-500/5'
     : section.genderRestriction === 'men_only'
     ? 'border-blue-500/30 bg-blue-500/5'
-    : 'border-green-500/30 bg-green-500/5';
+    : 'border-indigo-500/30 bg-indigo-500/5';
    const badgeColor = section.genderRestriction === 'women_only'
     ? 'bg-pink-500/20 text-pink-400'
     : section.genderRestriction === 'men_only'
     ? 'bg-blue-500/20 text-blue-400'
-    : 'bg-green-500/20 text-green-400';
+    : 'bg-indigo-500/20 text-indigo-400';
 
    return (
    <div key={section.name} className={`rounded-xl border ${genderColor} overflow-hidden`}>
@@ -2480,15 +2689,15 @@ export default function KermesDetailPage() {
     </div>
 
     {prepZones.length === 0 ? (
-    <div className="px-4 py-6 text-center text-muted-foreground">
+    <div className="px-4 py-4 text-center text-muted-foreground">
     <p className="text-sm">Bu bolumde henuz hazirlik alani yok.</p>
-    <p className="text-xs mt-1">Masalar sekmesinden PrepZone ekleyin.</p>
+    <p className="text-xs mt-1 mb-3">Asagidan yeni PrepZone ekleyebilirsiniz.</p>
     </div>
     ) : (
     <div className="p-4 space-y-3">
     {prepZones.map((zone) => {
      const assignedIds = prepZoneAssignments[zone] || [];
-     const assignedDetails = assignedIds.map(id => assignedStaffDetails.find((s: any) => s.uid === id)).filter(Boolean);
+     const assignedDetails = assignedIds.map(id => assignedStaffDetails.find((s: any) => s.id === id)).filter(Boolean);
      // Cinsiyete uygun personelleri filtrele
      const eligibleStaff = assignedStaffDetails.filter((s: any) => {
       if (section.genderRestriction === 'women_only') return s.gender === 'female';
@@ -2502,22 +2711,52 @@ export default function KermesDetailPage() {
       <div className="flex items-center gap-2">
        <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs font-bold">{zone}</span>
        <span className="text-sm text-foreground font-medium">Istasyon</span>
+       <button type="button" title="Istasyon ismini duzenle" onClick={() => {
+        const newName = prompt('Yeni istasyon ismi:', zone);
+        if (!newName || newName.trim() === '' || newName.trim() === zone) return;
+        const trimmed = newName.trim();
+        if (prepZones.includes(trimmed)) { showToast('Bu isim zaten kullaniliyor', 'error'); return; }
+        const newDefs = kermesSectionDefs.map((d: any) => d.name === section.name ? { ...d, prepZones: (d.prepZones || []).map((z: string) => z === zone ? trimmed : z) } : d);
+        setKermesSectionDefs(newDefs);
+        const newAssigns = { ...prepZoneAssignments };
+        if (newAssigns[zone]) { newAssigns[trimmed] = newAssigns[zone]; delete newAssigns[zone]; }
+        setPrepZoneAssignments(newAssigns);
+        updateDoc(doc(db, 'kermes_events', kermesId as string), { tableSectionsV2: newDefs, prepZoneAssignments: newAssigns })
+         .then(() => showToast(`"${zone}" -> "${trimmed}"`, 'success'))
+         .catch(() => showToast('Guncelleme hatasi', 'error'));
+       }} className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+       </button>
       </div>
+      <div className="flex items-center gap-2">
       <span className="text-xs text-muted-foreground">{assignedIds.length} personel atandi</span>
+      <button onClick={async () => {
+       if (!confirm(`"${zone}" istasyonunu silmek istediginizden emin misiniz?`)) return;
+       const newDefs = kermesSectionDefs.map((d: any) => d.name === section.name ? { ...d, prepZones: (d.prepZones || []).filter((z: string) => z !== zone) } : d);
+       setKermesSectionDefs(newDefs);
+       const newAssigns = { ...prepZoneAssignments };
+       delete newAssigns[zone];
+       setPrepZoneAssignments(newAssigns);
+       try {
+        await updateDoc(doc(db, 'kermes_events', kermesId as string), { tableSectionsV2: newDefs, prepZoneAssignments: newAssigns });
+        showToast(`${zone} silindi`, 'success');
+       } catch (err) { console.error(err); showToast('Hata', 'error'); }
+      }} className="w-5 h-5 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold" title="PrepZone sil">x</button>
+      </div>
       </div>
 
       {/* Atanan personeller */}
       {assignedDetails.length > 0 && (
       <div className="flex flex-wrap gap-1.5 mb-2">
        {assignedDetails.map((staff: any) => (
-       <span key={staff.uid} className="inline-flex items-center gap-1 px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded-md text-xs">
+       <span key={staff.id} className="inline-flex items-center gap-1 px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded-md text-xs">
         <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${staff.gender === 'female' ? 'bg-pink-500/30 text-pink-300' : 'bg-blue-500/30 text-blue-300'}`}>
         {staff.gender === 'female' ? 'K' : 'E'}
         </span>
         <span className="text-foreground">{staff.displayName || staff.email}</span>
         <button
         onClick={async () => {
-         const newIds = assignedIds.filter((id: string) => id !== staff.uid);
+         const newIds = assignedIds.filter((id: string) => id !== staff.id);
          const newAssignments = { ...prepZoneAssignments, [zone]: newIds };
          if (newIds.length === 0) delete newAssignments[zone];
          setPrepZoneAssignments(newAssignments);
@@ -2554,9 +2793,9 @@ export default function KermesDetailPage() {
       >
        <option value="">+ Personel ata...</option>
        {eligibleStaff
-       .filter((s: any) => !assignedIds.includes(s.uid))
+       .filter((s: any) => !assignedIds.includes(s.id))
        .map((s: any) => (
-        <option key={s.uid} value={s.uid}>{s.displayName || s.email} ({s.gender === 'female' ? 'Kadin' : 'Erkek'})</option>
+        <option key={s.id} value={s.id}>{s.displayName || s.email} ({s.gender === 'female' ? 'Kadin' : 'Erkek'})</option>
        ))
        }
       </select>
@@ -2565,6 +2804,46 @@ export default function KermesDetailPage() {
     })}
     </div>
     )}
+
+    {/* PrepZone Ekleme */}
+    <div className="px-4 pb-3">
+    <div className="bg-orange-500/5 border border-orange-500/15 rounded-lg p-3">
+    <p className="text-xs font-semibold text-orange-400/80 mb-2">+ Yeni PrepZone Ekle</p>
+    <div className="flex gap-1.5">
+    <input type="text" placeholder={`Orn: P${prepZones.length + 1}`}
+    className="flex-1 bg-background text-foreground text-xs px-2 py-1.5 rounded-md border border-input focus:border-orange-500 focus:outline-none"
+    id={`pz-mutfak-input-${section.name.replace(/\s/g, '_')}`}
+    onKeyDown={async (e) => {
+    if (e.key === 'Enter') {
+     const val = (e.target as HTMLInputElement).value.trim();
+     const newName = val || `P${prepZones.length + 1}`;
+     if (prepZones.includes(newName)) { showToast("Bu PrepZone zaten mevcut", "error"); return; }
+     const newDefs = kermesSectionDefs.map(d => d.name === section.name ? { ...d, prepZones: [...(d.prepZones || []), newName] } : d);
+     setKermesSectionDefs(newDefs);
+     try {
+      await updateDoc(doc(db, 'kermes_events', kermesId as string), { tableSectionsV2: newDefs });
+      showToast(`${newName} eklendi`, 'success');
+     } catch (err) { console.error('PrepZone ekleme hatasi:', err); showToast('Hata olustu', 'error'); }
+     (e.target as HTMLInputElement).value = '';
+    }
+    }} />
+    <button onClick={async () => {
+    const input = document.getElementById(`pz-mutfak-input-${section.name.replace(/\s/g, '_')}`) as HTMLInputElement;
+    const val = input?.value.trim();
+    const newName = val || `P${prepZones.length + 1}`;
+    if (prepZones.includes(newName)) { showToast("Bu PrepZone zaten mevcut", "error"); return; }
+    const newDefs = kermesSectionDefs.map(d => d.name === section.name ? { ...d, prepZones: [...(d.prepZones || []), newName] } : d);
+    setKermesSectionDefs(newDefs);
+    try {
+     await updateDoc(doc(db, 'kermes_events', kermesId as string), { tableSectionsV2: newDefs });
+     showToast(`${newName} eklendi`, 'success');
+    } catch (err) { console.error('PrepZone ekleme hatasi:', err); showToast('Hata olustu', 'error'); }
+    if (input) input.value = '';
+    }} className="px-2.5 py-1.5 bg-orange-600/80 hover:bg-orange-500 text-white text-xs rounded-md transition font-medium" title="Bos birakinca otomatik numara atar">+</button>
+    </div>
+    <p className="text-[10px] text-muted-foreground/50 mt-1">Bos birakip + basinca otomatik P-numara atanir. Isim girip Enter'a basabilirsiniz.</p>
+    </div>
+    </div>
    </div>
    );
    })}
@@ -2614,6 +2893,13 @@ export default function KermesDetailPage() {
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-foreground font-bold">{t('kermes_menusu')}</h3>
  <div className="flex gap-2">
+ {products.some(p => p.stockEnabled) && (
+ <button onClick={handleDayStart}
+ className="px-3 py-2 bg-amber-600/20 text-amber-800 dark:text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-600/40 flex items-center gap-1"
+ title="Tum stok takipli urunlerin stogunu baslangic degerine sifirlar">
+ <span className="material-symbols-outlined text-base">restart_alt</span> Gun Basla
+ </button>
+ )}
  <button onClick={() => setShowCategoryModal(true)}
  className="px-3 py-2 bg-purple-600/20 text-purple-800 dark:text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-600/40">
  {t('kategori_ekle')}
@@ -2671,7 +2957,8 @@ export default function KermesDetailPage() {
  <h4 className="text-pink-800 dark:text-pink-400 text-sm font-medium mb-2">{getCategoryEmoji(category)} {category}</h4>
  <div className="space-y-2">
  {items.map((product) => (
- <div key={product.id} className={`bg-gray-700 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-gray-600 transition ${!product.isAvailable ? 'opacity-50' : ''}`}
+ <div key={product.id} className={`bg-gray-700 rounded-lg p-3 ${!product.isAvailable ? 'opacity-60' : ''}`}>
+ <div className="flex items-center justify-between cursor-pointer hover:bg-gray-600/50 rounded -m-1 p-1 transition"
  onClick={() => setEditProduct({
  product,
  price: product.price,
@@ -2687,20 +2974,109 @@ export default function KermesDetailPage() {
  newAllergen: '',
  newIngredient: '',
  prepZone: product.prepZone || [],
+ serviceType: product.serviceType || 'prepped',
+ counterAvailability: product.counterAvailability || 'all',
  })}>
  <div className="flex items-center gap-3">
  <span className="text-foreground font-medium">{getLocalizedText(product.name, locale)}</span>
  {product.isCustom && <span className="px-2 py-0.5 bg-purple-600/30 text-purple-800 dark:text-purple-400 rounded text-xs">{t('ozel')}</span>}
  {product.sourceType === 'master' && <span className="px-2 py-0.5 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">{t('barcode')}</span>}
- <span className="text-green-800 dark:text-green-400 font-bold">{(Number(product.price) || 0).toFixed(2)} €</span>
+ <span className="text-green-800 dark:text-green-400 font-bold">{(Number(product.price) || 0).toFixed(2)} EUR</span>
  <span className="text-muted-foreground/80 text-xs">{t('duzenle')}</span>
  </div>
  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
  <button onClick={() => handleToggleAvailability(product)}
  className={`px-2 py-1 rounded text-xs ${product.isAvailable ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-red-600/30 text-red-800 dark:text-red-400'}`}>
- {product.isAvailable ? '✓ Mevcut' : t('tukendi')}
+ {product.isAvailable ? 'Mevcut' : t('tukendi')}
  </button>
- <button onClick={() => handleDeleteProduct(product)} className="px-2 py-1 bg-red-600/20 text-red-800 dark:text-red-400 hover:bg-red-600/40 rounded text-xs">🗑️</button>
+ <button onClick={() => handleDeleteProduct(product)} className="px-2 py-1 bg-red-600/20 text-red-800 dark:text-red-400 hover:bg-red-600/40 rounded text-xs">
+ <span className="material-symbols-outlined text-sm">delete</span>
+ </button>
+ </div>
+ </div>
+ {/* Stok Kontrolleri */}
+ <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-600" onClick={(e) => e.stopPropagation()}>
+ {/* Stok Takip Toggle */}
+ <button
+ onClick={() => handleToggleStockEnabled(product)}
+ className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
+ product.stockEnabled
+ ? 'bg-cyan-600/30 text-cyan-300'
+ : 'bg-gray-600 text-gray-400'
+ }`}
+ title="Stok takibini ac/kapat">
+ <span className="material-symbols-outlined text-sm">inventory_2</span>
+ {product.stockEnabled ? 'Stok Takip' : 'Stok Kapat'}
+ </button>
+
+ {product.stockEnabled && (
+ <>
+ {/* Artir/Azalt */}
+ <div className="flex items-center gap-1 bg-gray-800 rounded-lg px-1">
+ <button onClick={() => handleStockAdjust(product, -1)}
+ className="w-7 h-7 flex items-center justify-center text-red-400 hover:bg-red-600/30 rounded font-bold text-lg">-</button>
+ {editingStockId === product.id ? (
+ <input
+ type="number"
+ value={editingStockValue}
+ onChange={e => setEditingStockValue(e.target.value)}
+ onBlur={() => { handleStockSet(product, parseInt(editingStockValue) || 0); }}
+ onKeyDown={(e) => { if (e.key === 'Enter') handleStockSet(product, parseInt(editingStockValue) || 0); }}
+ className="w-14 text-center bg-transparent text-white font-bold text-sm focus:outline-none"
+ aria-label="Stok miktari"
+ placeholder="0"
+ autoFocus
+ />
+ ) : (
+ <button
+ onClick={() => { setEditingStockId(product.id); setEditingStockValue(String(product.currentStock || 0)); }}
+ className="w-14 text-center text-white font-bold text-sm hover:bg-gray-700 rounded py-1"
+ title="Tiklayarak stogu degistir">
+ {product.currentStock ?? 0}
+ </button>
+ )}
+ <button onClick={() => handleStockAdjust(product, 1)}
+ className="w-7 h-7 flex items-center justify-center text-green-400 hover:bg-green-600/30 rounded font-bold text-lg">+</button>
+ </div>
+
+ {/* Baslangic Stok / Kalan gostergesi */}
+ <span className={`text-xs px-2 py-1 rounded ${
+ (product.currentStock || 0) <= (product.lowStockThreshold || 5) && (product.currentStock || 0) > 0
+ ? 'bg-amber-600/30 text-amber-400'
+ : (product.currentStock || 0) <= 0
+ ? 'bg-red-600/30 text-red-400'
+ : 'bg-gray-600 text-gray-300'
+ }`}>
+ {product.initialStock ? `${product.currentStock ?? 0} / ${product.initialStock}` : `${product.currentStock ?? 0} adet`}
+ </span>
+
+ {/* Tukendi Butonu */}
+ {(product.currentStock || 0) > 0 && (
+ <button onClick={() => handleMarkSoldOut(product)}
+ className="px-2 py-1 bg-red-700/40 text-red-300 hover:bg-red-700/60 rounded text-xs flex items-center gap-1"
+ title="Tukendi olarak isaretle">
+ <span className="material-symbols-outlined text-sm">block</span> Tukendi
+ </button>
+ )}
+
+ {/* Baslangic Stok Ayarla (eger 0 ise) */}
+ {(!product.initialStock || product.initialStock === 0) && (
+ <button onClick={() => {
+ const val = prompt('Baslangic stok (adet):', '50');
+ if (val) handleSetInitialStock(product, parseInt(val));
+ }} className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded text-xs flex items-center gap-1">
+ <span className="material-symbols-outlined text-sm">edit</span> Bas.Stok
+ </button>
+ )}
+ </>
+ )}
+
+ {/* Satis Gecmisi Butonu - her zaman gozukur */}
+ <button onClick={() => handleLoadSalesHistory(product)}
+ className="ml-auto px-2 py-1 bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/40 rounded text-xs flex items-center gap-1"
+ title="Satis gecmisi ve istatistikler">
+ <span className="material-symbols-outlined text-sm">bar_chart</span> Gecmis
+ </button>
  </div>
  </div>
  ))}
@@ -2958,18 +3334,18 @@ export default function KermesDetailPage() {
  </div>
  </div>
 
- {/* Kategori, Birim ve Hazırlık Noktası */}
- <div className="grid grid-cols-3 gap-4">
+ {/* Kategori ve Birim */}
+ <div className="grid grid-cols-2 gap-4">
  <div>
  <label className="text-muted-foreground text-xs block mb-1">{t('kategori')}</label>
- <select value={editProduct.category} onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
+ <select title="Kategori sec" value={editProduct.category} onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
  className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow">
  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
  </select>
  </div>
  <div>
  <label className="text-muted-foreground text-xs block mb-1">{t('unit_label')}</label>
- <select value={editProduct.unit} onChange={(e) => setEditProduct({ ...editProduct, unit: e.target.value })}
+ <select title="Birim sec" value={editProduct.unit} onChange={(e) => setEditProduct({ ...editProduct, unit: e.target.value })}
  className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow">
  <option value={t('adet')}>{t('adet')}</option>
  <option value="porsiyon">Porsiyon</option>
@@ -2980,9 +3356,54 @@ export default function KermesDetailPage() {
  <option value="gr">Gram (gr)</option>
  </select>
  </div>
+ </div>
+
+ {/* Mutfak Operasyonu */}
+ <div className="bg-orange-900/10 dark:bg-orange-950/20 border border-orange-500/20 rounded-xl p-4 space-y-4">
+ <h3 className="text-foreground text-sm font-medium flex items-center gap-2">
+ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
+ Mutfak Operasyonu
+ </h3>
+
+ {/* Servis Tipi Toggle */}
  <div>
- <label className="text-muted-foreground text-xs block mb-1">Hazırlık / Garson Alanı</label>
+ <label className="text-muted-foreground text-xs block mb-2">Servis Tipi</label>
+ <div className="flex gap-2">
+ <button type="button" onClick={() => setEditProduct({ ...editProduct, serviceType: 'instant' })}
+ className={`flex-1 px-3 py-2.5 rounded-lg border text-sm font-medium transition ${(editProduct.serviceType || 'prepped') === 'instant' ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
+ <span className="block text-base mb-0.5">Aninda / Sicak</span>
+ <span className="block text-[10px] opacity-70">Siparis gelince aninda hazirlanir (Kumpir, Kebap, Grill)</span>
+ </button>
+ <button type="button" onClick={() => setEditProduct({ ...editProduct, serviceType: 'prepped' })}
+ className={`flex-1 px-3 py-2.5 rounded-lg border text-sm font-medium transition ${(editProduct.serviceType || 'prepped') === 'prepped' ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
+ <span className="block text-base mb-0.5">Onceden Hazir</span>
+ <span className="block text-[10px] opacity-70">Toplu hazirlanir, tezgahta servis edilir (Pasta, Borek, Salata)</span>
+ </button>
+ </div>
+ </div>
+
+ {/* Hazirlik Yeri - PrepZone secimi */}
+ <div>
+ <label className="text-muted-foreground text-xs block mb-2">Nerede Hazirlaniyor?</label>
  <PrepZoneSelector value={editProduct.prepZone || []} onChange={(val) => setEditProduct({ ...editProduct, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
+ <p className="text-[10px] text-muted-foreground/60 mt-1">Birden fazla bolum secebilirsiniz (ornegin hem Erkek hem Kadin bolumunde hazirlanan urunler icin)</p>
+ </div>
+
+ {/* Tezgah Dagitimi */}
+ <div>
+ <label className="text-muted-foreground text-xs block mb-2">Tezgah Dagitimi</label>
+ <div className="flex gap-2">
+ <button type="button" onClick={() => setEditProduct({ ...editProduct, counterAvailability: 'all' })}
+ className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition ${(editProduct.counterAvailability || 'all') === 'all' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
+ Tum Tezgahlar
+ <span className="block text-[10px] opacity-70">Her noktada mevcut</span>
+ </button>
+ <button type="button" onClick={() => setEditProduct({ ...editProduct, counterAvailability: 'source' })}
+ className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition ${(editProduct.counterAvailability || 'all') === 'source' ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
+ Sadece Kaynak
+ <span className="block text-[10px] opacity-70">Sadece hazirlandigi yerde</span>
+ </button>
+ </div>
  </div>
  </div>
 
@@ -3131,6 +3552,135 @@ export default function KermesDetailPage() {
  <div className="flex gap-3">
  <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium">İptal</button>
  <button onClick={handleConfirmDelete} className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium">{t('kaldir')}</button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* Satis Gecmisi Modali */}
+ {salesHistoryProduct && (
+ <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]" onClick={() => setSalesHistoryProduct(null)}>
+ <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+ <div className="flex items-center justify-between p-4 border-b border-border">
+ <div>
+ <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+ <span className="material-symbols-outlined text-indigo-400">bar_chart</span>
+ Satis Gecmisi: {typeof salesHistoryProduct.name === 'object' ? (salesHistoryProduct.name as any).tr || Object.values(salesHistoryProduct.name)[0] : salesHistoryProduct.name}
+ </h2>
+ <p className="text-muted-foreground text-sm mt-1">Tum kermesler boyunca satis verileri</p>
+ </div>
+ <button onClick={() => setSalesHistoryProduct(null)} className="text-muted-foreground hover:text-foreground text-2xl">x</button>
+ </div>
+ <div className="p-4 overflow-y-auto flex-1">
+ {loadingSalesHistory ? (
+ <div className="text-center py-8">
+ <div className="animate-spin w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+ <p className="text-muted-foreground">Satis verileri yukleniyor...</p>
+ </div>
+ ) : salesHistoryData.length === 0 ? (
+ <div className="text-center py-8">
+ <span className="material-symbols-outlined text-4xl text-gray-500 mb-3">inbox</span>
+ <p className="text-muted-foreground">Henuz satis verisi yok</p>
+ </div>
+ ) : (
+ <div className="space-y-4">
+ {/* Ozet */}
+ <div className="grid grid-cols-3 gap-3">
+ <div className="bg-green-900/30 rounded-xl p-3 text-center">
+ <div className="text-2xl font-bold text-green-400">
+ {salesHistoryData.reduce((sum: number, s: any) => sum + (s.quantity || 1), 0)}
+ </div>
+ <div className="text-xs text-green-300">Toplam Adet</div>
+ </div>
+ <div className="bg-blue-900/30 rounded-xl p-3 text-center">
+ <div className="text-2xl font-bold text-blue-400">
+ {salesHistoryData.reduce((sum: number, s: any) => sum + (s.totalPrice || 0), 0).toFixed(2)} EUR
+ </div>
+ <div className="text-xs text-blue-300">Toplam Gelir</div>
+ </div>
+ <div className="bg-purple-900/30 rounded-xl p-3 text-center">
+ <div className="text-2xl font-bold text-purple-400">
+ {new Set(salesHistoryData.map((s: any) => s.kermesDate)).size}
+ </div>
+ <div className="text-xs text-purple-300">Gun Sayisi</div>
+ </div>
+ </div>
+
+ {/* Bolum bazli dagilim */}
+ <div className="bg-gray-800 rounded-xl p-3">
+ <h4 className="text-sm font-medium text-foreground mb-2">Bolum Bazli Dagilim</h4>
+ <div className="space-y-1">
+ {Object.entries(
+ salesHistoryData.reduce((acc: Record<string, {qty: number, total: number}>, s: any) => {
+ const section = s.sectionLabel || s.section || 'Bilinmiyor';
+ if (!acc[section]) acc[section] = { qty: 0, total: 0 };
+ acc[section].qty += s.quantity || 1;
+ acc[section].total += s.totalPrice || 0;
+ return acc;
+ }, {})
+ ).map(([section, data]) => (
+ <div key={section} className="flex items-center justify-between text-sm">
+ <span className="text-muted-foreground">{section}</span>
+ <div className="flex items-center gap-3">
+ <span className="text-foreground">{(data as any).qty} adet</span>
+ <span className="text-green-400 font-medium">{(data as any).total.toFixed(2)} EUR</span>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+
+ {/* Tarih bazli dagilim */}
+ <div className="bg-gray-800 rounded-xl p-3">
+ <h4 className="text-sm font-medium text-foreground mb-2">Tarih Bazli Satis</h4>
+ <div className="space-y-1 max-h-60 overflow-y-auto">
+ {Object.entries(
+ salesHistoryData.reduce((acc: Record<string, {qty: number, total: number}>, s: any) => {
+ const date = s.kermesDate || 'Bilinmiyor';
+ if (!acc[date]) acc[date] = { qty: 0, total: 0 };
+ acc[date].qty += s.quantity || 1;
+ acc[date].total += s.totalPrice || 0;
+ return acc;
+ }, {})
+ ).sort(([a], [b]) => b.localeCompare(a)).map(([date, data]) => (
+ <div key={date} className="flex items-center justify-between text-sm">
+ <span className="text-muted-foreground">{date}</span>
+ <div className="flex items-center gap-3">
+ <span className="text-foreground">{(data as any).qty} adet</span>
+ <span className="text-green-400 font-medium">{(data as any).total.toFixed(2)} EUR</span>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+
+ {/* Son satislar listesi */}
+ <div className="bg-gray-800 rounded-xl p-3">
+ <h4 className="text-sm font-medium text-foreground mb-2">Son Satislar (en son 20)</h4>
+ <div className="space-y-1 max-h-48 overflow-y-auto">
+ {salesHistoryData.slice(0, 20).map((sale: any, i: number) => (
+ <div key={sale.id || i} className="flex items-center justify-between text-xs text-muted-foreground py-1 border-b border-gray-700 last:border-0">
+ <div className="flex items-center gap-2">
+ <span>{sale.kermesDate}</span>
+ <span className="text-gray-500">
+ {sale.soldAt?.toDate ? sale.soldAt.toDate().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : ''}
+ </span>
+ <span className={`px-1.5 py-0.5 rounded text-xs ${
+ sale.section?.includes('K') ? 'bg-pink-900/40 text-pink-300' :
+ sale.section?.includes('E') ? 'bg-blue-900/40 text-blue-300' :
+ 'bg-green-900/40 text-green-300'
+ }`}>{sale.sectionLabel || sale.section}</span>
+ </div>
+ <div className="flex items-center gap-2">
+ <span className="text-foreground">{sale.quantity}x</span>
+ <span className="text-green-400">{sale.totalPrice?.toFixed(2)} EUR</span>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ </div>
+ )}
  </div>
  </div>
  </div>
@@ -3374,6 +3924,35 @@ export default function KermesDetailPage() {
   <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 -mt-1 ml-1">Bu personel ayni zamanda surucu olarak aktif.</p>
   )}
 
+   {/* Garson Toggle Switch */}
+   <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
+   <div className="flex items-center gap-2">
+   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400"><path d="M3 11h18M5 11V6a7 7 0 0 1 14 0v5"/><ellipse cx="12" cy="11" rx="10" ry="2"/><path d="M12 13v2"/><circle cx="12" cy="17" r="2"/></svg>
+   <span className="text-sm font-medium text-foreground">Garson Olarak Ata</span>
+   </div>
+   <button
+   type="button"
+   title="Garson olarak ata/cikar"
+   onClick={() => {
+   if (assignedWaiters.includes(editPersonData.id)) {
+   const nw = assignedWaiters.filter((wid: string) => wid !== editPersonData.id);
+   setAssignedWaiters(nw);
+   saveTeamToDb(assignedStaff, assignedDrivers, nw);
+   } else {
+   const nw = [...assignedWaiters, editPersonData.id];
+   setAssignedWaiters(nw);
+   saveTeamToDb(assignedStaff, assignedDrivers, nw);
+   }
+   }}
+   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${assignedWaiters.includes(editPersonData.id) ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+   >
+   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${assignedWaiters.includes(editPersonData.id) ? 'translate-x-6' : 'translate-x-1'}`} />
+   </button>
+   </div>
+   {assignedWaiters.includes(editPersonData.id) && (
+   <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-3 -mt-1 ml-1">Bu personel garson olarak atandi. Masa siparisleri bolumune gore yonlendirilecek.</p>
+   )}
+
    {/* Login Bilgilerini Tekrar Gonder */}
    {(editPersonData.email || editPersonData.phone || editPersonData.phoneNumber) && (
    <button
@@ -3397,7 +3976,7 @@ export default function KermesDetailPage() {
    showToast("Email gonderilemedi", "error");
    }
    } else {
-   showToast("Bu kisinin email adresi yok. Telefon ile Firebase Auth uzerinden giris yapabilir.", "info");
+   showToast("Bu kisinin email adresi yok. Telefon ile Firebase Auth uzerinden giris yapabilir.", "success");
    }
    } catch (err) {
    console.error("Resend error:", err);

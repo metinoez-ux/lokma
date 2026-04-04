@@ -3706,3 +3706,4 @@ export { onUserAccountDeleted } from "./accountDeletion";
 
 // Kermes: Garson/Kurye Atama & Timeout
 export { kermesWaiterTimeoutCheck, onKermesOrderReady } from "./kermesWaiterFunctions";
+export { onKermesOrderPaidStock, onKermesOrderCancelledStock } from "./kermesStockFunctions";

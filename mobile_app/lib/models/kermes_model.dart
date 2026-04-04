@@ -243,10 +243,22 @@ class KermesMenuItem {
   final bool isAvailable;  // Stok durumu: true=mevcut, false=tukendi
   final List<OptionGroup> optionGroups; // Multi-step menu secenekleri (yan urun, icecek vb.)
 
-  final String? prepZone;  // e.g., 'K_ZONE', 'E_ZONE' - Hangi mutfakta/bölgede hazırlandığını belirtir.
+  final String? prepZone;  // e.g., 'K_ZONE', 'E_ZONE' - Hangi mutfakta/bolgede hazirlandigini belirtir.
+
+  // Stok takip alanlari
+  final bool stockEnabled;
+  final int? initialStock;
+  final int? currentStock;
+  final int lowStockThreshold;
 
   /// Bu urun multi-step combo menu mu? (ornegin: Tavuk Sis Menu = ana urun + yan urun + icecek secimi)
   bool get isComboMenu => optionGroups.isNotEmpty;
+
+  /// Stok takibi aktifse ve stok 0 ise tukenmis
+  bool get isSoldOut => stockEnabled && (currentStock ?? 0) <= 0;
+
+  /// Stok takibi aktifse ve stok esik degerinin altindaysa dusuk stok
+  bool get isLowStock => stockEnabled && (currentStock ?? 0) > 0 && (currentStock ?? 0) <= lowStockThreshold;
 
   KermesMenuItem({
     required this.name,
@@ -267,6 +279,10 @@ class KermesMenuItem {
     this.isAvailable = true,
     this.optionGroups = const [],
     this.prepZone,
+    this.stockEnabled = false,
+    this.initialStock,
+    this.currentStock,
+    this.lowStockThreshold = 5,
   });
   
   /// Tüm resimleri getir (imageUrls varsa onu, yoksa imageUrl'i)
@@ -306,6 +322,10 @@ class KermesMenuItem {
       isAvailable: json['isAvailable'] ?? true,
       optionGroups: _parseOptionGroups(json['optionGroups']),
       prepZone: _safeStringOrNull(json['prepZone']),
+      stockEnabled: json['stockEnabled'] ?? false,
+      initialStock: json['initialStock'] != null ? (json['initialStock'] as num).toInt() : null,
+      currentStock: json['currentStock'] != null ? (json['currentStock'] as num).toInt() : null,
+      lowStockThreshold: (json['lowStockThreshold'] as num?)?.toInt() ?? 5,
     );
   }
 
