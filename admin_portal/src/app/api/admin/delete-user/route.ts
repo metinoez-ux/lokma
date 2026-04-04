@@ -65,6 +65,19 @@ export async function POST(request: NextRequest) {
  // Delete from Firebase Auth (if user exists there)
  if (authUid) {
  try {
+ // STEP A: Revoke all refresh tokens FIRST - this prevents token renewal
+ await auth.revokeRefreshTokens(authUid);
+ console.log('🔒 Revoked refresh tokens for:', authUid);
+
+ // STEP B: Write a force-logout marker to Firestore so real-time listeners catch it
+ await db.collection('force_logout').doc(authUid).set({
+   reason: 'account_deleted',
+   deletedAt: new Date(),
+   deletedBy: 'super_admin',
+ });
+ console.log('📝 Force logout marker written for:', authUid);
+
+ // STEP C: Delete the Firebase Auth record
  await auth.deleteUser(authUid);
  results.authDeleted = true;
  console.log('✅ Deleted from Firebase Auth:', authUid);

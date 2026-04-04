@@ -714,7 +714,7 @@ export default function KermesDetailPage() {
  }
  };
 
- // Personel Arama (super admin dropdown)
+ // Personel Arama (super admin dropdown) - hem users hem admins koleksiyonunda
  const searchStaff = async (q: string) => {
  setStaffSearchQuery(q);
  if (q.length < 2) {
@@ -723,20 +723,32 @@ export default function KermesDetailPage() {
  }
  setSearchingStaff(true);
  try {
- const usersRef = collection(db, 'admins');
- const snapshot = await getDocs(usersRef);
- const results = snapshot.docs
- .map(doc => ({ id: doc.id, ...doc.data() } as any))
- .filter(user => {
  const qLower = q.toLowerCase();
- const searchValues = [
- user.name, user.displayName, user.firstName, user.lastName, 
+ const matchUser = (user: any) => {
+ const vals = [
+ user.name, user.displayName, user.firstName, user.lastName,
  user.email, user.phone, user.phoneNumber
  ].filter(Boolean).map(v => String(v).toLowerCase());
- 
- return searchValues.some(val => val.includes(qLower)) && !assignedStaff.includes(user.id);
- })
- .slice(0, 5); // Max 5 sonuç
+ return vals.some(val => val.includes(qLower));
+ };
+
+ const [snapUsers, snapAdmins] = await Promise.all([
+ getDocs(collection(db, 'users')),
+ getDocs(collection(db, 'admins')),
+ ]);
+
+ const allUsers = new Map<string, any>();
+ snapAdmins.docs.forEach(d => allUsers.set(d.id, { id: d.id, _src: 'admin', ...d.data() }));
+ snapUsers.docs.forEach(d => {
+ if (!allUsers.has(d.id)) allUsers.set(d.id, { id: d.id, _src: 'user', ...d.data() });
+ });
+
+ const alreadyInTeam = new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters]);
+
+ const results = Array.from(allUsers.values())
+ .filter(user => matchUser(user) && !alreadyInTeam.has(user.id))
+ .slice(0, 8);
+
  setStaffResults(results);
  } catch (error) {
  console.error('Error searching staff:', error);

@@ -499,7 +499,29 @@ export default function AdminHeader() {
 
  {/* FULL DESKTOP BAR - hidden on tablet */}
  <div className="hidden min-[1921px]:block bg-[var(--header-bg)] border-b border-[var(--header-border)] shadow-md relative z-40">
- <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-4">
+ <div className="w-full px-6 py-2 flex items-center gap-4 relative">
+ {/* CENTER: Clock + Version Stamp - always centered */}
+ <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none z-10">
+ <span className="text-sm font-light tabular-nums tracking-wider text-white">
+ {currentTime.toLocaleTimeString(localeToBcp47[currentLocale] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
+ </span>
+ <span className="text-muted-foreground/80 text-xs">|</span>
+ <span className="text-xs text-muted-foreground">
+ {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+ </span>
+ <span className="text-muted-foreground/80 text-xs">|</span>
+ <span className="text-xs text-muted-foreground">
+ {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { weekday: 'short' })}
+ </span>
+ {process.env.NEXT_PUBLIC_BUILD_TIME && (
+ <>
+ <span className="text-muted-foreground/80 text-xs">|</span>
+ <span className="text-xs font-semibold text-rose-500/80">
+ v.{process.env.NEXT_PUBLIC_BUILD_TIME}
+ </span>
+ </>
+ )}
+ </div>
 
  <div className="flex flex-wrap items-center gap-1.5 flex-1">
  {/* 1. Analytik */}

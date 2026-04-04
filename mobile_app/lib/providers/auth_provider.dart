@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lokma_app/services/auth_service.dart';
 import 'package:lokma_app/services/user_service.dart';
 import 'package:lokma_app/models/app_user.dart';
@@ -9,12 +11,14 @@ class AuthState {
   final User? user;
   final bool isLoading;
   final String? error;
+  final String? forceLogoutReason;
 
   const AuthState({
     this.user,
     this.appUser,
     this.isLoading = false,
     this.error,
+    this.forceLogoutReason,
   });
 
   final AppUser? appUser;
@@ -27,16 +31,14 @@ class AuthState {
     AppUser? appUser,
     bool? isLoading,
     String? error,
+    String? forceLogoutReason,
   }) {
     return AuthState(
       user: user ?? this.user,
       appUser: appUser ?? this.appUser,
       isLoading: isLoading ?? this.isLoading,
-      error: error, // Error is nullable, so if not provided it remains null? No, we want to clear it usually. 
-                    // Actually let's say if passed as null it clears, if not passed it keeps? 
-                    // Standard copyWith usually keeps if null. 
-                    // Let's simplify: explicit null to clear.
-      // But here I'll just replace it.
+      error: error,
+      forceLogoutReason: forceLogoutReason,
     );
   }
 }
@@ -46,6 +48,7 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   late final AuthService _authService;
   late final UserService _userService;
+  StreamSubscription? _forceLogoutSub;
 
   @override
   AuthState build() {
@@ -65,10 +68,58 @@ class AuthNotifier extends Notifier<AuthState> {
           // Handle error silently or log
           print('Error fetching app user: $e');
         }
+        // Start listening for force logout
+        _startForceLogoutListener(user.uid);
+      } else {
+        // Stop listening when user logs out
+        _stopForceLogoutListener();
       }
       state = AuthState(user: user, appUser: appUser, isLoading: false);
     });
-    ref.onDispose(sub.cancel);
+    ref.onDispose(() {
+      sub.cancel();
+      _stopForceLogoutListener();
+    });
+  }
+
+  /// Listen to force_logout/{uid} document - triggers immediate logout
+  /// when a super admin deletes this user's account
+  void _startForceLogoutListener(String uid) {
+    _stopForceLogoutListener();
+    _forceLogoutSub = FirebaseFirestore.instance
+        .collection('force_logout')
+        .doc(uid)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists) {
+        final reason = snapshot.data()?['reason'] as String? ?? 'account_deleted';
+        print('Force logout detected for $uid: $reason');
+        _handleForceLogout(reason);
+      }
+    }, onError: (e) {
+      // Silently handle - document may not exist yet
+      print('Force logout listener error: $e');
+    });
+  }
+
+  void _stopForceLogoutListener() {
+    _forceLogoutSub?.cancel();
+    _forceLogoutSub = null;
+  }
+
+  Future<void> _handleForceLogout(String reason) async {
+    _stopForceLogoutListener();
+    state = AuthState(
+      user: null,
+      appUser: null,
+      isLoading: false,
+      forceLogoutReason: reason,
+    );
+    try {
+      await _authService.logout();
+    } catch (e) {
+      print('Error during force logout: $e');
+    }
   }
 
   Future<void> loginWithEmail(String email, String password) async {

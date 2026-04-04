@@ -187,6 +187,18 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  const handleDeleteAdminConfirm = async () => {
  if (!confirmDeleteAdmin) return;
  try {
+ // Step 1: Call delete-user API for Auth revocation + force logout
+ try {
+ await fetch('/api/admin/delete-user', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ email: confirmDeleteAdmin.email }),
+ });
+ } catch (apiErr) {
+ console.error('delete-user API error (non-blocking):', apiErr);
+ }
+
+ // Step 2: Delete from platform_admins collection
  await deleteDoc(doc(db, 'platform_admins', confirmDeleteAdmin.id));
  setConfirmDeleteAdmin(null);
  } catch (error) {

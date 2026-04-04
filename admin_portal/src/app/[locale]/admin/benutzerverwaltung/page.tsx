@@ -776,7 +776,7 @@ export default function BenutzerverwaltungPage() {
  <td className="px-6 py-4">
  <div className="flex items-center gap-3">
  <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
- {user.photoURL ? (
+ {isSuperAdmin && user.photoURL ? (
  <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" />
  ) : (
  <span className="text-muted-foreground font-medium text-sm">
@@ -875,7 +875,7 @@ export default function BenutzerverwaltungPage() {
  <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20 rounded-t-2xl">
  <div className="flex items-center gap-3">
  <div className="h-12 w-12 rounded-full overflow-hidden bg-muted border border-border">
- {selectedUser.photoURL ? (
+ {isSuperAdmin && selectedUser.photoURL ? (
  <img src={selectedUser.photoURL} alt={selectedUser.displayName} className="h-full w-full object-cover" />
  ) : (
  <div className="h-full w-full flex items-center justify-center font-bold text-xl text-muted-foreground">
