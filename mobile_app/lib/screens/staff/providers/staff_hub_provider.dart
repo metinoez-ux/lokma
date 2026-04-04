@@ -103,7 +103,12 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           .doc(user.uid)
           .get();
 
-      if (!adminDoc.exists) {
+      // Check if admins doc has a real businessId (not a sparse doc from set(merge:true))
+      final hasRealAdminsDoc = adminDoc.exists && 
+          (adminDoc.data()?['businessId'] != null || 
+           (adminDoc.data()?['role'] != null && adminDoc.data()?['role'] != 'admin'));
+
+      if (!hasRealAdminsDoc) {
         // Fallback: user may be a Kermes volunteer (Google auth) whose role
         // was resolved by StaffRoleService.checkStaffStatus() during login.
         final roleService = StaffRoleService();

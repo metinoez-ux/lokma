@@ -76,22 +76,31 @@ class StaffRoleService {
       
       if (adminDoc.exists) {
         final data = adminDoc.data()!;
-        _isStaff = true;
-        _businessId = data['businessId'];
-        _businessName = data['businessName'];
-        _businessType = data['businessType'];
-        _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
-        _role = data['role'] ?? 'admin';
-        _lastCashSettlement = (data['lastCashSettlement'] as Timestamp?)?.toDate();
-        _kermesAllowedSections = List<String>.from(data['kermesAllowedSections'] ?? []);
+        final docBusinessId = data['businessId'] as String?;
+        final docRole = data['role'] as String?;
         
-        // Register FCM token for delivery notifications (skip if offline)
-        if (source == null) {
-          await _registerFcmToken(user.uid);
+        // Only treat as valid staff if doc has a real businessId or role
+        // (set(merge:true) from ShiftService creates sparse docs with only shift fields)
+        if (docBusinessId != null || (docRole != null && docRole != 'admin')) {
+          _isStaff = true;
+          _businessId = docBusinessId;
+          _businessName = data['businessName'];
+          _businessType = data['businessType'];
+          _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
+          _role = docRole ?? 'admin';
+          _lastCashSettlement = (data['lastCashSettlement'] as Timestamp?)?.toDate();
+          _kermesAllowedSections = List<String>.from(data['kermesAllowedSections'] ?? []);
+          
+          // Register FCM token for delivery notifications (skip if offline)
+          if (source == null) {
+            await _registerFcmToken(user.uid);
+          }
+          
+          debugPrint('[StaffRole] User is staff: $_staffName, businessId: $_businessId (source: ${source ?? "server"})');
+          return true;
         }
-        
-        debugPrint('[StaffRole] User is staff: $_staffName, businessId: $_businessId (source: ${source ?? "server"})');
-        return true;
+        // else: sparse doc from set(merge:true), fall through to kermes check
+        debugPrint('[StaffRole] Sparse admins doc found (no businessId), checking kermes...');
       }
       
       // Fallback: Check if user is assigned as Kermes staff/driver/waiter
