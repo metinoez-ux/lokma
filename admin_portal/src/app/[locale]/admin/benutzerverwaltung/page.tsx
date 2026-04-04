@@ -581,6 +581,7 @@ export default function BenutzerverwaltungPage() {
  const assignedBusinessNames = businesses.filter(b => selectedBusinessIds.includes(b.id)).map(b => b.name);
  const assignedKermesNames = kermesEvents.filter(k => selectedKermesIds.includes(k.id)).map(k => k.name);
  
+ // Determine adminType from editRole and/or kermes assignments
  let currentAdminType = editRole !== 'customer' && editRole !== 'user' 
  ? (editRole === 'business_admin' ? (() => {
  const b = businesses.find(bz => bz.id === editBusinessId);
@@ -589,6 +590,20 @@ export default function BenutzerverwaltungPage() {
  return 'lokma_admin';
  })() : editRole) 
  : null;
+ 
+ // If user has kermes assignments, ensure they get an admins doc
+ const kermesAssignmentIds = editAssignments.filter(a => a.entityType === 'kermes').map(a => a.id);
+ const hasKermesAssignment = kermesAssignmentIds.length > 0;
+ if (hasKermesAssignment && !currentAdminType) {
+ currentAdminType = 'staff';
+ }
+
+ // Build kermes event IDs from both driver selection and assignments
+ const allKermesIds = [...new Set([
+ ...(isDriver ? selectedKermesIds : []),
+ ...kermesAssignmentIds
+ ])];
+ const allKermesNames = kermesEvents.filter(k => allKermesIds.includes(k.id)).map(k => k.name);
  
  const updatePayload = {
  userId: selectedUser.id,
@@ -613,8 +628,8 @@ export default function BenutzerverwaltungPage() {
  driverType: isDriver ? (selectedBusinessIds.length > 0 ? 'business' : 'platform') : null,
  assignedBusinesses: isDriver ? selectedBusinessIds : [],
  assignedBusinessNames: isDriver ? assignedBusinessNames : [],
- assignedKermesEvents: isDriver ? selectedKermesIds : [],
- assignedKermesNames: isDriver ? assignedKermesNames : [],
+ assignedKermesEvents: allKermesIds,
+ assignedKermesNames: allKermesNames,
  adminEmail: admin?.email,
  assignments: editAssignments,
  kermesAllowedSections: editKermesAllowedSections,
