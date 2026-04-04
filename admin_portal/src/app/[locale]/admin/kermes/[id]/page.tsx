@@ -1654,7 +1654,7 @@ export default function KermesDetailPage() {
  </button>
  <button onClick={() => setActiveTab('personel')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 👥 Personel {new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters]).size > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters]).size}</span>}
+ 👥 Personel {assignedStaffDetails.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{assignedStaffDetails.length}</span>}
  </button>
  <button onClick={() => setActiveTab('mutfak')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
@@ -2845,7 +2845,9 @@ export default function KermesDetailPage() {
  </div>
  <div>
  <span className="text-sm font-medium text-foreground">{staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name || staff.email}</span>
+ {assignedStaff.includes(staff.id) && (
  <span className="ml-2 text-xs text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">Personel</span>
+ )}
  {kermesAdmins.includes(staff.id) && (
  <span className="ml-1 text-xs text-purple-400 bg-purple-900/30 border border-purple-700/30 px-2 py-0.5 rounded font-semibold">Kermes Admin</span>
  )}
@@ -2871,14 +2873,18 @@ export default function KermesDetailPage() {
  saveTeamToDb(assignedStaff, assignedDrivers, newWaiters, kermesAdmins);
  }
  }}
- className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-semibold transition-colors ${
+ className={`w-7 h-7 rounded-sm overflow-hidden flex items-center justify-center text-xs font-semibold transition-colors ${
  assignedWaiters.includes(staff.id)
  ? 'bg-emerald-500 text-white hover:bg-emerald-600'
  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600'
  }`}
  title={assignedWaiters.includes(staff.id) ? 'Garsonluktan Cikar' : 'Garson Olarak Ata'}
  >
- <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11h18M5 11V6a7 7 0 0 1 14 0v5"/><ellipse cx="12" cy="11" rx="10" ry="2"/><path d="M12 13v2"/><circle cx="12" cy="17" r="2"/></svg>
+ <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ <path d="M6 12C6 8.69 8.69 6 12 6C15.31 6 18 8.69 18 12"/>
+ <line x1="4" y1="12" x2="20" y2="12"/>
+ <line x1="6" y1="17" x2="18" y2="17"/>
+ </svg>
  </button>
  <button 
  type="button" 
