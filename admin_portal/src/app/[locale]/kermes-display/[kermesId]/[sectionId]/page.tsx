@@ -56,6 +56,10 @@ export default function KermesDisplayPage({
   const previousReadyRef = useRef<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Bolum mu, Istasyon mu?
+  const isKnownSection = sectionId.includes('bolumu') || sectionId.includes('section') || sectionId.includes('bolum');
+  const isStationDisplay = !isKnownSection;
+
   // Saat guncelleme
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -112,20 +116,20 @@ export default function KermesDisplayPage({
       snapshot.docs.forEach((docSnap) => {
         const data = docSnap.data();
         const orderSection = data.tableSection as string | undefined;
+        const sectionNormalized = sectionId.replace(/_/g, ' ').toLowerCase();
 
-        let belongsToSection = false;
-        if (orderSection === sectionId) {
-          belongsToSection = true;
-        } else if (!orderSection) {
-          const items = (data.items as { prepZone?: string }[]) || [];
-          belongsToSection = items.some(
-            (item) =>
-              item.prepZone &&
-              item.prepZone.toLowerCase().includes(sectionId.replace(/_/g, ' ').toLowerCase())
-          );
-        }
+        // Bolum ekrani: tableSection eslesirse (Erkek/Kadin pickup ekrani)
+        const matchesSection = orderSection === sectionId;
 
-        if (!belongsToSection) return;
+        // Istasyon ekrani: herhangi bir item'in prepZone'u eslesirse (Manti/Kumpir mutfak ekrani)
+        const items = (data.items as { prepZone?: string; name?: string; quantity?: number; price?: number; itemStatus?: string }[]) || [];
+        const matchesPrepZone = items.some(
+          (item) =>
+            item.prepZone &&
+            item.prepZone.toLowerCase().includes(sectionNormalized)
+        );
+
+        if (!matchesSection && !matchesPrepZone) return;
 
         allOrders.push({
           id: docSnap.id,
@@ -135,7 +139,11 @@ export default function KermesDisplayPage({
           customerName: data.customerName || '',
           tableNumber: data.tableNumber,
           tableSection: data.tableSection,
-          items: ((data.items as { name?: string; quantity?: number; price?: number; prepZone?: string; itemStatus?: string }[]) || []).map((item) => ({
+          // Istasyon ekraninda sadece o istasyona ait itemleri goster
+          items: (matchesPrepZone && !matchesSection
+            ? items.filter(item => item.prepZone && item.prepZone.toLowerCase().includes(sectionNormalized))
+            : items
+          ).map((item) => ({
             name: item.name || '',
             quantity: item.quantity || 1,
             price: item.price || 0,
@@ -319,9 +327,12 @@ export default function KermesDisplayPage({
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <span className={`material-symbols-outlined ${styles.footerIcon}`}>info</span>
+        <span className={`material-symbols-outlined ${styles.footerIcon}`}>{isStationDisplay ? 'skillet' : 'info'}</span>
         <span className={styles.footerText}>
-          Numaraniz ekranda gorundugundu tezgahtan alabilirsiniz
+          {isStationDisplay
+            ? 'Gelen siparisleri hazirlayin - garson gelip alacak'
+            : 'Numaraniz ekranda gorundugunde tezgahtan alabilirsiniz'
+          }
         </span>
       </footer>
     </div>

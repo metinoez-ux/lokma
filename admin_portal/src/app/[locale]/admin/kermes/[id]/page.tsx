@@ -730,6 +730,10 @@ export default function KermesDetailPage() {
 
  const handleSaveEditPerson = async () => {
  if (!editPersonData?.id) return;
+ if (!editPersonData.gender) {
+ showToast('Cinsiyet secimi zorunludur', 'error');
+ return;
+ }
  setIsSavingPerson(true);
  try {
  // Check if user is in 'admins' or 'users' collection
@@ -744,6 +748,7 @@ export default function KermesDetailPage() {
  displayName: editPersonData.name,
  phone: editPersonData.phone,
  email: editPersonData.email,
+ ...(editPersonData.gender ? { gender: editPersonData.gender } : {}),
  });
  } else {
  const userSnap = await getDoc(userRef);
@@ -755,6 +760,7 @@ export default function KermesDetailPage() {
  name: editPersonData.name,
  phone: editPersonData.phone,
  email: editPersonData.email,
+ ...(editPersonData.gender ? { gender: editPersonData.gender } : {}),
  });
  }
  }
@@ -2335,6 +2341,7 @@ export default function KermesDetailPage() {
  name: staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name,
  email: staff.email || '',
  phone: staff.phone || '',
+ gender: staff.gender || '',
  })}
  className="w-7 h-7 rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center justify-center text-xs font-semibold transition-colors"
  title="Düzenle"
@@ -2497,6 +2504,7 @@ export default function KermesDetailPage() {
  name: driver.displayName || (driver.firstName ? `${driver.firstName} ${driver.lastName || ''}`.trim() : '') || driver.name,
  email: driver.email || '',
  phone: driver.phone || '',
+ gender: driver.gender || '',
  })}
  className="w-7 h-7 rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center justify-center text-xs font-semibold transition-colors"
  title="Düzenle"
@@ -3252,6 +3260,37 @@ export default function KermesDetailPage() {
  />
  </div>
 
+ <div>
+ <label className="text-sm text-muted-foreground block mb-1">Cinsiyet <span className="text-red-500">*</span></label>
+ <div className="flex gap-2">
+ <button
+ type="button"
+ onClick={() => setEditPersonData({...editPersonData, gender: 'male'})}
+ className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition border ${
+ editPersonData.gender === 'male'
+ ? 'bg-blue-600 text-white border-blue-600'
+ : 'bg-background text-muted-foreground border-border hover:border-blue-400'
+ }`}
+ >
+ Erkek
+ </button>
+ <button
+ type="button"
+ onClick={() => setEditPersonData({...editPersonData, gender: 'female'})}
+ className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition border ${
+ editPersonData.gender === 'female'
+ ? 'bg-pink-600 text-white border-pink-600'
+ : 'bg-background text-muted-foreground border-border hover:border-pink-400'
+ }`}
+ >
+ Kadin
+ </button>
+ </div>
+ {!editPersonData.gender && (
+ <p className="text-xs text-red-400 mt-1">Kermes personeli icin cinsiyet secimi zorunludur</p>
+ )}
+ </div>
+
  <div className="pt-4 border-t border-border mt-6">
  <label className="text-sm font-semibold text-foreground block mb-3">Hızlı İşlemler</label>
  
@@ -3294,7 +3333,7 @@ export default function KermesDetailPage() {
 
  <div className="flex gap-3 mt-8">
  <button onClick={() => setEditPersonData(null)} className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">İptal</button>
- <button onClick={handleSaveEditPerson} disabled={isSavingPerson} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium disabled:opacity-50 transition">
+ <button onClick={handleSaveEditPerson} disabled={isSavingPerson || !editPersonData.gender} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium disabled:opacity-50 transition">
  {isSavingPerson ? 'Kaydediliyor...' : 'Kaydet'}
  </button>
  </div>

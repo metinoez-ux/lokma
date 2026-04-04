@@ -164,6 +164,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         .collection('kermes_events')
         .snapshots()
         .listen((snapshot) {
+      debugPrint('[KERMES-REALTIME] Snapshot geldi: ${snapshot.docs.length} doc, ${snapshot.docChanges.length} degisiklik');
+      for (final change in snapshot.docChanges) {
+        final data = change.doc.data();
+        debugPrint('[KERMES-REALTIME] ${change.type.name}: ${change.doc.id} -> startDate=${data?['startDate']}, name=${data?['name']}');
+      }
       _processKermesSnapshot(snapshot);
     }, onError: (e, stackTrace) {
       debugPrint('Kermes stream error: $e');
