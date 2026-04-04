@@ -1282,14 +1282,18 @@ export default function KermesDetailPage() {
  if (userSnap.exists()) {
  const existing = userSnap.data().kermesAssignments || [];
  const filtered = existing.filter((a: any) => a.kermesId !== kermes.id);
- await updateDoc(userRef, { kermesAssignments: [...filtered, assignmentData.kermesAssignments[0]] });
+ const updateData: any = { kermesAssignments: [...filtered, assignmentData.kermesAssignments[0]] };
+ if (newStaffForm.gender && !userSnap.data().gender) updateData.gender = newStaffForm.gender;
+ await updateDoc(userRef, updateData);
  }
  // Admins koleksiyonunda guncelle (varsa)
  const adminSnap = await getDoc(adminRef);
  if (adminSnap.exists()) {
  const existing = adminSnap.data().kermesAssignments || [];
  const filtered = existing.filter((a: any) => a.kermesId !== kermes.id);
- await updateDoc(adminRef, { kermesAssignments: [...filtered, assignmentData.kermesAssignments[0]] });
+ const updateData: any = { kermesAssignments: [...filtered, assignmentData.kermesAssignments[0]] };
+ if (newStaffForm.gender && !adminSnap.data().gender) updateData.gender = newStaffForm.gender;
+ await updateDoc(adminRef, updateData);
  }
 
  // Bildirim - atama emaili gonder
