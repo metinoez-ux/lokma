@@ -442,6 +442,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               acceptsDonations: data['acceptsDonations'] == true,
               selectedDonationFundId: data['selectedDonationFundId']?.toString(),
               selectedDonationFundName: data['selectedDonationFundName']?.toString(),
+              sectionDefs: _parseSectionDefs(data['tableSectionsV2']),
             );
 
             loadedEvents.add(event);
@@ -465,6 +466,30 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
     }
+  }
+
+  // ============== SECTION DEFS PARSING ==============
+  List<KermesSectionDef> _parseSectionDefs(dynamic rawSections) {
+    if (rawSections == null) return [];
+    try {
+      if (rawSections is List) {
+        return rawSections
+            .where((e) => e is Map)
+            .map((e) => KermesSectionDef.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+      if (rawSections is Map) {
+        // tableSectionsV2 Map<sectionId, sectionData> formatinda olabilir
+        return rawSections.entries.map((entry) {
+          final data = entry.value is Map ? Map<String, dynamic>.from(entry.value as Map) : <String, dynamic>{};
+          data['id'] = entry.key.toString();
+          return KermesSectionDef.fromJson(data);
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing sectionDefs: $e');
+    }
+    return [];
   }
 
   // ============== SMART SEARCH + FILTERING ==============

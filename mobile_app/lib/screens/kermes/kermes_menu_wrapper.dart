@@ -104,6 +104,7 @@ class _KermesMenuWrapperState extends State<KermesMenuWrapper> {
           hasKidsActivities: features.contains('kids') || features.contains('kids_area'),
           activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
           selectedDonationFundId: data['selectedDonationFundId']?.toString(),
+          sectionDefs: _parseSectionDefs(data['tableSectionsV2']),
         );
 
         if (mounted) {
@@ -128,6 +129,28 @@ class _KermesMenuWrapperState extends State<KermesMenuWrapper> {
         });
       }
     }
+  }
+
+  List<KermesSectionDef> _parseSectionDefs(dynamic rawSections) {
+    if (rawSections == null) return [];
+    try {
+      if (rawSections is List) {
+        return rawSections
+            .where((e) => e is Map)
+            .map((e) => KermesSectionDef.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+      if (rawSections is Map) {
+        return rawSections.entries.map((entry) {
+          final data = entry.value is Map ? Map<String, dynamic>.from(entry.value as Map) : <String, dynamic>{};
+          data['id'] = entry.key.toString();
+          return KermesSectionDef.fromJson(data);
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing sectionDefs: $e');
+    }
+    return [];
   }
 
   @override

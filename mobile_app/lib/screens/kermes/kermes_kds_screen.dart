@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
-
+import 'package:lokma_app/services/staff_role_service.dart';
+import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
 
 /// Kermes KDS (Kitchen Display System) Ekrani
 /// Zone-bazli mutfak gorunumu: Her hazirlik alani (prepZone) kendi siparislerini gorur
@@ -89,6 +91,21 @@ class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
     }
   }
 
+  Widget? _buildStaffFAB() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return null;
+    final staffRole = StaffRoleService();
+    return KermesStaffStatusFAB(
+      kermesId: widget.kermesId,
+      staffId: currentUser.uid,
+      staffName: staffRole.staffName ?? 'Personel',
+      role: 'waiter',
+      sectionId: widget.allowedSections.isNotEmpty
+          ? widget.allowedSections.first
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -154,6 +171,7 @@ class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
             ),
         ],
       ),
+      floatingActionButton: _buildStaffFAB(),
       body: StreamBuilder<List<KermesOrder>>(
         stream: orderService.getOrdersByZone(widget.kermesId, _activeZone),
         builder: (context, snapshot) {

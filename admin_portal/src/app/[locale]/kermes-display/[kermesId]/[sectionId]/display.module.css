@@ -1,0 +1,332 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  color: #f8fafc;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+  min-height: 72px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lokmaLogo {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ea580c;
+  letter-spacing: -0.5px;
+}
+
+.kermesName {
+  font-size: 18px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.headerCenter {
+  display: flex;
+  align-items: center;
+}
+
+.sectionName {
+  font-size: 32px;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.clock {
+  font-size: 36px;
+  font-weight: 700;
+  color: #cbd5e1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  display: flex;
+  padding: 24px 32px;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* HAZIR section */
+.readySection {
+  flex: 0 0 45%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionIconReady {
+  font-size: 32px;
+  color: #22c55e;
+}
+
+.sectionTitleReady {
+  font-size: 28px;
+  font-weight: 800;
+  color: #22c55e;
+  letter-spacing: 2px;
+}
+
+.countBadgeReady {
+  font-size: 18px;
+  font-weight: 700;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-left: 4px;
+}
+
+.readyGrid {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.readyCard {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
+  border: 2px solid rgba(34, 197, 94, 0.4);
+  border-radius: 20px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  flex: 0 0 auto;
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.readyCardNew {
+  composes: readyCard;
+  animation: newReadyPulse 1s ease-in-out 3, slideIn 0.5s ease-out;
+}
+
+.readyNumber {
+  font-size: 64px;
+  font-weight: 800;
+  color: #22c55e;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.readyDelivery {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #86efac;
+  font-size: 14px;
+}
+
+.readyDeliveryText {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.readyDeliveryIcon {
+  font-size: 20px;
+}
+
+/* Divider */
+.divider {
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.15), transparent);
+  margin: 0 24px;
+  align-self: stretch;
+}
+
+/* HAZIRLANIYOR section */
+.preparingSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.sectionIconPreparing {
+  font-size: 32px;
+  color: #f59e0b;
+}
+
+.sectionTitlePreparing {
+  font-size: 28px;
+  font-weight: 800;
+  color: #f59e0b;
+  letter-spacing: 2px;
+}
+
+.countBadgePreparing {
+  font-size: 18px;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-left: 4px;
+}
+
+.preparingList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.preparingCard {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.preparingHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.preparingNumber {
+  font-size: 32px;
+  font-weight: 800;
+  color: #fbbf24;
+  font-variant-numeric: tabular-nums;
+}
+
+.preparingDelivery {
+  display: flex;
+  align-items: center;
+  color: #fcd34d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.preparingDeliveryIcon {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.preparingItems {
+  font-size: 18px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* Empty state */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 0;
+  opacity: 0.4;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  color: #64748b;
+}
+
+.emptyText {
+  font-size: 18px;
+  color: #64748b;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.footerIcon {
+  font-size: 20px;
+  color: #64748b;
+}
+
+.footerText {
+  font-size: 18px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.6);
+    transform: scale(1.03);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes newReadyPulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Kiosk mode */
+.container * {
+  cursor: none !important;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}

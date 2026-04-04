@@ -167,33 +167,68 @@ class KermesOrderService {
     }
   }
 
-  /// Sipariş ID'si oluştur - Kermes bazlı sıralı numara
-  /// Format: 5 haneli sayı (11001, 11002, 11003...)
-  /// Her kermes başlangıcında 11001 ile başlar
-  /// Atomic transaction ile race condition önlenir
-  Future<String> generateSequentialOrderId(String kermesId) async {
+  /// Siparis ID'si olustur - Bolum-farkindali siralama
+  /// Erkekler bolumu: tek nolar (1, 3, 5, 7...)
+  /// Kadinlar bolumu: cift nolar (2, 4, 6, 8...)
+  /// Diger bolumler: 101'den baslayan ayri seri
+  /// Atomic transaction ile race condition onlenir
+  Future<String> generateSequentialOrderId(String kermesId, {String? tableSection}) async {
     final kermesRef = _firestore.collection('kermes_events').doc(kermesId);
     
-    // Transaction ile atomic olarak counter'ı artır
+    // Bolum tipine gore counter field ve numara mantigi belirle
+    final sectionType = _getSectionType(tableSection);
+    
+    // Transaction ile atomic olarak counter'i artir
     final orderId = await _firestore.runTransaction<String>((transaction) async {
       final kermesDoc = await transaction.get(kermesRef);
       
       if (!kermesDoc.exists) {
-        throw Exception('Kermes bulunamadı: $kermesId');
+        throw Exception('Kermes bulunamadi: $kermesId');
       }
       
-      // Mevcut counter'ı al, yoksa 11000 ile başla (ilk sipariş 11001 olacak)
-      final currentCounter = kermesDoc.data()?['orderCounter'] ?? 11000;
-      final newCounter = currentCounter + 1;
+      final data = kermesDoc.data() ?? {};
       
-      // Counter'ı güncelle
-      transaction.update(kermesRef, {'orderCounter': newCounter});
-      
-      // 5 haneli string olarak döndür
-      return newCounter.toString();
+      switch (sectionType) {
+        case _SectionType.erkekler:
+          // Tek nolar: 1, 3, 5, 7...
+          // Counter: kac tane erkek siparisi verildi (0, 1, 2...)
+          final erkekCount = data['orderCounterErkek'] ?? 0;
+          final newCount = erkekCount + 1;
+          final orderNum = (newCount * 2) - 1; // 1, 3, 5, 7...
+          transaction.update(kermesRef, {'orderCounterErkek': newCount});
+          return orderNum.toString();
+          
+        case _SectionType.kadinlar:
+          // Cift nolar: 2, 4, 6, 8...
+          final kadinCount = data['orderCounterKadin'] ?? 0;
+          final newCount = kadinCount + 1;
+          final orderNum = newCount * 2; // 2, 4, 6, 8...
+          transaction.update(kermesRef, {'orderCounterKadin': newCount});
+          return orderNum.toString();
+          
+        case _SectionType.diger:
+          // Diger bolumler: 101, 102, 103...
+          final digerCount = data['orderCounterDiger'] ?? 100;
+          final newCount = digerCount + 1;
+          transaction.update(kermesRef, {'orderCounterDiger': newCount});
+          return newCount.toString();
+      }
     });
     
     return orderId;
+  }
+  
+  /// Bolum tipini belirle
+  _SectionType _getSectionType(String? tableSection) {
+    if (tableSection == null) return _SectionType.diger;
+    final lower = tableSection.toLowerCase();
+    if (lower.contains('erkek') || lower.contains('men') || lower.contains('herren')) {
+      return _SectionType.erkekler;
+    }
+    if (lower.contains('kadin') || lower.contains('kadın') || lower.contains('women') || lower.contains('damen') || lower.contains('frauen')) {
+      return _SectionType.kadinlar;
+    }
+    return _SectionType.diger;
   }
   
   /// Fallback: Random sipariş ID'si oluştur (transaction başarısız olursa)
@@ -332,6 +367,100 @@ class KermesOrderService {
           
           return orders;
         });
+  }
+
+  // ==========================================================
+  // TEZGAH (SIPARIS BIRLESTIRME NOKTASI) METHODS
+  // Tezgah, tum zone'lardan gelen hazir itemlari birlestirir
+  // ==========================================================
+
+  /// Tezgah ekrani icin siparis stream'i
+  /// Hazirlanan ve hazir siparisler gosterilir, tamamen teslim edilenler cikarilir
+  /// Bolum filtresi uygulanabilir (ornegin sadece Kadin Bolumu tezgahi)
+  Stream<List<KermesOrder>> getTezgahOrdersStream(String kermesId, {List<String>? sectionFilter}) {
+    return _ordersCollection
+        .where('kermesId', isEqualTo: kermesId)
+        .where('status', whereIn: [
+          KermesOrderStatus.pending.name,
+          KermesOrderStatus.preparing.name,
+          KermesOrderStatus.ready.name,
+        ])
+        .orderBy('createdAt', descending: false) // FIFO - ilk gelen ilk cikar
+        .snapshots()
+        .map((snapshot) {
+          var orders = snapshot.docs
+              .map((doc) => KermesOrder.fromDocument(doc))
+              .toList();
+
+          // Bolum filtresi uygula: sipariste bu bolume ait en az bir item olmali
+          if (sectionFilter != null && sectionFilter.isNotEmpty) {
+            orders = orders.where((order) {
+              // Masa siparisi ise tableSection'a bak
+              if (order.tableSection != null) {
+                return sectionFilter.contains(order.tableSection);
+              }
+              // Diger siparisler icin prepZone'a bak
+              return order.items.any((item) =>
+                item.prepZone != null && sectionFilter.any((s) =>
+                  item.prepZone!.startsWith(s.substring(0, 1)))
+              );
+            }).toList();
+          }
+
+          // Siralama: Tam hazir olanlar en uste
+          orders.sort((a, b) {
+            if (a.isFullyReady && !b.isFullyReady) return -1;
+            if (!a.isFullyReady && b.isFullyReady) return 1;
+            return a.createdAt.compareTo(b.createdAt); // FIFO
+          });
+          
+          return orders;
+        });
+  }
+
+  /// Tezgahtan teslim et (GelAl siparisleri)
+  Future<void> markAsDeliveredFromTezgah(String orderId) async {
+    try {
+      await _ordersCollection.doc(orderId).update({
+        'status': KermesOrderStatus.delivered.name,
+        'completedAt': Timestamp.fromDate(DateTime.now()),
+        'deliveredFromTezgah': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Teslim islemi basarisiz: $e');
+    }
+  }
+
+  /// Garson ata (masa siparisleri icin)
+  Future<void> assignWaiter({
+    required String orderId,
+    required String waiterId,
+    required String waiterName,
+  }) async {
+    try {
+      await _ordersCollection.doc(orderId).update({
+        'assignedWaiterId': waiterId,
+        'assignedWaiterName': waiterName,
+        'assignedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Garson atamasi basarisiz: $e');
+    }
+  }
+
+  /// Kurye hazir (kurye dispatch ekranina yonlendir)
+  Future<void> markReadyForCourier(String orderId) async {
+    try {
+      await _ordersCollection.doc(orderId).update({
+        'readyForCourier': true,
+        'readyForCourierAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Kurye hazirligi basarisiz: $e');
+    }
   }
 
   /// Siparisi "teslim edildi" olarak isaretle (garson masaya goturdugunde)
@@ -740,3 +869,6 @@ class CancelOrderResult {
 final kermesOrderServiceProvider = Provider<KermesOrderService>((ref) {
   return KermesOrderService();
 });
+
+/// Bolum tipi - numara atama icin
+enum _SectionType { erkekler, kadinlar, diger }

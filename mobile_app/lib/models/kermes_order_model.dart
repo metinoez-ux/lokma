@@ -138,6 +138,13 @@ class KermesOrder {
   final String? createdByStaffName; // Garson adi
   final String? tableSection;      // Masanin ait oldugu bolum (Kadin Bolumu, Erkek Bolumu vb.)
 
+  // Tezgah & Stant POS alanlari
+  final String orderSource;          // 'app' | 'pos_garson' | 'pos_stant'
+  final String? assignedTezgah;      // Siparisi birlestirme noktasi (ornegin "KT1")
+  final bool isInstantDelivery;      // Stant POS: aninda teslim (siparis = ready + delivered)
+  final String? assignedWaiterId;    // Masa siparisi icin atanan garson UID
+  final String? assignedWaiterName;  // Garson adi
+
   KermesOrder({
     required this.id,
     required this.orderNumber,
@@ -162,6 +169,11 @@ class KermesOrder {
     this.createdByStaffId,
     this.createdByStaffName,
     this.tableSection,
+    this.orderSource = 'app',
+    this.assignedTezgah,
+    this.isInstantDelivery = false,
+    this.assignedWaiterId,
+    this.assignedWaiterName,
   });
 
   /// Siparisin tum itemlari hazir mi?
@@ -212,6 +224,11 @@ class KermesOrder {
       if (createdByStaffId != null) 'createdByStaffId': createdByStaffId,
       if (createdByStaffName != null) 'createdByStaffName': createdByStaffName,
       if (tableSection != null) 'tableSection': tableSection,
+      'orderSource': orderSource,
+      if (assignedTezgah != null) 'assignedTezgah': assignedTezgah,
+      if (isInstantDelivery) 'isInstantDelivery': isInstantDelivery,
+      if (assignedWaiterId != null) 'assignedWaiterId': assignedWaiterId,
+      if (assignedWaiterName != null) 'assignedWaiterName': assignedWaiterName,
     };
   }
 
@@ -253,6 +270,11 @@ class KermesOrder {
       createdByStaffId: map['createdByStaffId'] as String?,
       createdByStaffName: map['createdByStaffName'] as String?,
       tableSection: map['tableSection'] as String?,
+      orderSource: map['orderSource'] as String? ?? 'app',
+      assignedTezgah: map['assignedTezgah'] as String?,
+      isInstantDelivery: map['isInstantDelivery'] as bool? ?? false,
+      assignedWaiterId: map['assignedWaiterId'] as String?,
+      assignedWaiterName: map['assignedWaiterName'] as String?,
     );
   }
 
@@ -330,6 +352,11 @@ class KermesOrder {
     String? createdByStaffId,
     String? createdByStaffName,
     String? tableSection,
+    String? orderSource,
+    String? assignedTezgah,
+    bool? isInstantDelivery,
+    String? assignedWaiterId,
+    String? assignedWaiterName,
   }) {
     return KermesOrder(
       id: id ?? this.id,
@@ -355,6 +382,11 @@ class KermesOrder {
       createdByStaffId: createdByStaffId ?? this.createdByStaffId,
       createdByStaffName: createdByStaffName ?? this.createdByStaffName,
       tableSection: tableSection ?? this.tableSection,
+      orderSource: orderSource ?? this.orderSource,
+      assignedTezgah: assignedTezgah ?? this.assignedTezgah,
+      isInstantDelivery: isInstantDelivery ?? this.isInstantDelivery,
+      assignedWaiterId: assignedWaiterId ?? this.assignedWaiterId,
+      assignedWaiterName: assignedWaiterName ?? this.assignedWaiterName,
     );
   }
 }

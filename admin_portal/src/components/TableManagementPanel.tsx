@@ -18,6 +18,8 @@ interface TableDef {
 interface SectionDef {
  name: string;
  genderRestriction: string;
+ prepZones?: string[];    // Hazirlik alanlari (mutfak istasyonlari) - orn: K1, K2, K3
+ tezgahlar?: string[];    // Siparis birlestirme/teslimat noktasi - orn: KT1, KT2
 }
 
 interface GenderTypeConfig {
@@ -287,27 +289,33 @@ export default function TableManagementPanel({
   </div>
   )}
   </div>
-  <div className="flex flex-wrap gap-2 mt-4">
-  {tableSections.length === 0 && (
-  <span className="text-sm font-medium text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 w-full mb-2">
-  ℹ️ Masalarınızı oluşturup sonradan çoklu seçim ile (checkbox) onlara bölümler atayabilirsiniz.
-  </span>
+   <div className="space-y-3 mt-4">
+   {tableSections.length === 0 && (
+   <span className="text-sm font-medium text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 w-full mb-2 block">
+   Masalarinizi olusturup sonradan coklu secim ile (checkbox) onlara bolumler atayabilirsiniz.
+   </span>
    )}
    {tableSections.map((section, idx) => {
    const def = sectionDefs.find(d => d.name === section);
    const gr = def?.genderRestriction || 'mixed';
    const gd = getGenderDisplay(gr, genderTypes);
+   const sectionPrepZones = def?.prepZones || [];
+   const sectionTezgahlar = def?.tezgahlar || [];
    return (
-   <div key={idx} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-sm border ${gd.color}`}>
-   <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center bg-black/20">{gd.icon}</span>
-   <span className="text-white font-medium">{section}</span>
-   <span className="text-gray-300 text-xs ml-0.5 font-normal">
-   ({tables.filter((t) => t.section === section).length} {t("masa")})
+   <div key={idx} className={`rounded-xl border ${gd.color} overflow-hidden`}>
+   {/* Section header */}
+   <div className="flex items-center justify-between px-4 py-2.5">
+   <div className="flex items-center gap-2">
+   <span className="font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center bg-black/20">{gd.icon}</span>
+   <span className="text-white font-semibold">{section}</span>
+   <span className="text-gray-300 text-xs font-normal">
+   ({tables.filter((tb) => tb.section === section).length} Masa | {sectionPrepZones.length} Hazirlik | {sectionTezgahlar.length} Tezgah)
    </span>
+   </div>
    <button
    onClick={() => {
-   if (tables.some(t => t.section === section)) {
-       showToast("Hata: Bu bölümde masalar bulunuyor! Lütfen önce bu masaları silin veya bölümünü değiştirin.", "error");
+   if (tables.some(tb => tb.section === section)) {
+       showToast("Hata: Bu bolumde masalar var! Once masalari silin.", "error");
        return;
    }
    const newSections = tableSections.filter((_, i) => i !== idx);
@@ -316,22 +324,110 @@ export default function TableManagementPanel({
    updateAndSave(undefined, undefined, undefined, newSections, newDefs);
    if (selectedBulkSection === section) setSelectedBulkSection(newSections[0] || "");
    }}
-   className="ml-2 w-5 h-5 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition text-xs font-bold"
+   className="w-6 h-6 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition text-xs font-bold"
    title={t("bolumuSil")}
-   >
-   ✕
-   </button>
+   >x</button>
+   </div>
+   {/* PrepZone + Tezgah */}
+   <div className="px-4 pb-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+   {/* PrepZone */}
+   <div className="bg-black/10 rounded-lg p-3">
+   <p className="text-xs font-semibold text-gray-300 mb-2">Hazirlik Alanlari (PrepZone)</p>
+   <div className="flex flex-wrap gap-1.5 mb-2">
+   {sectionPrepZones.map((zone, zi) => (
+   <span key={zi} className="flex items-center gap-1 bg-black/20 text-white text-xs px-2 py-1 rounded-md border border-white/10">
+   {zone}
+   <button onClick={() => {
+   const nz = sectionPrepZones.filter((_, i) => i !== zi);
+   const nd = sectionDefs.map(d => d.name === section ? { ...d, prepZones: nz } : d);
+   setSectionDefs(nd);
+   updateAndSave(undefined, undefined, undefined, undefined, nd);
+   }} className="ml-0.5 text-red-400 hover:text-red-300 font-bold text-xs">x</button>
+   </span>
+   ))}
+   {sectionPrepZones.length === 0 && <span className="text-xs text-gray-500 italic">Henuz hazirlik alani eklenmedi</span>}
+   </div>
+   <div className="flex gap-1.5">
+   <input type="text" placeholder="Orn: Corba Standi" className="flex-1 bg-gray-800/80 text-white text-xs px-2 py-1.5 rounded-md border border-gray-600 focus:border-amber-500 focus:outline-none"
+   id={`pz-input-${idx}`}
+   onKeyDown={(e) => {
+   if (e.key === 'Enter') {
+   const val = (e.target as HTMLInputElement).value.trim();
+   if (!val) return;
+   if (sectionPrepZones.includes(val)) { showToast("Bu hazirlik alani zaten mevcut", "error"); return; }
+   const nd = sectionDefs.map(d => d.name === section ? { ...d, prepZones: [...(d.prepZones || []), val] } : d);
+   setSectionDefs(nd);
+   updateAndSave(undefined, undefined, undefined, undefined, nd);
+   (e.target as HTMLInputElement).value = '';
+   }
+   }} />
+   <button onClick={() => {
+   const input = document.getElementById(`pz-input-${idx}`) as HTMLInputElement;
+   const val = input?.value.trim();
+   if (!val) return;
+   if (sectionPrepZones.includes(val)) { showToast("Bu hazirlik alani zaten mevcut", "error"); return; }
+   const nd = sectionDefs.map(d => d.name === section ? { ...d, prepZones: [...(d.prepZones || []), val] } : d);
+   setSectionDefs(nd);
+   updateAndSave(undefined, undefined, undefined, undefined, nd);
+   input.value = '';
+   }} className="px-2 py-1.5 bg-green-600/80 hover:bg-green-500 text-white text-xs rounded-md transition font-medium">+</button>
+   </div>
+   </div>
+   {/* Tezgah */}
+   <div className="bg-black/10 rounded-lg p-3">
+   <p className="text-xs font-semibold text-gray-300 mb-2">Tezgahlar (Teslimat Noktasi)</p>
+   <div className="flex flex-wrap gap-1.5 mb-2">
+   {sectionTezgahlar.map((tz, ti) => (
+   <span key={ti} className="flex items-center gap-1 bg-black/20 text-white text-xs px-2 py-1 rounded-md border border-white/10">
+   {tz}
+   <button onClick={() => {
+   const nt = sectionTezgahlar.filter((_, i) => i !== ti);
+   const nd = sectionDefs.map(d => d.name === section ? { ...d, tezgahlar: nt } : d);
+   setSectionDefs(nd);
+   updateAndSave(undefined, undefined, undefined, undefined, nd);
+   }} className="ml-0.5 text-red-400 hover:text-red-300 font-bold text-xs">x</button>
+   </span>
+   ))}
+   {sectionTezgahlar.length === 0 && <span className="text-xs text-gray-500 italic">Henuz tezgah eklenmedi</span>}
+   </div>
+   <div className="flex gap-1.5">
+   <input type="text" placeholder="Orn: KT1" className="flex-1 bg-gray-800/80 text-white text-xs px-2 py-1.5 rounded-md border border-gray-600 focus:border-amber-500 focus:outline-none"
+   id={`tz-input-${idx}`}
+   onKeyDown={(e) => {
+   if (e.key === 'Enter') {
+   const val = (e.target as HTMLInputElement).value.trim();
+   if (!val) return;
+   if (sectionTezgahlar.includes(val)) { showToast("Bu tezgah zaten mevcut", "error"); return; }
+   const nd = sectionDefs.map(d => d.name === section ? { ...d, tezgahlar: [...(d.tezgahlar || []), val] } : d);
+   setSectionDefs(nd);
+   updateAndSave(undefined, undefined, undefined, undefined, nd);
+   (e.target as HTMLInputElement).value = '';
+   }
+   }} />
+   <button onClick={() => {
+   const input = document.getElementById(`tz-input-${idx}`) as HTMLInputElement;
+   const val = input?.value.trim();
+   if (!val) return;
+   if (sectionTezgahlar.includes(val)) { showToast("Bu tezgah zaten mevcut", "error"); return; }
+   const nd = sectionDefs.map(d => d.name === section ? { ...d, tezgahlar: [...(d.tezgahlar || []), val] } : d);
+   setSectionDefs(nd);
+   updateAndSave(undefined, undefined, undefined, undefined, nd);
+   input.value = '';
+   }} className="px-2 py-1.5 bg-green-600/80 hover:bg-green-500 text-white text-xs rounded-md transition font-medium">+</button>
+   </div>
+   </div>
+   </div>
    </div>
    );
    })}
    </div>
-  </div>
+   </div>
 
-  {/* Quick setup row */}
-  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-  <div>
-  <label className="text-gray-400 text-sm block mb-1">{t("toplam_masa_adedi")}</label>
-  <input
+   {/* Quick setup row */}
+   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+   <div>
+   <label className="text-gray-400 text-sm block mb-1">{t("toplam_masa_adedi")}</label>
+   <input
   type="number"
   value={maxReservationTables}
   onChange={(e) => setMaxReservationTables(Math.max(0, parseInt(e.target.value) || 0))}

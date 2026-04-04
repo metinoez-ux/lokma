@@ -44,46 +44,73 @@ const DEFAULT_FEATURES: KermesFeature[] = [
 // Varsayılan kategoriler (ilk yüklemede Firebase'e yazılacak)
 const DEFAULT_CATEGORIES = ['Ana Yemek', 'Çorba', 'Tatlı', 'İçecek', 'Aperatif', 'Grill', 'Diğer'];
 
-const DEFAULT_PREP_ZONES = ["Kadınlar Standı", "Erkekler Standı", "İçecek Standı", "Tatlı Standı", "Döner Standı"];
+const DEFAULT_PREP_ZONES = ["Kadinlar Standi", "Erkekler Standi", "Icecek Standi", "Tatli Standi", "Doner Standi"];
 
-function PrepZoneSelector({ value, onChange, products }: { value: string[], onChange: (val: string[]) => void, products: KermesProduct[] }) {
-    const allZones = Array.from(new Set([...DEFAULT_PREP_ZONES, ...products.flatMap(p => p.prepZone || [])])).filter(Boolean).sort();
-    
+interface SectionDefForPZ {
+  name: string;
+  genderRestriction: string;
+  prepZones?: string[];
+}
+
+function PrepZoneSelector({ value, onChange, products, sectionDefs }: { value: string[], onChange: (val: string[]) => void, products: KermesProduct[], sectionDefs?: SectionDefForPZ[] }) {
+    const hasDynamic = sectionDefs && sectionDefs.length > 0 && sectionDefs.some(s => (s.prepZones || []).length > 0);
+
     const toggleZone = (zone: string) => {
         if (value.includes(zone)) onChange(value.filter(v => v !== zone));
         else onChange([...value, zone]);
     };
 
-    const customValues = value.filter(v => !allZones.includes(v));
+    if (hasDynamic) {
+        const allDynamicZones = sectionDefs!.flatMap(s => (s.prepZones || []).map(z => ({ zone: z, section: s.name })));
+        const allZoneNames = allDynamicZones.map(d => d.zone);
+        const customValues = value.filter(v => !allZoneNames.includes(v));
+        return (
+            <div className="space-y-3">
+            {sectionDefs!.filter(s => (s.prepZones || []).length > 0).map(section => (
+                <div key={section.name} className="rounded-lg border border-border p-3">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">{section.name}</p>
+                <div className="flex flex-wrap gap-2">
+                {(section.prepZones || []).map(zone => (
+                    <label key={zone} className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border cursor-pointer transition ${value.includes(zone) ? 'bg-pink-50 border-pink-200 dark:bg-pink-900/20 dark:border-pink-800' : 'bg-muted/30 border-border hover:bg-muted'}`}>
+                        <input type="checkbox" checked={value.includes(zone)} onChange={() => toggleZone(zone)} className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 w-4 h-4" />
+                        <span className={`text-sm ${value.includes(zone) ? 'font-medium text-pink-700 dark:text-pink-300' : 'text-foreground'}`}>{zone}</span>
+                    </label>
+                ))}
+                </div>
+                </div>
+            ))}
+            <div>
+                <p className="text-xs text-muted-foreground mb-1">Farkli bir alan ekle (virgul ile ayirin)</p>
+                <input type="text" value={customValues.join(', ')} onChange={(e) => {
+                    const custom = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                    const selectedFromAll = value.filter(v => allZoneNames.includes(v));
+                    onChange([...selectedFromAll, ...custom]);
+                }} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-pink-500 text-sm" placeholder="Orn: Mutfak, Bar" />
+            </div>
+            </div>
+        );
+    }
 
+    // Fallback: hardcoded defaults
+    const allZones = Array.from(new Set([...DEFAULT_PREP_ZONES, ...products.flatMap(p => p.prepZone || [])])).filter(Boolean).sort();
+    const customValues = value.filter(v => !allZones.includes(v));
     return (
         <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
                 {allZones.map(zone => (
                     <label key={zone} className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border cursor-pointer transition ${value.includes(zone) ? 'bg-pink-50 border-pink-200 dark:bg-pink-900/20 dark:border-pink-800' : 'bg-muted/30 border-border hover:bg-muted'}`}>
-                        <input 
-                            type="checkbox" 
-                            checked={value.includes(zone)}
-                            onChange={() => toggleZone(zone)}
-                            className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 w-4 h-4"
-                        />
+                        <input type="checkbox" checked={value.includes(zone)} onChange={() => toggleZone(zone)} className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 w-4 h-4" />
                         <span className={`text-sm ${value.includes(zone) ? 'font-medium text-pink-700 dark:text-pink-300' : 'text-foreground'}`}>{zone}</span>
                     </label>
                 ))}
             </div>
             <div>
-                <p className="text-xs text-muted-foreground mb-1">Farklı bir alan ekle (virgülle ayırın)</p>
-                <input 
-                    type="text" 
-                    value={customValues.join(', ')}
-                    onChange={(e) => {
-                        const custom = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                        const selectedFromAll = value.filter(v => allZones.includes(v));
-                        onChange([...selectedFromAll, ...custom]);
-                    }}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-pink-500 text-sm"
-                    placeholder="Örn: Mutfak, Bar"
-                />
+                <p className="text-xs text-muted-foreground mb-1">Farkli bir alan ekle (virgul ile ayirin)</p>
+                <input type="text" value={customValues.join(', ')} onChange={(e) => {
+                    const custom = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                    const selectedFromAll = value.filter(v => allZones.includes(v));
+                    onChange([...selectedFromAll, ...custom]);
+                }} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-pink-500 text-sm" placeholder="Orn: Mutfak, Bar" />
             </div>
         </div>
     );
@@ -288,6 +315,9 @@ export default function KermesDetailPage() {
  const [editPersonData, setEditPersonData] = useState<any>(null);
  const [isSavingPerson, setIsSavingPerson] = useState(false);
 
+ // Bolum tanimlari (PrepZone + Tezgah hiyerarsisi)
+ const [kermesSectionDefs, setKermesSectionDefs] = useState<SectionDefForPZ[]>([]);
+
  // Otomatik kadro kaydetme fonksiyonu
  const saveTeamToDb = async (newStaff: string[], newDrivers: string[]) => {
  if (!kermesId) return;
@@ -453,6 +483,16 @@ export default function KermesDetailPage() {
  setEditCustomFeatures(Array.isArray(data.customFeatures) ? data.customFeatures : []);
  setAssignedStaff(Array.isArray(data.assignedStaff) ? data.assignedStaff : []);
  setAssignedDrivers(Array.isArray(data.assignedDrivers) ? data.assignedDrivers : []);
+
+ // Bolum tanimlarini yukle (PrepZone hiyerarsisi)
+ const rawSections = kermesDoc.data()?.tableSectionsV2;
+ if (Array.isArray(rawSections)) {
+ setKermesSectionDefs(rawSections.map((s: any) => ({
+ name: s.name || '',
+ genderRestriction: s.genderRestriction || 'mixed',
+ prepZones: Array.isArray(s.prepZones) ? s.prepZones : [],
+ })));
+ }
 
  const productsQuery = query(collection(db, 'kermes_events', kermesId, 'products'), orderBy('name'));
  const productsSnapshot = await getDocs(productsQuery);
@@ -2765,7 +2805,7 @@ export default function KermesDetailPage() {
  </div>
  <div>
  <label className="text-muted-foreground text-sm block mb-1">Hazırlık / Garson Alanı</label>
- <PrepZoneSelector value={customProduct.prepZone || []} onChange={(val) => setCustomProduct({ ...customProduct, prepZone: val })} products={products} />
+ <PrepZoneSelector value={customProduct.prepZone || []} onChange={(val) => setCustomProduct({ ...customProduct, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
  </div>
  <button onClick={handleCreateCustom} disabled={saving || !customProduct.name.trim() || customProduct.price <= 0}
  className="w-full py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg font-medium disabled:opacity-50">
@@ -2808,7 +2848,7 @@ export default function KermesDetailPage() {
  </div>
  <div>
  <label className="text-muted-foreground text-sm block mb-2">Hazırlık / Garson Alanı</label>
- <PrepZoneSelector value={editBeforeAdd.prepZone || []} onChange={(val) => setEditBeforeAdd({ ...editBeforeAdd, prepZone: val })} products={products} />
+ <PrepZoneSelector value={editBeforeAdd.prepZone || []} onChange={(val) => setEditBeforeAdd({ ...editBeforeAdd, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
  </div>
  </div>
  <div className="flex gap-3 mt-6">
@@ -2883,7 +2923,7 @@ export default function KermesDetailPage() {
  </div>
  <div>
  <label className="text-muted-foreground text-xs block mb-1">Hazırlık / Garson Alanı</label>
- <PrepZoneSelector value={editProduct.prepZone || []} onChange={(val) => setEditProduct({ ...editProduct, prepZone: val })} products={products} />
+ <PrepZoneSelector value={editProduct.prepZone || []} onChange={(val) => setEditProduct({ ...editProduct, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
  </div>
  </div>
 

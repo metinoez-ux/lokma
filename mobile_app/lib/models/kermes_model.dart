@@ -8,6 +8,49 @@ enum KermesSponsor {
   none,        // Sponsor yok
 }
 
+/// Kermes bolum tanimlari (Kadin Bolumu, Erkek Bolumu, Aile Bolumu vb.)
+/// Admin Portal'daki tableSectionsV2'den gelen veri.
+class KermesSectionDef {
+  final String id;          // "kadin_bolumu", "erkek_bolumu", "aile_bolumu"
+  final String name;        // "Kadin Bolumu"
+  final String gender;      // "female" | "male" | "mixed"
+  final List<String> prepZones;  // ["Kumpir Standi", "Borek Standi"]
+  final List<String> tezgahlar;  // ["KT1", "KT2"]
+  final List<String> tableIds;   // Bu bolume atanan masa ID'leri
+
+  KermesSectionDef({
+    required this.id,
+    required this.name,
+    this.gender = 'mixed',
+    this.prepZones = const [],
+    this.tezgahlar = const [],
+    this.tableIds = const [],
+  });
+
+  factory KermesSectionDef.fromJson(Map<String, dynamic> json) {
+    return KermesSectionDef(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      gender: json['gender']?.toString() ?? 'mixed',
+      prepZones: (json['prepZones'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      tezgahlar: (json['tezgahlar'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      tableIds: (json['tableIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'gender': gender,
+    'prepZones': prepZones,
+    'tezgahlar': tezgahlar,
+    'tableIds': tableIds,
+  };
+
+  /// Bu bolumde belirli bir masa var mi?
+  bool containsTable(String tableId) => tableIds.contains(tableId);
+}
+
 class KermesEvent {
   final String id;
   final String city;
@@ -85,6 +128,9 @@ class KermesEvent {
   final String? selectedDonationFundId; // Super admin tarafindan tanimlanan fonun ID'si
   final String? selectedDonationFundName; // Mobilde gosterilecek fon adi
 
+  // Bolum tanimlari (Admin Portal'dan gelen - Kadin/Erkek/Aile bolumleri)
+  final List<KermesSectionDef> sectionDefs;
+
   // Legacy - keep for backwards compatibility
   @Deprecated('Use hasOutdoor instead')
   bool get hasShoppingStands => hasOutdoor;
@@ -93,6 +139,17 @@ class KermesEvent {
   
   // Genel park notu
   final String? generalParkingNote;
+
+  /// Belirli bir masa ID'sinin hangi bolume ait oldugunu bul
+  KermesSectionDef? findSectionForTable(String tableId) {
+    for (final section in sectionDefs) {
+      if (section.containsTable(tableId)) return section;
+    }
+    return null;
+  }
+
+  /// Birden fazla bolum tanimli mi? (Bolum secimi step'i gostermek icin)
+  bool get hasMultipleSections => sectionDefs.length > 1;
 
   KermesEvent({
     required this.id,
@@ -152,6 +209,8 @@ class KermesEvent {
     this.acceptsDonations = false,
     this.selectedDonationFundId,
     this.selectedDonationFundName,
+    // Bolum tanimlari
+    this.sectionDefs = const [],
     // Pfand sistemi
     this.hasPfandSystem = false,
     this.pfandAmount = 0.25,

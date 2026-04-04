@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
+import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
 import '../../utils/currency_utils.dart';
 
 /// Kermes POS Ekrani - Garson/Kasiyer icin hizli siparis alma
@@ -48,6 +50,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   // States
   bool _isSubmitting = false;
   bool _showActiveOrders = false;
+  bool _isStantMode = false; // Stant modu: aninda teslim (POS kasa)
 
   // Renkler
   static const Color lokmaPink = Color(0xFFEA184A);
@@ -132,7 +135,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       _cart.clear();
       _tableController.clear();
       _customerNameController.clear();
-      _deliveryType = DeliveryType.gelAl;
+      if (!_isStantMode) {
+        _deliveryType = DeliveryType.gelAl;
+      }
       _paymentMethod = PaymentMethodType.cash;
     });
   }
@@ -162,7 +167,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       String orderNumber;
       try {
         orderNumber =
-            await orderService.generateSequentialOrderId(widget.event.id);
+            await orderService.generateSequentialOrderId(widget.event.id, tableSection: _selectedTableSection);
       } catch (e) {
         orderNumber = orderService.generateFallbackOrderId();
       }
@@ -182,6 +187,10 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         );
       }).toList();
 
+      // Stant modunda aninda teslim: siparis ready+delivered olarak kaydedilir
+      final isInstant = _isStantMode;
+      final orderSource = _isStantMode ? 'pos_stant' : 'pos_garson';
+
       final order = KermesOrder(
         id: orderId,
         orderNumber: orderNumber,
@@ -189,22 +198,34 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         kermesName: widget.event.title,
         customerName: _customerNameController.text.trim().isNotEmpty
             ? _customerNameController.text.trim()
-            : 'POS Siparis',
+            : (_isStantMode ? 'Stant Musteri' : 'POS Siparis'),
         customerPhone: '',
-        deliveryType: _deliveryType,
-        tableNumber: _deliveryType == DeliveryType.masada
+        deliveryType: _isStantMode ? DeliveryType.gelAl : _deliveryType,
+        tableNumber: _deliveryType == DeliveryType.masada && !_isStantMode
             ? _tableController.text.trim()
             : null,
-        items: orderItems,
+        items: isInstant
+            ? orderItems.map((i) => KermesOrderItem(
+                  name: i.name,
+                  quantity: i.quantity,
+                  price: i.price,
+                  prepZone: i.prepZone,
+                  category: i.category,
+                  imageUrl: i.imageUrl,
+                  itemStatus: KermesItemStatus.ready, // Aninda hazir
+                )).toList()
+            : orderItems,
         totalAmount: _totalCartAmount,
         paymentMethod: _paymentMethod,
-        // Kermes ortaminda nakit = aninda teslim. Kasiyer parayi alirken siparisi giriyor.
         isPaid: _paymentMethod == PaymentMethodType.cash,
-        status: KermesOrderStatus.pending,
+        status: isInstant ? KermesOrderStatus.delivered : KermesOrderStatus.pending,
         createdAt: DateTime.now(),
+        completedAt: isInstant ? DateTime.now() : null,
         createdByStaffId: widget.staffId,
         createdByStaffName: widget.staffName,
         tableSection: _selectedTableSection,
+        orderSource: orderSource,
+        isInstantDelivery: isInstant,
       );
 
       await orderService.createOrder(order);
@@ -264,6 +285,58 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           ],
         ),
         actions: [
+          // Stant Modu toggle
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: _isStantMode
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: _isStantMode
+                  ? Border.all(color: Colors.white54)
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.storefront,
+                  color: _isStantMode ? Colors.white : Colors.white54,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Stant',
+                  style: TextStyle(
+                    color: _isStantMode ? Colors.white : Colors.white54,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(
+                  height: 28,
+                  width: 36,
+                  child: Switch(
+                    value: _isStantMode,
+                    onChanged: (val) {
+                      HapticFeedback.mediumImpact();
+                      setState(() {
+                        _isStantMode = val;
+                        if (val) {
+                          _deliveryType = DeliveryType.gelAl;
+                        }
+                      });
+                    },
+                    activeColor: Colors.white,
+                    activeTrackColor: successGreen,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Aktif siparisler toggle
           IconButton(
             icon: Icon(
@@ -305,11 +378,26 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
             ),
         ],
       ),
+      floatingActionButton: _buildStaffFAB(),
       body: _showActiveOrders
           ? _buildActiveOrdersView(isDark)
           : isTablet
               ? _buildTabletLayout(isDark, screenWidth)
               : _buildPhoneLayout(isDark),
+    );
+  }
+
+  Widget? _buildStaffFAB() {
+    final uid = widget.staffId ?? FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return null;
+    return KermesStaffStatusFAB(
+      kermesId: widget.event.id,
+      staffId: uid,
+      staffName: widget.staffName ?? 'Kasiyer',
+      role: 'counter',
+      sectionId: widget.allowedSections.isNotEmpty
+          ? widget.allowedSections.first
+          : null,
     );
   }
 
