@@ -644,7 +644,8 @@ export default function KermesDetailPage() {
  return;
  }
  try {
- const teamData: any[] = [];
+ const usersMap = new Map<string, any>();
+ const adminsMap = new Map<string, any>();
  for (let i = 0; i < allIds.length; i += 10) {
  const chunk = allIds.slice(i, i + 10);
  const qUsers = query(collection(db, 'users'), where(documentId(), 'in', chunk));
@@ -652,12 +653,30 @@ export default function KermesDetailPage() {
  
  const [snapUsers, snapAdmins] = await Promise.all([getDocs(qUsers), getDocs(qAdmins)]);
  
- snapUsers.docs.forEach(d => teamData.push({ id: d.id, ...d.data() }));
- snapAdmins.docs.forEach(d => teamData.push({ id: d.id, ...d.data() }));
+ snapUsers.docs.forEach(d => usersMap.set(d.id, { id: d.id, ...d.data() }));
+ snapAdmins.docs.forEach(d => adminsMap.set(d.id, { id: d.id, ...d.data() }));
  }
  
- // Remove duplicates if same ID exists in both (rare)
- const uniqueTeamData = Array.from(new Map(teamData.map(item => [item.id, item])).values());
+ // Merge users + admins: users doc has identity (name/email/phone),
+ // admins doc has role/shift fields. Merge so neither blanks the other.
+ const mergedMap = new Map<string, any>();
+ for (const id of allIds) {
+ const userDoc = usersMap.get(id);
+ const adminDoc = adminsMap.get(id);
+ if (userDoc && adminDoc) {
+  // Start with adminDoc, overlay non-empty userDoc fields for identity
+  const merged = { ...adminDoc };
+  for (const [key, val] of Object.entries(userDoc)) {
+   if (val !== null && val !== undefined && val !== '') {
+    merged[key] = val;
+   }
+  }
+  mergedMap.set(id, merged);
+ } else {
+  mergedMap.set(id, userDoc || adminDoc || { id });
+ }
+ }
+ const uniqueTeamData = Array.from(mergedMap.values());
 
  setAssignedStaffDetails(uniqueTeamData);
  setAssignedDriverDetails(uniqueTeamData.filter(u => assignedDrivers.includes(u.id)));
