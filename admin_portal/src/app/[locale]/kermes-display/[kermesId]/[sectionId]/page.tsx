@@ -26,6 +26,9 @@ interface OrderItem {
   price: number;
   prepZone?: string;
   itemStatus?: string;
+  claimedByStaffId?: string;
+  claimedByStaffName?: string;
+  claimedAt?: Date;
 }
 
 interface KermesDisplayOrder {
@@ -149,6 +152,8 @@ export default function KermesDisplayPage({
             price: item.price || 0,
             prepZone: item.prepZone,
             itemStatus: item.itemStatus,
+            claimedByStaffId: (item as any).claimedByStaffId,
+            claimedByStaffName: (item as any).claimedByStaffName,
           })),
           totalAmount: data.totalAmount || 0,
           createdAt: data.createdAt?.toDate?.() || new Date(),
@@ -312,8 +317,13 @@ export default function KermesDisplayPage({
                   </div>
                   <div className={styles.preparingItems}>
                     {order.items.map((item, idx) => (
-                      <span key={idx}>
+                      <span key={idx} className={styles.preparingItemWrap}>
                         {item.name} x{item.quantity}
+                        {item.claimedByStaffName && (
+                          <span className={styles.claimChip}>
+                            {item.claimedByStaffName}
+                          </span>
+                        )}
                         {idx < order.items.length - 1 ? ', ' : ''}
                       </span>
                     ))}

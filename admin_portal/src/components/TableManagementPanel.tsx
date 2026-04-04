@@ -130,6 +130,23 @@ export default function TableManagementPanel({
  loadData();
  }, [loadData]);
 
+ // Cinsiyet-bazli otomatik numara uretici
+ // Kural: Tek sayilar (1,3,5) = Erkek, Cift sayilar (2,4,6) = Kadin
+ const getNextGenderNumber = (prefix: string, existingItems: string[], genderRestriction: string): string => {
+ const existingNums = existingItems
+  .filter(item => item.startsWith(prefix))
+  .map(item => parseInt(item.replace(prefix, '')))
+  .filter(n => !isNaN(n));
+
+ let candidate = genderRestriction === 'women_only' ? 2 : 1; // Kadin=cift, Erkek/Karisik=tek
+ const step = genderRestriction === 'mixed' ? 1 : 2; // Karisik ise ardisik, degilse 2'ser atla
+
+ while (existingNums.includes(candidate)) {
+  candidate += step;
+ }
+ return `${prefix}${candidate}`;
+ };
+
  // Save to Firestore
  const saveData = async (
  newTables: TableDef[],
@@ -348,8 +365,8 @@ export default function TableManagementPanel({
    {sectionPrepZones.length === 0 && <span className="text-xs text-gray-500 italic">Henuz hazirlik alani eklenmedi</span>}
    </div>
    <div className="flex gap-1.5">
-   <input type="text" placeholder="Orn: Corba Standi" className="flex-1 bg-gray-800/80 text-white text-xs px-2 py-1.5 rounded-md border border-gray-600 focus:border-amber-500 focus:outline-none"
-   id={`pz-input-${idx}`}
+   <input type="text" placeholder={`Orn: ${getNextGenderNumber('P', sectionPrepZones, gr)}`} className="flex-1 bg-gray-800/80 text-white text-xs px-2 py-1.5 rounded-md border border-gray-600 focus:border-amber-500 focus:outline-none"
+   id={`pz-input-${section.replace(/\s/g, '_')}-${idx}`}
    onKeyDown={(e) => {
    if (e.key === 'Enter') {
    const val = (e.target as HTMLInputElement).value.trim();
@@ -362,16 +379,25 @@ export default function TableManagementPanel({
    }
    }} />
    <button onClick={() => {
-   const input = document.getElementById(`pz-input-${idx}`) as HTMLInputElement;
+   const input = document.getElementById(`pz-input-${section.replace(/\s/g, '_')}-${idx}`) as HTMLInputElement;
    const val = input?.value.trim();
-   if (!val) return;
-   if (sectionPrepZones.includes(val)) { showToast("Bu hazirlik alani zaten mevcut", "error"); return; }
-   const nd = sectionDefs.map(d => d.name === section ? { ...d, prepZones: [...(d.prepZones || []), val] } : d);
-   setSectionDefs(nd);
-   updateAndSave(undefined, undefined, undefined, undefined, nd);
-   input.value = '';
-   }} className="px-2 py-1.5 bg-green-600/80 hover:bg-green-500 text-white text-xs rounded-md transition font-medium">+</button>
+   if (val) {
+    if (sectionPrepZones.includes(val)) { showToast("Bu hazirlik alani zaten mevcut", "error"); return; }
+    const nd = sectionDefs.map(d => d.name === section ? { ...d, prepZones: [...(d.prepZones || []), val] } : d);
+    setSectionDefs(nd);
+    updateAndSave(undefined, undefined, undefined, undefined, nd);
+    input.value = '';
+   } else {
+    // Oto numara (cinsiyet kurali: tek=erkek, cift=kadin)
+    const autoName = getNextGenderNumber('P', sectionPrepZones, gr);
+    const nd = sectionDefs.map(d => d.name === section ? { ...d, prepZones: [...(d.prepZones || []), autoName] } : d);
+    setSectionDefs(nd);
+    updateAndSave(undefined, undefined, undefined, undefined, nd);
+    showToast(`${autoName} eklendi`, 'success');
+   }
+   }} className="px-2 py-1.5 bg-green-600/80 hover:bg-green-500 text-white text-xs rounded-md transition font-medium" title="Bos birakinca otomatik numara atar">+</button>
    </div>
+   <p className="text-[10px] text-gray-500 mt-1">Bos birakip + basinca otomatik: {gr === 'women_only' ? 'Cift (K)' : gr === 'men_only' ? 'Tek (E)' : 'Ardisik'} numara atar</p>
    </div>
    {/* Tezgah */}
    <div className="bg-black/10 rounded-lg p-3">
@@ -391,8 +417,8 @@ export default function TableManagementPanel({
    {sectionTezgahlar.length === 0 && <span className="text-xs text-gray-500 italic">Henuz tezgah eklenmedi</span>}
    </div>
    <div className="flex gap-1.5">
-   <input type="text" placeholder="Orn: KT1" className="flex-1 bg-gray-800/80 text-white text-xs px-2 py-1.5 rounded-md border border-gray-600 focus:border-amber-500 focus:outline-none"
-   id={`tz-input-${idx}`}
+   <input type="text" placeholder={`Orn: ${getNextGenderNumber('T', sectionTezgahlar, gr)}`} className="flex-1 bg-gray-800/80 text-white text-xs px-2 py-1.5 rounded-md border border-gray-600 focus:border-amber-500 focus:outline-none"
+   id={`tz-input-${section.replace(/\s/g, '_')}-${idx}`}
    onKeyDown={(e) => {
    if (e.key === 'Enter') {
    const val = (e.target as HTMLInputElement).value.trim();
@@ -405,16 +431,24 @@ export default function TableManagementPanel({
    }
    }} />
    <button onClick={() => {
-   const input = document.getElementById(`tz-input-${idx}`) as HTMLInputElement;
+   const input = document.getElementById(`tz-input-${section.replace(/\s/g, '_')}-${idx}`) as HTMLInputElement;
    const val = input?.value.trim();
-   if (!val) return;
-   if (sectionTezgahlar.includes(val)) { showToast("Bu tezgah zaten mevcut", "error"); return; }
-   const nd = sectionDefs.map(d => d.name === section ? { ...d, tezgahlar: [...(d.tezgahlar || []), val] } : d);
-   setSectionDefs(nd);
-   updateAndSave(undefined, undefined, undefined, undefined, nd);
-   input.value = '';
-   }} className="px-2 py-1.5 bg-green-600/80 hover:bg-green-500 text-white text-xs rounded-md transition font-medium">+</button>
+   if (val) {
+    if (sectionTezgahlar.includes(val)) { showToast("Bu tezgah zaten mevcut", "error"); return; }
+    const nd = sectionDefs.map(d => d.name === section ? { ...d, tezgahlar: [...(d.tezgahlar || []), val] } : d);
+    setSectionDefs(nd);
+    updateAndSave(undefined, undefined, undefined, undefined, nd);
+    input.value = '';
+   } else {
+    const autoName = getNextGenderNumber('T', sectionTezgahlar, gr);
+    const nd = sectionDefs.map(d => d.name === section ? { ...d, tezgahlar: [...(d.tezgahlar || []), autoName] } : d);
+    setSectionDefs(nd);
+    updateAndSave(undefined, undefined, undefined, undefined, nd);
+    showToast(`${autoName} eklendi`, 'success');
+   }
+   }} className="px-2 py-1.5 bg-green-600/80 hover:bg-green-500 text-white text-xs rounded-md transition font-medium" title="Bos birakinca otomatik numara atar">+</button>
    </div>
+   <p className="text-[10px] text-gray-500 mt-1">Bos birakip + basinca otomatik: {gr === 'women_only' ? 'Cift (K)' : gr === 'men_only' ? 'Tek (E)' : 'Ardisik'} numara atar</p>
    </div>
    </div>
    </div>
@@ -466,8 +500,14 @@ export default function TableManagementPanel({
   const count = maxReservationTables || 0;
   if (count <= 0) return;
   const targetSection = selectedBulkSection || "";
+  const sectionDef = sectionDefs.find(d => d.name === targetSection);
+  const gr = sectionDef?.genderRestriction || 'mixed';
+  
+  // Cinsiyet-bazli toplu olusturma
+  const startNum = gr === 'women_only' ? 2 : 1;
+  const step = gr === 'mixed' ? 1 : 2;
   const newTables = Array.from({ length: count }, (_, i) => ({
-  label: String(i + 1),
+  label: `M${startNum + (i * step)}`,
   section: targetSection,
   sortOrder: i,
   }));
@@ -482,19 +522,28 @@ export default function TableManagementPanel({
   <div className="flex items-end">
   <button
   onClick={() => {
-  const existingLabels = tables.map((t) => t.label);
-  let nextNum = tables.length + 1;
-  while (existingLabels.includes(String(nextNum))) nextNum++;
-  
   const targetSection = selectedBulkSection || "";
+  const sectionDef = sectionDefs.find(d => d.name === targetSection);
+  const gr = sectionDef?.genderRestriction || 'mixed';
+  
+  // Cinsiyet-bazli masa numarasi: M prefix + tek/cift
+  const existingLabels = tables.map((t) => t.label);
+  const existingNums = existingLabels.map(l => parseInt(l.replace(/^M/, ''))).filter(n => !isNaN(n));
+  
+  let candidate = gr === 'women_only' ? 2 : 1;
+  const step = gr === 'mixed' ? 1 : 2;
+  while (existingNums.includes(candidate)) {
+  candidate += step;
+  }
 
   const newTable: TableDef = {
-  label: String(nextNum),
+  label: `M${candidate}`,
   section: targetSection,
   sortOrder: tables.length,
   };
   const newTables = [...tables, newTable];
   updateAndSave(newTables, newTables.length);
+  showToast(`M${candidate} eklendi (${gr === 'women_only' ? 'Cift' : gr === 'men_only' ? 'Tek' : 'Ardisik'})`, 'success');
   }}
   className="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-sm font-medium transition"
   >

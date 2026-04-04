@@ -236,7 +236,9 @@ export default function KermesDetailPage() {
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
- const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'masalar'>('bilgi');
+ const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'mutfak' | 'masalar'>('bilgi');
+ // Mutfak: PrepZone -> Personel atamalari
+ const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
  const [eventFeatures, setEventFeatures] = useState<KermesFeature[]>(DEFAULT_FEATURES);
  const [availableBadges, setAvailableBadges] = useState<any[]>([]);
  const [donationFunds, setDonationFunds] = useState<{ id: string; name: string; description?: string }[]>([]);
@@ -492,6 +494,11 @@ export default function KermesDetailPage() {
  genderRestriction: s.genderRestriction || 'mixed',
  prepZones: Array.isArray(s.prepZones) ? s.prepZones : [],
  })));
+ }
+ // Mutfak: PrepZone personel atamalarini yukle
+ const rawAssignments = kermesDoc.data()?.prepZoneAssignments;
+ if (rawAssignments && typeof rawAssignments === 'object') {
+ setPrepZoneAssignments(rawAssignments as Record<string, string[]>);
  }
 
  const productsQuery = query(collection(db, 'kermes_events', kermesId, 'products'), orderBy('name'));
@@ -1316,9 +1323,13 @@ export default function KermesDetailPage() {
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  👥 Personel {(assignedStaff.length + assignedDrivers.length) > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{assignedStaff.length + assignedDrivers.length}</span>}
  </button>
+ <button onClick={() => setActiveTab('mutfak')}
+ className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Mutfak {kermesSectionDefs.some(s => (s.prepZones || []).length > 0) && <span className="ml-1 px-1.5 py-0.5 bg-orange-500/30 text-orange-300 rounded-full text-xs">{kermesSectionDefs.reduce((acc, s) => acc + (s.prepZones || []).length, 0)}</span>}
+ </button>
  <button onClick={() => setActiveTab('masalar')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 🪑 Masalar
+ Masalar
  </button>
  </div>
 
@@ -2411,6 +2422,170 @@ export default function KermesDetailPage() {
   </div>
   </div>
   )}
+
+   {/* Tab Content - Mutfak (PrepZone Istasyon Yonetimi) */}
+   {activeTab === 'mutfak' && (
+   <div className="space-y-4">
+   <div className="bg-card rounded-xl p-4 border border-orange-500/20">
+   <div className="flex items-center gap-3 mb-1">
+   <span className="w-8 h-8 rounded-lg bg-orange-600/20 flex items-center justify-center text-sm">
+   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/><path d="M5.71 17.11a17.04 17.04 0 0 1 11.4-11.4"/></svg>
+   </span>
+   <div>
+   <h3 className="text-foreground font-bold">Mutfak Istasyonlari</h3>
+   <p className="text-xs text-muted-foreground">Her hazirlik alanina (PrepZone) personel atayin. Siparis geldiginde atanan personellerin ekranina dusecektir.</p>
+   </div>
+   </div>
+   </div>
+
+   {/* Info Banner */}
+   <div className="p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+   <p className="text-xs text-orange-700 dark:text-orange-400">
+   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1 -mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+   Masalar sekmesinde olusturdugumuz bolum ve PrepZone tanimlari burada listelenir. Yeni PrepZone eklemek icin Masalar sekmesine gidin.
+   </p>
+   </div>
+
+   {kermesSectionDefs.length === 0 ? (
+   <div className="text-center py-12 text-muted-foreground">
+   <div className="text-4xl mb-3">
+   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto opacity-40"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
+   </div>
+   <p className="text-sm font-medium">Henuz bolum tanimlanmamis</p>
+   <p className="text-xs mt-1">Once Masalar sekmesinden bolumleri ve hazirlik alanlarini olusturun.</p>
+   </div>
+   ) : (
+   <div className="space-y-4">
+   {kermesSectionDefs.map((section) => {
+   const prepZones = section.prepZones || [];
+   const genderIcon = section.genderRestriction === 'women_only' ? 'K' : section.genderRestriction === 'men_only' ? 'E' : 'A';
+   const genderColor = section.genderRestriction === 'women_only'
+    ? 'border-pink-500/30 bg-pink-500/5'
+    : section.genderRestriction === 'men_only'
+    ? 'border-blue-500/30 bg-blue-500/5'
+    : 'border-green-500/30 bg-green-500/5';
+   const badgeColor = section.genderRestriction === 'women_only'
+    ? 'bg-pink-500/20 text-pink-400'
+    : section.genderRestriction === 'men_only'
+    ? 'bg-blue-500/20 text-blue-400'
+    : 'bg-green-500/20 text-green-400';
+
+   return (
+   <div key={section.name} className={`rounded-xl border ${genderColor} overflow-hidden`}>
+    {/* Section Header */}
+    <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${badgeColor}`}>{genderIcon}</span>
+    <h4 className="text-foreground font-semibold">{section.name}</h4>
+    <span className="text-xs text-muted-foreground ml-1">({prepZones.length} istasyon)</span>
+    </div>
+
+    {prepZones.length === 0 ? (
+    <div className="px-4 py-6 text-center text-muted-foreground">
+    <p className="text-sm">Bu bolumde henuz hazirlik alani yok.</p>
+    <p className="text-xs mt-1">Masalar sekmesinden PrepZone ekleyin.</p>
+    </div>
+    ) : (
+    <div className="p-4 space-y-3">
+    {prepZones.map((zone) => {
+     const assignedIds = prepZoneAssignments[zone] || [];
+     const assignedDetails = assignedIds.map(id => assignedStaffDetails.find((s: any) => s.uid === id)).filter(Boolean);
+     // Cinsiyete uygun personelleri filtrele
+     const eligibleStaff = assignedStaffDetails.filter((s: any) => {
+      if (section.genderRestriction === 'women_only') return s.gender === 'female';
+      if (section.genderRestriction === 'men_only') return s.gender === 'male';
+      return true;
+     });
+
+     return (
+     <div key={zone} className="bg-card rounded-lg border border-border/50 p-3">
+      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center gap-2">
+       <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs font-bold">{zone}</span>
+       <span className="text-sm text-foreground font-medium">Istasyon</span>
+      </div>
+      <span className="text-xs text-muted-foreground">{assignedIds.length} personel atandi</span>
+      </div>
+
+      {/* Atanan personeller */}
+      {assignedDetails.length > 0 && (
+      <div className="flex flex-wrap gap-1.5 mb-2">
+       {assignedDetails.map((staff: any) => (
+       <span key={staff.uid} className="inline-flex items-center gap-1 px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded-md text-xs">
+        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${staff.gender === 'female' ? 'bg-pink-500/30 text-pink-300' : 'bg-blue-500/30 text-blue-300'}`}>
+        {staff.gender === 'female' ? 'K' : 'E'}
+        </span>
+        <span className="text-foreground">{staff.displayName || staff.email}</span>
+        <button
+        onClick={async () => {
+         const newIds = assignedIds.filter((id: string) => id !== staff.uid);
+         const newAssignments = { ...prepZoneAssignments, [zone]: newIds };
+         if (newIds.length === 0) delete newAssignments[zone];
+         setPrepZoneAssignments(newAssignments);
+         try {
+         await updateDoc(doc(db, 'kermes_events', kermesId as string), { prepZoneAssignments: newAssignments });
+         } catch (e) { console.error('PrepZone atama hatasi:', e); }
+        }}
+        className="ml-0.5 text-red-400 hover:text-red-300 font-bold"
+        >x</button>
+       </span>
+       ))}
+      </div>
+      )}
+
+      {/* Personel atama dropdown */}
+      <select
+       title={`${zone} istasyonuna personel ata`}
+       value=""
+       onChange={async (e) => {
+       const staffId = e.target.value;
+       if (!staffId) return;
+       const newIds = [...assignedIds, staffId];
+       const newAssignments = { ...prepZoneAssignments, [zone]: newIds };
+       setPrepZoneAssignments(newAssignments);
+       try {
+        await updateDoc(doc(db, 'kermes_events', kermesId as string), { prepZoneAssignments: newAssignments });
+        showToast('Personel istasyona atandi', 'success');
+       } catch (e) {
+        console.error('PrepZone atama hatasi:', e);
+        showToast('Atama basarisiz', 'error');
+       }
+       }}
+       className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-orange-500"
+      >
+       <option value="">+ Personel ata...</option>
+       {eligibleStaff
+       .filter((s: any) => !assignedIds.includes(s.uid))
+       .map((s: any) => (
+        <option key={s.uid} value={s.uid}>{s.displayName || s.email} ({s.gender === 'female' ? 'Kadin' : 'Erkek'})</option>
+       ))
+       }
+      </select>
+     </div>
+     );
+    })}
+    </div>
+    )}
+   </div>
+   );
+   })}
+
+   {/* Ozet: Kac kisi hangi istasyona atanmis */}
+   {Object.keys(prepZoneAssignments).length > 0 && (
+   <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+    <p className="text-xs text-green-700 dark:text-green-400 font-medium mb-1">Atama Ozeti</p>
+    <div className="flex flex-wrap gap-2">
+    {Object.entries(prepZoneAssignments).map(([zone, ids]) => (
+     <span key={zone} className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs text-foreground">
+     <strong>{zone}</strong>: {ids.length} kisi
+     </span>
+    ))}
+    </div>
+   </div>
+   )}
+   </div>
+   )}
+   </div>
+   )}
 
    {/* Tab Content - Masalar */}
    {activeTab === 'masalar' && (
