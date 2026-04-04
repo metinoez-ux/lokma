@@ -18,9 +18,9 @@ interface WorkspaceAssignmentsListProps {
 }
 
 const KERMES_ROLES = [
- { value: 'staff', label: 'Personel', icon: '👥', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' },
- { value: 'driver', label: 'Sürücü (Fahrer)', icon: '🚗', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
- { value: 'waiter', label: 'Garson (Kellner)', icon: '🍽️', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300' },
+ { value: 'staff', label: 'Kermes Personeli', icon: '👥', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' },
+ { value: 'driver', label: 'Kermes Sürücü', icon: '🚗', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+ { value: 'waiter', label: 'Kermes Garson', icon: '🍽️', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300' },
  { value: 'kermes_admin', label: 'Kermes Admin', icon: '👑', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' },
 ];
 
@@ -142,7 +142,7 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
         </div>
         <div className="flex flex-wrap gap-1 mt-2">
          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded shadow-sm ${getRoleBadgeStyle(a.role, a.entityType)}`}>
-          {a.role.replace('_', ' ').toUpperCase()}
+          {a.entityType === 'kermes' ? (a.role.startsWith('kermes') ? a.role.replace('_', ' ').toUpperCase() : `KERMES ${a.role.toUpperCase()}`) : a.role.replace('_', ' ').toUpperCase()}
          </span>
         </div>
        </div>
@@ -294,7 +294,7 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
        disabled={!selectedEntityId || selectedRoles.length === 0}
        className={`w-full py-2.5 rounded-lg text-sm font-medium transition ${
         selectedEntityId && selectedRoles.length > 0
-         ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+         ? 'bg-pink-600 text-white shadow-md hover:bg-pink-700' 
          : 'bg-muted text-muted-foreground cursor-not-allowed'
        }`}
       >

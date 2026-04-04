@@ -132,10 +132,17 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> registerWithEmail(String email, String password) async {
+  Future<void> registerWithEmail(String email, String password, {String? gender}) async {
     state = AuthState(user: state.user, isLoading: true);
     try {
-      await _authService.registerWithEmail(email, password);
+      final cred = await _authService.registerWithEmail(email, password);
+      if (gender != null && cred.user != null) {
+        // Cinsiyeti kayıt işlemi sonrası doğrudan veritabanına ekle
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(cred.user!.uid)
+            .set({'gender': gender}, SetOptions(merge: true));
+      }
       // State updated via listener
     } catch (e) {
       state = AuthState(user: state.user, isLoading: false, error: e.toString());

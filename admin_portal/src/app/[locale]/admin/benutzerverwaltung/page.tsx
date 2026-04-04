@@ -88,7 +88,7 @@ export default function BenutzerverwaltungPage() {
  const [newUserData, setNewUserData] = useState({
  firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
  address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
- country: 'Almanya', role: 'staff', sector: '', password: '', businessId: ''
+ country: 'Almanya', role: 'staff', sector: '', password: '', businessId: '', gender: ''
  });
  const [newUserIsDriver, setNewUserIsDriver] = useState(false);
  const [newUserDriverType, setNewUserDriverType] = useState<string>('platform');
@@ -104,6 +104,7 @@ export default function BenutzerverwaltungPage() {
  // Additional Detailed Edit State
  const [editFirstName, setEditFirstName] = useState('');
  const [editLastName, setEditLastName] = useState('');
+ const [editGender, setEditGender] = useState('');
  const [editAddress, setEditAddress] = useState('');
  const [editHouseNumber, setEditHouseNumber] = useState('');
  const [editAddressLine2, setEditAddressLine2] = useState('');
@@ -351,6 +352,7 @@ export default function BenutzerverwaltungPage() {
  const ud = userDoc.data();
  setEditFirstName(ud.firstName || nameChunks[0] || '');
  setEditLastName(ud.lastName || nameChunks.slice(1).join(' ') || '');
+ setEditGender(ud.gender || '');
  setEditAddress(ud.addressDetails?.address || ud.address || '');
  setEditHouseNumber(ud.addressDetails?.houseNumber || ud.houseNumber || '');
  setEditAddressLine2(ud.addressDetails?.addressLine2 || ud.addressLine2 || '');
@@ -360,6 +362,7 @@ export default function BenutzerverwaltungPage() {
  } else {
  setEditFirstName(nameChunks[0] || '');
  setEditLastName(nameChunks.slice(1).join(' ') || '');
+ setEditGender('');
  setEditAddress('');
  setEditHouseNumber('');
  setEditAddressLine2('');
@@ -500,6 +503,7 @@ export default function BenutzerverwaltungPage() {
  assignerRole: admin?.adminType || 'admin',
  firstName: newUserData.firstName,
  lastName: newUserData.lastName,
+ gender: newUserData.gender,
  addressDetails: {
  address: newUserData.address,
  houseNumber: newUserData.houseNumber,
@@ -554,7 +558,7 @@ export default function BenutzerverwaltungPage() {
  setNewUserData({
  firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
  address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
- country: 'Almanya', role: 'staff', sector: '', password: '', businessId: ''
+ country: 'Almanya', role: 'staff', sector: '', password: '', businessId: '', gender: ''
  });
  setNewUserIsDriver(false);
  setNewUserDriverType('platform');
@@ -610,6 +614,7 @@ export default function BenutzerverwaltungPage() {
  email: selectedUser.email,
  firstName: editFirstName,
  lastName: editLastName,
+ gender: editGender,
  displayName: `${editFirstName} ${editLastName}`.trim() || editName,
  phoneNumber: editPhone,
  address: editAddress,
@@ -656,30 +661,50 @@ export default function BenutzerverwaltungPage() {
  }
 
  // Sync kermes_events documents with assignment roles
- const kermesAssignments = editAssignments.filter(a => a.entityType === 'kermes');
- for (const ka of kermesAssignments) {
- try {
-  const kermesRef = doc(db, 'kermes_events', ka.id);
-  const kermesSnap = await getDoc(kermesRef);
-  if (kermesSnap.exists()) {
-  const kData = kermesSnap.data();
-  const uid = selectedUser.id;
-  const cStaff: string[] = kData.assignedStaff || [];
-  const cDrivers: string[] = kData.assignedDrivers || [];
-  const cWaiters: string[] = kData.assignedWaiters || [];
-  const cAdmins: string[] = kData.kermesAdmins || [];
-  const uK: Record<string, any> = {};
-  if (['staff','waiter','driver','kermes_admin'].includes(ka.role) && !cStaff.includes(uid)) {
-   uK.assignedStaff = [...cStaff, uid];
+ const oldKermesAssignments = (selectedUser.assignments || []).filter(a => a.entityType === 'kermes');
+ const newKermesAssignments = editAssignments.filter(a => a.entityType === 'kermes');
+
+ const allKermesIdsToSync = Array.from(new Set([
+  ...oldKermesAssignments.map(a => a.id),
+  ...newKermesAssignments.map(a => a.id)
+ ]));
+
+ for (const kaId of allKermesIdsToSync) {
+  try {
+   const kermesRef = doc(db, 'kermes_events', kaId);
+   const kermesSnap = await getDoc(kermesRef);
+   if (kermesSnap.exists()) {
+   const kData = kermesSnap.data();
+   const uid = selectedUser.id;
+   let cStaff: string[] = kData.assignedStaff || [];
+   let cDrivers: string[] = kData.assignedDrivers || [];
+   let cWaiters: string[] = kData.assignedWaiters || [];
+   let cAdmins: string[] = kData.kermesAdmins || [];
+   
+   const currentRoles = newKermesAssignments.filter(a => a.id === kaId).map(a => a.role);
+
+   cStaff = cStaff.filter(id => id !== uid);
+   cDrivers = cDrivers.filter(id => id !== uid);
+   cWaiters = cWaiters.filter(id => id !== uid);
+   cAdmins = cAdmins.filter(id => id !== uid);
+
+   if (currentRoles.some(r => ['staff','waiter','driver','kermes_admin'].includes(r))) {
+    cStaff.push(uid);
+   }
+   if (currentRoles.includes('driver')) cDrivers.push(uid);
+   if (currentRoles.includes('waiter')) cWaiters.push(uid);
+   if (currentRoles.includes('kermes_admin')) cAdmins.push(uid);
+
+   await updateDoc(kermesRef, {
+    assignedStaff: cStaff,
+    assignedDrivers: cDrivers,
+    assignedWaiters: cWaiters,
+    kermesAdmins: cAdmins
+   });
+   }
+  } catch (syncErr) {
+   console.error('Kermes sync error:', syncErr);
   }
-  if (ka.role === 'driver' && !cDrivers.includes(uid)) uK.assignedDrivers = [...cDrivers, uid];
-  if (ka.role === 'waiter' && !cWaiters.includes(uid)) uK.assignedWaiters = [...cWaiters, uid];
-  if (ka.role === 'kermes_admin' && !cAdmins.includes(uid)) uK.kermesAdmins = [...cAdmins, uid];
-  if (Object.keys(uK).length > 0) await updateDoc(kermesRef, uK);
-  }
- } catch (syncErr) {
-  console.error('Kermes sync error:', syncErr);
- }
  }
 
  setShowUserModal(false);
@@ -986,6 +1011,20 @@ export default function BenutzerverwaltungPage() {
  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
  />
  </div>
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-foreground mb-1">Cinsiyet *</label>
+ <select
+ value={editGender}
+ onChange={(e) => setEditGender(e.target.value)}
+ className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+ >
+ <option value="" disabled>Cinsiyet Seçiniz</option>
+ <option value="female">Kadın</option>
+ <option value="male">Erkek</option>
+ <option value="other">Belirtmek İstemiyorum</option>
+ </select>
  </div>
 
  <div>
@@ -1388,6 +1427,20 @@ export default function BenutzerverwaltungPage() {
  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
  placeholder="ornek@email.com"
  />
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-foreground mb-1">Cinsiyet *</label>
+ <select
+ value={newUserData.gender}
+ onChange={(e) => setNewUserData({ ...newUserData, gender: e.target.value })}
+ className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+ >
+ <option value="" disabled>Cinsiyet Seçiniz</option>
+ <option value="female">Kadın</option>
+ <option value="male">Erkek</option>
+ <option value="other">Belirtmek İstemiyorum</option>
+ </select>
  </div>
 
  <div>

@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
  assignedKermesEvents,
  assignedKermesNames,
  assignments,
- kermesAllowedSections
+ kermesAllowedSections,
+ gender
  } = source;
 
  const updatedBy = body.adminEmail || source.updatedBy || 'system';
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
  displayName: displayName !== undefined ? displayName : null,
  email: email !== undefined ? email : null,
  phoneNumber: phoneNumber !== undefined ? phoneNumber : null,
+      phone: phoneNumber !== undefined ? phoneNumber : null,
  dialCode: dialCode !== undefined ? dialCode : '+49',
  address: address !== undefined ? address : null,
  houseNumber: houseNumber !== undefined ? houseNumber : null,
@@ -146,6 +148,7 @@ export async function POST(request: NextRequest) {
  adminType: isAdmin ? (adminType !== undefined ? adminType : null) : null,
  assignments: assignments !== undefined ? assignments : [],
  kermesAllowedSections: kermesAllowedSections !== undefined ? kermesAllowedSections : [],
+ gender: gender !== undefined ? gender : null,
  isActive: isActive !== false, // default true
  updatedAt,
  updatedBy: updatedBy || 'system'
@@ -178,6 +181,7 @@ export async function POST(request: NextRequest) {
  lastName: lastName !== undefined ? lastName : null,
  email: email !== undefined ? email : null,
  phoneNumber: phoneNumber !== undefined ? phoneNumber : null,
+      phone: phoneNumber !== undefined ? phoneNumber : null,
  butcherId: finalBusinessId !== undefined ? finalBusinessId : null,
  butcherName: finalBusinessName !== undefined ? finalBusinessName : null,
  businessId: finalBusinessId !== undefined ? finalBusinessId : null,

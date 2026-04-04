@@ -22,6 +22,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
   bool _obscurePassword = true;
   bool _isRegister = false;
   bool _isEmailMode = true; // false = SMS mode
+  String? _selectedGender;
 
   @override
   void initState() {
@@ -52,7 +53,13 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
         return;
       }
       if (_isRegister) {
-        auth.registerWithEmail(email, password);
+        if (_selectedGender == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Lütfen cinsiyetinizi seçin.'), backgroundColor: Colors.red),
+          );
+          return;
+        }
+        auth.registerWithEmail(email, password, gender: _selectedGender);
       } else {
         auth.loginWithEmail(email, password);
       }
@@ -300,6 +307,80 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                     
                     const SizedBox(height: 16),
                     
+                    if (_isRegister) ...[
+                      Text(
+                        'Geschlecht / Cinsiyet',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedGender = 'female'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _selectedGender == 'female' 
+                                      ? Theme.of(context).primaryColor.withOpacity(0.1) 
+                                      : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
+                                  border: Border.all(
+                                    color: _selectedGender == 'female' 
+                                        ? Theme.of(context).primaryColor 
+                                        : (isDark ? Colors.white12 : Colors.grey.shade300)
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Kadın',
+                                    style: TextStyle(
+                                      color: _selectedGender == 'female' 
+                                          ? Theme.of(context).primaryColor 
+                                          : textColor,
+                                      fontWeight: _selectedGender == 'female' ? FontWeight.w700 : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedGender = 'male'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _selectedGender == 'male' 
+                                      ? Theme.of(context).primaryColor.withOpacity(0.1) 
+                                      : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
+                                  border: Border.all(
+                                    color: _selectedGender == 'male' 
+                                        ? Theme.of(context).primaryColor 
+                                        : (isDark ? Colors.white12 : Colors.grey.shade300)
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Erkek',
+                                    style: TextStyle(
+                                      color: _selectedGender == 'male' 
+                                          ? Theme.of(context).primaryColor 
+                                          : textColor,
+                                      fontWeight: _selectedGender == 'male' ? FontWeight.w700 : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Inputs
                     Container(
                       decoration: BoxDecoration(

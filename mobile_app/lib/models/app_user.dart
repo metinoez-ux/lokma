@@ -22,6 +22,7 @@ class AppUser {
   final bool notifyOrderEmail; // Sipariş bildirimleri email
   final bool notifyOrderPush;  // Sipariş bildirimleri push
   final String? fcmToken;      // Firebase Cloud Messaging token
+  final String? gender;        // Cinsiyet (male, female, other)
 
   final String? selectedCountry; // Kullanıcının seçtiği/gezindiği ülke (Aksi halde default)
 
@@ -45,6 +46,7 @@ class AppUser {
     this.notifyOrderEmail = true, // Default: açık
     this.notifyOrderPush = true,  // Default: açık
     this.fcmToken,
+    this.gender,
     this.selectedCountry,
   });
 
@@ -69,6 +71,7 @@ class AppUser {
       'notifyOrderEmail': notifyOrderEmail,
       'notifyOrderPush': notifyOrderPush,
       'fcmToken': fcmToken,
+      'gender': gender,
       'selectedCountry': selectedCountry,
     };
   }
@@ -98,6 +101,7 @@ class AppUser {
       notifyOrderEmail: map['notifyOrderEmail'] ?? true,
       notifyOrderPush: map['notifyOrderPush'] ?? true,
       fcmToken: map['fcmToken'],
+      gender: map['gender'],
       selectedCountry: map['selectedCountry'],
     );
   }
@@ -108,6 +112,7 @@ class AppUser {
     bool? notifyOrderEmail,
     bool? notifyOrderPush,
     String? fcmToken,
+    String? gender,
     String? selectedCountry,
   }) {
     return AppUser(
@@ -130,6 +135,7 @@ class AppUser {
       notifyOrderEmail: notifyOrderEmail ?? this.notifyOrderEmail,
       notifyOrderPush: notifyOrderPush ?? this.notifyOrderPush,
       fcmToken: fcmToken ?? this.fcmToken,
+      gender: gender ?? this.gender,
       selectedCountry: selectedCountry ?? this.selectedCountry,
     );
   }
