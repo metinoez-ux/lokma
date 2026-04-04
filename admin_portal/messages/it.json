@@ -4290,7 +4290,16 @@
     "ad_soyad": "Nome Completo",
     "email_zorunlu": "Email (obbligatorio)",
     "iptal_et": "Annulla",
-    "email_opsiyonel": "Email (Opzionale)"
+    "email_opsiyonel": "Email (Opzionale)",
+    "surucu_atandi_bilgi": "persona/e assegnata/e come autista. Gli ordini verranno inviati a loro.",
+    "kaydedildi": "Salvato",
+    "personel_silindi": "Il personale e stato completamente rimosso dal sistema",
+    "personel_silinirken_hata": "Errore durante la rimozione del personale",
+    "personel_olusturuldu": "Personale creato e assegnato",
+    "personel_zaten_var_uyari": "Un utente con questa email o telefono esiste gia. Cerca e assegna.",
+    "isletme_bilgisi_bulunamadi": "Informazioni aziendali non trovate.",
+    "bir_hata_olustu": "Si e verificato un errore",
+    "cinsiyet_zorunlu": "La selezione del genere e obbligatoria per il personale Kermes"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪Amministrazione aziendale",

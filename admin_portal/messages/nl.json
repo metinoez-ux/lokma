@@ -4749,7 +4749,16 @@
     "ad_soyad": "Volledige Naam",
     "email_zorunlu": "E-mail (verplicht)",
     "iptal_et": "Annuleren",
-    "email_opsiyonel": "E-mail (Optioneel)"
+    "email_opsiyonel": "E-mail (Optioneel)",
+    "surucu_atandi_bilgi": "persoon/personen toegewezen als chauffeur. Bestellingen worden naar hen doorgestuurd.",
+    "kaydedildi": "Opgeslagen",
+    "personel_silindi": "Personeel is volledig uit het systeem verwijderd",
+    "personel_silinirken_hata": "Fout bij het verwijderen van personeel",
+    "personel_olusturuldu": "Personeel aangemaakt en toegewezen",
+    "personel_zaten_var_uyari": "Er bestaat al een gebruiker met dit e-mailadres of telefoonnummer. Zoek en wijs toe.",
+    "isletme_bilgisi_bulunamadi": "Bedrijfsinformatie niet gevonden.",
+    "bir_hata_olustu": "Er is een fout opgetreden",
+    "cinsiyet_zorunlu": "Geslachtsselectie is vereist voor Kermes-personeel"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

@@ -4323,7 +4323,16 @@
     "ad_soyad": "Vor- und Nachname",
     "email_zorunlu": "E-Mail (zwingend für den Login)",
     "iptal_et": "Abbrechen",
-    "email_opsiyonel": "E-Mail (Optional)"
+    "email_opsiyonel": "E-Mail (Optional)",
+    "surucu_atandi_bilgi": "Person(en) als Fahrer zugewiesen. Bestellungen werden an sie weitergeleitet.",
+    "kaydedildi": "Gespeichert",
+    "personel_silindi": "Personal wurde vollstaendig aus dem System entfernt",
+    "personel_silinirken_hata": "Fehler beim Entfernen des Personals",
+    "personel_olusturuldu": "Personal wurde erstellt und zugewiesen",
+    "personel_zaten_var_uyari": "Ein Benutzer mit dieser E-Mail oder Telefonnummer existiert bereits. Suchen und zuweisen.",
+    "isletme_bilgisi_bulunamadi": "Unternehmensinformationen nicht gefunden.",
+    "bir_hata_olustu": "Ein Fehler ist aufgetreten",
+    "cinsiyet_zorunlu": "Geschlechtsauswahl ist fuer Kermes-Personal erforderlich"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Geschäftsadministrator",

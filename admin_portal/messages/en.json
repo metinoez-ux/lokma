@@ -4346,7 +4346,16 @@
     "ad_soyad": "Full Name",
     "email_zorunlu": "Email (required for login)",
     "iptal_et": "Cancel",
-    "email_opsiyonel": "Email (Optional)"
+    "email_opsiyonel": "Email (Optional)",
+    "surucu_atandi_bilgi": "person(s) assigned as driver. Orders will be routed to them.",
+    "kaydedildi": "Saved",
+    "personel_silindi": "Staff member has been completely removed from the system",
+    "personel_silinirken_hata": "Error while removing staff member",
+    "personel_olusturuldu": "Staff member created and assigned",
+    "personel_zaten_var_uyari": "A user with this email or phone already exists. Search and assign instead.",
+    "isletme_bilgisi_bulunamadi": "Business information not found.",
+    "bir_hata_olustu": "An error occurred",
+    "cinsiyet_zorunlu": "Gender selection is required for Kermes staff"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

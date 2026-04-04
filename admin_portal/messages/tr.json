@@ -4349,7 +4349,15 @@
     "ziyaretcilereGosterilecekGenelParkBilgisi": "Ziyaretçilere gösterilecek genel park bilgisi...",
     "ziyaretcilere_gosterilecek_genel_park_bi": "Ziyaretçilere gösterilecek genel park bilgisi...",
     "kurumsal_ayarlar": "Kurumsal Ayarlar",
-    "email_opsiyonel": "E-posta (İsteğe Bağlı)"
+    "email_opsiyonel": "E-posta (İsteğe Bağlı)",
+    "surucu_atandi_bilgi": "kişi sürücü olarak atandı. Sipariş teslimatları bu kişilere yönlendirilecek.",
+    "kaydedildi": "Kaydedildi",
+    "personel_silindi": "Personel sistemden tamamen silindi",
+    "personel_silinirken_hata": "Personel silinirken hata",
+    "personel_olusturuldu": "Personel olusturuldu ve atandi",
+    "personel_zaten_var_uyari": "Bu e-posta veya telefon ile kayitli kullanici var. Arama ile bulup atayin.",
+    "bir_hata_olustu": "Bir hata olustu",
+    "cinsiyet_zorunlu": "Kermes personeli icin cinsiyet secimi zorunludur"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 İşletme Admin",

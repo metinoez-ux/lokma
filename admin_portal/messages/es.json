@@ -4313,7 +4313,16 @@
     "ad_soyad": "Nombre Completo",
     "email_zorunlu": "Correo Electrónico (obligatorio)",
     "iptal_et": "Cancelar",
-    "email_opsiyonel": "Correo Electrónico (Opcional)"
+    "email_opsiyonel": "Correo Electrónico (Opcional)",
+    "surucu_atandi_bilgi": "persona(s) asignada(s) como conductor. Los pedidos se enviarán a ellos.",
+    "kaydedildi": "Guardado",
+    "personel_silindi": "El personal ha sido eliminado completamente del sistema",
+    "personel_silinirken_hata": "Error al eliminar el personal",
+    "personel_olusturuldu": "Personal creado y asignado",
+    "personel_zaten_var_uyari": "Ya existe un usuario con este correo o telefono. Busque y asigne.",
+    "isletme_bilgisi_bulunamadi": "Informacion de la empresa no encontrada.",
+    "bir_hata_olustu": "Se ha producido un error",
+    "cinsiyet_zorunlu": "La seleccion de genero es obligatoria para el personal del Kermes"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrador de empresas",

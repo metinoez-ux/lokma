@@ -4323,7 +4323,16 @@
     "ad_soyad": "Nom Complet",
     "email_zorunlu": "E-mail (obligatoire)",
     "iptal_et": "Annuler",
-    "email_opsiyonel": "E-mail (Facultatif)"
+    "email_opsiyonel": "E-mail (Facultatif)",
+    "surucu_atandi_bilgi": "personne(s) assignée(s) comme livreur. Les commandes leur seront envoyées.",
+    "kaydedildi": "Enregistre",
+    "personel_silindi": "Le personnel a ete completement supprime du systeme",
+    "personel_silinirken_hata": "Erreur lors de la suppression du personnel",
+    "personel_olusturuldu": "Personnel cree et assigne",
+    "personel_zaten_var_uyari": "Un utilisateur avec cet e-mail ou telephone existe deja. Recherchez et assignez.",
+    "isletme_bilgisi_bulunamadi": "Informations de l'entreprise introuvables.",
+    "bir_hata_olustu": "Une erreur s'est produite",
+    "cinsiyet_zorunlu": "La selection du sexe est requise pour le personnel Kermes"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrateur d'entreprise",
