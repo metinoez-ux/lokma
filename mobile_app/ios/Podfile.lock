@@ -1663,7 +1663,7 @@ SPEC CHECKSUMS:
   audioplayers_darwin: 835ced6edd4c9fc8ebb0a7cc9e294a91d99917d5
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: 698d4d849c58da2ef2b3b8b9db27d2cd56614e7e
-  device_calendar: 72a1d465d4ef4c5821ee90a31845cb4f1db4c264
+  device_calendar: b55b2c5406cfba45c95a59f9059156daee1f74ed
   Firebase: 065f2bb395062046623036d8e6dc857bc2521d56
   firebase_auth: 323c64eedef33fc3fdf438d16c29d2624b2ce4f4
   firebase_core: 8e6f58412ca227827c366b92e7cee047a2148c60

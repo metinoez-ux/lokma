@@ -521,7 +521,6 @@ export default function BenutzerverwaltungPage() {
  assignedKermesEvents: newUserSelectedKermesIds,
  assignments: newUserAssignments,
  businessId: newUserData.businessId || undefined,
- butcherId: newUserData.businessId || undefined,
  };
 
  const response = await fetch('/api/admin/create-user', {
@@ -639,6 +638,33 @@ export default function BenutzerverwaltungPage() {
  alert(`Hata: ${data.error || 'Bilinmeyen Hata'}`);
  setSavingModal(false);
  return;
+ }
+
+ // Sync kermes_events documents with assignment roles
+ const kermesAssignments = editAssignments.filter(a => a.entityType === 'kermes');
+ for (const ka of kermesAssignments) {
+ try {
+  const kermesRef = doc(db, 'kermes_events', ka.id);
+  const kermesSnap = await getDoc(kermesRef);
+  if (kermesSnap.exists()) {
+  const kData = kermesSnap.data();
+  const uid = selectedUser.id;
+  const cStaff: string[] = kData.assignedStaff || [];
+  const cDrivers: string[] = kData.assignedDrivers || [];
+  const cWaiters: string[] = kData.assignedWaiters || [];
+  const cAdmins: string[] = kData.kermesAdmins || [];
+  const uK: Record<string, any> = {};
+  if (['staff','waiter','driver','kermes_admin'].includes(ka.role) && !cStaff.includes(uid)) {
+   uK.assignedStaff = [...cStaff, uid];
+  }
+  if (ka.role === 'driver' && !cDrivers.includes(uid)) uK.assignedDrivers = [...cDrivers, uid];
+  if (ka.role === 'waiter' && !cWaiters.includes(uid)) uK.assignedWaiters = [...cWaiters, uid];
+  if (ka.role === 'kermes_admin' && !cAdmins.includes(uid)) uK.kermesAdmins = [...cAdmins, uid];
+  if (Object.keys(uK).length > 0) await updateDoc(kermesRef, uK);
+  }
+ } catch (syncErr) {
+  console.error('Kermes sync error:', syncErr);
+ }
  }
 
  setShowUserModal(false);
