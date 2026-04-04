@@ -2218,7 +2218,7 @@ export default function KermesDetailPage() {
  Kermes Personel
  </h3>
  <p className="text-xs text-muted-foreground mt-1">
- {t('kermes_personel_aciklama') || 'Bu Kermes icin siparisleri kabul edecek ve hazirlayacak personel.'}
+ {t('kermes_personel_aciklama') || 'Kermeste gorev alacak personelleri secin. Araba ikonu ile surucu olarak da atayabilirsiniz.'}
  </p>
  </div>
  <button 
@@ -2331,9 +2331,34 @@ export default function KermesDetailPage() {
  <div>
  <span className="text-sm font-medium text-foreground">{staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name || staff.email}</span>
  <span className="ml-2 text-xs text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">Kermes Personel</span>
+ {assignedDrivers.includes(staff.id) && (
+ <span className="ml-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">Surucu</span>
+ )}
  </div>
  </div>
  <div className="flex items-center gap-2">
+ <button 
+ type="button" 
+ onClick={() => {
+ if (assignedDrivers.includes(staff.id)) {
+ const newDrivers = assignedDrivers.filter(id => id !== staff.id);
+ setAssignedDrivers(newDrivers);
+ saveTeamToDb(assignedStaff, newDrivers);
+ } else {
+ const newDrivers = [...assignedDrivers, staff.id];
+ setAssignedDrivers(newDrivers);
+ saveTeamToDb(assignedStaff, newDrivers);
+ }
+ }}
+ className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-semibold transition-colors ${
+ assignedDrivers.includes(staff.id)
+ ? 'bg-amber-500 text-white hover:bg-amber-600'
+ : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600'
+ }`}
+ title={assignedDrivers.includes(staff.id) ? 'Suruculukten Cikar' : 'Surucu Olarak Ata'}
+ >
+ <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+ </button>
  <button 
  type="button" 
  onClick={() => setEditPersonData({
@@ -2353,7 +2378,10 @@ export default function KermesDetailPage() {
  onClick={() => {
  const newStaff = assignedStaff.filter(id => id !== staff.id);
  setAssignedStaff(newStaff);
- saveTeamToDb(newStaff, assignedDrivers);
+ // Also remove from drivers if they were a driver
+ const newDrivers = assignedDrivers.filter(id => id !== staff.id);
+ setAssignedDrivers(newDrivers);
+ saveTeamToDb(newStaff, newDrivers);
  }}
  className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center text-sm font-bold transition-colors"
  title="Personeli Karmesten Çıkar"
@@ -2363,182 +2391,30 @@ export default function KermesDetailPage() {
  </div>
  </div>
  ))}
- {assignedStaff.length === 0 && (
- <div className="text-center py-8 text-muted-foreground">
- <div className="text-3xl mb-2">P</div>
- <p className="text-sm">{t('henuz_personel_yok') || 'Henuz personel atanmamis.'}</p>
- </div>
- )}
- </div>
- </div>
 
- {/* Kermes Surucu */}
- <div className="bg-card rounded-xl p-6">
- <div className="flex justify-between items-center mb-4">
- <div>
- <h3 className="text-foreground font-bold flex items-center gap-2">
- <span className="w-8 h-8 rounded-lg bg-amber-600/20 flex items-center justify-center text-sm">S</span>
- Kermes Surucu
- </h3>
- <p className="text-xs text-muted-foreground mt-1">
- {t('kermes_surucu_aciklama') || 'Bu Kermes siparislerini teslim edecek gonullu suruculer.'}
+ {/* Surucu bilgi notu */}
+ {assignedDrivers.length > 0 && (
+ <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+ <p className="text-xs text-amber-700 dark:text-amber-400">
+ <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1 -mt-0.5"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+ {assignedDrivers.length} kisi surucu olarak atandi. Siparis teslimatlari bu kisilere yonlendirilecektir.
  </p>
  </div>
- <button 
- type="button"
- onClick={() => setIsAddingDriver(!isAddingDriver)}
- className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-lg transition"
- >
- {isAddingDriver ? t('iptal_et') || 'Iptal Et' : `+ ${t('yeni_surucu_ekle') || 'Yeni Surucu Ekle'}`}
- </button>
- </div>
+ )}
+  {assignedStaff.length === 0 && (
+  <div className="text-center py-8 text-muted-foreground">
+  <div className="text-3xl mb-2">P</div>
+  <p className="text-sm">{t('henuz_personel_yok') || 'Henuz personel atanmamis.'}</p>
+  </div>
+  )}
+  </div>
+  </div>
+  </div>
+  )}
 
- {isAddingDriver && (
- <div className="mb-6 p-4 bg-amber-950/20 rounded-xl border border-amber-700/30">
- <h5 className="text-sm font-semibold text-foreground mb-3">{t('surucu_bilgileri') || 'Surucu Bilgileri'}</h5>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
- <input 
- type="text" 
- placeholder={t('ad_soyad') || 'Ad Soyad'}
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
- value={newDriverForm.name}
- onChange={e => setNewDriverForm({...newDriverForm, name: e.target.value})}
- />
- <div className="flex gap-2">
- <input 
- type="text" 
- placeholder="+49"
- className="w-20 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none text-center"
- value={newDriverForm.countryCode}
- onChange={e => setNewDriverForm({...newDriverForm, countryCode: e.target.value})}
- />
- <input 
- type="text" 
- placeholder={t('telefon_numarasi') || 'Telefon Numarasi'}
- className="flex-1 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
- value={newDriverForm.phone}
- onChange={e => setNewDriverForm({...newDriverForm, phone: e.target.value})}
- />
- </div>
- <input 
- type="email" 
- placeholder={`${t('email_opsiyonel') || 'E-posta (Istege Bagli)'}`}
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
- value={newDriverForm.email}
- onChange={e => setNewDriverForm({...newDriverForm, email: e.target.value})}
- />
- <select
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
- value={newDriverForm.gender}
- onChange={e => setNewDriverForm({...newDriverForm, gender: e.target.value})}
- >
- <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seciniz'}</option>
- <option value="male">{t('erkek') || 'Bay / Herr'}</option>
- <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
- </select>
- </div>
- <button
- type="button"
- onClick={() => handleCreateUser('kermes_driver')}
- disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone || !newDriverForm.gender}
- className="mt-3 w-full py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
- >
- {isCreatingUser ? t('olusturuluyor') || 'Olusturuluyor...' : t('kaydet') || 'Kaydet'}
- </button>
- </div>
- )}
-
- {/* Surucu Arama */}
- <div className="relative mb-4">
- <input 
- type="text" 
- placeholder={t('surucu_ara') || 'Isim veya e-posta ile ara...'}
- value={driverSearchQuery}
- onChange={(e) => searchDriver(e.target.value)}
- className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
- />
- {searchingDriver && (
- <div className="absolute right-3 top-3 w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
- )}
- {driverResults.length > 0 && (
- <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
- {driverResults.map(user => (
- <button
- key={user.id}
- type="button"
- onClick={() => {
- const newDrivers = [...assignedDrivers, user.id];
- setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers);
- setDriverSearchQuery('');
- setDriverResults([]);
- }}
- className="w-full text-left px-4 py-3 hover:bg-muted dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
- >
- <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
- <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">{user.driverType === 'lokma_fleet' ? 'Fleet' : 'Gonullu'}</span>
- </button>
- ))}
- </div>
- )}
- </div>
-
- {/* Atanmis Surucu Listesi */}
- <div className="space-y-2">
- {assignedDriverDetails.map(driver => (
- <div key={driver.id} className="flex items-center justify-between px-4 py-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
- <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold">
- {(driver.displayName || driver.firstName || driver.name || driver.email || 'S').substring(0, 2).toUpperCase()}
- </div>
- <div>
- <span className="text-sm font-medium text-foreground">{driver.displayName || (driver.firstName ? `${driver.firstName} ${driver.lastName || ''}`.trim() : '') || driver.name || driver.email}</span>
- <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">Kermes Surucu</span>
- </div>
- </div>
- <div className="flex items-center gap-2">
- <button 
- type="button" 
- onClick={() => setEditPersonData({
- id: driver.id,
- name: driver.displayName || (driver.firstName ? `${driver.firstName} ${driver.lastName || ''}`.trim() : '') || driver.name,
- email: driver.email || '',
- phone: driver.phone || '',
- gender: driver.gender || '',
- })}
- className="w-7 h-7 rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center justify-center text-xs font-semibold transition-colors"
- title="Düzenle"
- >
- ✎
- </button>
- <button 
- type="button" 
- onClick={() => {
- const newDrivers = assignedDrivers.filter(id => id !== driver.id);
- setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers);
- }}
- className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center text-sm font-bold transition-colors"
- >
- ×
- </button>
- </div>
- </div>
- ))}
- {assignedDrivers.length === 0 && (
- <div className="text-center py-8 text-muted-foreground">
- <div className="text-3xl mb-2">S</div>
- <p className="text-sm">{t('henuz_surucu_yok') || 'Henuz surucu atanmamis.'}</p>
- </div>
- )}
- </div>
- </div>
- </div>
- )}
-
-  {/* Tab Content - Masalar */}
-  {activeTab === 'masalar' && (
-  <div className="space-y-4">
+   {/* Tab Content - Masalar */}
+   {activeTab === 'masalar' && (
+   <div className="space-y-4">
   <div className="bg-card rounded-xl p-4 border border-amber-500/20">
   <div className="flex items-center gap-3 mb-1">
   <span className="w-8 h-8 rounded-lg bg-amber-600/20 flex items-center justify-center text-sm">🪑</span>
