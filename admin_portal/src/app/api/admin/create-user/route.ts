@@ -49,6 +49,8 @@ export async function POST(request: NextRequest) {
  locale: requestLocale,
  // Array of workspace assignments (M:N)
  assignments,
+ // Kermes context (for mobile app login credentials in welcome email)
+ kermesName, kermesId,
  } = body;
 
  // Resolve locale (default German for DACH market)
@@ -381,6 +383,13 @@ export async function POST(request: NextRequest) {
  adminType?.includes('_staff') ? 'Personel' :
  adminType || 'Personel';
 
+ // App store links (update when live)
+ const APP_STORE_URL = 'https://apps.apple.com/app/lokma/id123456789';
+ const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.lokma.app';
+
+ // Is this a kermes-related user creation?
+ const isKermesContext = !!(kermesId || businessType === 'kermes');
+
  // 1. Send Welcome Email via API
  let emailSent = false;
  let emailError = null;
@@ -530,6 +539,26 @@ export async function POST(request: NextRequest) {
  </table>
  </div>
 
+ <!-- Mobile App Login Section -->
+ ${isKermesContext ? `
+ <div style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:18px;margin-bottom:20px;">
+ <p style="margin:0 0 8px 0;color:#166534;font-weight:700;font-size:13px;">LOKMA Mobil Uygulamasi</p>
+ <p style="margin:0 0 12px 0;color:#4b5563;font-size:12px;line-height:1.6;">
+ Mobil uygulamaya <strong>yukaridaki email ve sifre</strong> ile giris yapabilirsiniz.<br>
+ Giris sonrasi <strong>Profilim &gt; Personel Menusu</strong> uzerinden kermes paneline ulaşabilirsiniz.
+ </p>
+ <table style="border-collapse:collapse;">
+ <tr>
+ <td style="padding-right:10px;">
+ <a href="${APP_STORE_URL}" style="display:inline-block;background:#111827;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">App Store</a>
+ </td>
+ <td>
+ <a href="${PLAY_STORE_URL}" style="display:inline-block;background:#166534;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">Google Play</a>
+ </td>
+ </tr>
+ </table>
+ </div>` : ''}
+
  <p style="margin:0 0 32px 0;color:#dc2626;font-size:13px;font-weight:500;">
  ${s.passWarning}
  </p>
@@ -596,6 +625,25 @@ export async function POST(request: NextRequest) {
  </table>
  </div>
 
+ <!-- Mobile App Login Section -->
+ ${isKermesContext ? `
+ <div style="background-color:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px;margin-bottom:24px;">
+ <p style="margin:0 0 8px 0;color:#f3f4f6;font-weight:700;font-size:13px;">LOKMA Mobil Uygulamasi</p>
+ <p style="margin:0 0 12px 0;color:#d1d5db;font-size:12px;line-height:1.6;">
+ Mobil uygulamaya <strong>yukaridaki email ve sifre</strong> ile giris yapabilirsiniz.
+ </p>
+ <table style="border-collapse:collapse;">
+ <tr>
+ <td style="padding-right:10px;">
+ <a href="${APP_STORE_URL}" style="display:inline-block;background:#f9fafb;color:#111827;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">App Store</a>
+ </td>
+ <td>
+ <a href="${PLAY_STORE_URL}" style="display:inline-block;background:#dc2626;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">Google Play</a>
+ </td>
+ </tr>
+ </table>
+ </div>` : ''}
+
  <!-- Password Change Warning -->
  <div class="warn-box" style="background-color:rgba(239,68,68,0.1);padding:14px 18px;border-radius:10px;margin:0 0 24px 0;border:1px solid rgba(239,68,68,0.3);">
  <p class="warn-text" style="margin:0;color:#fca5a5;font-size:13px;font-weight:700;text-align:center;">
@@ -656,13 +704,19 @@ export async function POST(request: NextRequest) {
  // Updated messages explaining Phone Auth logic based on user's feedback
  const businessNameText = businessName ? `${businessName} işletmesinde ` : '';
  const assignerText = assignerName ? `Sizi atayan: ${assignerName}\n\n` : '';
+ const credentialsText = finalEmail && password
+ ? `\nUygulama Giris Bilgileriniz:\nKullanici Adi: ${finalEmail}\nGecici Sifre: ${password}\n(Ilk giriste sifrenizi degistirin!)\n`
+ : '';
+ const appLinkText = isKermesContext ? `\nUygulama indirme:\nApp Store: ${APP_STORE_URL}\nGoogle Play: ${PLAY_STORE_URL}\n` : '';
  
  // 2A. Send WhatsApp Message (Primary)
  try {
  const whatsappMessage = 
  `LOKMA - Merhaba ${firstName}!\n\n` +
  `Size ${businessNameText}${roleDisplayName} yetkisi verildi.\n\n` +
- `Uygulamaya telefon numaranızla giriş yaparak SMS doğrulama kodu alabilir ve kendi şifrenizi belirleyebilirsiniz.\n\n` +
+ credentialsText +
+ (credentialsText ? '' : `Uygulamaya telefon numaranızla giriş yaparak SMS doğrulama kodu alabilir ve kendi şifrenizi belirleyebilirsiniz.\n\n`) +
+ appLinkText +
  `Giriş Yap: ${onboardingUrl}\n\n` +
  assignerText + 
  `LOKMA Marketplace`;
@@ -692,7 +746,9 @@ export async function POST(request: NextRequest) {
 
  // 2B. Send SMS (Fallback or Secondary)
  try {
- const smsMessage = `LOKMA: Merhaba ${firstName}! ${businessNameText}${roleDisplayName} olarak atandiniz. Telefon numaranizla giris yapip sifrenizi belirlemek icin tiklayin: ${onboardingUrl}`;
+ const smsMessage = credentialsText
+ ? `LOKMA: Merhaba ${firstName}! ${businessNameText}${roleDisplayName} olarak atandiniz.${credentialsText}Giris: ${onboardingUrl}`
+ : `LOKMA: Merhaba ${firstName}! ${businessNameText}${roleDisplayName} olarak atandiniz. Tel.no ile giris yapin: ${onboardingUrl}`;
 
  const smsResponse = await fetch(`${baseUrl}/api/sms/send`, {
  method: 'POST',

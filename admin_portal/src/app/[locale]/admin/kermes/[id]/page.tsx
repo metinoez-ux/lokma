@@ -240,6 +240,7 @@ export default function KermesDetailPage() {
  const params = useParams();
  const router = useRouter();
  const { admin, loading: adminLoading } = useAdmin();
+ const isSuperAdmin = admin?.adminType === 'super';
  const kermesId = params.id as string;
 
  const [kermes, setKermes] = useState<KermesEvent | null>(null);
@@ -318,12 +319,24 @@ export default function KermesDetailPage() {
  const [assignedStaff, setAssignedStaff] = useState<string[]>([]);
  const [assignedDrivers, setAssignedDrivers] = useState<string[]>([]);
  const [assignedWaiters, setAssignedWaiters] = useState<string[]>([]);
+ const [kermesAdmins, setKermesAdmins] = useState<string[]>([]); // Kermes Admin UIDs
  const [staffSearchQuery, setStaffSearchQuery] = useState('');
  const [driverSearchQuery, setDriverSearchQuery] = useState('');
  const [staffResults, setStaffResults] = useState<any[]>([]);
  const [driverResults, setDriverResults] = useState<any[]>([]);
  const [searchingStaff, setSearchingStaff] = useState(false);
  const [searchingDriver, setSearchingDriver] = useState(false);
+
+ // Akilli eslestirme - mevcut kullanici bulunca
+ const [matchedUser, setMatchedUser] = useState<any | null>(null);
+ const [isMatchSearching, setIsMatchSearching] = useState(false);
+ // Rol checkboxlari (yeni olusturma + mevcut atama icin)
+ const [newStaffRoles, setNewStaffRoles] = useState({
+ isStaff: true,
+ isDriver: false,
+ isWaiter: false,
+ isKermesAdmin: false,
+ });
 
  // Edit Person Modal State
  const [editPersonData, setEditPersonData] = useState<any>(null);
@@ -333,7 +346,7 @@ export default function KermesDetailPage() {
  const [kermesSectionDefs, setKermesSectionDefs] = useState<SectionDefForPZ[]>([]);
 
  // Otomatik kadro kaydetme fonksiyonu
- const saveTeamToDb = async (newStaff: string[], newDrivers: string[], newWaiters?: string[]) => {
+ const saveTeamToDb = async (newStaff: string[], newDrivers: string[], newWaiters?: string[], newKermesAdmins?: string[]) => {
  if (!kermesId) return;
  try {
  const updatePayload: any = {
@@ -342,6 +355,8 @@ export default function KermesDetailPage() {
  };
  if (newWaiters !== undefined) updatePayload.assignedWaiters = newWaiters;
  else updatePayload.assignedWaiters = assignedWaiters;
+ if (newKermesAdmins !== undefined) updatePayload.kermesAdmins = newKermesAdmins;
+ else updatePayload.kermesAdmins = kermesAdmins;
  await updateDoc(doc(db, 'kermes_events', kermesId as string), updatePayload);
  showToast(t('kaydedildi') || 'Kadro güncellendi', 'success');
  } catch (error) {
@@ -512,6 +527,7 @@ export default function KermesDetailPage() {
  setAssignedStaff(Array.isArray(data.assignedStaff) ? data.assignedStaff : []);
  setAssignedDrivers(Array.isArray(data.assignedDrivers) ? data.assignedDrivers : []);
  setAssignedWaiters(Array.isArray(data.assignedWaiters) ? data.assignedWaiters : []);
+ setKermesAdmins(Array.isArray((data as any).kermesAdmins) ? (data as any).kermesAdmins : []);
 
  // Bolum tanimlarini yukle (PrepZone hiyerarsisi)
  const rawSections = kermesDoc.data()?.tableSectionsV2;
@@ -698,7 +714,7 @@ export default function KermesDetailPage() {
  }
  };
 
- // Personel Arama
+ // Personel Arama (super admin dropdown)
  const searchStaff = async (q: string) => {
  setStaffSearchQuery(q);
  if (q.length < 2) {
@@ -726,6 +742,57 @@ export default function KermesDetailPage() {
  console.error('Error searching staff:', error);
  } finally {
  setSearchingStaff(false);
+ }
+ };
+
+ // Akilli eslestirme: telefon veya email ile users+admins koleksiyonunda ara
+ const lookupUserByPhoneOrEmail = async (phone: string, email: string) => {
+ const phoneClean = phone.replace(/[^0-9]/g, '');
+ if (phoneClean.length < 6 && email.length < 5) {
+ setMatchedUser(null);
+ return;
+ }
+ setIsMatchSearching(true);
+ try {
+ // Hem users hem admins koleksiyonunda ara
+ const checks: Promise<any>[] = [];
+
+ if (phoneClean.length >= 6) {
+ checks.push(
+ getDocs(query(collection(db, 'users'), where('phone', '>=', phoneClean), limit(3))),
+ getDocs(query(collection(db, 'admins'), where('phone', '>=', phoneClean), limit(3)))
+ );
+ }
+ if (email.length >= 5) {
+ checks.push(
+ getDocs(query(collection(db, 'users'), where('email', '==', email.toLowerCase()), limit(1))),
+ getDocs(query(collection(db, 'admins'), where('email', '==', email.toLowerCase()), limit(1)))
+ );
+ }
+
+ const snapshots = await Promise.all(checks);
+ const allDocs: any[] = [];
+ snapshots.forEach(snap => snap.docs.forEach((d: any) => allDocs.push({ id: d.id, ...d.data() })));
+
+ // Telefon eslesme - tam uyan bul
+ let found: any = null;
+ if (phoneClean.length >= 6) {
+ found = allDocs.find(u => {
+ const uPhone = (u.phone || u.phoneNumber || '').replace(/[^0-9]/g, '');
+ return uPhone.endsWith(phoneClean) || phoneClean.endsWith(uPhone.slice(-8));
+ });
+ }
+ // Email eslesme
+ if (!found && email.length >= 5) {
+ found = allDocs.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+ }
+
+ setMatchedUser(found || null);
+ } catch (e) {
+ console.error('User lookup error:', e);
+ setMatchedUser(null);
+ } finally {
+ setIsMatchSearching(false);
  }
  };
 
@@ -1058,31 +1125,34 @@ export default function KermesDetailPage() {
  });
  };
 
- // Inline Personel / Sürücü Oluşturma
+ // Yeni Personel Olustur (eslesen kullanici yoksa)
  const handleCreateUser = async (type: 'kermes_staff' | 'kermes_driver' | 'kermes_waiter') => {
  if (!kermes?.id) {
- showToast(t('isletme_bilgisi_bulunamadi') || 'İşletme bilgisi bulunamadı.', 'error');
+ showToast(t('isletme_bilgisi_bulunamadi') || 'Işletme bilgisi bulunamadı.', 'error');
  return;
  }
  
  const form = type === 'kermes_staff' ? newStaffForm : newDriverForm;
  if (!form.name || !form.phone || !form.gender) {
- showToast(t('isim_telefon_cinsiyet_zorunlu') || 'İsim, telefon ve cinsiyet zorunludur.', 'error');
+ showToast(t('isim_telefon_cinsiyet_zorunlu') || 'Isim, telefon ve cinsiyet zorunludur.', 'error');
  return;
  }
 
+ // Rol listesi build
+ const roles: string[] = [];
+ if (newStaffRoles.isStaff) roles.push('kermes_staff');
+ if (newStaffRoles.isDriver) roles.push('kermes_driver');
+ if (newStaffRoles.isWaiter) roles.push('kermes_waiter');
+ if (newStaffRoles.isKermesAdmin && isSuperAdmin) roles.push('kermes_admin');
+
  setIsCreatingUser(true);
  try {
- // Otomatik güçlü şifre oluştur
  const generatePassword = () => {
  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%*+';
  let pass = '';
- for(let i=0; i<10; i++){
- pass += chars.charAt(Math.floor(Math.random() * chars.length));
- }
- // En az bir sayı ve bir büyük harf garantisi
- pass = pass.replace(/./, chars.charAt(Math.floor(Math.random() * 26) + 26)); // Büyük harf
- pass = pass.replace(/.$/, chars.charAt(Math.floor(Math.random() * 10) + 52)); // Rakam
+ for(let i=0; i<10; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+ pass = pass.replace(/./, chars.charAt(Math.floor(Math.random() * 26) + 26));
+ pass = pass.replace(/.$/, chars.charAt(Math.floor(Math.random() * 10) + 52));
  return pass;
  };
  const tempPassword = generatePassword();
@@ -1096,70 +1166,141 @@ export default function KermesDetailPage() {
  displayName: form.name.trim(),
  phone: form.phone.replace(/[^0-9+]/g, ''),
  dialCode: form.countryCode,
- gender: form.gender, // 👈 Eklenen Alan
+ gender: form.gender,
  role: 'admin',
  adminType: type,
  businessId: kermes.id,
  businessName: kermes.title,
  businessType: 'kermes',
+ kermesId: kermes.id,
+ kermesName: kermes.title,
+ kermesRoles: roles,
+ isKermesAdmin: newStaffRoles.isKermesAdmin && isSuperAdmin,
  createdBy: (admin as any)?.firebaseUid || 'admin_panel',
  locale: params.locale || 'de',
  assignerName: admin ? `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.displayName : undefined,
  assignerEmail: admin?.email,
- assignerRole: admin?.adminType || admin?.role
+ assignerRole: admin?.adminType || admin?.role,
  }),
  });
 
  const data = await response.json();
  if (!response.ok) {
- if (data.error?.includes('zaten kullanımda') || data.error?.includes('kullanımda')) {
+ if (data.error?.includes('zaten kullan') || data.error?.includes('kullan')) {
  throw new Error(
  t('personel_zaten_var_uyari') || 
- 'Bu e-posta veya telefon ile kayıtlı bir kullanıcı zaten var. Lütfen yeni kayıt oluşturmak yerine, önceki menüdeki arama kısmını kullanarak personeli bulun ve ekleyin.'
+ 'Bu e-posta veya telefon ile kayıtlı kullanıcı var. Arama ile bulup atayın.'
  );
  }
  throw new Error(data.error || t('bir_hata_olustu'));
  }
 
- let successMsg = type === 'kermes_staff' ? 
- (t('personel_basariyla_olusturuldu') || 'Personel oluşturuldu.') : 
- (type === 'kermes_driver' ? (t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.') : (t('garson_basariyla_olusturuldu') || 'Garson oluşturuldu.'));
- 
- if (data.notifications) {
- const { email, whatsapp, sms } = data.notifications;
- if (!email?.sent && email?.address) {
- successMsg += `\n⚠️ E-posta GÖNDERİLEMEDİ: ${email.error || 'Bilinmeyen hata'}`;
- }
- if (!whatsapp?.sent && whatsapp?.address) {
- successMsg += `\n⚠️ WhatsApp GÖNDERİLEMEDİ: ${whatsapp.error || 'Bilinmeyen hata'}`;
- }
- if (!sms?.sent && sms?.address) {
- successMsg += `\n⚠️ SMS GÖNDERİLEMEDİ: ${sms.error || 'Bilinmeyen hata'}`;
- }
- }
- 
- showToast(successMsg, data.notifications && (!data.notifications.email?.sent || !data.notifications.whatsapp?.sent) ? 'error' : 'success');
+ const newUid = data.uid;
+ // Roller guncelle
+ const newStaff = newStaffRoles.isStaff ? [...assignedStaff, newUid] : [...assignedStaff];
+ const newDrivers = newStaffRoles.isDriver ? [...assignedDrivers, newUid] : [...assignedDrivers];
+ const newWaiters = newStaffRoles.isWaiter ? [...assignedWaiters, newUid] : [...assignedWaiters];
+ const newKAdmins = (newStaffRoles.isKermesAdmin && isSuperAdmin) ? [...kermesAdmins, newUid] : [...kermesAdmins];
 
- if (type === 'kermes_staff') {
- const newStaff = [...assignedStaff, data.uid];
  setAssignedStaff(newStaff);
- saveTeamToDb(newStaff, assignedDrivers, assignedWaiters);
+ setAssignedDrivers(newDrivers);
+ setAssignedWaiters(newWaiters);
+ setKermesAdmins(newKAdmins);
+ saveTeamToDb(newStaff, newDrivers, newWaiters, newKAdmins);
+
  setIsAddingStaff(false);
  setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
- } else if (type === 'kermes_driver') {
- const newDrivers = [...assignedDrivers, data.uid];
- setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers, assignedWaiters);
- setIsAddingDriver(false);
- setNewDriverForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
- } else {
- const newWaiters = [...assignedWaiters, data.uid];
- setAssignedWaiters(newWaiters);
- saveTeamToDb(assignedStaff, assignedDrivers, newWaiters);
- }
+ setMatchedUser(null);
+ setNewStaffRoles({ isStaff: true, isDriver: false, isWaiter: false, isKermesAdmin: false });
+
+ showToast('Personel oluşturuldu ve atandı', 'success');
  } catch (error: any) {
  console.error('Create user error:', error);
  showToast(error.message, 'error');
+ } finally {
+ setIsCreatingUser(false);
+ }
+ };
+
+ // Mevcut kullaniciyi kermes personeli olarak ata (eslestirme butonu)
+ const handleAssignExistingUser = async (user: any) => {
+ if (!kermes?.id || !user?.id) return;
+ setIsCreatingUser(true);
+ try {
+ const newStaff = newStaffRoles.isStaff && !assignedStaff.includes(user.id) ? [...assignedStaff, user.id] : [...assignedStaff];
+ const newDrivers = newStaffRoles.isDriver && !assignedDrivers.includes(user.id) ? [...assignedDrivers, user.id] : [...assignedDrivers];
+ const newWaiters = newStaffRoles.isWaiter && !assignedWaiters.includes(user.id) ? [...assignedWaiters, user.id] : [...assignedWaiters];
+ const newKAdmins = (newStaffRoles.isKermesAdmin && isSuperAdmin && !kermesAdmins.includes(user.id)) ? [...kermesAdmins, user.id] : [...kermesAdmins];
+
+ setAssignedStaff(newStaff);
+ setAssignedDrivers(newDrivers);
+ setAssignedWaiters(newWaiters);
+ setKermesAdmins(newKAdmins);
+ await saveTeamToDb(newStaff, newDrivers, newWaiters, newKAdmins);
+
+ // Firestore'da kullaniciya kermes atamasi ekle
+ const userRef = doc(db, 'users', user.id);
+ const adminRef = doc(db, 'admins', user.id);
+ const roles: string[] = [];
+ if (newStaffRoles.isStaff) roles.push('personel');
+ if (newStaffRoles.isDriver) roles.push('surucu');
+ if (newStaffRoles.isWaiter) roles.push('garson');
+ if (newStaffRoles.isKermesAdmin && isSuperAdmin) roles.push('kermes_admin');
+
+ const assignmentData = {
+ kermesAssignments: [{
+ kermesId: kermes.id,
+ kermesTitle: kermes.title,
+ roles,
+ assignedAt: new Date(),
+ assignedBy: admin?.id || 'unknown',
+ }]
+ };
+ // Users koleksiyonunda guncelle (varsa)
+ const userSnap = await getDoc(userRef);
+ if (userSnap.exists()) {
+ const existing = userSnap.data().kermesAssignments || [];
+ const filtered = existing.filter((a: any) => a.kermesId !== kermes.id);
+ await updateDoc(userRef, { kermesAssignments: [...filtered, assignmentData.kermesAssignments[0]] });
+ }
+ // Admins koleksiyonunda guncelle (varsa)
+ const adminSnap = await getDoc(adminRef);
+ if (adminSnap.exists()) {
+ const existing = adminSnap.data().kermesAssignments || [];
+ const filtered = existing.filter((a: any) => a.kermesId !== kermes.id);
+ await updateDoc(adminRef, { kermesAssignments: [...filtered, assignmentData.kermesAssignments[0]] });
+ }
+
+ // Bildirim - atama emaili gonder
+ try {
+ await fetch('/api/kermes/notify-assignment', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ userId: user.id,
+ userName: user.displayName || user.name || user.firstName || '',
+ userEmail: user.email || '',
+ userPhone: user.phone || user.phoneNumber || '',
+ kermesId: kermes.id,
+ kermesTitle: kermes.title,
+ roles,
+ isKermesAdmin: newStaffRoles.isKermesAdmin && isSuperAdmin,
+ assignerName: admin ? `${admin.firstName || ''} ${admin.lastName || ''}`.trim() : 'Admin',
+ locale: params.locale || 'de',
+ }),
+ });
+ } catch (notifErr) {
+ console.error('Notification error (non-blocking):', notifErr);
+ }
+
+ setIsAddingStaff(false);
+ setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
+ setMatchedUser(null);
+ setNewStaffRoles({ isStaff: true, isDriver: false, isWaiter: false, isKermesAdmin: false });
+ showToast(`${user.displayName || user.name || ''} kermes kadrosuna eklendi`, 'success');
+ } catch (error: any) {
+ console.error('Assign existing user error:', error);
+ showToast(error.message || 'Atama hatası', 'error');
  } finally {
  setIsCreatingUser(false);
  }
@@ -2434,94 +2575,265 @@ export default function KermesDetailPage() {
  </div>
 
  {isAddingStaff && (
- <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30">
- <h5 className="text-sm font-semibold text-foreground mb-3">{t('personel_bilgileri') || 'Personel Bilgileri'}</h5>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
- <input 
- type="text" 
- placeholder={t('ad_soyad') || 'Ad Soyad'}
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
- value={newStaffForm.name}
- onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})}
- />
- <div className="flex gap-2">
- <input 
- type="text" 
- placeholder="+49"
- className="w-20 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none text-center"
- value={newStaffForm.countryCode}
- onChange={e => setNewStaffForm({...newStaffForm, countryCode: e.target.value})}
- />
- <input 
- type="text" 
- placeholder={t('telefon_numarasi') || 'Telefon Numarasi'}
- className="flex-1 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
- value={newStaffForm.phone}
- onChange={e => setNewStaffForm({...newStaffForm, phone: e.target.value})}
- />
- </div>
- <input 
- type="email" 
- placeholder={`${t('email_opsiyonel') || 'E-posta (Istege Bagli)'}`}
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
- value={newStaffForm.email}
- onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})}
- />
- <select
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
- value={newStaffForm.gender}
- onChange={e => setNewStaffForm({...newStaffForm, gender: e.target.value})}
- >
- <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seciniz'}</option>
- <option value="male">{t('erkek') || 'Bay / Herr'}</option>
- <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
- </select>
- </div>
- <button
- type="button"
- onClick={() => handleCreateUser('kermes_staff')}
- disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.gender}
- className="mt-3 w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
- >
- {isCreatingUser ? t('olusturuluyor') || 'Olusturuluyor...' : t('kaydet') || 'Kaydet'}
- </button>
- </div>
+  <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30 space-y-4">
+  <h5 className="text-sm font-semibold text-foreground">
+  {isSuperAdmin ? 'Yeni Personel Ekle veya Mevcut Kullaniciyi Bul' : 'Personel Bilgileri'}
+  </h5>
+
+  {/* Telefon + Email alanlari - her ikisi icin de arama tetikler */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+  <input
+  type="text"
+  placeholder={t('ad_soyad') || 'Ad Soyad'}
+  aria-label="Ad Soyad"
+  className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+  value={newStaffForm.name}
+  onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})}
+  />
+  <div className="flex gap-2">
+  <input
+  type="text"
+  placeholder="+49"
+  aria-label="Ulke kodu"
+  className="w-20 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none text-center"
+  value={newStaffForm.countryCode}
+  onChange={e => setNewStaffForm({...newStaffForm, countryCode: e.target.value})}
+  />
+  <input
+  type="text"
+  placeholder={t('telefon_numarasi') || 'Telefon Numarasi'}
+  aria-label="Telefon numarasi"
+  className="flex-1 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+  value={newStaffForm.phone}
+  onChange={e => {
+  const v = e.target.value;
+  setNewStaffForm({...newStaffForm, phone: v});
+  // Debounce ile ara
+  if (v.length >= 6) lookupUserByPhoneOrEmail(v, newStaffForm.email);
+  else setMatchedUser(null);
+  }}
+  />
+  </div>
+  <input
+  type="email"
+  placeholder={t('email_opsiyonel') || 'E-posta (Istege Bagli)'}
+  aria-label="E-posta adresi"
+  className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+  value={newStaffForm.email}
+  onChange={e => {
+  const v = e.target.value;
+  setNewStaffForm({...newStaffForm, email: v});
+  if (v.includes('@') && v.length >= 5) lookupUserByPhoneOrEmail(newStaffForm.phone, v);
+  }}
+  />
+  <select
+  aria-label="Cinsiyet secimi"
+  className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+  value={newStaffForm.gender}
+  onChange={e => setNewStaffForm({...newStaffForm, gender: e.target.value})}
+  >
+  <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seciniz'}</option>
+  <option value="male">{t('erkek') || 'Bay / Herr'}</option>
+  <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
+  </select>
+  </div>
+
+  {/* Eslesen kullanici banneri */}
+  {isMatchSearching && (
+  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+  <div className="w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+  Sistemde aranıyor...
+  </div>
+  )}
+  {matchedUser && !isMatchSearching && (
+  <div className="rounded-xl border-2 border-emerald-500/60 bg-emerald-950/20 p-4">
+  <div className="flex items-start gap-3">
+  <div className="w-10 h-10 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-sm font-bold flex-shrink-0">
+  {(matchedUser.displayName || matchedUser.name || matchedUser.firstName || 'U').substring(0, 2).toUpperCase()}
+  </div>
+  <div className="flex-1 min-w-0">
+  <p className="text-sm font-semibold text-emerald-400">Sistemde kayitli kullanici bulundu!</p>
+  <p className="text-sm font-medium text-foreground mt-0.5 truncate">
+  {matchedUser.displayName || (matchedUser.firstName ? `${matchedUser.firstName} ${matchedUser.lastName || ''}`.trim() : '') || matchedUser.name}
+  </p>
+  {matchedUser.email && <p className="text-xs text-muted-foreground">{matchedUser.email}</p>}
+  {(matchedUser.phone || matchedUser.phoneNumber) && <p className="text-xs text-muted-foreground">{matchedUser.phone || matchedUser.phoneNumber}</p>}
+  </div>
+  </div>
+
+  {/* Rol Checkboxlari */}
+  <div className="mt-4 grid grid-cols-2 gap-2">
+  {([
+  { key: 'isStaff', label: 'Personel', color: 'cyan' },
+  { key: 'isDriver', label: 'Surucu', color: 'amber' },
+  { key: 'isWaiter', label: 'Garson', color: 'emerald' },
+  ] as const).map(role => (
+  <label key={role.key} className="flex items-center gap-2 cursor-pointer select-none">
+  <input
+  type="checkbox"
+  aria-label={`${role.label} olarak ata`}
+  checked={newStaffRoles[role.key]}
+  onChange={e => setNewStaffRoles(r => ({...r, [role.key]: e.target.checked}))}
+  className="w-4 h-4 accent-cyan-500 rounded"
+  />
+  <span className="text-xs text-foreground">{role.label}</span>
+  </label>
+  ))}
+  {isSuperAdmin && (
+  <label className="flex items-center gap-2 cursor-pointer select-none col-span-2 mt-1 p-2 rounded-lg bg-purple-900/20 border border-purple-700/30">
+  <input
+  type="checkbox"
+  aria-label="Kermes Admin olarak ata"
+  checked={newStaffRoles.isKermesAdmin}
+  onChange={e => setNewStaffRoles(r => ({...r, isKermesAdmin: e.target.checked}))}
+  className="w-4 h-4 accent-purple-500 rounded"
+  />
+  <span className="text-xs font-semibold text-purple-300">Kermes Admin olarak ata (Personel yonetim yetkisi verir)</span>
+  </label>
+  )}
+  </div>
+
+  <button
+  type="button"
+  onClick={() => handleAssignExistingUser(matchedUser)}
+  disabled={isCreatingUser || (!newStaffRoles.isStaff && !newStaffRoles.isDriver && !newStaffRoles.isWaiter && !newStaffRoles.isKermesAdmin)}
+  className="mt-3 w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
+  >
+  {isCreatingUser ? 'Ataniyor...' : `${matchedUser.displayName || matchedUser.name || 'Kullanici'} kermes kadrosuna ekle`}
+  </button>
+  <p className="text-xs text-muted-foreground text-center mt-1.5">
+  veya asagidan yeni kayit olustur
+  </p>
+  </div>
+  )}
+  {!matchedUser && !isMatchSearching && newStaffForm.phone.length >= 6 && (
+  <p className="text-xs text-amber-400">Sistemde bu telefon/email ile eslesen kullanici bulunamadi. Asagidan yeni kayit olusturulacak.</p>
+  )}
+
+  {/* Rol Checkboxlari - yoksa da goster (yeni kayit icin) */}
+  {!matchedUser && (
+  <div className="grid grid-cols-2 gap-2">
+  <label className="flex items-center gap-2 cursor-pointer select-none">
+  <input type="checkbox" aria-label="Personel olarak ata" checked={newStaffRoles.isStaff} onChange={e => setNewStaffRoles(r => ({...r, isStaff: e.target.checked}))} className="w-4 h-4 accent-cyan-500 rounded" />
+  <span className="text-xs text-foreground">Personel</span>
+  </label>
+  <label className="flex items-center gap-2 cursor-pointer select-none">
+  <input type="checkbox" aria-label="Surucu olarak ata" checked={newStaffRoles.isDriver} onChange={e => setNewStaffRoles(r => ({...r, isDriver: e.target.checked}))} className="w-4 h-4 accent-amber-500 rounded" />
+  <span className="text-xs text-foreground">Surucu</span>
+  </label>
+  <label className="flex items-center gap-2 cursor-pointer select-none">
+  <input type="checkbox" aria-label="Garson olarak ata" checked={newStaffRoles.isWaiter} onChange={e => setNewStaffRoles(r => ({...r, isWaiter: e.target.checked}))} className="w-4 h-4 accent-emerald-500 rounded" />
+  <span className="text-xs text-foreground">Garson</span>
+  </label>
+  {isSuperAdmin && (
+  <label className="flex items-center gap-2 cursor-pointer select-none p-2 rounded-lg bg-purple-900/20 border border-purple-700/30">
+  <input type="checkbox" aria-label="Kermes Admin olarak ata" checked={newStaffRoles.isKermesAdmin} onChange={e => setNewStaffRoles(r => ({...r, isKermesAdmin: e.target.checked}))} className="w-4 h-4 accent-purple-500 rounded" />
+  <span className="text-xs font-semibold text-purple-300">Kermes Admin</span>
+  </label>
+  )}
+  </div>
+  )}
+
+  {/* Yeni kayit olusturma butonu - eslesen yoksa */}
+  {!matchedUser && (
+  <button
+  type="button"
+  onClick={() => handleCreateUser('kermes_staff')}
+  disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.gender}
+  className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
+  >
+  {isCreatingUser ? (t('olusturuluyor') || 'Olusturuluyor...') : (t('kaydet') || 'Yeni Kayit Olustur ve Ata')}
+  </button>
+  )}
+  </div>
  )}
 
- {/* Personel Arama */}
- <div className="relative mb-4">
- <input 
- type="text" 
- placeholder={t('personel_ara') || 'Isim veya e-posta ile ara...'}
- value={staffSearchQuery}
- onChange={(e) => searchStaff(e.target.value)}
- className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
- />
- {searchingStaff && (
- <div className="absolute right-3 top-3 w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
- )}
- {staffResults.length > 0 && (
- <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
- {staffResults.map(user => (
- <button
- key={user.id}
- type="button"
- onClick={() => {
- const newStaff = [...assignedStaff, user.id];
- setAssignedStaff(newStaff);
- saveTeamToDb(newStaff, assignedDrivers);
- setStaffSearchQuery('');
- setStaffResults([]);
- }}
- className="w-full text-left px-4 py-3 hover:bg-muted dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
- >
- <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
- <span className="text-xs text-cyan-600 dark:text-cyan-400 capitalize bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">{user.role || 'staff'}</span>
- </button>
- ))}
- </div>
- )}
- </div>
+ {/* Personel Arama - SADECE Super Admin */}
+  {isSuperAdmin && (
+  <div className="relative mb-4">
+  <label className="block text-xs font-medium text-muted-foreground mb-1.5">Mevcut kullanici listesinden ara (Ad, email veya telefon)</label>
+  <input
+  type="text"
+  placeholder="Isim, e-posta veya telefon ile ara..."
+  aria-label="Kullanici listesinde ara"
+  value={staffSearchQuery}
+  onChange={(e) => searchStaff(e.target.value)}
+  className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+  />
+  {searchingStaff && (
+  <div className="absolute right-3 top-9 w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+  )}
+  {staffResults.length > 0 && (
+  <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
+  {staffResults.map(user => {
+  const alreadyAssigned = assignedStaff.includes(user.id);
+  return (
+  <div key={user.id} className="border-b border-border last:border-0">
+  <div className="flex items-start gap-3 px-4 py-3">
+  <div className="w-8 h-8 rounded-full bg-cyan-600/20 text-cyan-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+  {(user.displayName || user.name || user.firstName || 'U').substring(0, 2).toUpperCase()}
+  </div>
+  <div className="flex-1 min-w-0">
+  <p className="text-sm font-medium text-foreground">{user.displayName || user.name || user.firstName} {user.lastName || ''}</p>
+  {user.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
+  {/* Rol secim checkboxlari - super admin arama sonucunda */}
+  <div className="flex flex-wrap gap-3 mt-2">
+  {(['Personel', 'Surucu', 'Garson'] as const).map((rol, idx) => {
+  const keys = ['isStaff', 'isDriver', 'isWaiter'] as const;
+  return (
+  <label key={rol} className="flex items-center gap-1 cursor-pointer select-none">
+  <input
+  type="checkbox"
+  aria-label={`${user.displayName || user.name} - ${rol} olarak ata`}
+  defaultChecked={idx === 0}
+  id={`search-role-${user.id}-${rol}`}
+  className="w-3.5 h-3.5 accent-cyan-500 rounded"
+  onChange={e => {
+  setNewStaffRoles(r => ({...r, [keys[idx]]: e.target.checked}));
+  }}
+  />
+  <span className="text-xs text-foreground">{rol}</span>
+  </label>
+  );
+  })}
+  <label className="flex items-center gap-1 cursor-pointer select-none">
+  <input
+  type="checkbox"
+  aria-label={`${user.displayName || user.name} - Kermes Admin olarak ata`}
+  id={`search-role-${user.id}-admin`}
+  className="w-3.5 h-3.5 accent-purple-500 rounded"
+  onChange={e => setNewStaffRoles(r => ({...r, isKermesAdmin: e.target.checked}))}
+  />
+  <span className="text-xs font-semibold text-purple-300">K.Admin</span>
+  </label>
+  </div>
+  </div>
+  <button
+  type="button"
+  disabled={alreadyAssigned}
+  onClick={() => {
+  if (alreadyAssigned) return;
+  setMatchedUser(user);
+  handleAssignExistingUser(user);
+  setStaffSearchQuery('');
+  setStaffResults([]);
+  }}
+  className={`flex-shrink-0 mt-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+  alreadyAssigned
+  ? 'bg-gray-200 dark:bg-gray-700 text-muted-foreground cursor-not-allowed'
+  : 'bg-cyan-600 hover:bg-cyan-500 text-white'
+  }`}
+  >
+  {alreadyAssigned ? 'Zaten Atandi' : 'Ata'}
+  </button>
+  </div>
+  </div>
+  );
+  })}
+  </div>
+  )}
+  </div>
+  )}
 
  {/* Atanmis Personel Listesi */}
  <div className="space-y-2">
@@ -2533,7 +2845,10 @@ export default function KermesDetailPage() {
  </div>
  <div>
  <span className="text-sm font-medium text-foreground">{staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name || staff.email}</span>
- <span className="ml-2 text-xs text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">Kermes Personel</span>
+ <span className="ml-2 text-xs text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">Personel</span>
+ {kermesAdmins.includes(staff.id) && (
+ <span className="ml-1 text-xs text-purple-400 bg-purple-900/30 border border-purple-700/30 px-2 py-0.5 rounded font-semibold">Kermes Admin</span>
+ )}
  {assignedDrivers.includes(staff.id) && (
  <span className="ml-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">Surucu</span>
  )}
@@ -2549,11 +2864,11 @@ export default function KermesDetailPage() {
  if (assignedWaiters.includes(staff.id)) {
  const newWaiters = assignedWaiters.filter(id => id !== staff.id);
  setAssignedWaiters(newWaiters);
- saveTeamToDb(assignedStaff, assignedDrivers, newWaiters);
+ saveTeamToDb(assignedStaff, assignedDrivers, newWaiters, kermesAdmins);
  } else {
  const newWaiters = [...assignedWaiters, staff.id];
  setAssignedWaiters(newWaiters);
- saveTeamToDb(assignedStaff, assignedDrivers, newWaiters);
+ saveTeamToDb(assignedStaff, assignedDrivers, newWaiters, kermesAdmins);
  }
  }}
  className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-semibold transition-colors ${
@@ -2571,11 +2886,11 @@ export default function KermesDetailPage() {
  if (assignedDrivers.includes(staff.id)) {
  const newDrivers = assignedDrivers.filter(id => id !== staff.id);
  setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers, assignedWaiters);
+ saveTeamToDb(assignedStaff, newDrivers, assignedWaiters, kermesAdmins);
  } else {
  const newDrivers = [...assignedDrivers, staff.id];
  setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers, assignedWaiters);
+ saveTeamToDb(assignedStaff, newDrivers, assignedWaiters, kermesAdmins);
  }
  }}
  className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-semibold transition-colors ${
@@ -2606,10 +2921,13 @@ export default function KermesDetailPage() {
  onClick={() => {
  const newStaff = assignedStaff.filter(id => id !== staff.id);
  setAssignedStaff(newStaff);
- // Also remove from drivers if they were a driver
  const newDrivers = assignedDrivers.filter(id => id !== staff.id);
  setAssignedDrivers(newDrivers);
- saveTeamToDb(newStaff, newDrivers);
+ const newWaiters = assignedWaiters.filter(id => id !== staff.id);
+ setAssignedWaiters(newWaiters);
+ const newKAdmins = kermesAdmins.filter(id => id !== staff.id);
+ setKermesAdmins(newKAdmins);
+ saveTeamToDb(newStaff, newDrivers, newWaiters, newKAdmins);
  }}
  className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center text-sm font-bold transition-colors"
  title="Personeli Karmesten Çıkar"
