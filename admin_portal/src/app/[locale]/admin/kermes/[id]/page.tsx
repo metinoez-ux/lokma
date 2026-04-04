@@ -598,7 +598,7 @@ export default function KermesDetailPage() {
  // Remove duplicates if same ID exists in both (rare)
  const uniqueTeamData = Array.from(new Map(teamData.map(item => [item.id, item])).values());
 
- setAssignedStaffDetails(uniqueTeamData.filter(u => assignedStaff.includes(u.id)));
+ setAssignedStaffDetails(uniqueTeamData);
  setAssignedDriverDetails(uniqueTeamData.filter(u => assignedDrivers.includes(u.id)));
  } catch (error) {
  console.error('Error fetching team data:', error);
@@ -1321,7 +1321,7 @@ export default function KermesDetailPage() {
  </button>
  <button onClick={() => setActiveTab('personel')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 👥 Personel {(assignedStaff.length + assignedDrivers.length) > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{assignedStaff.length + assignedDrivers.length}</span>}
+ 👥 Personel {new Set([...assignedStaff, ...assignedDrivers]).size > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{new Set([...assignedStaff, ...assignedDrivers]).size}</span>}
  </button>
  <button onClick={() => setActiveTab('mutfak')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
@@ -3342,44 +3342,82 @@ export default function KermesDetailPage() {
  )}
  </div>
 
- <div className="pt-4 border-t border-border mt-6">
- <label className="text-sm font-semibold text-foreground block mb-3">Hızlı İşlemler</label>
- 
- {!assignedDrivers.includes(editPersonData.id) && assignedStaff.includes(editPersonData.id) && (
- <button
- onClick={() => {
- const newDrivers = [...assignedDrivers, editPersonData.id];
- setAssignedDrivers(newDrivers);
- saveTeamToDb(assignedStaff, newDrivers);
- setEditPersonData(null);
- }}
- className="w-full py-2 mb-3 bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 rounded-lg text-sm font-medium transition"
- >
- + Ayrıca Sürücü Olarak Ata
- </button>
- )}
+  <div className="pt-4 border-t border-border mt-6">
+  <label className="text-sm font-semibold text-foreground block mb-3">Hizli Islemler</label>
+  
+  {/* Surucu Toggle Switch */}
+  <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+  <div className="flex items-center gap-2">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+  <span className="text-sm font-medium text-foreground">Surucu Olarak Ata</span>
+  </div>
+  <button
+  type="button"
+  title="Surucu olarak ata/cikar"
+  onClick={() => {
+  if (assignedDrivers.includes(editPersonData.id)) {
+  const nd = assignedDrivers.filter((did: string) => did !== editPersonData.id);
+  setAssignedDrivers(nd);
+  saveTeamToDb(assignedStaff, nd);
+  } else {
+  const nd = [...assignedDrivers, editPersonData.id];
+  setAssignedDrivers(nd);
+  saveTeamToDb(assignedStaff, nd);
+  }
+  }}
+  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${assignedDrivers.includes(editPersonData.id) ? 'bg-amber-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+  >
+  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${assignedDrivers.includes(editPersonData.id) ? 'translate-x-6' : 'translate-x-1'}`} />
+  </button>
+  </div>
+  {assignedDrivers.includes(editPersonData.id) && (
+  <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 -mt-1 ml-1">Bu personel ayni zamanda surucu olarak aktif.</p>
+  )}
 
- {!assignedStaff.includes(editPersonData.id) && assignedDrivers.includes(editPersonData.id) && (
- <button
- onClick={() => {
- const newStaff = [...assignedStaff, editPersonData.id];
- setAssignedStaff(newStaff);
- saveTeamToDb(newStaff, assignedDrivers);
- setEditPersonData(null);
- }}
- className="w-full py-2 mb-3 bg-cyan-600/20 text-cyan-500 hover:bg-cyan-600/30 rounded-lg text-sm font-medium transition"
- >
- + Ayrıca Personel Olarak Ata
- </button>
- )}
+   {/* Login Bilgilerini Tekrar Gonder */}
+   {(editPersonData.email || editPersonData.phone || editPersonData.phoneNumber) && (
+   <button
+   type="button"
+   onClick={async () => {
+   try {
+   const email = editPersonData.email;
+   if (email) {
+   const res = await fetch("/api/email/send", {
+   method: "POST",
+   headers: { "Content-Type": "application/json" },
+   body: JSON.stringify({
+   to: email,
+   subject: "LOKMA - Kermes Personel Login Bilgileri",
+   html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb"><h2 style="color:#1e40af;margin-top:0">Merhaba ${editPersonData.displayName || editPersonData.firstName || editPersonData.name || "Personel"}</h2><p>Kermes personel panelinize giris yapmak icin lutfen asagidaki bilgileri kullanin:</p><p><strong>Login:</strong> ${email}</p><p><strong>Link:</strong> <a href="https://lokma.web.app/kermes-login">https://lokma.web.app/kermes-login</a></p><p>Eger sifrenizi bilmiyorsaniz, giris sayfasindan "Sifremi Unuttum" secenegini kullanabilirsiniz.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"><p style="color:#6b7280;font-size:12px">LOKMA Kermes Yonetim Sistemi</p></div>`
+   })
+   });
+   if (res.ok) {
+   showToast("Login bilgileri email ile gonderildi", "success");
+   } else {
+   showToast("Email gonderilemedi", "error");
+   }
+   } else {
+   showToast("Bu kisinin email adresi yok. Telefon ile Firebase Auth uzerinden giris yapabilir.", "info");
+   }
+   } catch (err) {
+   console.error("Resend error:", err);
+   showToast("Bilgi gonderilemedi", "error");
+   }
+   }}
+   className="w-full py-2 mb-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600/20 border border-blue-900/30 rounded-lg text-sm font-medium transition"
+   >
+   Login Bilgilerini Tekrar Gonder
+   </button>
+   )}
 
- <button
- onClick={() => handleDeletePersonCompletely(editPersonData.id)}
- className="w-full py-2 bg-red-600/10 text-red-500 hover:bg-red-600/20 border border-red-900/30 rounded-lg text-sm font-medium transition"
- >
- Sistemden Tamamen Sil
- </button>
- </div>
+
+  <button
+  onClick={() => handleDeletePersonCompletely(editPersonData.id)}
+  className="w-full py-2 bg-red-600/10 text-red-500 hover:bg-red-600/20 border border-red-900/30 rounded-lg text-sm font-medium transition"
+  >
+  Sistemden Tamamen Sil
+  </button>
+  </div>
  </div>
 
  <div className="flex gap-3 mt-8">
