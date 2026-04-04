@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'staff_role_service.dart';
 
 /// Staff Shift Service — manages Play/Pause/Stop shift lifecycle
 /// 
@@ -52,7 +53,10 @@ class ShiftService {
 
     try {
       final adminDoc = await _db.collection('admins').doc(user.uid).get();
-      if (!adminDoc.exists) return;
+      if (!adminDoc.exists) {
+        // Kermes volunteer without admins doc — no shift to restore
+        return;
+      }
 
       final data = adminDoc.data()!;
       final isOnShift = data['isOnShift'] == true;
@@ -122,9 +126,14 @@ class ShiftService {
       final now = FieldValue.serverTimestamp();
       final dateStr = _todayString();
 
+      // Determine collection path: kermes uses kermes_events, others use businesses
+      final roleService = StaffRoleService();
+      final isKermes = roleService.businessType == 'kermes';
+      final parentCollection = isKermes ? 'kermes_events' : 'businesses';
+
       // Create shift document
       final shiftRef = _db
-          .collection('businesses')
+          .collection(parentCollection)
           .doc(businessId)
           .collection('shifts')
           .doc();
@@ -145,12 +154,13 @@ class ShiftService {
         'totalMinutes': 0,
         'pauseMinutes': 0,
         'createdAt': now,
+        'isKermes': isKermes,
       };
 
       await shiftRef.set(shiftData);
 
-      // Update admin doc with real-time shift status
-      await _db.collection('admins').doc(user.uid).update({
+      // Update admin doc with real-time shift status (set+merge for kermes volunteers without admins doc)
+      await _db.collection('admins').doc(user.uid).set({
         'isOnShift': true,
         'currentShiftId': shiftRef.id,
         'shiftBusinessId': businessId,
@@ -159,7 +169,8 @@ class ShiftService {
         'shiftAssignedTables': tables,
         'shiftIsDeliveryDriver': isDeliveryDriver,
         'shiftIsOtherRole': isOtherRole,
-      });
+        'shiftParentCollection': parentCollection,
+      }, SetOptions(merge: true));
 
       // Update local state
       _currentShiftId = shiftRef.id;
@@ -204,10 +215,10 @@ class ShiftService {
         ]),
       });
 
-      // Update admin doc
-      await _db.collection('admins').doc(user.uid).update({
+      // Update admin doc (set+merge for kermes volunteers)
+      await _db.collection('admins').doc(user.uid).set({
         'shiftStatus': 'paused',
-      });
+      }, SetOptions(merge: true));
 
       _shiftStatus = 'paused';
       _cancelGpsCheckTimers();
@@ -256,10 +267,10 @@ class ShiftService {
         'pauseLog': pauseLog,
       });
 
-      // Update admin doc
-      await _db.collection('admins').doc(user.uid).update({
+      // Update admin doc (set+merge for kermes volunteers)
+      await _db.collection('admins').doc(user.uid).set({
         'shiftStatus': 'active',
-      });
+      }, SetOptions(merge: true));
 
       _shiftStatus = 'active';
       _scheduleRandomGpsChecks();
@@ -452,7 +463,7 @@ class ShiftService {
 
   /// Clear shift fields from admin doc
   Future<void> _clearAdminShiftFields(String uid) async {
-    await _db.collection('admins').doc(uid).update({
+    await _db.collection('admins').doc(uid).set({
       'isOnShift': false,
       'currentShiftId': null,
       'shiftBusinessId': null,
@@ -460,7 +471,8 @@ class ShiftService {
       'shiftStartedAt': null,
       'shiftAssignedTables': [],
       'shiftIsOtherRole': false,
-    });
+      'shiftParentCollection': null,
+    }, SetOptions(merge: true));
   }
 
   /// Set up real-time stream for the current shift doc

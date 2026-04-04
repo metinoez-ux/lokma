@@ -114,19 +114,25 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedNavIndex,
-        children: tabs,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedNavIndex,
-        onTap: (index) => setState(() => _selectedNavIndex = index),
-        type: BottomNavigationBarType.fixed,
-        items: navItems,
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.grey,
-      ),
+      body: tabs.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : tabs.length == 1
+              ? tabs.first
+              : IndexedStack(
+                  index: _selectedNavIndex,
+                  children: tabs,
+                ),
+      bottomNavigationBar: navItems.length >= 2
+          ? BottomNavigationBar(
+              currentIndex: _selectedNavIndex,
+              onTap: (index) => setState(() => _selectedNavIndex = index),
+              type: BottomNavigationBarType.fixed,
+              items: navItems,
+              backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              selectedItemColor: Colors.blueAccent,
+              unselectedItemColor: Colors.grey,
+            )
+          : null,
     );
   }
 }

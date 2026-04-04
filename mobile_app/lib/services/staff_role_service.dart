@@ -54,9 +54,25 @@ class StaffRoleService {
       return false;
     }
 
+    // Try server first, then fall back to cache if offline
+    final result = await _tryCheckStaff(user, null) ||
+                   await _tryCheckStaff(user, Source.cache);
+    
+    if (!result) {
+      _resetStatus();
+    }
+    return result;
+  }
+
+  /// Attempt staff detection from given source (null = default/server, Source.cache = offline)
+  Future<bool> _tryCheckStaff(User user, Source? source) async {
     try {
+      final getOpts = source != null ? GetOptions(source: source) : null;
+
       // Check admins collection first (traditional staff/business admin)
-      final adminDoc = await _db.collection('admins').doc(user.uid).get();
+      final adminDoc = getOpts != null
+          ? await _db.collection('admins').doc(user.uid).get(getOpts)
+          : await _db.collection('admins').doc(user.uid).get();
       
       if (adminDoc.exists) {
         final data = adminDoc.data()!;
@@ -69,19 +85,23 @@ class StaffRoleService {
         _lastCashSettlement = (data['lastCashSettlement'] as Timestamp?)?.toDate();
         _kermesAllowedSections = List<String>.from(data['kermesAllowedSections'] ?? []);
         
-        // Register FCM token for delivery notifications
-        await _registerFcmToken(user.uid);
+        // Register FCM token for delivery notifications (skip if offline)
+        if (source == null) {
+          await _registerFcmToken(user.uid);
+        }
         
-        debugPrint('[StaffRole] User is staff: $_staffName, businessId: $_businessId');
+        debugPrint('[StaffRole] User is staff: $_staffName, businessId: $_businessId (source: ${source ?? "server"})');
         return true;
       }
       
       // Fallback: Check if user is assigned as Kermes staff/driver/waiter
-      // Kermes staff are stored in assignedStaff/assignedDrivers/assignedWaiters arrays
-      final kermesQuery = await _db.collection('kermes_events')
-          .where('assignedStaff', arrayContains: user.uid)
-          .limit(1)
-          .get();
+      final kermesQuery = getOpts != null
+          ? await _db.collection('kermes_events')
+              .where('assignedStaff', arrayContains: user.uid)
+              .limit(1).get(getOpts)
+          : await _db.collection('kermes_events')
+              .where('assignedStaff', arrayContains: user.uid)
+              .limit(1).get();
 
       if (kermesQuery.docs.isNotEmpty) {
         final kermesData = kermesQuery.docs.first.data();
@@ -93,16 +113,19 @@ class StaffRoleService {
         _role = 'kermes_staff';
         _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
         
-        await _registerFcmToken(user.uid);
-        debugPrint('[StaffRole] User is Kermes staff: $_staffName, kermesId: $_businessId');
+        if (source == null) await _registerFcmToken(user.uid);
+        debugPrint('[StaffRole] User is Kermes staff: $_staffName, kermesId: $_businessId (source: ${source ?? "server"})');
         return true;
       }
 
       // Also check assignedDrivers
-      final driverQuery = await _db.collection('kermes_events')
-          .where('assignedDrivers', arrayContains: user.uid)
-          .limit(1)
-          .get();
+      final driverQuery = getOpts != null
+          ? await _db.collection('kermes_events')
+              .where('assignedDrivers', arrayContains: user.uid)
+              .limit(1).get(getOpts)
+          : await _db.collection('kermes_events')
+              .where('assignedDrivers', arrayContains: user.uid)
+              .limit(1).get();
 
       if (driverQuery.docs.isNotEmpty) {
         final kermesData = driverQuery.docs.first.data();
@@ -114,16 +137,19 @@ class StaffRoleService {
         _role = 'kermes_driver';
         _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
         
-        await _registerFcmToken(user.uid);
-        debugPrint('[StaffRole] User is Kermes driver: $_staffName, kermesId: $_businessId');
+        if (source == null) await _registerFcmToken(user.uid);
+        debugPrint('[StaffRole] User is Kermes driver: $_staffName, kermesId: $_businessId (source: ${source ?? "server"})');
         return true;
       }
 
       // Also check assignedWaiters
-      final waiterQuery = await _db.collection('kermes_events')
-          .where('assignedWaiters', arrayContains: user.uid)
-          .limit(1)
-          .get();
+      final waiterQuery = getOpts != null
+          ? await _db.collection('kermes_events')
+              .where('assignedWaiters', arrayContains: user.uid)
+              .limit(1).get(getOpts)
+          : await _db.collection('kermes_events')
+              .where('assignedWaiters', arrayContains: user.uid)
+              .limit(1).get();
 
       if (waiterQuery.docs.isNotEmpty) {
         final kermesData = waiterQuery.docs.first.data();
@@ -135,17 +161,14 @@ class StaffRoleService {
         _role = 'kermes_waiter';
         _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
 
-        await _registerFcmToken(user.uid);
-        debugPrint('[StaffRole] User is Kermes waiter: $_staffName, kermesId: $_businessId');
+        if (source == null) await _registerFcmToken(user.uid);
+        debugPrint('[StaffRole] User is Kermes waiter: $_staffName, kermesId: $_businessId (source: ${source ?? "server"})');
         return true;
       }
 
-      // Not a staff member
-      _resetStatus();
       return false;
     } catch (e) {
-      debugPrint('[StaffRole] Error checking staff status: $e');
-      _resetStatus();
+      debugPrint('[StaffRole] Error checking staff (source: ${source ?? "server"}): $e');
       return false;
     }
   }
@@ -155,10 +178,10 @@ class StaffRoleService {
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
-        await _db.collection('admins').doc(uid).update({
+        await _db.collection('admins').doc(uid).set({
           'fcmToken': token,
           'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-        });
+        }, SetOptions(merge: true));
         debugPrint('[StaffRole] FCM token registered');
       }
     } catch (e) {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../services/staff_role_service.dart';
 
 class StaffCapabilities {
   final bool isLoading;
@@ -103,7 +104,27 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           .get();
 
       if (!adminDoc.exists) {
-        state = state.copyWith(isLoading: false);
+        // Fallback: user may be a Kermes volunteer (Google auth) whose role
+        // was resolved by StaffRoleService.checkStaffStatus() during login.
+        final roleService = StaffRoleService();
+        if (roleService.isStaff && roleService.businessId != null) {
+          final isKermes = roleService.businessType == 'kermes';
+          state = state.copyWith(
+            isLoading: false,
+            staffName: roleService.staffName ?? user.displayName ?? '',
+            businessName: roleService.businessName ?? '',
+            businessId: roleService.businessId,
+            isDriver: roleService.role == 'kermes_driver',
+            hasTablesRole: roleService.role == 'kermes_waiter',
+            hasCourierRole: roleService.role == 'kermes_driver',
+            hasFinanceRole: true,
+            hasShiftTracking: !isKermes,
+            kermesAllowedSections: roleService.kermesAllowedSections,
+            userId: user.uid,
+          );
+        } else {
+          state = state.copyWith(isLoading: false);
+        }
         return;
       }
 

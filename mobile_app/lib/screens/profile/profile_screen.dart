@@ -836,12 +836,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     try {
-      // Refresh staff status to ensure we have the latest base business data
       final roleService = StaffRoleService();
-      await roleService.checkStaffStatus();
-      
-      // Fetch any active kermes assignments
-      final kermeses = await KermesAssignmentService.getActiveAssignedKermeses();
+
+      // Refresh staff status — timeout after 10s so offline doesn't block
+      try {
+        await roleService.checkStaffStatus().timeout(
+          const Duration(seconds: 10),
+        );
+      } catch (e) {
+        // Network or timeout — continue with cached state from last session
+        debugPrint('[StaffLogin] checkStaffStatus soft-failed: $e');
+      }
+
+      // Fetch any active kermes assignments — also soft-fail on error
+      List<KermesAssignment> kermeses = [];
+      try {
+        kermeses = await KermesAssignmentService.getActiveAssignedKermeses()
+            .timeout(const Duration(seconds: 10));
+      } catch (e) {
+        debugPrint('[StaffLogin] getActiveAssignedKermeses soft-failed: $e');
+      }
       
       // Remove loading overlay properly
       if (context.mounted) {
@@ -883,10 +897,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         // User is ONLY assigned to a kermes
         roleService.setOverrideWorkplace(kermeses.first.id, kermeses.first.title, 'kermes');
         context.push('/staff-hub');
-      } else {
-        // Default behavior: ONLY a restaurant
+      } else if (hasBaseBusiness) {
+        // Default behavior: ONLY a restaurant (or cached kermes role)
         roleService.clearOverride();
         context.push('/staff-hub');
+      } else {
+        // isStaff is false and no kermeses found — user is not staff
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bu hesap personel olarak tanımlı değil. Lütfen yöneticinizle iletişime geçin.'),
+            duration: Duration(seconds: 4),
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -899,6 +921,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     }
   }
+
 
   void _showImagePickerBottomSheet() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
