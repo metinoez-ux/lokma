@@ -35,6 +35,7 @@ type CardLang = 'tr' | 'de' | 'en' | 'fr' | 'es' | 'it' | 'nl';
 
 interface CardTexts {
  partnerLine: string;
+ kermesPartnerLine: string;
  tablePrefix: string;
  cta: string;
  steps: { title: string; desc: string }[];
@@ -44,6 +45,7 @@ interface CardTexts {
 const CARD_TEXTS: Record<CardLang, CardTexts> = {
  tr: {
  partnerLine: 'Bu i\u015fletme bir LOKMA Partneridir',
+ kermesPartnerLine: 'Bu Kermes bir LOKMA Partneridir',
  tablePrefix: 'Masa',
  cta: 'Hemen Okut, Masana Gelsin!',
  steps: [
@@ -56,6 +58,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
  },
  de: {
  partnerLine: 'Dieses Restaurant ist ein LOKMA Partner',
+ kermesPartnerLine: 'Diese Kermes ist ein LOKMA Partner',
  tablePrefix: 'Tisch',
  cta: 'Jetzt scannen & bestellen!',
  steps: [
@@ -68,6 +71,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
  },
  en: {
  partnerLine: 'This restaurant is a LOKMA Partner',
+ kermesPartnerLine: 'This Kermes is a LOKMA Partner',
  tablePrefix: 'Table',
  cta: 'Scan now, order to your table!',
  steps: [
@@ -80,6 +84,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
  },
  fr: {
  partnerLine: 'Ce restaurant est un partenaire LOKMA',
+ kermesPartnerLine: 'Cette Kermes est un partenaire LOKMA',
  tablePrefix: 'Table',
  cta: 'Scannez et commandez !',
  steps: [
@@ -92,6 +97,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
  },
  es: {
  partnerLine: 'Este restaurante es un socio de LOKMA',
+ kermesPartnerLine: 'Esta Kermes es un socio de LOKMA',
  tablePrefix: 'Mesa',
  cta: '\u00a1Escanea y pide a tu mesa!',
  steps: [
@@ -104,6 +110,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
  },
  it: {
  partnerLine: 'Questo ristorante \u00e8 un partner LOKMA',
+ kermesPartnerLine: 'Questa Kermes \u00e8 un partner LOKMA',
  tablePrefix: 'Tavolo',
  cta: 'Scansiona e ordina!',
  steps: [
@@ -116,6 +123,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
  },
  nl: {
  partnerLine: 'Dit restaurant is een LOKMA Partner',
+ kermesPartnerLine: 'Deze Kermes is een LOKMA Partner',
  tablePrefix: 'Tafel',
  cta: 'Scan en bestel!',
  steps: [
@@ -180,9 +188,11 @@ function renderCardPage(
  lang: CardLang;
  appStoreBadge?: string;
  googlePlayBadge?: string;
+ isKermes?: boolean;
+ sponsorLogos?: { base64: string; name: string; bgColor?: string }[];
  },
 ) {
- const { tableLabel, companyName, logoBase64, qrBase64, lang, appStoreBadge, googlePlayBadge } = opts;
+ const { tableLabel, companyName, logoBase64, qrBase64, lang, appStoreBadge, googlePlayBadge, isKermes, sponsorLogos } = opts;
  const txt = CARD_TEXTS[lang];
  const PAD = 8;
 
@@ -302,50 +312,82 @@ function renderCardPage(
  doc.line(PAD, divY, A6_WIDTH - PAD, divY);
 
  // ================================================================
+ // SPONSOR LOGOS (from Marka & Sertifika badges)
+ // ================================================================
+ let sponsorEndY = divY;
+ if (sponsorLogos && sponsorLogos.length > 0) {
+ const sponsorStartY = divY + 2;
+ const sponsorLogoSize = 8; // mm per logo
+ const sponsorGap = 3;
+ const totalW = sponsorLogos.length * sponsorLogoSize + (sponsorLogos.length - 1) * sponsorGap;
+ let sx = (A6_WIDTH - totalW) / 2; // center horizontally
+
+ sponsorLogos.forEach((logo) => {
+ try {
+ // Background circle
+ if (logo.bgColor) {
+ const hex = logo.bgColor.replace('#', '');
+ const r = parseInt(hex.substring(0, 2), 16) || 255;
+ const g = parseInt(hex.substring(2, 4), 16) || 255;
+ const b = parseInt(hex.substring(4, 6), 16) || 255;
+ doc.setFillColor(r, g, b);
+ } else {
+ doc.setFillColor(245, 245, 245);
+ }
+ doc.circle(sx + sponsorLogoSize / 2, sponsorStartY + sponsorLogoSize / 2, sponsorLogoSize / 2 + 0.5, 'F');
+ doc.addImage(logo.base64, 'PNG', sx + 0.5, sponsorStartY + 0.5, sponsorLogoSize - 1, sponsorLogoSize - 1);
+ } catch {
+ // fallback: just print name
+ doc.setFont('Roboto', 'normal');
+ doc.setFontSize(5);
+ doc.setTextColor(100, 100, 100);
+ doc.text(logo.name, sx + sponsorLogoSize / 2, sponsorStartY + sponsorLogoSize / 2 + 1, { align: 'center' });
+ }
+ sx += sponsorLogoSize + sponsorGap;
+ });
+ sponsorEndY = sponsorStartY + sponsorLogoSize + 1;
+ }
+
+ // ================================================================
  // DIN A6 LABEL + CORNER CROP MARKS (cutting guide)
  // ================================================================
- // Corner crop marks (L-shaped, 5mm each arm)
  const cropLen = 5;
- const cropOffset = 1.5; // offset from page edge
+ const cropOffset = 1.5;
  doc.setDrawColor(180, 180, 180);
  doc.setLineWidth(0.2);
- // Top-left
  doc.line(cropOffset, 0, cropOffset, cropLen);
  doc.line(0, cropOffset, cropLen, cropOffset);
- // Top-right
  doc.line(A6_WIDTH - cropOffset, 0, A6_WIDTH - cropOffset, cropLen);
  doc.line(A6_WIDTH, cropOffset, A6_WIDTH - cropLen, cropOffset);
- // Bottom-left
  doc.line(cropOffset, A6_HEIGHT, cropOffset, A6_HEIGHT - cropLen);
  doc.line(0, A6_HEIGHT - cropOffset, cropLen, A6_HEIGHT - cropOffset);
- // Bottom-right
  doc.line(A6_WIDTH - cropOffset, A6_HEIGHT, A6_WIDTH - cropOffset, A6_HEIGHT - cropLen);
  doc.line(A6_WIDTH, A6_HEIGHT - cropOffset, A6_WIDTH - cropLen, A6_HEIGHT - cropOffset);
 
- // "DIN A6" label - subtle, bottom-right
  doc.setFont('Roboto', 'normal');
  doc.setFontSize(5);
  doc.setTextColor(190, 190, 190);
  doc.text('DIN A6 \u00b7 105\u00d7148 mm', A6_WIDTH - PAD, A6_HEIGHT - 2, { align: 'right' });
 
  // ================================================================
- // BOTTOM BAR: Partner text (left-aligned above logo) + Logo (left) + badges (right)
+ // BOTTOM BAR: Partner text + Logo (left) + badges (right)
  // ================================================================
- const bottomStartY = divY + 2;
+ const bottomStartY = Math.max(sponsorEndY + 1, divY + 2);
 
- // LEFT: LOKMA logo (actual ratio: 1893x521 = 3.63:1)
- const logoW = 28;
- const logoH = logoW / 3.63; // ~7.7mm - preserves aspect ratio
+ // LOKMA logo (ratio: 1893x521 = 3.63:1)
+ const logoW = 26;
+ const logoH = logoW / 3.63;
 
- // Partner text left-aligned directly above logo
+ // Partner text
+ const partnerText = isKermes ? txt.kermesPartnerLine : txt.partnerLine;
  const rightEdge = A6_WIDTH - PAD;
  doc.setFont('Roboto', 'normal');
  doc.setFontSize(6.5);
  doc.setTextColor(80, 80, 80);
- doc.text(txt.partnerLine, PAD, bottomStartY + 2, { align: 'left' });
+ doc.text(partnerText, PAD, bottomStartY + 2, { align: 'left' });
 
- // ROW BELOW: LOKMA logo (left) + badges (right)
- const rowY = bottomStartY + 5;
+ // LOKMA logo (left) + badges (right)
+ const rowY = bottomStartY + 4;
 
  try {
  doc.addImage(logoBase64, 'PNG', PAD, rowY, logoW, logoH);
@@ -356,27 +398,24 @@ function renderCardPage(
  doc.text('LOKMA', PAD, rowY + 6);
  }
 
- // RIGHT: App Store + Google Play badges - SAME HEIGHT
- const badgeH = 6.5; // unified height for both badges
- // App Store badge: 498x167 (ratio ~2.98:1)
- const asBadgeW = badgeH * 2.98; // ~19.4mm
- // Google Play badge: 646x250 (ratio ~2.584:1)
- const gpBadgeW = badgeH * 2.584; // ~16.8mm
- const badgeY = rowY + (logoH - badgeH) / 2; // vertically center with logo
+ // App Store + Google Play badges
+ const badgeH = 6;
+ const asBadgeW = badgeH * 2.98;
+ const gpBadgeW = badgeH * 2.584;
+ const badgeY = rowY + (logoH - badgeH) / 2;
  const badge2X = rightEdge - gpBadgeW;
- const badge1X = badge2X - asBadgeW - 2;
+ const badge1X = badge2X - asBadgeW - 1.5;
 
  if (appStoreBadge) {
  try {
  doc.addImage(appStoreBadge, 'PNG', badge1X, badgeY, asBadgeW, badgeH);
  } catch {
- // fallback text badge
  doc.setFillColor(0, 0, 0);
  doc.roundedRect(badge1X, badgeY, asBadgeW, badgeH, 1, 1, 'F');
  doc.setFont('Roboto', 'bold');
  doc.setFontSize(4);
  doc.setTextColor(255, 255, 255);
- doc.text('App Store', badge1X + asBadgeW / 2, badgeY + 3.8, { align: 'center' });
+ doc.text('App Store', badge1X + asBadgeW / 2, badgeY + 3.5, { align: 'center' });
  }
  }
 
@@ -384,13 +423,12 @@ function renderCardPage(
  try {
  doc.addImage(googlePlayBadge, 'PNG', badge2X, badgeY, gpBadgeW, badgeH);
  } catch {
- // fallback text badge
  doc.setFillColor(0, 0, 0);
  doc.roundedRect(badge2X, badgeY, gpBadgeW, badgeH, 1, 1, 'F');
  doc.setFont('Roboto', 'bold');
  doc.setFontSize(4);
  doc.setTextColor(255, 255, 255);
- doc.text('Google Play', badge2X + gpBadgeW / 2, badgeY + 3.8, { align: 'center' });
+ doc.text('Google Play', badge2X + gpBadgeW / 2, badgeY + 3.5, { align: 'center' });
  }
  }
 }
@@ -399,11 +437,31 @@ function renderCardPage(
 // Public API
 // ------------------------------------------------------------------
 
+type SponsorLogoInput = { iconUrl: string; name: string; bgColor?: string };
+type SponsorLogoResolved = { base64: string; name: string; bgColor?: string };
+
+async function fetchSponsorLogos(logos?: SponsorLogoInput[]): Promise<SponsorLogoResolved[] | undefined> {
+ if (!logos || logos.length === 0) return undefined;
+ const resolved = await Promise.all(
+ logos.map(async (s) => {
+  try {
+  const base64 = await fetchImageAsBase64(s.iconUrl);
+  return { base64, name: s.name, bgColor: s.bgColor };
+  } catch {
+  return { base64: '', name: s.name, bgColor: s.bgColor };
+  }
+ })
+ );
+ const filtered = resolved.filter(s => s.base64);
+ return filtered.length > 0 ? filtered : undefined;
+}
+
 export async function generateTableCardPDF(
  tableLabel: string,
  businessId: string,
  companyName: string,
  lang: CardLang = 'tr',
+ options?: { isKermes?: boolean; sponsorLogos?: { iconUrl: string; name: string; bgColor?: string }[] },
 ): Promise<jsPDF> {
  const doc = new jsPDF({
  orientation: 'portrait',
@@ -412,7 +470,8 @@ export async function generateTableCardPDF(
  });
  registerFonts(doc);
 
- const qrUrl = `https://lokma.web.app/dinein/${businessId}/table/${tableLabel}`;
+ const basePath = options?.isKermes ? 'kermes' : 'dinein';
+ const qrUrl = `https://lokma.web.app/${basePath}/${businessId}/table/${tableLabel}`;
  const [logoBase64, qrBase64, appStoreBadge, googlePlayBadge] = await Promise.all([
  fetchImageAsBase64('/logo_qr_lokma_red.png'),
  generateQRCodeBase64(qrUrl),
@@ -420,7 +479,8 @@ export async function generateTableCardPDF(
  fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
  ]);
 
- renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang, appStoreBadge, googlePlayBadge });
+ const sponsorLogos = await fetchSponsorLogos(options?.sponsorLogos);
+ renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang, appStoreBadge, googlePlayBadge, isKermes: options?.isKermes, sponsorLogos });
  return doc;
 }
 
@@ -429,6 +489,7 @@ export async function generateDualLangTableCardPDF(
  businessId: string,
  companyName: string,
  country?: string,
+ options?: { isKermes?: boolean; sponsorLogos?: SponsorLogoInput[] },
 ): Promise<jsPDF> {
  const [lang1, lang2] = getCardLanguages(country);
 
@@ -439,7 +500,8 @@ export async function generateDualLangTableCardPDF(
  });
  registerFonts(doc);
 
- const qrUrl = `https://lokma.web.app/dinein/${businessId}/table/${tableLabel}`;
+ const basePath = options?.isKermes ? 'kermes' : 'dinein';
+ const qrUrl = `https://lokma.web.app/${basePath}/${businessId}/table/${tableLabel}`;
  const [logoBase64, qrBase64, appStoreBadge, googlePlayBadge] = await Promise.all([
  fetchImageAsBase64('/logo_qr_lokma_red.png'),
  generateQRCodeBase64(qrUrl),
@@ -447,9 +509,11 @@ export async function generateDualLangTableCardPDF(
  fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
  ]);
 
- renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang1, appStoreBadge, googlePlayBadge });
+ const sponsorLogos = await fetchSponsorLogos(options?.sponsorLogos);
+ const extra = { isKermes: options?.isKermes, sponsorLogos };
+ renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang1, appStoreBadge, googlePlayBadge, ...extra });
  doc.addPage([A6_WIDTH, A6_HEIGHT]);
- renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang2, appStoreBadge, googlePlayBadge });
+ renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang2, appStoreBadge, googlePlayBadge, ...extra });
 
  return doc;
 }
@@ -459,8 +523,9 @@ export async function downloadTableCardPDF(
  businessId: string,
  companyName: string,
  country?: string,
+ options?: { isKermes?: boolean; sponsorLogos?: SponsorLogoInput[] },
 ): Promise<void> {
- const doc = await generateDualLangTableCardPDF(tableLabel, businessId, companyName, country);
+ const doc = await generateDualLangTableCardPDF(tableLabel, businessId, companyName, country, options);
  doc.save(`Masa_${tableLabel}_LOKMA_Kart.pdf`);
 }
 
@@ -469,9 +534,10 @@ export async function downloadAllTableCardPDFs(
  businessId: string,
  companyName: string,
  country?: string,
+ options?: { isKermes?: boolean; sponsorLogos?: SponsorLogoInput[] },
 ): Promise<void> {
  for (const table of tables) {
- const doc = await generateDualLangTableCardPDF(table.label, businessId, companyName, country);
+ const doc = await generateDualLangTableCardPDF(table.label, businessId, companyName, country, options);
  doc.save(`Masa_${table.label}_LOKMA_Kart.pdf`);
  await new Promise((resolve) => setTimeout(resolve, 300));
  }
@@ -482,6 +548,7 @@ export async function downloadAllTableCardsAsSinglePDF(
  businessId: string,
  companyName: string,
  country?: string,
+ options?: { isKermes?: boolean; sponsorLogos?: SponsorLogoInput[] },
 ): Promise<void> {
  if (tables.length === 0) return;
 
@@ -492,6 +559,9 @@ export async function downloadAllTableCardsAsSinglePDF(
  fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
  ]);
 
+ const sponsorLogos = await fetchSponsorLogos(options?.sponsorLogos);
+ const extra = { isKermes: options?.isKermes, sponsorLogos };
+
  const doc = new jsPDF({
  orientation: 'portrait',
  unit: 'mm',
@@ -501,14 +571,14 @@ export async function downloadAllTableCardsAsSinglePDF(
 
  for (let i = 0; i < tables.length; i++) {
  const table = tables[i];
- const qrUrl = `https://lokma.web.app/dinein/${businessId}/table/${table.label}`;
+ const qrUrl = `https://lokma.web.app/${extra.isKermes ? 'kermes' : 'dinein'}/${businessId}/table/${table.label}`;
  const qrBase64 = await generateQRCodeBase64(qrUrl);
 
  if (i > 0) doc.addPage([A6_WIDTH, A6_HEIGHT]);
- renderCardPage(doc, { tableLabel: table.label, companyName, logoBase64, qrBase64, lang: lang1, appStoreBadge, googlePlayBadge });
+ renderCardPage(doc, { tableLabel: table.label, companyName, logoBase64, qrBase64, lang: lang1, appStoreBadge, googlePlayBadge, ...extra });
 
  doc.addPage([A6_WIDTH, A6_HEIGHT]);
- renderCardPage(doc, { tableLabel: table.label, companyName, logoBase64, qrBase64, lang: lang2, appStoreBadge, googlePlayBadge });
+ renderCardPage(doc, { tableLabel: table.label, companyName, logoBase64, qrBase64, lang: lang2, appStoreBadge, googlePlayBadge, ...extra });
  }
 
  doc.save(`LOKMA_Tum_Masa_Kartlari_${companyName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);

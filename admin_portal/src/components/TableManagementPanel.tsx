@@ -50,6 +50,8 @@ interface TableManagementPanelProps {
  country?: string;
  collectionPath?: string;
  qrBaseUrl?: string;
+ isKermes?: boolean;
+ sponsorLogos?: { iconUrl: string; name: string; bgColor?: string }[];
 }
 
 export default function TableManagementPanel({
@@ -58,6 +60,8 @@ export default function TableManagementPanel({
  country,
  collectionPath = "businesses",
  qrBaseUrl = "https://lokma.web.app/dinein",
+ isKermes,
+ sponsorLogos,
 }: TableManagementPanelProps) {
  const t = useTranslations("AdminBusinessDetail");
 
@@ -553,14 +557,14 @@ export default function TableManagementPanel({
      <button
       onClick={async () => {
       const { downloadAllTableCardsAsSinglePDF } = await import("@/utils/tableCardPdfGenerator");
-      await downloadAllTableCardsAsSinglePDF(sectionTables, businessId, businessName || t("isletme_fallback"), country);
+      await downloadAllTableCardsAsSinglePDF(sectionTables, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos });
       }}
       className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-medium transition"
      >{t("pdfKartTek")}</button>
      <button
       onClick={async () => {
       const { downloadAllTableCardPDFs } = await import("@/utils/tableCardPdfGenerator");
-      await downloadAllTableCardPDFs(sectionTables, businessId, businessName || t("isletme_fallback"), country);
+      await downloadAllTableCardPDFs(sectionTables, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos });
       }}
       className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-medium transition"
      >{t("pdfKartlarAyri")}</button>
@@ -590,7 +594,7 @@ export default function TableManagementPanel({
        key={table.label}
        onClick={async () => {
         const { downloadTableCardPDF } = await import("@/utils/tableCardPdfGenerator");
-        await downloadTableCardPDF(table.label, businessId, businessName || t("isletme_fallback"), country);
+        await downloadTableCardPDF(table.label, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos });
        }}
        className="bg-gray-800 rounded-lg border border-gray-700 p-1.5 flex flex-col items-center gap-0.5 hover:border-red-500 hover:bg-gray-700/50 transition cursor-pointer group"
        title={t("masaKartiIndir", { label: table.label })}

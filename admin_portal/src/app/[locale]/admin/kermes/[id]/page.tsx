@@ -781,7 +781,9 @@ export default function KermesDetailPage() {
  if (phoneClean.length >= 6) {
  checks.push(
  getDocs(query(collection(db, 'users'), where('phone', '>=', phoneClean), limit(3))),
- getDocs(query(collection(db, 'admins'), where('phone', '>=', phoneClean), limit(3)))
+ getDocs(query(collection(db, 'admins'), where('phone', '>=', phoneClean), limit(3))),
+ getDocs(query(collection(db, 'users'), where('phoneNumber', '>=', `+${phoneClean}`), limit(3))),
+ getDocs(query(collection(db, 'admins'), where('phoneNumber', '>=', `+${phoneClean}`), limit(3)))
  );
  }
  if (email.length >= 5) {
@@ -909,12 +911,14 @@ export default function KermesDetailPage() {
  const newStaff = assignedStaff.filter(id => id !== personId);
  const newDrivers = assignedDrivers.filter(id => id !== personId);
  const newWaiters = assignedWaiters.filter(id => id !== personId);
+ const newKAdmins = kermesAdmins.filter(id => id !== personId);
  setAssignedStaff(newStaff);
  setAssignedDrivers(newDrivers);
  setAssignedWaiters(newWaiters);
+ setKermesAdmins(newKAdmins);
  
  // First save the team to remove references in Kermes
- await saveTeamToDb(newStaff, newDrivers, newWaiters);
+ await saveTeamToDb(newStaff, newDrivers, newWaiters, newKAdmins);
  
  // Delete from admins database 
  try {
@@ -930,11 +934,22 @@ export default function KermesDetailPage() {
  console.error('Users doc deletion error (might be restricted):', userErr);
  }
  
- showToast('Personel sistemden tamamen silindi', 'success');
+ // Firebase Auth'tan da sil
+ try {
+ await fetch('/api/admin/delete-user', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ uid: personId }),
+ });
+ } catch (authErr) {
+ console.error('Firebase Auth deletion error:', authErr);
+ }
+ 
+ showToast(t('personel_silindi') || 'Personel sistemden tamamen silindi', 'success');
  setEditPersonData(null);
  } catch (e) {
  console.error(e);
- showToast('Personel silinirken hata', 'error');
+ showToast(t('personel_silinirken_hata') || 'Personel silinirken hata', 'error');
  }
  };
 
@@ -995,10 +1010,6 @@ export default function KermesDetailPage() {
  acceptsDonations: editForm.acceptsDonations || false,
  selectedDonationFundId: editForm.selectedDonationFundId || null,
  selectedDonationFundName: editForm.selectedDonationFundName || null,
- // Personel ve Sürücüler
- assignedStaff: assignedStaff,
- assignedDrivers: assignedDrivers,
- assignedWaiters: assignedWaiters,
  // Sistem
  updatedAt: new Date(),
  };
@@ -1216,7 +1227,7 @@ export default function KermesDetailPage() {
  throw new Error(data.error || t('bir_hata_olustu'));
  }
 
- const newUid = data.uid;
+ const newUid = data.user?.uid || data.uid;
  // Roller guncelle
  const newStaff = newStaffRoles.isStaff ? [...assignedStaff, newUid] : [...assignedStaff];
  const newDrivers = newStaffRoles.isDriver ? [...assignedDrivers, newUid] : [...assignedDrivers];
@@ -1234,7 +1245,7 @@ export default function KermesDetailPage() {
  setMatchedUser(null);
  setNewStaffRoles({ isStaff: true, isDriver: false, isWaiter: false, isKermesAdmin: false });
 
- showToast('Personel oluşturuldu ve atandı', 'success');
+ showToast(t('personel_olusturuldu') || 'Personel oluşturuldu ve atandı', 'success');
  } catch (error: any) {
  console.error('Create user error:', error);
  showToast(error.message, 'error');
@@ -2761,14 +2772,23 @@ export default function KermesDetailPage() {
 
   {/* Yeni kayit olusturma butonu - eslesen yoksa */}
   {!matchedUser && (
+  <>
   <button
   type="button"
   onClick={() => handleCreateUser('kermes_staff')}
   disabled={isCreatingUser || !newStaffForm.name || (!newStaffForm.phone && !newStaffForm.email) || !newStaffForm.gender}
-  className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
+  className={`w-full py-2.5 text-white text-sm font-semibold rounded-lg transition ${
+  isCreatingUser || !newStaffForm.name || (!newStaffForm.phone && !newStaffForm.email) || !newStaffForm.gender
+   ? 'bg-gray-600 cursor-not-allowed opacity-60'
+   : 'bg-cyan-600 hover:bg-cyan-500'
+  }`}
   >
   {isCreatingUser ? (t('olusturuluyor') || 'Olusturuluyor...') : (t('kaydet') || 'Yeni Kayit Olustur ve Ata')}
   </button>
+  {!newStaffForm.gender && (
+  <p className="text-xs text-amber-400 text-center mt-1">Bitte Geschlecht auswahlen / Cinsiyet seciniz</p>
+  )}
+  </>
   )}
   </div>
  )}
@@ -2951,7 +2971,7 @@ export default function KermesDetailPage() {
  id: staff.id,
  name: staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name,
  email: staff.email || '',
- phone: staff.phone || '',
+ phone: staff.phone || staff.phoneNumber || '',
  gender: staff.gender || '',
  })}
  className="w-7 h-7 rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center justify-center text-xs font-semibold transition-colors"
@@ -2961,7 +2981,7 @@ export default function KermesDetailPage() {
  </button>
  <button 
  type="button" 
- onClick={() => {
+ onClick={async () => {
  const newStaff = assignedStaff.filter(id => id !== staff.id);
  setAssignedStaff(newStaff);
  const newDrivers = assignedDrivers.filter(id => id !== staff.id);
@@ -2971,6 +2991,15 @@ export default function KermesDetailPage() {
  const newKAdmins = kermesAdmins.filter(id => id !== staff.id);
  setKermesAdmins(newKAdmins);
  saveTeamToDb(newStaff, newDrivers, newWaiters, newKAdmins);
+  // Y2: Orphaned kermesAssignments temizle
+  try {
+   const staffRef = doc(db, 'admins', staff.id);
+   const staffSnap = await getDoc(staffRef);
+   if (staffSnap.exists()) {
+   const curAssignments = staffSnap.data()?.kermesAssignments || [];
+   await updateDoc(staffRef, { kermesAssignments: curAssignments.filter((k: string) => k !== kermesId) });
+   }
+  } catch (e) { console.error('kermesAssignments cleanup error:', e); }
  }}
  className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center text-sm font-bold transition-colors"
  title="Personeli Karmesten Çıkar"
@@ -2986,7 +3015,7 @@ export default function KermesDetailPage() {
  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
  <p className="text-xs text-amber-700 dark:text-amber-400">
  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1 -mt-0.5"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
- {assignedDrivers.length} kisi surucu olarak atandi. Siparis teslimatlari bu kisilere yonlendirilecektir.
+ {assignedDrivers.length} {t('surucu_atandi_bilgi') || 'kisi surucu olarak atandi. Siparis teslimatlari bu kisilere yonlendirilecektir.'}
  </p>
  </div>
  )}
@@ -3244,6 +3273,13 @@ export default function KermesDetailPage() {
   businessName={kermes?.title || ''}
   collectionPath="kermes_events"
   qrBaseUrl="https://lokma.web.app/kermes"
+  isKermes={true}
+  sponsorLogos={
+  (kermes?.activeBadgeIds || [])
+   .map((bid: string) => availableBadges.find((b: any) => b.id === bid))
+   .filter((b: any) => b && b.iconUrl)
+   .map((b: any) => ({ iconUrl: b.iconUrl, name: b.name || '', bgColor: b.bgColor }))
+  }
   />
   </div>
   )}
