@@ -22,6 +22,7 @@ class ShiftService {
   // ── Current shift state ──
   String? _currentShiftId;
   String? _currentBusinessId;
+  String _currentParentCollection = 'businesses'; // 'businesses' or 'kermes_events'
   DateTime? _shiftStartedAt;
   String _shiftStatus = 'off'; // "active" | "paused" | "off"
   List<int> _currentTables = [];
@@ -62,11 +63,13 @@ class ShiftService {
       final isOnShift = data['isOnShift'] == true;
       final shiftId = data['currentShiftId'] as String?;
       final bizId = data['shiftBusinessId'] as String?;
+      // Restore parent collection (kermes_events vs businesses)
+      final parentCol = (data['shiftParentCollection'] as String?) ?? 'businesses';
 
       if (isOnShift && shiftId != null && bizId != null) {
         // Verify the shift doc still exists and is active
         final shiftDoc = await _db
-            .collection('businesses')
+            .collection(parentCol)
             .doc(bizId)
             .collection('shifts')
             .doc(shiftId)
@@ -78,6 +81,7 @@ class ShiftService {
           if (status == 'active' || status == 'paused') {
             _currentShiftId = shiftId;
             _currentBusinessId = bizId;
+            _currentParentCollection = parentCol;
             _shiftStatus = status;
             _shiftStartedAt = (shiftData['startedAt'] as Timestamp?)?.toDate();
             _currentTables = List<int>.from(
@@ -89,7 +93,7 @@ class ShiftService {
             if (_shiftStatus == 'active') {
               _scheduleRandomGpsChecks();
             }
-            debugPrint('[Shift] Restored shift: $_currentShiftId status=$_shiftStatus');
+            debugPrint('[Shift] Restored shift: $_currentShiftId status=$_shiftStatus col=$_currentParentCollection');
             return;
           }
         }
@@ -175,6 +179,7 @@ class ShiftService {
       // Update local state
       _currentShiftId = shiftRef.id;
       _currentBusinessId = businessId;
+      _currentParentCollection = parentCollection;
       _shiftStatus = 'active';
       _shiftStartedAt = DateTime.now();
       _currentTables = tables;
@@ -199,7 +204,7 @@ class ShiftService {
 
     try {
       final shiftRef = _db
-          .collection('businesses')
+          .collection(_currentParentCollection)
           .doc(_currentBusinessId)
           .collection('shifts')
           .doc(_currentShiftId);
@@ -238,7 +243,7 @@ class ShiftService {
 
     try {
       final shiftRef = _db
-          .collection('businesses')
+          .collection(_currentParentCollection)
           .doc(_currentBusinessId)
           .collection('shifts')
           .doc(_currentShiftId);
@@ -290,7 +295,7 @@ class ShiftService {
 
     try {
       final shiftRef = _db
-          .collection('businesses')
+          .collection(_currentParentCollection)
           .doc(_currentBusinessId)
           .collection('shifts')
           .doc(_currentShiftId);
@@ -366,6 +371,7 @@ class ShiftService {
       // Reset local state
       _currentShiftId = null;
       _currentBusinessId = null;
+      _currentParentCollection = 'businesses';
       _shiftStartedAt = null;
       _shiftStatus = 'off';
       _currentTables = [];
