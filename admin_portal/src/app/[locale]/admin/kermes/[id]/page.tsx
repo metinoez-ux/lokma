@@ -2861,7 +2861,11 @@ export default function KermesDetailPage() {
  {assignedStaffDetails.map(staff => (
  <div key={staff.id} className="flex items-center justify-between px-4 py-3 bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800 rounded-lg">
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-bold">
+ <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+ staff.gender === 'female'
+ ? 'bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400'
+ : 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400'
+ }`}>
  {(staff.displayName || staff.firstName || staff.name || staff.email || 'P').substring(0, 2).toUpperCase()}
  </div>
  <div>
