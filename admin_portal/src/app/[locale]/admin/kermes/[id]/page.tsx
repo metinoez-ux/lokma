@@ -2863,8 +2863,15 @@ export default function KermesDetailPage() {
  {/* Atanmis Personel Listesi */}
  <div className="space-y-2">
  {assignedStaffDetails.map(staff => (
- <div key={staff.id} className="flex items-center justify-between px-4 py-3 bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800 rounded-lg">
+ <div key={staff.id} className={`flex items-center justify-between px-4 py-3 rounded-lg border ${
+ staff.gender === 'female'
+ ? 'bg-pink-50 dark:bg-pink-950/20 border-pink-200 dark:border-pink-800'
+ : 'bg-cyan-50 dark:bg-cyan-950/20 border-cyan-200 dark:border-cyan-800'
+ }`}>
  <div className="flex items-center gap-3">
+ {staff.photoURL || staff.profileImageUrl ? (
+ <img src={staff.photoURL || staff.profileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+ ) : (
  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
  staff.gender === 'female'
  ? 'bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400'
@@ -2872,6 +2879,7 @@ export default function KermesDetailPage() {
  }`}>
  {(staff.displayName || staff.firstName || staff.name || staff.email || 'P').substring(0, 2).toUpperCase()}
  </div>
+ )}
  <div>
  <span className="text-sm font-medium text-foreground">{staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name || staff.email}</span>
  {assignedStaff.includes(staff.id) && (
