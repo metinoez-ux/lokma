@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
-import { updatePassword } from 'firebase/auth';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -11,6 +11,7 @@ export default function ForcePasswordResetPage() {
  const router = useRouter();
  const { admin, refreshAdmin } = useAdmin();
 
+ const [currentPassword, setCurrentPassword] = useState('');
  const [newPassword, setNewPassword] = useState('');
  const [confirmPassword, setConfirmPassword] = useState('');
  const [loading, setLoading] = useState(false);
@@ -24,6 +25,11 @@ export default function ForcePasswordResetPage() {
  e.preventDefault();
  setError(null);
 
+ if (!currentPassword) {
+ setError('Lütfen mevcut/geçici şifrenizi girin.');
+ return;
+ }
+
  if (newPassword.length < 6) {
  setError('Şifre en az 6 karakter olmalıdır.');
  return;
@@ -34,7 +40,7 @@ export default function ForcePasswordResetPage() {
  return;
  }
 
- if (!auth.currentUser) {
+ if (!auth.currentUser || !auth.currentUser.email) {
  setError('Geçerli oturum bulunamadı. Lütfen tekrar giriş yapın.');
  return;
  }
@@ -42,6 +48,10 @@ export default function ForcePasswordResetPage() {
  setLoading(true);
 
  try {
+ // 0. Re-authenticate user to prevent 'auth/requires-recent-login'
+ const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+ await reauthenticateWithCredential(auth.currentUser, credential);
+
  // 1. Update password via Firebase Auth SDK
  await updatePassword(auth.currentUser, newPassword);
 
@@ -70,8 +80,10 @@ export default function ForcePasswordResetPage() {
 
  } catch (err: any) {
  console.error('Password reset error:', err);
- if (err.code === 'auth/requires-recent-login') {
- setError('Güvenlik nedeniyle tekrar giriş yapmanız gerekiyor. Lütfen çıkış yapıp mevcut geçici şifrenizle giriş yapın.');
+ if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+ setError('Mevcut/Geçici şifrenizi yanlış girdiniz. Lütfen kontrol edip tekrar deneyin.');
+ } else if (err.code === 'auth/requires-recent-login') {
+ setError('Güvenlik nedeniyle tekrar giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yapın.');
  } else {
  setError(err.message || 'Şifreniz güncellenemedi.');
  }
@@ -116,26 +128,41 @@ export default function ForcePasswordResetPage() {
  )}
 
  <form onSubmit={handleSubmit} className="space-y-6">
- <div className="space-y-2">
- <label className="block text-sm font-medium text-neutral-300 mb-1">Yeni Şifreniz</label>
- <div className="relative">
- <input
- type={showPassword ? 'text' : 'password'}
- value={newPassword}
- onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
- className="w-full rounded-md border py-3 px-4 bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500 pr-10 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
- placeholder="En az 6 karakter"
- required
- />
- <button
- type="button"
- onClick={() => setShowPassword(!showPassword)}
- className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
- >
- {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
- </button>
- </div>
- </div>
+  {/* Current Password Field */}
+  <div className="space-y-2">
+  <label className="block text-sm font-medium text-neutral-300 mb-1">Mevcut/Geçici Şifreniz</label>
+  <div className="relative">
+  <input
+  type={showPassword ? 'text' : 'password'}
+  value={currentPassword}
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentPassword(e.target.value)}
+  className="w-full rounded-md border py-3 px-4 bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
+  placeholder="Almış olduğunuz geçici şifreyi girin"
+  required
+  />
+  </div>
+  </div>
+
+  <div className="space-y-2">
+  <label className="block text-sm font-medium text-neutral-300 mb-1">Yeni Şifreniz</label>
+  <div className="relative">
+  <input
+  type={showPassword ? 'text' : 'password'}
+  value={newPassword}
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
+  className="w-full rounded-md border py-3 px-4 bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500 pr-10 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
+  placeholder="En az 6 karakter"
+  required
+  />
+  <button
+  type="button"
+  onClick={() => setShowPassword(!showPassword)}
+  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+  >
+  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+  </button>
+  </div>
+  </div>
 
  <div className="space-y-2">
  <label className="block text-sm font-medium text-neutral-300 mb-1">Yeni Şifre (Tekrar)</label>
