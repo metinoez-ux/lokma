@@ -736,7 +736,7 @@ const handleSaveUser = async () => {
  }
  };
 
- const getRoleBadgeInfo = (role: string) => {
+const getRoleBadgeInfo = (role: string) => {
  switch (role) {
  case 'super': return { bg: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', label: 'Super Admin' };
  case 'lokma_admin': return { bg: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400', label: 'Lokma Partner' };
@@ -746,7 +746,17 @@ const handleSaveUser = async () => {
  case 'customer': return { bg: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400', label: 'Müşteri (Kunde)' };
  default: return { bg: 'bg-muted text-muted-foreground/80 dark:bg-gray-800 dark:text-gray-400', label: 'Bilinmiyor' };
  }
- };
+};
+
+const getKermesBadgeInfo = (role: string) => {
+ switch (role) {
+  case 'kermes_admin': return { bg: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', label: 'Kermes Admin' };
+  case 'driver': return { bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', label: 'Kermes Sürücü' };
+  case 'waiter': return { bg: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300', label: 'Kermes Garson' };
+  case 'staff': return { bg: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300', label: 'Kermes Personeli' };
+  default: return { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400', label: 'Kermes Staff' };
+ }
+};
 
  if (adminLoading) {
  return (
@@ -907,11 +917,25 @@ const handleSaveUser = async () => {
  🏪 Lokma #{user.businessId.slice(0,4)}
  </span>
  )}
- {(user.kermesId && user.kermesId !== 'NONE') || (user.kermesAssignments && user.kermesAssignments.length > 0) || (user.assignments && user.assignments.some((a: any) => a.entityType === 'kermes')) ? (
- <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-current/20">
- Kermes Staff
- </span>
- ) : null}
+        {(() => {
+          const kermesRoles = new Set<string>();
+          if (user.kermesId && user.kermesId !== 'NONE') kermesRoles.add('staff');
+          if (user.kermesAssignments && user.kermesAssignments.length > 0) kermesRoles.add('staff');
+          if (user.assignments) {
+            user.assignments.filter((a: any) => a.entityType === 'kermes').forEach((a: any) => kermesRoles.add(a.role));
+          }
+          
+          if (kermesRoles.size === 0) return null;
+
+          return Array.from(kermesRoles).map((role, idx) => {
+            const roleInfo = getKermesBadgeInfo(role);
+            return (
+             <span key={`kermes-${role}-${idx}`} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${roleInfo.bg} border border-current/20`}>
+              🎪 {roleInfo.label}
+             </span>
+            );
+          });
+        })()}
   {/* Auth Provider Tags */}
   {authProviderMap[user.id] && (
   <div className="flex flex-wrap gap-1 mt-1">

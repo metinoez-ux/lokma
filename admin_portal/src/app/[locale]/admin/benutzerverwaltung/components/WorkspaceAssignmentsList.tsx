@@ -142,7 +142,7 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
         </div>
         <div className="flex flex-wrap gap-1 mt-2">
          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded shadow-sm ${getRoleBadgeStyle(a.role, a.entityType)}`}>
-          {a.entityType === 'kermes' ? (a.role.startsWith('kermes') ? a.role.replace('_', ' ').toUpperCase() : `KERMES ${a.role.toUpperCase()}`) : a.role.replace('_', ' ').toUpperCase()}
+          {a.entityType === 'kermes' ? (KERMES_ROLES.find(r => r.value === a.role)?.label || a.role.toUpperCase()) : (BUSINESS_ROLES.find(r => r.value === a.role)?.label || a.role.toUpperCase())}
          </span>
         </div>
        </div>
