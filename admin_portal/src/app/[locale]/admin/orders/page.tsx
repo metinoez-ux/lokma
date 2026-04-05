@@ -846,8 +846,7 @@ export default function OrdersPage() {
  orderBy('createdAt', 'desc')
  );
  }
-
- const startMs = startDate.getTime();
+ const reservationStartMs = startDate.getTime();
 
  const unsubReservations = onSnapshot(qReservations, (snapshot) => {
  const relevantDocs = snapshot.docs.filter(d => {
@@ -855,7 +854,7 @@ export default function OrdersPage() {
  // For super admin: apply date filter client-side
  if (!effectBusinessId) {
  const createdMs = data.createdAt?.toMillis?.() ?? (data.createdAt?.seconds ? data.createdAt.seconds * 1000 : 0);
- if (createdMs < startMs) return false;
+ if (createdMs < reservationStartMs) return false;
  }
  // Include pre-order/tab reservations (tabStatus set)
  if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
