@@ -689,25 +689,20 @@ export default function OrdersPage() {
  }
 
  const effectBusinessId = adminBusinessId; // capture for closure
+ const startMs = startDate.getTime();
 
   const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
   
   // 1. Listen to orders
   const qOrders = isKermesAdmin 
-    ? query(
-        collection(db, 'kermes_orders'),
-        where('kermesId', '==', effectBusinessId as string),
-        where('createdAt', '>=', Timestamp.fromDate(startDate)),
-        orderBy('createdAt', 'desc')
+    ? (effectBusinessId && admin?.adminType !== 'super'
+        ? query(collection(db, 'kermes_orders'), where('kermesId', '==', effectBusinessId as string))
+        : query(collection(db, 'kermes_orders'), where('createdAt', '>=', Timestamp.fromDate(startDate)), orderBy('createdAt', 'desc'))
       )
-    : query(
-        collection(db, 'meat_orders'),
-        where('createdAt', '>=', Timestamp.fromDate(startDate)),
-        orderBy('createdAt', 'desc')
-      );
+    : query(collection(db, 'meat_orders'), where('createdAt', '>=', Timestamp.fromDate(startDate)), orderBy('createdAt', 'desc'));
 
  const unsubOrders = onSnapshot(qOrders, (snapshot) => {
- const data = snapshot.docs.map(doc => {
+ let data = snapshot.docs.map(doc => {
  const d = doc.data();
  return {
  id: doc.id,
@@ -742,6 +737,26 @@ export default function OrdersPage() {
  stripePaymentIntentId: d.stripePaymentIntentId,
  } as Order;
  });
+
+  if (isKermesAdmin && effectBusinessId && admin?.adminType !== 'super') {
+    // Client-side date filter and sort for Kermes since we dropped it from query to avoid missing index error
+    data = data.filter(d => {
+      if (!d.createdAt) return true;
+      const ms = d.createdAt.toMillis?.() ?? (d.createdAt.seconds ? d.createdAt.seconds * 1000 : Date.now());
+      return ms >= startMs;
+    });
+    data.sort((a, b) => {
+      const aMs = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : Date.now());
+      const bMs = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : Date.now());
+      return bMs - aMs; // Descending
+    });
+  }
+
+  // CRITICAL SECURITY FIX: STRICT client-side filtering for business
+  if (admin?.adminType !== 'super' && effectBusinessId) {
+    data = data.filter(d => d.businessId === effectBusinessId);
+  }
+
  setMeatOrders(data);
 
  // Hydrate KDS checklist state from Firestore
