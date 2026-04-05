@@ -115,8 +115,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const QRScannerScreen(
-                    title: 'Sipariş / Fatura QR Oku',
-                    returnScannedText: true,
+                    prompt: 'Sipariş / Fatura QR Oku',
                   ),
                 )).then((scannedText) {
                   if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
@@ -161,6 +160,29 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               unselectedItemColor: Colors.grey,
             )
           : null,
+      floatingActionButton: (capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole)
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const QRScannerScreen(
+                    prompt: 'Sipariş / Fatura QR Oku',
+                  ),
+                )).then((scannedText) {
+                  if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
+                    final query = Uri(path: '/kermesler', queryParameters: {
+                      'scannedOrder': scannedText,
+                      'businessId': capabilities.businessId,
+                    }).toString();
+                    context.push(query);
+                  }
+                });
+              },
+              backgroundColor: Colors.greenAccent.shade700,
+              icon: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 28),
+              label: const Text('QR Tahsilat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
@@ -38,6 +39,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
   bool _isProcessingPayment = false;
   bool _isCancelled = false;
   bool _isCancelling = false;
+  
+  StreamSubscription<DocumentSnapshot>? _orderSubscription;
 
   static const Color darkBg = Color(0xFF121212);
   static const Color cardBg = Color(0xFF1E1E1E);
@@ -48,10 +51,27 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
     super.initState();
     _isPaid = widget.isPaid;
     _setMaxBrightness();
+    
+    // Listen for payment status changes from staff
+    _orderSubscription = FirebaseFirestore.instance
+        .collection('kermes_orders')
+        .doc(widget.orderId)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists && mounted) {
+        final data = snapshot.data();
+        if (data != null && data['isPaid'] == true && !_isPaid) {
+          setState(() {
+            _isPaid = true;
+          });
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    _orderSubscription?.cancel();
     _restoreBrightness();
     super.dispose();
   }

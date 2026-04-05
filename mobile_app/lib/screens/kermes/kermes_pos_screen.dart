@@ -10,7 +10,7 @@ import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
 import '../../utils/currency_utils.dart';
-
+import 'package:lokma_app/providers/kermes_category_provider.dart';
 /// Kermes POS Ekrani - Garson/Kasiyer icin hizli siparis alma
 /// Tablet-optimized grid layout ile urun secimi, sepet yonetimi, masa atama
 class KermesPOSScreen extends ConsumerStatefulWidget {
@@ -62,8 +62,6 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     _customerNameController.dispose();
     super.dispose();
   }
-
-import 'package:lokma_app/providers/kermes_category_provider.dart';
 
   /// Menu verilerinden tum kategorileri cikart
   List<String> get _categories {

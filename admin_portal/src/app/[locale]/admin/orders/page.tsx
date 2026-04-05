@@ -67,7 +67,8 @@ export default function OrdersPage() {
 
   // ─── Fetch Kermes PrepZone Assignments & Settings ───
   useEffect(() => {
-    if (!admin || !['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin.adminType) || !adminBusinessId) {
+    const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
+    if (!admin || !isKermesAdmin || !adminBusinessId) {
       setMyPrepZones([]);
       setAllKermesPrepZones([]);
       return;
@@ -689,7 +690,7 @@ export default function OrdersPage() {
 
  const effectBusinessId = adminBusinessId; // capture for closure
 
-  const isKermesAdmin = ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
+  const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
   
   // 1. Listen to orders
   const qOrders = isKermesAdmin 

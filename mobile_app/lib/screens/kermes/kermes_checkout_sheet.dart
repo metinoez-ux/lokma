@@ -15,6 +15,7 @@ import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import 'package:lokma_app/widgets/kermes/group_order_share_sheet.dart';
 import '../../utils/currency_utils.dart';
 import '../../widgets/qr_scanner_screen.dart';
+import '../../services/staff_role_service.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -404,6 +405,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         name: item.menuItem.name,
         quantity: item.quantity,
         price: item.menuItem.price,
+        productId: item.menuItem.id,
+        prepZone: item.menuItem.prepZone,
+        category: item.menuItem.category,
+        imageUrl: item.menuItem.imageUrl,
       )).toList();
       
       // Guest profil servisi
@@ -434,6 +439,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       // Benzersiz Firestore doc ID oluştur: kermesId_orderNumber
       final docId = '${widget.event.id}_$orderNumber';
       
+      // Staff bilgisi (siparişi alan kişinin garson olup olmadığını anla)
+      final roleService = StaffRoleService();
+      final isStaff = roleService.isStaff;
+      final staffId = isStaff ? FirebaseAuth.instance.currentUser?.uid : null;
+      final staffName = isStaff ? roleService.staffName ?? guestProfile?.name : null;
+
       // Siparis olustur
       final order = KermesOrder(
         id: docId,
@@ -453,8 +464,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         isPaid: _paymentMethod == PaymentMethodType.card,
         status: KermesOrderStatus.pending,
         createdAt: DateTime.now(),
-        orderSource: 'app',
+        orderSource: isStaff ? 'pos_garson' : 'app',
         tableSection: _selectedSectionId,
+        assignedWaiterId: staffId,
+        assignedWaiterName: staffName,
+        createdByStaffId: staffId,
+        createdByStaffName: staffName,
       );
       
       // Siparişi kaydet

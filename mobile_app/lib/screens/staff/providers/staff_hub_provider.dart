@@ -123,7 +123,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             hasTablesRole: roleService.role == 'kermes_waiter',
             hasCourierRole: roleService.role == 'kermes_driver',
             hasFinanceRole: true,
-            hasShiftTracking: !isKermes,
+            hasShiftTracking: true, // Allow Kermes staff to use shift tracking
             kermesAllowedSections: roleService.kermesAllowedSections,
             userId: user.uid,
           );
@@ -165,7 +165,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         }
       }
 
-      final bizId = data['businessId'] ?? data['butcherId'];
+      final bizId = data['businessId'] ?? data['butcherId'] ?? data['kermesId'];
       if (bizId != null) {
         final bizDoc = await FirebaseFirestore.instance
             .collection('businesses')
@@ -186,12 +186,27 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             maxTables = effectiveTables;
             hasTables = true;
           }
+        } else {
+          // Check if it's a kermes event
+          final kermesDoc = await FirebaseFirestore.instance
+              .collection('kermes_events')
+              .doc(bizId)
+              .get();
+          if (kermesDoc.exists) {
+            final kData = kermesDoc.data()!;
+            businessId = bizId;
+            businessName = kData['name'] ?? 'Kermes';
+            // Give basic tabs to kermes staff
+            hasTables = false;
+          }
         }
       }
 
       // Check plan for features
       bool hasShiftTracking = false;
-      if (businessId != null) {
+      bool isKermesDoc = businessId != null && businessId == bizId && await FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get().then((d) => d.exists);
+
+      if (businessId != null && !isKermesDoc) {
         final planDoc = await FirebaseFirestore.instance
             .collection('businesses')
             .doc(businessId)
@@ -207,6 +222,8 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           if (!hasReservation) hasReservation = isPremium || features.contains('rezervasyon');
           if (!hasTables) hasTables = isPremium || features.contains('table_service');
         }
+      } else if (isKermesDoc) {
+        hasShiftTracking = true;
       }
 
       state = state.copyWith(

@@ -499,8 +499,12 @@ class ShiftService {
     String? staffId,
     int limit = 30,
   }) async {
+    final roleService = StaffRoleService();
+    final isKermes = roleService.businessType == 'kermes';
+    final parentCollection = isKermes ? 'kermes_events' : 'businesses';
+
     final shiftsRef = _db
-        .collection('businesses')
+        .collection(parentCollection)
         .doc(businessId)
         .collection('shifts');
 
@@ -540,9 +544,13 @@ class ShiftService {
     if (user == null) return 0;
 
     try {
+      final roleService = StaffRoleService();
+      final isKermes = roleService.businessType == 'kermes';
+      final parentCollection = isKermes ? 'kermes_events' : 'businesses';
+
       final dateStr = _todayString();
       final snap = await _db
-          .collection('businesses')
+          .collection(parentCollection)
           .doc(businessId)
           .collection('shifts')
           .where('staffId', isEqualTo: user.uid)
@@ -616,7 +624,7 @@ class ShiftService {
       locationData['timestamp'] = Timestamp.now();
 
       final shiftRef = _db
-          .collection('businesses')
+          .collection(_currentParentCollection)
           .doc(_currentBusinessId)
           .collection('shifts')
           .doc(_currentShiftId);

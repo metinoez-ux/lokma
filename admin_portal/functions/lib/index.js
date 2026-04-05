@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onKermesOrderCancelledStock = exports.onKermesOrderPaidStock = exports.onKermesOrderReady = exports.kermesWaiterTimeoutCheck = exports.onUserAccountDeleted = exports.onNewChatMessage = exports.cleanupTestData = exports.preOrderReminder = exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
+exports.onKermesOrderPaidNotif = exports.onKermesOrderCreatedNotif = exports.onKermesOrderCancelledStock = exports.onKermesOrderPaidStock = exports.onKermesOrderReady = exports.kermesWaiterTimeoutCheck = exports.onUserAccountDeleted = exports.onNewChatMessage = exports.cleanupTestData = exports.preOrderReminder = exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
@@ -3391,4 +3391,7 @@ Object.defineProperty(exports, "onKermesOrderReady", { enumerable: true, get: fu
 var kermesStockFunctions_1 = require("./kermesStockFunctions");
 Object.defineProperty(exports, "onKermesOrderPaidStock", { enumerable: true, get: function () { return kermesStockFunctions_1.onKermesOrderPaidStock; } });
 Object.defineProperty(exports, "onKermesOrderCancelledStock", { enumerable: true, get: function () { return kermesStockFunctions_1.onKermesOrderCancelledStock; } });
+var kermesCustomerNotifications_1 = require("./kermesCustomerNotifications");
+Object.defineProperty(exports, "onKermesOrderCreatedNotif", { enumerable: true, get: function () { return kermesCustomerNotifications_1.onKermesOrderCreatedNotif; } });
+Object.defineProperty(exports, "onKermesOrderPaidNotif", { enumerable: true, get: function () { return kermesCustomerNotifications_1.onKermesOrderPaidNotif; } });
 //# sourceMappingURL=index.js.map
