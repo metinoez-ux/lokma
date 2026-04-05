@@ -135,6 +135,23 @@ export async function POST(request: NextRequest) {
  } catch (e) {
  console.log('User profile doc deletion error:', e);
  }
+
+ // Cleanup Kermes subcollection roles (Dangling references)
+ try {
+ const kermesSnap = await db.collection('kermes_events').get();
+ let kermesDeletedCount = 0;
+ for (const kDoc of kermesSnap.docs) {
+   const roleRef = kDoc.ref.collection('roles').doc(docId);
+   const roleSnap = await roleRef.get();
+   if (roleSnap.exists) {
+     await roleRef.delete();
+     kermesDeletedCount++;
+   }
+ }
+ console.log(`✅ Deleted user ${docId} from ${kermesDeletedCount} kermes_events roles subcollection`);
+ } catch (e) {
+ console.log('Kermes roles deletion error:', e);
+ }
  } else {
  console.log('❌ No docId available for Firestore deletion');
  }
