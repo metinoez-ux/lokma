@@ -28,6 +28,7 @@ class ShiftService {
   List<int> _currentTables = [];
   bool _isDeliveryDriver = false;
   bool _isOtherRole = false;
+  List<String> _currentPrepZones = [];
 
   String? get currentShiftId => _currentShiftId;
   String? get currentBusinessId => _currentBusinessId;
@@ -36,6 +37,7 @@ class ShiftService {
   List<int> get currentTables => _currentTables;
   bool get isDeliveryDriver => _isDeliveryDriver;
   bool get isOtherRole => _isOtherRole;
+  List<String> get currentPrepZones => _currentPrepZones;
   bool get isOnShift => _shiftStatus == 'active' || _shiftStatus == 'paused';
 
   // ── Stream for UI ──
@@ -89,6 +91,9 @@ class ShiftService {
             );
             _isDeliveryDriver = shiftData['isDeliveryDriver'] == true;
             _isOtherRole = shiftData['isOtherRole'] == true;
+            _currentPrepZones = List<String>.from(
+              (shiftData['assignedPrepZones'] as List<dynamic>?) ?? [],
+            );
             _setupShiftStream();
             if (_shiftStatus == 'active') {
               _scheduleRandomGpsChecks();
@@ -113,6 +118,7 @@ class ShiftService {
     required List<int> tables,
     bool isDeliveryDriver = false,
     bool isOtherRole = false,
+    List<String> prepZones = const [],
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
@@ -152,6 +158,7 @@ class ShiftService {
         'endedAt': null,
         'startLocation': locationData,
         'assignedTables': tables,
+        'assignedPrepZones': prepZones,
         'isDeliveryDriver': isDeliveryDriver,
         'isOtherRole': isOtherRole,
         'pauseLog': [],
@@ -171,6 +178,7 @@ class ShiftService {
         'shiftStatus': 'active',
         'shiftStartedAt': now,
         'shiftAssignedTables': tables,
+        'shiftPrepZones': prepZones,
         'shiftIsDeliveryDriver': isDeliveryDriver,
         'shiftIsOtherRole': isOtherRole,
         'shiftParentCollection': parentCollection,
@@ -183,6 +191,7 @@ class ShiftService {
       _shiftStatus = 'active';
       _shiftStartedAt = DateTime.now();
       _currentTables = tables;
+      _currentPrepZones = prepZones;
       _isDeliveryDriver = isDeliveryDriver;
       _isOtherRole = isOtherRole;
       _setupShiftStream();
@@ -193,6 +202,54 @@ class ShiftService {
     } catch (e) {
       debugPrint('[Shift] Error starting shift: $e');
       return null;
+    }
+  }
+
+  /// Update active shift roles mid-shift
+  Future<bool> updateShiftRoles({
+    required List<int> tables,
+    required bool isDeliveryDriver,
+    required bool isOtherRole,
+    required List<String> prepZones,
+  }) async {
+    if (_currentShiftId == null || _currentBusinessId == null) return false;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    try {
+      final shiftRef = _db
+          .collection(_currentParentCollection)
+          .doc(_currentBusinessId)
+          .collection('shifts')
+          .doc(_currentShiftId);
+
+      // Update shift document
+      await shiftRef.update({
+        'assignedTables': tables,
+        'assignedPrepZones': prepZones,
+        'isDeliveryDriver': isDeliveryDriver,
+        'isOtherRole': isOtherRole,
+      });
+
+      // Update admin doc (real-time presence tracking)
+      await _db.collection('admins').doc(user.uid).set({
+        'shiftAssignedTables': tables,
+        'shiftPrepZones': prepZones,
+        'shiftIsDeliveryDriver': isDeliveryDriver,
+        'shiftIsOtherRole': isOtherRole,
+      }, SetOptions(merge: true));
+
+      // Local state update
+      _currentTables = tables;
+      _currentPrepZones = prepZones;
+      _isDeliveryDriver = isDeliveryDriver;
+      _isOtherRole = isOtherRole;
+
+      debugPrint('[Shift] Updated roles for shift: $_currentShiftId');
+      return true;
+    } catch (e) {
+      debugPrint('[Shift] Error updating shift roles: $e');
+      return false;
     }
   }
 

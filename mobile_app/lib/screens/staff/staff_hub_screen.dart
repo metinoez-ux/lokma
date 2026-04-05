@@ -11,6 +11,7 @@ import 'staff_reservations_screen.dart';
 import '../../widgets/qr_scanner_screen.dart';
 import 'providers/staff_notifications_provider.dart';
 import 'staff_notifications_screen.dart';
+import 'widgets/shift_action_pill.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -123,29 +124,18 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Personel Paneli'),
-            if (capabilities.staffName.isNotEmpty || capabilities.phoneNumber.isNotEmpty)
-              Row(
-                children: [
-                  if (capabilities.staffName.isNotEmpty)
-                    Flexible(
-                      child: Text(
-                        capabilities.staffName,
-                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  if (capabilities.staffName.isNotEmpty && capabilities.phoneNumber.isNotEmpty)
-                    Text(
-                      ' • ',
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
-                    ),
-                  if (capabilities.phoneNumber.isNotEmpty)
-                    Text(
-                      capabilities.phoneNumber,
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
-                    ),
-                ],
+            Text(
+              capabilities.staffName.isNotEmpty ? capabilities.staffName : 'Personel Paneli',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+            if (capabilities.phoneNumber.isNotEmpty)
+              Text(
+                capabilities.phoneNumber,
+                style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
           ],
         ),
@@ -209,16 +199,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               },
               tooltip: 'QR Seçili İşlemler',
             ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/profile');
-              }
-            },
-          ),
+          const ShiftActionPill(),
         ],
       ),
       body: tabs.isEmpty

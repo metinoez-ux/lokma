@@ -11,15 +11,24 @@ class ShiftDialogs {
     required bool isDriver,
     required int maxTables,
     required List<int> assignedTables,
+    required List<String> kermesPrepZones,
+    bool isUpdating = false,
+    bool currentMasa = false,
+    bool currentKurye = false,
+    bool currentDiger = false,
+    List<int> currentTables = const [],
+    List<String> currentPrepZones = const [],
   }) async {
-    bool masaEnabled = hasTables;
-    bool kuryeEnabled = isDriver;
-    bool digerEnabled = true;
-    final Set<int> selectedTables = Set<int>.from(assignedTables);
+    bool masaEnabled = currentMasa;
+    bool kuryeEnabled = currentKurye;
+    bool digerEnabled = currentDiger;
+    final Set<int> selectedTables = Set<int>.from(currentTables);
+    final Set<String> selectedPrepZones = Set<String>.from(currentPrepZones);
     final max = maxTables;
 
     final bool showKurye = isDriver;
     final bool showMasa = hasTables;
+    final bool showPrepZones = kermesPrepZones.isNotEmpty;
 
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
@@ -29,7 +38,7 @@ class ShiftDialogs {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             final isDark = Theme.of(ctx).brightness == Brightness.dark;
-            final hasAnyRole = digerEnabled || kuryeEnabled || (masaEnabled && (selectedTables.isNotEmpty || !hasTables));
+            final hasAnyRole = digerEnabled || kuryeEnabled || (masaEnabled && selectedTables.isNotEmpty) || selectedPrepZones.isNotEmpty;
             final canStart = hasAnyRole;
 
             return Container(
@@ -55,7 +64,7 @@ class ShiftDialogs {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                     child: Column(
                       children: [
-                        const Text('Görev Seçimi', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                        Text(isUpdating ? 'Görevleri Güncelle' : 'Görev Seçimi', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
                         Text('Bu vardiyada hangi görevleri üstleneceksiniz?', style: TextStyle(fontSize: 13, color: Colors.grey[500]), textAlign: TextAlign.center),
                       ],
@@ -163,6 +172,34 @@ class ShiftDialogs {
                             ),
                             const SizedBox(height: 12),
                           ],
+                          if (showPrepZones) ...[
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4, bottom: 8, top: 4),
+                              child: Text('Ocakbaşı (Hazırlık) Görevleri', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                            ),
+                            ...kermesPrepZones.map((zone) {
+                              final isSelected = selectedPrepZones.contains(zone);
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: _buildRoleToggle(
+                                  context: ctx,
+                                  icon: Icons.soup_kitchen,
+                                  title: zone,
+                                  subtitle: isSelected ? 'Bu alanda çalışıyorsunuz' : 'Seçili değil',
+                                  color: Colors.deepOrange,
+                                  isEnabled: isSelected,
+                                  onChanged: (val) => setSheetState(() {
+                                    if (val) {
+                                      selectedPrepZones.add(zone);
+                                    } else {
+                                      selectedPrepZones.remove(zone);
+                                    }
+                                  }),
+                                ),
+                              );
+                            }).toList(),
+                            const SizedBox(height: 12),
+                          ],
                           if (showKurye) ...[
                             _buildRoleToggle(
                               context: ctx,
@@ -200,15 +237,16 @@ class ShiftDialogs {
                                 'tables': masaEnabled ? (selectedTables.toList()..sort()) : <int>[],
                                 'isDeliveryDriver': kuryeEnabled,
                                 'isDiger': digerEnabled,
+                                'prepZones': selectedPrepZones.toList(),
                               })
                             : null,
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        icon: const Icon(Icons.play_arrow),
+                        icon: Icon(isUpdating ? Icons.update : Icons.play_arrow),
                         label: Text(
-                          _buildStartButtonLabel(masaEnabled, kuryeEnabled, digerEnabled, selectedTables.length),
+                          _buildStartButtonLabel(isUpdating, masaEnabled, kuryeEnabled, digerEnabled, selectedTables.length, selectedPrepZones.length),
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -494,13 +532,14 @@ class ShiftDialogs {
     );
   }
 
-  static String _buildStartButtonLabel(bool masa, bool kurye, bool diger, int tableCount) {
+  static String _buildStartButtonLabel(bool isUp, bool masa, bool kurye, bool diger, int tableCount, int prepCount) {
     final parts = <String>[];
     if (masa && tableCount > 0) parts.add('$tableCount masa');
     if (kurye) parts.add('sürücü');
     if (diger) parts.add('diğer');
+    if (prepCount > 0) parts.add('$prepCount ocakbaşı');
     if (parts.isEmpty) return 'En az bir görev seçin';
-    return 'Vardiyayı Başlat (${parts.join(' + ')})';
+    return isUp ? 'Rolleri Güncelle' : 'Vardiyayı Başlat (${parts.join(' + ')})';
   }
 
   static Widget _buildRoleToggle({
