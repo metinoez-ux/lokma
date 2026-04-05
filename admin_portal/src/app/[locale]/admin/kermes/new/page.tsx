@@ -345,6 +345,11 @@ function NewKermesContent() {
  showKdv: showKdv,
  kdvRate: showKdv ? kdvRate : 0,
  pricesIncludeKdv: pricesIncludeKdv,
+ // Dinamik Sabit Görevler (Daima Varsayılan Olarak Atanır)
+ customRoles: [
+   { id: 'role_park_system', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
+   { id: 'role_temizlik_system', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' }
+ ],
  // Sistem bilgileri
  organizerId: auth.currentUser.uid,
  isActive: true,

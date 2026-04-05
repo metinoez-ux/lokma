@@ -9,6 +9,8 @@ import 'tabs/waiter_tables_tab.dart';
 import 'tabs/finance_wallet_tab.dart';
 import 'staff_reservations_screen.dart';
 import '../../widgets/qr_scanner_screen.dart';
+import 'providers/staff_notifications_provider.dart';
+import 'staff_notifications_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -21,11 +23,21 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   int _selectedNavIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(staffCapabilitiesProvider.notifier).reload();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final capabilities = ref.watch(staffCapabilitiesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final driverState = ref.watch(driverProvider);
+    final unreadCountAsync = ref.watch(staffUnreadNotificationsCountProvider);
+    final unreadCount = unreadCountAsync.value ?? 0;
 
     List<Widget> tabs = [];
     List<BottomNavigationBarItem> navItems = [];
@@ -107,8 +119,76 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('Personel Paneli'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Personel Paneli'),
+            if (capabilities.staffName.isNotEmpty || capabilities.phoneNumber.isNotEmpty)
+              Row(
+                children: [
+                  if (capabilities.staffName.isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        capabilities.staffName,
+                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  if (capabilities.staffName.isNotEmpty && capabilities.phoneNumber.isNotEmpty)
+                    Text(
+                      ' • ',
+                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
+                    ),
+                  if (capabilities.phoneNumber.isNotEmpty)
+                    Text(
+                      capabilities.phoneNumber,
+                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
+                    ),
+                ],
+              ),
+          ],
+        ),
         actions: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const StaffNotificationsScreen(),
+                  ));
+                },
+                tooltip: 'Bildirimler',
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 14,
+                      minHeight: 14,
+                    ),
+                    child: Text(
+                      unreadCount > 99 ? '99+' : unreadCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           if (capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole)
             IconButton(
               icon: const Icon(Icons.qr_code_scanner, color: Colors.greenAccent),
@@ -160,29 +240,6 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               unselectedItemColor: Colors.grey,
             )
           : null,
-      floatingActionButton: (capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole)
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const QRScannerScreen(
-                    prompt: 'Sipariş / Fatura QR Oku',
-                  ),
-                )).then((scannedText) {
-                  if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
-                    final query = Uri(path: '/kermesler', queryParameters: {
-                      'scannedOrder': scannedText,
-                      'businessId': capabilities.businessId,
-                    }).toString();
-                    context.push(query);
-                  }
-                });
-              },
-              backgroundColor: Colors.greenAccent.shade700,
-              icon: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 28),
-              label: const Text('QR Tahsilat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

@@ -24,6 +24,9 @@ class StaffRoleService {
   String? _overrideBusinessId;
   String? _overrideBusinessName;
   String? _overrideBusinessType;
+  String? get overrideBusinessId => _overrideBusinessId;
+  String? get overrideBusinessName => _overrideBusinessName;
+  String? get overrideBusinessType => _overrideBusinessType;
   
   bool get isStaff => _isStaff;
   String? get businessId => _overrideBusinessId ?? _businessId;
@@ -48,9 +51,9 @@ class StaffRoleService {
 
   /// Check if current user is a staff member
   Future<bool> checkStaffStatus() async {
+    _resetStatus(); // Ensure no stale data bleeds across sessions
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _resetStatus();
       return false;
     }
 
@@ -116,7 +119,7 @@ class StaffRoleService {
         final kermesData = kermesQuery.docs.first.data();
         _isStaff = true;
         _businessId = kermesQuery.docs.first.id;
-        _businessName = kermesData['name'] ?? 'Kermes';
+        _businessName = kermesData['title'] ?? kermesData['name'] ?? 'Kermes';
         _businessType = 'kermes';
         _staffName = user.displayName ?? 'Gonullu';
         _role = 'kermes_staff';
@@ -140,7 +143,7 @@ class StaffRoleService {
         final kermesData = driverQuery.docs.first.data();
         _isStaff = true;
         _businessId = driverQuery.docs.first.id;
-        _businessName = kermesData['name'] ?? 'Kermes';
+        _businessName = kermesData['title'] ?? kermesData['name'] ?? 'Kermes';
         _businessType = 'kermes';
         _staffName = user.displayName ?? 'Surucu';
         _role = 'kermes_driver';
@@ -164,7 +167,7 @@ class StaffRoleService {
         final kermesData = waiterQuery.docs.first.data();
         _isStaff = true;
         _businessId = waiterQuery.docs.first.id;
-        _businessName = kermesData['name'] ?? 'Kermes';
+        _businessName = kermesData['title'] ?? kermesData['name'] ?? 'Kermes';
         _businessType = 'kermes';
         _staffName = user.displayName ?? 'Garson';
         _role = 'kermes_waiter';

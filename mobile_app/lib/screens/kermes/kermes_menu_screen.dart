@@ -15,7 +15,7 @@ import 'dart:math' as math;
 import 'package:lokma_app/providers/kermes_category_provider.dart';
 import '../../utils/currency_utils.dart';
 import '../../utils/cart_warning_utils.dart';
-import '../../widgets/animated_shopping_cart.dart';
+
 
 const Color lokmaPink = Color(0xFFEA184A);
 

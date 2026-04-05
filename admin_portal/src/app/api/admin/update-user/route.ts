@@ -14,9 +14,10 @@ export async function POST(request: NextRequest) {
  );
  }
 
- let auth: any, db: any;
+ let auth: any, db: any, firebaseAdmin: any;
  try {
  const admin = await getFirebaseAdmin();
+ firebaseAdmin = admin;
  auth = admin.auth;
  db = admin.db;
  } catch (initError: any) {
@@ -122,6 +123,11 @@ export async function POST(request: NextRequest) {
 
  const updatedAt = new Date();
 
+ // Fetch old user data to detect assignment changes
+ const userRef = db.collection('users').doc(userId);
+ const userDocSnapshot = await userRef.get();
+ const oldUserData = userDocSnapshot.exists ? userDocSnapshot.data() : null;
+
  // 2. Update Firestore `users` Document
  const userUpdateData: any = {
  firstName: firstName !== undefined ? firstName : null,
@@ -165,6 +171,74 @@ export async function POST(request: NextRequest) {
  }
 
  await db.collection('users').doc(userId).set(userUpdateData, { merge: true });
+
+ // 2.5. Personnel Assignment Notification Logic
+ try {
+   if (oldUserData) {
+     const oldAssignments = oldUserData.assignments || [];
+     const newAssignments = assignments || [];
+     const addedAssignments = newAssignments.filter((a: any) => 
+       !oldAssignments.some((oa: any) => oa.id === a.id && oa.role === a.role)
+     );
+
+     const oldPrepZones = oldUserData.kermesAllowedSections || [];
+     const newPrepZones = kermesAllowedSections || [];
+     const addedPrepZones = newPrepZones.filter((z: string) => !oldPrepZones.includes(z));
+
+     const assigner = updatedBy ? updatedBy.split('@')[0] : 'Yönetici';
+     const nowIso = new Date().toISOString();
+     const notificationsRef = db.collection('users').doc(userId).collection('personnel_notifications');
+
+     const fcmToken = oldUserData.customerFcmToken || oldUserData.fcmToken;
+     const messaging = require('@/lib/firebase-admin').getFirebaseMessaging();
+
+     for (const a of addedAssignments) {
+       const title = "Yeni Görev Ataması";
+       const body = `Şu kişi (${assigner}) tarafından "${a.entityName || 'Kermes'}" kermesinde "${a.role}" görevine atandınız.`;
+       
+       const notifData = {
+         title,
+         body,
+         type: 'kermes_assignment',
+         createdAt: nowIso,
+         read: false
+       };
+       await notificationsRef.add(notifData);
+
+       if (fcmToken && messaging) {
+         await messaging.send({
+           token: fcmToken,
+           notification: { title, body },
+           data: { type: 'kermes_assignment' }
+         }).catch((err: any) => console.log("FCM Warning:", err));
+       }
+     }
+
+     for (const z of addedPrepZones) {
+       const title = "Yeni Ocakbaşı Ataması";
+       const body = `Şu kişi (${assigner}) tarafından "${z}" ocakbaşı görevine atandınız.`;
+       
+       const notifData = {
+         title,
+         body,
+         type: 'kermes_assignment',
+         createdAt: nowIso,
+         read: false
+       };
+       await notificationsRef.add(notifData);
+       
+       if (fcmToken && messaging) {
+         await messaging.send({
+           token: fcmToken,
+           notification: { title, body },
+           data: { type: 'kermes_assignment' }
+         }).catch((err: any) => console.log("FCM Warning:", err));
+       }
+     }
+   }
+ } catch(notifError) {
+   console.error('Notification error:', notifError);
+ }
 
  // 3. Update Firestore `admins` Document if the user is an admin
  let roleChangedToAdmin = false;

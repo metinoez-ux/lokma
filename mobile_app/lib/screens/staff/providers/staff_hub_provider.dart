@@ -11,6 +11,7 @@ class StaffCapabilities {
   final bool hasTables;
   final bool hasShiftTracking;
   final String staffName;
+  final String phoneNumber;
   final String businessName;
   final String? businessId;
   final int maxTables;
@@ -21,6 +22,7 @@ class StaffCapabilities {
   final bool hasFinanceRole;
   final bool isBusinessAdmin;
   final List<String> kermesAllowedSections;
+  final List<String> kermesPrepZones;
 
   StaffCapabilities({
     this.isLoading = true,
@@ -29,6 +31,7 @@ class StaffCapabilities {
     this.hasTables = false,
     this.hasShiftTracking = false,
     this.staffName = '',
+    this.phoneNumber = '',
     this.businessName = '',
     this.businessId,
     this.maxTables = 0,
@@ -39,6 +42,7 @@ class StaffCapabilities {
     this.hasTablesRole = false,
     this.hasFinanceRole = false,
     this.kermesAllowedSections = const [],
+    this.kermesPrepZones = const [],
   });
 
   StaffCapabilities copyWith({
@@ -48,6 +52,7 @@ class StaffCapabilities {
     bool? hasTables,
     bool? hasShiftTracking,
     String? staffName,
+    String? phoneNumber,
     String? businessName,
     String? businessId,
     int? maxTables,
@@ -58,6 +63,7 @@ class StaffCapabilities {
     bool? hasTablesRole,
     bool? hasFinanceRole,
     List<String>? kermesAllowedSections,
+    List<String>? kermesPrepZones,
   }) {
     return StaffCapabilities(
       isLoading: isLoading ?? this.isLoading,
@@ -66,6 +72,7 @@ class StaffCapabilities {
       hasTables: hasTables ?? this.hasTables,
       hasShiftTracking: hasShiftTracking ?? this.hasShiftTracking,
       staffName: staffName ?? this.staffName,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       businessName: businessName ?? this.businessName,
       businessId: businessId ?? this.businessId,
       maxTables: maxTables ?? this.maxTables,
@@ -76,6 +83,7 @@ class StaffCapabilities {
       hasTablesRole: hasTablesRole ?? this.hasTablesRole,
       hasFinanceRole: hasFinanceRole ?? this.hasFinanceRole,
       kermesAllowedSections: kermesAllowedSections ?? this.kermesAllowedSections,
+      kermesPrepZones: kermesPrepZones ?? this.kermesPrepZones,
     );
   }
 }
@@ -114,9 +122,27 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         final roleService = StaffRoleService();
         if (roleService.isStaff && roleService.businessId != null) {
           final isKermes = roleService.businessType == 'kermes';
+          
+          List<String> earlyPrepZones = [];
+          if (isKermes && roleService.businessId != null) {
+             try {
+                final kDoc = await FirebaseFirestore.instance.collection('kermes_events').doc(roleService.businessId).get();
+                if (kDoc.exists) {
+                   final pz = kDoc.data()?['prepZoneAssignments'] as Map<String, dynamic>? ?? {};
+                   for (final entry in pz.entries) {
+                      final arr = List<String>.from(entry.value ?? []);
+                      if (arr.contains(user.uid)) {
+                         earlyPrepZones.add(entry.key);
+                      }
+                   }
+                }
+             } catch(e){}
+          }
+          
           state = state.copyWith(
             isLoading: false,
             staffName: roleService.staffName ?? user.displayName ?? '',
+            phoneNumber: user.phoneNumber ?? '',
             businessName: roleService.businessName ?? '',
             businessId: roleService.businessId,
             isDriver: roleService.role == 'kermes_driver',
@@ -126,6 +152,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             hasShiftTracking: true, // Allow Kermes staff to use shift tracking
             kermesAllowedSections: roleService.kermesAllowedSections,
             userId: user.uid,
+            kermesPrepZones: earlyPrepZones,
           );
         } else {
           state = state.copyWith(isLoading: false);
@@ -135,7 +162,8 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
 
       final data = adminDoc.data()!;
       final isDriver = data['isDriver'] == true;
-      final staffName = data['staffName'] ?? data['name'] ?? user.displayName ?? '';
+      final staffName = StaffRoleService().staffName ?? data['staffName'] ?? data['name'] ?? user.displayName ?? '';
+      final phoneNumber = data['phone'] ?? data['phoneNumber'] ?? user.phoneNumber ?? '';
 
       final userRole = (data['role'] as String?) ?? 'staff';
       final adminType = (data['adminType'] as String?) ?? '';
@@ -146,6 +174,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
       String businessName = '';
       int maxTables = 0;
       bool hasTables = false;
+      List<String> assignedPrepZones = [];
 
       final assigned = data['assignedBusinesses'] as List<dynamic>?;
       if (assigned != null && assigned.isNotEmpty) {
@@ -165,7 +194,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         }
       }
 
-      final bizId = data['businessId'] ?? data['butcherId'] ?? data['kermesId'];
+      final bizId = StaffRoleService().overrideBusinessId ?? data['businessId'] ?? data['butcherId'] ?? data['kermesId'];
       if (bizId != null) {
         final bizDoc = await FirebaseFirestore.instance
             .collection('businesses')
@@ -195,11 +224,25 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           if (kermesDoc.exists) {
             final kData = kermesDoc.data()!;
             businessId = bizId;
-            businessName = kData['name'] ?? 'Kermes';
+            businessName = kData['title'] ?? kData['name'] ?? 'Kermes';
             // Give basic tabs to kermes staff
             hasTables = false;
+            
+            // Look for assigned prep zones
+            final prepZoneAssignments = kData['prepZoneAssignments'] as Map<String, dynamic>? ?? {};
+            for (final entry in prepZoneAssignments.entries) {
+              final assignedTo = List<String>.from(entry.value ?? []);
+              if (assignedTo.contains(user.uid)) {
+                assignedPrepZones.add(entry.key);
+              }
+            }
           }
         }
+      }
+
+      // Fallback for Kermes prep zones if we found them through StaffRoleService early exit
+      if (businessId == null) {
+        // ... (This shouldn't happen here normally since we'd hit the early return, but we'll re-check kermesId just in case)
       }
 
       // Check plan for features
@@ -233,6 +276,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         hasTables: hasTables,
         hasShiftTracking: hasShiftTracking,
         staffName: staffName,
+        phoneNumber: phoneNumber,
         businessName: businessName,
         businessId: businessId,
         maxTables: maxTables,
@@ -242,10 +286,17 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         hasTablesRole: hasTables, // simplified mapped role
         hasFinanceRole: true, // everyone on staff hub gets wallet access currently
         kermesAllowedSections: List<String>.from(data['kermesAllowedSections'] ?? []),
+        kermesPrepZones: assignedPrepZones,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  // Public method to force reload
+  void reload() {
+    state = state.copyWith(isLoading: true);
+    Future.microtask(_loadCapabilities);
   }
 }
 

@@ -148,15 +148,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       CartWarningUtils.showDifferentCartWarning(
         context: context,
         ref: ref,
-        targetBusinessName: butcherName ?? widget.businessName ?? 'common.butcher'.tr(),
+        targetBusinessName: butcherName ?? 'common.butcher'.tr(),
         onConfirmClearAndAdd: () {
-          ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName);
+          ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName ?? 'common.butcher'.tr());
           if (onSuccess != null) onSuccess();
         },
       );
       return;
     }
-    ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName);
+    ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName ?? 'common.butcher'.tr());
     if (onSuccess != null) onSuccess();
   }
 

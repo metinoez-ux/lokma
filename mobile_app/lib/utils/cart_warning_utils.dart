@@ -57,7 +57,7 @@ class CartWarningUtils {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'marketplace.farkli_sepet'.tr(fallback: 'Farklı Sepet Uyarısı'),
+                'marketplace.farkli_sepet'.tr(),
                 style: TextStyle(
                   color: Theme.of(dialogContext).brightness == Brightness.dark
                       ? Colors.white
@@ -74,7 +74,7 @@ class CartWarningUtils {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'marketplace.farkli_sepet_desc'.tr(fallback: 'Sepetinizde farklı bir işletmeye veya kermese ait ürünler bulunuyor. Yeni ürünleri eklemek için mevcut sepetinizin temizlenmesi gerekmektedir.'),
+              'marketplace.farkli_sepet_desc'.tr(),
               style: TextStyle(
                   color: Theme.of(dialogContext).brightness == Brightness.dark
                       ? Colors.white70
@@ -83,7 +83,7 @@ class CartWarningUtils {
             ),
             const SizedBox(height: 12),
             Text(
-              'marketplace.onayliyor_musunuz'.tr(args: [targetBusinessName], fallback: '$targetBusinessName menüsünden ürün eklemek için sepetiniz temizlenecek. Onaylıyor musunuz?'),
+              'marketplace.onayliyor_musunuz'.tr(args: [targetBusinessName]),
               style: TextStyle(
                   color: Theme.of(dialogContext).brightness == Brightness.dark
                       ? Colors.white54
@@ -118,7 +118,7 @@ class CartWarningUtils {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
-            child: Text('cart.change_cart'.tr(fallback: 'Sepeti Değiştir')),
+            child: Text('cart.change_cart'.tr()),
           ),
         ],
       ),
