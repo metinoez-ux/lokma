@@ -866,18 +866,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      final hasBaseBusiness = roleService.businessId != null;
+      final hasBaseRestaurant = roleService.businessId != null && roleService.businessType != 'kermes';
+      final totalOptions = (hasBaseRestaurant ? 1 : 0) + kermeses.length;
 
       if (!context.mounted) return;
 
-      if (kermeses.isNotEmpty && hasBaseBusiness) {
-        // User has BOTH a restaurant AND active kermeses
+      if (totalOptions > 1) {
+        // User has multiple workplaces (e.g. restaurant + kermes, or multiple kermeses)
         showModalBottomSheet(
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
           builder: (ctx) => WorkplaceSelectorSheet(
-            baseBusinessName: roleService.businessName ?? 'İşletme',
+            baseBusinessName: hasBaseRestaurant ? (roleService.businessName ?? 'İşletme') : null,
             kermeses: kermeses,
             onSelected: (id, name, type) {
               if (id.isEmpty) {
@@ -886,7 +887,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               } else {
                 roleService.setOverrideWorkplace(id, name, type);
               }
-              // Add delay inside the bottom sheet callback as well
+              // Add delay inside the bottom sheet callback
               Future.delayed(const Duration(milliseconds: 100), () {
                 if (context.mounted) context.push('/staff-hub');
               });
@@ -894,11 +895,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         );
       } else if (kermeses.isNotEmpty) {
-        // User is ONLY assigned to a kermes
+        // User has exactly 1 kermes and no base restaurant
         roleService.setOverrideWorkplace(kermeses.first.id, kermeses.first.title, 'kermes');
         context.push('/staff-hub');
-      } else if (hasBaseBusiness) {
-        // Default behavior: ONLY a restaurant (or cached kermes role)
+      } else if (hasBaseRestaurant || roleService.businessId != null) {
+        // Default behavior: ONLY a restaurant (or base kermes without active assignments)
         roleService.clearOverride();
         context.push('/staff-hub');
       } else {

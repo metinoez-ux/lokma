@@ -54,71 +54,87 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   }
 
   Future<void> _handleStartShift() async {
-    final capabilities = ref.read(staffCapabilitiesProvider);
-    if (capabilities.businessId == null) return;
+    try {
+      final capabilities = ref.read(staffCapabilitiesProvider);
+      if (capabilities.businessId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('İşletme bilgisi bulunamadı. Lütfen girişinizi kontrol edin.'), backgroundColor: Colors.red),
+          );
+        }
+        return;
+      }
 
-    final hasTables = capabilities.hasTablesRole;
-    final hasCourier = capabilities.hasCourierRole;
+      final hasTables = capabilities.hasTablesRole;
+      final hasCourier = capabilities.hasCourierRole;
 
-    // Scenario 1: No tables, no courier -> direct start
-    if (!hasTables && !hasCourier) {
-      if (mounted) setState(() => _shiftLoading = true);
-      HapticFeedback.heavyImpact();
-      final shiftId = await _shiftService.startShift(
-        businessId: capabilities.businessId!,
-        staffName: capabilities.staffName,
-        tables: [],
-        isOtherRole: true,
-      );
-      if (shiftId != null) _startTimerFresh();
-      if (mounted) setState(() => _shiftLoading = false);
-      return;
-    }
+      // Scenario 1: No tables, no courier -> direct start
+      if (!hasTables && !hasCourier) {
+        if (mounted) setState(() => _shiftLoading = true);
+        HapticFeedback.heavyImpact();
+        final shiftId = await _shiftService.startShift(
+          businessId: capabilities.businessId!,
+          staffName: capabilities.staffName,
+          tables: [],
+          isOtherRole: true,
+        );
+        if (shiftId != null) _startTimerFresh();
+        if (mounted) setState(() => _shiftLoading = false);
+        return;
+      }
 
-    // Scenario 2: Has tables but no courier -> table selection only
-    if (hasTables && !hasCourier) {
-      final selectedTables = await ShiftDialogs.showTableSelectionSheet(
+      // Scenario 2: Has tables but no courier -> table selection only
+      if (hasTables && !hasCourier) {
+        final selectedTables = await ShiftDialogs.showTableSelectionSheet(
+          context: context,
+          maxTables: capabilities.maxTables,
+          assignedTables: capabilities.assignedTables,
+        );
+        if (selectedTables == null) return;
+        
+        if (mounted) setState(() => _shiftLoading = true);
+        HapticFeedback.heavyImpact();
+        final shiftId = await _shiftService.startShift(
+          businessId: capabilities.businessId!,
+          staffName: capabilities.staffName,
+          tables: selectedTables,
+          isOtherRole: false,
+        );
+        if (shiftId != null) _startTimerFresh();
+        if (mounted) setState(() => _shiftLoading = false);
+        return;
+      }
+
+      // Scenario 3: Courier available -> role selection sheet
+      final result = await ShiftDialogs.showRoleSelectionSheet(
         context: context,
+        hasTables: capabilities.hasTablesRole,
+        isDriver: capabilities.hasCourierRole,
         maxTables: capabilities.maxTables,
         assignedTables: capabilities.assignedTables,
       );
-      if (selectedTables == null) return;
-      
+      if (result == null) return;
+
       if (mounted) setState(() => _shiftLoading = true);
       HapticFeedback.heavyImpact();
       final shiftId = await _shiftService.startShift(
         businessId: capabilities.businessId!,
         staffName: capabilities.staffName,
-        tables: selectedTables,
-        isOtherRole: false,
+        tables: result['tables'] as List<int>,
+        isDeliveryDriver: result['isDeliveryDriver'] as bool,
+        isOtherRole: result['isDiger'] as bool,
       );
+
       if (shiftId != null) _startTimerFresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
       if (mounted) setState(() => _shiftLoading = false);
-      return;
     }
-
-    // Scenario 3: Courier available -> role selection sheet
-    final result = await ShiftDialogs.showRoleSelectionSheet(
-      context: context,
-      hasTables: capabilities.hasTablesRole,
-      isDriver: capabilities.hasCourierRole,
-      maxTables: capabilities.maxTables,
-      assignedTables: capabilities.assignedTables,
-    );
-    if (result == null) return;
-
-    if (mounted) setState(() => _shiftLoading = true);
-    HapticFeedback.heavyImpact();
-    final shiftId = await _shiftService.startShift(
-      businessId: capabilities.businessId!,
-      staffName: capabilities.staffName,
-      tables: result['tables'] as List<int>,
-      isDeliveryDriver: result['isDeliveryDriver'] as bool,
-      isOtherRole: result['isDiger'] as bool,
-    );
-
-    if (shiftId != null) _startTimerFresh();
-    if (mounted) setState(() => _shiftLoading = false);
   }
 
   Future<void> _handlePauseShift() async {

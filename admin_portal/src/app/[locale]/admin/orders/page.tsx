@@ -9,6 +9,7 @@ import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { ORDER_STATUSES, ORDER_TYPES, type Order, type OrderStatus, mapReservationToOrder } from '@/hooks/useOrders';
 import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
 import OrderCard from '@/components/admin/OrderCard';
+import KermesScannerModal from '@/components/admin/KermesScannerModal';
 
 import { useTranslations, useLocale } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
@@ -58,7 +59,10 @@ export default function OrdersPage() {
  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [myPrepZones, setMyPrepZones] = useState<string[]>([]);
-  const [allKermesPrepZones, setAllKermesPrepZones] = useState<string[]>([]);
+  const [showKermesScanner, setShowKermesScanner] = useState(false);
+
+  // Pagination bounds limit to prevent infinite scroll memory issues (up to ~infinite)
+  const MAX_ORDERS = 500;  const [allKermesPrepZones, setAllKermesPrepZones] = useState<string[]>([]);
   const [activeKdsMode, setActiveKdsMode] = useState<string>('auto'); // 'auto', 'expo', or specific prepZone name
 
   // ─── Fetch Kermes PrepZone Assignments & Settings ───
@@ -212,7 +216,7 @@ export default function OrdersPage() {
     setCheckedItems(prev => ({ ...prev, [orderId]: updated }));
     // Persist to Firestore
     try {
-      const isKermesAdmin = admin?.adminType === 'kermes';
+      const isKermesAdmin = ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
       // Fallback search in our filtered array for businessId to be safe
       const orderMatch = [...meatOrders, ...resOrders].find(o => o.id === orderId);
       const bId = orderMatch?.businessId || adminBusinessId;
@@ -685,12 +689,13 @@ export default function OrdersPage() {
 
  const effectBusinessId = adminBusinessId; // capture for closure
 
-  const isKermesAdmin = admin?.adminType === 'kermes';
+  const isKermesAdmin = ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
   
   // 1. Listen to orders
   const qOrders = isKermesAdmin 
     ? query(
-        collection(db, 'kermes_events', effectBusinessId as string, 'orders'),
+        collection(db, 'kermes_orders'),
+        where('kermesId', '==', effectBusinessId as string),
         where('createdAt', '>=', Timestamp.fromDate(startDate)),
         orderBy('createdAt', 'desc')
       )
@@ -706,8 +711,8 @@ export default function OrdersPage() {
  return {
  id: doc.id,
  orderNumber: d.orderNumber || doc.id.slice(0, 6).toUpperCase(),
- businessId: d.businessId || d.butcherId || '',
- businessName: d.businessName || d.butcherName || '',
+ businessId: d.businessId || d.butcherId || d.kermesId || '',
+ businessName: d.businessName || d.butcherName || d.kermesName || '',
  customerId: d.userId || d.customerId || '',
  customerName: d.customerName || d.userDisplayName || d.userName || '',
  customerPhone: d.customerPhone || d.userPhone || '',
@@ -1071,11 +1076,11 @@ export default function OrdersPage() {
  }
 
   // Route to correct collection
-  const isKermesAdmin = admin?.adminType === 'kermes';
+  const isKermesAdmin = ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
   const orderRef = isReservation && order?.businessId
   ? doc(db, 'businesses', order.businessId, 'reservations', orderId)
-  : isKermesAdmin && order?.businessId
-    ? doc(db, 'kermes_events', order.businessId, 'orders', orderId)
+  : isKermesAdmin
+    ? doc(db, 'kermes_orders', orderId)
     : doc(db, 'meat_orders', orderId);
 
   await updateDoc(orderRef, updateData);
@@ -1307,6 +1312,18 @@ export default function OrdersPage() {
  <div className="flex flex-wrap items-center gap-4">
  <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
  {t('siparis_merkezi')}
+ 
+ {/* QR Tahsilat Butonu (Başlığa taşındı) */}
+ {['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '') && (
+      <button
+        onClick={() => setShowKermesScanner(true)}
+        className="ml-4 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-full text-sm font-semibold shadow-lg transition-colors border border-emerald-400/30"
+        title="QR veya Sipariş No ile Nakit Tahsilat"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="7" height="7" x="7" y="7" rx="1"/><rect width="2" height="2" x="14" y="14"/><rect width="2" height="2" x="14" y="10"/><rect width="2" height="2" x="10" y="14"/></svg>
+        QR Tahsilat
+      </button>
+  )}
  </h1>
  {nextReservation && (() => {
  const dateObj = nextReservation.resDateObject;
@@ -1960,6 +1977,12 @@ export default function OrdersPage() {
  </div>
  )}
  </div>
+
+ <KermesScannerModal
+    isOpen={showKermesScanner}
+    onClose={() => setShowKermesScanner(false)}
+    kermesId={businessFilter}
+  />
 
  {/* Order Detail Modal */}
  {selectedOrder && (

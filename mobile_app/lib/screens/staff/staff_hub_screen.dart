@@ -8,6 +8,7 @@ import 'tabs/courier_tab.dart';
 import 'tabs/waiter_tables_tab.dart';
 import 'tabs/finance_wallet_tab.dart';
 import 'staff_reservations_screen.dart';
+import '../../widgets/qr_scanner_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -108,6 +109,27 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       appBar: AppBar(
         title: const Text('Personel Paneli'),
         actions: [
+          if (capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole)
+            IconButton(
+              icon: const Icon(Icons.qr_code_scanner, color: Colors.greenAccent),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const QRScannerScreen(
+                    title: 'Sipariş / Fatura QR Oku',
+                    returnScannedText: true,
+                  ),
+                )).then((scannedText) {
+                  if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
+                    final query = Uri(path: '/kermesler', queryParameters: {
+                      'scannedOrder': scannedText,
+                      'businessId': capabilities.businessId,
+                    }).toString();
+                    context.push(query);
+                  }
+                });
+              },
+              tooltip: 'QR Seçili İşlemler',
+            ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {

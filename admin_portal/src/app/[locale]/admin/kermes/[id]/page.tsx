@@ -1253,6 +1253,12 @@ export default function KermesDetailPage() {
  setMatchedUser(null);
  setNewStaffRoles({ isStaff: true, isDriver: false, isWaiter: false, isKermesAdmin: false });
 
+ // Sifreyi ve email'i hemen goster
+ const loginEmail = data.user?.email || form.email || (form.phone ? `${form.countryCode?.replace('+','') || '49'}${form.phone}@lokma.shop` : '');
+ setTimeout(() => {
+   alert(`Personel başarıyla oluşturuldu!\n\nLütfen giriş bilgilerini kopyalayıp personele iletin:\n\nLogin/Benutzername: ${loginEmail}\nŞifre/Passwort: ${tempPassword}\nLink: https://lokma.web.app/kermes-login`);
+ }, 500);
+
  showToast(t('personel_olusturuldu') || 'Personel oluşturuldu ve atandı', 'success');
  } catch (error: any) {
  console.error('Create user error:', error);
@@ -4376,7 +4382,7 @@ export default function KermesDetailPage() {
    <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-3 -mt-1 ml-1">Bu personel garson olarak atandi. Masa siparisleri bolumune gore yonlendirilecek.</p>
    )}
 
-   {/* Login Bilgilerini Tekrar Gonder */}
+   {/* Login Bilgilerini Tekrar Gonder veya Yeni Sifre Belirle */}
    {(editPersonData.email || editPersonData.phone || editPersonData.phoneNumber) && (
    <button
    type="button"
@@ -4384,17 +4390,32 @@ export default function KermesDetailPage() {
    try {
    const email = editPersonData.email;
    if (email) {
+   // Kullanicinin sifresini sifirlayip yeni sifre ile email gonderme
+   showToast("Yeni şifre oluşturuluyor...", "success");
+   const resetRes = await fetch("/api/admin/reset-user-password", {
+   method: "POST",
+   headers: { "Content-Type": "application/json" },
+   body: JSON.stringify({ uid: editPersonData.id })
+   });
+   
+   if (!resetRes.ok) {
+     showToast("Şifre sıfırlama başarısız oldu", "error");
+     return;
+   }
+   
+   const { tempPassword } = await resetRes.json();
+   
    const res = await fetch("/api/email/send", {
    method: "POST",
    headers: { "Content-Type": "application/json" },
    body: JSON.stringify({
    to: email,
    subject: "LOKMA - Kermes Personel Login Bilgileri",
-   html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb"><h2 style="color:#1e40af;margin-top:0">Merhaba ${editPersonData.displayName || editPersonData.firstName || editPersonData.name || "Personel"}</h2><p>Kermes personel panelinize giris yapmak icin lutfen asagidaki bilgileri kullanin:</p><p><strong>Login:</strong> ${email}</p><p><strong>Link:</strong> <a href="https://lokma.web.app/kermes-login">https://lokma.web.app/kermes-login</a></p><p>Eger sifrenizi bilmiyorsaniz, giris sayfasindan "Sifremi Unuttum" secenegini kullanabilirsiniz.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"><p style="color:#6b7280;font-size:12px">LOKMA Kermes Yonetim Sistemi</p></div>`
+   html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb"><h2 style="color:#1e40af;margin-top:0">Merhaba ${editPersonData.displayName || editPersonData.firstName || editPersonData.name || "Personel"}</h2><p>Kermes personel panelinize giris yapmak icin lutfen asagidaki bilgileri kullanin:</p><p><strong>Benutzername (Login):</strong> ${email}</p><p><strong>Passwort (Şifre):</strong> <span style="background-color:#ffe4e6;color:#e11d48;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:16px;">${tempPassword}</span></p><p><strong>Link:</strong> <a href="https://lokma.web.app/kermes-login">https://lokma.web.app/kermes-login</a></p><p>Eger sifrenizi degistirmek isterseniz, giris sayfasindan "Sifremi Unuttum" secenegini kullanabilirsiniz.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"><p style="color:#6b7280;font-size:12px">LOKMA Kermes Yonetim Sistemi</p></div>`
    })
    });
    if (res.ok) {
-   showToast("Login bilgileri email ile gonderildi", "success");
+   showToast("Yeni şifreli login bilgileri email ile gonderildi", "success");
    } else {
    showToast("Email gonderilemedi", "error");
    }
@@ -4408,7 +4429,7 @@ export default function KermesDetailPage() {
    }}
    className="w-full py-2 mb-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600/20 border border-blue-900/30 rounded-lg text-sm font-medium transition"
    >
-   Login Bilgilerini Tekrar Gonder
+   Login Bilgilerini Tekrar Gönder (Yeni Şifre)
    </button>
    )}
 
