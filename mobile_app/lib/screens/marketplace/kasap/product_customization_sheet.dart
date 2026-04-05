@@ -8,9 +8,8 @@ import '../../../models/product_option.dart';
 import '../../../providers/cart_provider.dart';
 import '../../../utils/i18n_utils.dart';
 import '../../../utils/currency_utils.dart';
+import '../../../utils/cart_warning_utils.dart';
 import '../../../providers/product_favorites_provider.dart';
-
-/// Lieferando-style product customization bottom sheet.
 ///
 /// Shows: product info, required option groups (radio), optional extras (checkbox),
 /// Sonderwunsch removals, quantity selector, and dynamic price.
@@ -140,27 +139,45 @@ class _ProductCustomizationSheetState
   }
 
   void _addToCart() {
-  final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
-  final recipientText = _recipientName?.trim().isNotEmpty == true ? _recipientName!.trim() : null;
-  final cartNotifier = ref.read(cartProvider.notifier);
-  
-  // If editing, remove the old variant first (options may have changed -> different uniqueKey)
-  if (widget.existingItem != null) {
-    cartNotifier.removeFromCart(widget.existingItem!.uniqueKey);
+    final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
+    final recipientText = _recipientName?.trim().isNotEmpty == true ? _recipientName!.trim() : null;
+    
+    // Check for cart conflicts (different Kasap OR any Kermes)
+    if (CartWarningUtils.checkConflictForNormalCart(ref, widget.businessId)) {
+      CartWarningUtils.showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: widget.businessName,
+        onConfirmClearAndAdd: () {
+          _executeAddToCart(noteText, recipientText);
+        },
+      );
+      return;
+    }
+    
+    _executeAddToCart(noteText, recipientText);
   }
-  
-  cartNotifier.addToCart(
-    widget.product,
-    _quantity,
-    widget.businessId,
-    widget.businessName,
-    selectedOptions: _selectedOptions,
-    note: noteText,
-    recipientName: recipientText,
-  );
-  Navigator.pop(context);
-  HapticFeedback.heavyImpact();
-}
+
+  void _executeAddToCart(String? noteText, String? recipientText) {
+    final cartNotifier = ref.read(cartProvider.notifier);
+    
+    // If editing, remove the old variant first (options may have changed -> different uniqueKey)
+    if (widget.existingItem != null) {
+      cartNotifier.removeFromCart(widget.existingItem!.uniqueKey);
+    }
+    
+    cartNotifier.addToCart(
+      widget.product,
+      _quantity,
+      widget.businessId,
+      widget.businessName,
+      selectedOptions: _selectedOptions,
+      note: noteText,
+      recipientName: recipientText,
+    );
+    Navigator.pop(context);
+    HapticFeedback.heavyImpact();
+  }
 
   @override
   Widget build(BuildContext context) {

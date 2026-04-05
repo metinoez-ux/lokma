@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import '../../providers/kermes_cart_provider.dart';
+import '../../providers/cart_provider.dart'; // Needed for CartWarningUtils
 import '../../utils/currency_utils.dart';
+import '../../utils/cart_warning_utils.dart';
 
 const Color _lokmaPink = Color(0xFFEA184A);
 
@@ -318,6 +320,21 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
   }
 
   void _addToCartAndClose() {
+    if (CartWarningUtils.checkConflictForKermesCart(ref, widget.eventId)) {
+      CartWarningUtils.showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: '${widget.eventName} Kermesi',
+        onConfirmClearAndAdd: () {
+          _executeAddToCartAndClose();
+        },
+      );
+      return;
+    }
+    _executeAddToCartAndClose();
+  }
+
+  void _executeAddToCartAndClose() {
     // Set quantity in cart
     final cartNotifier = ref.read(kermesCartProvider.notifier);
     

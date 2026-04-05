@@ -1289,7 +1289,11 @@
         "gluten_free": "Sans Gluten",
         "no_wheat": "Sans Protéines de Blé",
         "state_only": "État / Province",
-        "all_country": "Tout le Pays"
+        "all_country": "Tout le Pays",
+        "farkli_sepet": "Avertissement de Panier Différent",
+        "farkli_sepet_desc": "Votre panier contient des articles d'une autre entreprise ou événement. Votre panier actuel doit être vidé pour ajouter de nouveaux articles.",
+        "onayliyor_musunuz": "Pour ajouter des articles du menu {}, votre panier sera vidé. Êtes-vous d'accord ?",
+        "cart_cleared_and_added": "Panier vidé et article de {} ajouté."
     },
     "navigation": {
         "food": "Repas",

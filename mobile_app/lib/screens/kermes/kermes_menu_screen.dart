@@ -14,6 +14,8 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
 import 'package:lokma_app/providers/kermes_category_provider.dart';
 import '../../utils/currency_utils.dart';
+import '../../utils/cart_warning_utils.dart';
+import '../../widgets/animated_shopping_cart.dart';
 
 const Color lokmaPink = Color(0xFFEA184A);
 
@@ -390,89 +392,27 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
 
   void _addToCart(KermesMenuItem item) {
     HapticFeedback.lightImpact();
-    final cartNotifier = ref.read(kermesCartProvider.notifier);
-    final added =
-        cartNotifier.addToCart(item, widget.event.id, widget.event.city);
-    if (!added) _showDifferentKermesWarning(item);
+
+    if (CartWarningUtils.checkConflictForKermesCart(ref, widget.event.id)) {
+      CartWarningUtils.showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: '${widget.event.city} Kermesi',
+        onConfirmClearAndAdd: () {
+          _executeAddKermesItem(item);
+        },
+      );
+      return;
+    }
+
+    _executeAddKermesItem(item);
   }
 
-  void _showDifferentKermesWarning(KermesMenuItem item) {
-    final currentKermesName =
-        ref.read(kermesCartProvider.notifier).currentKermesName;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
-            : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 28),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Farklı Kermes Siparişi',
-                style: TextStyle(
-                  color: Theme.of(dialogContext).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black87,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-                'marketplace.clear_cart_warning'
-                    .tr(args: [currentKermesName ?? '']),
-                style: TextStyle(
-                    color: Theme.of(dialogContext).brightness == Brightness.dark
-                        ? Colors.white70
-                        : Colors.black87,
-                    fontSize: 15)),
-            const SizedBox(height: 12),
-            Text(
-                '${widget.event.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.',
-                style: TextStyle(
-                    color: Theme.of(dialogContext).brightness == Brightness.dark
-                        ? Colors.white54
-                        : Colors.black54,
-                    fontSize: 14)),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text('common.cancel'.tr(),
-                  style: const TextStyle(color: Colors.grey, fontSize: 15))),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              ref.read(kermesCartProvider.notifier).clearAndAddFromNewKermes(
-                  item, widget.event.id, widget.event.city);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('marketplace.cart_updated_for_city'
-                      .tr(args: [widget.event.city])),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  behavior: SnackBarBehavior.floating));
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: lokmaPink,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10))),
-            child: Text(tr('cart.change_cart')),
-          ),
-        ],
-      ),
-    );
+  void _executeAddKermesItem(KermesMenuItem item) {
+    final cartNotifier = ref.read(kermesCartProvider.notifier);
+    cartNotifier.addToCart(item, widget.event.id, widget.event.city);
   }
+
 
   void _removeFromCart(KermesMenuItem item) {
     HapticFeedback.lightImpact();

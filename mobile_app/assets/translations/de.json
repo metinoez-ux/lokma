@@ -1292,7 +1292,11 @@
         "gluten_free": "Glutenfrei",
         "no_wheat": "Ohne Weizenproteine",
         "state_only": "Dein Bundesland",
-        "all_country": "Deutschlandweit"
+        "all_country": "Deutschlandweit",
+        "farkli_sepet": "Anderer Warenkorb-Warnung",
+        "farkli_sepet_desc": "Ihr Warenkorb enthält Artikel eines anderen Geschäfts oder einer Veranstaltung. Ihr aktueller Warenkorb muss gelöscht werden, um neue Artikel hinzuzufügen.",
+        "onayliyor_musunuz": "Um Artikel aus dem {} Menü hinzuzufügen, wird Ihr Warenkorb gelöscht. Stimmen Sie zu?",
+        "cart_cleared_and_added": "Warenkorb gelöscht und Artikel aus {} hinzugefügt."
     },
     "masa": {
         "preorder_title": "Vorbestellung aufgeben?",

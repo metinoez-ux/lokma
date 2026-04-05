@@ -1289,7 +1289,11 @@
         "gluten_free": "Senza Glutine",
         "no_wheat": "Senza proteine del grano",
         "state_only": "Stato / Provincia",
-        "all_country": "Tutto il Paese"
+        "all_country": "Tutto il Paese",
+        "farkli_sepet": "Avviso carrello diverso",
+        "farkli_sepet_desc": "Il tuo carrello contiene articoli di un'altra attività o evento. Il carrello attuale deve essere svuotato per aggiungere nuovi articoli.",
+        "onayliyor_musunuz": "Per aggiungere articoli dal menu {}, il carrello verrà svuotato. Sei d'accordo?",
+        "cart_cleared_and_added": "Carrello svuotato e articolo di {} aggiunto."
     },
     "navigation": {
         "food": "Cibo",

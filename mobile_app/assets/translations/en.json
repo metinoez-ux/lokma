@@ -1289,7 +1289,11 @@
         "gluten_free": "Gluten-Free",
         "no_wheat": "No Wheat Proteins",
         "state_only": "State / Province",
-        "all_country": "Entire Country"
+        "all_country": "Entire Country",
+        "farkli_sepet": "Different Cart Warning",
+        "farkli_sepet_desc": "Your cart contains items from a different business or event. Your current cart must be cleared to add new items.",
+        "onayliyor_musunuz": "To add items from the {} menu, your cart will be cleared. Do you agree?",
+        "cart_cleared_and_added": "Cart cleared and item from {} added."
     },
     "navigation": {
         "food": "Food",

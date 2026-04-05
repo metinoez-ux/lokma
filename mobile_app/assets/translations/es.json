@@ -1289,7 +1289,11 @@
         "gluten_free": "Sin Gluten",
         "no_wheat": "Sin Proteínas de Trigo",
         "state_only": "Estado / Provincia",
-        "all_country": "Todo el País"
+        "all_country": "Todo el País",
+        "farkli_sepet": "Advertencia de Carrito Diferente",
+        "farkli_sepet_desc": "Tu carrito contiene artículos de otro negocio o evento. El carrito actual debe borrarse para añadir nuevos artículos.",
+        "onayliyor_musunuz": "Para añadir artículos del menú de {}, tu carrito será borrado. ¿Estás de acuerdo?",
+        "cart_cleared_and_added": "Carrito borrado y artículo de {} añadido."
     },
     "navigation": {
         "food": "Comida",

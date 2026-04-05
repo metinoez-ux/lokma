@@ -1289,7 +1289,11 @@
         "gluten_free": "Glutensiz",
         "no_wheat": "Buğday proteini içermez",
         "state_only": "Bulunduğun İl / Eyalet",
-        "all_country": "Tümü (Ülke)"
+        "all_country": "Tümü (Ülke)",
+        "farkli_sepet": "Farklı Sepet Uyarısı",
+        "farkli_sepet_desc": "Sepetinizde farklı bir işletmeye veya kermese ait ürünler bulunuyor. Yeni ürünleri eklemek için mevcut sepetinizin temizlenmesi gerekmektedir.",
+        "onayliyor_musunuz": "{} menüsünden ürün eklemek için sepetiniz temizlenecek. Onaylıyor musunuz?",
+        "cart_cleared_and_added": "Sepet temizlendi ve {} ürünü eklendi."
     },
     "navigation": {
         "food": "Yemek",

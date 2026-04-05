@@ -28,6 +28,7 @@ import 'product_customization_sheet.dart';
 import 'reservation_booking_screen.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import '../../../utils/currency_utils.dart';
+import '../../../utils/cart_warning_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class BusinessDetailScreen extends ConsumerStatefulWidget {
@@ -140,6 +141,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     Future.delayed(const Duration(milliseconds: 350), () {
       if (mounted) _isUserScrolling = true;
     });
+  }
+
+  void _quickAddToCart(ButcherProduct product, double quantity, String businessId, String? butcherName, {VoidCallback? onSuccess}) {
+    if (CartWarningUtils.checkConflictForNormalCart(ref, businessId)) {
+      CartWarningUtils.showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: butcherName ?? widget.businessName ?? 'common.butcher'.tr(),
+        onConfirmClearAndAdd: () {
+          ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName);
+          if (onSuccess != null) onSuccess();
+        },
+      );
+      return;
+    }
+    ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName);
+    if (onSuccess != null) onSuccess();
   }
 
   /// Auto-scroll the horizontal chip bar so the selected chip is fully visible and centered
@@ -3733,13 +3751,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     } else {
                       final data = _butcherDoc?.data() as Map<String, dynamic>?;
                       final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                      ref.read(cartProvider.notifier).addToCart(
+                      _quickAddToCart(
                         product,
                         product.unitType.toLowerCase() == 'kg' ? product.minQuantity : 1,
                         widget.businessId,
                         butcherName,
+                        onSuccess: () => setState(() {}),
                       );
-                      setState(() {});
                     }
                   },
                   child: Container(
@@ -4119,13 +4137,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       final data = _butcherDoc?.data() as Map<String, dynamic>?;
                                       final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                                       HapticFeedback.mediumImpact();
-                                      ref.read(cartProvider.notifier).addToCart(
+                                      _quickAddToCart(
                                         product,
                                         isByWeight ? product.minQuantity : 1,
                                         widget.businessId,
                                         butcherName,
+                                        onSuccess: () => setState(() {}),
                                       );
-                                      setState(() {});
                                     }
                                   },
                                   child: inCart && product.optionGroups.isEmpty
@@ -4195,13 +4213,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               final data = _butcherDoc?.data() as Map<String, dynamic>?;
                               final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                               HapticFeedback.mediumImpact();
-                              ref.read(cartProvider.notifier).addToCart(
+                              _quickAddToCart(
                                 product,
                                 isByWeight ? product.minQuantity : 1,
                                 widget.businessId,
                                 butcherName,
+                                onSuccess: () => setState(() {}),
                               );
-                              setState(() {});
                             }
                           },
                           child: inCart && product.optionGroups.isEmpty
@@ -4583,13 +4601,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   final data = _butcherDoc?.data() as Map<String, dynamic>?;
                                   final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                                   HapticFeedback.mediumImpact();
-                                  ref.read(cartProvider.notifier).addToCart(
+                                  _quickAddToCart(
                                     product,
                                     isByWeight ? stepQty : 1,
                                     widget.businessId,
                                     butcherName,
+                                    onSuccess: () => setState(() {}),
                                   );
-                                  setState(() {});
                                 }
                               } else {
                                 final current = _selections[product.sku] ?? defaultQty;
@@ -4638,14 +4656,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                               final qtyToAdd = _selections[product.sku] ?? defaultQty;
                               HapticFeedback.mediumImpact();
-                              ref.read(cartProvider.notifier).addToCart(
+                              _quickAddToCart(
                                 product,
                                 qtyToAdd,
                                 widget.businessId,
                                 butcherName,
+                                onSuccess: () {
+                                  setState(() => _selections.remove(product.sku));
+                                }
                               );
-                              // Reset local selection after adding
-                              setState(() => _selections.remove(product.sku));
                             }
                           }
                         } : null,
