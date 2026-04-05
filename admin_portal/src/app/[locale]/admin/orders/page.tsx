@@ -1324,7 +1324,7 @@ return (
         QR Tahsilat
       </button>
   )}
- </div>
+ 
  {nextReservation && (() => {
  const dateObj = nextReservation.resDateObject;
  let timeDisplay = nextReservation.timeSlot || '-';
