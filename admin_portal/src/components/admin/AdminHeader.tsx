@@ -97,15 +97,20 @@ export default function AdminHeader() {
  useEffect(() => {
  if (!admin) return;
  const isSuperAdmin = admin.adminType === 'super';
+ const isKermesAdmin = admin.adminType === 'kermes';
  const bId = businessId;
  if (!isSuperAdmin && !bId) return;
 
  // Composite index gerektirmeyen basit sorgu
- const constraints = isSuperAdmin
- ? [where('status', '==', 'pending'), limit(50)]
- : [where('businessId', '==', bId), where('status', '==', 'pending'), limit(50)];
+ let q;
+ if (isSuperAdmin) {
+   q = query(collection(db, 'meat_orders'), where('status', '==', 'pending'), limit(50));
+ } else if (isKermesAdmin && bId) {
+   q = query(collection(db, 'kermes_events', bId, 'orders'), where('status', '==', 'pending'), limit(50));
+ } else {
+   q = query(collection(db, 'meat_orders'), where('businessId', '==', bId), where('status', '==', 'pending'), limit(50));
+ }
 
- const q = query(collection(db, 'meat_orders'), ...constraints);
  const unsub = onSnapshot(q, (snap) => {
  setPendingOrderCount(snap.size);
  if (snap.size > 0) {

@@ -115,8 +115,11 @@ const applyVirtualContext = (admin: Admin): Admin => {
  ...clonedAdmin,
  adminType: activeAssignment.role,
  businessId: activeAssignment.entityType === 'business' ? activeAssignment.entityId : undefined,
+ butcherId: activeAssignment.entityType === 'business' ? activeAssignment.entityId : undefined,
+ restaurantId: activeAssignment.entityType === 'business' ? activeAssignment.entityId : undefined,
+ marketId: activeAssignment.entityType === 'business' ? activeAssignment.entityId : undefined,
  kermesId: activeAssignment.entityType === 'kermes' ? activeAssignment.entityId : undefined,
- businessName: activeAssignment.entityType === 'business' ? activeAssignment.entityName : clonedAdmin.businessName,
+ businessName: activeAssignment.entityName || clonedAdmin.businessName,
  };
  }
  

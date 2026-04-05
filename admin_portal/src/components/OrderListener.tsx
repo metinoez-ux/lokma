@@ -134,16 +134,24 @@ const { admin } = useAdmin();
  firstLoad.current = true;
  firstLoadTabs.current = true;
 
- // 1. Listen for new pending meat_orders
- const qOrders = query(
- collection(db, 'meat_orders'),
- where('businessId', '==', businessId),
- where('status', '==', 'pending'),
- orderBy('createdAt', 'desc'),
- limit(10)
- );
+  // 1. Listen for new pending orders
+  const isKermesAdmin = admin?.adminType === 'kermes';
+  const qOrders = isKermesAdmin
+    ? query(
+        collection(db, 'kermes_events', businessId, 'orders'),
+        where('status', '==', 'pending'),
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      )
+    : query(
+        collection(db, 'meat_orders'),
+        where('businessId', '==', businessId),
+        where('status', '==', 'pending'),
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      );
 
- const unsubOrders = onSnapshot(qOrders, (snapshot) => {
+  const unsubOrders = onSnapshot(qOrders, (snapshot) => {
  if (firstLoad.current) {
  firstLoad.current = false;
  return;

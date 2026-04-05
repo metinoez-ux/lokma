@@ -22,6 +22,7 @@ interface OrderDetailsModalProps {
  onPrint?: (order: any) => void;
  onShowPrinterPanel?: () => void;
  disableBusinessLink?: boolean;
+ activePrepZones?: string[];
 }
 
 export default function OrderDetailsModal({
@@ -38,6 +39,7 @@ export default function OrderDetailsModal({
  onPrint,
  onShowPrinterPanel,
  disableBusinessLink = false,
+ activePrepZones = [],
 }: OrderDetailsModalProps) {
  const t = useTranslations('AdminPortal.Orders');
  const tRes = useTranslations('AdminPortal.Reservations');
@@ -351,8 +353,14 @@ export default function OrderDetailsModal({
  const renderItem = (item: any, originalIdx: number) => {
  const isChecked = !!(checkedItems || {})[originalIdx];
  const posNum = item.positionNumber || (originalIdx + 1);
+ 
+ const itemZones = Array.isArray(item.prepZone) ? item.prepZone : [item.prepZone];
+ const isMyZone = activePrepZones && activePrepZones.length > 0
+   ? itemZones.some((z: string) => z && activePrepZones.includes(z))
+   : true;
+
  return (
- <div key={originalIdx} className={`rounded-xl px-3 py-2 transition-all mb-1.5 border border-transparent ${isChecked ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-500/20' : 'bg-muted dark:bg-gray-700/30 border-border/50 dark:border-gray-600/30 shadow-sm'}`}>
+ <div key={originalIdx} className={`rounded-xl px-3 py-2 transition-all mb-1.5 border border-transparent ${isChecked ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-500/20' : 'bg-muted dark:bg-gray-700/30 border-border/50 dark:border-gray-600/30 shadow-sm'} ${!isMyZone ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
  <div className="flex items-center gap-2.5 text-sm">
  <button
  onClick={() => onToggleItemChecked(order.id, originalIdx)}

@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lokma_app/data/kermes_menu_templates.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
+import 'package:lokma_app/providers/kermes_category_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
@@ -362,15 +363,19 @@ void _onMenuScroll() {
         uniqueCategories.add(category);
       }
     }
-    final sortOrder = [
-      'Ana Yemek',
-      'Çorba',
-      'Tatlı',
-      'İçecek',
-      'Aperatif',
-      'Grill',
-      'Diğer'
-    ];
+    final categoriesAsync = ref.read(kermesCategoryProvider);
+    final sortOrder = categoriesAsync.maybeWhen(
+      data: (cats) => cats.map((c) => c.name).toList(),
+      orElse: () => const [
+        'Ana Yemek',
+        'Çorba',
+        'Tatlı',
+        'İçecek',
+        'Aperatif',
+        'Grill',
+        'Diğer'
+      ],
+    );
     final sorted = uniqueCategories.toList();
     sorted.sort((a, b) {
       final indexA = sortOrder.indexOf(a);
@@ -689,8 +694,9 @@ if (_selectedCategory.isEmpty) {
       _sectionKeys.putIfAbsent(category, () => GlobalKey());
     }
 
-    // Watch cart state for updates
+    // Watch cart and category state for updates
     ref.watch(kermesCartProvider);
+    ref.watch(kermesCategoryProvider);
 
     // Force pill recalculation after every build to fix stale positioning
     // (e.g. after returning from checkout sheet or product detail modal)

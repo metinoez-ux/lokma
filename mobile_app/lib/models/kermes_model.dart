@@ -17,6 +17,7 @@ class KermesSectionDef {
   final List<String> prepZones;  // ["Kumpir Standi", "Borek Standi"]
   final List<String> tezgahlar;  // ["KT1", "KT2"]
   final List<String> tableIds;   // Bu bolume atanan masa ID'leri
+  final bool hasDineIn;          // Bu bolumde masa servisi aktif mi?
 
   KermesSectionDef({
     required this.id,
@@ -25,13 +26,25 @@ class KermesSectionDef {
     this.prepZones = const [],
     this.tezgahlar = const [],
     this.tableIds = const [],
+    this.hasDineIn = true,
   });
 
   factory KermesSectionDef.fromJson(Map<String, dynamic> json) {
+    final name = json['name']?.toString() ?? '';
+    final idStr = json['id']?.toString() ?? '';
+    
+    String genderVal = json['gender']?.toString() ?? 'mixed';
+    if (json['genderRestriction'] != null) {
+      if (json['genderRestriction'] == 'women_only') genderVal = 'female';
+      else if (json['genderRestriction'] == 'men_only') genderVal = 'male';
+      else genderVal = 'mixed';
+    }
+
     return KermesSectionDef(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      gender: json['gender']?.toString() ?? 'mixed',
+      id: idStr.isNotEmpty ? idStr : name,
+      name: name,
+      gender: genderVal,
+      hasDineIn: json['hasDineIn'] as bool? ?? true,
       prepZones: (json['prepZones'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
       tezgahlar: (json['tezgahlar'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
       tableIds: (json['tableIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
@@ -42,6 +55,7 @@ class KermesSectionDef {
     'id': id,
     'name': name,
     'gender': gender,
+    'hasDineIn': hasDineIn,
     'prepZones': prepZones,
     'tezgahlar': tezgahlar,
     'tableIds': tableIds,

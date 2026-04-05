@@ -110,7 +110,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () => context.push('/profile'),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/profile');
+              }
+            },
           ),
         ],
       ),

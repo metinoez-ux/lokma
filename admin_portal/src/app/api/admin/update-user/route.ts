@@ -85,15 +85,15 @@ export async function POST(request: NextRequest) {
  let finalBusinessName = butcherName;
  
  if (!finalBusinessId && assignments && Array.isArray(assignments) && assignments.length > 0) {
- const firstBusiness = assignments.find((a: any) => a.type === 'business');
+ const firstBusiness = assignments.find((a: any) => a.entityType === 'business' || a.type === 'business');
  if (firstBusiness) {
  finalBusinessId = firstBusiness.id;
- finalBusinessName = firstBusiness.name;
+ finalBusinessName = firstBusiness.entityName || firstBusiness.name;
  } else {
- const firstKermes = assignments.find((a: any) => a.type === 'kermes');
+ const firstKermes = assignments.find((a: any) => a.entityType === 'kermes' || a.type === 'kermes');
  if (firstKermes) {
  finalBusinessId = firstKermes.id;
- finalBusinessName = firstKermes.name;
+ finalBusinessName = firstKermes.entityName || firstKermes.name;
  }
  }
  }
@@ -286,18 +286,46 @@ export async function POST(request: NextRequest) {
  await adminRef.set(driverUpdateData);
  }
  } else {
- if (adminDoc.exists) {
- await adminRef.update({
- isActive: false,
- isDriver: false,
- updatedAt,
- updatedBy: updatedBy || 'system',
- deactivationReason: 'Admin role removed'
- });
- }
- }
+  if (adminDoc.exists) {
+  await adminRef.update({
+  isActive: false,
+  isDriver: false,
+  updatedAt,
+  updatedBy: updatedBy || 'system',
+  deactivationReason: 'Admin role removed',
+  // Clear all role and assignment fields
+  assignedBusinesses: [],
+  assignedBusinessNames: [],
+  assignedKermesEvents: [],
+  assignedKermesNames: [],
+  assignments: [],
+  kermesAssignments: [],
+  kermesAllowedSections: [],
+  roles: ['customer'],
+  adminType: null,
+  butcherId: null,
+  butcherName: null,
+  businessId: null,
+  businessName: null
+  });
+  }
+  }
  }
 
+ // If not admin, also ensure users doc clears redundant fields
+ if (!isAdmin && !isDriver) {
+    const userRef = db.collection('users').doc(userId);
+    await userRef.update({
+        assignedBusinesses: [],
+        assignedBusinessNames: [],
+        assignedKermesEvents: [],
+        assignedKermesNames: [],
+        assignments: [],
+        kermesAssignments: [],
+        kermesAllowedSections: [],
+        roles: ['customer']
+    });
+ }
 
  return NextResponse.json({
  success: true,

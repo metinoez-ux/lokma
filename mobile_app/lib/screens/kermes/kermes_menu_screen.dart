@@ -12,6 +12,7 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/data/kermes_menu_templates.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
+import 'package:lokma_app/providers/kermes_category_provider.dart';
 import '../../utils/currency_utils.dart';
 
 const Color lokmaPink = Color(0xFFEA184A);
@@ -294,15 +295,30 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         uniqueCategories.add(category);
       }
     }
-    final sortOrder = [
-      'Ana Yemek',
-      'Çorba',
-      'Tatlı',
-      'İçecek',
-      'Aperatif',
-      'Grill',
-      'Diğer'
-    ];
+    
+    final categoriesAsync = ref.read(kermesCategoryProvider);
+    final sortOrder = categoriesAsync.when(
+      data: (cats) => cats.map((c) => c.name).toList(),
+      loading: () => const [
+        'Ana Yemek',
+        'Çorba',
+        'Tatlı',
+        'İçecek',
+        'Aperatif',
+        'Grill',
+        'Diğer'
+      ],
+      error: (_, __) => const [
+        'Ana Yemek',
+        'Çorba',
+        'Tatlı',
+        'İçecek',
+        'Aperatif',
+        'Grill',
+        'Diğer'
+      ],
+    );
+
     final sorted = uniqueCategories.toList();
     sorted.sort((a, b) {
       final indexA = sortOrder.indexOf(a);
@@ -615,12 +631,14 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     if (_selectedCategory.isEmpty) {
       _selectedCategory = 'marketplace.category_all'.tr();
     }
+    
+    // Watch providers so ui updates when categories or cart change
+    ref.watch(kermesCategoryProvider);
+    ref.watch(kermesCartProvider);
+
     for (final category in _categoriesWithoutAll) {
       _sectionKeys.putIfAbsent(category, () => GlobalKey());
     }
-
-    // Watch cart state for updates
-    ref.watch(kermesCartProvider);
 
     // Force pill recalculation after every build to fix stale positioning
     // (e.g. after returning from checkout sheet or product detail modal)

@@ -57,6 +57,46 @@ export default function OrdersPage() {
  const [dateFilter, setDateFilter] = useState<string>('all');
  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [myPrepZones, setMyPrepZones] = useState<string[]>([]);
+  const [allKermesPrepZones, setAllKermesPrepZones] = useState<string[]>([]);
+  const [activeKdsMode, setActiveKdsMode] = useState<string>('auto'); // 'auto', 'expo', or specific prepZone name
+
+  // ─── Fetch Kermes PrepZone Assignments & Settings ───
+  useEffect(() => {
+    if (!admin || !['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin.adminType) || !adminBusinessId) {
+      setMyPrepZones([]);
+      setAllKermesPrepZones([]);
+      return;
+    }
+    
+    // Listen to Kermes events prepZoneAssignments and tableSectionsV2
+    const unsub = onSnapshot(doc(db, 'kermes_events', adminBusinessId), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        // 1) Current user's assigned zones
+        const assignments = data.prepZoneAssignments || {};
+        const zones: string[] = [];
+        Object.entries(assignments).forEach(([zone, userIds]) => {
+          if (Array.isArray(userIds) && userIds.includes(admin.id)) {
+            zones.push(zone);
+          }
+        });
+        setMyPrepZones(zones);
+        
+        // 2) All available prep zones from sections
+        const sections = data.tableSectionsV2 || [];
+        const allZones = sections.flatMap((s: any) => s.prepZones || []);
+        // Remove duplicates and sort
+        const uniqueZones = Array.from(new Set<string>(allZones)).filter(Boolean).sort();
+        setAllKermesPrepZones(uniqueZones);
+      }
+    }, (error) => {
+      console.error("Error fetching prep zones:", error);
+    });
+    
+    return () => unsub();
+  }, [admin, adminBusinessId]);
 
  // ─── Fetch Next Upcoming Reservation ───
  useEffect(() => {
@@ -164,21 +204,30 @@ export default function OrdersPage() {
  // ─── Next Upcoming Reservation State ───
  const [nextReservation, setNextReservation] = useState<any>(null);
 
- // Toggle item checked state and persist to Firestore
- const toggleItemChecked = async (orderId: string, itemIdx: number) => {
- const orderChecks = checkedItems[orderId] || {};
- const newChecked = !orderChecks[itemIdx];
- const updated = { ...orderChecks, [itemIdx]: newChecked };
- setCheckedItems(prev => ({ ...prev, [orderId]: updated }));
- // Persist to Firestore
- try {
- await updateDoc(doc(db, 'meat_orders', orderId), {
- [`checkedItems.${itemIdx}`]: newChecked,
- });
- } catch (e) {
- console.error(t('error_updating_checkeditems'), e);
- }
- };
+  // Handle checking off items on KDS
+  const updateCheckedItem = async (orderId: string, itemIdx: number) => {
+    const orderChecks = checkedItems[orderId] || {};
+    const newChecked = !orderChecks[itemIdx];
+    const updated = { ...orderChecks, [itemIdx]: newChecked };
+    setCheckedItems(prev => ({ ...prev, [orderId]: updated }));
+    // Persist to Firestore
+    try {
+      const isKermesAdmin = admin?.adminType === 'kermes';
+      // Fallback search in our filtered array for businessId to be safe
+      const orderMatch = [...meatOrders, ...resOrders].find(o => o.id === orderId);
+      const bId = orderMatch?.businessId || adminBusinessId;
+      
+      const orderRef = isKermesAdmin 
+        ? doc(db, 'kermes_events', bId as string, 'orders', orderId)
+        : doc(db, 'meat_orders', orderId);
+
+      await updateDoc(orderRef, {
+        [`checkedItems.${itemIdx}`]: newChecked,
+      });
+    } catch (e) {
+      console.error(t('error_updating_checkeditems'), e);
+    }
+  };
 
  
  // Filter businesses based on search
@@ -636,12 +685,20 @@ export default function OrdersPage() {
 
  const effectBusinessId = adminBusinessId; // capture for closure
 
- // 1. Listen to meat_orders
- const qOrders = query(
- collection(db, 'meat_orders'),
- where('createdAt', '>=', Timestamp.fromDate(startDate)),
- orderBy('createdAt', 'desc')
- );
+  const isKermesAdmin = admin?.adminType === 'kermes';
+  
+  // 1. Listen to orders
+  const qOrders = isKermesAdmin 
+    ? query(
+        collection(db, 'kermes_events', effectBusinessId as string, 'orders'),
+        where('createdAt', '>=', Timestamp.fromDate(startDate)),
+        orderBy('createdAt', 'desc')
+      )
+    : query(
+        collection(db, 'meat_orders'),
+        where('createdAt', '>=', Timestamp.fromDate(startDate)),
+        orderBy('createdAt', 'desc')
+      );
 
  const unsubOrders = onSnapshot(qOrders, (snapshot) => {
  const data = snapshot.docs.map(doc => {
@@ -872,6 +929,27 @@ export default function OrdersPage() {
  if (statusFilter !== 'all' && order.status !== statusFilter) return false;
  if (typeFilter !== 'all' && order.type !== typeFilter) return false;
  if (businessFilter !== 'all' && order.businessId !== businessFilter) return false;
+
+ // Prep Zone Assignment logic for Kermes workers
+ let filterZones = myPrepZones;
+  
+ if (activeKdsMode === 'expo') {
+   filterZones = []; // show all
+ } else if (activeKdsMode !== 'auto') {
+   filterZones = [activeKdsMode]; // strictly use selected prepZone
+ }
+
+ if (filterZones && filterZones.length > 0) {
+   if (!order.items || order.items.length === 0) return false; // Hide orders with no items
+   
+   const hasMyItems = order.items.some((item: any) => {
+     const itemZones = Array.isArray(item.prepZone) ? item.prepZone : [item.prepZone];
+     return itemZones.some((z: string) => z && filterZones.includes(z));
+   });
+   
+   if (!hasMyItems) return false;
+ }
+
  return true;
  });
 
@@ -992,12 +1070,15 @@ export default function OrdersPage() {
  }));
  }
 
- // Route to correct collection
- const orderRef = isReservation && order?.businessId
- ? doc(db, 'businesses', order.businessId, 'reservations', orderId)
- : doc(db, 'meat_orders', orderId);
+  // Route to correct collection
+  const isKermesAdmin = admin?.adminType === 'kermes';
+  const orderRef = isReservation && order?.businessId
+  ? doc(db, 'businesses', order.businessId, 'reservations', orderId)
+  : isKermesAdmin && order?.businessId
+    ? doc(db, 'kermes_events', order.businessId, 'orders', orderId)
+    : doc(db, 'meat_orders', orderId);
 
- await updateDoc(orderRef, updateData);
+  await updateDoc(orderRef, updateData);
 
  // Send push notification to customer for cancellation
  if (newStatus === 'cancelled') {
@@ -1261,9 +1342,25 @@ export default function OrdersPage() {
  </div>
  {/* Filters inline */}
  <div className="flex flex-wrap items-center gap-2">
+ {allKermesPrepZones.length > 0 && admin?.adminType === 'kermes' && (
+      <select
+        value={activeKdsMode}
+        onChange={(e) => setActiveKdsMode(e.target.value)}
+        className="px-3 py-1.5 bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 font-bold text-sm rounded-lg border border-orange-500 shadow-sm"
+        title="Tablet Görünümü (KDS)"
+      >
+        <option value="auto">⚙️ Oto ({myPrepZones.length ? myPrepZones.join(', ') : 'Tümü'})</option>
+        <option value="expo">🌟 Expo (Tümü)</option>
+        {allKermesPrepZones.map(z => (
+          <option key={z} value={z}>👨‍🍳 {z}</option>
+        ))}
+      </select>
+  )}
+
  <select
  value={dateFilter}
  onChange={(e) => setDateFilter(e.target.value)}
+ title="Tarih Filtresi"
  className="px-3 py-1.5 bg-background text-foreground/90 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-border dark:border-gray-600 shadow-sm"
  >
  <option value="today">{t('bugun')}</option>
@@ -1874,7 +1971,7 @@ export default function OrdersPage() {
  checkedItems={checkedItems[selectedOrder.id] || {}}
  dateLocale={dateLocale}
  onUpdateOrderStatus={updateOrderStatus}
- onToggleItemChecked={toggleItemChecked}
+ onToggleItemChecked={updateCheckedItem}
  printerSettings={printerSettings}
  printingOrderId={printingOrderId}
  onPrint={handlePrintOrder}

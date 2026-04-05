@@ -63,15 +63,33 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     super.dispose();
   }
 
+import 'package:lokma_app/providers/kermes_category_provider.dart';
+
   /// Menu verilerinden tum kategorileri cikart
   List<String> get _categories {
-    final cats = <String>{'Tumu'};
+    final cats = <String>{};
     for (final item in widget.event.menu) {
       if (item.category != null && item.category!.isNotEmpty) {
         cats.add(item.category!);
       }
     }
-    return cats.toList();
+
+    final categoriesAsync = ref.read(kermesCategoryProvider);
+    final sortOrder = categoriesAsync.maybeWhen(
+      data: (c) => c.map((e) => e.name).toList(),
+      orElse: () => const <String>[],
+    );
+
+    final sorted = cats.toList();
+    if (sortOrder.isNotEmpty) {
+      sorted.sort((a, b) {
+        final iA = sortOrder.indexOf(a);
+        final iB = sortOrder.indexOf(b);
+        return (iA == -1 ? 999 : iA).compareTo(iB == -1 ? 999 : iB);
+      });
+    }
+
+    return ['Tumu', ...sorted];
   }
 
   /// Filtrelenmis menu itemlari
@@ -266,6 +284,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(kermesCategoryProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTablet = MediaQuery.of(context).size.width > 768;
     final screenWidth = MediaQuery.of(context).size.width;

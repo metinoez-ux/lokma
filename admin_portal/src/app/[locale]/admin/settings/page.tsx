@@ -64,7 +64,20 @@ export default function SettingsPage() {
  <span className="ml-auto text-muted-foreground group-hover:text-muted-foreground transition text-xl">→</span>
  </Link>
 
-
+ {/* Kermes Kategorileri */}
+ <Link
+ href="/admin/settings/kermes-categories"
+ className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-indigo-600 hover:bg-indigo-950/20 transition-all group"
+ >
+ <div className="w-12 h-12 rounded-xl bg-indigo-900/50 flex items-center justify-center text-2xl group-hover:bg-indigo-800/50 transition">
+ 🏷️
+ </div>
+ <div>
+ <h3 className="font-bold text-foreground group-hover:text-indigo-300 transition">Kategori Yönetimi</h3>
+ <p className="text-xs text-muted-foreground/80">Menüler için evrensel kategoriler</p>
+ </div>
+ <span className="ml-auto text-muted-foreground group-hover:text-indigo-400 transition text-xl">→</span>
+ </Link>
 
  {/* Teslimat */}
  <Link

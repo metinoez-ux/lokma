@@ -20,6 +20,7 @@ interface SectionDef {
  genderRestriction: string;
  prepZones?: string[];
  tezgahlar?: string[];
+ hasDineIn?: boolean;
 }
 
 interface GenderTypeConfig {
@@ -375,15 +376,29 @@ export default function TableManagementPanel({
   return (
   <div key={idx} className={`rounded-xl border ${gd.color} overflow-hidden`}>
    {/* Section header */}
-   <div className="flex items-center justify-between px-4 py-3">
+   <div className="flex items-center justify-between px-4 py-3 flex-wrap gap-2">
    <div className="flex items-center gap-2">
     <span className="font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center bg-black/20">{gd.icon}</span>
     <span className="text-white font-semibold">{section}</span>
-    <span className="text-gray-300 text-xs font-normal">
+    <span className="text-gray-300 text-xs font-normal min-w-[60px]">
     ({sectionTables.length} Masa)
     </span>
    </div>
-   <div className="flex items-center gap-2">
+   <div className="flex items-center gap-2 ml-auto">
+    {/* Masa Servisi (QR) Aç/Kapat Toggle */}
+    <div className="flex items-center gap-1.5 mr-2" title="Bu bölümde Masa Servisi (QR) açık olsun mu?">
+      <span className="text-[10px] text-gray-300 font-medium">Masa Servisi</span>
+      <button
+        onClick={() => {
+          const newDefs = sectionDefs.map(d => d.name === section ? { ...d, hasDineIn: d.hasDineIn === false ? true : false } : d);
+          setSectionDefs(newDefs);
+          updateAndSave(undefined, undefined, undefined, undefined, newDefs);
+        }}
+        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${def?.hasDineIn !== false ? 'bg-amber-500' : 'bg-gray-600'}`}
+      >
+        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${def?.hasDineIn !== false ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+      </button>
+    </div>
     {/* Tek masa ekle */}
     <button
     onClick={() => addSingleTable(section)}

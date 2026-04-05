@@ -149,19 +149,58 @@ export default function OrderCard({
  )}
  </div>
  )}
- <div className="flex items-center justify-between">
- <span className="text-green-800 dark:text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
- <div className="flex items-center gap-2">
- {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
- <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${checkedCount >= itemCount ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
- ✓{checkedCount}/{itemCount}
- </span>
- )}
- <span className="text-muted-foreground text-xs">
- {order.createdAt ? (typeof order.createdAt.toDate === 'function' ? order.createdAt.toDate() : new Date((order.createdAt as any))).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' }) : ''}
- </span>
- </div>
- </div>
+  {/* PrepZone Progress Badges */}
+  {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted' || order.status === 'ready') && (
+    <div className="flex items-center flex-wrap gap-1.5 mt-2 mb-2 pb-2 pt-1 border-t border-border/50">
+      {(() => {
+        const prepZoneGroups: Record<string, { total: number; checked: number }> = {};
+        
+        order.items?.forEach((item: any, idx) => {
+          const isChecked = checked[idx] || false;
+          const zones = Array.isArray(item.prepZone) 
+            ? item.prepZone 
+            : (item.prepZone ? [item.prepZone] : ['Standart']);
+          
+          if (zones.length === 0) zones.push('Standart');
+          
+          zones.forEach((z: string) => {
+            const zoneStr = z || 'Standart';
+            if (!prepZoneGroups[zoneStr]) {
+              prepZoneGroups[zoneStr] = { total: 0, checked: 0 };
+            }
+            prepZoneGroups[zoneStr].total += 1;
+            if (isChecked) {
+              prepZoneGroups[zoneStr].checked += 1;
+            }
+          });
+        });
+
+        const numZones = Object.keys(prepZoneGroups).length;
+
+        return Object.entries(prepZoneGroups).map(([zone, stats]) => {
+          const isCompleted = stats.total > 0 && stats.checked >= stats.total;
+          const badgeClass = isCompleted 
+            ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/50' 
+            : 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50';
+          
+          return (
+            <span key={zone} title={zone} className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-md font-bold whitespace-nowrap shadow-sm ${badgeClass}`}>
+               {numZones > 1 ? `${zone.substring(0, 10)}${zone.length > 10 ? '.' : ''}: ` : ''}✓{stats.checked}/{stats.total}
+            </span>
+          );
+        });
+      })()}
+    </div>
+  )}
+
+  <div className="flex items-center justify-between">
+  <span className="text-green-800 dark:text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
+  <div className="flex items-center gap-2">
+  <span className="text-muted-foreground text-xs">
+  {order.createdAt ? (typeof order.createdAt.toDate === 'function' ? order.createdAt.toDate() : new Date((order.createdAt as any))).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' }) : ''}
+  </span>
+  </div>
+  </div>
  </button>
  );
 }

@@ -204,6 +204,7 @@ export default function BenutzerverwaltungPage() {
  if (data.adminType === 'kermes_admin') rolesList.push('kermes_admin');
  if (data.adminType === 'driver' || (data.roles && data.roles.includes('driver')) || data.isDriver) rolesList.push('driver');
  if (data.roles && data.roles.includes('staff')) rolesList.push('staff');
+ if (data.roles && data.roles.includes('customer')) rolesList.push('customer');
  // fallback
  if (rolesList.length === 0) rolesList.push('staff');
 
@@ -338,9 +339,9 @@ export default function BenutzerverwaltungPage() {
  let pr = 'staff';
  if (user.roles.includes('super')) pr = 'super';
  else if (user.roles.includes('lokma_admin')) pr = 'lokma_admin';
- else if (user.roles.includes('business_admin')) pr = 'business_admin';
- else if (user.roles.includes('driver_business')) pr = 'staff';
- else if (user.roles.includes('driver_lokma')) pr = 'staff';
+ else if (user.roles.includes('business_admin') || user.roles.includes('kermes_admin')) pr = 'business_admin';
+ else if (user.roles.includes('customer')) pr = 'customer';
+ else if (user.roles.includes('driver_business') || user.roles.includes('driver_lokma')) pr = 'staff';
  
  setEditRole(pr);
  setSelectedUser(user);
@@ -573,15 +574,30 @@ export default function BenutzerverwaltungPage() {
  setAddingUser(false);
  }
  };
-
- const handleSaveUser = async () => {
+const handleSaveUser = async () => {
  if (!selectedUser) return;
  setSavingModal(true);
  try {
- let finalRoles = [...editRoles];
- if (isDriver && !finalRoles.includes('driver')) finalRoles.push('driver');
- if (!isDriver) finalRoles = finalRoles.filter(r => r !== 'driver');
+  let finalRoles = [...editRoles];
+  finalRoles = finalRoles.filter(r => !['super', 'staff', 'business_admin', 'lokma_admin', 'kermes_admin', 'customer'].includes(r));
+  if (editRole === 'super') finalRoles.push('super');
+  else if (editRole === 'staff') finalRoles.push('staff');
+  else if (editRole === 'customer') finalRoles.push('customer');
+  else if (editRole === 'business_admin') {
+   const k = kermesEvents.find(ke => ke.id === editBusinessId);
+   if (k) finalRoles.push('kermes_admin');
+   else finalRoles.push('lokma_admin');
+  }
+
+  if (isDriver && !finalRoles.includes('driver')) finalRoles.push('driver');
+  if (!isDriver) finalRoles = finalRoles.filter(r => r !== 'driver');
  
+  // Add roles from assignments
+  editAssignments.forEach(a => {
+    if (a.role && !finalRoles.includes(a.role)) {
+      finalRoles.push(a.role);
+    }
+  });
  const assignedBusinessNames = businesses.filter(b => selectedBusinessIds.includes(b.id)).map(b => b.name);
  const assignedKermesNames = kermesEvents.filter(k => selectedKermesIds.includes(k.id)).map(k => k.name);
  
@@ -596,8 +612,11 @@ export default function BenutzerverwaltungPage() {
  : null;
  
  // If user has kermes assignments, ensure they get an admins doc
- const kermesAssignmentIds = editAssignments.filter(a => a.entityType === 'kermes').map(a => a.id);
+ const kermesAssignmentIds = editAssignments.filter(a => a.entityType === 'kermes' || (a as any).type === 'kermes').map(a => a.id);
  const hasKermesAssignment = kermesAssignmentIds.length > 0;
+ if (editAssignments.length > 0 && !currentAdminType) {
+ currentAdminType = 'staff';
+ };
  if (hasKermesAssignment && !currentAdminType) {
  currentAdminType = 'staff';
  }
@@ -888,7 +907,7 @@ export default function BenutzerverwaltungPage() {
  🏪 Lokma #{user.businessId.slice(0,4)}
  </span>
  )}
- {(user.kermesId && user.kermesId !== 'NONE') || (user.kermesAssignments && user.kermesAssignments.length > 0) ? (
+ {(user.kermesId && user.kermesId !== 'NONE') || (user.kermesAssignments && user.kermesAssignments.length > 0) || (user.assignments && user.assignments.some((a: any) => a.entityType === 'kermes')) ? (
  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-current/20">
  Kermes Staff
  </span>
@@ -1125,17 +1144,23 @@ export default function BenutzerverwaltungPage() {
  <label className="block text-sm font-medium text-foreground mb-1">{t('rol') || 'Rol'} *</label>
  <select
  value={editRole}
- onChange={(e) => { setEditRole(e.target.value); setEditBusinessId(''); }}
+ onChange={(e) => {
+    const val = e.target.value;
+    setEditRole(val); 
+    // We intentionally removed setEditAssignments([]) here so changing to Customer 
+    // does not clear the Kermes staff assignments!
+   }}
  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
  disabled={!isSuperAdmin && editRole === 'super'}
  >
  {isSuperAdmin && <option value="super">{t('super_admin') || 'Super Admin'}</option>}
  <option value="staff">{t('personel') || 'Personel'}</option>
  <option value="business_admin">{t('i_sletme_admin') || 'İşletme Admin (Lokma/Kermes vb.)'}</option>
+ <option value="customer">{"Normal Kullanıcı / Müşteri (Kunde)"}</option>
  </select>
  </div>
 
- {(editRole === 'staff' || editRole === 'business_admin') && isSuperAdmin && (
+ {isSuperAdmin && (
  <WorkspaceAssignmentsList
  assignments={editAssignments}
  onChange={setEditAssignments}
@@ -1556,7 +1581,7 @@ export default function BenutzerverwaltungPage() {
  </select>
  </div>
 
- {(newUserData.role === 'staff' || newUserData.role === 'business_admin') && isSuperAdmin && (
+ {isSuperAdmin && (
  <WorkspaceAssignmentsList
  assignments={newUserAssignments}
  onChange={setNewUserAssignments}

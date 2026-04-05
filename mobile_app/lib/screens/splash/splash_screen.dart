@@ -56,29 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (_) {}
 
-    // Phase 1: Show whole O for 1.5 seconds
-    await Future.delayed(const Duration(milliseconds: 1500));
-
-    // Phase 2: Switch to bitten O + play bite sound once per day
-    if (mounted) {
-      setState(() => _showBitten = true);
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final now = DateTime.now();
-        final todayStr = '${now.year}-${now.month}-${now.day}';
-        final lastPlayedDate = prefs.getString('last_bite_sound_date');
-
-        if (lastPlayedDate != todayStr) {
-          await _audioPlayer.play(AssetSource('sounds/bite_crunch.mp3'));
-          await prefs.setString('last_bite_sound_date', todayStr);
-        }
-      } catch (_) {}
-    }
-
-    // Hold bitten O for 2 seconds
-    await Future.delayed(const Duration(milliseconds: 2000));
-
-    // Navigate to app
+    // Navigate to app instantly
     if (mounted) {
       final prefs = await SharedPreferences.getInstance();
       final hasSeenOnboarding = prefs.getBool('onboarding_seen') ?? false;
@@ -98,15 +76,25 @@ class _SplashScreenState extends State<SplashScreen> {
         fit: StackFit.expand,
         children: [
           // Bottom layer: whole O (always visible)
-          Image.asset(
-            'assets/images/lokma_splash_whole.png',
-            fit: BoxFit.cover,
+          Center(
+            child: FractionallySizedBox(
+              widthFactor: 0.6,
+              child: Image.asset(
+                'assets/images/lokma_splash_whole.png',
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
           // Top layer: bitten O (appears on top, instant switch)
           if (_showBitten)
-            Image.asset(
-              'assets/images/lokma_splash_bitten.png',
-              fit: BoxFit.cover,
+            Center(
+              child: FractionallySizedBox(
+                widthFactor: 0.6,
+                child: Image.asset(
+                  'assets/images/lokma_splash_bitten.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
         ],
       ),

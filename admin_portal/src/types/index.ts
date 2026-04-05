@@ -747,9 +747,26 @@ export interface BusinessPlanState {
 export type AdminRole = 'super_admin' | 'admin' | 'sub_admin' | 'hotline';
 
 export type AdminType =
- | 'super'
- | 'admin'
- | 'staff';
+  | 'super'
+  | 'admin'
+  | 'staff'
+  | 'kermes'
+  | 'kermes_staff'
+  | 'cenaze_fonu'
+  | 'restoran'
+  | 'restoran_staff'
+  | 'mutfak'
+  | 'garson'
+  | 'teslimat'
+  | 'kasap'
+  | 'kasap_staff'
+  | 'bakkal'
+  | 'market'
+  | 'market_staff'
+  | 'hali_yikama'
+  | 'hali_surucu'
+  | 'transfer_surucu'
+  | 'tur_rehberi';
 
 export interface Admin {
  id: string;

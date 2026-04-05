@@ -15,6 +15,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { normalizeTimeString } from '@/utils/timeUtils';
 import { getLocalizedText } from '@/lib/utils';
 import TableManagementPanel from '@/components/TableManagementPanel';
+import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
 
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
 interface KermesFeature {
@@ -457,22 +458,10 @@ export default function KermesDetailPage() {
  router.push('/admin/business');
  return;
  }
- const data = { id: kermesDoc.id, ...kermesDoc.data() } as KermesEvent;
- setKermes(data);
+      const data = { id: kermesDoc.id, ...kermesDoc.data() } as KermesEvent;
+      setKermes(data);
 
- // Dinamik kategorileri yükle
- if (data.customCategories && Array.isArray(data.customCategories) && data.customCategories.length > 0) {
- const localizedCustomCats = data.customCategories.map((c: any) => typeof c === "object" ? getLocalizedText(c, locale) : String(c));
-        setCategories(prev => {
-          const merged = [...prev];
-          localizedCustomCats.forEach((c: string) => {
-            if (!merged.includes(c)) merged.push(c);
-          });
-          return merged;
-        });
- }
-
- const startD = data.date?.toDate?.() || data.startDate?.toDate?.() || null;
+      const startD = data.date?.toDate?.() || data.startDate?.toDate?.() || null;
  const endD = data.endDate?.toDate?.() || null;
  setEditForm({
  // Temel bilgiler
@@ -586,44 +575,35 @@ export default function KermesDetailPage() {
  setLoadingMaster(false);
  }
  };
-
- // Global kategorileri Firebase'den yükle
- const loadCategories = useCallback(async () => {
- try {
- const q = query(collection(db, 'kermes_categories'), orderBy('order'));
- const snapshot = await getDocs(q);
- const firebaseCats = snapshot.docs.map(d => {
-        const name = d.data().name;
-        return typeof name === "object" ? getLocalizedText(name, locale) : String(name || "");
-      });
-
- // Default kategorileri Firebase'dekilerle birleştir
- const allCats = [...DEFAULT_CATEGORIES];
- firebaseCats.forEach(cat => {
- if (!allCats.includes(cat)) {
- allCats.push(cat);
- }
- });
- setCategories(prev => {
-        const cats = [...prev];
-        allCats.forEach(c => { if (!cats.includes(c)) cats.push(c); });
-        return cats;
-      });
-
- // Eğer Firebase'de kategori yoksa, default'ları kaydet
- if (snapshot.empty) {
- for (let i = 0; i < DEFAULT_CATEGORIES.length; i++) {
- const catName = DEFAULT_CATEGORIES[i];
- const categoryId = catName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_ğüşöçı]/g, '');
- await setDoc(doc(db, 'kermes_categories', categoryId), {
- name: catName, id: categoryId, order: i, createdAt: new Date(),
- });
- }
- }
- } catch (error) {
- console.error('Error loading categories:', error);
- }
- }, []);
+  // Global kategorileri Firebase'den yükle
+  const loadCategories = useCallback(async () => {
+    try {
+      const q = query(collection(db, 'kermes_categories'), orderBy('order'));
+      const snapshot = await getDocs(q);
+      
+      let finalCats = [];
+      if (snapshot.empty) {
+        // Eğer Firebase'de kategori yoksa, default'ları kaydet ve göster
+        finalCats = [...DEFAULT_CATEGORIES];
+        for (let i = 0; i < DEFAULT_CATEGORIES.length; i++) {
+          const catName = DEFAULT_CATEGORIES[i];
+          const categoryId = catName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_ğüşöçı]/g, '');
+          await setDoc(doc(db, 'kermes_categories', categoryId), {
+            name: catName, id: categoryId, order: i, createdAt: new Date(),
+          });
+        }
+      } else {
+        // Firebase'den gelen kategorileri çevirileriyle beraber al
+        finalCats = snapshot.docs.map(d => {
+          const name = d.data().name;
+          return typeof name === "object" ? getLocalizedText(name, locale) : String(name || "");
+        });
+      }
+      setCategories(finalCats);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  }, [locale]);
 
  useEffect(() => { loadKermes(); loadCategories(); }, [loadKermes, loadCategories]);
 
@@ -1692,6 +1672,12 @@ export default function KermesDetailPage() {
  </div>
  </div>
  <div className="flex items-center gap-2">
+ <Link 
+ href="/admin/orders" 
+ className="px-4 py-2 mr-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg shadow-sm font-bold text-sm flex items-center gap-2 transform transition hover:scale-105"
+ >
+ 🍳 Mutfak & Expo (KDS)
+ </Link>
  {kermes.sponsor === 'tuna' && <span className="px-2 py-1 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">🐟 TUNA</span>}
  {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-amber-600/30 text-amber-800 dark:text-amber-400 rounded text-xs">🏔️ TOROS</span>}
  <button onClick={toggleActiveStatus}
@@ -3154,7 +3140,8 @@ export default function KermesDetailPage() {
         const newName = prompt('Yeni istasyon ismi:', zone);
         if (!newName || newName.trim() === '' || newName.trim() === zone) return;
         const trimmed = newName.trim();
-        if (prepZones.includes(trimmed)) { showToast('Bu isim zaten kullaniliyor', 'error'); return; }
+        const allZones = kermesSectionDefs.flatMap((d: any) => d.prepZones || []);
+        if (allZones.includes(trimmed)) { showToast('Bu isim baska bir bolumde zaten var. Lutfen "Grill E" veya "Grill K" gibi benzersiz bir isim girin.', 'error'); return; }
         const newDefs = kermesSectionDefs.map((d: any) => d.name === section.name ? { ...d, prepZones: (d.prepZones || []).map((z: string) => z === zone ? trimmed : z) } : d);
         setKermesSectionDefs(newDefs);
         const newAssigns = { ...prepZoneAssignments };
@@ -3249,14 +3236,15 @@ export default function KermesDetailPage() {
     <div className="bg-orange-500/5 border border-orange-500/15 rounded-lg p-3">
     <p className="text-xs font-semibold text-orange-400/80 mb-2">+ Yeni PrepZone Ekle</p>
     <div className="flex gap-1.5">
-    <input type="text" placeholder={`Orn: P${prepZones.length + 1}`}
+    <input type="text" placeholder={`Orn: P${kermesSectionDefs.flatMap(d => d.prepZones || []).length + 1}`}
     className="flex-1 bg-background text-foreground text-xs px-2 py-1.5 rounded-md border border-input focus:border-orange-500 focus:outline-none"
     id={`pz-mutfak-input-${section.name.replace(/\s/g, '_')}`}
     onKeyDown={async (e) => {
     if (e.key === 'Enter') {
      const val = (e.target as HTMLInputElement).value.trim();
-     const newName = val || `P${prepZones.length + 1}`;
-     if (prepZones.includes(newName)) { showToast("Bu PrepZone zaten mevcut", "error"); return; }
+     const allZones = kermesSectionDefs.flatMap(d => d.prepZones || []);
+     const newName = val || `P${allZones.length + 1}`;
+     if (allZones.includes(newName)) { showToast("Bu isim baska bir bolumde zaten var. Lutfen 'Grill E' gibi benzersiz bir isim secin.", "error"); return; }
      const newDefs = kermesSectionDefs.map(d => d.name === section.name ? { ...d, prepZones: [...(d.prepZones || []), newName] } : d);
      setKermesSectionDefs(newDefs);
      try {
@@ -3269,8 +3257,9 @@ export default function KermesDetailPage() {
     <button onClick={async () => {
     const input = document.getElementById(`pz-mutfak-input-${section.name.replace(/\s/g, '_')}`) as HTMLInputElement;
     const val = input?.value.trim();
-    const newName = val || `P${prepZones.length + 1}`;
-    if (prepZones.includes(newName)) { showToast("Bu PrepZone zaten mevcut", "error"); return; }
+    const allZones = kermesSectionDefs.flatMap(d => d.prepZones || []);
+    const newName = val || `P${allZones.length + 1}`;
+    if (allZones.includes(newName)) { showToast("Bu isim baska bir bolumde zaten var. Lutfen 'Grill E' gibi benzersiz bir isim secin.", "error"); return; }
     const newDefs = kermesSectionDefs.map(d => d.name === section.name ? { ...d, prepZones: [...(d.prepZones || []), newName] } : d);
     setKermesSectionDefs(newDefs);
     try {
@@ -3535,26 +3524,14 @@ export default function KermesDetailPage() {
  )}
  </div>
 
- {/* Category Modal */}
- {showCategoryModal && (
- <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
- <div className="bg-card rounded-2xl w-full max-w-md p-6">
- <h2 className="text-lg font-bold text-foreground mb-4">{t('yeni_kategori_ekle')}</h2>
- <input
- type="text"
- value={newCategoryName}
- onChange={(e) => setNewCategoryName(e.target.value)}
- placeholder={t('kategori_adi_orn_salata')}
- className="w-full px-4 py-3 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow mb-4"
- autoFocus
- />
- <div className="flex gap-2">
- <button onClick={() => setShowCategoryModal(false)} className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg">{t('cancel_btn')}</button>
- <button onClick={handleAddCategory} disabled={!newCategoryName.trim()} className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50">{t('ekle')}</button>
- </div>
- </div>
- </div>
- )}
+  {/* Category Modal */}
+  {showCategoryModal && (
+    <CategoryManagementModal 
+      onClose={() => setShowCategoryModal(false)}
+      onCategoriesUpdated={loadCategories}
+      locale={locale}
+    />
+  )}
 
  {/* Add Product Modal */}
  {showAddModal && (

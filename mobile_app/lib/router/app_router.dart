@@ -215,6 +215,22 @@ class AppRouter {
             return '/kasap/$id?mode=masa&table=$table';
           },
         ),
+        // KERMES DINE-IN DEEP LINK:
+        GoRoute(
+          path: '/kermes-dinein/:kermesId/table/:tableNum',
+          redirect: (context, state) {
+            final id = state.pathParameters['kermesId']!;
+            final table = state.pathParameters['tableNum']!;
+            final queryParams = state.uri.queryParameters;
+            
+            // Build the redirect URL
+            final buffer = StringBuffer('/kermesler/$id?table=$table');
+            if (queryParams.containsKey('section')) {
+              buffer.write('&section=${queryParams['section']}');
+            }
+            return buffer.toString();
+          },
+        ),
         // BACKWARD COMPATIBILITY ALIASES: Redirect to primary Turkish route
         GoRoute(
           path: '/butcher/:id',

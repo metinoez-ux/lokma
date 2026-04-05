@@ -14,6 +14,11 @@ import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import 'package:lokma_app/widgets/kermes/group_order_share_sheet.dart';
 import '../../utils/currency_utils.dart';
+import '../../widgets/qr_scanner_screen.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 
 /// Unified Checkout Sheet - Tüm sipariş akışı tek bir tam ekran bottom sheet'te
 class KermesCheckoutSheet extends ConsumerStatefulWidget {
@@ -38,31 +43,24 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   // Form degerleri
   bool _isGroupOrder = false; // Step 2: Bireysel/Ailecek
-  late DeliveryType _deliveryType; // Step 3: Teslimat
+  DeliveryType? _deliveryType; // Step 3: Teslimat
   PaymentMethodType _paymentMethod = PaymentMethodType.cash; // Step 5: Odeme
   String? _selectedSectionId; // Step 1: Bolum Secimi (kadin_bolumu, erkek_bolumu, aile_bolumu)
+  bool _showManualSectionSelection = false;
+  
+  // Kişisel bilgiler
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _tableController = TextEditingController();
+  String _completePhoneNumber = '';
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialDeliveryMode != null) {
-      if (widget.initialDeliveryMode == 0) {
-        _deliveryType = DeliveryType.kurye;
-      } else if (widget.initialDeliveryMode == 1) {
-        _deliveryType = DeliveryType.gelAl;
-      } else if (widget.initialDeliveryMode == 2) {
-        _deliveryType = DeliveryType.masada;
-      } else {
-        _deliveryType = DeliveryType.gelAl;
-      }
-    } else if (widget.event.hasTakeaway) {
-      _deliveryType = DeliveryType.gelAl;
-    } else if (widget.event.hasDineIn) {
+    if (widget.initialTableNumber != null) {
       _deliveryType = DeliveryType.masada;
-    } else if (widget.event.hasDelivery) {
-      _deliveryType = DeliveryType.kurye;
     } else {
-      _deliveryType = DeliveryType.gelAl;
+      _deliveryType = null;
     }
     
     if (widget.initialTableNumber != null) {
@@ -77,12 +75,39 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     if (_selectedSectionId == null && widget.event.sectionDefs.length == 1) {
       _selectedSectionId = widget.event.sectionDefs.first.id;
     }
+    
+    // Autofill user info if logged in or has guest profile
+    _prefillUserInfo();
   }
   
-  // Kişisel bilgiler
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _tableController = TextEditingController();
+  Future<void> _prefillUserInfo() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (user.displayName != null && user.displayName!.isNotEmpty) {
+        _nameController.text = user.displayName!;
+      }
+      if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) {
+        _phoneController.text = user.phoneNumber!;
+        _completePhoneNumber = user.phoneNumber!;
+      } else {
+        // Fetch from firestore if phone not in auth object
+        try {
+          final db = FirebaseFirestore.instance;
+          final doc = await db.collection('users').doc(user.uid).get();
+          if (doc.exists) {
+            final data = doc.data()!;
+            if (_nameController.text.isEmpty && data['name'] != null) {
+              _nameController.text = data['name'];
+            }
+            if (_phoneController.text.isEmpty && data['phone'] != null) {
+              _phoneController.text = data['phone'];
+              _completePhoneNumber = data['phone'];
+            }
+          }
+        } catch (_) {}
+      }
+    }
+  }
   
   // Loading state
   bool _isSubmitting = false;
@@ -173,32 +198,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   bool get _isKermesFuture => DateTime.now().isBefore(widget.event.startDate);
-  /// Toplam adim sayisi (bolum secimi step'i dahil/haric)
-  int get _totalSteps => _shouldShowSectionStep ? 6 : 5;
-
-  /// Bolum secimi step'i gosterilmeli mi?
-  bool get _shouldShowSectionStep {
-    // QR masadan gelen siparis: otomatik atandiysa gosterme
-    if (widget.initialTableNumber != null && _selectedSectionId != null) return false;
-    // Tek bolum varsa gosterme
-    if (widget.event.sectionDefs.length <= 1) return false;
-    // Bolum tanimli degilse gosterme
-    if (widget.event.sectionDefs.isEmpty) return false;
-    return true;
-  }
+  /// Toplam adim sayisi
+  int get _totalSteps => 5;
 
   /// Adim baslik listesi
   List<String> get _stepTitles {
-    if (_shouldShowSectionStep) {
-      return [
-        'Sepetim',
-        'Bolum',
-        'Siparis Turu',
-        'Teslimat',
-        'Bilgileriniz',
-        'Odeme',
-      ];
-    }
     return [
       'Sepetim',
       'Siparis Turu',
@@ -214,16 +218,29 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     switch (effectiveStep) {
       case 'cart':
         return ref.read(kermesCartProvider).isNotEmpty;
-      case 'section':
-        return _selectedSectionId != null;
       case 'orderType':
         return true;
       case 'delivery':
+        if (_deliveryType == null) return false;
+        if (_deliveryType == DeliveryType.kurye) return true;
+        if (widget.event.sectionDefs.length <= 1) return true;
+        
+        if (_deliveryType == DeliveryType.gelAl) {
+          return _selectedSectionId != null;
+        }
+        
+        if (_deliveryType == DeliveryType.masada) {
+          return _selectedSectionId != null;
+        }
         return true;
       case 'info':
         if (!_isKermesActive) return false;
-        return _nameController.text.trim().isNotEmpty && 
-               _phoneController.text.trim().isNotEmpty;
+        bool isInfoOk = _nameController.text.trim().isNotEmpty && 
+               (_phoneController.text.trim().isNotEmpty || _completePhoneNumber.isNotEmpty);
+        if (_deliveryType == DeliveryType.masada) {
+          isInfoOk = isInfoOk && _tableController.text.trim().isNotEmpty;
+        }
+        return isInfoOk;
       case 'payment':
         return true;
       default:
@@ -233,25 +250,13 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
   /// Step index -> mantiksal adim adi
   String _getEffectiveStep(int step) {
-    if (_shouldShowSectionStep) {
-      switch (step) {
-        case 0: return 'cart';
-        case 1: return 'section';
-        case 2: return 'orderType';
-        case 3: return 'delivery';
-        case 4: return 'info';
-        case 5: return 'payment';
-        default: return 'cart';
-      }
-    } else {
-      switch (step) {
-        case 0: return 'cart';
-        case 1: return 'orderType';
-        case 2: return 'delivery';
-        case 3: return 'info';
-        case 4: return 'payment';
-        default: return 'cart';
-      }
+    switch (step) {
+      case 0: return 'cart';
+      case 1: return 'orderType';
+      case 2: return 'delivery';
+      case 3: return 'info';
+      case 4: return 'payment';
+      default: return 'cart';
     }
   }
   
@@ -437,8 +442,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         kermesName: widget.event.city,
         userId: guestProfile?.id,
         customerName: _nameController.text.trim(),
-        customerPhone: _phoneController.text.trim(),
-        deliveryType: _deliveryType,
+        customerPhone: _completePhoneNumber.isNotEmpty ? _completePhoneNumber : _phoneController.text.trim(),
+        deliveryType: _deliveryType ?? DeliveryType.gelAl,
         tableNumber: _tableController.text.isNotEmpty ? _tableController.text : null,
         address: null,
         items: orderItems,
@@ -664,8 +669,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     switch (effectiveStep) {
       case 'cart':
         return _buildCartStep();
-      case 'section':
-        return _buildSectionSelectionStep();
       case 'orderType':
         return _buildOrderTypeStep();
       case 'delivery':
@@ -677,143 +680,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       default:
         return const SizedBox.shrink();
     }
-  }
-  
-  /// Step: Bolum Secimi (Kadin / Erkek / Aile)
-  Widget _buildSectionSelectionStep() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
-    final sections = widget.event.sectionDefs;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Yemeklerinizi hangi bolumden almak istersiniz?',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Siparisleriniz sectiginiz bolumun tezgahina yonlendirilecektir.',
-            style: TextStyle(
-              fontSize: 13,
-              color: subtleTextColor,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ...sections.map((section) {
-            final isSelected = _selectedSectionId == section.id;
-            // Ikon secimi
-            IconData sectionIcon;
-            if (section.gender == 'female') {
-              sectionIcon = Icons.woman;
-            } else if (section.gender == 'male') {
-              sectionIcon = Icons.man;
-            } else {
-              sectionIcon = Icons.family_restroom;
-            }
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedSectionId = section.id);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? lokmaPink.withOpacity(0.1)
-                        : _cardBg(isDark),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected ? lokmaPink : Colors.transparent,
-                      width: 2,
-                    ),
-                    boxShadow: isSelected
-                        ? [BoxShadow(
-                            color: lokmaPink.withOpacity(0.15),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          )]
-                        : null,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? lokmaPink.withOpacity(0.15)
-                              : isDark ? Colors.grey[800] : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          sectionIcon,
-                          color: isSelected ? lokmaPink : subtleTextColor,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              section.name,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected ? lokmaPink : textColor,
-                              ),
-                            ),
-                            if (section.prepZones.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                section.prepZones.join(' / '),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: subtleTextColor,
-                                ),
-                              ),
-                            ],
-                            // Aile bolumu notu
-                            if (section.gender == 'mixed') ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                'Erkek garson servisi',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark ? Colors.orange[300] : Colors.orange[700],
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      if (isSelected)
-                        Icon(Icons.check_circle, color: lokmaPink, size: 24),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ],
-      ),
-    );
   }
 
   /// Step 0: Sepet ozeti
@@ -1220,6 +1086,103 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     );
   }
   
+  Widget _buildSectionSelector({required bool includeFamily}) {
+    // QR masadan gelen siparis: otomatik atandiysa gosterme
+    if (widget.initialTableNumber != null && _selectedSectionId != null) return const SizedBox.shrink();
+    if (widget.event.sectionDefs.length <= 1) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+
+    final sections = widget.event.sectionDefs.where(
+      (s) {
+        if (!includeFamily && s.gender == 'mixed') return false;
+        if (_deliveryType == DeliveryType.masada && !s.hasDineIn) return false;
+        return true;
+      }
+    ).toList();
+
+    if (sections.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg(isDark),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: lokmaPink.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hangi bölümden almak istersiniz?',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...sections.map((section) {
+            final isSelected = _selectedSectionId == section.id;
+            IconData sectionIcon;
+            if (section.gender == 'female') {
+              sectionIcon = Icons.woman;
+            } else if (section.gender == 'male') {
+              sectionIcon = Icons.man;
+            } else {
+              sectionIcon = Icons.family_restroom;
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _selectedSectionId = section.id;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? lokmaPink.withOpacity(0.1) : (isDark ? Colors.grey[800] : Colors.grey[100]),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? lokmaPink : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(sectionIcon, color: isSelected ? lokmaPink : subtleTextColor, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          section.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                            color: isSelected ? lokmaPink : textColor,
+                          ),
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(Icons.check_circle, color: lokmaPink, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
   /// Step 2: Teslimat Türü
   Widget _buildDeliveryStep() {
     return SingleChildScrollView(
@@ -1247,6 +1210,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 ? () => setState(() => _deliveryType = DeliveryType.gelAl)
                 : null,
           ),
+          if (_deliveryType == DeliveryType.gelAl) _buildSectionSelector(includeFamily: false),
           const SizedBox(height: 12),
           
           // Masada
@@ -1263,6 +1227,46 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 ? () => setState(() => _deliveryType = DeliveryType.masada)
                 : null,
           ),
+          if (_deliveryType == DeliveryType.masada) ...[
+            if (_selectedSectionId != null && _tableController.text.isNotEmpty)
+              Container(
+                 margin: const EdgeInsets.symmetric(vertical: 8),
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.green.withOpacity(0.3))),
+                 child: Row(children: [
+                   const Icon(Icons.check_circle, color: Colors.green), const SizedBox(width: 8),
+                   Expanded(child: Text("${widget.event.sectionDefs.firstWhere((s) => s.id == _selectedSectionId, orElse: () => widget.event.sectionDefs.first).name} - Masa ${_tableController.text}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                   TextButton(onPressed: () => setState(() { _tableController.clear(); _selectedSectionId = null; }), child: Text("Değiştir", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)))
+                 ])
+              )
+            else ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _scanTableQR,
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: const Text('Masa QR Kodunu Okut'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (!_showManualSectionSelection)
+                Center(
+                  child: TextButton(
+                    onPressed: () => setState(() => _showManualSectionSelection = true),
+                    child: const Text('Masada QR kod yok mu? Bölüm seçerek devam et', style: TextStyle(color: Colors.grey)),
+                  ),
+                ),
+              if (_showManualSectionSelection)
+                _buildSectionSelector(includeFamily: true),
+            ],
+          ],
           const SizedBox(height: 12),
           
           // Kurye
@@ -1284,8 +1288,48 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     );
   }
   
+  /// QR Okutma
+  Future<void> _scanTableQR() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const QRScannerScreen(
+          prompt: 'Masadaki QR Kodu Okutun',
+        ),
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty) {
+      try {
+        final uri = Uri.parse(result);
+        if (uri.pathSegments.contains('table')) {
+          final tableIndex = uri.pathSegments.indexOf('table');
+          if (tableIndex + 1 < uri.pathSegments.length) {
+            final tableLabel = uri.pathSegments[tableIndex + 1];
+            final section = uri.queryParameters['section'];
+            setState(() {
+              _tableController.text = tableLabel;
+              if (section != null && section.isNotEmpty) {
+                 final matchingSection = widget.event.sectionDefs.where(
+                    (s) => s.name == section || s.id == section
+                 ).firstOrNull;
+                 if (matchingSection != null) {
+                   _selectedSectionId = matchingSection.id;
+                 }
+              }
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('QR Parse error: $e');
+      }
+    }
+  }
+
   /// Step 3: Kişisel Bilgiler
   Widget _buildInfoStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     // Kermes aktif değilse uyarı göster
     if (!_isKermesActive) {
       return _buildKermesNotActiveMessage();
@@ -1312,12 +1356,33 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           const SizedBox(height: 14),
           
           // Telefon
-          _buildTextField(
+          IntlPhoneField(
             controller: _phoneController,
-            label: 'Telefon',
-            icon: Icons.phone_outlined,
-            hint: '+49 XXX XXXXXXX',
-            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              labelText: 'Telefon',
+              labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+              filled: true,
+              fillColor: _cardBg(isDark),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: lokmaPink, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            initialCountryCode: 'DE',
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16),
+            dropdownTextStyle: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16),
+            onChanged: (phone) {
+              _completePhoneNumber = phone.completeNumber;
+              setState(() {});
+            },
+            onCountryChanged: (country) {
+              setState(() {});
+            },
           ),
           
           // Masa numarası (masada için)
@@ -1325,7 +1390,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             const SizedBox(height: 14),
             _buildTextField(
               controller: _tableController,
-              label: 'Masa Numarası',
+              label: 'Masa No',
               icon: Icons.table_restaurant_outlined,
               hint: 'Örn: 5',
               keyboardType: TextInputType.number,
@@ -1693,10 +1758,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             isDisabled: false, // Explicitly enabling it because user expects it available based on prompt.
             onTap: () => setState(() => _paymentMethod = PaymentMethodType.card),
           ),
-          
-          // Bagis / Yuvarlama section
-          const SizedBox(height: 28),
-          _buildDonationSection(grandTotal),
         ],
       ),
     );
@@ -2136,6 +2197,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         return Icons.table_restaurant;
       case DeliveryType.kurye:
         return Icons.delivery_dining;
+      default:
+        return Icons.delivery_dining;
     }
   }
   
@@ -2147,6 +2210,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         return 'Masaya Servis';
       case DeliveryType.kurye:
         return 'Kurye ile Teslimat';
+      default:
+        return '';
     }
   }
 
