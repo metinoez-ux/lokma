@@ -1293,8 +1293,7 @@ export default function OrdersPage() {
  </div>
  );
  }
-
- return (
+return (
  <div className="min-h-screen bg-background p-6">
  {/* Toast */}
  {toast && (
@@ -1309,22 +1308,23 @@ export default function OrdersPage() {
  <div className="max-w-7xl mx-auto mb-6">
  <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
  <div className="flex flex-col gap-2">
- <div className="flex flex-wrap items-center gap-4">
- <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+ <div className="flex flex-wrap items-center gap-2 md:gap-4">
+ <h1 className="text-xl font-bold text-foreground">
  {t('siparis_merkezi')}
+ </h1>
  
- {/* QR Tahsilat Butonu (Başlığa taşındı) */}
- {['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '') && (
+ {/* QR Tahsilat Butonu (Başlıktan flex-wrap içerisine alındı) */}
+ {(['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat', 'volunteer', 'kasa', 'vezne'].includes(admin?.adminType || '') || !!admin?.kermesId) && (
       <button
         onClick={() => setShowKermesScanner(true)}
-        className="ml-4 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-full text-sm font-semibold shadow-lg transition-colors border border-emerald-400/30"
+        className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-full text-sm font-semibold shadow-lg transition-colors border border-emerald-400/30"
         title="QR veya Sipariş No ile Nakit Tahsilat"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="7" height="7" x="7" y="7" rx="1"/><rect width="2" height="2" x="14" y="14"/><rect width="2" height="2" x="14" y="10"/><rect width="2" height="2" x="10" y="14"/></svg>
         QR Tahsilat
       </button>
   )}
- </h1>
+ </div>
  {nextReservation && (() => {
  const dateObj = nextReservation.resDateObject;
  let timeDisplay = nextReservation.timeSlot || '-';
