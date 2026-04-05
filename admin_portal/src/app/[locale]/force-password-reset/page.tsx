@@ -18,12 +18,7 @@ export default function ForcePasswordResetPage() {
  const [success, setSuccess] = useState(false);
  const [showPassword, setShowPassword] = useState(false);
 
- // If suddenly the user loses admin status (e.g. logs out), redirect to login
- useEffect(() => {
- if (admin === null && !loading) {
- router.push('/login');
- }
- }, [admin, router, loading]);
+ // Removed flawed useEffect that causes infinite redirect loop with /login
 
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault();
