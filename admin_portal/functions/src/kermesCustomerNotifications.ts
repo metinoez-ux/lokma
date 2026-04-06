@@ -124,6 +124,24 @@ export const onKermesOrderCreatedNotif = onDocumentCreated(
               const res = await admin.messaging().sendEachForMulticast(sendObj(webTokens, true));
               console.log(`[Web] Sent to ${res.successCount}/${webTokens.length} devices`);
             }
+
+            // Write to personnel_notifications subcollection for in-app inbox
+            const batch = db.batch();
+            for (const uid of staffUids) {
+              const notifRef = db.collection("users").doc(uid).collection("personnel_notifications").doc();
+              batch.set(notifRef, {
+                title: staffTitle,
+                body: staffBody,
+                type: "kermes_new_order",
+                orderId,
+                orderNumber,
+                kermesId,
+                read: false,
+                createdAt: new Date().toISOString(),
+              });
+            }
+            await batch.commit();
+            console.log(`[Inbox] Written to ${staffUids.size} staff inboxes`);
           }
         }
       } catch (e) {
@@ -273,6 +291,24 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
 
             if (mobileTokens.length > 0) admin.messaging().sendEachForMulticast(sendObj(mobileTokens, false));
             if (webTokens.length > 0) admin.messaging().sendEachForMulticast(sendObj(webTokens, true));
+
+            // Write to personnel_notifications subcollection for in-app inbox
+            const batch2 = db.batch();
+            for (const uid of staffUids) {
+              const notifRef = db.collection("users").doc(uid).collection("personnel_notifications").doc();
+              batch2.set(notifRef, {
+                title: staffTitle,
+                body: staffBody,
+                type: "kermes_order_paid",
+                orderId: event.params.orderId,
+                orderNumber: orderNumber2,
+                kermesId,
+                read: false,
+                createdAt: new Date().toISOString(),
+              });
+            }
+            await batch2.commit();
+            console.log(`[Inbox] Payment notification written to ${staffUids.size} staff inboxes`);
           }
         }
       } catch (e) {
