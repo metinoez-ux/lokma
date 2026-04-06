@@ -312,47 +312,79 @@ export default function TableManagementPanel({
    <span className="font-bold text-lg leading-none">+</span> {t("bolumEkle") || "Bolum Ekle"}
    </button>
   ) : (
-   <div className="flex items-center gap-2">
-   <select
-    title="Bolum tipi sec"
-    value={selectedSectionType}
-    onChange={(e) => setSelectedSectionType(e.target.value)}
-    className="px-3 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-amber-500"
-   >
-    <option value="">-- Bolum Tipi Secin --</option>
-    {genderTypes
-     .filter(gt => !tableSections.some(s => {
-      const def = sectionDefs.find(d => d.name === s);
-      return def?.genderRestriction === gt.key;
-     }))
-     .map((gt) => (
-      <option key={gt.key} value={gt.key}>{gt.icon} {gt.label}</option>
-     ))}
-   </select>
-   <button
-    onClick={() => {
-    if (!selectedSectionType) return;
-    const gt = genderTypes.find(g => g.key === selectedSectionType);
-    if (!gt) return;
-    const sectionName = gt.label;
-    if (tableSections.includes(sectionName)) {
-     showToast(t("buBolumZatenMevcut"), "error");
-     return;
-    }
-    const newSections = [...tableSections, sectionName];
-    const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: gt.key }];
-    setSectionDefs(newDefs);
-    updateAndSave(undefined, undefined, undefined, newSections, newDefs);
-    setSelectedSectionType('');
-    setShowSectionInput(false);
-    }}
-    disabled={!selectedSectionType}
-    className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-lg transition"
-   >Ekle</button>
-   <button
-    onClick={() => { setSelectedSectionType(''); setShowSectionInput(false); }}
-    className="px-2 py-1.5 text-sm text-gray-400 hover:text-white transition"
-   >Iptal</button>
+   <div className="flex flex-col gap-2">
+     <div className="flex flex-wrap gap-2">
+       {genderTypes
+         .filter(gt => !tableSections.some(s => {
+          const def = sectionDefs.find(d => d.name === s);
+          return def?.genderRestriction === gt.key;
+         }))
+         .map((gt) => (
+           <button 
+             key={gt.key} 
+             onClick={() => {
+                const sectionName = gt.label;
+                if (tableSections.includes(sectionName)) { showToast("Bu bolum zaten mevcut!", "error"); return; }
+                const newSections = [...tableSections, sectionName];
+                const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: gt.key }];
+                setSectionDefs(newDefs);
+                updateAndSave(undefined, undefined, undefined, newSections, newDefs);
+                setShowSectionInput(false);
+             }}
+             className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 flex items-center gap-1.5 transition"
+           >
+             <span className="w-5 h-5 flex items-center justify-center rounded-full bg-black/20 font-bold">{gt.icon}</span>
+             {gt.label} Ekle
+           </button>
+         ))}
+     </div>
+     <div className="flex items-center gap-2 mt-1">
+       <input
+         type="text"
+         placeholder="Farklı bir isim.. (Örn: Merkezi Mutfak, 3. Kat)"
+         value={selectedSectionType}
+         onChange={(e) => setSelectedSectionType(e.target.value)}
+         onKeyDown={(e) => {
+           if (e.key === 'Enter') {
+             if (!selectedSectionType.trim()) return;
+             const sectionName = selectedSectionType.trim();
+             if (tableSections.includes(sectionName)) {
+              showToast("Bu bolum zaten mevcut!", "error");
+              return;
+             }
+             const newSections = [...tableSections, sectionName];
+             const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: 'mixed' }];
+             setSectionDefs(newDefs);
+             updateAndSave(undefined, undefined, undefined, newSections, newDefs);
+             setSelectedSectionType('');
+             setShowSectionInput(false);
+           }
+         }}
+         className="px-3 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-amber-500 w-72"
+       />
+       <button
+        onClick={() => {
+         if (!selectedSectionType.trim()) return;
+         const sectionName = selectedSectionType.trim();
+         if (tableSections.includes(sectionName)) {
+          showToast(t("buBolumZatenMevcut"), "error");
+          return;
+         }
+         const newSections = [...tableSections, sectionName];
+         const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: 'mixed' }];
+         setSectionDefs(newDefs);
+         updateAndSave(undefined, undefined, undefined, newSections, newDefs);
+         setSelectedSectionType('');
+         setShowSectionInput(false);
+        }}
+        disabled={!selectedSectionType.trim()}
+        className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-lg transition"
+       >Ekle</button>
+       <button
+        onClick={() => { setSelectedSectionType(''); setShowSectionInput(false); }}
+        className="px-2 py-1.5 text-sm text-gray-400 hover:text-white transition"
+       >Iptal</button>
+     </div>
    </div>
   )}
   </div>
@@ -366,7 +398,10 @@ export default function TableManagementPanel({
  )}
 
  <div className="space-y-4">
- {tableSections.map((section, idx) => {
+ {tableSections.filter(sec => {
+  const def = sectionDefs.find(d => d.name === sec);
+  return def?.hasDineIn !== false; // Sadece masası olanlar
+ }).map((section, idx) => {
   const def = sectionDefs.find(d => d.name === section);
   const gr = def?.genderRestriction || 'mixed';
   const gd = getGenderDisplay(gr, genderTypes);
@@ -378,27 +413,15 @@ export default function TableManagementPanel({
    {/* Section header */}
    <div className="flex items-center justify-between px-4 py-3 flex-wrap gap-2">
    <div className="flex items-center gap-2">
-    <span className="font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center bg-black/20">{gd.icon}</span>
+    <span className="font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center bg-black/20">
+      {gr === 'mixed' && !genderTypes.some(g => g.label === section) ? section.charAt(0).toUpperCase() : gd.icon}
+    </span>
     <span className="text-white font-semibold">{section}</span>
     <span className="text-gray-300 text-xs font-normal min-w-[60px]">
     ({sectionTables.length} Masa)
     </span>
    </div>
    <div className="flex items-center gap-2 ml-auto">
-    {/* Masa Servisi (QR) Aç/Kapat Toggle */}
-    <div className="flex items-center gap-1.5 mr-2" title="Bu bölümde Masa Servisi (QR) açık olsun mu?">
-      <span className="text-[10px] text-gray-300 font-medium">Masa Servisi</span>
-      <button
-        onClick={() => {
-          const newDefs = sectionDefs.map(d => d.name === section ? { ...d, hasDineIn: d.hasDineIn === false ? true : false } : d);
-          setSectionDefs(newDefs);
-          updateAndSave(undefined, undefined, undefined, undefined, newDefs);
-        }}
-        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${def?.hasDineIn !== false ? 'bg-amber-500' : 'bg-gray-600'}`}
-      >
-        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${def?.hasDineIn !== false ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
-      </button>
-    </div>
     {/* Tek masa ekle */}
     <button
     onClick={() => addSingleTable(section)}

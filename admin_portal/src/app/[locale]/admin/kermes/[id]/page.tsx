@@ -52,6 +52,7 @@ interface SectionDefForPZ {
   name: string;
   genderRestriction: string;
   prepZones?: string[];
+  hasDineIn?: boolean;
 }
 
 function PrepZoneSelector({ value, onChange, products, sectionDefs }: { value: string[], onChange: (val: string[]) => void, products: KermesProduct[], sectionDefs?: SectionDefForPZ[] }) {
@@ -372,6 +373,9 @@ export default function KermesDetailPage() {
 
  // Bolum tanimlari (PrepZone + Tezgah hiyerarsisi)
  const [kermesSectionDefs, setKermesSectionDefs] = useState<SectionDefForPZ[]>([]);
+ const [showNewKitchenPanel, setShowNewKitchenPanel] = useState(false);
+ const [newKitchenName, setNewKitchenName] = useState('');
+ const [newKitchenGender, setNewKitchenGender] = useState<'mixed'|'women_only'|'men_only'>('women_only');
 
    // Otomatik kadro kaydetme fonksiyonu
   const saveTeamToDb = async (newStaff: string[], newDrivers: string[], newWaiters?: string[], newKermesAdmins?: string[], newCustomRoleAssignments?: Record<string, string[]>) => {
@@ -619,6 +623,7 @@ export default function KermesDetailPage() {
  name: s.name || '',
  genderRestriction: s.genderRestriction || 'mixed',
  prepZones: Array.isArray(s.prepZones) ? s.prepZones : [],
+  hasDineIn: s.hasDineIn !== false,
  })));
  }
  // Mutfak: PrepZone personel atamalarini yukle
@@ -3353,19 +3358,64 @@ export default function KermesDetailPage() {
    </div>
    </div>
 
-   {kermesSectionDefs.length === 0 ? (
-   <div className="text-center py-12 text-muted-foreground">
-   <div className="text-4xl mb-3">
-   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto opacity-40"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
-   </div>
-   <p className="text-sm font-medium">Henuz bolum tanimlanmamis</p>
-   <p className="text-xs mt-1">Once Masalar sekmesinden bolumleri olusturun, sonra burada PrepZone ekleyebilirsiniz.</p>
-   </div>
+    {!showNewKitchenPanel ? (
+      <button onClick={() => setShowNewKitchenPanel(true)} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-orange-500/30 text-orange-500 rounded-xl hover:bg-orange-500/10 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        <span className="font-medium">Yeni Mutfak / Üretim Alanı Ekle</span>
+      </button>
+    ) : (
+      <div className="bg-card rounded-xl p-4 border border-orange-500/40">
+        <h4 className="font-semibold text-foreground mb-3">Yeni Mutfak Bölümü Oluştur</h4>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1.5">Mutfak Adı</label>
+            <input type="text" value={newKitchenName} onChange={e => setNewKitchenName(e.target.value)} placeholder="Örn: Tatlı Sepeti, Izgara Çadırı.." className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1.5">Bu Mutfak Kimler İçin Hizmet Verecek? (Zorunlu Porsiyon Takibi İçin)</label>
+            <div className="flex gap-2">
+              <button onClick={() => setNewKitchenGender('women_only')} className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${newKitchenGender === 'women_only' ? 'bg-pink-500/20 border-pink-500 text-pink-400' : 'bg-background border-border text-muted-foreground hover:border-pink-500/50'}`}>Hanımlar Bölümü</button>
+              <button onClick={() => setNewKitchenGender('men_only')} className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${newKitchenGender === 'men_only' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-background border-border text-muted-foreground hover:border-blue-500/50'}`}>Beyler Bölümü</button>
+              <button onClick={() => setNewKitchenGender('mixed')} className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${newKitchenGender === 'mixed' ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-background border-border text-muted-foreground hover:border-indigo-500/50'}`}>Ortak (Karışık)</button>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-border/40 mt-1">
+            <button onClick={() => { setShowNewKitchenPanel(false); setNewKitchenName(''); setNewKitchenGender('women_only'); }} className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">İptal</button>
+            <button 
+              disabled={!newKitchenName.trim()}
+              onClick={() => {
+                const trimmed = newKitchenName.trim();
+                // Check against ALL existing sections to prevent ID collisions
+                if (kermesSectionDefs.some(s => s.name === trimmed)) { alert("Bu isimde bir bölüm zaten var!"); return; }
+                const newSection = { name: trimmed, genderRestriction: newKitchenGender, hasDineIn: false, prepZones: [] };
+                setKermesSectionDefs([...kermesSectionDefs, newSection]);
+                setShowNewKitchenPanel(false);
+                setNewKitchenName('');
+                setNewKitchenGender('women_only');
+              }} 
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
+            >
+              Mutfak Oluştur
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {kermesSectionDefs.filter(s => s.hasDineIn === false || (s.prepZones && s.prepZones.length > 0)).length === 0 ? (
+    <div className="text-center py-12 text-muted-foreground">
+    <div className="text-4xl mb-3">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto opacity-40"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
+    </div>
+    <p className="text-sm font-medium">Henuz Mutfak veya Üretim Alanı eklemediniz.</p>
+    <p className="text-xs mt-1">Yukarıdaki butona tıklayarak mutfak bölümlerini oluşturabilir, ardından onlara PrepZone (Hazırlık İstasyonu) ekleyebilirsiniz.</p>
+    </div>
    ) : (
    <div className="space-y-4">
-   {kermesSectionDefs.map((section) => {
+   {kermesSectionDefs.filter(s => s.hasDineIn === false || (s.prepZones && s.prepZones.length > 0)).map((section) => {
    const prepZones = section.prepZones || [];
-   const genderIcon = section.genderRestriction === 'women_only' ? 'K' : section.genderRestriction === 'men_only' ? 'E' : 'A';
+   const isCustomSection = section.genderRestriction === 'mixed' && section.name !== 'Karisik / Aile';
+   const genderIcon = section.genderRestriction === 'women_only' ? 'K' : section.genderRestriction === 'men_only' ? 'E' : isCustomSection ? section.name.charAt(0).toUpperCase() : 'A';
    const genderColor = section.genderRestriction === 'women_only'
     ? 'border-pink-500/30 bg-pink-500/5'
     : section.genderRestriction === 'men_only'
