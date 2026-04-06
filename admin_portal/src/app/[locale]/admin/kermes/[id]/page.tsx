@@ -81,14 +81,19 @@ function PrepZoneSelector({ value, onChange, products, sectionDefs }: { value: s
                 </div>
                 </div>
             ))}
-            <div>
-                <p className="text-xs text-muted-foreground mb-1">Farkli bir alan ekle (virgul ile ayirin)</p>
-                <input type="text" value={customValues.join(', ')} onChange={(e) => {
-                    const custom = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                    const selectedFromAll = value.filter(v => allZoneNames.includes(v));
-                    onChange([...selectedFromAll, ...custom]);
-                }} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-pink-500 text-sm" placeholder="Orn: Mutfak, Bar" />
-            </div>
+            {customValues.length > 0 && (
+                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/50 rounded-lg">
+                    <p className="text-[10px] text-red-600 dark:text-red-400 mb-2 font-medium">Sistemde tanımlı olmayan alanlar (Lütfen kaldırın):</p>
+                    <div className="flex flex-wrap gap-2">
+                        {customValues.map(zone => (
+                            <label key={zone} className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border bg-red-100 border-red-300 dark:bg-red-900/40 dark:border-red-800 cursor-pointer transition hover:bg-red-200/50">
+                                <input type="checkbox" checked={true} onChange={() => toggleZone(zone)} className="rounded border-red-400 text-red-600 focus:ring-red-500 w-4 h-4" />
+                                <span className="text-sm font-medium text-red-800 dark:text-red-300">{zone}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
             </div>
         );
     }
@@ -106,14 +111,19 @@ function PrepZoneSelector({ value, onChange, products, sectionDefs }: { value: s
                     </label>
                 ))}
             </div>
-            <div>
-                <p className="text-xs text-muted-foreground mb-1">Farkli bir alan ekle (virgul ile ayirin)</p>
-                <input type="text" value={customValues.join(', ')} onChange={(e) => {
-                    const custom = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                    const selectedFromAll = value.filter(v => allZones.includes(v));
-                    onChange([...selectedFromAll, ...custom]);
-                }} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-pink-500 text-sm" placeholder="Orn: Mutfak, Bar" />
-            </div>
+            {customValues.length > 0 && (
+                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/50 rounded-lg">
+                    <p className="text-[10px] text-red-600 dark:text-red-400 mb-2 font-medium">Sistemde tanımlı olmayan alanlar (Lütfen kaldırın):</p>
+                    <div className="flex flex-wrap gap-2">
+                        {customValues.map(zone => (
+                            <label key={zone} className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border bg-red-100 border-red-300 dark:bg-red-900/40 dark:border-red-800 cursor-pointer transition hover:bg-red-200/50">
+                                <input type="checkbox" checked={true} onChange={() => toggleZone(zone)} className="rounded border-red-400 text-red-600 focus:ring-red-500 w-4 h-4" />
+                                <span className="text-sm font-medium text-red-800 dark:text-red-300">{zone}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
