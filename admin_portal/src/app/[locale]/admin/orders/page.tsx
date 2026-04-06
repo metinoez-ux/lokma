@@ -1012,6 +1012,7 @@ export default function OrdersPage() {
  // Note: 'served' orders (legacy dine-in) are included in completedOrders below
  const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
  const completedOrders = filteredOrders.filter(o => ['delivered', 'served', 'completed'].includes(o.status));
+ const cancelledOrders = filteredOrders.filter(o => o.status === 'cancelled');
 
  // Update order status
  // When status is reset backward (pending/preparing/ready), clear courier assignment
@@ -1621,6 +1622,10 @@ return (
  <p className="text-xl font-bold text-amber-800 dark:text-amber-300">{stats.preparing}</p>
  <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">{t('hazirlanan')}</p>
  </div>
+ <div className="bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+ <p className="text-xl font-bold text-red-800 dark:text-red-300">{stats.cancelled}</p>
+ <p className="text-[10px] font-semibold text-red-700 dark:text-red-400">İptal</p>
+ </div>
  <div className="bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
  <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
  <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Ciro</p>
@@ -1889,7 +1894,7 @@ return (
  <p className="text-muted-foreground">{t('siparis_bulunamadi')}</p>
  </div>
  ) : (
- <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
  {/* Pending Column */}
  <div className="bg-yellow-50/50 dark:bg-card rounded-xl p-4 border border-yellow-200/50 dark:border-transparent">
  <h3 className="text-yellow-900 dark:text-yellow-400 font-medium mb-4 flex items-center gap-2">
@@ -1986,6 +1991,22 @@ return (
  ))}
  {completedOrders.length > 10 && (
  <p className="text-muted-foreground/80 text-center text-sm">+{completedOrders.length - 10} {t('kanban.more')}</p>
+ )}
+ </div>
+ </div>
+
+ {/* Cancelled Column */}
+ <div className="bg-red-50/50 dark:bg-card rounded-xl p-4 border border-red-200/50 dark:border-transparent">
+ <h3 className="text-red-900 dark:text-red-400 font-medium mb-4 flex items-center gap-2">
+ <span className="w-3 h-3 bg-red-400 rounded-full"></span>
+ İptal ({cancelledOrders.length})
+ </h3>
+ <div className="space-y-3 max-h-[600px] overflow-y-auto">
+ {cancelledOrders.slice(0, 10).map(order => (
+ <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
+ ))}
+ {cancelledOrders.length > 10 && (
+ <p className="text-muted-foreground/80 text-center text-sm">+{cancelledOrders.length - 10} {t('kanban.more')}</p>
  )}
  </div>
  </div>
