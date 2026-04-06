@@ -196,7 +196,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           name: ci.menuItem.name,
           quantity: ci.quantity,
           price: ci.menuItem.price,
-          prepZone: ci.menuItem.prepZone,
+          prepZones: ci.menuItem.prepZones,
           category: ci.menuItem.category,
           imageUrl: ci.menuItem.imageUrl,
           itemStatus: KermesItemStatus.pending,
@@ -225,7 +225,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                   name: i.name,
                   quantity: i.quantity,
                   price: i.price,
-                  prepZone: i.prepZone,
+                  prepZones: i.prepZones,
                   category: i.category,
                   imageUrl: i.imageUrl,
                   itemStatus: KermesItemStatus.ready, // Aninda hazir
@@ -604,23 +604,26 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    // PrepZone (kucuk tag)
-                    if (item.prepZone != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: categoryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          item.prepZone!,
-                          style: TextStyle(
-                            color: categoryColor,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
+                    // PrepZones (kucuk tag)
+                    if (item.prepZones.isNotEmpty)
+                      Wrap(
+                        spacing: 4,
+                        children: item.prepZones.map((zone) => Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: categoryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                        ),
+                          child: Text(
+                            zone,
+                            style: TextStyle(
+                              color: categoryColor,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        )).toList(),
                       ),
                     const Spacer(),
                     // Fiyat
@@ -1387,9 +1390,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                         ),
                       ),
                       const Spacer(),
-                      if (item.prepZone != null)
+                      if (item.prepZones.isNotEmpty)
                         Text(
-                          item.prepZone!,
+                          item.prepZones.join(', '),
                           style: TextStyle(
                             color: isDark ? Colors.white38 : Colors.grey,
                             fontSize: 11,

@@ -194,12 +194,12 @@ class KermesOrder {
 
   /// Bu sipariste belirli bir zone'a ait itemlar
   List<KermesOrderItem> itemsForZone(String zone) {
-    return items.where((item) => item.prepZone == zone).toList();
+    return items.where((item) => item.prepZones.contains(zone)).toList();
   }
 
   /// Bu siparisteki tum zone'lar
   Set<String> get allZones {
-    return items.map((item) => item.prepZone).whereType<String>().toSet();
+    return items.expand((item) => item.prepZones).toSet();
   }
 
   /// Firestore'a kaydetmek icin Map

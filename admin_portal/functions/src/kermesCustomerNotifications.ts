@@ -94,6 +94,8 @@ export const onKermesOrderCreatedNotif = onDocumentCreated(
             adminDocs.forEach(doc => {
               if (doc.exists) {
                 const data = doc.data();
+                // Mobile app writes singular fcmToken, check both formats
+                if (data?.fcmToken && typeof data.fcmToken === 'string') mobileTokens.push(data.fcmToken);
                 if (data?.fcmTokens && Array.isArray(data.fcmTokens)) mobileTokens.push(...data.fcmTokens);
                 if (data?.webFcmTokens && Array.isArray(data.webFcmTokens)) webTokens.push(...data.webFcmTokens);
               }
@@ -250,6 +252,8 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
             adminDocs.forEach(doc => {
               if (doc.exists) {
                 const data = doc.data();
+                // Mobile app writes singular fcmToken, check both formats
+                if (data?.fcmToken && typeof data.fcmToken === 'string') mobileTokens.push(data.fcmToken);
                 if (data?.fcmTokens && Array.isArray(data.fcmTokens)) mobileTokens.push(...data.fcmTokens);
                 if (data?.webFcmTokens && Array.isArray(data.webFcmTokens)) webTokens.push(...data.webFcmTokens);
               }
