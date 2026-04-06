@@ -347,7 +347,12 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
       try {
         final currentUserDoc = await FirebaseFirestore.instance.collection('users').doc(currentUserUid).get();
         if (currentUserDoc.exists) {
-           currentUserGender = currentUserDoc.data()?['gender'] as String?;
+           String? g = currentUserDoc.data()?['gender'] as String?;
+           if (g != null) {
+             g = g.toLowerCase();
+             if (g == 'kadin' || g == 'kadın' || g == 'female') currentUserGender = 'female';
+             else if (g == 'erkek' || g == 'male') currentUserGender = 'male';
+           }
         }
       } catch (e) {}
     }
@@ -436,6 +441,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
              requiredGender = 'female';
            } else if (roleOrZone.contains('Erkek')) {
              requiredGender = 'male';
+           } else {
+             requiredGender = currentUserGender;
            }
            
            // Normalize target colleague's gender
