@@ -186,15 +186,17 @@ class StaffRoleService {
   }
 
   /// Register FCM token for this staff member
+  /// Writes both singular fcmToken and fcmTokens array for Cloud Function compatibility
   Future<void> _registerFcmToken(String uid) async {
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
         await _db.collection('admins').doc(uid).set({
           'fcmToken': token,
+          'fcmTokens': FieldValue.arrayUnion([token]),
           'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        debugPrint('[StaffRole] FCM token registered');
+        debugPrint('[StaffRole] FCM token registered (singular + array)');
       }
     } catch (e) {
       debugPrint('[StaffRole] Error registering FCM token: $e');
