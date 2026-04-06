@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
-import 'package:lokma_app/services/staff_role_service.dart';
-import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
 import 'package:intl/intl.dart';
 
 class KermesUnifiedKdsScreen extends ConsumerStatefulWidget {
@@ -66,118 +64,119 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
     }
   }
 
-  Widget? _buildStaffFAB() {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) return null;
-    final staffRole = StaffRoleService();
-    return KermesStaffStatusFAB(
-      kermesId: widget.kermesId,
-      staffId: currentUser.uid,
-      staffName: staffRole.staffName ?? 'Personel',
-      role: 'waiter',
-      sectionId: widget.allowedSections.isNotEmpty ? widget.allowedSections.first : null,
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final orderService = ref.read(kermesOrderServiceProvider);
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFEAEAEA),
-      appBar: AppBar(
-        backgroundColor: lokmaPink,
-        foregroundColor: Colors.white,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.dashboard_customize, size: 20),
-                const SizedBox(width: 8),
-                const Text('Unified Mutfak Ekranı', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-              ],
-            ),
-            Text(widget.kermesName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
-          ],
-        ),
-      ),
-      floatingActionButton: _buildStaffFAB(),
-      body: StreamBuilder<List<KermesOrder>>(
-        // Aktif tüm siparişleri getirir
-        stream: orderService.getActiveOrders(widget.kermesId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Hata: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-          }
-
-          final allOrders = snapshot.data ?? [];
-
-          // Optional order visibility control by table section
-          final sectionFilteredOrders = widget.allowedSections.isEmpty
-              ? allOrders
-              : allOrders.where((o) =>
-                  o.tableSection == null ||
-                  o.tableSection!.isEmpty ||
-                  widget.allowedSections.contains(o.tableSection)).toList();
-
-          // Collect unique zones for the filter chip
-          final Set<String> zones = {};
-          for (var order in sectionFilteredOrders) {
-            for (var item in order.items) {
-              zones.addAll(item.prepZones.where((z) => z.isNotEmpty));
-            }
-          }
-          final zoneList = zones.toList()..sort();
-          zoneList.insert(0, 'Tümü');
-
-          // Ensure active filter is still valid (fallback to Tümü)
-          if (!zoneList.contains(_activeFilter)) {
-            _activeFilter = 'Tümü';
-          }
-
-          // Filter out orders that don't match the zone filter AT ALL
-          final displayOrders = _activeFilter == 'Tümü'
-              ? sectionFilteredOrders
-              : sectionFilteredOrders.where((order) {
-                  return order.items.any((item) => item.prepZones.contains(_activeFilter));
-                }).toList();
-
-          // Haptic on slightly distinct new orders
-          final currentIds = displayOrders.map((o) => o.id).toSet();
-          if (_previousOrderIds.isNotEmpty && currentIds.difference(_previousOrderIds).isNotEmpty) {
-            HapticFeedback.heavyImpact();
-          }
-          _previousOrderIds = currentIds;
-
-          // Bucket orders
-          final pendingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.pending).toList();
-          final preparingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.preparing).toList();
-          final readyOrders = displayOrders.where((o) => o.status == KermesOrderStatus.ready).toList();
-
-          return Column(
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFEAEAEA),
+        appBar: AppBar(
+          backgroundColor: lokmaPink,
+          foregroundColor: Colors.white,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildFilterBar(zoneList, isDark),
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _buildKanbanColumn('Gelenler', pendingOrders, isDark, warningOrange)),
-                    _buildDivider(isDark),
-                    Expanded(child: _buildKanbanColumn('Hazırlanıyor', preparingOrders, isDark, preparingBlue)),
-                    _buildDivider(isDark),
-                    Expanded(child: _buildKanbanColumn('Teslime Hazır', readyOrders, isDark, successGreen)),
-                  ],
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.dashboard_customize, size: 20),
+                  const SizedBox(width: 8),
+                  const Text('Unified Mutfak', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                ],
               ),
+              Text(widget.kermesName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
             ],
-          );
-        },
+          ),
+          bottom: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            indicatorWeight: 3,
+            labelPadding: EdgeInsets.symmetric(horizontal: 4),
+            tabs: [
+              Tab(text: 'GELENLER'),
+              Tab(text: 'HAZIRLANIYOR'),
+              Tab(text: 'TESLİME HAZIR'),
+            ],
+          ),
+        ),
+        body: StreamBuilder<List<KermesOrder>>(
+          // Aktif tüm siparişleri getirir
+          stream: orderService.getActiveOrders(widget.kermesId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Hata: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+            }
+
+            final allOrders = snapshot.data ?? [];
+
+            // Optional order visibility control by table section
+            final sectionFilteredOrders = widget.allowedSections.isEmpty
+                ? allOrders
+                : allOrders.where((o) =>
+                    o.tableSection == null ||
+                    o.tableSection!.isEmpty ||
+                    widget.allowedSections.contains(o.tableSection)).toList();
+
+            // Collect unique zones for the filter chip
+            final Set<String> zones = {};
+            for (var order in sectionFilteredOrders) {
+              for (var item in order.items) {
+                zones.addAll(item.prepZones.where((z) => z.isNotEmpty));
+              }
+            }
+            final zoneList = zones.toList()..sort();
+            zoneList.insert(0, 'Tümü');
+
+            // Ensure active filter is still valid (fallback to Tümü)
+            if (!zoneList.contains(_activeFilter)) {
+              _activeFilter = 'Tümü';
+            }
+
+            // Filter out orders that don't match the zone filter AT ALL
+            final displayOrders = _activeFilter == 'Tümü'
+                ? sectionFilteredOrders
+                : sectionFilteredOrders.where((order) {
+                    return order.items.any((item) => item.prepZones.contains(_activeFilter));
+                  }).toList();
+
+            // Haptic on slightly distinct new orders
+            final currentIds = displayOrders.map((o) => o.id).toSet();
+            if (_previousOrderIds.isNotEmpty && currentIds.difference(_previousOrderIds).isNotEmpty) {
+              HapticFeedback.heavyImpact();
+            }
+            _previousOrderIds = currentIds;
+
+            // Bucket orders
+            final pendingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.pending).toList();
+            final preparingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.preparing).toList();
+            final readyOrders = displayOrders.where((o) => o.status == KermesOrderStatus.ready).toList();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildFilterBar(zoneList, isDark),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _buildKanbanColumn(pendingOrders, isDark, warningOrange),
+                      _buildKanbanColumn(preparingOrders, isDark, preparingBlue),
+                      _buildKanbanColumn(readyOrders, isDark, successGreen),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -222,30 +221,26 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
     );
   }
 
-  Widget _buildKanbanColumn(String title, List<KermesOrder> orders, bool isDark, Color accentColor) {
+  Widget _buildKanbanColumn(List<KermesOrder> orders, bool isDark, Color accentColor) {
     return Container(
       color: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F7),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
               border: Border(bottom: BorderSide(color: accentColor, width: 3)),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title.toUpperCase(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
-                ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(color: accentColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                   child: Text(
-                    '\${orders.length}',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: accentColor, fontSize: 14),
+                    "${orders.length} Sipariş",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: accentColor, fontSize: 13),
                   ),
                 ),
               ],
@@ -257,7 +252,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     child: Text('Bulunamadı', style: TextStyle(color: isDark ? Colors.white30 : Colors.black26)),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(12),
                     itemCount: orders.length,
                     itemBuilder: (context, index) {
                       return _buildUnifiedOrderCard(orders[index], isDark, accentColor);
@@ -297,7 +292,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
               children: [
                 Row(
                   children: [
-                    Text('#\${order.orderNumber}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                    Text("#${order.orderNumber}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
                     const SizedBox(width: 8),
                     if (order.tableNumber != null && order.tableNumber!.isNotEmpty)
                       Container(
@@ -389,8 +384,8 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                '\${item.quantity}x',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isActiveMatch ? statusColor : textColor),
+                "${item.quantity}x",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isActiveMatch ? statusColor : textColor),
               ),
             ),
             const SizedBox(width: 8),
