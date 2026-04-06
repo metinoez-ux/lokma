@@ -403,10 +403,17 @@ export default function KermesDetailPage() {
       updatePayload.customRoleAssignments = newCustomRoleAssignments;
       Object.entries(newCustomRoleAssignments).forEach(([roleId, uids]) => {
           const oldUids = customRoleAssignments[roleId] || [];
-          const roleName = customRoles.find((r:any) => r.id === roleId)?.name || 'Özel Görev';
+          const roleName = (editForm.customRoles || []).find((r:any) => r.id === roleId)?.name || 'Özel Görev';
           uids.forEach(uid => { if (!oldUids.includes(uid)) toNotify.push({uid, role: roleName}); });
       });
   } else updatePayload.customRoleAssignments = customRoleAssignments;
+  
+  // Clean updatePayload from undefined values just in case to prevent Firebase errors
+  Object.keys(updatePayload).forEach(key => {
+    if (updatePayload[key] === undefined) {
+      delete updatePayload[key];
+    }
+  });
   
   await updateDoc(doc(db, 'kermes_events', kermesId as string), updatePayload);
   showToast(t('kaydedildi') || 'Kadro güncellendi', 'success');
@@ -1491,10 +1498,18 @@ export default function KermesDetailPage() {
  }
  };
 
- const handleToggleAvailability = async (product: KermesProduct) => {
+ const touchKermesTimestamp = async () => {
+    try {
+      const { serverTimestamp } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'kermes_events', kermesId), { updatedAt: serverTimestamp() });
+    } catch(e) { console.error(e); }
+  };
+
+  const handleToggleAvailability = async (product: KermesProduct) => {
  try {
  await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), { isAvailable: !product.isAvailable });
  setProducts(products.map(p => p.id === product.id ? { ...p, isAvailable: !p.isAvailable } : p));
+    await touchKermesTimestamp();
  } catch (error) {
  showToast(t('hata'), 'error');
  }
@@ -1516,6 +1531,7 @@ export default function KermesDetailPage() {
  try {
  await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), updatePayload);
  setProducts(products.map(p => p.id === product.id ? { ...p, currentStock: newStock, isAvailable: newStock > 0 ? (product.isAvailable || newStock > 0) : false, ...updatePayload } : p));
+    await touchKermesTimestamp();
  } catch (error) {
  showToast(t('hata'), 'error');
  }
@@ -1534,6 +1550,7 @@ export default function KermesDetailPage() {
  await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), updatePayload);
  setProducts(products.map(p => p.id === product.id ? { ...p, ...updatePayload } : p));
  setEditingStockId(null);
+    await touchKermesTimestamp();
  } catch (error) {
  showToast(t('hata'), 'error');
  }
@@ -1548,6 +1565,7 @@ export default function KermesDetailPage() {
  });
  setProducts(products.map(p => p.id === product.id ? { ...p, currentStock: 0, isAvailable: false } : p));
  showToast(`${product.name}: Tukendi olarak isaretlendi`);
+    await touchKermesTimestamp();
  } catch (error) {
  showToast(t('hata'), 'error');
  }
@@ -3012,6 +3030,12 @@ export default function KermesDetailPage() {
  {assignedWaiters.includes(staff.id) && (
  <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded">Garson</span>
  )}
+ {/* Custom Roles Badges */}
+ {(editForm.customRoles || []).filter(r => (customRoleAssignments[r.id] || []).includes(staff.id)).map(r => (
+   <span key={r.id} className={`ml-1 flex-shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded ${r.color || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+     {r.name}
+   </span>
+ ))}
  {/* Auth Provider */}
  {authProviderMap[staff.id] && (
  <div className="flex gap-1 mt-0.5">

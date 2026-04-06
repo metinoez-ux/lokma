@@ -28,6 +28,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   int _pastTotalActiveMin = 0;
   int _pastTodayActiveMin = 0;
   int _pastTodayPauseMin = 0;
+  Map<String, int> _pastTodayRoleActiveMin = {};
 
   Map<String, dynamic>? _weatherInfo;
   bool _weatherLoading = true;
@@ -61,6 +62,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
       int tTotal = 0;
       int tTodayActive = 0;
       int tTodayPause = 0;
+      Map<String, int> todayRoles = {};
 
       final now = DateTime.now();
       final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
@@ -75,6 +77,24 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         if (date == todayStr) {
           tTodayActive += active;
           tTodayPause += pause;
+
+          if (active > 0) {
+            final pZones = List<String>.from(s['assignedPrepZones'] ?? []);
+            final tables = List<int>.from(s['assignedTables'] ?? []);
+            final isDriver = s['isDeliveryDriver'] == true;
+            final isOther = s['isOtherRole'] == true;
+
+            List<String> roleTokens = [];
+            if (pZones.isNotEmpty) roleTokens.addAll(pZones);
+            if (isDriver) roleTokens.add('Sürücü');
+            if (tables.isNotEmpty) roleTokens.add('Garson');
+            if (isOther && roleTokens.isEmpty) roleTokens.add('Diğer');
+            if (roleTokens.isEmpty) roleTokens.add('Genel Alan');
+            
+            for (var t in roleTokens) {
+               todayRoles[t] = (todayRoles[t] ?? 0) + active;
+            }
+          }
         }
       }
 
@@ -83,6 +103,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           _pastTotalActiveMin = tTotal;
           _pastTodayActiveMin = tTodayActive;
           _pastTodayPauseMin = tTodayPause;
+          _pastTodayRoleActiveMin = todayRoles;
         });
       }
     } catch (e) {
@@ -156,19 +177,6 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               
 
               _buildStatsCard(isDark),
-
-              const SizedBox(height: 10),
-              Text(
-                'Mesai Takibi',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              _buildShiftInfoCard(context, onShift, onBreak, isDark),
               const SizedBox(height: 24),
             ],
           ),
@@ -723,66 +731,77 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           _buildInfoRow('Bugün Mola:', pauseStr, isDark),
           const SizedBox(height: 10),
           _buildInfoRow('Top. Kermes Mesai:', totalStr, isDark),
+          if (_pastTodayRoleActiveMin.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 15),
+              child: Divider(height: 1),
+            ),
+            Text('Görev Dağılımı (Bugün)', 
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)
+            ),
+            const SizedBox(height: 15),
+            ..._pastTodayRoleActiveMin.entries.map((e) {
+               String roleName = e.key;
+               roleName = roleName.replaceAll('Kadın Bölümü', '')
+                                  .replaceAll('Hanımlar Bölümü', '')
+                                  .replaceAll('Kadin Bölümü', '')
+                                  .replaceAll('Erkekler Bölümü', '')
+                                  .replaceAll('Erkek Bölümü', '')
+                                  .trim();
+               if (roleName.startsWith('-')) roleName = roleName.substring(1).trim();
+               if (roleName.isEmpty) roleName = e.key;
+
+               final mins = e.value;
+               final rStr = '${mins ~/ 60}s ${mins % 60}dk';
+               
+               final fraction = todayMin > 0 ? (mins / todayMin).clamp(0.0, 1.0) : 0.0;
+               return Padding(
+                 padding: const EdgeInsets.only(bottom: 12.0),
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text(roleName, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87)),
+                         Text(rStr, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black54)),
+                       ],
+                     ),
+                     const SizedBox(height: 6),
+                     ClipRRect(
+                       borderRadius: BorderRadius.circular(4),
+                       child: Container(
+                         height: 6,
+                         color: isDark ? Colors.white10 : Colors.black12,
+                         alignment: Alignment.centerLeft,
+                         child: FractionallySizedBox(
+                           widthFactor: fraction,
+                           child: Container(
+                             decoration: BoxDecoration(
+                               color: _getRoleColor(roleName),
+                               borderRadius: BorderRadius.circular(4),
+                             ),
+                           ),
+                         ),
+                       ),
+                     ),
+                   ],
+                 ),
+               );
+            }),
+          ]
         ],
       ),
     );
   }
 
-  Widget _buildShiftInfoCard(BuildContext context, bool onShift, bool onBreak, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: onShift 
-            ? (onBreak ? Colors.orange.withOpacity(0.1) : Colors.green.withOpacity(0.1)) 
-            : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: onShift 
-              ? (onBreak ? Colors.orange.withOpacity(0.3) : Colors.green.withOpacity(0.3)) 
-              : Colors.transparent,
-          width: 2,
-        ),
-        boxShadow: onShift ? [] : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                onShift ? (onBreak ? Icons.pause_circle_filled : Icons.check_circle) : Icons.access_time_filled,
-                color: onShift ? (onBreak ? Colors.orange : Colors.green) : Colors.grey,
-                size: 28,
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    onShift ? (onBreak ? 'Mola Verildi' : 'Mesai Devam Ediyor') : 'Mesai Dışı',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: onShift ? (onBreak ? Colors.orange : Colors.green) : (isDark ? Colors.white : Colors.black87),
-                    ),
-                  ),
-                  if (onShift && _shiftService.shiftStartedAt != null)
-                    Text(
-                      'Başlangıç: ${DateFormat('HH:mm').format(_shiftService.shiftStartedAt!)}',
-                      style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+  Color _getRoleColor(String roleName) {
+    if (roleName.toLowerCase().contains('park')) return Colors.blueAccent;
+    if (roleName.toLowerCase().contains('temizlik')) return Colors.purpleAccent;
+    if (roleName.toLowerCase().contains('sürücü')) return Colors.orange;
+    if (roleName.toLowerCase().contains('garson')) return Colors.green;
+    return Colors.pinkAccent;
   }
+
+
 }

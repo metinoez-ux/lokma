@@ -245,9 +245,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 for (final productDoc in productsSnapshot.docs) {
                   final productData = productDoc.data();
                   try {
-                    // Prevent duplicates if already added from 'menu' array
+                    // Override legacy menu array item if it exists, otherwise add it
                     final parsedProduct = KermesMenuItem.fromJson(productData);
-                    if (!menuItems.any((m) => m.name == parsedProduct.name)) {
+                    final existingIndex = menuItems.indexWhere((m) => m.name == parsedProduct.name);
+                    if (existingIndex >= 0) {
+                      menuItems[existingIndex] = parsedProduct;
+                    } else {
                       menuItems.add(parsedProduct);
                     }
                   } catch (e) {

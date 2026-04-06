@@ -333,6 +333,7 @@ export default function AdminHeader() {
  setLoggingOut(true);
  // Clear cached admin profile immediately for instant UI feedback
  localStorage.removeItem('mira_admin_profile');
+ localStorage.removeItem('mira_active_assignment_id');
  try {
  await auth.signOut();
  } catch (err) {

@@ -172,8 +172,8 @@ export default function LoginPage() {
  if (adminDocById.exists() && adminDocById.data().isActive) {
  const adminData = adminDocById.data();
  console.log('Found admin by UID:', userId, 'adminType:', adminData.adminType);
- // Role-based redirect
- router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
+ if (typeof window !== 'undefined') localStorage.removeItem('mira_active_assignment_id');
+      router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
  return;
  }
 
@@ -184,8 +184,8 @@ export default function LoginPage() {
  const adminData = uidSnapshot.docs[0].data();
  if (adminData.isActive) {
  console.log('Found admin by firebaseUid field:', userId);
- // Role-based redirect
- router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
+ if (typeof window !== 'undefined') localStorage.removeItem('mira_active_assignment_id');
+      router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
  return;
  }
  }
@@ -197,19 +197,21 @@ export default function LoginPage() {
 
  if (!emailSnapshot.empty) {
  const matchedAdmin = emailSnapshot.docs[0];
- const adminData = matchedAdmin.data();
-
- // Link this Firebase UID to the admin record
- console.log('Found admin by email:', userEmail, '- Linking UID:', userId);
- await updateDoc(doc(db, 'admins', matchedAdmin.id), {
- firebaseUid: userId,
- isActive: true,
- lastLoginAt: new Date(),
- linkedVia: 'email_login',
- // CRITICAL: Save Google profile picture to admin record for header display
- photoURL: auth.currentUser?.photoURL || adminData.photoURL || null,
- displayName: auth.currentUser?.displayName || adminData.displayName || null,
- });
+          const adminData = matchedAdmin.data();
+          
+          console.log('Found admin by email:', userEmail, '- Linking UID to all matches:', userId);
+          // Link this Firebase UID to ALL matched admin records
+          for (const docSnap of emailSnapshot.docs) {
+            const docData = docSnap.data();
+            await updateDoc(doc(db, 'admins', docSnap.id), {
+              firebaseUid: userId,
+              isActive: true,
+              lastLoginAt: new Date(),
+              linkedVia: 'email_login',
+              photoURL: auth.currentUser?.photoURL || docData.photoURL || null,
+              displayName: auth.currentUser?.displayName || docData.displayName || null,
+            });
+          }
 
  // Also update/merge the users record to link with admin
  const { setDoc } = await import('firebase/firestore');
@@ -228,8 +230,8 @@ export default function LoginPage() {
  }, { merge: true });
  console.log('📸 Admin linked with photoURL:', auth.currentUser?.photoURL);
 
- // Role-based redirect
- router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
+ if (typeof window !== 'undefined') localStorage.removeItem('mira_active_assignment_id');
+      router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
  return;
  }
  }
@@ -280,8 +282,8 @@ export default function LoginPage() {
  linkedFromAdmin: true,
  }, { merge: true });
 
- // Role-based redirect
- router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
+ if (typeof window !== 'undefined') localStorage.removeItem('mira_active_assignment_id');
+      router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
  return;
  }
  }
@@ -498,26 +500,24 @@ export default function LoginPage() {
  const adminsSnapshot = await getDocs(adminsQuery);
 
  if (!adminsSnapshot.empty) {
- matchedAdminDoc = adminsSnapshot.docs[0];
- matchedAdminData = matchedAdminDoc.data();
- console.log('Found admin match with phone format:', phoneVar, 'Admin:', matchedAdminData.displayName);
- break;
- }
+                  matchedAdminDoc = adminsSnapshot.docs[0];
+                  matchedAdminData = matchedAdminDoc.data();
+                  console.log('Found admin match with phone format:', phoneVar, 'Admin:', matchedAdminData.displayName);
+                  // Link all immediately
+                  for (const docSnap of adminsSnapshot.docs) {
+                    await updateDoc(doc(db, 'admins', docSnap.id), {
+                      isActive: true, tempPasswordRequired: false,
+                      firebaseUid: user.uid, activatedAt: new Date(),
+                      lastLoginAt: new Date(), linkedVia: 'phone_login',
+                    });
+                  }
+                  break;
+                }
  }
 
  if (matchedAdminDoc) {
- // Found matching admin record - activate and link UID
- console.log('Linking admin profile:', matchedAdminDoc.id, 'to Firebase UID:', user.uid);
-
- await updateDoc(doc(db, 'admins', matchedAdminDoc.id), {
- isActive: true,
- tempPasswordRequired: false,
- firebaseUid: user.uid,
- activatedAt: new Date(),
- lastLoginAt: new Date(),
- linkedVia: 'phone_login',
- });
- }
+                console.log('Admin profile(s) linked to Firebase UID:', user.uid);
+              }
  }
 
  // Now handle users collection - use admin data if available
@@ -570,8 +570,8 @@ export default function LoginPage() {
  if (matchedAdminData) {
  console.log('Phone matched admin record:', matchedAdminDoc!.id, 'adminType:', matchedAdminData.adminType);
 
- // Role-based redirect
- router.push(getAdminRedirectPath(matchedAdminData.role, matchedAdminData.adminType));
+ if (typeof window !== 'undefined') localStorage.removeItem('mira_active_assignment_id');
+      router.push(getAdminRedirectPath(matchedAdminData.role, matchedAdminData.adminType));
  return;
  }
 

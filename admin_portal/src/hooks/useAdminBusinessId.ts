@@ -14,6 +14,14 @@ export function useAdminBusinessId(): string | null {
  const { admin } = useAdmin();
  
  if (!admin) return null;
+
+ const isKermesContext = admin.businessType === 'kermes' || 
+   ['kermes', 'kermes_staff', 'kermes_admin', 'staff', 'mutfak', 'garson', 'teslimat'].includes(admin.adminType || '');
+
+ // Prioritize kermesId for kermes staff. Many volunteers may have a legacy businessId that ruins their queries.
+ if (isKermesContext && admin.kermesId) {
+   return admin.kermesId;
+ }
  
  return (
  admin.businessId ||
