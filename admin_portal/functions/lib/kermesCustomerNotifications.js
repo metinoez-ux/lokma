@@ -106,6 +106,13 @@ exports.onKermesOrderCreatedNotif = (0, firestore_1.onDocumentCreated)({
                         kData[field].forEach((uid) => staffUids.add(uid));
                     }
                 });
+                if (kData?.prepZoneAssignments) {
+                    Object.values(kData.prepZoneAssignments).forEach((uids) => {
+                        if (Array.isArray(uids)) {
+                            uids.forEach((uid) => staffUids.add(uid));
+                        }
+                    });
+                }
                 if (staffUids.size > 0) {
                     const adminPromises = Array.from(staffUids).map(uid => db.collection("admins").doc(uid).get());
                     const adminDocs = await Promise.all(adminPromises);
@@ -114,6 +121,9 @@ exports.onKermesOrderCreatedNotif = (0, firestore_1.onDocumentCreated)({
                     adminDocs.forEach(doc => {
                         if (doc.exists) {
                             const data = doc.data();
+                            // Mobile app writes singular fcmToken, check both formats
+                            if (data?.fcmToken && typeof data.fcmToken === 'string')
+                                mobileTokens.push(data.fcmToken);
                             if (data?.fcmTokens && Array.isArray(data.fcmTokens))
                                 mobileTokens.push(...data.fcmTokens);
                             if (data?.webFcmTokens && Array.isArray(data.webFcmTokens))
@@ -141,6 +151,23 @@ exports.onKermesOrderCreatedNotif = (0, firestore_1.onDocumentCreated)({
                         const res = await admin.messaging().sendEachForMulticast(sendObj(webTokens, true));
                         console.log(`[Web] Sent to ${res.successCount}/${webTokens.length} devices`);
                     }
+                    // Write to personnel_notifications subcollection for in-app inbox
+                    const batch = db.batch();
+                    for (const uid of staffUids) {
+                        const notifRef = db.collection("users").doc(uid).collection("personnel_notifications").doc();
+                        batch.set(notifRef, {
+                            title: staffTitle,
+                            body: staffBody,
+                            type: "kermes_new_order",
+                            orderId,
+                            orderNumber,
+                            kermesId,
+                            read: false,
+                            createdAt: new Date().toISOString(),
+                        });
+                    }
+                    await batch.commit();
+                    console.log(`[Inbox] Written to ${staffUids.size} staff inboxes`);
                 }
             }
         }
@@ -242,6 +269,13 @@ exports.onKermesOrderPaidNotif = (0, firestore_1.onDocumentUpdated)({
                         kData[field].forEach((uid) => staffUids.add(uid));
                     }
                 });
+                if (kData?.prepZoneAssignments) {
+                    Object.values(kData.prepZoneAssignments).forEach((uids) => {
+                        if (Array.isArray(uids)) {
+                            uids.forEach((uid) => staffUids.add(uid));
+                        }
+                    });
+                }
                 if (staffUids.size > 0) {
                     const adminPromises = Array.from(staffUids).map(uid => db.collection("admins").doc(uid).get());
                     const adminDocs = await Promise.all(adminPromises);
@@ -250,6 +284,9 @@ exports.onKermesOrderPaidNotif = (0, firestore_1.onDocumentUpdated)({
                     adminDocs.forEach(doc => {
                         if (doc.exists) {
                             const data = doc.data();
+                            // Mobile app writes singular fcmToken, check both formats
+                            if (data?.fcmToken && typeof data.fcmToken === 'string')
+                                mobileTokens.push(data.fcmToken);
                             if (data?.fcmTokens && Array.isArray(data.fcmTokens))
                                 mobileTokens.push(...data.fcmTokens);
                             if (data?.webFcmTokens && Array.isArray(data.webFcmTokens))
@@ -270,6 +307,23 @@ exports.onKermesOrderPaidNotif = (0, firestore_1.onDocumentUpdated)({
                         admin.messaging().sendEachForMulticast(sendObj(mobileTokens, false));
                     if (webTokens.length > 0)
                         admin.messaging().sendEachForMulticast(sendObj(webTokens, true));
+                    // Write to personnel_notifications subcollection for in-app inbox
+                    const batch2 = db.batch();
+                    for (const uid of staffUids) {
+                        const notifRef = db.collection("users").doc(uid).collection("personnel_notifications").doc();
+                        batch2.set(notifRef, {
+                            title: staffTitle,
+                            body: staffBody,
+                            type: "kermes_order_paid",
+                            orderId: event.params.orderId,
+                            orderNumber: orderNumber2,
+                            kermesId,
+                            read: false,
+                            createdAt: new Date().toISOString(),
+                        });
+                    }
+                    await batch2.commit();
+                    console.log(`[Inbox] Payment notification written to ${staffUids.size} staff inboxes`);
                 }
             }
         }
