@@ -12,6 +12,7 @@ import '../../widgets/qr_scanner_screen.dart';
 import 'providers/staff_notifications_provider.dart';
 import 'staff_notifications_screen.dart';
 import 'widgets/shift_action_pill.dart';
+import '../kermes/kermes_kds_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -50,7 +51,22 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       label: 'Mesai',
     ));
 
-    // 2. Courier Tab
+    // 2. KDS / Mutfak Tab (If prepZones exist)
+    if (capabilities.kermesPrepZones.isNotEmpty && capabilities.businessId != null) {
+      tabs.add(KermesKDSScreen(
+        kermesId: capabilities.businessId!,
+        kermesName: capabilities.businessName,
+        zone: capabilities.kermesPrepZones.first,
+        allZones: capabilities.kermesPrepZones,
+        allowedSections: capabilities.kermesAllowedSections,
+      ));
+      navItems.add(const BottomNavigationBarItem(
+        icon: Icon(Icons.kitchen),
+        label: 'Mutfak',
+      ));
+    }
+
+    // 3. Courier Tab
     if (capabilities.isDriver && capabilities.businessId != null) {
       tabs.add(CourierTab(
         businessIds: [capabilities.businessId!],
@@ -63,7 +79,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       ));
     }
 
-    // 3. Waiter Tab
+    // 4. Waiter Tab
     if (capabilities.hasTablesRole && capabilities.businessId != null) {
       tabs.add(WaiterTablesTab(
         businessId: capabilities.businessId!,
@@ -84,6 +100,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           }).toString();
           context.push(query);
         },
+        onWalkinOrderSelected: () {
+          final query = Uri(path: '/waiter-order', queryParameters: {
+            'businessId': capabilities.businessId,
+            'businessName': capabilities.businessName,
+          }).toString();
+          context.push(query);
+        },
       ));
       navItems.add(const BottomNavigationBarItem(
         icon: Icon(Icons.table_restaurant),
@@ -91,7 +114,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       ));
     }
 
-    // 4. Reservations Tab
+    // 5. Reservations Tab
     if (capabilities.hasReservation && capabilities.businessId != null) {
       tabs.add(const StaffReservationsScreen(hideAppBar: true));
       navItems.add(const BottomNavigationBarItem(
@@ -100,7 +123,23 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       ));
     }
 
-    // 4. Finance Tab
+    final bool showQr = capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole;
+    if (showQr) {
+      tabs.add(const SizedBox.shrink()); // Dummy tab for QR
+      navItems.add(BottomNavigationBarItem(
+        icon: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.qr_code_scanner, color: Colors.green),
+        ),
+        label: 'QR',
+      ));
+    }
+
+    // 6. Finance Tab
     if (capabilities.hasFinanceRole && capabilities.businessId != null) {
       tabs.add(FinanceWalletTab(
         userId: capabilities.userId,
@@ -179,26 +218,6 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 ),
             ],
           ),
-          if (capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole)
-            IconButton(
-              icon: const Icon(Icons.qr_code_scanner, color: Colors.greenAccent),
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const QRScannerScreen(
-                    prompt: 'Sipariş / Fatura QR Oku',
-                  ),
-                )).then((scannedText) {
-                  if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
-                    final query = Uri(path: '/kermesler', queryParameters: {
-                      'scannedOrder': scannedText,
-                      'businessId': capabilities.businessId,
-                    }).toString();
-                    context.push(query);
-                  }
-                });
-              },
-              tooltip: 'QR Seçili İşlemler',
-            ),
           const ShiftActionPill(),
         ],
       ),
@@ -213,7 +232,25 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       bottomNavigationBar: navItems.length >= 2
           ? BottomNavigationBar(
               currentIndex: _selectedNavIndex,
-              onTap: (index) => setState(() => _selectedNavIndex = index),
+              onTap: (index) {
+                if (navItems[index].label == 'QR') {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const QRScannerScreen(
+                      prompt: 'Sipariş / Fatura QR Oku',
+                    ),
+                  )).then((scannedText) {
+                    if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
+                      final query = Uri(path: '/kermesler', queryParameters: {
+                        'scannedOrder': scannedText,
+                        'businessId': capabilities.businessId,
+                      }).toString();
+                      context.push(query);
+                    }
+                  });
+                  return;
+                }
+                setState(() => _selectedNavIndex = index);
+              },
               type: BottomNavigationBarType.fixed,
               items: navItems,
               backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,

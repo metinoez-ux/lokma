@@ -8,6 +8,7 @@ class WaiterTablesTab extends ConsumerWidget {
   final bool isDark;
   final Function(TableSession, int) onTableSelected;
   final Function(int) onEmptyTableSelected;
+  final Function()? onWalkinOrderSelected;
 
   const WaiterTablesTab({
     super.key,
@@ -15,6 +16,7 @@ class WaiterTablesTab extends ConsumerWidget {
     required this.isDark,
     required this.onTableSelected,
     required this.onEmptyTableSelected,
+    this.onWalkinOrderSelected,
   });
 
   @override
@@ -38,9 +40,28 @@ class WaiterTablesTab extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    'staff.active_tables_count'.tr(namedArgs: {'count': sessions.length.toString()}),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (onWalkinOrderSelected != null) ...[
+                        ElevatedButton.icon(
+                          onPressed: onWalkinOrderSelected,
+                          icon: const Icon(Icons.shopping_bag_outlined),
+                          label: const Text('Masa Bağımsız Sipariş Al', style: TextStyle(fontSize: 16)),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      Text(
+                        'staff.active_tables_count'.tr(namedArgs: {'count': sessions.length.toString()}),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ),
               ),

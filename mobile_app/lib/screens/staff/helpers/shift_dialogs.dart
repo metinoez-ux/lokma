@@ -232,19 +232,25 @@ class ShiftDialogs {
                       width: double.infinity,
                       height: 52,
                       child: FilledButton.icon(
-                        onPressed: canStart
-                            ? () => Navigator.pop(ctx, {
-                                'tables': masaEnabled ? (selectedTables.toList()..sort()) : <int>[],
-                                'isDeliveryDriver': kuryeEnabled,
-                                'isDiger': digerEnabled,
-                                'prepZones': selectedPrepZones.toList(),
-                              })
+                        onPressed: canStart || isUpdating
+                            ? () {
+                                if (!hasAnyRole && isUpdating) {
+                                  Navigator.pop(ctx, {'endShift': true});
+                                } else {
+                                  Navigator.pop(ctx, {
+                                    'tables': masaEnabled ? (selectedTables.toList()..sort()) : <int>[],
+                                    'isDeliveryDriver': kuryeEnabled,
+                                    'isDiger': digerEnabled,
+                                    'prepZones': selectedPrepZones.toList(),
+                                  });
+                                }
+                              }
                             : null,
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: (!hasAnyRole && isUpdating) ? Colors.red : Colors.green,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        icon: Icon(isUpdating ? Icons.update : Icons.play_arrow),
+                        icon: Icon(!hasAnyRole && isUpdating ? Icons.power_settings_new : (isUpdating ? Icons.update : Icons.play_arrow)),
                         label: Text(
                           _buildStartButtonLabel(isUpdating, masaEnabled, kuryeEnabled, digerEnabled, selectedTables.length, selectedPrepZones.length),
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -538,7 +544,9 @@ class ShiftDialogs {
     if (kurye) parts.add('sürücü');
     if (diger) parts.add('diğer');
     if (prepCount > 0) parts.add('$prepCount ocakbaşı');
-    if (parts.isEmpty) return 'En az bir görev seçin';
+    if (parts.isEmpty) {
+      return isUp ? 'Vardiyayı Bitir' : 'En az bir görev seçin';
+    }
     return isUp ? 'Rolleri Güncelle' : 'Vardiyayı Başlat (${parts.join(' + ')})';
   }
 
@@ -582,6 +590,102 @@ class ShiftDialogs {
           Switch.adaptive(value: isEnabled, onChanged: onChanged, activeColor: color),
         ],
       ),
+    );
+  }
+
+  static Future<String?> showEndShiftActionSheet({
+    required BuildContext context,
+    required List<Map<String, dynamic>> tasks,
+  }) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Hangi Görevi Bitirmek İstiyorsunuz?',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Birden fazla aktif göreviniz bulunuyor. Sadece birini veya tümünü sonlandırabilirsiniz.',
+                        style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ...tasks.map((task) {
+                          String subtitle = 'Bu görevi sonlandır';
+                          if (task['elapsedText'] != null) {
+                            subtitle = '${task['elapsedText']} süredir aktif • $subtitle';
+                          }
+                          return ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.stop_circle_outlined, color: Colors.orange),
+                            ),
+                            title: Text(task['name']),
+                            subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+                            onTap: () => Navigator.pop(ctx, task['id']),
+                          );
+                        }).toList(),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.power_settings_new, color: Colors.red),
+                          ),
+                          title: const Text('Hepsini Bitir', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                          subtitle: const Text('Tüm görevlerden çıkış yap', style: TextStyle(fontSize: 12)),
+                          onTap: () => Navigator.pop(ctx, 'all'),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -75,7 +75,7 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
         isDriver: capabilities.hasCourierRole,
         maxTables: capabilities.maxTables,
         assignedTables: capabilities.assignedTables,
-        kermesPrepZones: capabilities.kermesAllowedSections,
+        kermesPrepZones: capabilities.kermesPrepZones,
       );
       if (result == null) return;
 
@@ -109,7 +109,7 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
       isDriver: capabilities.hasCourierRole,
       maxTables: capabilities.maxTables,
       assignedTables: capabilities.assignedTables,
-      kermesPrepZones: capabilities.kermesAllowedSections,
+      kermesPrepZones: capabilities.kermesPrepZones,
       isUpdating: true,
       currentMasa: _shiftService.currentTables.isNotEmpty,
       currentKurye: _shiftService.isDeliveryDriver,
@@ -118,6 +118,11 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
       currentPrepZones: _shiftService.currentPrepZones,
     );
     if (result == null) return;
+
+    if (result['endShift'] == true) {
+      await _executeEndWholeShift();
+      return;
+    }
 
     if (mounted) setState(() => _isLoading = true);
     HapticFeedback.heavyImpact();
@@ -141,24 +146,7 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
     if (mounted) setState(() => _isLoading = false);
   }
 
-  Future<void> _handleEndShift() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('staff.end_shift')),
-        content: Text(tr('staff.confirm_end_shift')),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('common.cancel'))),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(tr('common.finish')),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-
+  Future<void> _executeEndWholeShift() async {
     if (mounted) setState(() => _isLoading = true);
     HapticFeedback.heavyImpact();
     final summary = await _shiftService.endShift();
@@ -169,6 +157,84 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
       setState(() => _isLoading = false);
       if (summary != null) {
         ShiftDialogs.showShiftSummaryDialog(context, summary);
+      }
+    }
+  }
+
+  Future<void> _executeEndSpecificTask(String taskId, List<int> tables, bool isDriver, bool isDiger, List<String> prepZones) async {
+    if (mounted) setState(() => _isLoading = true);
+    HapticFeedback.heavyImpact();
+
+    List<int> newTables = List.from(tables);
+    bool newIsDriver = isDriver;
+    bool newIsDiger = isDiger;
+    List<String> newPrepZones = List.from(prepZones);
+
+    if (taskId == 'masa') {
+      newTables.clear();
+    } else if (taskId == 'kurye') {
+      newIsDriver = false;
+    } else if (taskId == 'diger') {
+      newIsDiger = false;
+    } else if (taskId.startsWith('prep_')) {
+      final zone = taskId.substring(5);
+      newPrepZones.remove(zone);
+    }
+
+    await _shiftService.updateShiftRoles(
+      tables: newTables,
+      isDeliveryDriver: newIsDriver,
+      isOtherRole: newIsDiger,
+      prepZones: newPrepZones,
+    );
+
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _handleEndShift() async {
+    final tables = _shiftService.currentTables;
+    final isDriver = _shiftService.isDeliveryDriver;
+    final isDiger = _shiftService.isOtherRole;
+    final prepZones = _shiftService.currentPrepZones;
+
+    final elapsedStr = _formatDuration(_shiftElapsed);
+
+    final tasks = <Map<String, dynamic>>[];
+    if (tables.isNotEmpty) tasks.add({'id': 'masa', 'name': 'Masa Servisi', 'elapsedText': elapsedStr});
+    if (isDriver) tasks.add({'id': 'kurye', 'name': 'Kurye Görevi', 'elapsedText': elapsedStr});
+    if (isDiger) tasks.add({'id': 'diger', 'name': 'Diğer Görevler', 'elapsedText': elapsedStr});
+    for (var zone in prepZones) {
+      tasks.add({'id': 'prep_$zone', 'name': 'Ocakbaşı: $zone', 'zone': zone, 'elapsedText': elapsedStr});
+    }
+
+    if (tasks.length <= 1) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr('staff.end_shift')),
+          content: Text(tr('staff.confirm_end_shift')),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('common.cancel'))),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: Text(tr('common.finish')),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+      await _executeEndWholeShift();
+    } else {
+      final result = await ShiftDialogs.showEndShiftActionSheet(
+        context: context,
+        tasks: tasks,
+      );
+      if (result == null) return;
+      if (result == 'all') {
+        await _executeEndWholeShift();
+      } else {
+        await _executeEndSpecificTask(result, tables, isDriver, isDiger, prepZones);
       }
     }
   }
