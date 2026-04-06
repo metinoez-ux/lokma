@@ -217,13 +217,13 @@ export default function OrdersPage() {
     setCheckedItems(prev => ({ ...prev, [orderId]: updated }));
     // Persist to Firestore
     try {
-      const isKermesAdmin = ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
+      const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat', 'kds', 'kasa', 'vezne', 'volunteer'].includes(admin?.adminType || '');
       // Fallback search in our filtered array for businessId to be safe
       const orderMatch = [...meatOrders, ...resOrders].find(o => o.id === orderId);
       const bId = orderMatch?.businessId || adminBusinessId;
       
       const orderRef = isKermesAdmin 
-        ? doc(db, 'kermes_events', bId as string, 'orders', orderId)
+        ? doc(db, 'kermes_orders', orderId)
         : doc(db, 'meat_orders', orderId);
 
       await updateDoc(orderRef, {
@@ -1091,7 +1091,7 @@ export default function OrdersPage() {
  }
 
   // Route to correct collection
-  const isKermesAdmin = ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
+  const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat', 'kds', 'kasa', 'vezne', 'volunteer'].includes(admin?.adminType || '');
   const orderRef = isReservation && order?.businessId
   ? doc(db, 'businesses', order.businessId, 'reservations', orderId)
   : isKermesAdmin

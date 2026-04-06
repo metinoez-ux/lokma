@@ -12,7 +12,7 @@ import '../../widgets/qr_scanner_screen.dart';
 import 'providers/staff_notifications_provider.dart';
 import 'staff_notifications_screen.dart';
 import 'widgets/shift_action_pill.dart';
-import '../kermes/kermes_kds_screen.dart';
+import '../kermes/kermes_unified_kds_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -53,11 +53,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
     // 2. KDS / Mutfak Tab (If prepZones exist)
     if (capabilities.kermesPrepZones.isNotEmpty && capabilities.businessId != null) {
-      tabs.add(KermesKDSScreen(
+      tabs.add(KermesUnifiedKdsScreen(
         kermesId: capabilities.businessId!,
         kermesName: capabilities.businessName,
-        zone: capabilities.kermesPrepZones.first,
-        allZones: capabilities.kermesPrepZones,
         allowedSections: capabilities.kermesAllowedSections,
       ));
       navItems.add(const BottomNavigationBarItem(
