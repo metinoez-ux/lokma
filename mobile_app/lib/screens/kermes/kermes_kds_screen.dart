@@ -293,7 +293,7 @@ class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
 
     for (int i = 0; i < order.items.length; i++) {
       final item = order.items[i];
-      if (item.prepZone == _activeZone) {
+      if (item.prepZones.contains(_activeZone)) {
         zoneItems.add(MapEntry(i, item));
       } else {
         otherZoneItems.add(item);
@@ -476,7 +476,7 @@ class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
                             ),
                             const Spacer(),
                             Text(
-                              item.prepZone ?? '?',
+                              item.prepZones.isNotEmpty ? item.prepZones.join(', ') : '?',
                               style: TextStyle(
                                 color: isDark
                                     ? Colors.white24

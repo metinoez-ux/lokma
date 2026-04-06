@@ -135,10 +135,11 @@ const { admin } = useAdmin();
  firstLoadTabs.current = true;
 
   // 1. Listen for new pending orders
-  const isKermesAdmin = admin?.adminType === 'kermes';
+  const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'kermes_admin', 'mutfak', 'garson', 'teslimat'].includes(admin?.adminType || '');
   const qOrders = isKermesAdmin
     ? query(
-        collection(db, 'kermes_events', businessId, 'orders'),
+        collection(db, 'kermes_orders'),
+        where('kermesId', '==', businessId),
         where('status', '==', 'pending'),
         orderBy('createdAt', 'desc'),
         limit(10)

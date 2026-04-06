@@ -257,7 +257,7 @@ class KermesMenuItem {
   final bool isAvailable;  // Stok durumu: true=mevcut, false=tukendi
   final List<OptionGroup> optionGroups; // Multi-step menu secenekleri (yan urun, icecek vb.)
 
-  final String? prepZone;  // e.g., 'K_ZONE', 'E_ZONE' - Hangi mutfakta/bolgede hazirlandigini belirtir.
+  final List<String> prepZones; // e.g., ['Kadinlar Standi', 'Erkekler Standi'] - Hangi mutfakta/bolgede hazirlandigini belirtir.
 
   // Stok takip alanlari
   final bool stockEnabled;
@@ -292,7 +292,7 @@ class KermesMenuItem {
     this.hasPfand = false,
     this.isAvailable = true,
     this.optionGroups = const [],
-    this.prepZone,
+    this.prepZones = const [],
     this.stockEnabled = false,
     this.initialStock,
     this.currentStock,
@@ -335,7 +335,7 @@ class KermesMenuItem {
       hasPfand: json['hasPfand'] ?? false,
       isAvailable: json['isAvailable'] ?? true,
       optionGroups: _parseOptionGroups(json['optionGroups']),
-      prepZone: _safeStringOrNull(json['prepZone']),
+      prepZones: _parseStringList(json['prepZone']),
       stockEnabled: json['stockEnabled'] ?? false,
       initialStock: json['initialStock'] != null ? (json['initialStock'] as num).toInt() : null,
       currentStock: json['currentStock'] != null ? (json['currentStock'] as num).toInt() : null,

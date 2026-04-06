@@ -496,7 +496,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             final orderId = data['orderId'] as String?;
             final reservationId = data['reservationId'] as String?;
 
-            if (type == 'order_status' && orderId != null && orderId.isNotEmpty) {
+            if ((type == 'order_status' || type == 'kermes_order_created' || type == 'kermes_order_paid') && orderId != null && orderId.isNotEmpty) {
               orderMap.putIfAbsent(orderId, () => []);
               orderDocIds.putIfAbsent(orderId, () => []);
               orderMap[orderId]!.add(data);

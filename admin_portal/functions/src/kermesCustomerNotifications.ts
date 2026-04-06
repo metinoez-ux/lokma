@@ -76,6 +76,13 @@ export const onKermesOrderCreatedNotif = onDocumentCreated(
               kData![field].forEach((uid: string) => staffUids.add(uid));
             }
           });
+          if (kData?.prepZoneAssignments) {
+            Object.values(kData.prepZoneAssignments).forEach((uids: any) => {
+              if (Array.isArray(uids)) {
+                uids.forEach((uid: string) => staffUids.add(uid));
+              }
+            });
+          }
 
           if (staffUids.size > 0) {
             const adminPromises = Array.from(staffUids).map(uid => db.collection("admins").doc(uid).get());
@@ -225,6 +232,13 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
               kData![field].forEach((uid: string) => staffUids.add(uid));
             }
           });
+          if (kData?.prepZoneAssignments) {
+            Object.values(kData.prepZoneAssignments).forEach((uids: any) => {
+              if (Array.isArray(uids)) {
+                uids.forEach((uid: string) => staffUids.add(uid));
+              }
+            });
+          }
 
           if (staffUids.size > 0) {
             const adminPromises = Array.from(staffUids).map(uid => db.collection("admins").doc(uid).get());

@@ -406,7 +406,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         quantity: item.quantity,
         price: item.menuItem.price,
         productId: item.menuItem.name,
-        prepZone: item.menuItem.prepZone,
+        prepZones: item.menuItem.prepZones,
         category: item.menuItem.category,
         imageUrl: item.menuItem.imageUrl,
       )).toList();

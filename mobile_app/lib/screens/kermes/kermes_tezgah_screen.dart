@@ -517,21 +517,24 @@ class _KermesTezgahScreenState extends ConsumerState<KermesTezgahScreen>
             ),
           ),
           // PrepZone badge
-          if (item.prepZone != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: _getZoneColor(item.prepZone!).withOpacity(isDark ? 0.2 : 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                item.prepZone!,
-                style: TextStyle(
-                  color: _getZoneColor(item.prepZone!),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
+          if (item.prepZones.isNotEmpty)
+            Wrap(
+              spacing: 4,
+              children: item.prepZones.map((zone) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _getZoneColor(zone).withOpacity(isDark ? 0.2 : 0.1),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              ),
+                child: Text(
+                  zone,
+                  style: TextStyle(
+                    color: _getZoneColor(zone),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )).toList(),
             ),
         ],
       ),

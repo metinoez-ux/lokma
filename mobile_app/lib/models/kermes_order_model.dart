@@ -25,7 +25,7 @@ class KermesOrderItem {
   final int quantity;
   final double price;
   final String? productId;         // Firestore urun referansi
-  final String? prepZone;          // Urunun hazirlik alani (Kadinlar Standi, Erkekler Standi vb.)
+  final List<String> prepZones;    // Urunun hazirlik alanlari (Kadinlar Standi, Erkekler Standi vb.)
   final KermesItemStatus itemStatus; // Item-bazli statu: pending / preparing / ready
   final DateTime? readyAt;         // Hazir oldugu zaman
   final String? readyByZone;       // Hangi zone "hazir" dedi
@@ -37,7 +37,7 @@ class KermesOrderItem {
     required this.quantity,
     required this.price,
     this.productId,
-    this.prepZone,
+    this.prepZones = const [],
     this.itemStatus = KermesItemStatus.pending,
     this.readyAt,
     this.readyByZone,
@@ -56,7 +56,7 @@ class KermesOrderItem {
       'quantity': quantity,
       'price': price,
       if (productId != null) 'productId': productId,
-      if (prepZone != null) 'prepZone': prepZone,
+      if (prepZones.isNotEmpty) 'prepZone': prepZones,
       'itemStatus': itemStatus.name,
       if (readyAt != null) 'readyAt': Timestamp.fromDate(readyAt!),
       if (readyByZone != null) 'readyByZone': readyByZone,
@@ -71,7 +71,11 @@ class KermesOrderItem {
       quantity: map['quantity'] ?? 0,
       price: (map['price'] ?? 0).toDouble(),
       productId: map['productId'] as String?,
-      prepZone: map['prepZone'] as String?,
+      prepZones: map['prepZone'] is List
+          ? (map['prepZone'] as List).map((e) => e.toString()).toList()
+          : map['prepZone'] is String && map['prepZone'].toString().isNotEmpty
+              ? [map['prepZone'].toString()]
+              : [],
       itemStatus: KermesItemStatus.values.firstWhere(
         (e) => e.name == map['itemStatus'],
         orElse: () => KermesItemStatus.pending,
@@ -89,7 +93,7 @@ class KermesOrderItem {
     int? quantity,
     double? price,
     String? productId,
-    String? prepZone,
+    List<String>? prepZones,
     KermesItemStatus? itemStatus,
     DateTime? readyAt,
     String? readyByZone,
@@ -101,7 +105,7 @@ class KermesOrderItem {
       quantity: quantity ?? this.quantity,
       price: price ?? this.price,
       productId: productId ?? this.productId,
-      prepZone: prepZone ?? this.prepZone,
+      prepZones: prepZones ?? this.prepZones,
       itemStatus: itemStatus ?? this.itemStatus,
       readyAt: readyAt ?? this.readyAt,
       readyByZone: readyByZone ?? this.readyByZone,

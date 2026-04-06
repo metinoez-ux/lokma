@@ -261,7 +261,7 @@ class KermesOrderService {
               .where((order) {
                 // Bu sipariste bu zone'a ait en az bir item var mi?
                 return order.items.any((item) => 
-                  item.prepZone == zone && item.itemStatus != KermesItemStatus.ready
+                  item.prepZones.contains(zone) && item.itemStatus != KermesItemStatus.ready
                 );
               })
               .toList();
@@ -291,8 +291,17 @@ class KermesOrderService {
         if (itemIndex >= items.length) throw Exception('Gecersiz item index');
         
         // Zone dogrulama: bu item gercekten bu zone'a mi ait?
-        if (zone != null && items[itemIndex]['prepZone'] != null && items[itemIndex]['prepZone'] != zone) {
-          throw Exception('Bu item bu zone\'a ait degil');
+        if (zone != null && items[itemIndex]['prepZone'] != null) {
+          final pZone = items[itemIndex]['prepZone'];
+          bool matches = false;
+          if (pZone is List) {
+            matches = pZone.contains(zone);
+          } else {
+            matches = pZone == zone;
+          }
+          if (!matches) {
+            throw Exception('Bu item bu zone\'a ait degil');
+          }
         }
         
         // Item statusunu guncelle
@@ -401,8 +410,9 @@ class KermesOrderService {
               }
               // Diger siparisler icin prepZone'a bak
               return order.items.any((item) =>
-                item.prepZone != null && sectionFilter.any((s) =>
-                  item.prepZone!.startsWith(s.substring(0, 1)))
+                item.prepZones.isNotEmpty && sectionFilter.any((s) =>
+                  item.prepZones.any((zone) => zone.startsWith(s.substring(0, 1)))
+                )
               );
             }).toList();
           }

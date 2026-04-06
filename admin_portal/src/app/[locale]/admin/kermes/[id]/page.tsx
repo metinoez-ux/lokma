@@ -504,6 +504,7 @@ export default function KermesDetailPage() {
  const [salesHistoryProduct, setSalesHistoryProduct] = useState<KermesProduct | null>(null);
  const [salesHistoryData, setSalesHistoryData] = useState<any[]>([]);
  const [loadingSalesHistory, setLoadingSalesHistory] = useState(false);
+ const [isUploadingProductImage, setIsUploadingProductImage] = useState(false);
 
  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
  setToast({ message, type });
@@ -3675,6 +3676,13 @@ export default function KermesDetailPage() {
  counterAvailability: product.counterAvailability || 'all',
  })}>
  <div className="flex items-center gap-3">
+ {product.imageUrls && product.imageUrls.length > 0 ? (
+ <img src={product.imageUrls[0]} alt={product.name} className="w-8 h-8 rounded-full object-cover border border-gray-600" />
+ ) : (
+ <div className="w-8 h-8 rounded-full bg-gray-600/50 border border-gray-500/50 flex items-center justify-center">
+ <span className="text-[10px]">🍽️</span>
+ </div>
+ )}
  <span className="text-foreground font-medium">{getLocalizedText(product.name, locale)}</span>
  {product.isCustom && <span className="px-2 py-0.5 bg-purple-600/30 text-purple-800 dark:text-purple-400 rounded text-xs">{t('ozel')}</span>}
  {product.sourceType === 'master' && <span className="px-2 py-0.5 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">{t('barcode')}</span>}
@@ -3995,6 +4003,107 @@ export default function KermesDetailPage() {
  </div>
 
  <div className="p-6 space-y-5">
+ {/* Ürün Görseli (Elit Modası Upload) */}
+ <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-xl p-4">
+ <h3 className="text-foreground text-sm font-medium mb-3 flex items-center justify-between">
+ <span>📸 {t('urun_gorseli') || 'Ürün Görseli'}</span>
+ </h3>
+ <div className="flex items-center gap-4">
+ <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-gray-500 overflow-hidden bg-gray-800 flex items-center justify-center shrink-0">
+ {editProduct.imageUrls && editProduct.imageUrls.length > 0 ? (
+ <img src={editProduct.imageUrls[0]} alt="Product" className="w-full h-full object-cover" />
+ ) : (
+ <span className="text-3xl opacity-50">🍽️</span>
+ )}
+ {isUploadingProductImage && (
+ <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+ <div className="w-5 h-5 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+ </div>
+ )}
+ </div>
+ <div className="flex-1">
+ <p className="text-xs text-muted-foreground mb-2">
+ Ürüne ait iştah açıcı ve elit bir görsel yükleyin. Bu görsel detay sayfasında büyük, listelerde zarif bir şekilde gösterilecektir. Minimum 800x800px önerilir.
+ </p>
+ <label className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-lg cursor-pointer transition shadow-lg text-sm font-medium">
+ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+ {isUploadingProductImage ? 'Yükleniyor...' : 'Görsel Seç & Yükle'}
+ <input 
+ type="file" 
+ className="hidden" 
+ accept="image/*"
+ disabled={isUploadingProductImage}
+ onChange={async (e) => {
+ if (!e.target.files || !e.target.files[0]) return;
+ try {
+ setIsUploadingProductImage(true);
+ const file = e.target.files[0];
+ 
+ // Resim boyutlandirma islemi
+ const resizedBlob = await new Promise<Blob>((resolve, reject) => {
+ const img = new Image();
+ img.onload = () => {
+ const canvas = document.createElement('canvas');
+ const MAX_WIDTH = 800;
+ const MAX_HEIGHT = 800;
+ let width = img.width;
+ let height = img.height;
+
+ if (width > height) {
+ if (width > MAX_WIDTH) {
+ height = Math.round((height * MAX_WIDTH) / width);
+ width = MAX_WIDTH;
+ }
+ } else {
+ if (height > MAX_HEIGHT) {
+ width = Math.round((width * MAX_HEIGHT) / height);
+ height = MAX_HEIGHT;
+ }
+ }
+
+ canvas.width = width;
+ canvas.height = height;
+ const ctx = canvas.getContext('2d');
+ ctx?.drawImage(img, 0, 0, width, height);
+
+ canvas.toBlob((blob) => {
+ if (blob) resolve(blob);
+ else reject(new Error('Canvas to Blob hatasi'));
+ }, file.type, 0.85);
+ };
+ img.onerror = (err) => reject(err);
+ img.src = URL.createObjectURL(file);
+ });
+
+ const fileExt = file.name.split('.').pop() || 'jpg';
+ const fileName = `product_${Date.now()}.${fileExt}`;
+ const storageRef = ref(storage, `kermes/${kermesId}/products/${fileName}`);
+ await uploadBytes(storageRef, resizedBlob);
+ const url = await getDownloadURL(storageRef);
+ setEditProduct({ ...editProduct, imageUrls: [url] });
+ showToast('Görsel başarıyla yüklendi', 'success');
+ } catch (error) {
+ console.error('Upload Error:', error);
+ showToast('Görsel yüklenirken bir hata oluştu', 'error');
+ } finally {
+ setIsUploadingProductImage(false);
+ }
+ }}
+ />
+ </label>
+ {editProduct.imageUrls && editProduct.imageUrls.length > 0 && (
+ <button 
+ type="button" 
+ onClick={() => setEditProduct({ ...editProduct, imageUrls: [] })}
+ className="ml-3 text-xs text-red-400 hover:text-red-300 transition underline"
+ >
+ Görseli Kaldır
+ </button>
+ )}
+ </div>
+ </div>
+ </div>
+
  {/* Fiyat Bilgileri */}
  <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-xl p-4">
  <h3 className="text-foreground text-sm font-medium mb-3">💰 Fiyat Bilgileri</h3>
