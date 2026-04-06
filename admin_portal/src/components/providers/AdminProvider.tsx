@@ -79,33 +79,76 @@ const applyVirtualContext = (admin: Admin): Admin => {
  
  let clonedAdmin = { ...admin };
 
- // Auto-migrate in memory if zero assignments but legacy field exists
- if (!clonedAdmin.assignments || clonedAdmin.assignments.length === 0) {
- if (clonedAdmin.businessId || clonedAdmin.kermesId) {
- clonedAdmin.assignments = [{
- id: clonedAdmin.businessId || clonedAdmin.kermesId || 'legacy_id',
- entityId: clonedAdmin.businessId || clonedAdmin.kermesId || 'legacy_id',
- entityType: clonedAdmin.kermesId ? 'kermes' : 'business',
- entityName: clonedAdmin.businessName || 'Legacy Entity',
- role: clonedAdmin.adminType
- }];
- } else {
- return clonedAdmin; // No assignments and no legacy logic
- }
- }
+ // Synthesize all assignments dynamically combining legacy fields and arrays
+  if (!clonedAdmin.assignments) {
+    clonedAdmin.assignments = [];
+  }
 
- let activeAssignmentId: string | null = null;
+  // Legacy single kermesId or businessId
+  if (clonedAdmin.kermesId && !clonedAdmin.assignments.some(a => a.entityId === clonedAdmin.kermesId)) {
+    clonedAdmin.assignments.push({
+      id: clonedAdmin.kermesId, entityId: clonedAdmin.kermesId, entityType: 'kermes',
+      entityName: clonedAdmin.businessName || 'Kermes', role: clonedAdmin.adminType || 'staff'
+    });
+  }
+  if (clonedAdmin.businessId && !clonedAdmin.assignments.some(a => a.entityId === clonedAdmin.businessId)) {
+    clonedAdmin.assignments.push({
+      id: clonedAdmin.businessId, entityId: clonedAdmin.businessId, entityType: 'business',
+      entityName: clonedAdmin.businessName || 'Business', role: clonedAdmin.adminType || 'staff'
+    });
+  }
+
+  // Kermes Assignments array
+  if ((clonedAdmin as any).kermesAssignments && Array.isArray((clonedAdmin as any).kermesAssignments)) {
+    (clonedAdmin as any).kermesAssignments.forEach((ka: any) => {
+      const targetEntityId = typeof ka === 'string' ? ka : ka.kermesId;
+      if (!targetEntityId) return;
+
+      if (!clonedAdmin.assignments!.some(a => a.entityId === targetEntityId)) {
+        clonedAdmin.assignments!.push({
+          id: targetEntityId, 
+          entityId: targetEntityId, 
+          entityType: 'kermes',
+          entityName: typeof ka === 'string' ? 'Kermes' : (ka.title || 'Kermes'), 
+          role: (typeof ka !== 'string' && ka.roles && ka.roles.length > 0) ? ka.roles[0] : (clonedAdmin.adminType || 'staff')
+        });
+      }
+    });
+  }
+
+  // Restaurant IDs array (sometimes used by sub-businesses)
+  if ((clonedAdmin as any).restaurantIds && Array.isArray((clonedAdmin as any).restaurantIds)) {
+    (clonedAdmin as any).restaurantIds.forEach((rid: any) => {
+      if (!clonedAdmin.assignments!.some(a => a.entityId === rid)) {
+        clonedAdmin.assignments!.push({
+          id: rid, entityId: rid, entityType: 'business',
+          entityName: 'Restaurant', role: clonedAdmin.adminType || 'staff'
+        });
+      }
+    });
+  }
+
+  let activeAssignmentId: string | null = null;
+
  if (typeof window !== 'undefined') {
  activeAssignmentId = localStorage.getItem('mira_active_assignment_id');
  }
 
  let activeAssignment = clonedAdmin.assignments?.find(a => a.id === activeAssignmentId);
  
- // If not found or empty, default to the very first assignment
+ // If not found or empty, default to the very first assignment ONLY if there's exactly 1
  if (!activeAssignment && clonedAdmin.assignments && clonedAdmin.assignments.length > 0) {
+ if (clonedAdmin.assignments.length === 1) {
  activeAssignment = clonedAdmin.assignments[0];
  if (typeof window !== 'undefined') {
  localStorage.setItem('mira_active_assignment_id', activeAssignment.id);
+ }
+ } else {
+ // Multiple assignments, tell the app we need selection
+ return {
+ ...clonedAdmin,
+ needsWorkspaceSelection: true
+ } as any;
  }
  }
 
@@ -188,6 +231,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
  // Clear cached profile
  if (typeof window !== 'undefined') {
  localStorage.removeItem('mira_admin_profile');
+ localStorage.removeItem('mira_active_assignment_id');
  // Store reason to display on login page
  if (reason !== 'manual') {
  sessionStorage.setItem('logout_reason', logoutReasonMessages[reason]);
@@ -384,7 +428,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
  };
  }, [router, setupRealtimeListener]);
 
- const loadAdmin = useCallback(async (userId: string, email: string | null, displayName: string | null, phoneNumber: string | null = null) => {
+ 
+  const mergeMatchedDocs = (docs: any[]): Admin | null => {
+    if (!docs || docs.length === 0) return null;
+    const primary = docs[0];
+    const profile = { id: primary.id, ...primary.data() } as Admin;
+    profile.assignments = profile.assignments || [];
+    
+    docs.forEach(doc => {
+      const data = doc.data();
+      if (data.assignments) profile.assignments!.push(...data.assignments);
+      if (data.kermesAssignments) {
+        data.kermesAssignments.forEach((ka: any) => profile.assignments!.push({
+          id: ka.kermesId, entityId: ka.kermesId, entityType: 'kermes', entityName: ka.title || 'Kermes', role: ka.roles?.[0] || data.adminType
+        }));
+      }
+      if (data.businessId && !profile.assignments!.some(a => a.entityId === data.businessId)) {
+        profile.assignments!.push({ id: data.businessId, entityId: data.businessId, entityType: 'business', entityName: data.businessName || 'Business', role: data.adminType });
+      }
+      if (data.kermesId && !profile.assignments!.some(a => a.entityId === data.kermesId)) {
+        profile.assignments!.push({ id: data.kermesId, entityId: data.kermesId, entityType: 'kermes', entityName: data.businessName || 'Kermes', role: data.adminType });
+      }
+      if (data.restaurantIds && Array.isArray(data.restaurantIds)) {
+        data.restaurantIds.forEach((rid: any) => {
+          if (!profile.assignments!.some(a => a.entityId === rid)) {
+            profile.assignments!.push({ id: rid, entityId: rid, entityType: 'business', entityName: 'Restaurant', role: data.adminType });
+          }
+        });
+      }
+    });
+    return profile;
+  };
+
+  const loadAdmin = useCallback(async (userId: string, email: string | null, displayName: string | null, phoneNumber: string | null = null) => {
  try {
  // Check email whitelist first for super admin access
  let adminProfile: Admin | null = null;
@@ -423,7 +499,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
  if (!phoneSnapshot.empty) {
  const matchedAdmin = phoneSnapshot.docs[0];
- adminProfile = { id: matchedAdmin.id, ...matchedAdmin.data() } as Admin;
+ adminProfile = mergeMatchedDocs(phoneSnapshot.docs) as Admin;
 
  // Link Firebase UID to this admin record for future logins
  console.log('🔗 Linking Firebase UID to existing admin:', matchedAdmin.id);
@@ -449,7 +525,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
  if (!altSnapshot.empty) {
  const matchedAdmin = altSnapshot.docs[0];
- adminProfile = { id: matchedAdmin.id, ...matchedAdmin.data() } as Admin;
+ adminProfile = mergeMatchedDocs(altSnapshot.docs) as Admin;
 
  // Link Firebase UID
  console.log('🔗 Linking Firebase UID (alt phone) to admin:', matchedAdmin.id);
@@ -474,8 +550,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
  const emailSnapshot = await getDocs(emailQuery);
 
  if (!emailSnapshot.empty) {
- const matchedAdmin = emailSnapshot.docs[0];
- adminProfile = { id: matchedAdmin.id, ...matchedAdmin.data() } as Admin;
+          const matchedAdmin = emailSnapshot.docs[0];
+          adminProfile = mergeMatchedDocs(emailSnapshot.docs);
 
  // Link Firebase UID
  console.log('🔗 Linking Firebase UID (email) to admin:', matchedAdmin.id);
