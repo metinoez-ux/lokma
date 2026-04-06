@@ -3942,7 +3942,7 @@ export default function KermesDetailPage() {
  placeholder="0.00" className="w-full px-3 py-2 bg-gray-700 text-white text-xl font-bold rounded-lg border border-gray-600" />
  </div>
  <div>
- <label className="text-muted-foreground text-sm block mb-1">Hazırlık / Garson Alanı</label>
+ <label className="text-muted-foreground text-sm block mb-1">Hangi İstasyonlarda Hazırlanıyor? (Opsiyonel)</label>
  <PrepZoneSelector value={customProduct.prepZone || []} onChange={(val) => setCustomProduct({ ...customProduct, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
  </div>
  <button onClick={handleCreateCustom} disabled={saving || !customProduct.name.trim() || customProduct.price <= 0}
@@ -3985,7 +3985,7 @@ export default function KermesDetailPage() {
  </p>
  </div>
  <div>
- <label className="text-muted-foreground text-sm block mb-2">Hazırlık / Garson Alanı</label>
+ <label className="text-muted-foreground text-sm block mb-2">Hangi İstasyonlarda Hazırlanıyor? (Opsiyonel)</label>
  <PrepZoneSelector value={editBeforeAdd.prepZone || []} onChange={(val) => setEditBeforeAdd({ ...editBeforeAdd, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
  </div>
  </div>
@@ -4163,55 +4163,21 @@ export default function KermesDetailPage() {
  </div>
 
  {/* Mutfak Operasyonu */}
- <div className="bg-orange-900/10 dark:bg-orange-950/20 border border-orange-500/20 rounded-xl p-4 space-y-4">
- <h3 className="text-foreground text-sm font-medium flex items-center gap-2">
- <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
- Mutfak Operasyonu
- </h3>
+                <div className="bg-orange-900/10 dark:bg-orange-950/20 border border-orange-500/20 rounded-xl p-4 space-y-4">
+                  <h3 className="text-foreground text-sm font-medium flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
+                    Mutfak Operasyonu
+                  </h3>
 
- {/* Servis Tipi Toggle */}
- <div>
- <label className="text-muted-foreground text-xs block mb-2">Servis Tipi</label>
- <div className="flex gap-2">
- <button type="button" onClick={() => setEditProduct({ ...editProduct, serviceType: 'instant' })}
- className={`flex-1 px-3 py-2.5 rounded-lg border text-sm font-medium transition ${(editProduct.serviceType || 'prepped') === 'instant' ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
- <span className="block text-base mb-0.5">Aninda / Sicak</span>
- <span className="block text-[10px] opacity-70">Siparis gelince aninda hazirlanir (Kumpir, Kebap, Grill)</span>
- </button>
- <button type="button" onClick={() => setEditProduct({ ...editProduct, serviceType: 'prepped' })}
- className={`flex-1 px-3 py-2.5 rounded-lg border text-sm font-medium transition ${(editProduct.serviceType || 'prepped') === 'prepped' ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
- <span className="block text-base mb-0.5">Onceden Hazir</span>
- <span className="block text-[10px] opacity-70">Toplu hazirlanir, tezgahta servis edilir (Pasta, Borek, Salata)</span>
- </button>
- </div>
- </div>
+                  {/* Hazirlik Yeri - PrepZone secimi */}
+                  <div>
+                    <label className="text-muted-foreground text-xs block mb-2">Hangi İstasyonlarda Hazırlanıyor? (Opsiyonel)</label>
+                    <PrepZoneSelector value={editProduct.prepZone || []} onChange={(val) => setEditProduct({ ...editProduct, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">Birden fazla bölüm seçebilirsiniz (örneğin hem Erkek hem Kadın bölümünde hazırlanan ürünler için)</p>
+                  </div>
+                </div>
 
- {/* Hazirlik Yeri - PrepZone secimi */}
- <div>
- <label className="text-muted-foreground text-xs block mb-2">Nerede Hazirlaniyor?</label>
- <PrepZoneSelector value={editProduct.prepZone || []} onChange={(val) => setEditProduct({ ...editProduct, prepZone: val })} products={products} sectionDefs={kermesSectionDefs} />
- <p className="text-[10px] text-muted-foreground/60 mt-1">Birden fazla bolum secebilirsiniz (ornegin hem Erkek hem Kadin bolumunde hazirlanan urunler icin)</p>
- </div>
-
- {/* Tezgah Dagitimi */}
- <div>
- <label className="text-muted-foreground text-xs block mb-2">Tezgah Dagitimi</label>
- <div className="flex gap-2">
- <button type="button" onClick={() => setEditProduct({ ...editProduct, counterAvailability: 'all' })}
- className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition ${(editProduct.counterAvailability || 'all') === 'all' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
- Tum Tezgahlar
- <span className="block text-[10px] opacity-70">Her noktada mevcut</span>
- </button>
- <button type="button" onClick={() => setEditProduct({ ...editProduct, counterAvailability: 'source' })}
- className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition ${(editProduct.counterAvailability || 'all') === 'source' ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}>
- Sadece Kaynak
- <span className="block text-[10px] opacity-70">Sadece hazirlandigi yerde</span>
- </button>
- </div>
- </div>
- </div>
-
- {/* 2. İsim */}
+                {/* 2. İsim */}
  <div>
  <label className="text-muted-foreground text-xs block mb-1">2. İsim (Opsiyonel)</label>
  <input type="text" value={editProduct.secondaryName || ''}
