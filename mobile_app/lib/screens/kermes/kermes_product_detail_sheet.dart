@@ -8,6 +8,7 @@ import '../../providers/kermes_cart_provider.dart';
 import '../../providers/cart_provider.dart'; // Needed for CartWarningUtils
 import '../../utils/currency_utils.dart';
 import '../../utils/cart_warning_utils.dart';
+import 'kermes_customization_sheet.dart';
 
 const Color _lokmaPink = Color(0xFFEA184A);
 
@@ -320,6 +321,31 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
   }
 
   void _addToCartAndClose() {
+    // Multi-step: show customization sheet for combo items
+    if (item.isComboMenu) {
+      // Capture parent navigator context before popping
+      final parentNavigator = Navigator.of(context);
+      final parentContext = parentNavigator.context;
+      Navigator.pop(context); // Close product detail sheet first
+      // Use Future.delayed to ensure previous sheet is fully dismissed
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (parentContext.mounted) {
+          showModalBottomSheet(
+            context: parentContext,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            useSafeArea: true,
+            builder: (ctx) => KermesCustomizationSheet(
+              item: item,
+              eventId: widget.eventId,
+              eventName: widget.eventName,
+            ),
+          );
+        }
+      });
+      return;
+    }
+
     if (CartWarningUtils.checkConflictForKermesCart(ref, widget.eventId)) {
       CartWarningUtils.showDifferentCartWarning(
         context: context,
@@ -444,8 +470,8 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                   Text(
                     item.name,
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
                       color: textPrimary,
                     ),
                   ),
@@ -466,9 +492,9 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                   Text(
                     'ab ${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2)}',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 17,
+                      color: textPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
 
@@ -478,8 +504,9 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                     Text(
                       item.detailedDescription ?? item.description!,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         color: textSecondary,
+                        fontWeight: FontWeight.w500,
                         height: 1.4,
                       ),
                     ),

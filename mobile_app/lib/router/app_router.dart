@@ -27,6 +27,7 @@ import '../screens/auth/simple_auth_screen.dart';
 import '../screens/auth/set_password_screen.dart';
 import '../screens/search/smart_search_screen.dart';
 import '../screens/marketplace/kasap/cart_screen.dart';
+import '../screens/marketplace/kasap/cart_dispatcher.dart';
 import '../screens/driver/driver_delivery_screen.dart';
 import '../screens/profile/my_reservations_screen.dart';
 import '../screens/staff/staff_reservations_screen.dart';
@@ -139,7 +140,7 @@ class AppRouter {
               builder: (context, state) {
                 final tab =
                     int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
-                return CartScreen(initialTab: tab);
+                return CartDispatcher(initialTab: tab);
               },
             ),
             GoRoute(

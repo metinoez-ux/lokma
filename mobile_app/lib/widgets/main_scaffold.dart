@@ -169,8 +169,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
             ),
         ],
       ),
-      bottomNavigationBar: (isCartPage ||
-              !isBottomNavVisible)
+      bottomNavigationBar: (!isBottomNavVisible)
           ? null
           : GlassBottomBar(
               currentIndex: selectedIndex,

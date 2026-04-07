@@ -244,6 +244,7 @@ interface KermesProduct {
  lowStockThreshold?: number;
  lastStockUpdateBy?: string;
  lastStockUpdateAt?: any;
+ optionGroups?: any[];
 }
 
 interface MasterProduct {
@@ -507,7 +508,10 @@ export default function KermesDetailPage() {
  prepZone?: string[];
  serviceType?: 'instant' | 'prepped';
  counterAvailability?: 'all' | 'source';
+  optionGroups?: any[];
  } | null>(null);
+
+ const [editProductTab, setEditProductTab] = useState<'genel' | 'detay' | 'secenekler'>('genel');
 
  // Silme onay modali
  const [deleteConfirm, setDeleteConfirm] = useState<KermesProduct | null>(null);
@@ -1466,6 +1470,7 @@ export default function KermesDetailPage() {
  prepZone: editProduct.prepZone || [],
  serviceType: editProduct.serviceType || 'prepped',
  counterAvailability: editProduct.counterAvailability || 'all',
+  optionGroups: editProduct.optionGroups || [],
  updatedAt: new Date(),
  };
  await updateDoc(productRef, updateData);
@@ -3724,7 +3729,7 @@ export default function KermesDetailPage() {
  category: product.category,
  unit: product.unit || t('adet'),
  secondaryName: product.secondaryName || '',
- description: product.description || '',
+ description: typeof product.description === 'object' ? getLocalizedText(product.description, locale) : (product.description || ''),
  detailedDescription: product.detailedDescription || '',
  allergens: Array.isArray(product.allergens) ? product.allergens : [],
  ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
@@ -3734,6 +3739,7 @@ export default function KermesDetailPage() {
  prepZone: product.prepZone || [],
  serviceType: product.serviceType || 'prepped',
  counterAvailability: product.counterAvailability || 'all',
+  optionGroups: product.optionGroups || [],
  })}>
  <div className="flex items-center gap-3">
  {product.imageUrls && product.imageUrls.length > 0 ? (
@@ -4227,6 +4233,26 @@ export default function KermesDetailPage() {
                   </div>
                 </div>
 
+
+                {/* Tab Navigation */}
+                <div className="flex gap-1 bg-muted/30 rounded-lg p-1 mb-4">
+                  <button type="button" onClick={() => setEditProductTab('genel')}
+                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition ${editProductTab === 'genel' ? 'bg-card text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+                    Genel
+                  </button>
+                  <button type="button" onClick={() => setEditProductTab('detay')}
+                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition ${editProductTab === 'detay' ? 'bg-card text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+                    Detay & Alerjenler
+                  </button>
+                  <button type="button" onClick={() => setEditProductTab('secenekler')}
+                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition ${editProductTab === 'secenekler' ? 'bg-card text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+                    Secenekler {(editProduct.optionGroups || []).length > 0 ? `(${(editProduct.optionGroups || []).length})` : ''}
+                  </button>
+                </div>
+
+                {/* GENEL TAB */}
+                {editProductTab === 'genel' && (
+                <div className="space-y-4">
                 {/* 2. İsim */}
  <div>
  <label className="text-muted-foreground text-xs block mb-1">2. İsim (Opsiyonel)</label>
@@ -4254,6 +4280,12 @@ export default function KermesDetailPage() {
  placeholder={t('detayli_bilgi_tarif_veya_urun_hakkinda_n')} />
  </div>
 
+  </div>
+                )}
+
+                {/* DETAY & ALERJENLER TAB */}
+                {editProductTab === 'detay' && (
+                <div className="space-y-4">
  {/* Alerjenler */}
  <div className="bg-amber-900/20 rounded-xl p-4 border border-amber-800/30">
  <label className="text-amber-800 dark:text-amber-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
@@ -4346,8 +4378,89 @@ export default function KermesDetailPage() {
  <label className="text-foreground text-sm font-medium block mb-2">📷 Görseller (Max 3)</label>
  ... Image upload will be added here ...
  </div> */}
- </div>
+  </div>
+                )}
 
+                {/* SECENEKLER TAB */}
+                {editProductTab === 'secenekler' && (
+                <div className="space-y-4">
+                <div className="bg-muted/50 dark:bg-muted/10 border border-border rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-amber-800 dark:text-amber-400 text-sm font-medium">Urun Secenekleri (Combo / Varyantlar)</label>
+                    <button type="button"
+                      onClick={() => {
+                        const groups = editProduct.optionGroups || [];
+                        const newGroup = { id: `grp_${Date.now()}`, name: '', type: 'radio', required: false, minSelect: 0, maxSelect: 1, options: [] };
+                        setEditProduct({ ...editProduct, optionGroups: [...groups, newGroup] });
+                      }}
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-colors">
+                      + Grup Ekle
+                    </button>
+                  </div>
+                  {(editProduct.optionGroups || []).length === 0 ? (
+                    <div className="bg-background/50 border border-dashed border-input rounded-xl p-5 text-center">
+                      <p className="text-muted-foreground/80 text-sm">Henuz secenek grubu yok.</p>
+                      <p className="text-muted-foreground text-xs mt-1">Boyut, sos, ekstra secimi icin Grup Ekle butonunu kullanin.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {(editProduct.optionGroups || []).map((group: any, gIdx: number) => (
+                        <div key={group.id} className="bg-background/60 border border-input rounded-xl p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-muted-foreground/80 font-mono text-xs">#{gIdx + 1}</span>
+                            <input type="text" value={group.name}
+                              onChange={e => { const g = [...(editProduct.optionGroups || [])]; g[gIdx] = { ...g[gIdx], name: e.target.value }; setEditProduct({ ...editProduct, optionGroups: g }); }}
+                              className="flex-1 bg-card border border-input rounded-lg px-3 py-1.5 text-sm font-semibold"
+                              placeholder="Grup adi (orn: Boyut, Sos Secimi, Ekstra)" />
+                            <select value={group.type}
+                              onChange={e => { const g = [...(editProduct.optionGroups || [])]; g[gIdx] = { ...g[gIdx], type: e.target.value, maxSelect: e.target.value === 'radio' ? 1 : -1 }; setEditProduct({ ...editProduct, optionGroups: g }); }}
+                              className="bg-card border border-input rounded-lg px-2 py-1 text-xs">
+                              <option value="radio">Tek Secim</option>
+                              <option value="checkbox">Coklu Secim</option>
+                            </select>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" checked={group.required}
+                                onChange={e => { const g = [...(editProduct.optionGroups || [])]; g[gIdx] = { ...g[gIdx], required: e.target.checked, minSelect: e.target.checked ? 1 : 0 }; setEditProduct({ ...editProduct, optionGroups: g }); }}
+                                className="w-3.5 h-3.5 rounded" />
+                              <span className="text-xs text-muted-foreground">Zorunlu</span>
+                            </label>
+                            <button type="button" onClick={() => { const g = [...(editProduct.optionGroups || [])]; g.splice(gIdx, 1); setEditProduct({ ...editProduct, optionGroups: g }); }}
+                              className="text-destructive hover:text-destructive/80 text-sm px-2">X</button>
+                          </div>
+                          <div className="space-y-2">
+                            {(group.options || []).map((opt: any, oIdx: number) => (
+                              <div key={opt.id} className="flex items-center gap-2 bg-card/50 rounded-lg px-3 py-2">
+                                <span className="text-muted-foreground text-xs w-4">{oIdx + 1}.</span>
+                                <input type="text" value={opt.name}
+                                  onChange={e => { const g = [...(editProduct.optionGroups || [])]; const o = [...g[gIdx].options]; o[oIdx] = { ...o[oIdx], name: e.target.value }; g[gIdx] = { ...g[gIdx], options: o }; setEditProduct({ ...editProduct, optionGroups: g }); }}
+                                  className="flex-1 bg-background border border-input rounded px-2 py-1 text-sm" placeholder="Secenek adi" />
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground/80">+EUR</span>
+                                  <input type="number" step="0.10" min="0" value={opt.priceModifier || ''}
+                                    onChange={e => { const g = [...(editProduct.optionGroups || [])]; const o = [...g[gIdx].options]; o[oIdx] = { ...o[oIdx], priceModifier: parseFloat(e.target.value) || 0 }; g[gIdx] = { ...g[gIdx], options: o }; setEditProduct({ ...editProduct, optionGroups: g }); }}
+                                    className="w-20 bg-background border border-input rounded px-2 py-1 text-sm text-right" placeholder="0.00" />
+                                </div>
+                                <button type="button" onClick={() => { const g = [...(editProduct.optionGroups || [])]; const o = [...g[gIdx].options]; o.splice(oIdx, 1); g[gIdx] = { ...g[gIdx], options: o }; setEditProduct({ ...editProduct, optionGroups: g }); }}
+                                  className="text-destructive text-xs px-1">X</button>
+                              </div>
+                            ))}
+                            <button type="button" onClick={() => { const g = [...(editProduct.optionGroups || [])]; const no = { id: `opt_${Date.now()}_${Math.random().toString(36).slice(2,6)}`, name: '', priceModifier: 0 }; g[gIdx] = { ...g[gIdx], options: [...(g[gIdx].options||[]), no] }; setEditProduct({ ...editProduct, optionGroups: g }); }}
+                              className="w-full py-1.5 border border-dashed border-input hover:border-amber-500 rounded-lg text-xs text-muted-foreground/80 hover:text-amber-600 transition-colors">
+                              + Secenek Ekle
+                            </button>
+                          </div>
+                          {group.options && group.options.length > 0 && (
+                            <div className="mt-2 text-[10px] text-muted-foreground/80">{group.options.length} secenek | {group.type === 'radio' ? 'Tek secim' : 'Coklu secim'}{group.required ? ' | Zorunlu' : ''}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                </div>
+                )}
+
+  </div>
  {/* Footer Buttons */}
  <div className="sticky bottom-0 bg-card px-6 py-4 border-t border-border flex gap-3">
  <button onClick={() => setEditProduct(null)} className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium">İptal</button>

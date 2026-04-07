@@ -1,4 +1,6 @@
 import '../../utils/currency_utils.dart';
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -48,6 +50,10 @@ WeatherForecast? _weatherForecast;
   bool _isLoadingWeather = true;
   List<KermesFeature> _globalFeatures = [];
   Map<String, KermesBadge> _activeBadges = {};
+
+  // Realtime products listener
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _productsSubscription;
+  List<KermesMenuItem>? _liveMenu;
 
 String _selectedCategory = '';
 
@@ -112,6 +118,7 @@ String _selectedCategory = '';
     _fetchLiveWeather();
     _loadGlobalFeatures();
     _loadBadges();
+    _listenToProducts();
     _scrollController.addListener(_onMenuScroll);
     
     final modes = _availableModes;
@@ -127,7 +134,7 @@ String _selectedCategory = '';
     _scrollController.removeListener(_onMenuScroll);
     _scrollController.dispose();
     _chipScrollController.dispose();
-    
+    _productsSubscription?.cancel();
     super.dispose();
   }
 
@@ -345,19 +352,35 @@ void _onMenuScroll() {
     });
   }
 
+  /// Realtime listener for products subcollection
+  void _listenToProducts() {
+    _productsSubscription = FirebaseFirestore.instance
+        .collection('kermes_events')
+        .doc(widget.event.id)
+        .collection('products')
+        .snapshots()
+        .listen((snapshot) {
+      if (!mounted) return;
+      final items = <KermesMenuItem>[];
+      for (final doc in snapshot.docs) {
+        try {
+          items.add(KermesMenuItem.fromJson(doc.data()));
+        } catch (e) {
+          debugPrint('Error parsing live product ${doc.id}: $e');
+        }
+      }
+      setState(() => _liveMenu = items);
+      debugPrint('[KERMES-LIVE] Products updated: ${items.length} items');
+    }, onError: (e) {
+      debugPrint('[KERMES-LIVE] Products stream error: $e');
+    });
+  }
+
   List<KermesMenuItem> get _eventMenu {
+    // Prefer realtime data, fallback to initial snapshot
+    if (_liveMenu != null && _liveMenu!.isNotEmpty) return _liveMenu!;
     if (widget.event.menu.isNotEmpty) return widget.event.menu;
-    // Dummy veriler (Eger veritabaninda veya test event'inde hic menu yoksa bos gozukmemesi icin)
-    return [
-      KermesMenuItem(name: 'Adana Kebap', price: 15.0, category: 'Ana Yemek', description: 'Acili Adana', imageUrl: 'https://lh3.googleusercontent.com/abZf2O0-R43Xo_nE3iJ8P-1H0nZ8qfX8j_A1E0r2ZJzH5yY1p1K6c1Xk0dIeX3cTqW1eY8pD0c9bN3A8xK7yL5M2Z1P4X7A9C5k=w600'),
-      KermesMenuItem(name: 'Urfa Kebap', price: 14.5, category: 'Ana Yemek', description: 'Acisiz Urfa'),
-      KermesMenuItem(name: 'Karisik Izgara', price: 22.0, category: 'Grill', description: 'Ozel LOKMA karisik'),
-      KermesMenuItem(name: 'Ezogelin Corba', price: 6.0, category: 'Çorba'),
-      KermesMenuItem(name: 'Kunefe', price: 9.0, category: 'Tatlı', description: 'Hatay usulu kunefe'),
-      KermesMenuItem(name: 'Sutlac', price: 5.5, category: 'Tatlı'),
-      KermesMenuItem(name: 'Ayran', price: 2.5, category: 'İçecek', description: 'Yayik ayran'),
-      KermesMenuItem(name: 'Cizre Cola', price: 2.0, category: 'İçecek'),
-    ];
+    return [];
   }
 
   List<String> get _categoriesWithoutAll {
@@ -745,14 +768,20 @@ void _onMenuScroll() {
                                 child: Text('marketplace.no_results'.tr(),
                                     style: TextStyle(
                                         color: hintColor, fontSize: 16)))
-                            : ListView.builder(
-                                padding: const EdgeInsets.all(16),
-                                itemCount: searchResults.length,
-                                itemBuilder: (context, index) {
-                                  final item = searchResults[index];
-                                  final cartQuantity = _getCartQuantity(item);
-                                  return _buildMenuItem(item, cartQuantity,
-                                      isDark: isDark);
+                            : Consumer(
+                                builder: (context, cartRef, _) {
+                                  // Watch cart so this rebuilds on add/remove
+                                  cartRef.watch(kermesCartProvider);
+                                  return ListView.builder(
+                                    padding: const EdgeInsets.all(16),
+                                    itemCount: searchResults.length,
+                                    itemBuilder: (context, index) {
+                                      final item = searchResults[index];
+                                      final cartQuantity = _getCartQuantity(item);
+                                      return _buildMenuItem(item, cartQuantity,
+                                          isDark: isDark);
+                                    },
+                                  );
                                 },
                               ),
                   ),
@@ -2430,12 +2459,12 @@ Widget _buildHeroSection(BuildContext context) {
                                 children: [
                                   Text(
                                     '${day.date.day} ${_formatDateShort(day.date).split(' ').last}',
-                                    style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w700),
+                                    style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w700),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     _getTurkishDayName(day.date),
-                                    style: TextStyle(color: subtleTextColor, fontSize: 12, fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
@@ -2460,7 +2489,7 @@ Widget _buildHeroSection(BuildContext context) {
                                   const SizedBox(width: 8),
                                   Text(
                                     day.description,
-                                    style: TextStyle(color: subtleTextColor, fontSize: 11),
+                                    style: TextStyle(color: subtleTextColor, fontSize: 12, fontWeight: FontWeight.w500),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
@@ -2509,7 +2538,7 @@ Widget _buildHeroSection(BuildContext context) {
                               const SizedBox(width: 4),
                               Text(
                                 '${day.avgWindSpeed.round()} km/h',
-                                style: TextStyle(color: subtleTextColor, fontSize: 11, fontWeight: FontWeight.w500),
+                                style: TextStyle(color: subtleTextColor, fontSize: 12, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -2527,8 +2556,8 @@ Widget _buildHeroSection(BuildContext context) {
                                 '${day.maxRainProbability.round()}%',
                                 style: TextStyle(
                                   color: day.maxRainProbability > 50 ? Colors.blue : subtleTextColor,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -2596,10 +2625,10 @@ Widget _buildHeroSection(BuildContext context) {
                         ),
                     const SizedBox(height: 4),
                     Text(
-                      'Sorularınız için iletişime geçebilirsiniz.',
+                      'Sorulariniz icin iletisime gecebilirsiniz.',
                       style: TextStyle(
                         color: subtleTextColor,
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2702,16 +2731,16 @@ Widget _buildHeroSection(BuildContext context) {
                         'Telefon',
                         style: TextStyle(
                           color: subtleTextColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                       Text(
                         '+49 163 123 4567',
                          style: TextStyle(
                           color: textColor,
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

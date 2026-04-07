@@ -587,15 +587,16 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       _stepTitles[_currentStep],
                       style: TextStyle(
                         color: textColor,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      'Adım ${_currentStep + 1} / 5',
+                      'Adim ${_currentStep + 1} / 5',
                       style: TextStyle(
                         color: isDark ? Colors.grey[400]! : Colors.grey[600]!,
-                        fontSize: 13,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -866,14 +867,23 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           item.name,
                           style: TextStyle(
                             color: textColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
                           ),
                         ),
+                        if (cartItem.selectedOptions.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            cartItem.selectedOptions.map((o) => o.optionName).join(', '),
+                            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                         const SizedBox(height: 4),
                         Text(
                           '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} x $quantity = ${subtotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                          style: TextStyle(color: subtleTextColor, fontSize: 13),
+                          style: TextStyle(color: subtleTextColor, fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -951,9 +961,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Nasıl sipariş vermek istersiniz?',
-            style: TextStyle(color: Colors.white70, fontSize: 15),
+          Text(
+            'Nasil siparis vermek istersiniz?',
+            style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 24),
           
@@ -1200,14 +1210,15 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
   /// Step 2: Teslimat Türü
   Widget _buildDeliveryStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Siparişinizi nasıl almak istersiniz?',
-            style: TextStyle(color: Colors.white70, fontSize: 15),
+          Text(
+            'Siparissinizi nasil almak istersiniz?',
+            style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 24),
           
@@ -1355,9 +1366,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Siparişiniz için bilgilerinizi girin',
-            style: TextStyle(color: Colors.white70, fontSize: 15),
+          Text(
+            'Siparissiniz icin bilgilerinizi girin',
+            style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 20),
           
@@ -1375,7 +1386,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             controller: _phoneController,
             decoration: InputDecoration(
               labelText: 'Telefon',
-              labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+              labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 15, fontWeight: FontWeight.w600),
               filled: true,
               fillColor: _cardBg(isDark),
               border: OutlineInputBorder(
@@ -1405,10 +1416,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             const SizedBox(height: 14),
             _buildTextField(
               controller: _tableController,
-              label: 'Masa No',
+              label: 'Bolum / Masa No',
               icon: Icons.table_restaurant_outlined,
-              hint: 'Örn: 5',
-              keyboardType: TextInputType.number,
+              hint: 'Orn: M9',
+              keyboardType: TextInputType.text,
             ),
           ],
           
@@ -1656,17 +1667,34 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ),
             child: Column(
               children: [
-                // Ürünler
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${cartState.totalItems} ürün', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600])),
-                    Text(
-                      '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16),
+                // Urunler detayli
+                ...cartState.items.map((cartItem) {
+                  final itemTotal = cartItem.menuItem.price * cartItem.quantity;
+                  final optionText = cartItem.selectedOptions.isNotEmpty
+                      ? ' (${cartItem.selectedOptions.map((o) => o.optionName).join(', ')})'
+                      : '';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${cartItem.quantity}x ${cartItem.menuItem.name}$optionText',
+                            style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w500),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${itemTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                          style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                }).toList(),
                 
                 // Pfand satırı
                 if (pfandCount > 0) ...[
@@ -1695,7 +1723,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(tr('Toplam'), style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
+                    Text(tr('Toplam'), style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 16)),
                     Text(
                       '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: TextStyle(
@@ -1707,28 +1735,43 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   ],
                 ),
                 
-                // Yuvarlama ile Destek widget'i (sadece acceptsDonations == true ise)
-                if (widget.event.acceptsDonations) ...[
-                  const SizedBox(height: 16),
-                  _buildRoundUpWidget(isDark, grandTotal),
-                ],
-                
                 const Divider(color: Colors.white24, height: 20),
                 
                 // Teslimat
                 Row(
                   children: [
-                    Icon(_getDeliveryIcon(), color: Colors.white70, size: 18),
+                    Icon(_getDeliveryIcon(), color: isDark ? Colors.white70 : Colors.grey[600], size: 18),
                     const SizedBox(width: 8),
                     Text(
                       _getDeliveryLabel(),
-                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14),
+                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
               ],
             ),
           ),
+          
+          // Yuvarlama ile Destek - ayri kart
+          if (widget.event.acceptsDonations) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green.withOpacity(0.3), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: _buildRoundUpWidget(isDark, grandTotal),
+            ),
+          ],
           
           const SizedBox(height: 24),
           Text(
@@ -2019,9 +2062,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           child: Text(
                             title,
                             style: TextStyle(
-                              color: isSelected ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.white70 : Colors.black54),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              color: isSelected ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.white : Colors.black87),
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -2048,7 +2091,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 13),
+                      style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -2095,8 +2138,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
-        hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
+        labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 15, fontWeight: FontWeight.w600),
+        hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400], fontSize: 15),
         prefixIcon: Icon(icon, color: isDark ? Colors.grey[500] : Colors.grey[600]),
         filled: true,
         fillColor: _cardBg(isDark),

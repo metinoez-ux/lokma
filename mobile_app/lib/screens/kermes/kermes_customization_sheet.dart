@@ -185,8 +185,8 @@ class _KermesCustomizationSheetState
                   Text(
                     item.name,
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
                       color: textPrimary,
                     ),
                   ),
@@ -209,9 +209,9 @@ class _KermesCustomizationSheetState
                   Text(
                     '${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2).replaceAll('.', ',')}',
                     style: TextStyle(
-                      fontSize: 15,
-                      color: textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 17,
+                      color: textPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
 
@@ -221,8 +221,9 @@ class _KermesCustomizationSheetState
                     Text(
                       item.description!,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         color: textSecondary,
+                        fontWeight: FontWeight.w500,
                         height: 1.4,
                       ),
                     ),
@@ -390,8 +391,8 @@ class _KermesCustomizationSheetState
               child: Text(
                 group.name,
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                   color: textPrimary,
                 ),
               ),
@@ -448,10 +449,10 @@ class _KermesCustomizationSheetState
                     child: Text(
                       option.name,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         color: textPrimary,
                         fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),
                   ),

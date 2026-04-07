@@ -22,6 +22,8 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../core/constants/build_info.dart';
+import '../../providers/kermes_cart_provider.dart';
+import '../../providers/cart_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -704,6 +706,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     GestureDetector(
                       onTap: () async {
                         HapticFeedback.mediumImpact();
+                        // Sepetleri temizle
+                        ref.read(kermesCartProvider.notifier).clearCart();
+                        ref.read(cartProvider.notifier).clearCart();
                         await _googleSignIn.signOut();
                         await _auth.signOut();
                         if (context.mounted) {
