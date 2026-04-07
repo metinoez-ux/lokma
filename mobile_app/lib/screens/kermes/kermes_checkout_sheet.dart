@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/models/kermes_order_model.dart';
@@ -16,6 +18,7 @@ import 'package:lokma_app/widgets/kermes/group_order_share_sheet.dart';
 import '../../utils/currency_utils.dart';
 import '../../widgets/qr_scanner_screen.dart';
 import '../../services/staff_role_service.dart';
+import 'kermes_customization_sheet.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -115,6 +118,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   bool _isCreatingGroup = false;
   String? _activeGroupOrderId;
   
+  // Auth state tracking - login sonrasi prefill icin
+  String? _lastAuthUid;
+  
   // Bagis/yuvarlama
   double _donationAmount = 0.0;
   String _donationTarget = 'none'; // 'kermesOrg' | 'fund' | 'none'
@@ -200,13 +206,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   bool get _isKermesFuture => DateTime.now().isBefore(widget.event.startDate);
   /// Toplam adim sayisi
-  int get _totalSteps => 5;
+  int get _totalSteps => 4;
 
   /// Adim baslik listesi
   List<String> get _stepTitles {
     return [
       'Sepetim',
-      'Siparis Turu',
       'Teslimat',
       'Bilgileriniz',
       'Odeme',
@@ -219,8 +224,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     switch (effectiveStep) {
       case 'cart':
         return ref.read(kermesCartProvider).isNotEmpty;
-      case 'orderType':
-        return true;
       case 'delivery':
         if (_deliveryType == null) return false;
         if (_deliveryType == DeliveryType.kurye) return true;
@@ -235,9 +238,22 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         }
         return true;
       case 'info':
-        if (!_isKermesActive) return false;
-        bool isInfoOk = _nameController.text.trim().isNotEmpty && 
-               (_phoneController.text.trim().isNotEmpty || _completePhoneNumber.isNotEmpty);
+        final user = FirebaseAuth.instance.currentUser;
+        final isGuest = user == null || user.isAnonymous;
+        
+        if (isGuest && _deliveryType == DeliveryType.kurye) {
+          return false;
+        }
+        
+        if (isGuest && (_deliveryType == DeliveryType.gelAl || _deliveryType == DeliveryType.masada)) {
+          bool isInfoOk = _nameController.text.trim().isNotEmpty;
+          if (_deliveryType == DeliveryType.masada) {
+            isInfoOk = isInfoOk && _tableController.text.trim().isNotEmpty;
+          }
+          return isInfoOk;
+        }
+        
+        bool isInfoOk = _nameController.text.trim().isNotEmpty;
         if (_deliveryType == DeliveryType.masada) {
           isInfoOk = isInfoOk && _tableController.text.trim().isNotEmpty;
         }
@@ -253,27 +269,19 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   String _getEffectiveStep(int step) {
     switch (step) {
       case 0: return 'cart';
-      case 1: return 'orderType';
-      case 2: return 'delivery';
-      case 3: return 'info';
-      case 4: return 'payment';
+      case 1: return 'delivery';
+      case 2: return 'info';
+      case 3: return 'payment';
       default: return 'cart';
     }
   }
   
   void _nextStep() {
-    // Tarih kontrolu: Sepetten sonra Kermes aktif mi kontrol et
-    if (_currentStep == 0 && !_isKermesActive) {
-      HapticFeedback.heavyImpact();
-      _showKermesDateBlockDialog();
-      return;
-    }
-    
     if (_currentStep < _totalSteps - 1) {
       HapticFeedback.selectionClick();
       setState(() => _currentStep++);
     } else {
-      // Son adim - siparisi tamamla
+      // Son adim - siparisi tamamla (tarih kontrolu burada yapilir)
       _submitOrder();
     }
   }
@@ -381,6 +389,13 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   Future<void> _submitOrder() async {
+    // Tarih kontrolu: siparis verilmeden once kermes aktif mi?
+    if (!_isKermesActive) {
+      HapticFeedback.heavyImpact();
+      _showKermesDateBlockDialog();
+      return;
+    }
+    
     setState(() => _isSubmitting = true);
     
     try {
@@ -510,6 +525,21 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = _darkBg(isDark);
     
+    // Auth state degisikligi algila (login sonrasi prefill icin)
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUid = currentUser?.uid;
+    if (currentUid != _lastAuthUid) {
+      _lastAuthUid = currentUid;
+      if (currentUser != null && !currentUser.isAnonymous) {
+        // Kayitli kullanici olarak dondu - bilgileri doldur
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _prefillUserInfo().then((_) {
+            if (mounted) setState(() {});
+          });
+        });
+      }
+    }
+    
     return Container(
       height: MediaQuery.of(context).size.height * 0.92,
       decoration: BoxDecoration(
@@ -560,22 +590,23 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Back button (always visible — step 0 closes sheet, others go back)
-              GestureDetector(
-                onTap: _previousStep,
-                child: Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _cardBg(isDark),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    _currentStep > 0 ? Icons.arrow_back_ios_new : Icons.close,
-                    color: textColor,
-                    size: 20,
+              // Back button (only on step > 0)
+              if (_currentStep > 0)
+                GestureDetector(
+                  onTap: _previousStep,
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _cardBg(isDark),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: textColor,
+                      size: 20,
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(width: 12),
               
               // Title + Step indicator
@@ -592,7 +623,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       ),
                     ),
                     Text(
-                      'Adim ${_currentStep + 1} / 5',
+                      'Adim ${_currentStep + 1} / $_totalSteps',
                       style: TextStyle(
                         color: isDark ? Colors.grey[400]! : Colors.grey[600]!,
                         fontSize: 14,
@@ -685,8 +716,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     switch (effectiveStep) {
       case 'cart':
         return _buildCartStep();
-      case 'orderType':
-        return _buildOrderTypeStep();
       case 'delivery':
         return _buildDeliveryStep();
       case 'info':
@@ -715,7 +744,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Icon(Icons.shopping_bag_outlined, size: 64, color: isDark ? Colors.grey[700] : Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'Sepetiniz boş',
+                  'Sepetiniz bos',
                   style: TextStyle(color: subtleTextColor, fontSize: 16),
                 ),
               ],
@@ -723,30 +752,162 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           );
         }
         
-        return ListView.builder(
+        // Pfand hesaplama
+        final bool hasPfandSystem = widget.event.hasPfandSystem;
+        final double pfandAmount = widget.event.pfandAmount;
+        int pfandCount = 0;
+        if (hasPfandSystem) {
+          for (final item in cartState.items) {
+            if (item.menuItem.hasPfand) {
+              pfandCount += item.quantity;
+            }
+          }
+        }
+        final double pfandTotal = pfandCount * pfandAmount;
+        final double grandTotal = cartState.totalAmount + pfandTotal;
+        
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          itemCount: cartState.items.length + 1, // +1 for total summary
-          itemBuilder: (context, index) {
-            if (index == cartState.items.length) {
-              // Pfand hesaplama - kermes ayarlarına bak
-              final bool hasPfandSystem = widget.event.hasPfandSystem;
-              final double pfandAmount = widget.event.pfandAmount;
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cart items
+              ...cartState.items.map((cartItem) {
+                final item = cartItem.menuItem;
+                final quantity = cartItem.quantity;
+                final subtotal = item.price * quantity;
+                
+                final fullMenuItem = widget.event.menu.where((m) => m.name == item.name).firstOrNull;
+                final isMultiStep = fullMenuItem != null && fullMenuItem.isComboMenu;
+                return GestureDetector(
+                  onTap: isMultiStep ? () {
+                    _openCustomizationForCartEdit(fullMenuItem, cartItem);
+                  } : null,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: _cardBg(isDark),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.name,
+                                      style: TextStyle(
+                                        color: textColor,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isMultiStep)
+                                    Icon(Icons.edit_outlined, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                                ],
+                              ),
+                              if (cartItem.selectedOptions.isNotEmpty) ...[
+                                const SizedBox(height: 3),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 12),
+                                  child: Text(
+                                    cartItem.selectedOptions.map((o) => o.optionName).join(', '),
+                                    style: TextStyle(
+                                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w400,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 4),
+                              Text(
+                                '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} x $quantity = ${subtotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                style: TextStyle(color: subtleTextColor, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Controls
+                        Container(
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => ref.read(kermesCartProvider.notifier).removeFromCart(item.name),
+                                behavior: HitTestBehavior.opaque,
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  alignment: Alignment.center,
+                                  child: Icon(Icons.remove, size: 18, color: isDark ? Colors.white70 : Colors.black87),
+                                ),
+                              ),
+                              Container(
+                                width: 30,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  quantity.toString(),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  if (isMultiStep) {
+                                    _openCustomizationForCartAdd(fullMenuItem);
+                                  } else {
+                                    ref.read(kermesCartProvider.notifier).addToCart(item, widget.event.id, widget.event.city);
+                                  }
+                                },
+                                behavior: HitTestBehavior.opaque,
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  alignment: Alignment.center,
+                                  child: Icon(Icons.add, size: 18, color: lokmaPink),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
               
-              // Pfandlı ürün sayısını hesapla
-              int pfandCount = 0;
-              if (hasPfandSystem) {
-                for (final item in cartState.items) {
-                  if (item.menuItem.hasPfand) {
-                    pfandCount += item.quantity;
-                  }
-                }
-              }
-              final double pfandTotal = pfandCount * pfandAmount;
-              final double grandTotal = cartState.totalAmount + pfandTotal;
-              
-              // Summary card with Pfand breakdown
-              return Container(
-                margin: const EdgeInsets.only(top: 16),
+              // Summary card
+              Container(
+                margin: const EdgeInsets.only(top: 4),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
@@ -762,12 +923,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 ),
                 child: Column(
                   children: [
-                    // Ara Toplam (Ürünler)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${cartState.totalItems} ürün',
+                          '${cartState.totalItems} urun',
                           style: TextStyle(color: subtleTextColor, fontSize: 14),
                         ),
                         Text(
@@ -780,8 +940,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         ),
                       ],
                     ),
-                    
-                    // Pfand satırı (varsa)
                     if (pfandCount > 0) ...[
                       const SizedBox(height: 8),
                       Row(
@@ -808,8 +966,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         ],
                       ),
                     ],
-                    
-                    // Ayırıcı çizgi
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Container(
@@ -817,8 +973,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         color: isDark ? Colors.white.withOpacity(0.2) : Colors.black.withOpacity(0.1),
                       ),
                     ),
-                    
-                    // Toplam Tutar
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -842,118 +996,171 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     ),
                   ],
                 ),
-              );
-            }
-            
-            final cartItem = cartState.items[index];
-            final item = cartItem.menuItem;
-            final quantity = cartItem.quantity;
-            final subtotal = item.price * quantity;
-            
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: _cardBg(isDark),
-                borderRadius: BorderRadius.circular(14),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name,
-                          style: TextStyle(
-                            color: textColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (cartItem.selectedOptions.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(
-                            cartItem.selectedOptions.map((o) => o.optionName).join(', '),
-                            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                        const SizedBox(height: 4),
-                        Text(
-                          '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} x $quantity = ${subtotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                          style: TextStyle(color: subtleTextColor, fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
+              
+              // Group order ek icerik (toggle footer'da)
+              if (_isGroupOrder) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: _cardBg(isDark),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  // Controls
-                  Container(
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-                        width: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Isminiz (Grup Yoneticisi)',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: () => ref.read(kermesCartProvider.notifier).removeFromCart(item.name),
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            alignment: Alignment.center,
-                            child: Icon(Icons.remove, size: 18, color: isDark ? Colors.white70 : Colors.black87),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _nameController,
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                        decoration: InputDecoration(
+                          hintText: 'Orn: Metin',
+                          hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                          filled: true,
+                          fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
-                        Container(
-                          width: 30,
-                          alignment: Alignment.center,
-                          child: Text(
-                            quantity.toString(),
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (_activeGroupOrderId == null)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isCreatingGroup ? null : _createAndShareGroupOrder,
+                      icon: _isCreatingGroup
+                          ? const SizedBox(
+                              width: 20, height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                            )
+                          : const Icon(Icons.link, size: 20),
+                      label: Text(_isCreatingGroup ? 'Olusturuluyor...' : 'Link Olustur ve Paylas'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green[400], size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Grup siparisi olusturuldu!',
+                                style: TextStyle(color: Colors.green[400], fontSize: 15, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (ctx) => GroupOrderShareSheet(
+                                  orderId: _activeGroupOrderId!,
+                                  kermesName: widget.event.title,
+                                  hostName: _nameController.text.trim(),
+                                  expirationMinutes: 30,
+                                  expiresAt: DateTime.now().add(const Duration(minutes: 30)),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.share, size: 18),
+                            label: const Text('Linki Tekrar Paylas'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.green[400],
+                              side: BorderSide(color: Colors.green.withOpacity(0.4)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () => ref.read(kermesCartProvider.notifier).addToCart(item, widget.event.id, widget.event.city),
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            alignment: Alignment.center,
-                            child: Icon(Icons.add, size: 18, color: lokmaPink),
-                          ),
-                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            );
-          },
+              ],
+              
+              const SizedBox(height: 80), // bottom padding for checkout button
+            ],
+          ),
         );
       },
     );
   }
   
-  /// Step 1: Sipariş Türü
+  /// Step 1: Siparis Turu
+  void _openCustomizationForCartAdd(KermesMenuItem fullItem) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      builder: (ctx) => KermesCustomizationSheet(
+        item: fullItem,
+        eventId: widget.event.id,
+        eventName: widget.event.city,
+      ),
+    );
+  }
+
+  /// Sepetteki multi-step urunu duzenle
+  void _openCustomizationForCartEdit(KermesMenuItem fullItem, KermesCartItem cartItem) {
+    final oldKey = cartItem.uniqueKey;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      builder: (ctx) => KermesCustomizationSheet(
+        item: fullItem,
+        eventId: widget.event.id,
+        eventName: widget.event.city,
+        editMode: true,
+        initialSelections: cartItem.selectedOptions,
+        initialQuantity: cartItem.quantity,
+        onEdit: (newOptions) {
+          ref.read(kermesCartProvider.notifier).replaceCartItem(oldKey, fullItem, newOptions);
+          setState(() {});
+        },
+      ),
+    );
+  }
+
+  /// Step 1: Siparis Turu
   Widget _buildOrderTypeStep() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
@@ -1356,11 +1563,30 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   Widget _buildInfoStep() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    // Kermes aktif değilse uyarı göster
+    // Kermes aktif degilse uyari goster
     if (!_isKermesActive) {
       return _buildKermesNotActiveMessage();
     }
     
+    final user = FirebaseAuth.instance.currentUser;
+    final isGuest = user == null || user.isAnonymous;
+    
+    // Misafir + Kurye: kayit zorunlu
+    if (isGuest && _deliveryType == DeliveryType.kurye) {
+      return _buildGuestKuryeRegistrationRequired(isDark);
+    }
+    
+    // Misafir + Gel-Al/Masa: basit isim formu + LOKMA avantajlari
+    if (isGuest) {
+      return _buildGuestSimpleInfoStep(isDark);
+    }
+    
+    // Kayitli kullanici: mevcut tam form
+    return _buildRegisteredUserInfoStep(isDark);
+  }
+  
+  /// Kayitli kullanici icin mevcut form
+  Widget _buildRegisteredUserInfoStep(bool isDark) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
@@ -1372,20 +1598,18 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ),
           const SizedBox(height: 20),
           
-          // Ad
           _buildTextField(
             controller: _nameController,
-            label: 'Adınız',
+            label: 'Adiniz',
             icon: Icons.person_outline,
-            hint: 'Siparişte görünecek isim',
+            hint: 'Sipariste gorunecek isim',
           ),
           const SizedBox(height: 14),
           
-          // Telefon
           IntlPhoneField(
             controller: _phoneController,
             decoration: InputDecoration(
-              labelText: 'Telefon',
+              labelText: 'Telefon (Tavsiye edilir)',
               labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 15, fontWeight: FontWeight.w600),
               filled: true,
               fillColor: _cardBg(isDark),
@@ -1411,7 +1635,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             },
           ),
           
-          // Masa numarası (masada için)
           if (_deliveryType == DeliveryType.masada) ...[
             const SizedBox(height: 14),
             _buildTextField(
@@ -1424,6 +1647,332 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ],
           
           const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+  
+  /// Misafir + Gel-Al/Masa: basit isim formu + LOKMA avantajlari
+  Widget _buildGuestSimpleInfoStep(bool isDark) {
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Isim alani (zorunlu)
+          Text(
+            'Siparissiniz icin adinizi girin',
+            style: TextStyle(color: subtleColor, fontSize: 15, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 14),
+          
+          _buildTextField(
+            controller: _nameController,
+            label: 'Ad Soyad',
+            icon: Icons.person_outline,
+            hint: 'Sipariste gorunecek isim',
+          ),
+          
+          // Masa numarasi (masada icin)
+          if (_deliveryType == DeliveryType.masada) ...[
+            const SizedBox(height: 14),
+            _buildTextField(
+              controller: _tableController,
+              label: 'Bolum / Masa No',
+              icon: Icons.table_restaurant_outlined,
+              hint: 'Orn: M9',
+              keyboardType: TextInputType.text,
+            ),
+          ],
+          
+          const SizedBox(height: 24),
+          
+          // LOKMA Avantajlari + Kayit Ol
+          _buildLokmaAdvantagesBanner(isDark, textColor, subtleColor),
+        ],
+      ),
+    );
+  }
+  
+  /// Misafir + Kurye: kayit zorunlu ekrani
+  Widget _buildGuestKuryeRegistrationRequired(bool isDark) {
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        children: [
+          // Uyari ikonu
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: lokmaPink.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.delivery_dining, size: 36, color: lokmaPink),
+          ),
+          const SizedBox(height: 16),
+          
+          Text(
+            'Kurye Siparisi icin\nLOKMA Hesabi Gerekli',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Adresinize teslimat yapabilmemiz icin hesap olusturmaniz gerekmektedir.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: subtleColor, fontSize: 14, height: 1.4),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // LOKMA Avantajlari
+          _buildLokmaAdvantagesBanner(isDark, textColor, subtleColor),
+          
+          const SizedBox(height: 20),
+          
+          // Giris Yap / Kayit Ol pill toggle
+          Container(
+            height: 52,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(26),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      context.push('/login');
+                    },
+                    child: Container(
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        color: lokmaPink,
+                        borderRadius: BorderRadius.circular(22),
+                        boxShadow: [
+                          BoxShadow(
+                            color: lokmaPink.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Giris Yap',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      context.push('/login?register=true');
+                    },
+                    child: Container(
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Kayit Ol',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 10),
+          Text(
+            'Sepetiniz korunur',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: subtleColor, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// LOKMA avantajlari banner'i + opsiyonel kayit butonu
+  Widget _buildLokmaAdvantagesBanner(bool isDark, Color textColor, Color subtleColor) {
+    final advantages = [
+      {'icon': Icons.receipt_long_outlined, 'text': 'Siparislerini her zaman takip et'},
+      {'icon': Icons.verified_user_outlined, 'text': 'Guvenle siparis ver'},
+      {'icon': Icons.store_outlined, 'text': 'TUNA isletmelerini kolayca bul'},
+      {'icon': Icons.table_restaurant_outlined, 'text': 'Masa Rezervasyonu yap'},
+      {'icon': Icons.delivery_dining_outlined, 'text': 'Kurye siparisi ver'},
+    ];
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg(isDark),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: lokmaPink.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Image.asset(
+                isDark
+                    ? 'assets/images/lokma_logo_white.png'
+                    : 'assets/images/logo_lokma_red.png',
+                height: 22,
+                errorBuilder: (_, __, ___) => Text(
+                  'LOKMA',
+                  style: TextStyle(color: lokmaPink, fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Hesap Avantajlari',
+                style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          ...advantages.map((a) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(a['icon'] as IconData, size: 18, color: lokmaPink),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    a['text'] as String,
+                    style: TextStyle(color: subtleColor, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          )),
+          
+          const SizedBox(height: 12),
+          
+          // Giris Yap / Kayit Ol pill buttons
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    context.push('/login');
+                  },
+                  child: Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: lokmaPink,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: lokmaPink.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.login, size: 18, color: Colors.white),
+                        SizedBox(width: 6),
+                        Text(
+                          'Giris Yap',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    context.push('/login?register=true');
+                  },
+                  child: Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: lokmaPink,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: lokmaPink.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.person_add, size: 18, color: Colors.white),
+                        SizedBox(width: 6),
+                        Text(
+                          'Kayit Ol',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 6),
+          Center(
+            child: Text(
+              'Sepetiniz korunur',
+              style: TextStyle(color: subtleColor.withOpacity(0.7), fontSize: 11),
+            ),
+          ),
         ],
       ),
     );
@@ -1717,6 +2266,32 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   ),
                 ],
                 
+                // Bagis satiri (anlik yansima)
+                if (_donationAmount > 0) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.volunteer_activism, color: Colors.green[400], size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            _donationTarget == 'fund' && widget.event.selectedDonationFundName != null
+                                ? widget.event.selectedDonationFundName!
+                                : widget.event.title,
+                            style: TextStyle(color: Colors.green[400], fontSize: 13, fontStyle: FontStyle.italic),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '+${_donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                        style: TextStyle(color: Colors.green[400], fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ],
+                
                 const Divider(color: Colors.white24, height: 20),
                 
                 // Toplam
@@ -1725,7 +2300,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   children: [
                     Text(tr('Toplam'), style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 16)),
                     Text(
-                      '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                      '${(grandTotal + _donationAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black87,
                         fontSize: 24,
@@ -1752,25 +2327,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ),
           ),
           
-          // Yuvarlama ile Destek - ayri kart
+          // Yuvarlama ile Destek
           if (widget.event.acceptsDonations) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.withOpacity(0.3), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: _buildRoundUpWidget(isDark, grandTotal),
-            ),
+            _buildRoundUpWidget(isDark, grandTotal),
           ],
           
           const SizedBox(height: 24),
@@ -2159,7 +2719,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   Widget _buildFooter() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cartState = ref.watch(kermesCartProvider);
-    final isLastStep = _currentStep == 4;
+    final isLastStep = _currentStep == _totalSteps - 1;
     
     return Container(
       padding: EdgeInsets.only(
@@ -2172,30 +2732,117 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         color: _cardBg(isDark),
         border: Border(top: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[300]!)),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Total (only on non-cart steps)
-          if (_currentStep > 0) ...[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${cartState.totalItems} ürün',
-                  style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 11),
-                ),
-                Text(
-                  '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+          // Grup/Aile toggle - sadece cart step'te (step 0)
+          if (_currentStep == 0) ...[
+            Container(
+              height: 40,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _isGroupOrder = false);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: !_isGroupOrder ? lokmaPink : Colors.transparent,
+                          borderRadius: BorderRadius.circular(17),
+                          boxShadow: !_isGroupOrder ? [
+                            BoxShadow(color: lokmaPink.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
+                          ] : [],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.person, size: 16, color: !_isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
+                            const SizedBox(width: 4),
+                            Text('Bireysel', style: TextStyle(
+                              color: !_isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                              fontWeight: FontWeight.w600, fontSize: 13,
+                            )),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _isGroupOrder = true);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: _isGroupOrder ? lokmaPink : Colors.transparent,
+                          borderRadius: BorderRadius.circular(17),
+                          boxShadow: _isGroupOrder ? [
+                            BoxShadow(color: lokmaPink.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
+                          ] : [],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.group, size: 16, color: _isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
+                            const SizedBox(width: 4),
+                            Text('Grup/Aile', style: TextStyle(
+                              color: _isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                              fontWeight: FontWeight.w600, fontSize: 13,
+                            )),
+                            if (!_isGroupOrder) ...[
+                              const SizedBox(width: 3),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(5)),
+                                child: const Text('YENI', style: TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.w700)),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Spacer(),
+            const SizedBox(height: 8),
           ],
+          Row(
+            children: [
+              // Total (only on non-cart steps)
+              if (_currentStep > 0) ...[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${cartState.totalItems} urun',
+                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 11),
+                    ),
+                    Text(
+                      '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                Spacer(),
+              ],
           
           // Next/Submit button
           Expanded(
@@ -2243,8 +2890,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ),
           ),
         ],
-      ),
-    );
+      ),  // Row
+        ],
+      ),  // Column
+    );  // Container
   }
   
   IconData _getDeliveryIcon() {
@@ -2263,7 +2912,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   String _getDeliveryLabel() {
     switch (_deliveryType) {
       case DeliveryType.gelAl:
-        return 'Gel Al - Tezgahtan alacaksınız';
+        return 'Gel Al - Tezgahtan alacaksiniz';
       case DeliveryType.masada:
         return 'Masaya Servis';
       case DeliveryType.kurye:
@@ -2273,45 +2922,46 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     }
   }
 
-  /// Yuvarlama ile Destek widget'i
-  Widget _buildRoundUpWidget(bool isDark, double subtotal) {
-    final double roundedUp = subtotal == subtotal.ceilToDouble() ? subtotal + 1 : subtotal.ceilToDouble();
-    final double roundUpAmount = double.parse((roundedUp - subtotal).toStringAsFixed(2));
+  /// Yuvarlama ile Destek widget'i - minimal, zarif tasarim
+  Widget _buildRoundUpWidget(bool isDark, double baseTotal) {
+    final currency = CurrencyUtils.getCurrencySymbol();
     final String kermesOrgName = widget.event.title;
     final String? fundName = widget.event.selectedDonationFundName;
+    final String? fundUrl = null; // TODO: widget.event.donationFundUrl
     final bool hasFund = fundName != null && fundName.isNotEmpty;
-
-    void selectTarget(String target) {
-      HapticFeedback.selectionClick();
-      setState(() {
-        if (_donationTarget == target) {
-          _donationTarget = 'none';
-          _donationAmount = 0;
-        } else {
-          _donationTarget = target;
-          _donationAmount = roundUpAmount;
-        }
-      });
+    
+    // Yuvarlama hesaplamalari - bir sonraki euro, 5, ve bir sonraki 5
+    final round1 = _roundUpTo(baseTotal, 1.00);
+    final round5 = _roundUpTo(baseTotal, 5.00);
+    final round5next = round5 + 5.0;
+    
+    final rawDonations = <double>[
+      double.parse((round1 - baseTotal).toStringAsFixed(2)),
+      double.parse((round5 - baseTotal).toStringAsFixed(2)),
+      double.parse((round5next - baseTotal).toStringAsFixed(2)),
+    ];
+    // Deduplicate & sifir olanlari filtrele
+    final seen = <double>{};
+    final options = <double>[];
+    for (final d in rawDonations) {
+      if (d > 0 && seen.add(d)) options.add(d);
     }
-
+    
+    final selectedDonation = _donationAmount;
+    
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2A2E) : const Color(0xFFE8F5E9),
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF8F8F8),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: _donationTarget != 'none'
-              ? Colors.green.withOpacity(0.5)
-              : isDark ? Colors.white12 : Colors.grey.shade300,
-          width: 1.5,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Baslik satiri
           Row(
             children: [
-              const Icon(Icons.volunteer_activism, color: Colors.green, size: 18),
+              Icon(Icons.volunteer_activism, color: Colors.green[400], size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -2323,103 +2973,166 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   ),
                 ),
               ),
-              if (roundUpAmount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+              if (selectedDonation > 0)
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _donationAmount = 0;
+                      _donationTarget = 'none';
+                    });
+                  },
                   child: Text(
-                    '+${roundUpAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600),
+                    'Iptal',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            '${subtotal.toStringAsFixed(2)} € → ${roundedUp.toStringAsFixed(2)} €',
-            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 11),
-          ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          
+          // Yuvarlama secenekleri - sadece bagis miktari goster
+          Row(
             children: [
-              _buildDonationPill(
-                isDark: isDark,
-                label: kermesOrgName,
-                isSelected: _donationTarget == 'kermesOrg',
-                icon: Icons.mosque,
-                onTap: () => selectTarget('kermesOrg'),
-              ),
-              if (hasFund)
-                _buildDonationPill(
-                  isDark: isDark,
-                  label: fundName,
-                  isSelected: _donationTarget == 'fund',
-                  icon: Icons.favorite,
-                  onTap: () => selectTarget('fund'),
+              for (int i = 0; i < options.length; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _donationAmount = _donationAmount == options[i] ? 0.0 : options[i];
+                      if (_donationAmount > 0 && _donationTarget == 'none') {
+                        _donationTarget = 'kermesOrg';
+                      }
+                      if (_donationAmount == 0) _donationTarget = 'none';
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: selectedDonation == options[i]
+                          ? Colors.green
+                          : isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: selectedDonation == options[i]
+                            ? Colors.green
+                            : isDark ? Colors.grey[700]! : Colors.grey.shade300,
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '+${options[i].toStringAsFixed(2)} $currency',
+                      style: TextStyle(
+                        color: selectedDonation == options[i]
+                            ? Colors.white
+                            : isDark ? Colors.white70 : Colors.black87,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
-              _buildDonationPill(
+              ],
+            ],
+          ),
+          
+          // Kurulus secimi (bagis secildiginde goster)
+          if (selectedDonation > 0) ...[
+            const SizedBox(height: 14),
+            // Kermes organizasyonu
+            _buildCharityOption(
+              isDark: isDark,
+              label: kermesOrgName,
+              icon: Icons.mosque,
+              isSelected: _donationTarget == 'kermesOrg',
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _donationTarget = 'kermesOrg');
+              },
+            ),
+            // Ek hayir kurumu (varsa)
+            if (hasFund) ...[
+              const SizedBox(height: 8),
+              _buildCharityOption(
                 isDark: isDark,
-                label: 'Hayir, tesekkurler',
-                isSelected: _donationTarget == 'none',
-                icon: Icons.close,
+                label: fundName,
+                icon: Icons.favorite,
+                isSelected: _donationTarget == 'fund',
+                url: fundUrl,
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  setState(() {
-                    _donationTarget = 'none';
-                    _donationAmount = 0;
-                  });
+                  setState(() => _donationTarget = 'fund');
                 },
               ),
             ],
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildDonationPill({
+  Widget _buildCharityOption({
     required bool isDark,
     required String label,
-    required bool isSelected,
     required IconData icon,
+    required bool isSelected,
     required VoidCallback onTap,
+    String? url,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.green.withOpacity(0.2)
+              ? Colors.green.withOpacity(0.12)
               : isDark ? const Color(0xFF2A2A2A) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.green : (isDark ? Colors.white24 : Colors.grey.shade300),
+            color: isSelected ? Colors.green : (isDark ? Colors.white12 : Colors.grey.shade300),
             width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isSelected ? Colors.green : (isDark ? Colors.white54 : Colors.grey)),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? Colors.green : (isDark ? Colors.white70 : Colors.black54),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Icon(
+              isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 20,
+              color: isSelected ? Colors.green : (isDark ? Colors.white38 : Colors.grey),
             ),
+            const SizedBox(width: 10),
+            Icon(icon, size: 16, color: isSelected ? Colors.green : (isDark ? Colors.white54 : Colors.grey)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.white70 : Colors.black54),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (url != null && url.isNotEmpty)
+              GestureDetector(
+                onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 4),
+                    Icon(Icons.open_in_new, size: 14, color: Colors.green[400]),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

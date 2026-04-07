@@ -75,7 +75,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    // If authenticated, go back or home
+    // If authenticated (non-guest), go back or home
     if (authState.isAuthenticated && !authState.isGuest) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.canPop()) {
@@ -134,7 +134,16 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Theme.of(context).primaryColor),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              // Logout sonrasi stack bos ise ana sayfaya git
+              ref.read(authProvider.notifier).signInAnonymously().then((_) {
+                if (mounted) context.go('/');
+              });
+            }
+          },
         ),
         title: Text(
           'Einloggen oder Konto erstellen', // Giriş yap veya hesap oluştur
@@ -470,7 +479,10 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                     // Guest Login Option
                     Center(
                       child: TextButton(
-                        onPressed: () => ref.read(authProvider.notifier).signInAnonymously(),
+                        onPressed: () async {
+                          await ref.read(authProvider.notifier).signInAnonymously();
+                          if (mounted) context.go('/');
+                        },
                         child: Text(
                           'Als Gast fortfahren', // Misafir olarak devam et
                           style: TextStyle(

@@ -709,11 +709,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         // Sepetleri temizle
                         ref.read(kermesCartProvider.notifier).clearCart();
                         ref.read(cartProvider.notifier).clearCart();
-                        await _googleSignIn.signOut();
-                        await _auth.signOut();
+                        // Once navigate et, sonra sign out yap (spinner onlenir)
                         if (context.mounted) {
                           context.go('/login');
                         }
+                        try {
+                          await _googleSignIn.signOut();
+                        } catch (_) {
+                          // Google ile giris yapilmamissa hata verir, sessizce gec
+                        }
+                        try {
+                          await _auth.signOut();
+                        } catch (_) {}
                       },
                       child: Container(
                         width: double.infinity,

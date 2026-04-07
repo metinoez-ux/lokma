@@ -249,7 +249,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
     return '$name|${optionKeys.join(',')}';
   }
 
-  /// Sepetten ürün çıkar (miktarı azalt)
+  /// Sepetten urun cikar (miktari azalt)
   void removeFromCart(String menuItemName) {
     final existingIndex = state.items.indexWhere(
       (item) => item.menuItem.name == menuItemName,
@@ -260,10 +260,9 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
     final existingItem = state.items[existingIndex];
     
     if (existingItem.quantity <= 1) {
-      // Tamamen kaldır
-      final newItems = state.items.where(
-        (item) => item.menuItem.name != menuItemName,
-      ).toList();
+      // Sadece bu index'teki urunu kaldir (ayni isimli diger variantlara dokunma)
+      final newItems = List<KermesCartItem>.from(state.items);
+      newItems.removeAt(existingIndex);
       
       state = KermesCartState(
         eventId: newItems.isEmpty ? null : state.eventId,
@@ -271,7 +270,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
         items: newItems,
       );
     } else {
-      // Miktarı azalt
+      // Miktari azalt
       final updatedItems = List<KermesCartItem>.from(state.items);
       updatedItems[existingIndex] = existingItem.copyWith(
         quantity: existingItem.quantity - 1,
@@ -282,7 +281,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
         items: updatedItems,
       );
     }
-    _saveCartToStorage(); // Kalıcı kaydet
+    _saveCartToStorage(); // Kalici kaydet
   }
 
   /// Ürün miktarını belirle
@@ -341,10 +340,32 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
     }
   }
 
+  /// Sepetteki bir urunu yeni seceneklerle degistir (edit icin)
+  void replaceCartItem(String oldUniqueKey, KermesMenuItem menuItem, List<SelectedOption> newOptions) {
+    final existingIndex = state.items.indexWhere((item) => item.uniqueKey == oldUniqueKey);
+    if (existingIndex < 0) return;
+
+    final existingItem = state.items[existingIndex];
+    final updatedItems = List<KermesCartItem>.from(state.items);
+    updatedItems[existingIndex] = KermesCartItem(
+      menuItem: menuItem,
+      quantity: existingItem.quantity,
+      eventId: existingItem.eventId,
+      eventName: existingItem.eventName,
+      selectedOptions: newOptions,
+    );
+    state = KermesCartState(
+      eventId: state.eventId,
+      eventName: state.eventName,
+      items: updatedItems,
+    );
+    _saveCartToStorage();
+  }
+
   /// Sepeti temizle
   void clearCart() {
     state = KermesCartState();
-    _saveCartToStorage(); // Kalıcı kaydet (boş olarak)
+    _saveCartToStorage(); // Kalici kaydet (bos olarak)
   }
 }
 

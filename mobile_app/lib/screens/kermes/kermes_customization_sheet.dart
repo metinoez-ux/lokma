@@ -15,12 +15,20 @@ class KermesCustomizationSheet extends ConsumerStatefulWidget {
   final KermesMenuItem item;
   final String eventId;
   final String eventName;
+  final List<SelectedOption>? initialSelections;
+  final int? initialQuantity;
+  final bool editMode;
+  final void Function(List<SelectedOption> newOptions)? onEdit;
 
   const KermesCustomizationSheet({
     super.key,
     required this.item,
     required this.eventId,
     required this.eventName,
+    this.initialSelections,
+    this.initialQuantity,
+    this.editMode = false,
+    this.onEdit,
   });
 
   @override
@@ -36,11 +44,21 @@ class _KermesCustomizationSheetState
   @override
   void initState() {
     super.initState();
+    if (widget.initialQuantity != null) _quantity = widget.initialQuantity!;
     for (final group in widget.item.optionGroups) {
       _selections[group.id] = {};
-      for (final option in group.options) {
-        if (option.defaultSelected) {
-          _selections[group.id]!.add(option.id);
+      // Edit modunda mevcut secenekleri yukle
+      if (widget.initialSelections != null) {
+        for (final sel in widget.initialSelections!) {
+          if (sel.groupId == group.id) {
+            _selections[group.id]!.add(sel.optionId);
+          }
+        }
+      } else {
+        for (final option in group.options) {
+          if (option.defaultSelected) {
+            _selections[group.id]!.add(option.id);
+          }
         }
       }
     }
@@ -109,6 +127,12 @@ class _KermesCustomizationSheetState
   }
 
   void _addToCart() {
+    if (widget.editMode && widget.onEdit != null) {
+      widget.onEdit!(_selectedOptions);
+      Navigator.pop(context);
+      HapticFeedback.heavyImpact();
+      return;
+    }
     final cartNotifier = ref.read(kermesCartProvider.notifier);
     final added = cartNotifier.addToCart(
       widget.item,
@@ -329,7 +353,9 @@ class _KermesCustomizationSheetState
                             elevation: 0,
                           ),
                           child: Text(
-                            '${'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2).replaceAll('.', ',')}',
+                            widget.editMode
+                                ? 'Guncelle  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2).replaceAll('.', ',')}'
+                                : '${'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2).replaceAll('.', ',')}',
                             style: const TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w600),
                           ),

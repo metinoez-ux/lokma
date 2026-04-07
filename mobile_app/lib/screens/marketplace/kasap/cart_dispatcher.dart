@@ -502,19 +502,8 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
     final eventId = ref.read(kermesCartProvider).eventId;
     if (eventId == null) return;
 
-    // Check opening hours
-    if (!_isWithinOpeningHours) {
-      final hours = '${_openingTime ?? "?"} - ${_closingTime ?? "?"}';
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Kermes su an kapali. Calisma saatleri: $hours'),
-            backgroundColor: Colors.orange[700],
-          ),
-        );
-      }
-      return;
-    }
+    // Acilis saati kontrolu sonraya birakildi - siparis gonderme asamasinda yapilacak
+    // Kullanici checkout akisini (teslimat tipi, bilgi, odeme) gezebilir
 
     // Show loading indicator
     if (mounted) {
