@@ -35,10 +35,20 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Position? _currentPosition;
   String _userCountryCode = '';
   String _sortBy = 'distance_asc';
-  double _maxDistance = 120; // default: Deutschlandweit
+  double _maxDistance = 50; // default: 50km
   Set<String> _favoriteKermesIds = {};
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+
+  // Scope mode: controls whether slider or region filter is active
+  // 'nearby' = slider, 'state' = eyalet, 'country' = ulke
+  String _scopeMode = 'nearby';
+
+  // Step-based slider (matches yemek screen pattern)
+  static const List<double> _kmSteps = [
+    5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200,
+  ];
+  int _currentStepIndex = 7; // default: 50km (index 7)
 
 
   // Delivery mode: 'teslimat', 'gelal', 'masa'
@@ -560,12 +570,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       }
     }
 
-    // Distance filter
+    // Distance & scope filter
     final locationAsync = ref.read(userLocationProvider);
     final userState = locationAsync.value?.state ?? '';
 
-    // Distance & Region filter
-    if (_maxDistance <= 100) {
+    if (_scopeMode == 'nearby') {
+      // Slider-based distance filter
       if (_currentPosition != null) {
         events = events.where((event) {
           final distance = Geolocator.distanceBetween(
@@ -577,18 +587,17 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           return distance <= _maxDistance;
         }).toList();
       }
-    } else if (_maxDistance == 110) {
-      // Eyalet filtresi — state alani bos olan eventler dahil edilir
+    } else if (_scopeMode == 'state') {
+      // Eyalet filtresi
       if (userState.isNotEmpty) {
         final userStateLower = _normalizeTurkish(userState.toLowerCase());
         events = events.where((event) {
-          // State alani bos ise goster (koordinat/state kaydedilmemis olabilir)
           if (event.state == null || event.state!.isEmpty) return true;
           return _statesMatch(userStateLower, _normalizeTurkish(event.state!.toLowerCase()));
         }).toList();
       }
     }
-    // _maxDistance >= 120 is "Tümü" (All/Country), so no filter needed.
+    // _scopeMode == 'country' -> no distance filter, show all in that country
 
     // Quick filters
     if (_filterKidsActivities) events = events.where((e) => e.hasKidsActivities).toList();
@@ -1366,11 +1375,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                   children: [
                                     // Delivery mode tabs kaldirildi - tum kermesler gosterilir
 
-                                    // Search bar
+                                    // Search bar + scope dropdown
                                     _buildSearchBar(),
 
-                                    // Distance slider
-                                    _buildDistanceSlider(),
+                                    // Distance slider (only visible in 'nearby' scope)
+                                    if (_scopeMode == 'nearby')
+                                      _buildDistanceSlider(),
                                   ],
                                 ),
                               ),
@@ -1794,8 +1804,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         ),
         child: Row(
           children: [
-            Icon(Icons.search, color: Colors.grey[600], size: 22),
-            const SizedBox(width: 12),
+            Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[500], size: 22),
+            const SizedBox(width: 10),
             // Search input
             Expanded(
               child: TextField(
@@ -1805,18 +1815,26 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 },
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 14,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Kermes ara: sehir, eyalet, menu...',
-                  hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w200),
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w400,
+                  ),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
+            // Scope Dropdown
+            _buildScopeDropdown(),
+            const SizedBox(width: 4),
             // Filter Button
             GestureDetector(
               onTap: () {
@@ -1866,80 +1884,282 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     );
   }
 
-  // ============== DISTANCE PILLS ==============
+  // ============== DISTANCE SLIDER (Yemek stili) ==============
   Widget _buildDistanceSlider() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentKm = _kmSteps[_currentStepIndex];
 
-    // Bundesland kisaltmasini al
+    // En yakin kermes mesafesini bul
+    int nearestKm = 0;
+    if (_currentPosition != null && _kermesEvents.isNotEmpty) {
+      double minDist = double.infinity;
+      for (final event in _kermesEvents) {
+        final dist = Geolocator.distanceBetween(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+          event.latitude,
+          event.longitude,
+        ) / 1000;
+        if (dist < minDist) minDist = dist;
+      }
+      nearestKm = minDist.isFinite ? minDist.round() : 0;
+    }
+
+    String distanceLabel;
+    if (_currentStepIndex == _kmSteps.length - 1) {
+      distanceLabel = 'Tumu';
+    } else {
+      distanceLabel = '${currentKm.toInt()} km';
+    }
+
+    final String nearestLabel = nearestKm > 0 ? '$nearestKm km' : '';
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 2),
+      child: Row(
+        children: [
+          if (nearestLabel.isNotEmpty)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.near_me,
+                    color: isDark ? lokmaPink : Colors.grey[700],
+                    size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  nearestLabel,
+                  style: TextStyle(
+                    color: isDark ? lokmaPink : Colors.grey[700],
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            )
+          else
+            Icon(Icons.near_me,
+                color: isDark ? lokmaPink : Colors.grey[700],
+                size: 14),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: lokmaPink,
+                inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
+                thumbColor: lokmaPink,
+                overlayColor: lokmaPink.withValues(alpha: 0.2),
+                trackHeight: 4,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
+                activeTickMarkColor: Colors.transparent,
+                inactiveTickMarkColor: Colors.transparent,
+              ),
+              child: Slider(
+                value: _currentStepIndex.toDouble(),
+                min: 0,
+                max: (_kmSteps.length - 1).toDouble(),
+                divisions: _kmSteps.length - 1,
+                onChanged: (value) {
+                  final newIndex = value.round();
+                  if (newIndex != _currentStepIndex) {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _currentStepIndex = newIndex;
+                      _maxDistance = _kmSteps[newIndex];
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[800] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              distanceLabel,
+              style: TextStyle(
+                color: isDark ? Colors.grey[300]! : Colors.grey[700]!,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============== SCOPE DROPDOWN ==============
+  Widget _buildScopeDropdown() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final locationAsync = ref.read(userLocationProvider);
     final userState = locationAsync.value?.state ?? '';
     final bundeslandShort = _getBundeslandAbbr(userState);
 
-    // Preset pill tanimlari: {deger, etiket}
-    final List<(double, String)> pills = [
-      (10, '10 km'),
-      (25, '25 km'),
-      (50, '50 km'),
-      (100, '100 km'),
-      (110, bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet'),
-      (120, 'DE'),
-    ];
+    // Current scope label
+    String scopeLabel;
+    IconData scopeIcon;
+    switch (_scopeMode) {
+      case 'state':
+        scopeLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
+        scopeIcon = Icons.map_outlined;
+        break;
+      case 'country':
+        scopeLabel = _userCountryCode.isNotEmpty ? _userCountryCode : 'Ulke';
+        scopeIcon = Icons.public;
+        break;
+      default:
+        scopeLabel = '${_kmSteps[_currentStepIndex].toInt()} km';
+        scopeIcon = Icons.near_me;
+    }
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 12, right: 12, top: 6),
-      child: Row(
-        children: [
-          Icon(Icons.near_me, color: lokmaPink, size: 15),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: pills.map((pill) {
-                  final (val, label) = pill;
-                  final isSelected = _maxDistance.round() == val.round();
-                  final isSpecial = val >= 110; // Bundesland veya DE
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _maxDistance = val);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? lokmaPink
-                              : (isSpecial && !isSelected
-                                  ? lokmaPink.withOpacity(0.08)
-                                  : (isDark ? Colors.grey[800] : Colors.grey[100])),
-                          borderRadius: BorderRadius.circular(20),
-                          border: isSpecial && !isSelected
-                              ? Border.all(color: lokmaPink.withOpacity(0.35), width: 1)
-                              : null,
-                        ),
-                        child: Text(
-                          label,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : (isSpecial
-                                    ? lokmaPink
-                                    : (isDark ? Colors.grey[300] : Colors.grey[700])),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _scopeMode = value;
+          if (value == 'nearby') {
+            _maxDistance = _kmSteps[_currentStepIndex];
+          } else if (value == 'state') {
+            _maxDistance = 110;
+          } else if (value == 'country') {
+            _maxDistance = 999;
+          }
+        });
+      },
+      color: isDark ? const Color(0xFF2A2A28) : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      offset: const Offset(0, 40),
+      itemBuilder: (context) => [
+        _buildScopeMenuItem(
+          value: 'nearby',
+          icon: Icons.near_me,
+          label: 'Yakin Cevre',
+          subtitle: 'Mesafe cubugu ile',
+          isSelected: _scopeMode == 'nearby',
+          isDark: isDark,
+        ),
+        _buildScopeMenuItem(
+          value: 'state',
+          icon: Icons.map_outlined,
+          label: bundeslandShort.isNotEmpty ? '$bundeslandShort - Eyalet' : 'Eyalet',
+          subtitle: userState.isNotEmpty ? userState : 'Bulundugunuz eyalet',
+          isSelected: _scopeMode == 'state',
+          isDark: isDark,
+        ),
+        _buildScopeMenuItem(
+          value: 'country',
+          icon: Icons.public,
+          label: _userCountryCode == 'TR' ? 'Turkiye' : _userCountryCode == 'DE' ? 'Almanya' : 'Ulke',
+          subtitle: 'Tum ulke genelinde',
+          isSelected: _scopeMode == 'country',
+          isDark: isDark,
+        ),
+        const PopupMenuDivider(),
+        _buildScopeMenuItem(
+          value: 'map',
+          icon: Icons.map,
+          label: 'Harita Gorunumu',
+          subtitle: 'Yakinda...',
+          isSelected: false,
+          isDark: isDark,
+          disabled: true,
+        ),
+        _buildScopeMenuItem(
+          value: 'silaYolu',
+          icon: Icons.route,
+          label: 'Sila Yolu Kermesleri',
+          subtitle: 'Yakinda...',
+          isSelected: false,
+          isDark: isDark,
+          disabled: true,
+        ),
+      ],
+      child: Container(
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[700] : Colors.grey[200],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(scopeIcon, size: 14, color: isDark ? Colors.grey[300] : Colors.grey[600]),
+            const SizedBox(width: 4),
+            Text(
+              scopeLabel,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.grey[200] : Colors.grey[700],
               ),
             ),
+            const SizedBox(width: 2),
+            Icon(Icons.keyboard_arrow_down, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildScopeMenuItem({
+    required String value,
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool isSelected,
+    required bool isDark,
+    bool disabled = false,
+  }) {
+    return PopupMenuItem<String>(
+      value: disabled ? null : value,
+      enabled: !disabled,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: disabled
+                ? (isDark ? Colors.grey[600] : Colors.grey[400])
+                : isSelected
+                    ? lokmaPink
+                    : (isDark ? Colors.grey[300] : Colors.grey[700]),
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: disabled
+                        ? (isDark ? Colors.grey[600] : Colors.grey[400])
+                        : (isDark ? Colors.white : Colors.grey[900]),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: disabled
+                        ? (isDark ? Colors.grey[700] : Colors.grey[350])
+                        : (isDark ? Colors.grey[500] : Colors.grey[500]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isSelected)
+            Icon(Icons.check_circle, size: 18, color: lokmaPink),
         ],
       ),
     );
