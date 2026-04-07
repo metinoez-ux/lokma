@@ -498,6 +498,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               acceptsDonations: data['acceptsDonations'] == true,
               selectedDonationFundId: data['selectedDonationFundId']?.toString(),
               selectedDonationFundName: data['selectedDonationFundName']?.toString(),
+              isSilaYolu: data['isSilaYolu'] == true,
               sectionDefs: _parseSectionDefs(data['tableSectionsV2']),
             );
 
@@ -634,6 +635,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           return _statesMatch(userStateLower, _normalizeTurkish(event.state!.toLowerCase()));
         }).toList();
       }
+    } else if (_scopeMode == 'silaYolu') {
+      events = events.where((e) => e.isSilaYolu).toList();
     }
     // _scopeMode == 'country' -> no distance filter, show all in that country
 
@@ -1607,8 +1610,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           isLoading ? 'marketplace.getting_location'.tr() : cityName,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -1617,9 +1620,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           Text(
                             streetInfo,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -1857,9 +1860,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 decoration: InputDecoration(
                   hintText: 'Kermes ara: sehir, eyalet, menu...',
                   hintStyle: TextStyle(
-                    color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    color: isDark ? Colors.grey[300] : Colors.grey[600],
                     fontSize: 14.5,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w500,
                   ),
                   border: InputBorder.none,
                   isDense: true,
@@ -2045,6 +2048,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         scopeIcon = Icons.public;
         activeColor = lokmaPink;
         break;
+      case 'silaYolu':
+        scopeLabel = 'Sila';
+        scopeIcon = Icons.route;
+        activeColor = lokmaPink;
+        break;
       case 'map':
         scopeLabel = 'Harita';
         scopeIcon = Icons.map;
@@ -2084,6 +2092,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             _maxDistance = 110;
           } else if (value == 'country') {
             _maxDistance = 999;
+          } else if (value == 'silaYolu') {
+            _maxDistance = 999;
           }
         });
       },
@@ -2115,6 +2125,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           isSelected: _scopeMode == 'country',
           isDark: isDark,
         ),
+        _buildScopeMenuItem(
+          value: 'silaYolu',
+          icon: Icons.route,
+          label: 'Sila Yolu Kermesleri',
+          subtitle: 'Almanya guzergahindaki kermesler',
+          isSelected: _scopeMode == 'silaYolu',
+          isDark: isDark,
+        ),
         const PopupMenuDivider(),
         _buildScopeMenuItem(
           value: 'map',
@@ -2123,15 +2141,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           subtitle: 'Kermesleri haritada goster',
           isSelected: _scopeMode == 'map',
           isDark: isDark,
-        ),
-        _buildScopeMenuItem(
-          value: 'silaYolu',
-          icon: Icons.route,
-          label: 'Sila Yolu Kermesleri',
-          subtitle: 'Yakinda...',
-          isSelected: false,
-          isDark: isDark,
-          disabled: true,
         ),
       ],
       child: Container(

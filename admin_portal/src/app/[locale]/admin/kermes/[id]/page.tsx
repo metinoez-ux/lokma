@@ -214,6 +214,8 @@ interface KermesEvent {
  acceptsDonations?: boolean;
  selectedDonationFundId?: string;
  selectedDonationFundName?: string;
+ // Sila Yolu
+ isSilaYolu?: boolean;
 }
 
 interface KermesProduct {
@@ -335,6 +337,7 @@ export default function KermesDetailPage() {
  acceptsDonations: false,
  selectedDonationFundId: '',
  selectedDonationFundName: '',
+ isSilaYolu: false,
  // Roles
  customRoles: [] as KermesCustomRole[],
  });
@@ -597,6 +600,7 @@ export default function KermesDetailPage() {
  acceptsDonations: data.acceptsDonations || false,
  selectedDonationFundId: data.selectedDonationFundId || '',
  selectedDonationFundName: data.selectedDonationFundName || '',
+ isSilaYolu: data.isSilaYolu || false,
  customRoles: (() => {
   const roles = [...(data.customRoles || [])];
   if (!roles.some((r: any) => r.name === 'Park Görevlisi')) {
@@ -1113,6 +1117,8 @@ export default function KermesDetailPage() {
  selectedDonationFundId: editForm.selectedDonationFundId || null,
  selectedDonationFundName: editForm.selectedDonationFundName || null,
  customRoles: editForm.customRoles || [],
+ // Sila Yolu
+ isSilaYolu: editForm.isSilaYolu || false,
  // Sistem
  updatedAt: new Date(),
  };
@@ -2494,6 +2500,34 @@ export default function KermesDetailPage() {
  )}
  </div>
  )}
+ </div>
+
+ {/* Sila Yolu Kermesi */}
+ <div className="bg-card rounded-xl p-6">
+  <div className="flex items-center gap-3 mb-1">
+   <span className="text-xl">🛣️</span>
+   <h3 className="text-foreground font-bold">Sıla Yolu Kermesi</h3>
+  </div>
+  <p className="text-muted-foreground text-xs mb-4">
+   Bu kermes <strong className="text-foreground">Sıla Yolu</strong> güzergahındaki bir etkinliktir. İşaretlenirse mobil uygulamada <em>Almanya → Sıla Yolu Kermesleri</em> listesinde görünür.
+  </p>
+  {isEditing ? (
+   <label className="flex items-center gap-3 cursor-pointer">
+    <input
+     type="checkbox"
+     checked={!!editForm.isSilaYolu}
+     onChange={(e) => setEditForm({ ...editForm, isSilaYolu: e.target.checked })}
+     className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500"
+    />
+    <span className="text-foreground font-medium">Bu bir Sıla Yolu kermesidir</span>
+   </label>
+  ) : (
+   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+    (kermes as any).isSilaYolu ? 'bg-emerald-600/30 text-emerald-400' : 'bg-gray-600/30 text-gray-400'
+   }`}>
+    {(kermes as any).isSilaYolu ? '🛣️ Sıla Yolu Kermesi' : 'Normal Kermes'}
+   </span>
+  )}
  </div>
 
  {/* Park Imkanlari Card */}

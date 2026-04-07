@@ -138,9 +138,12 @@ class KermesEvent {
   final List<String> activeBadgeIds;
 
   // Yuvarlama ile Destek (Bagis)
-  final bool acceptsDonations; // Bu kermes bagis kabul ediyor mu?
-  final String? selectedDonationFundId; // Super admin tarafindan tanimlanan fonun ID'si
-  final String? selectedDonationFundName; // Mobilde gosterilecek fon adi
+  final bool acceptsDonations;
+  final String? selectedDonationFundId;
+  final String? selectedDonationFundName;
+
+  // Sila Yolu
+  final bool isSilaYolu;
 
   // Bolum tanimlari (Admin Portal'dan gelen - Kadin/Erkek/Aile bolumleri)
   final List<KermesSectionDef> sectionDefs;
@@ -223,6 +226,8 @@ class KermesEvent {
     this.acceptsDonations = false,
     this.selectedDonationFundId,
     this.selectedDonationFundName,
+    // Sila Yolu
+    this.isSilaYolu = false,
     // Bolum tanimlari
     this.sectionDefs = const [],
     // Pfand sistemi
