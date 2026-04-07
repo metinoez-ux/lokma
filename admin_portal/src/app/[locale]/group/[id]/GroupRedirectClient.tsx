@@ -60,7 +60,7 @@ export default function GroupRedirectClient({ groupId }: GroupRedirectClientProp
         boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
       }}>
         <img
-          src="/lokma_logo_wide.png"
+          src="/app-icon.png"
           alt="LOKMA"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
