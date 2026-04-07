@@ -549,6 +549,58 @@ void _onMenuScroll() {
     Share.share(text, subject: event.title);
   }
 
+  /// Normalize Turkish/German/special characters for flexible search
+  /// cay -> cay, doner -> doner, etc.
+  String _normalizeForSearch(String text) {
+    final buffer = StringBuffer();
+    for (final c in text.toLowerCase().runes) {
+      switch (c) {
+        case 0x00FC: // u umlaut
+        case 0x00FB: // u circumflex
+          buffer.write('u');
+          break;
+        case 0x00F6: // o umlaut
+        case 0x00F4: // o circumflex
+          buffer.write('o');
+          break;
+        case 0x015F: // s cedilla
+          buffer.write('s');
+          break;
+        case 0x00E7: // c cedilla
+          buffer.write('c');
+          break;
+        case 0x011F: // g breve
+          buffer.write('g');
+          break;
+        case 0x0131: // dotless i
+          buffer.write('i');
+          break;
+        case 0x0130: // dotted I
+          buffer.write('i');
+          break;
+        case 0x00E4: // a umlaut
+        case 0x00E2: // a circumflex
+        case 0x00E0: // a grave
+          buffer.write('a');
+          break;
+        case 0x00DF: // eszett
+          buffer.write('ss');
+          break;
+        case 0x00E9: // e acute
+        case 0x00E8: // e grave
+        case 0x00EA: // e circumflex
+          buffer.write('e');
+          break;
+        case 0x00EE: // i circumflex
+          buffer.write('i');
+          break;
+        default:
+          buffer.writeCharCode(c);
+      }
+    }
+    return buffer.toString();
+  }
+
   void _showMenuSearchOverlay() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF050505) : const Color(0xFFF9F9F9);
@@ -564,11 +616,12 @@ void _onMenuScroll() {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final query = _menuSearchQuery.toLowerCase();
+            final query = _normalizeForSearch(_menuSearchQuery);
             final searchResults = _eventMenu
                 .where((p) =>
-                    p.name.toLowerCase().contains(query) ||
-                    (p.description?.toLowerCase().contains(query) ?? false))
+                    _normalizeForSearch(p.name).contains(query) ||
+                    (_normalizeForSearch(p.description ?? '').contains(query)) ||
+                    _normalizeForSearch(p.category ?? '').contains(query))
                 .toList();
 
             return Container(
@@ -812,7 +865,7 @@ if (_selectedCategory.isEmpty) {
           if (_globalFeatures.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: _buildFeaturesRow(),
               ),
             ),
@@ -932,7 +985,7 @@ if (_selectedCategory.isEmpty) {
           // Info Cards (before menu)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
