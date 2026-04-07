@@ -16,6 +16,7 @@ import { normalizeTimeString } from '@/utils/timeUtils';
 import { getLocalizedText } from '@/lib/utils';
 import TableManagementPanel from '@/components/TableManagementPanel';
 import KermesTahsilatTab from './KermesTahsilatTab';
+import KermesSiparislerTab from './KermesSiparislerTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
 
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
@@ -275,7 +276,7 @@ export default function KermesDetailPage() {
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
- const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'gorevler' | 'mutfak' | 'masalar' | 'tahsilat'>('bilgi');
+ const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat'>('bilgi');
  // Mutfak: PrepZone -> Personel atamalari
  const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
  const [eventFeatures, setEventFeatures] = useState<KermesFeature[]>(DEFAULT_FEATURES);
@@ -1829,6 +1830,10 @@ export default function KermesDetailPage() {
         <button onClick={() => setActiveTab('masalar')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
           Masalar
+        </button>
+        <button onClick={() => setActiveTab('siparisler')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+          Siparisler
         </button>
         {(isSuperAdmin || isAdmin) && (
           <button onClick={() => setActiveTab('tahsilat')}
@@ -3650,7 +3655,12 @@ export default function KermesDetailPage() {
   </div>
   )}
 
- {/* Tab Content - Menu */}
+   {/* Tab Content - Siparisler */}
+   {activeTab === 'siparisler' && (
+     <KermesSiparislerTab kermesId={kermesId} />
+   )}
+
+  {/* Tab Content - Menu */}
  {activeTab === 'menu' && (
  <div className="bg-card rounded-xl p-6">
  <div className="flex items-center justify-between mb-4">
