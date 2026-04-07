@@ -1384,12 +1384,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: 232,
+              expandedHeight: 185,
               collapsedHeight: 120,
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = 232.0;
+                  final expandedHeight = 185.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -2571,7 +2571,7 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                           return Marker(
                             point: LatLng(event.latitude, event.longitude),
                             width: 120 * scaleFactor,
-                            height: 68 * scaleFactor,
+                            height: 75 * scaleFactor,
                             child: GestureDetector(
                               onTap: () {
                                 HapticFeedback.lightImpact();
@@ -2579,13 +2579,14 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                   _selectedEvent = (_selectedEvent?.id == event.id) ? null : event;
                                 });
                               },
-                              child: Column(
+                              child: ClipRect(
+                                child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // Pulsing pin
                                   SizedBox(
-                                    width: 32,
-                                    height: 32,
+                                    width: 28,
+                                    height: 28,
                                     child: Stack(
                                       alignment: Alignment.center,
                                       children: [
@@ -2664,7 +2665,8 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                     ),
                                   ),
                                 ],
-                              ),
+                               ),
+                              ), // ClipRect
                             ),
                           );
                         }).toList(),
