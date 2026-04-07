@@ -2142,19 +2142,66 @@ Widget _buildHeroSection(BuildContext context) {
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
     final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final accentBlue = const Color(0xFF2563EB);
 
     if (_isLoadingWeather) {
-      return SizedBox(
-        height: 144,
-        child: Center(child: CircularProgressIndicator(color: textColor)),
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(color: dividerBg, shape: BoxShape.circle),
+                  child: const Icon(Icons.wb_sunny, color: Colors.amber, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text('Hava durumu yukleniyor...', style: TextStyle(color: subtleTextColor, fontSize: 13)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            LinearProgressIndicator(color: accentBlue, backgroundColor: dividerBg),
+          ],
+        ),
       );
     }
-    if (_weatherForecast == null) return const SizedBox.shrink();
 
-    final dailySummaries = _weatherForecast!.getDailySummaries();
+    final now = DateTime.now();
+    final start = widget.event.startDate;
+    final end = widget.event.endDate;
+
+    // Etkinlik gunleri icin filtrelenecek
+    final dailySummaries = _weatherForecast?.getDailySummaries() ?? [];
+    
+    // Sadece etkinlik gunlerine denk gelen tahminleri filtrele
+    final eventDailySummaries = dailySummaries.where((day) {
+      final dayDate = DateTime(day.date.year, day.date.month, day.date.day);
+      final startDate = DateTime(start.year, start.month, start.day);
+      final endDate = DateTime(end.year, end.month, end.day);
+      return !dayDate.isBefore(startDate) && !dayDate.isAfter(endDate);
+    }).toList();
+
+    // Bugunun saatlik tahminleri (etkinlik suresi icindeyse)
+    final todayHourly = _weatherForecast?.getHourlyForDay(now) ?? [];
+    final isEventDay = !now.isBefore(DateTime(start.year, start.month, start.day)) && 
+                       !now.isAfter(DateTime(end.year, end.month, end.day));
+
+    // Hava durumu bulunabilir mi?
+    final hasForecast = eventDailySummaries.isNotEmpty;
+
+    // Kermesin kacinci gunu
+    int _getEventDayNumber(DateTime date) {
+      return DateTime(date.year, date.month, date.day)
+          .difference(DateTime(start.year, start.month, start.day)).inDays + 1;
+    }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
@@ -2163,128 +2210,313 @@ Widget _buildHeroSection(BuildContext context) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // HEADER
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: dividerBg,
+                  gradient: LinearGradient(colors: [Colors.amber, Colors.orange]),
                   shape: BoxShape.circle,
-                  border: Border.all(color: dividerBg),
                 ),
-                child: const Icon(Icons.wb_sunny, color: Colors.amber, size: 20),
+                child: const Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 20),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'HAVA DURUMU',
-                    style: TextStyle(
-                      color: subtleTextColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'KERMES ALANI HAVA DURUMU',
+                      style: TextStyle(
+                        color: subtleTextColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Etkinlik Günleri',
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 2),
+                    Text(
+                      '${widget.event.city} - Etkinlik Gunleri Tahmini',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Column(
-            children: dailySummaries.take(3).map((day) {
+
+          // Konum uyarisi  
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: accentBlue.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.location_on_outlined, color: accentBlue, size: 14),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Bu tahminler ${widget.event.city} kermes alani icindir, bulundugunuz konum icin degil.',
+                    style: TextStyle(color: accentBlue, fontSize: 11, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Hava durumu yoksa bilgilendirme
+          if (!hasForecast) ...[
+            const SizedBox(height: 24),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: dividerBg,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.cloud_off_outlined, color: subtleTextColor, size: 40),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Hava durumu henuz mevcut degil',
+                    style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    now.isBefore(start)
+                      ? 'Etkinlik yaklastikca hava durumu burada gorunecek. Tahminler genellikle 5 gun oncesinden itibaren mevcut olur.'
+                      : 'Kermes alani icin hava durumu verisi alinamadi.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: subtleTextColor, fontSize: 12, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ======= BUGUNUN SAATLIK TAHMINI =======
+          if (hasForecast && isEventDay && todayHourly.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Text(
+                  'BUGUN',
+                  style: TextStyle(color: subtleTextColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Kermesin ${_getEventDayNumber(now)}. Gunu',
+                    style: const TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Saatlik yatay scroll
+            SizedBox(
+              height: 100,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: todayHourly.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 4),
+                itemBuilder: (context, i) {
+                  final h = todayHourly[i];
+                  final isNow = h.dateTime.hour == now.hour;
+                  return Container(
+                    width: 64,
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: isNow ? accentBlue.withOpacity(0.15) : dividerBg,
+                      borderRadius: BorderRadius.circular(14),
+                      border: isNow ? Border.all(color: accentBlue.withOpacity(0.4), width: 1.5) : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          isNow ? 'Simdi' : '${h.dateTime.hour.toString().padLeft(2, '0')}:00',
+                          style: TextStyle(
+                            color: isNow ? accentBlue : subtleTextColor,
+                            fontSize: 11,
+                            fontWeight: isNow ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                        CachedNetworkImage(
+                          imageUrl: h.iconUrl,
+                          width: 28, height: 28,
+                          errorWidget: (_, __, ___) => const Icon(Icons.wb_cloudy, size: 24, color: Colors.grey),
+                        ),
+                        Text(
+                          '${h.temperature.round()}°',
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+
+          // ======= GUNLUK TAHMIN (ETKINLIK GUNLERI) =======
+          if (hasForecast) ...[
+            const SizedBox(height: 20),
+            Text(
+              'ETKINLIK GUNLERI',
+              style: TextStyle(color: subtleTextColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+            ),
+            const SizedBox(height: 12),
+            ...eventDailySummaries.map((day) {
+              final dayNum = _getEventDayNumber(day.date);
+              final isToday = day.date.year == now.year && day.date.month == now.month && day.date.day == now.day;
+              
               return Container(
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: dividerBg,
-                  border: Border.all(color: dividerBg),
+                  color: isToday ? accentBlue.withOpacity(0.08) : dividerBg,
                   borderRadius: BorderRadius.circular(16),
+                  border: isToday ? Border.all(color: accentBlue.withOpacity(0.3)) : null,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
                   children: [
                     Row(
                       children: [
-                        SizedBox(
-                          width: 48,
+                        // Tarih + Gun
+                        Expanded(
+                          flex: 3,
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _getTurkishDayName(day.date).substring(0, 3).toUpperCase(),
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${day.date.day} ${_formatDateShort(day.date).split(' ').last}',
+                                    style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _getTurkishDayName(day.date),
+                                    style: TextStyle(color: subtleTextColor, fontSize: 12, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _formatDateShort(day.date),
-                                style: TextStyle(
-                                  color: subtleTextColor,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: isToday ? Colors.green.withOpacity(0.15) : Colors.orange.withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      isToday ? 'Bugun - ${dayNum}. Gun' : '${dayNum}. Gun',
+                                      style: TextStyle(
+                                        color: isToday ? Colors.green : Colors.orange,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    day.description,
+                                    style: TextStyle(color: subtleTextColor, fontSize: 11),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        Container(
-                          width: 1,
-                          height: 32,
-                          color: dividerBg,
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                        ),
+                        // Hava ikonu + sicaklik
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             CachedNetworkImage(
                               imageUrl: day.iconUrl,
-                              width: 20,
-                              height: 20,
-                              errorWidget: (_, __, ___) => const Icon(Icons.wb_sunny, color: Colors.amber, size: 20),
+                              width: 32, height: 32,
+                              errorWidget: (_, __, ___) => const Icon(Icons.wb_sunny, color: Colors.amber, size: 28),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 4),
                             Text(
-                              'Hava Durumu',
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              '${day.avgTemperature.round()}°',
+                              style: TextStyle(color: textColor, fontSize: 22, fontWeight: FontWeight.w800),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          '${day.avgTemperature.round()}°',
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                    const SizedBox(height: 8),
+                    // Detay satiri: Ruzgar + Yagis
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.air, color: subtleTextColor, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${day.avgWindSpeed.round()} km/h',
+                                style: TextStyle(color: subtleTextColor, fontSize: 11, fontWeight: FontWeight.w500),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          Container(width: 1, height: 14, color: dividerBg),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.water_drop,
+                                color: day.maxRainProbability > 50 ? Colors.blue : subtleTextColor,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${day.maxRainProbability.round()}%',
+                                style: TextStyle(
+                                  color: day.maxRainProbability > 50 ? Colors.blue : subtleTextColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               );
             }).toList(),
-          ),
+          ],
         ],
       ),
     );
