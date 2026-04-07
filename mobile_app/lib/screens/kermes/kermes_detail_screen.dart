@@ -606,9 +606,9 @@ void _onMenuScroll() {
   void _showMenuSearchOverlay() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF2B2929) : const Color(0xFFF9F9F9);
-    final cardColor = isDark ? const Color(0xFF151515) : Colors.white;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final hintColor = isDark ? Colors.grey[500] : Colors.grey[400];
+    final hintColor = isDark ? Colors.grey[400] : Colors.grey[500];
 
     showModalBottomSheet(
       context: context,
@@ -655,18 +655,18 @@ void _onMenuScroll() {
                               color: cardColor,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: Colors.transparent, width: 2),
+                                  color: isDark ? Colors.grey[700]! : Colors.grey[300]!, width: 1.5),
                             ),
                             child: TextField(
                               autofocus: true,
                               cursorColor: lokmaPink,
-                              style: TextStyle(color: textColor, fontSize: 16),
+                              style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                               decoration: InputDecoration(
                                 hintText: 'marketplace.search_in_menu'.tr(),
                                 hintStyle:
-                                    TextStyle(color: hintColor, fontSize: 15),
+                                    TextStyle(color: hintColor, fontSize: 15, fontWeight: FontWeight.w500),
                                 prefixIcon: Icon(Icons.search,
-                                    color: hintColor, size: 22),
+                                    color: isDark ? Colors.grey[300] : Colors.grey[600], size: 22),
                                 border: InputBorder.none,
                                 contentPadding:
                                     const EdgeInsets.symmetric(vertical: 14),
@@ -1133,7 +1133,7 @@ if (_selectedCategory.isEmpty) {
                           ),
                         ],
                       ),
-                    const Divider(height: 1, thickness: 1),
+                    Divider(height: 1, thickness: 0.5, color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[300]),
                   ],
                 ),
               ),
@@ -2295,28 +2295,6 @@ Widget _buildHeroSection(BuildContext context) {
             ],
           ),
 
-          // Konum uyarisi  
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: accentBlue.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.location_on_outlined, color: accentBlue, size: 14),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Bu tahminler ${widget.event.city} kermes alani icindir, bulundugunuz konum icin degil.',
-                    style: TextStyle(color: accentBlue, fontSize: 11, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Hava durumu yoksa bilgilendirme
           if (!hasForecast) ...[
             const SizedBox(height: 24),
@@ -2594,11 +2572,13 @@ Widget _buildHeroSection(BuildContext context) {
                 height: 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  image: const DecorationImage(
-                    fit: BoxFit.cover,
-                    image: CachedNetworkImageProvider('https://ui-avatars.com/api/?name=Admin+User&background=random'),
-                  ),
+                  color: isDark ? Colors.grey[800] : Colors.grey[100],
                   border: Border.all(color: dividerBg, width: 2),
+                ),
+                child: Icon(
+                  Icons.admin_panel_settings_rounded,
+                  color: isDark ? Colors.amber[400] : Colors.amber[700],
+                  size: 26,
                 ),
               ),
               const SizedBox(width: 16),
@@ -2606,36 +2586,14 @@ Widget _buildHeroSection(BuildContext context) {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Kermes Yetkilisi',
+                    Text(
+                          widget.event.contactName ?? 'Kermes Yetkilisi',
                           style: TextStyle(
                             color: textColor,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3B82F6).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: const Color(0xFF3B82F6).withOpacity(0.3)),
-                          ),
-                          child: const Text(
-                            'YETKİLİ',
-                            style: TextStyle(
-                              color: Color(0xFF60A5FA),
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Sorularınız için iletişime geçebilirsiniz.',
@@ -2970,7 +2928,7 @@ Widget _buildHeroSection(BuildContext context) {
                           item.name,
                           style: TextStyle(
                             color: isAvailable ? textColor : subtleTextColor,
-                            fontSize: 17,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                             height: 1.2,
                             letterSpacing: -0.2,
@@ -3002,26 +2960,27 @@ Widget _buildHeroSection(BuildContext context) {
                         if (item.description != null &&
                             item.description!.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
+                            padding: const EdgeInsets.only(bottom: 10.0),
                             child: Text(
                               item.description!,
                               style: TextStyle(
-                                color: subtleTextColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
                                 height: 1.3,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                        const SizedBox(height: 2),
                         // Price
                         Text(
                           '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
                             color: isAvailable ? textColor : subtleTextColor,
                             fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
