@@ -93,10 +93,12 @@ class WeatherForecast {
     return grouped.entries.map((e) {
       final items = e.value;
       final avgTemp = items.map((i) => i.temperature).reduce((a, b) => a + b) / items.length;
+      final minTemp = items.map((i) => i.temperature).reduce((a, b) => a < b ? a : b);
+      final maxTemp = items.map((i) => i.temperature).reduce((a, b) => a > b ? a : b);
       final maxRain = items.map((i) => i.rainProbability).reduce((a, b) => a > b ? a : b);
       final avgWind = items.map((i) => i.windSpeed).reduce((a, b) => a + b) / items.length;
       
-      // En sık görülen iconı al
+      // En sik gorulen iconi al
       final iconCounts = <String, int>{};
       for (final item in items) {
         iconCounts[item.icon] = (iconCounts[item.icon] ?? 0) + 1;
@@ -106,6 +108,8 @@ class WeatherForecast {
       return DailyWeatherSummary(
         date: items.first.dateTime,
         avgTemperature: avgTemp,
+        minTemperature: minTemp,
+        maxTemperature: maxTemp,
         maxRainProbability: maxRain,
         avgWindSpeed: avgWind,
         icon: mainIcon,
@@ -152,6 +156,8 @@ class HourlyWeather {
 class DailyWeatherSummary {
   final DateTime date;
   final double avgTemperature;
+  final double minTemperature;
+  final double maxTemperature;
   final double maxRainProbability;
   final double avgWindSpeed;
   final String icon;
@@ -160,6 +166,8 @@ class DailyWeatherSummary {
   DailyWeatherSummary({
     required this.date,
     required this.avgTemperature,
+    required this.minTemperature,
+    required this.maxTemperature,
     required this.maxRainProbability,
     required this.avgWindSpeed,
     required this.icon,

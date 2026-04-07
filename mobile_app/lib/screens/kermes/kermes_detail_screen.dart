@@ -2459,9 +2459,18 @@ Widget _buildHeroSection(BuildContext context) {
                               errorWidget: (_, __, ___) => const Icon(Icons.wb_sunny, color: Colors.amber, size: 28),
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              '${day.avgTemperature.round()}°',
-                              style: TextStyle(color: textColor, fontSize: 22, fontWeight: FontWeight.w800),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${day.maxTemperature.round()}°',
+                                  style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w800),
+                                ),
+                                Text(
+                                  '${day.minTemperature.round()}°',
+                                  style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w500),
+                                ),
+                              ],
                             ),
                           ],
                         ),
