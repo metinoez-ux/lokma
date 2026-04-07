@@ -21,8 +21,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 // LOKMA Kermes tema renkleri
 const Color primaryRed = Color(0xFFFF3333);
 const Color accentRed = Color(0xFFE00000);
-Color _darkBg(bool isDark) => isDark ? const Color(0xFF000000) : const Color(0xFFF5F5F5);
-Color _surfaceDark(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
+Color _darkBg(bool isDark) => isDark ? const Color(0xFF2B2929) : const Color(0xFFF5F5F5);
+Color _surfaceDark(bool isDark) => isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE8E8EC);
 Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
 /// Modern koyu tema park bilgileri ekranı

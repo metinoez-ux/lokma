@@ -603,7 +603,7 @@ void _onMenuScroll() {
 
   void _showMenuSearchOverlay() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF050505) : const Color(0xFFF9F9F9);
+    final bgColor = isDark ? const Color(0xFF2B2929) : const Color(0xFFF9F9F9);
     final cardColor = isDark ? const Color(0xFF151515) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final hintColor = isDark ? Colors.grey[500] : Colors.grey[400];
@@ -779,7 +779,7 @@ if (_selectedCategory.isEmpty) {
     final validTabIndex = selectedTabIndex >= 0 ? selectedTabIndex : 0;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF050505) : const Color(0xFFF9F9F9),
+      backgroundColor: isDark ? const Color(0xFF2B2929) : const Color(0xFFF9F9F9),
       body: Stack(
         children: [
           CustomScrollView(
@@ -1257,7 +1257,7 @@ Widget _buildHeroSection(BuildContext context) {
       height: 440,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF141416).withOpacity(0.9),
+        color: const Color(0xFF1E1E1E).withOpacity(0.9),
       ),
       child: Stack(
         fit: StackFit.expand,
@@ -1679,7 +1679,7 @@ Widget _buildHeroSection(BuildContext context) {
 
   Widget _buildLocationCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF141416) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
     final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
@@ -1872,7 +1872,7 @@ Widget _buildHeroSection(BuildContext context) {
 
   Widget _buildParkingCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF141416) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
     final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
@@ -2000,7 +2000,7 @@ Widget _buildHeroSection(BuildContext context) {
 
     Widget _buildAdminAndContactCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF141416) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
     final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
@@ -2138,7 +2138,7 @@ Widget _buildHeroSection(BuildContext context) {
 
   Widget _buildWeatherSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF141416) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
     final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
@@ -2533,7 +2533,7 @@ Widget _buildHeroSection(BuildContext context) {
 
   Widget _buildAdminCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF141416) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
     final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
@@ -2620,7 +2620,7 @@ Widget _buildHeroSection(BuildContext context) {
 
   Widget _buildContactCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF141416) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
     final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
