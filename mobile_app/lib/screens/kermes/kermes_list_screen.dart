@@ -366,11 +366,46 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               sponsor = KermesSponsor.akdenizToros;
             }
 
-            // Koordinat cozumleme: Firestore'da varsa kullan, yoksa adresten geocode yap
-            double eventLat = (data['latitude'] ?? data['lat'])?.toDouble() ?? 0.0;
-            double eventLng = (data['longitude'] ?? data['lng'])?.toDouble() ?? 0.0;
+            // Koordinat cozumleme: Coklu kaynaktan kontrol et
+            double eventLat = 0.0;
+            double eventLng = 0.0;
 
-            // Eger koordinatlar (0,0) veya default (51.0, 6.0) ise adresten geocode dene
+            // 1. Dogrudan toplevel latitude/longitude veya lat/lng
+            if (data['latitude'] != null) eventLat = (data['latitude'] as num).toDouble();
+            else if (data['lat'] != null) eventLat = (data['lat'] as num).toDouble();
+
+            if (data['longitude'] != null) eventLng = (data['longitude'] as num).toDouble();
+            else if (data['lng'] != null) eventLng = (data['lng'] as num).toDouble();
+
+            // 2. address map icindeki lat/lng
+            if ((eventLat == 0.0 || eventLng == 0.0) && data['address'] is Map) {
+              final addrMap = data['address'] as Map;
+              if (addrMap['lat'] != null) eventLat = (addrMap['lat'] as num).toDouble();
+              else if (addrMap['latitude'] != null) eventLat = (addrMap['latitude'] as num).toDouble();
+              if (addrMap['lng'] != null) eventLng = (addrMap['lng'] as num).toDouble();
+              else if (addrMap['longitude'] != null) eventLng = (addrMap['longitude'] as num).toDouble();
+            }
+
+            // 3. location map icindeki lat/lng
+            if ((eventLat == 0.0 || eventLng == 0.0) && data['location'] is Map) {
+              final locMap = data['location'] as Map;
+              if (locMap['lat'] != null) eventLat = (locMap['lat'] as num).toDouble();
+              if (locMap['lng'] != null) eventLng = (locMap['lng'] as num).toDouble();
+            }
+
+            // 4. GeoPoint turu
+            if ((eventLat == 0.0 || eventLng == 0.0) && data['geoPoint'] is GeoPoint) {
+              final gp = data['geoPoint'] as GeoPoint;
+              eventLat = gp.latitude;
+              eventLng = gp.longitude;
+            }
+            if ((eventLat == 0.0 || eventLng == 0.0) && data['coordinates'] is GeoPoint) {
+              final gp = data['coordinates'] as GeoPoint;
+              eventLat = gp.latitude;
+              eventLng = gp.longitude;
+            }
+
+            // 5. postalCode veya sehir bazli geocoding (fallback)
             if ((eventLat == 0.0 && eventLng == 0.0) || (eventLat == 51.0 && eventLng == 6.0)) {
               if (fullAddress.isNotEmpty) {
                 try {
@@ -413,6 +448,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               }
             }
 
+            debugPrint('Creating KermesEvent ${doc.id} with coords: ($eventLat, $eventLng)');
             final event = KermesEvent(
               id: doc.id,
               city: city,
@@ -1345,12 +1381,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: 210,
+              expandedHeight: 222,
               collapsedHeight: 120,
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = 210.0;
+                  final expandedHeight = 222.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -1375,14 +1411,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // Delivery mode tabs kaldirildi - tum kermesler gosterilir
-
+                                    // Delivery mode tabs kaldirildi
                                     // Search bar + scope dropdown
                                     _buildSearchBar(),
 
-                                    // Distance slider (only visible in 'nearby' scope)
-                                    if (_scopeMode == 'nearby')
-                                      _buildDistanceSlider(),
+                                    // Distance slider + scope chip - her zaman goster
+                                    _buildDistanceSlider(),
                                   ],
                                 ),
                               ),
@@ -1887,6 +1921,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Widget _buildDistanceSlider() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentKm = _kmSteps[_currentStepIndex];
+    final isNearby = _scopeMode == 'nearby';
 
     // En yakin kermes mesafesini bul
     int nearestKm = 0;
@@ -1907,67 +1942,72 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     final String nearestLabel = nearestKm > 0 ? '$nearestKm km' : '';
 
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 2),
-      child: Row(
-        children: [
-          if (nearestLabel.isNotEmpty)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.near_me,
-                    color: isDark ? lokmaPink : Colors.grey[700],
-                    size: 14),
-                const SizedBox(width: 4),
-                Text(
-                  nearestLabel,
-                  style: TextStyle(
-                    color: isDark ? lokmaPink : Colors.grey[700],
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Opacity(
+        opacity: isNearby ? 1.0 : 0.4,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (nearestLabel.isNotEmpty) ...[
+              Icon(Icons.near_me,
+                  color: isDark ? lokmaPink : Colors.grey[700], size: 14),
+              const SizedBox(width: 4),
+              Text(
+                nearestLabel,
+                style: TextStyle(
+                  color: isDark ? lokmaPink : Colors.grey[700],
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ] else ...[
+              Icon(Icons.near_me,
+                  color: isDark ? lokmaPink : Colors.grey[700], size: 14),
+            ],
+            const SizedBox(width: 4),
+            Expanded(
+              child: SizedBox(
+                height: 36,
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: lokmaPink,
+                    inactiveTrackColor:
+                        isDark ? Colors.grey[600] : Colors.grey[300],
+                    thumbColor: lokmaPink,
+                    overlayColor: lokmaPink.withValues(alpha: 0.2),
+                    trackHeight: 4,
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 8),
+                    tickMarkShape:
+                        const RoundSliderTickMarkShape(tickMarkRadius: 0),
+                    activeTickMarkColor: Colors.transparent,
+                    inactiveTickMarkColor: Colors.transparent,
+                  ),
+                  child: Slider(
+                    value: _currentStepIndex.toDouble(),
+                    min: 0,
+                    max: (_kmSteps.length - 1).toDouble(),
+                    divisions: _kmSteps.length - 1,
+                    onChanged: isNearby
+                        ? (value) {
+                            final newIndex = value.round();
+                            if (newIndex != _currentStepIndex) {
+                              HapticFeedback.selectionClick();
+                              setState(() {
+                                _currentStepIndex = newIndex;
+                                _maxDistance = _kmSteps[newIndex];
+                              });
+                            }
+                          }
+                        : null,
                   ),
                 ),
-              ],
-            )
-          else
-            Icon(Icons.near_me,
-                color: isDark ? lokmaPink : Colors.grey[700],
-                size: 14),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: lokmaPink,
-                inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
-                thumbColor: lokmaPink,
-                overlayColor: lokmaPink.withValues(alpha: 0.2),
-                trackHeight: 4,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
-                activeTickMarkColor: Colors.transparent,
-                inactiveTickMarkColor: Colors.transparent,
-              ),
-              child: Slider(
-                value: _currentStepIndex.toDouble(),
-                min: 0,
-                max: (_kmSteps.length - 1).toDouble(),
-                divisions: _kmSteps.length - 1,
-                onChanged: (value) {
-                  final newIndex = value.round();
-                  if (newIndex != _currentStepIndex) {
-                    HapticFeedback.selectionClick();
-                    setState(() {
-                      _currentStepIndex = newIndex;
-                      _maxDistance = _kmSteps[newIndex];
-                    });
-                  }
-                },
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          // Slider row sag: km etiketi yerine scope dropdown
-          _buildScopeDropdown(compact: true),
-        ],
+            const SizedBox(width: 4),
+            _buildScopeDropdown(compact: true),
+          ],
+        ),
       ),
     );
   }
