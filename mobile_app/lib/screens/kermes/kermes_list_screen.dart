@@ -45,6 +45,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   // Scope mode: controls whether slider or region filter is active
   // 'nearby' = slider, 'state' = eyalet, 'country' = ulke
   String _scopeMode = 'nearby';
+  final GlobalKey<PopupMenuButtonState<String>> _scopeMenuKey = GlobalKey<PopupMenuButtonState<String>>();
+  bool _menuOpenedBySlider = false;
 
   // Step-based slider (matches yemek screen pattern)
   static const List<double> _kmSteps = [
@@ -1384,12 +1386,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: 185,
+              expandedHeight: 180,
               collapsedHeight: 120,
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = 185.0;
+                  final expandedHeight = 180.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -1999,12 +2001,22 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           onChanged: isNearby
                               ? (value) {
                                   final newIndex = value.round();
+                                  final isAtMax = newIndex == _kmSteps.length - 1;
                                   if (newIndex != _currentStepIndex) {
                                     HapticFeedback.selectionClick();
                                     setState(() {
                                       _currentStepIndex = newIndex;
                                       _maxDistance = _kmSteps[newIndex];
                                     });
+                                    // Slider en saga gelince dropdown'i ac
+                                    if (isAtMax && !_menuOpenedBySlider) {
+                                      _menuOpenedBySlider = true;
+                                      Future.microtask(() {
+                                        _scopeMenuKey.currentState?.showButtonMenu();
+                                      });
+                                    } else if (!isAtMax && _menuOpenedBySlider) {
+                                      _menuOpenedBySlider = false;
+                                    }
                                   }
                                 }
                               : null,
@@ -2076,7 +2088,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         : (isDark ? Colors.grey[300]! : Colors.grey[700]!);
 
     return PopupMenuButton<String>(
+      key: _scopeMenuKey,
       onSelected: (value) {
+        _menuOpenedBySlider = false;
         HapticFeedback.lightImpact();
         if (value == 'map') {
           // Harita modunu aktif et ve hemen haritayi ac
