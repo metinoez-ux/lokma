@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -1831,10 +1833,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 4),
-            // Scope Dropdown
-            _buildScopeDropdown(),
-            const SizedBox(width: 4),
+            const SizedBox(width: 8),
             // Filter Button
             GestureDetector(
               onTap: () {
@@ -1905,13 +1904,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       nearestKm = minDist.isFinite ? minDist.round() : 0;
     }
 
-    String distanceLabel;
-    if (_currentStepIndex == _kmSteps.length - 1) {
-      distanceLabel = 'Tumu';
-    } else {
-      distanceLabel = '${currentKm.toInt()} km';
-    }
-
     final String nearestLabel = nearestKm > 0 ? '$nearestKm km' : '';
 
     return Padding(
@@ -1973,53 +1965,68 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[800] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              distanceLabel,
-              style: TextStyle(
-                color: isDark ? Colors.grey[300]! : Colors.grey[700]!,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          // Slider row sag: km etiketi yerine scope dropdown
+          _buildScopeDropdown(compact: true),
         ],
       ),
     );
   }
 
   // ============== SCOPE DROPDOWN ==============
-  Widget _buildScopeDropdown() {
+  // compact: true -> slider row'unun saginda kucuk chip olarak gosterilir
+  // compact: false -> search bar icinde (eski davranis, artik kullanilmiyor)
+  Widget _buildScopeDropdown({bool compact = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final locationAsync = ref.read(userLocationProvider);
     final userState = locationAsync.value?.state ?? '';
     final bundeslandShort = _getBundeslandAbbr(userState);
 
-    // Current scope label
+    // Current scope label & icon
     String scopeLabel;
     IconData scopeIcon;
+    Color? activeColor;
     switch (_scopeMode) {
       case 'state':
         scopeLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
         scopeIcon = Icons.map_outlined;
+        activeColor = lokmaPink;
         break;
       case 'country':
-        scopeLabel = _userCountryCode.isNotEmpty ? _userCountryCode : 'Ulke';
+        scopeLabel = _userCountryCode == 'TR' ? 'TR' : _userCountryCode == 'DE' ? 'DE' : 'Ulke';
         scopeIcon = Icons.public;
+        activeColor = lokmaPink;
+        break;
+      case 'map':
+        scopeLabel = 'Harita';
+        scopeIcon = Icons.map;
+        activeColor = lokmaPink;
         break;
       default:
-        scopeLabel = '${_kmSteps[_currentStepIndex].toInt()} km';
+        // nearby: show current km from slider
+        scopeLabel = _currentStepIndex == _kmSteps.length - 1
+            ? 'Tumu'
+            : '${_kmSteps[_currentStepIndex].toInt()} km';
         scopeIcon = Icons.near_me;
+        activeColor = null;
     }
+
+    final isActive = _scopeMode != 'nearby';
+    final chipBg = isActive
+        ? lokmaPink
+        : (isDark ? Colors.grey[800] : Colors.grey[100]);
+    final textColor = isActive
+        ? Colors.white
+        : (isDark ? Colors.grey[300]! : Colors.grey[700]!);
 
     return PopupMenuButton<String>(
       onSelected: (value) {
         HapticFeedback.lightImpact();
+        if (value == 'map') {
+          // Harita modunu aktif et ve hemen haritayi ac
+          setState(() => _scopeMode = 'map');
+          _showKermesMapSheet();
+          return;
+        }
         setState(() {
           _scopeMode = value;
           if (value == 'nearby') {
@@ -2064,10 +2071,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           value: 'map',
           icon: Icons.map,
           label: 'Harita Gorunumu',
-          subtitle: 'Yakinda...',
-          isSelected: false,
+          subtitle: 'Kermesleri haritada goster',
+          isSelected: _scopeMode == 'map',
           isDark: isDark,
-          disabled: true,
         ),
         _buildScopeMenuItem(
           value: 'silaYolu',
@@ -2083,28 +2089,51 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey[700] : Colors.grey[200],
-          borderRadius: BorderRadius.circular(16),
+          color: chipBg,
+          borderRadius: BorderRadius.circular(20),
+          border: isActive ? null : Border.all(
+            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+            width: 0.5,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(scopeIcon, size: 14, color: isDark ? Colors.grey[300] : Colors.grey[600]),
+            Icon(scopeIcon, size: 13, color: textColor),
             const SizedBox(width: 4),
             Text(
               scopeLabel,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isDark ? Colors.grey[200] : Colors.grey[700],
+                color: textColor,
               ),
             ),
             const SizedBox(width: 2),
-            Icon(Icons.keyboard_arrow_down, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+            Icon(Icons.keyboard_arrow_down, size: 14, color: isActive ? Colors.white70 : (isDark ? Colors.grey[500] : Colors.grey[400])),
           ],
         ),
       ),
     );
+  }
+
+  // ============== KERMES MAP SHEET ==============
+  void _showKermesMapSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _KermesMapSheet(
+        events: _filteredEvents,
+        userLat: _currentPosition?.latitude,
+        userLng: _currentPosition?.longitude,
+      ),
+    ).then((_) {
+      // Harita kapaninca scope'u nearby'a dondur
+      if (mounted && _scopeMode == 'map') {
+        setState(() => _scopeMode = 'country');
+      }
+    });
   }
 
   PopupMenuItem<String> _buildScopeMenuItem({
@@ -2209,5 +2238,507 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     }
     // Bilinmiyorsa ilk 4 harf buyuk harf
     return fullName.length > 4 ? fullName.substring(0, 4).toUpperCase() : fullName.toUpperCase();
+  }
+}
+
+// ============================================================
+//  KERMES MAP SHEET
+// ============================================================
+class _KermesMapSheet extends StatefulWidget {
+  final List<KermesEvent> events;
+  final double? userLat;
+  final double? userLng;
+
+  const _KermesMapSheet({
+    required this.events,
+    this.userLat,
+    this.userLng,
+  });
+
+  @override
+  State<_KermesMapSheet> createState() => _KermesMapSheetState();
+}
+
+class _KermesMapSheetState extends State<_KermesMapSheet>
+    with SingleTickerProviderStateMixin {
+  late final MapController _mapController;
+  late AnimationController _pulseController;
+  KermesEvent? _selectedEvent;
+  double _currentZoom = 8;
+
+  static const Color lokmaPink = Color(0xFFEA184A);
+  static const List<double> _ringRadiiM = [25000, 50000, 100000];
+  static const List<String> _ringLabels = ['25 km', '50 km', '100 km'];
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  LatLng _calculateCenter() {
+    if (widget.userLat != null && widget.userLng != null) {
+      return LatLng(widget.userLat!, widget.userLng!);
+    }
+    if (widget.events.isEmpty) return LatLng(51.1657, 10.4515); // Germany center
+    double sumLat = 0, sumLng = 0;
+    for (final e in widget.events) {
+      sumLat += e.latitude;
+      sumLng += e.longitude;
+    }
+    return LatLng(sumLat / widget.events.length, sumLng / widget.events.length);
+  }
+
+  double _calculateZoom() {
+    if (widget.events.isEmpty) return 6;
+    if (widget.events.length == 1) return 12;
+    double minLat = double.infinity, maxLat = -double.infinity;
+    double minLng = double.infinity, maxLng = -double.infinity;
+    for (final e in widget.events) {
+      if (e.latitude < minLat) minLat = e.latitude;
+      if (e.latitude > maxLat) maxLat = e.latitude;
+      if (e.longitude < minLng) minLng = e.longitude;
+      if (e.longitude > maxLng) maxLng = e.longitude;
+    }
+    final diff = (maxLat - minLat) > (maxLng - minLng)
+        ? (maxLat - minLat)
+        : (maxLng - minLng);
+    if (diff < 0.05) return 13;
+    if (diff < 0.2) return 11;
+    if (diff < 1.0) return 9;
+    if (diff < 3.0) return 7;
+    return 5;
+  }
+
+  String _distanceText(KermesEvent event) {
+    if (widget.userLat == null || widget.userLng == null) return '';
+    final dist = Geolocator.distanceBetween(
+      widget.userLat!, widget.userLng!,
+      event.latitude, event.longitude,
+    ) / 1000;
+    if (dist < 1) return '${(dist * 1000).round()} m';
+    return '${dist.toStringAsFixed(1)} km';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final center = _calculateCenter();
+    final zoom = _calculateZoom();
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.82,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              // Handle + header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[600] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: lokmaPink.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.map, color: lokmaPink, size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kermes Haritasi',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              Text(
+                                '${widget.events.length} kermes gosteriliyor',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(
+                            Icons.close,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Map
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: center,
+                      initialZoom: zoom,
+                      onPositionChanged: (camera, _) {
+                        if (camera.zoom != _currentZoom) {
+                          setState(() => _currentZoom = camera.zoom);
+                        }
+                      },
+                      onTap: (_, __) {
+                        if (_selectedEvent != null) {
+                          setState(() => _selectedEvent = null);
+                        }
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.lokma.app',
+                      ),
+                      // Distance rings around user
+                      if (widget.userLat != null && widget.userLng != null)
+                        CircleLayer(
+                          circles: List.generate(_ringRadiiM.length, (i) {
+                            final opacity = 0.05 - (i * 0.01);
+                            return CircleMarker(
+                              point: LatLng(widget.userLat!, widget.userLng!),
+                              radius: _ringRadiiM[i],
+                              useRadiusInMeter: true,
+                              color: lokmaPink.withValues(alpha: opacity.clamp(0.01, 0.08)),
+                              borderColor: lokmaPink.withValues(alpha: 0.3 - (i * 0.07)),
+                              borderStrokeWidth: 1.5,
+                            );
+                          }),
+                        ),
+                      // Ring labels
+                      if (widget.userLat != null && widget.userLng != null)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: List.generate(_ringRadiiM.length, (i) {
+                            final radiusDeg = _ringRadiiM[i] / 111320;
+                            return Marker(
+                              point: LatLng(widget.userLat! + radiusDeg, widget.userLng!),
+                              width: 52,
+                              height: 22,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: lokmaPink.withValues(alpha: 0.25), width: 0.5),
+                                ),
+                                child: Text(
+                                  _ringLabels[i],
+                                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: lokmaPink),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      // User location marker
+                      if (widget.userLat != null && widget.userLng != null)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: [
+                            Marker(
+                              point: LatLng(widget.userLat!, widget.userLng!),
+                              width: 20,
+                              height: 20,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.blue.withValues(alpha: 0.4),
+                                      blurRadius: 6,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      // Kermes markers
+                      MarkerLayer(
+                        rotate: true,
+                        markers: widget.events.map((event) {
+                          final isSelected = _selectedEvent?.id == event.id;
+                          final scaleFactor = (1.0 + (_currentZoom - 8) * 0.12).clamp(0.7, 2.0);
+
+                          return Marker(
+                            point: LatLng(event.latitude, event.longitude),
+                            width: 120 * scaleFactor,
+                            height: 68 * scaleFactor,
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                setState(() {
+                                  _selectedEvent = (_selectedEvent?.id == event.id) ? null : event;
+                                });
+                              },
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Pulsing pin
+                                  SizedBox(
+                                    width: 32,
+                                    height: 32,
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        AnimatedBuilder(
+                                          animation: _pulseController,
+                                          builder: (context, child) => Container(
+                                            width: 20 + (_pulseController.value * 12),
+                                            height: 20 + (_pulseController.value * 12),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: lokmaPink.withValues(alpha: 0.5 * (1 - _pulseController.value)),
+                                                width: 2,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          width: (isSelected ? 26 : 22) * scaleFactor,
+                                          height: (isSelected ? 26 : 22) * scaleFactor,
+                                          decoration: BoxDecoration(
+                                            color: isSelected ? lokmaPink : const Color(0xFF2E7D32),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: Colors.white, width: 2),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: (isSelected ? lokmaPink : const Color(0xFF2E7D32)).withValues(alpha: 0.4),
+                                                blurRadius: 6,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Icon(
+                                            Icons.festival,
+                                            color: Colors.white,
+                                            size: (isSelected ? 13 : 11) * scaleFactor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Name badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? lokmaPink
+                                          : (isDark ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.95)),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isSelected ? Colors.transparent : lokmaPink.withValues(alpha: 0.2),
+                                        width: 0.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            event.title.length > 13
+                                                ? '${event.title.substring(0, 12)}...'
+                                                : (event.title),
+                                            style: TextStyle(
+                                              fontSize: 10 * scaleFactor,
+                                              fontWeight: FontWeight.w600,
+                                              color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: bottomPadding),
+            ],
+          ),
+          // Selected event info card
+          if (_selectedEvent != null)
+            Positioned(
+              bottom: bottomPadding + 16,
+              left: 12,
+              right: 12,
+              child: _buildInfoCard(isDark),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(bool isDark) {
+    final event = _selectedEvent!;
+    final dist = _distanceText(event);
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A2A28) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: lokmaPink.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: lokmaPink.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.festival, color: lokmaPink, size: 22),
+            ),
+            const SizedBox(width: 12),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    event.title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      if (dist.isNotEmpty) ...[
+                        Icon(Icons.near_me, size: 12, color: lokmaPink),
+                        const SizedBox(width: 3),
+                        Text(
+                          dist,
+                          style: TextStyle(fontSize: 12, color: lokmaPink, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      if (event.city != null)
+                        Flexible(
+                          child: Text(
+                            event.city!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Navigate button
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                Navigator.pop(context);
+                // Navigasyonu context kullanarak yap
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: lokmaPink,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'Incele',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
