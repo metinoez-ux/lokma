@@ -13,6 +13,7 @@ import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'package:lokma_app/providers/kermes_category_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
+import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
 import 'package:lokma_app/services/kermes_badge_service.dart';
@@ -451,6 +452,23 @@ void _onMenuScroll() {
 
   void _addToCart(KermesMenuItem item) {
     HapticFeedback.lightImpact();
+    
+    // Multi-step: show customization sheet if item has option groups
+    if (item.isComboMenu) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        useSafeArea: true,
+        builder: (ctx) => KermesCustomizationSheet(
+          item: item,
+          eventId: widget.event.id,
+          eventName: widget.event.city,
+        ),
+      );
+      return;
+    }
+    
     final cartNotifier = ref.read(kermesCartProvider.notifier);
     final added =
         cartNotifier.addToCart(item, widget.event.id, widget.event.city);
@@ -2935,6 +2953,23 @@ Widget _buildHeroSection(BuildContext context) {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
+                          ),
+                        ],
+                        if (item.isComboMenu && !isSoldOut) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.tune_rounded, size: 13, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Secenekli',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                         const SizedBox(height: 6),
