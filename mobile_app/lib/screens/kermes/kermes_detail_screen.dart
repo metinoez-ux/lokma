@@ -20,6 +20,7 @@ import 'package:lokma_app/services/kermes_feature_service.dart';
 import 'package:lokma_app/services/weather_service.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 // Tailwind Colors mapped from HTML
 const Color primaryRuby = Color(0xFFD32F2F);
@@ -61,6 +62,7 @@ String _selectedCategory = '';
   // Sliding pill indicator state
   double _pillLeft = 0;
   double _pillWidth = 60;
+    bool _isFavorite = false;
   bool _pillInitialized = false;
   final GlobalKey _chipRowKey = GlobalKey();
 
@@ -540,6 +542,13 @@ void _onMenuScroll() {
     return ref.read(kermesCartProvider.notifier).getQuantity(item.name);
   }
 
+  void _shareKermes() {
+    HapticFeedback.lightImpact();
+    final event = widget.event;
+    final text = '${event.title}\n${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}\n${event.address}, ${event.postalCode} ${event.city}';
+    Share.share(text, subject: event.title);
+  }
+
   void _showMenuSearchOverlay() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF050505) : const Color(0xFFF9F9F9);
@@ -721,197 +730,219 @@ if (_selectedCategory.isEmpty) {
       body: Stack(
         children: [
           CustomScrollView(
+            cacheExtent: 10000,
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
-              SliverToBoxAdapter(
+          // SliverAppBar for search and navigation
+          SliverAppBar(
+            pinned: true,
+            floating: true,
+            snap: true,
+            expandedHeight: 0,
+            toolbarHeight: 56,
+            backgroundColor: scaffoldBg,
+            surfaceTintColor: Colors.transparent,
+            automaticallyImplyLeading: false,
+            title: GestureDetector(
+              onTap: () => _showMenuSearchOverlay(),
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'Menude ara...',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _menuSearchQuery.isNotEmpty ? (isDark ? Colors.white : Colors.black87) : Colors.grey[500],
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              ),
+            ),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.arrow_back_ios_new, color: isDark ? Colors.white : Colors.black87, size: 18),
+                ),
+              ),
+            ),
+            actions: [
+              GestureDetector(
+                onTap: () { HapticFeedback.lightImpact(); setState(() => _isFavorite = !_isFavorite); },
+                child: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: _isFavorite ? Colors.red : (isDark ? Colors.white : Colors.black87), size: 24),
+              ),
+              const SizedBox(width: 16),
+              GestureDetector(
+                onTap: () => _shareKermes(),
+                child: Icon(Icons.share_outlined, color: isDark ? Colors.white : Colors.black87, size: 22),
+              ),
+              const SizedBox(width: 16),
+            ],
+          ),
+          // Hero Section (Card format)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
                 child: _buildHeroSection(context),
               ),
-              if (_globalFeatures.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                    child: _buildFeaturesRow(),
-                  ),
-                ),
-          // 1. Top Bar: Back Button & Search Bar
-          SliverAppBar(
-            floating: false,
-            pinned: true,
-            backgroundColor: scaffoldBg,
-            surfaceTintColor: scaffoldBg,
-            elevation: 0,
-            toolbarHeight: 60,
-            automaticallyImplyLeading: false,
-            flexibleSpace: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(
-                  height: 60,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: Row(
+            ),
+          ),
+          if (_globalFeatures.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: _buildFeaturesRow(),
+              ),
+            ),
+
+          // Menu ve Siparis Card
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: GestureDetector(
+                onTap: () {
+                  // Scroll to first category
+                  if (_categoriesWithoutAll.isNotEmpty) {
+                    _selectCategory(_categoriesWithoutAll.first);
+                  }
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        // Back Button
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go('/kermes');
-                            }
-                          },
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1C1C1E) : Colors.grey[200],
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(Icons.arrow_back_ios_new, size: 18, color: textPrimary),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        // Search Bar
-                        Expanded(
-                          child: Container(
-                            height: 44,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1C1C1E) : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.search, size: 20, color: textSecondary),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextField(
-                                    style: TextStyle(color: textPrimary, fontSize: 14),
-                                    decoration: InputDecoration(
-                                      hintText: 'Im Menü suchen...',
-                                      hintStyle: TextStyle(color: textSecondary, fontSize: 14),
-                                      border: InputBorder.none,
-                                      isDense: true,
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                                    ),
-                                  ),
+                        // Background image
+                        widget.event.menu.isNotEmpty && widget.event.menu.first.allImages.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: widget.event.menu.first.allImages.first,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [const Color(0xFF2D1B00), const Color(0xFF1A0E00)],
                                 ),
+                              ),
+                            ),
+                        // Gradient overlay
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomLeft,
+                              end: Alignment.topRight,
+                              colors: [
+                                Colors.black.withOpacity(0.85),
+                                Colors.black.withOpacity(0.3),
+                                Colors.transparent,
                               ],
                             ),
+                          ),
+                        ),
+                        // Populer badge
+                        Positioned(
+                          top: 16,
+                          right: 16,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: primaryRuby.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(Icons.star, color: Colors.white, size: 12),
+                                SizedBox(width: 4),
+                                Text('POPULER', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Bottom content
+                        Positioned(
+                          bottom: 20,
+                          left: 20,
+                          right: 20,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(width: 6, height: 6, decoration: BoxDecoration(color: primaryRuby, shape: BoxShape.circle)),
+                                        const SizedBox(width: 8),
+                                        Text('LEZZET SOLENI', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    const Text('Menu ve Siparis', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, height: 1.1)),
+                                    const SizedBox(height: 4),
+                                    Text('Kebaplar, tatlilar ve sokak lezzetlerini kesfet.', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: primaryRuby,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
 
-          // 2. HERO IMAGE CARD (BusinessDetailScreen style)
+          // Info Cards (before menu)
           SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              margin: const EdgeInsets.only(top: 8, bottom: 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: CachedNetworkImageProvider(
-                            'https://lh3.googleusercontent.com/aida-public/AB6AXuBJbRi7Loz4DMKqPn8OxdwybssRuCj0euEnxEc2C3sIHp6PFPWFIxOz6Cl1hciT95IosE2iL3AOdQZla7X1RwTK4ZloveV5PhHcDz2MIcFPkRk1fYTc6j15pKLPVi4nGg1p2FgfsHwmyUCs8CHb-DA_fXZbgYlwwXOLlYtl3y2Zsk3SbNm8_lHiurj651KmrmAse3uiJELB_Abh3LbqDqyDFQdnjAdhne_sjvjeNEnJDhq6P7tR33_Z97ZDVPbNUCIT78xhXY9zlnQM'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.9),
-                            Colors.black.withOpacity(0.4),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: 24,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFD32F2F).withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                children: const [
-                                  Icon(Icons.star, color: Colors.white, size: 12),
-                                  SizedBox(width: 4),
-                                  Text('Popüler',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1)),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                            width: 6,
-                                            height: 6,
-                                            decoration: const BoxDecoration(
-                                                color: Color(0xFFD32F2F),
-                                                shape: BoxShape.circle)),
-                                        const SizedBox(width: 8),
-                                        const Text('LEZZET ŞÖLENİ',
-                                            style: TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: 2)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    const Text('Menü ve Sipariş',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                            height: 1.1)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLocationCard(),
+                  const SizedBox(height: 20),
+                  _buildWeatherSection(),
+                  const SizedBox(height: 20),
+                  _buildAdminAndContactCard(),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           ),
@@ -1163,29 +1194,10 @@ if (_selectedCategory.isEmpty) {
                 childCount: _categoriesWithoutAll.length,
               ),
             ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLocationCard(),
-                      const SizedBox(height: 20),
-                      _buildParkingCard(),
-                      const SizedBox(height: 20),
-                      _buildWeatherSection(),
-                      const SizedBox(height: 20),
-                      _buildAdminCard(),
-                      _buildContactCard(),
-                      const SizedBox(height: 120),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ],  // slivers end
+          ),  // CustomScrollView end
+        ],  // Stack children end
+      ),  // Stack end
       bottomNavigationBar: (_totalItems > 0 && !widget.event.isMenuOnly)
           ? _buildCartBar()
           : null,
@@ -1238,7 +1250,16 @@ Widget _buildHeroSection(BuildContext context) {
                 _buildGlassButton(Icons.arrow_back, () => Navigator.pop(context)),
                 Row(
                   children: [
-                    _buildGlassButton(Icons.favorite_border, () {}),
+                    _buildGlassButton(
+                      _isFavorite ? Icons.favorite : Icons.favorite_border, 
+                      () {
+                        HapticFeedback.lightImpact();
+                        setState(() {
+                          _isFavorite = !_isFavorite;
+                        });
+                      },
+                      color: _isFavorite ? const Color(0xFFE50055) : Colors.white,
+                    ),
                     const SizedBox(width: 12),
                     _buildGlassButton(Icons.share, () {}),
                   ],
@@ -1471,7 +1492,7 @@ Widget _buildHeroSection(BuildContext context) {
     );
   }
 
-  Widget _buildGlassButton(IconData icon, VoidCallback onTap) {
+  Widget _buildGlassButton(IconData icon, VoidCallback onTap, {Color color = Colors.white}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1486,7 +1507,7 @@ Widget _buildHeroSection(BuildContext context) {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Center(
-              child: Icon(icon, color: Colors.white, size: 20),
+              child: Icon(icon, color: color, size: 20),
             ),
           ),
         ),
@@ -1601,27 +1622,41 @@ Widget _buildHeroSection(BuildContext context) {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: dividerBg,
-                  border: Border.all(color: dividerBg),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.near_me, color: subtleTextColor, size: 14),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${_distanceKm.toStringAsFixed(1)} km',
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: dividerBg,
+                      border: Border.all(color: dividerBg),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.near_me, color: subtleTextColor, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_distanceKm.toStringAsFixed(1)} km',
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${(_distanceKm * 2.5 + 3).ceil()} Dk.',
+                    style: TextStyle(
+                      color: subtleTextColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                ],
               ),
             ],
           ),
@@ -1642,39 +1677,74 @@ Widget _buildHeroSection(BuildContext context) {
             ),
           ),
           const SizedBox(height: 16),
-          GestureDetector(
-            onTap: _openMaps,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: primaryRuby,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.shade900.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.navigation, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'YOL TARİFİ AL',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: _openMaps,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2196F3),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.navigation, color: Colors.white, size: 16),
+                        SizedBox(width: 6),
+                        Text(
+                          'Yol Tarifi',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+              ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => KermesParkingScreen(event: widget.event),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2196F3).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.local_parking, color: const Color(0xFF2196F3), size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Park Bilgisi',
+                            style: TextStyle(
+                              color: const Color(0xFF2196F3),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -1807,6 +1877,144 @@ Widget _buildHeroSection(BuildContext context) {
   String _formatDateShort(DateTime date) {
     const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
     return '${date.day} ${months[date.month - 1]}';
+  }
+
+    Widget _buildAdminAndContactCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF141416) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Kermes Yetkilisi Top Section
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: dividerBg, width: 2),
+                  ),
+                  child: ClipOval(
+                    child: Icon(Icons.person, color: subtleTextColor, size: 24),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Kermes Yetkilisi',
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isDark ? lokmaPink.withOpacity(0.2) : lokmaPink.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'YETKİLİ',
+                              style: TextStyle(
+                                color: isDark ? lokmaPink : const Color(0xFFE50055),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Sorularınız için iletişime geçebilirsiniz.',
+                        style: TextStyle(
+                          color: subtleTextColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Bize Ulaşın Bottom Section
+          Padding(
+            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.phone, color: Colors.green, size: 20),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Telefon',
+                          style: TextStyle(
+                            color: subtleTextColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.event.phoneNumber,
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildWeatherSection() {
