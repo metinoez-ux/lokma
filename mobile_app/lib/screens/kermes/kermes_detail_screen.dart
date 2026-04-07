@@ -841,11 +841,6 @@ if (_selectedCategory.isEmpty) {
             ),
             actions: [
               GestureDetector(
-                onTap: () { HapticFeedback.lightImpact(); setState(() => _isFavorite = !_isFavorite); },
-                child: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: _isFavorite ? Colors.red : (isDark ? Colors.white : Colors.black87), size: 24),
-              ),
-              const SizedBox(width: 16),
-              GestureDetector(
                 onTap: () => _shareKermes(),
                 child: Icon(Icons.share_outlined, color: isDark ? Colors.white : Colors.black87, size: 22),
               ),
@@ -1294,9 +1289,9 @@ Widget _buildHeroSection(BuildContext context) {
 
           // Top Action Buttons
           Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 20,
-            right: 20,
+            top: 12,
+            left: 16,
+            right: 16,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1314,12 +1309,54 @@ Widget _buildHeroSection(BuildContext context) {
                       color: _isFavorite ? const Color(0xFFE50055) : Colors.white,
                     ),
                     const SizedBox(width: 12),
-                    _buildGlassButton(Icons.share, () {}),
+                    _buildGlassButton(Icons.share, () => _shareKermes()),
                   ],
                 ),
               ],
             ),
           ),
+
+          // TUNA Sponsor Badge
+          if (widget.event.sponsor == KermesSponsor.tuna)
+            Positioned(
+              top: 56,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/images/tuna_logo.png',
+                      width: 20,
+                      height: 20,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.verified, color: Color(0xFF2196F3), size: 18),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'TUNA',
+                      style: TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // Bottom Content
           Positioned(
@@ -1399,14 +1436,43 @@ Widget _buildHeroSection(BuildContext context) {
                       ],
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      '${DateTime.now().difference(widget.event.startDate).inDays.abs()} GÜN KALDI',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final now = DateTime.now();
+                        final start = widget.event.startDate;
+                        final end = widget.event.endDate;
+                        String countdownText;
+                        if (now.isBefore(start)) {
+                          final days = start.difference(now).inDays;
+                          if (days == 0) {
+                            countdownText = 'BUGUN BASLIYOR!';
+                          } else if (days == 1) {
+                            countdownText = 'YARIN BASLIYOR!';
+                          } else {
+                            countdownText = 'BASLAMASINA $days GUN';
+                          }
+                        } else if (now.isAfter(end)) {
+                          countdownText = 'KERMES SONA ERDI';
+                        } else {
+                          final days = end.difference(now).inDays;
+                          if (days == 0) {
+                            countdownText = 'SON GUN!';
+                          } else if (days == 1) {
+                            countdownText = 'YARIN SONA ERIYOR';
+                          } else {
+                            countdownText = 'BITMESINE $days GUN';
+                          }
+                        }
+                        return Text(
+                          countdownText,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
