@@ -817,7 +817,8 @@ if (_selectedCategory.isEmpty) {
                         _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'Menude ara...',
                         style: TextStyle(
                           fontSize: 14,
-                          color: _menuSearchQuery.isNotEmpty ? (isDark ? Colors.white : Colors.black87) : Colors.grey[500],
+                          fontWeight: FontWeight.w500,
+                          color: _menuSearchQuery.isNotEmpty ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.grey[400] : Colors.grey[600]),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -2070,10 +2071,13 @@ Widget _buildHeroSection(BuildContext context) {
                   height: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    color: isDark ? Colors.grey[800] : Colors.grey[100],
                     border: Border.all(color: dividerBg, width: 2),
                   ),
-                  child: ClipOval(
-                    child: Icon(Icons.person, color: subtleTextColor, size: 24),
+                  child: Icon(
+                    Icons.admin_panel_settings_rounded,
+                    color: isDark ? Colors.amber[400] : Colors.amber[700],
+                    size: 26,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -2081,37 +2085,15 @@ Widget _buildHeroSection(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Kermes Yetkilisi',
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isDark ? lokmaPink.withOpacity(0.2) : lokmaPink.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'YETKİLİ',
-                              style: TextStyle(
-                                color: isDark ? lokmaPink : const Color(0xFFE50055),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        widget.event.contactName ?? 'Kermes Yetkilisi',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
