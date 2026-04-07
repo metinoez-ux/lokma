@@ -13,6 +13,8 @@ import 'providers/staff_notifications_provider.dart';
 import 'staff_notifications_screen.dart';
 import 'widgets/shift_action_pill.dart';
 import '../kermes/kermes_unified_kds_screen.dart';
+import '../kermes/kermes_tezgah_screen.dart';
+import 'tabs/staff_pos_wrapper_tab.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -61,6 +63,34 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       navItems.add(const BottomNavigationBarItem(
         icon: Icon(Icons.kitchen),
         label: 'Mutfak',
+      ));
+    }
+
+    // 2b. Tezgah Tab (If user has tezgah role)
+    if (capabilities.hasTezgahRole && capabilities.businessId != null) {
+      tabs.add(KermesTezgahScreen(
+        kermesId: capabilities.businessId!,
+        kermesName: capabilities.businessName,
+        tezgahName: capabilities.tezgahName.isNotEmpty ? capabilities.tezgahName : 'T1',
+        allowedSections: capabilities.kermesAllowedSections,
+      ));
+      navItems.add(const BottomNavigationBarItem(
+        icon: Icon(Icons.storefront),
+        label: 'Tezgah',
+      ));
+    }
+
+    // 2c. POS Tab (If user has POS role - kermes staff)
+    if (capabilities.hasPosRole && capabilities.businessId != null) {
+      tabs.add(StaffPosWrapperTab(
+        kermesId: capabilities.businessId!,
+        staffId: capabilities.userId,
+        staffName: capabilities.staffName,
+        allowedSections: capabilities.kermesAllowedSections,
+      ));
+      navItems.add(const BottomNavigationBarItem(
+        icon: Icon(Icons.point_of_sale),
+        label: 'POS',
       ));
     }
 

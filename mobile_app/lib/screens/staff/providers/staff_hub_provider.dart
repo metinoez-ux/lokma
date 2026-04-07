@@ -23,6 +23,9 @@ class StaffCapabilities {
   final bool isBusinessAdmin;
   final List<String> kermesAllowedSections;
   final List<String> kermesPrepZones;
+  final bool hasTezgahRole;
+  final bool hasPosRole;
+  final String tezgahName;
 
   StaffCapabilities({
     this.isLoading = true,
@@ -43,6 +46,9 @@ class StaffCapabilities {
     this.hasFinanceRole = false,
     this.kermesAllowedSections = const [],
     this.kermesPrepZones = const [],
+    this.hasTezgahRole = false,
+    this.hasPosRole = false,
+    this.tezgahName = '',
   });
 
   StaffCapabilities copyWith({
@@ -64,6 +70,9 @@ class StaffCapabilities {
     bool? hasFinanceRole,
     List<String>? kermesAllowedSections,
     List<String>? kermesPrepZones,
+    bool? hasTezgahRole,
+    bool? hasPosRole,
+    String? tezgahName,
   }) {
     return StaffCapabilities(
       isLoading: isLoading ?? this.isLoading,
@@ -84,6 +93,9 @@ class StaffCapabilities {
       hasFinanceRole: hasFinanceRole ?? this.hasFinanceRole,
       kermesAllowedSections: kermesAllowedSections ?? this.kermesAllowedSections,
       kermesPrepZones: kermesPrepZones ?? this.kermesPrepZones,
+      hasTezgahRole: hasTezgahRole ?? this.hasTezgahRole,
+      hasPosRole: hasPosRole ?? this.hasPosRole,
+      tezgahName: tezgahName ?? this.tezgahName,
     );
   }
 }
@@ -139,6 +151,9 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
              } catch(e){}
           }
           
+          final hasTezgah = isKermes && earlyPrepZones.isNotEmpty;
+          final tName = earlyPrepZones.isNotEmpty ? _deriveTezgahName(earlyPrepZones) : '';
+          
           state = state.copyWith(
             isLoading: false,
             staffName: roleService.staffName ?? user.displayName ?? '',
@@ -153,6 +168,9 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             kermesAllowedSections: roleService.kermesAllowedSections,
             userId: user.uid,
             kermesPrepZones: earlyPrepZones,
+            hasTezgahRole: hasTezgah,
+            hasPosRole: isKermes,
+            tezgahName: tName,
           );
         } else {
           state = state.copyWith(isLoading: false);
@@ -269,6 +287,10 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         hasShiftTracking = true;
       }
 
+      // Determine tezgah/pos roles for kermes staff
+      final bool kermesHasTezgah = isKermesDoc && assignedPrepZones.isNotEmpty;
+      final String kermesTezgahLabel = assignedPrepZones.isNotEmpty ? _deriveTezgahName(assignedPrepZones) : '';
+
       state = state.copyWith(
         isLoading: false,
         isDriver: isDriver,
@@ -287,6 +309,9 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         hasFinanceRole: true, // everyone on staff hub gets wallet access currently
         kermesAllowedSections: List<String>.from(data['kermesAllowedSections'] ?? []),
         kermesPrepZones: assignedPrepZones,
+        hasTezgahRole: kermesHasTezgah,
+        hasPosRole: isKermesDoc,
+        tezgahName: kermesTezgahLabel,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);
@@ -297,6 +322,20 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
   void reload() {
     state = state.copyWith(isLoading: true);
     Future.microtask(_loadCapabilities);
+  }
+
+  /// Derive tezgah name from prepZone assignments.
+  /// e.g. ["Kadın Bölümü - Izgara"] -> "KT1"
+  /// e.g. ["Erkekler Bölümü - Corba"] -> "ET1"
+  String _deriveTezgahName(List<String> prepZones) {
+    if (prepZones.isEmpty) return 'T1';
+    final first = prepZones.first.toLowerCase();
+    if (first.contains('kadin') || first.contains('kadın') || first.contains('hanim') || first.contains('hanım')) {
+      return 'KT1';
+    } else if (first.contains('erkek')) {
+      return 'ET1';
+    }
+    return 'T1';
   }
 }
 
