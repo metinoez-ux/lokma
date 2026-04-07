@@ -1381,12 +1381,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: 222,
+              expandedHeight: 232,
               collapsedHeight: 120,
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = 222.0;
+                  final expandedHeight = 232.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -1437,7 +1437,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             if (!_isLoading && _filteredEvents.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
                   child: Row(
                     children: [
                       Text(
@@ -1942,72 +1942,81 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     final String nearestLabel = nearestKm > 0 ? '$nearestKm km' : '';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Opacity(
-        opacity: isNearby ? 1.0 : 0.4,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (nearestLabel.isNotEmpty) ...[
-              Icon(Icons.near_me,
-                  color: isDark ? lokmaPink : Colors.grey[700], size: 14),
-              const SizedBox(width: 4),
-              Text(
-                nearestLabel,
-                style: TextStyle(
-                  color: isDark ? lokmaPink : Colors.grey[700],
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ] else ...[
-              Icon(Icons.near_me,
-                  color: isDark ? lokmaPink : Colors.grey[700], size: 14),
-            ],
-            const SizedBox(width: 4),
-            Expanded(
-              child: SizedBox(
-                height: 36,
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: lokmaPink,
-                    inactiveTrackColor:
-                        isDark ? Colors.grey[600] : Colors.grey[300],
-                    thumbColor: lokmaPink,
-                    overlayColor: lokmaPink.withValues(alpha: 0.2),
-                    trackHeight: 4,
-                    thumbShape:
-                        const RoundSliderThumbShape(enabledThumbRadius: 8),
-                    tickMarkShape:
-                        const RoundSliderTickMarkShape(tickMarkRadius: 0),
-                    activeTickMarkColor: Colors.transparent,
-                    inactiveTickMarkColor: Colors.transparent,
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Sadece ikon + label + slider grileşir
+          Expanded(
+            child: Opacity(
+              opacity: isNearby ? 1.0 : 0.4,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (nearestLabel.isNotEmpty) ...[
+                    Icon(Icons.near_me,
+                        color: isDark ? lokmaPink : Colors.grey[700], size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      nearestLabel,
+                      style: TextStyle(
+                        color: isDark ? lokmaPink : Colors.grey[700],
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ] else ...[
+                    Icon(Icons.near_me,
+                        color: isDark ? lokmaPink : Colors.grey[700], size: 14),
+                  ],
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: lokmaPink,
+                          inactiveTrackColor:
+                              isDark ? Colors.grey[600] : Colors.grey[300],
+                          thumbColor: lokmaPink,
+                          overlayColor: lokmaPink.withValues(alpha: 0.2),
+                          trackHeight: 4,
+                          thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 8),
+                          tickMarkShape: const RoundSliderTickMarkShape(
+                              tickMarkRadius: 0),
+                          activeTickMarkColor: Colors.transparent,
+                          inactiveTickMarkColor: Colors.transparent,
+                        ),
+                        child: Slider(
+                          value: _currentStepIndex.toDouble(),
+                          min: 0,
+                          max: (_kmSteps.length - 1).toDouble(),
+                          divisions: _kmSteps.length - 1,
+                          onChanged: isNearby
+                              ? (value) {
+                                  final newIndex = value.round();
+                                  if (newIndex != _currentStepIndex) {
+                                    HapticFeedback.selectionClick();
+                                    setState(() {
+                                      _currentStepIndex = newIndex;
+                                      _maxDistance = _kmSteps[newIndex];
+                                    });
+                                  }
+                                }
+                              : null,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Slider(
-                    value: _currentStepIndex.toDouble(),
-                    min: 0,
-                    max: (_kmSteps.length - 1).toDouble(),
-                    divisions: _kmSteps.length - 1,
-                    onChanged: isNearby
-                        ? (value) {
-                            final newIndex = value.round();
-                            if (newIndex != _currentStepIndex) {
-                              HapticFeedback.selectionClick();
-                              setState(() {
-                                _currentStepIndex = newIndex;
-                                _maxDistance = _kmSteps[newIndex];
-                              });
-                            }
-                          }
-                        : null,
-                  ),
-                ),
+                ],
               ),
             ),
-            const SizedBox(width: 4),
-            _buildScopeDropdown(compact: true),
-          ],
-        ),
+          ),
+          const SizedBox(width: 4),
+          // Dropdown her zaman tam opak - Opacity dışında
+          _buildScopeDropdown(compact: true),
+        ],
       ),
     );
   }
