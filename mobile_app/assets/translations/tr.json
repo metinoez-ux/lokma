@@ -938,6 +938,7 @@
         "sort_by_distance": "Mesafeye gore sirala"
     },
     "marketplace": {
+        "sold_out": "Tükendi",
         "available_now": "Şu an siparişe açık",
         "available_today": "Bugün {time}'dan itibaren",
         "available_tomorrow": "Yarın {time}'dan itibaren",

@@ -9,7 +9,7 @@ import '../screens/marketplace/restoran/restoran_screen.dart';
 import '../screens/marketplace/kahve/kahve_shop_screen.dart';
 import '../screens/marketplace/kermes/kermes_screen.dart';
 import '../screens/kermes/kermes_list_screen.dart';
-import '../screens/kermes/kermes_menu_screen.dart';
+import 'package:lokma_app/screens/kermes/kermes_detail_screen.dart';
 import '../screens/kermes/kermes_menu_wrapper.dart';
 import '../models/kermes_model.dart';
 import '../screens/marketplace/catering/catering_screen.dart';
@@ -113,17 +113,13 @@ class AppRouter {
                 final event = state.extra;
 
                 if (event != null && event is KermesEvent) {
-                  return KermesMenuScreen(
+                  return KermesDetailScreen(
                     event: event,
-                    initialDeliveryMode: deliveryMode,
-                    initialTableId: tableNumber,
                   );
                 }
 
                 return KermesMenuWrapper(
                   kermesId: kermesId,
-                  initialDeliveryMode: deliveryMode,
-                  initialTableId: tableNumber,
                 );
               },
             ),

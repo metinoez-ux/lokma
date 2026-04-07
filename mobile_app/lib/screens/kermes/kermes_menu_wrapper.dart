@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lokma_app/models/kermes_model.dart';
-import 'package:lokma_app/screens/kermes/kermes_menu_screen.dart';
+import 'package:lokma_app/screens/kermes/kermes_detail_screen.dart';
 
 class KermesMenuWrapper extends StatefulWidget {
   final String kermesId;
-  final int initialDeliveryMode;
-  final String? initialTableId;
 
   const KermesMenuWrapper({
     super.key,
     required this.kermesId,
-    this.initialDeliveryMode = 0,
-    this.initialTableId,
   });
 
   @override
@@ -172,10 +168,8 @@ class _KermesMenuWrapperState extends State<KermesMenuWrapper> {
       );
     }
 
-    return KermesMenuScreen(
+    return KermesDetailScreen(
       event: _event!,
-      initialDeliveryMode: widget.initialDeliveryMode,
-      initialTableId: widget.initialTableId,
     );
   }
 }

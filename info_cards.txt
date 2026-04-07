@@ -1,0 +1,19 @@
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLocationCard(),
+                      const SizedBox(height: 20),
+                      _buildParkingCard(),
+                      const SizedBox(height: 20),
+                      _buildWeatherSection(),
+                      const SizedBox(height: 20),
+                      _buildAdminCard(),
+                      _buildContactCard(),
+                      const SizedBox(height: 120),
+                    ],
+                  ),
+                ),
+              ),

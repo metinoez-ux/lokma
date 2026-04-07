@@ -111,6 +111,7 @@ String _selectedCategory = '';
     _fetchLiveWeather();
     _loadGlobalFeatures();
     _loadBadges();
+    _scrollController.addListener(_onMenuScroll);
     
     final modes = _availableModes;
     if (modes.isNotEmpty) {
@@ -122,6 +123,7 @@ String _selectedCategory = '';
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onMenuScroll);
     _scrollController.dispose();
     _chipScrollController.dispose();
     
@@ -1322,14 +1324,14 @@ Widget _buildHeroSection(BuildContext context) {
               top: 56,
               left: 16,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.95),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFA01E22),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 8,
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -1337,20 +1339,15 @@ Widget _buildHeroSection(BuildContext context) {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      'assets/images/tuna_logo.png',
-                      width: 20,
-                      height: 20,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.verified, color: Color(0xFF2196F3), size: 18),
-                    ),
-                    const SizedBox(width: 6),
+                    const Icon(Icons.verified, color: Colors.white, size: 15),
+                    const SizedBox(width: 5),
                     const Text(
                       'TUNA',
                       style: TextStyle(
-                        color: Color(0xFF1A1A1A),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.5,
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   ],
@@ -1998,6 +1995,54 @@ Widget _buildHeroSection(BuildContext context) {
     return '${date.day} ${months[date.month - 1]}';
   }
 
+  /// OpenWeatherMap ikon kodunu Flutter Material ikona cevirir
+  Widget _weatherIcon(String iconCode, {double size = 28, Color? color}) {
+    IconData icon;
+    Color iconColor;
+    switch (iconCode.substring(0, 2)) {
+      case '01': // clear sky
+        icon = iconCode.endsWith('n') ? Icons.nightlight_round : Icons.wb_sunny_rounded;
+        iconColor = color ?? (iconCode.endsWith('n') ? Colors.blueGrey : Colors.amber);
+        break;
+      case '02': // few clouds
+        icon = iconCode.endsWith('n') ? Icons.nights_stay_rounded : Icons.cloud_queue_rounded;
+        iconColor = color ?? (iconCode.endsWith('n') ? Colors.blueGrey : Colors.amber.shade700);
+        break;
+      case '03': // scattered clouds
+        icon = Icons.cloud_rounded;
+        iconColor = color ?? Colors.grey;
+        break;
+      case '04': // broken clouds
+        icon = Icons.cloud_rounded;
+        iconColor = color ?? Colors.grey.shade600;
+        break;
+      case '09': // shower rain
+        icon = Icons.grain_rounded;
+        iconColor = color ?? Colors.blue.shade400;
+        break;
+      case '10': // rain
+        icon = Icons.water_drop_rounded;
+        iconColor = color ?? Colors.blue;
+        break;
+      case '11': // thunderstorm
+        icon = Icons.thunderstorm_rounded;
+        iconColor = color ?? Colors.deepPurple;
+        break;
+      case '13': // snow
+        icon = Icons.ac_unit_rounded;
+        iconColor = color ?? Colors.lightBlue.shade200;
+        break;
+      case '50': // mist
+        icon = Icons.foggy;
+        iconColor = color ?? Colors.grey.shade400;
+        break;
+      default:
+        icon = Icons.wb_cloudy_rounded;
+        iconColor = color ?? Colors.grey;
+    }
+    return Icon(icon, size: size, color: iconColor);
+  }
+
     Widget _buildAdminAndContactCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -2230,18 +2275,18 @@ Widget _buildHeroSection(BuildContext context) {
                       'KERMES ALANI HAVA DURUMU',
                       style: TextStyle(
                         color: subtleTextColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       '${widget.event.city} - Etkinlik Gunleri Tahmini',
                       style: TextStyle(
                         color: textColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -2310,7 +2355,7 @@ Widget _buildHeroSection(BuildContext context) {
               children: [
                 Text(
                   'BUGUN',
-                  style: TextStyle(color: subtleTextColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.2),
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -2356,11 +2401,7 @@ Widget _buildHeroSection(BuildContext context) {
                             fontWeight: isNow ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
-                        CachedNetworkImage(
-                          imageUrl: h.iconUrl,
-                          width: 28, height: 28,
-                          errorWidget: (_, __, ___) => const Icon(Icons.wb_cloudy, size: 24, color: Colors.grey),
-                        ),
+                        _weatherIcon(h.icon, size: 28),
                         Text(
                           '${h.temperature.round()}°',
                           style: TextStyle(
@@ -2382,7 +2423,7 @@ Widget _buildHeroSection(BuildContext context) {
             const SizedBox(height: 20),
             Text(
               'ETKINLIK GUNLERI',
-              style: TextStyle(color: subtleTextColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+              style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.2),
             ),
             const SizedBox(height: 12),
             ...eventDailySummaries.map((day) {
@@ -2453,11 +2494,7 @@ Widget _buildHeroSection(BuildContext context) {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CachedNetworkImage(
-                              imageUrl: day.iconUrl,
-                              width: 32, height: 32,
-                              errorWidget: (_, __, ___) => const Icon(Icons.wb_sunny, color: Colors.amber, size: 28),
-                            ),
+                            _weatherIcon(day.icon, size: 32),
                             const SizedBox(width: 4),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -2933,11 +2970,10 @@ Widget _buildHeroSection(BuildContext context) {
                           item.name,
                           style: TextStyle(
                             color: isAvailable ? textColor : subtleTextColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
                             height: 1.2,
-                            letterSpacing:
-                                -0.2, // Small touch from kermes original
+                            letterSpacing: -0.2,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -2971,8 +3007,8 @@ Widget _buildHeroSection(BuildContext context) {
                               item.description!,
                               style: TextStyle(
                                 color: subtleTextColor,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w300,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
                                 height: 1.3,
                               ),
                               maxLines: 2,
@@ -2984,8 +3020,8 @@ Widget _buildHeroSection(BuildContext context) {
                           '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
                             color: isAvailable ? textColor : subtleTextColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
