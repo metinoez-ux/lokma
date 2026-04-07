@@ -3,9 +3,10 @@
     "apps": [],
     "details": [
       {
-        "appID": "Y834B2NJY9.com.lokma.lokma_app",
+        "appID": "Y834B2NJY9.shop.lokma.app",
         "paths": [
-          "/dinein/*"
+          "/dinein/*",
+          "/group/*"
         ]
       }
     ]

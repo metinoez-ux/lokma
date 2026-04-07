@@ -73,6 +73,7 @@
 		3CF4F9340D2206690B6F14C7 /* lokma_bright_bell.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_bright_bell.caf; sourceTree = "<group>"; };
 		3DD5CDBCDE2582DE6338B726 /* lokma_double_ding.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_double_ding.caf; sourceTree = "<group>"; };
 		4039283B3B9B05D04C0E82A5 /* lokma_order_bell.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_order_bell.caf; sourceTree = "<group>"; };
+		4E8A9C392F84FD670097426F /* RunnerRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerRelease.entitlements; sourceTree = "<group>"; };
 		50EF9DFF4F7595A9A445C427 /* lokma_classic_ding.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_classic_ding.caf; sourceTree = "<group>"; };
 		605F461CFAA15FF88C081407 /* lokma_soft_gong.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_soft_gong.caf; sourceTree = "<group>"; };
 		6C8DE0F6256B1998861BC353 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -190,6 +191,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				4E8A9C392F84FD670097426F /* RunnerRelease.entitlements */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -777,9 +779,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Runner/RunnerRelease.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y834B2NJY9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
