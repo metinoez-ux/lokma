@@ -1433,6 +1433,20 @@ if (_selectedCategory.isEmpty) {
     );
   }
 
+  String _getCountryFlag(String country) {
+    final lower = country.toLowerCase();
+    if (lower.contains('avusturya') || lower.contains('austria') || lower == 'at') return '🇦🇹';
+    if (lower.contains('sirbistan') || lower.contains('serbia') || lower == 'rs') return '🇷🇸';
+    if (lower.contains('bulgaristan') || lower.contains('bulgaria') || lower == 'bg') return '🇧🇬';
+    if (lower.contains('turkiye') || lower.contains('turkey') || lower == 'tr') return '🇹🇷';
+    if (lower.contains('hollanda') || lower.contains('netherlands') || lower == 'nl') return '🇳🇱';
+    if (lower.contains('fransa') || lower.contains('france') || lower == 'fr') return '🇫🇷';
+    if (lower.contains('belcika') || lower.contains('belgium') || lower == 'be') return '🇧🇪';
+    if (lower.contains('isvicre') || lower.contains('switzerland') || lower == 'ch') return '🇨🇭';
+    if (lower.contains('macaristan') || lower.contains('hungary') || lower == 'hu') return '🇭🇺';
+    return '🇩🇪'; // Varsayilan Almanya
+  }
+
 Widget _buildHeroSection(BuildContext context) {
     return Container(
       height: 440,
@@ -1563,7 +1577,7 @@ Widget _buildHeroSection(BuildContext context) {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${_currentEvent.country.split(' ').first} 🇩🇪',
+                      '${_currentEvent.country.split(' ').first} ${_getCountryFlag(_currentEvent.country)}',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 12,
