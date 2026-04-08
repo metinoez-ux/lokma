@@ -71,6 +71,13 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   }
 
   @override
+  void deactivate() {
+    // Sayfa tree'den çıkınca (navigation, pop, hot restart) klavyeyi kapat
+    FocusManager.instance.primaryFocus?.unfocus();
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
