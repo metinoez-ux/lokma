@@ -22,7 +22,7 @@ class KermesBadge {
     final data = doc.data() as Map<String, dynamic>;
     return KermesBadge(
       id: doc.id,
-      label: data['label'] ?? '',
+      label: data['name'] ?? data['label'] ?? '',
       iconUrl: data['iconUrl'] ?? '',
       colorHex: data['colorHex'] ?? '#EA184A',
       textColorHex: data['textColorHex'] ?? '#FFFFFF',

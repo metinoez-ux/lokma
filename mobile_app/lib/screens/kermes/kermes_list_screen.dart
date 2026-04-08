@@ -45,9 +45,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   // Scope mode: controls whether slider or region filter is active
   // 'nearby' = slider, 'state' = eyalet, 'country' = ulke
   String _scopeMode = 'nearby';
-  final GlobalKey<PopupMenuButtonState<String>> _scopeMenuKey = GlobalKey<PopupMenuButtonState<String>>();
+  final GlobalKey _scopeChipKey = GlobalKey();
   bool _menuOpenedBySlider = false;
   bool _isMenuOpen = false;
+  OverlayEntry? _scopeOverlayEntry;
 
   // Step-based slider (matches yemek screen pattern)
   static const List<double> _kmSteps = [
@@ -117,6 +118,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
   @override
   void dispose() {
+    _dismissScopeOverlay();
     _kermesSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -694,59 +696,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     ) / 1000;
   }
 
-  Widget _buildSortChip({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required bool ascending,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isActive
-              ? lokmaPink.withOpacity(0.12)
-              : (isDark ? Colors.grey[800] : Colors.grey[200]),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? lokmaPink : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 14,
-              color: isActive ? lokmaPink : (isDark ? Colors.grey[400] : Colors.grey[600]),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                color: isActive ? lokmaPink : (isDark ? Colors.grey[300] : Colors.grey[700]),
-              ),
-            ),
-            if (isActive) ...[
-              const SizedBox(width: 2),
-              Icon(
-                ascending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                size: 12,
-                color: lokmaPink,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+
 
   /// State adi / kisaltma eslesmesi -- alias tablosunu kullanir
   bool _statesMatch(String userState, String eventState) {
@@ -1371,7 +1321,16 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       statusBarBrightness: Theme.of(context).brightness,
     ));
 
-    return Container(
+    return PopScope(
+      canPop: !_isMenuOpen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _isMenuOpen) {
+          // Overlay acikken back gesture geldi - overlay'i kapat
+          _dismissScopeOverlay();
+          _menuOpenedBySlider = false;
+        }
+      },
+      child: Container(
       color: scaffoldBg,
       child: SafeArea(
         bottom: false,
@@ -1449,47 +1408,63 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       Text(
                         'kermes.events_found_count'.tr(args: [_filteredEvents.length.toString()]),
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.85),
                           letterSpacing: -0.2,
                         ),
                       ),
                       const Spacer(),
-                      // Tarih siralama toggle
-                      _buildSortChip(
-                        icon: Icons.calendar_today_rounded,
-                        label: _sortBy == 'date_asc' ? 'kermes.sort_date_old'.tr() : _sortBy == 'date_desc' ? 'kermes.sort_date_new'.tr() : 'kermes.sort_date_default'.tr(),
-                        isActive: _sortBy == 'date_asc' || _sortBy == 'date_desc',
-                        ascending: _sortBy == 'date_asc',
+                      // Tek tersine cevirme ikonu - mevcut siralamayi ters cevirir
+                      GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
                           setState(() {
                             if (_sortBy == 'date_asc') {
                               _sortBy = 'date_desc';
-                            } else {
+                            } else if (_sortBy == 'date_desc') {
                               _sortBy = 'date_asc';
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      // Mesafe siralama toggle
-                      _buildSortChip(
-                        icon: Icons.near_me_rounded,
-                        label: _sortBy == 'distance_asc' ? 'kermes.sort_distance_near'.tr() : _sortBy == 'distance_desc' ? 'kermes.sort_distance_far'.tr() : 'kermes.sort_distance_default'.tr(),
-                        isActive: _sortBy == 'distance_asc' || _sortBy == 'distance_desc',
-                        ascending: _sortBy == 'distance_asc',
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          setState(() {
-                            if (_sortBy == 'distance_asc') {
+                            } else if (_sortBy == 'distance_asc') {
                               _sortBy = 'distance_desc';
-                            } else {
+                            } else if (_sortBy == 'distance_desc') {
                               _sortBy = 'distance_asc';
                             }
+                            // favorites icin tersine cevirme yok
                           });
                         },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _sortBy.contains('date') ? Icons.calendar_today_rounded : Icons.near_me_rounded,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              ),
+                              const SizedBox(width: 4),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  (_sortBy == 'date_asc' || _sortBy == 'distance_asc')
+                                      ? Icons.arrow_upward_rounded
+                                      : Icons.arrow_downward_rounded,
+                                  key: ValueKey(_sortBy),
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -1550,6 +1525,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -1985,10 +1961,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           inactiveTrackColor:
                               isDark ? Colors.grey[600] : Colors.grey[300],
                           thumbColor: lokmaPink,
-                          overlayColor: lokmaPink.withValues(alpha: 0.2),
+                          overlayColor: lokmaPink.withValues(alpha: 0.15),
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
                           trackHeight: 4,
                           thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 8),
+                              enabledThumbRadius: 7),
                           tickMarkShape: const RoundSliderTickMarkShape(
                               tickMarkRadius: 0),
                           activeTickMarkColor: Colors.transparent,
@@ -2013,14 +1990,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                     if (isAtMax && !_menuOpenedBySlider) {
                                       _menuOpenedBySlider = true;
                                       Future.microtask(() {
-                                        _scopeMenuKey.currentState?.showButtonMenu();
+                                        _showScopeOverlay();
                                       });
                                     } else if (!isAtMax && _menuOpenedBySlider) {
                                       // Sola cekilince menüyü kapat
                                       _menuOpenedBySlider = false;
-                                      if (Navigator.of(context).canPop()) {
-                                        Navigator.of(context).pop();
-                                      }
+                                      _dismissScopeOverlay();
                                     }
                                   }
                                 }
@@ -2041,77 +2016,94 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     );
   }
 
-  // ============== SCOPE DROPDOWN ==============
-  // compact: true -> slider row'unun saginda kucuk chip olarak gosterilir
-  // compact: false -> search bar icinde (eski davranis, artik kullanilmiyor)
-  Widget _buildScopeDropdown({bool compact = false}) {
+  // ============== SCOPE OVERLAY METHODS ==============
+  void _showScopeOverlay() {
+    _dismissScopeOverlay();
+    final chipBox = _scopeChipKey.currentContext?.findRenderObject() as RenderBox?;
+    if (chipBox == null) return;
+
+    final chipPosition = chipBox.localToGlobal(Offset.zero);
+    final chipSize = chipBox.size;
+    final screenWidth = MediaQuery.of(context).size.width;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final locationAsync = ref.read(userLocationProvider);
     final userState = locationAsync.value?.state ?? '';
     final bundeslandShort = _getBundeslandAbbr(userState);
 
-    // Current scope label & icon
-    String scopeLabel;
-    IconData scopeIcon;
-    Color? activeColor;
-    switch (_scopeMode) {
-      case 'state':
-        scopeLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
-        scopeIcon = Icons.map_outlined;
-        activeColor = lokmaPink;
-        break;
-      case 'country':
-        scopeLabel = _userCountryCode == 'TR' ? 'TR' : _userCountryCode == 'DE' ? 'DE' : 'Ulke';
-        scopeIcon = Icons.public;
-        activeColor = lokmaPink;
-        break;
-      case 'silaYolu':
-        scopeLabel = 'Sila';
-        scopeIcon = Icons.route;
-        activeColor = lokmaPink;
-        break;
-      case 'map':
-        scopeLabel = 'Harita';
-        scopeIcon = Icons.map;
-        activeColor = lokmaPink;
-        break;
-      default:
-        // nearby: show current km from slider
-        scopeLabel = _currentStepIndex == _kmSteps.length - 1
-            ? 'Tumu'
-            : '${_kmSteps[_currentStepIndex].toInt()} km';
-        scopeIcon = Icons.near_me;
-        activeColor = null;
-    }
+    setState(() => _isMenuOpen = true);
 
-    final isActive = _scopeMode != 'nearby';
-    final chipBg = isActive
-        ? lokmaPink
-        : (isDark ? Colors.grey[800] : Colors.grey[100]);
-    final textColor = isActive
-        ? Colors.white
-        : (isDark ? Colors.grey[300]! : Colors.grey[700]!);
+    _scopeOverlayEntry = OverlayEntry(
+      builder: (overlayContext) {
+        return Stack(
+          children: [
+            // Transparent tap barrier - closes dropdown on tap outside
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTapDown: (_) {
+                  _dismissScopeOverlay();
+                  if (_menuOpenedBySlider) {
+                    _menuOpenedBySlider = false;
+                    if (_currentStepIndex == _kmSteps.length - 1) {
+                      setState(() {
+                        _currentStepIndex = _kmSteps.length - 2;
+                        _maxDistance = _kmSteps[_currentStepIndex];
+                      });
+                    }
+                  }
+                },
+              ),
+            ),
+            // Dropdown card
+            Positioned(
+              top: chipPosition.dy + chipSize.height + 4,
+              right: screenWidth - chipPosition.dx - chipSize.width,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 260,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2A28) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildScopeOverlayItem('nearby', Icons.near_me, 'Yakin Cevre', 'Mesafe cubugu ile', isDark),
+                      _buildScopeOverlayItem('state', Icons.map_outlined, bundeslandShort.isNotEmpty ? '$bundeslandShort - Eyalet' : 'Eyalet', userState.isNotEmpty ? userState : 'Bulundugunuz eyalet', isDark),
+                      _buildScopeOverlayItem('country', Icons.public, _userCountryCode == 'TR' ? 'Turkiye' : _userCountryCode == 'DE' ? 'Almanya' : 'Ulke', 'Tum ulke genelinde', isDark),
+                      _buildScopeOverlayItem('silaYolu', Icons.route, 'Sila Yolu Kermesleri', 'Avrupa-Turkiye guzergahi', isDark),
+                      Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
+                      _buildScopeOverlayItem('map', Icons.map, 'Harita Gorunumu', 'Kermesleri haritada goster', isDark),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
 
-    return PopupMenuButton<String>(
-      key: _scopeMenuKey,
-      onOpened: () => setState(() => _isMenuOpen = true),
-      onCanceled: () => setState(() {
-        _isMenuOpen = false;
-        if (_menuOpenedBySlider) {
-          // Slider max idi, kullanici popup'i kapatti (barrier) - slider'i geri al
-          _menuOpenedBySlider = false;
-          if (_currentStepIndex == _kmSteps.length - 1) {
-            _currentStepIndex = _kmSteps.length - 2;
-            _maxDistance = _kmSteps[_currentStepIndex];
-          }
-        }
-      }),
-      onSelected: (value) {
+    Overlay.of(context).insert(_scopeOverlayEntry!);
+  }
+
+  Widget _buildScopeOverlayItem(String value, IconData icon, String label, String subtitle, bool isDark) {
+    final isSelected = _scopeMode == value;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () {
         _menuOpenedBySlider = false;
-        _isMenuOpen = false;
+        _dismissScopeOverlay();
         HapticFeedback.lightImpact();
         if (value == 'map') {
-          // Harita modunu aktif et ve hemen haritayi ac
           setState(() => _scopeMode = 'map');
           _showKermesMapSheet();
           return;
@@ -2129,52 +2121,89 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           }
         });
       },
-      color: isDark ? const Color(0xFF2A2A28) : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      offset: const Offset(0, 40),
-      itemBuilder: (context) => [
-        _buildScopeMenuItem(
-          value: 'nearby',
-          icon: Icons.near_me,
-          label: 'Yakin Cevre',
-          subtitle: 'Mesafe cubugu ile',
-          isSelected: _scopeMode == 'nearby',
-          isDark: isDark,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: isSelected ? lokmaPink : (isDark ? Colors.grey[300] : Colors.grey[700])),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(label, style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isDark ? Colors.white : Colors.grey[900])),
+                  Text(subtitle, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                ],
+              ),
+            ),
+            if (isSelected) Icon(Icons.check_circle, size: 18, color: lokmaPink),
+          ],
         ),
-        _buildScopeMenuItem(
-          value: 'state',
-          icon: Icons.map_outlined,
-          label: bundeslandShort.isNotEmpty ? '$bundeslandShort - Eyalet' : 'Eyalet',
-          subtitle: userState.isNotEmpty ? userState : 'Bulundugunuz eyalet',
-          isSelected: _scopeMode == 'state',
-          isDark: isDark,
-        ),
-        _buildScopeMenuItem(
-          value: 'country',
-          icon: Icons.public,
-          label: _userCountryCode == 'TR' ? 'Turkiye' : _userCountryCode == 'DE' ? 'Almanya' : 'Ulke',
-          subtitle: 'Tum ulke genelinde',
-          isSelected: _scopeMode == 'country',
-          isDark: isDark,
-        ),
-        _buildScopeMenuItem(
-          value: 'silaYolu',
-          icon: Icons.route,
-          label: 'Sila Yolu Kermesleri',
-          subtitle: 'Avrupa-Turkiye guzergahi',
-          isSelected: _scopeMode == 'silaYolu',
-          isDark: isDark,
-        ),
-        const PopupMenuDivider(),
-        _buildScopeMenuItem(
-          value: 'map',
-          icon: Icons.map,
-          label: 'Harita Gorunumu',
-          subtitle: 'Kermesleri haritada goster',
-          isSelected: _scopeMode == 'map',
-          isDark: isDark,
-        ),
-      ],
+      ),
+    );
+  }
+
+  void _dismissScopeOverlay() {
+    _scopeOverlayEntry?.remove();
+    _scopeOverlayEntry = null;
+    if (_isMenuOpen) {
+      setState(() => _isMenuOpen = false);
+    }
+  }
+
+  // ============== SCOPE DROPDOWN CHIP ==============
+  Widget _buildScopeDropdown({bool compact = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locationAsync = ref.read(userLocationProvider);
+    final userState = locationAsync.value?.state ?? '';
+    final bundeslandShort = _getBundeslandAbbr(userState);
+
+    // Current scope label & icon
+    String scopeLabel;
+    IconData scopeIcon;
+    switch (_scopeMode) {
+      case 'state':
+        scopeLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
+        scopeIcon = Icons.map_outlined;
+        break;
+      case 'country':
+        scopeLabel = _userCountryCode == 'TR' ? 'TR' : _userCountryCode == 'DE' ? 'DE' : 'Ulke';
+        scopeIcon = Icons.public;
+        break;
+      case 'silaYolu':
+        scopeLabel = 'Sila';
+        scopeIcon = Icons.route;
+        break;
+      case 'map':
+        scopeLabel = 'Harita';
+        scopeIcon = Icons.map;
+        break;
+      default:
+        scopeLabel = _currentStepIndex == _kmSteps.length - 1
+            ? 'Tumu'
+            : '${_kmSteps[_currentStepIndex].toInt()} km';
+        scopeIcon = Icons.near_me;
+    }
+
+    final isActive = _scopeMode != 'nearby';
+    final chipBg = isActive
+        ? lokmaPink
+        : (isDark ? Colors.grey[800] : Colors.grey[100]);
+    final textColor = isActive
+        ? Colors.white
+        : (isDark ? Colors.grey[300]! : Colors.grey[700]!);
+
+    return GestureDetector(
+      key: _scopeChipKey,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        if (_isMenuOpen) {
+          _dismissScopeOverlay();
+        } else {
+          _showScopeOverlay();
+        }
+      },
       child: Container(
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -2269,10 +2298,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w500,
                     color: disabled
                         ? (isDark ? Colors.grey[700] : Colors.grey[350])
-                        : (isDark ? Colors.grey[500] : Colors.grey[500]),
+                        : (isDark ? Colors.grey[400] : Colors.grey[600]),
                   ),
                 ),
               ],

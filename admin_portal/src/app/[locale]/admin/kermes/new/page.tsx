@@ -997,6 +997,9 @@ function NewKermesContent() {
  street: place.street || place.formattedAddress || '',
  city: place.city || updated[index].city,
  postalCode: place.postalCode || updated[index].postalCode,
+ country: place.country || updated[index].country,
+ lat: place.lat,
+ lng: place.lng,
  };
  setParkingLocations(updated);
  }}

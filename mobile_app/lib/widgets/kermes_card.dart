@@ -193,7 +193,7 @@ class _KermesCardState extends State<KermesCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: const EdgeInsets.only(bottom: 16),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -205,13 +205,9 @@ class _KermesCardState extends State<KermesCard> {
               child: Container(
                 height: bannerHeight,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [const Color(0xFF1E3A8A), const Color(0xFF1E40AF)]
-                        : [const Color(0xFFDBEAFE), const Color(0xFFBFDBFE)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
+                  color: isDark
+                      ? const Color(0xFF2D2D2D)
+                      : const Color(0xFF4A4A4A),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Stack(
@@ -223,21 +219,17 @@ class _KermesCardState extends State<KermesCard> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.calendar_month,
-                                size: 14,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF1E3A8A)),
+                            const Icon(Icons.calendar_month,
+                                size: 15,
+                                color: Colors.white70),
                             const SizedBox(width: 6),
                             Text(
                               dateRangeText,
                               style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w300,
-                                letterSpacing: 0.5,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF1E3A8A),
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -252,19 +244,15 @@ class _KermesCardState extends State<KermesCard> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.black26
-                                : Colors.white.withOpacity(0.5),
+                            color: Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             bannerRightText,
                             style: GoogleFonts.inter(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF1E3A8A),
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -376,42 +364,68 @@ class _KermesCardState extends State<KermesCard> {
                         ),
                       ),
 
-                      // Bottom Left: Dynamic Badges (Zertifikate)
+                      // Top Left: Dynamic Badges (Zertifikate)
                       if (_activeBadges.isNotEmpty)
                         Positioned(
-                          bottom: 12,
+                          top: 12,
                           left: 12,
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: _activeBadges.map((badge) {
+                              // Parse badge colors from Firestore
+                              final bgColor = Color(int.parse(
+                                  badge.colorHex.replaceFirst('#', '0xFF')));
+                              final textColor = Color(int.parse(
+                                  badge.textColorHex.replaceFirst('#', '0xFF')));
                               return Padding(
-                                padding: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.only(bottom: 6),
                                 child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
+                                    color: bgColor,
+                                    borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black
-                                            .withOpacity(0.15),
-                                        blurRadius: 4,
+                                            .withOpacity(0.25),
+                                        blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
-                                  child: ClipOval(
-                                    child: CachedNetworkImage(
-                                      imageUrl: badge.iconUrl,
-                                      height: 34,
-                                      width: 34,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => Container(
-                                        color: Colors.grey[200],
-                                        height: 34,
-                                        width: 34,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: CachedNetworkImage(
+                                          imageUrl: badge.iconUrl,
+                                          height: 18,
+                                          width: 18,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => Container(
+                                            color: Colors.transparent,
+                                            height: 18,
+                                            width: 18,
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              Icon(Icons.verified, color: textColor, size: 15),
+                                        ),
                                       ),
-                                      errorWidget: (context, url, error) =>
-                                          const SizedBox.shrink(),
-                                    ),
+                                      if (badge.label.isNotEmpty) ...[
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          badge.label,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: textColor,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
                               );
@@ -426,21 +440,21 @@ class _KermesCardState extends State<KermesCard> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (widget.event.isMenuOnly)
+                          if (widget.event.isMenuOnly)
                               _buildModalityPill(Icons.restaurant_menu,
                                   'kermes.no_orders'.tr()),
                             if (!widget.event.isMenuOnly &&
                                 widget.event.hasDineIn)
                               _buildModalityPill(Icons.table_restaurant,
-                                  'delivery_modes.dine_in'.tr()),
+                                  'kermes.dine_in_service'.tr()),
                             if (!widget.event.isMenuOnly &&
                                 widget.event.hasTakeaway)
-                              _buildModalityPill(Icons.shopping_bag_outlined,
-                                  'delivery_modes.pickup'.tr()),
+                              _buildModalityPill(Icons.phone_iphone,
+                                  'kermes.order_via_app'.tr()),
                             if (!widget.event.isMenuOnly &&
                                 widget.event.hasDelivery)
                               _buildModalityPill(
-                                Icons.two_wheeler,
+                                Icons.delivery_dining,
                                 widget.event.deliveryFee > 0
                                     ? '${'delivery_modes.delivery'.tr()} (${widget.event.deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()})'
                                     : '${'delivery_modes.delivery'.tr()} (${'kermes.free_delivery'.tr()})',
@@ -480,17 +494,18 @@ class _KermesCardState extends State<KermesCard> {
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      Icon(Icons.flag,
-                                          size: 14, color: primaryRose),
+                                      Icon(Icons.location_on_outlined,
+                                          size: 15, color: primaryRose),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           formattedLocation,
                                           style: TextStyle(
                                             color: isDark
-                                                ? Colors.grey[400]
-                                                : Colors.grey[500],
-                                            fontSize: 13,
+                                                ? Colors.grey[300]
+                                                : Colors.grey[700],
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -549,8 +564,8 @@ class _KermesCardState extends State<KermesCard> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.two_wheeler,
-                                      size: 16,
+                                  Icon(Icons.delivery_dining,
+                                      size: 17,
                                       color: isDark
                                           ? Colors.green[400]
                                           : const Color(0xFF059669)),
@@ -565,7 +580,7 @@ class _KermesCardState extends State<KermesCard> {
                                       color: isDark
                                           ? Colors.green[400]
                                           : const Color(0xFF059669),
-                                      fontSize: 12,
+                                      fontSize: 13.5,
                                       fontWeight: FontWeight.w600,
                                     ),
                                     maxLines: 1,
@@ -636,14 +651,14 @@ class _KermesCardState extends State<KermesCard> {
       IconData icon, String text, Color iconColor, bool isDark) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: iconColor),
+        Icon(icon, size: 17, color: iconColor),
         const SizedBox(width: 4),
         Text(
           text,
           style: TextStyle(
-            color: isDark ? Colors.grey[400] : Colors.grey[500],
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.grey[300] : Colors.grey[700],
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],

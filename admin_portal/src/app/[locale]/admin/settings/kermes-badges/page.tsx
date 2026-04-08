@@ -30,6 +30,8 @@ export default function KermesBadgesPage() {
  const [newBadge, setNewBadge] = useState({
  name: '',
  description: '',
+ colorHex: '#EA184A',
+ textColorHex: '#FFFFFF',
  isActive: true,
  file: null as File | null,
  });
@@ -81,15 +83,18 @@ export default function KermesBadgesPage() {
 
  await addDoc(collection(db, 'kermes_badges'), {
  name: newBadge.name,
+ label: newBadge.name,
  description: newBadge.description,
  iconUrl: downloadUrl,
  storagePath: fileName,
+ colorHex: newBadge.colorHex,
+ textColorHex: newBadge.textColorHex,
  isActive: newBadge.isActive,
  createdAt: serverTimestamp(),
  createdBy: admin.id,
  });
 
- setNewBadge({ name: '', description: '', isActive: true, file: null });
+ setNewBadge({ name: '', description: '', colorHex: '#EA184A', textColorHex: '#FFFFFF', isActive: true, file: null });
  setShowUploadModal(false);
  loadBadges();
  } catch (error) {
@@ -305,9 +310,26 @@ export default function KermesBadgesPage() {
  <input type="text" value={newBadge.name} onChange={(e) => setNewBadge(prev => ({ ...prev, name: e.target.value }))} placeholder="örn: Tuna Helal Kesim %100" className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" />
  </div>
  
- <div className="mb-6">
+ <div className="mb-4">
  <label className="block text-foreground text-sm font-medium mb-2">Kısa Açıklama (İsteğe Bağlı)</label>
  <textarea value={newBadge.description} onChange={(e) => setNewBadge(prev => ({ ...prev, description: e.target.value }))} placeholder="Bu rozetin anlamı..." className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white resize-none" rows={3}></textarea>
+ </div>
+
+ <div className="mb-6 grid grid-cols-2 gap-4">
+ <div>
+ <label className="block text-foreground text-sm font-medium mb-2">Arka Plan Rengi</label>
+ <div className="flex items-center gap-3">
+ <input type="color" value={newBadge.colorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, colorHex: e.target.value }))} className="w-10 h-10 rounded cursor-pointer border-0" />
+ <input type="text" value={newBadge.colorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, colorHex: e.target.value }))} className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono" />
+ </div>
+ </div>
+ <div>
+ <label className="block text-foreground text-sm font-medium mb-2">Yazı Rengi</label>
+ <div className="flex items-center gap-3">
+ <input type="color" value={newBadge.textColorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, textColorHex: e.target.value }))} className="w-10 h-10 rounded cursor-pointer border-0" />
+ <input type="text" value={newBadge.textColorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, textColorHex: e.target.value }))} className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono" />
+ </div>
+ </div>
  </div>
 
  <div className="flex gap-3">

@@ -936,7 +936,9 @@
         "sort_nearest_date": "Naechstes Datum",
         "sort_by_date": "Nach Datum sortieren",
         "sort_nearest_distance": "Kuerzeste Entfernung",
-        "sort_by_distance": "Nach Entfernung sortieren"
+        "sort_by_distance": "Nach Entfernung sortieren",
+        "dine_in_service": "Tischservice",
+        "order_via_app": "Per App bestellen"
     },
     "marketplace": {
         "available_now": "Jetzt möglich",

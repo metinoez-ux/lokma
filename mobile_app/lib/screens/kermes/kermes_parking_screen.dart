@@ -56,10 +56,21 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   // Genel park bilgisi notu
   String _generalParkingNote = '';
 
+  // Geocoding cache (adres -> koordinat)
+  final Map<String, List<double>?> _coordCache = {};
+
+  // Kermes koordinatlari (realtime guncellenir)
+  late double _kermesLat;
+  late double _kermesLng;
+  late String _kermesAddress;
+
   @override
   void initState() {
     super.initState();
     _parkingList = List.from(widget.event.parking);
+    _kermesLat = widget.event.latitude;
+    _kermesLng = widget.event.longitude;
+    _kermesAddress = widget.event.address;
     
     // Yanıp sönen animasyon
     _flashController = AnimationController(
@@ -129,10 +140,40 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         final parkingData = data?['parkingLocations'] as List<dynamic>? ?? [];
         final parkingNote = data?['parkingNote'] as String? ?? '';
         
+        // Kermes koordinatlarini da guncelle
+        double newLat = widget.event.latitude;
+        double newLng = widget.event.longitude;
+        if (data?['latitude'] is num) newLat = (data!['latitude'] as num).toDouble();
+        if (data?['longitude'] is num) newLng = (data!['longitude'] as num).toDouble();
+        
+        String newAddress = widget.event.address;
+        if (data?['address'] is String) {
+          newAddress = data!['address'] as String;
+        } else if (data?['address'] is Map) {
+          final addrMap = data!['address'] as Map;
+          newAddress = addrMap['fullAddress']?.toString() ?? newAddress;
+          if (newAddress.isEmpty) {
+            final street = addrMap['street']?.toString() ?? '';
+            final pc = addrMap['postalCode']?.toString() ?? '';
+            final city = addrMap['city']?.toString() ?? '';
+            newAddress = '$street, $pc $city'.trim();
+          }
+        }
+        // Koordinatlar degisti mi kontrol et, degistiyse cache temizle
+        final coordsChanged = newLat != _kermesLat || newLng != _kermesLng;
+        
         setState(() {
           _parkingList = parkingData.map((p) => KermesParkingInfo.fromJson(p as Map<String, dynamic>)).toList();
           _generalParkingNote = parkingNote;
+          _kermesLat = newLat;
+          _kermesLng = newLng;
+          _kermesAddress = newAddress;
         });
+        
+        if (coordsChanged) {
+          _coordCache.clear();
+          debugPrint('[PARK-DIST] Kermes koordinatlari degisti, cache temizlendi. Yeni: $newLat, $newLng');
+        }
       }
     });
   }
@@ -410,18 +451,31 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     }
   }
 
-  // Koordinat cozumleme: varsa direkt kullan, yoksa geocode et
+  // Koordinat cozumleme: varsa direkt kullan, yoksa geocode et (cached)
   Future<List<double>?> _resolveCoordinates(KermesParkingInfo info, String address) async {
     if (info.lat != null && info.lng != null) {
+      debugPrint('[PARK-DIST] Direkt koordinat: lat=${info.lat}, lng=${info.lng} (${info.street})');
       return [info.lat!, info.lng!];
+    }
+    // Cache kontrolu
+    if (_coordCache.containsKey(address)) {
+      return _coordCache[address];
     }
     try {
       final locations = await locationFromAddress(address);
       if (locations.isNotEmpty) {
-        return [locations.first.latitude, locations.first.longitude];
+        final result = [locations.first.latitude, locations.first.longitude];
+        _coordCache[address] = result;
+        debugPrint('[PARK-DIST] Geocoded: $address -> lat=${result[0]}, lng=${result[1]}');
+        debugPrint('[PARK-DIST] Kermes loc: lat=$_kermesLat, lng=$_kermesLng');
+        final dist = Geolocator.distanceBetween(result[0], result[1], _kermesLat, _kermesLng);
+        debugPrint('[PARK-DIST] Mesafe: ${dist.round()} m = ${(dist/1000).toStringAsFixed(1)} km');
+        return result;
       }
+      _coordCache[address] = null;
     } catch (e) {
-      debugPrint('Geocoding hatasi: $e');
+      debugPrint('[PARK-DIST] Geocoding hatasi ($address): $e');
+      _coordCache[address] = null;
     }
     return null;
   }
@@ -434,6 +488,52 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
+  }
+
+  /// Calculate walking distance and time from parking to kermes venue
+  Widget _buildWalkingDistanceChip(double parkLat, double parkLng, bool isDark) {
+    final kermesLat = _kermesLat;
+    final kermesLng = _kermesLng;
+    
+    // Haversine distance in meters
+    final distanceMeters = Geolocator.distanceBetween(parkLat, parkLng, kermesLat, kermesLng);
+    
+    // Format distance
+    String distanceText;
+    if (distanceMeters < 1000) {
+      distanceText = '${distanceMeters.round()} m';
+    } else {
+      distanceText = '${(distanceMeters / 1000).toStringAsFixed(1)} km';
+    }
+    
+    // Walking time at ~5 km/h (83m/min)
+    final walkingMinutes = (distanceMeters / 83).ceil();
+    final walkTimeText = walkingMinutes <= 1 ? '~1 dk' : '~$walkingMinutes dk';
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark 
+            ? const Color(0xFF2563EB).withOpacity(0.15)
+            : const Color(0xFF2563EB).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.directions_walk, size: 14, color: const Color(0xFF2563EB)),
+          const SizedBox(width: 4),
+          Text(
+            '$distanceText  $walkTimeText',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF2563EB),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -632,21 +732,18 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 margin: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.amber.withOpacity(0.15), Colors.amber.withOpacity(0.08)],
-                  ),
+                  color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFF3A3A3A),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, color: Colors.amber, size: 22),
+                    Icon(Icons.info_outline, color: Colors.white70, size: 22),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         _generalParkingNote,
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, height: 1.4),
+                        style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500, height: 1.4),
                       ),
                     ),
                   ],
@@ -795,7 +892,24 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         const SizedBox(height: 2),
                         Text(
                           '${info.postalCode} ${info.city}',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                          ),
+                        ),
+                        // Walking distance to kermes venue
+                        FutureBuilder<List<double>?>(
+                          future: _resolveCoordinates(info, '${info.street}, ${info.postalCode} ${info.city}'),
+                          builder: (context, snap) {
+                            if (!snap.hasData || snap.data == null) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: _buildWalkingDistanceChip(snap.data![0], snap.data![1], isDark),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -847,23 +961,23 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(isDark ? 0.08 : 0.06),
+                  color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFF3A3A3A),
                   borderRadius: BorderRadius.circular(12),
                   border: Border(
-                    left: BorderSide(color: Colors.amber, width: 3),
+                    left: BorderSide(color: Colors.white54, width: 3),
                   ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline_rounded, color: Colors.amber, size: 18),
+                    Icon(Icons.info_outline_rounded, color: Colors.white70, size: 18),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         info.note!,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.85),
-                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w500,
                           height: 1.4,
                         ),

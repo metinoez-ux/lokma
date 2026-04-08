@@ -51,6 +51,11 @@ WeatherForecast? _weatherForecast;
   List<KermesFeature> _globalFeatures = [];
   Map<String, KermesBadge> _activeBadges = {};
 
+  // Realtime event document listener
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _eventSubscription;
+  KermesEvent? _liveEvent;
+  KermesEvent get _currentEvent => _liveEvent ?? widget.event;
+
   // Realtime products listener
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _productsSubscription;
   List<KermesMenuItem>? _liveMenu;
@@ -82,10 +87,10 @@ String _selectedCategory = '';
 
   List<({int absoluteIndex, String title, IconData icon, String subtitle})>
       get _availableModes {
-    if (widget.event.isMenuOnly) return [];
+    if (_currentEvent.isMenuOnly) return [];
     final modes =
         <({int absoluteIndex, String title, IconData icon, String subtitle})>[];
-    if (widget.event.hasDelivery) {
+    if (_currentEvent.hasDelivery) {
       modes.add((
         absoluteIndex: 0,
         title: 'Evine',
@@ -93,7 +98,7 @@ String _selectedCategory = '';
         subtitle: 'gelsin'
       ));
     }
-    if (widget.event.hasTakeaway) {
+    if (_currentEvent.hasTakeaway) {
       modes.add((
         absoluteIndex: 1,
         title: 'Gel Al',
@@ -101,7 +106,7 @@ String _selectedCategory = '';
         subtitle: 'Sıra bekleme'
       ));
     }
-    if (widget.event.hasDineIn) {
+    if (_currentEvent.hasDineIn) {
       modes.add((
         absoluteIndex: 2,
         title: '(Masa)',
@@ -119,6 +124,7 @@ String _selectedCategory = '';
     _loadGlobalFeatures();
     _loadBadges();
     _listenToProducts();
+    _listenToEventDocument();
     _scrollController.addListener(_onMenuScroll);
     
     final modes = _availableModes;
@@ -135,6 +141,7 @@ String _selectedCategory = '';
     _scrollController.dispose();
     _chipScrollController.dispose();
     _productsSubscription?.cancel();
+    _eventSubscription?.cancel();
     super.dispose();
   }
 
@@ -155,8 +162,8 @@ Future<void> _loadBadges() async {
   Future<void> _fetchLiveWeather() async {
     try {
       final forecast = await WeatherService.getForecast(
-        lat: widget.event.latitude,
-        lon: widget.event.longitude,
+        lat: _currentEvent.latitude,
+        lon: _currentEvent.longitude,
       );
 
       if (mounted && forecast != null) {
@@ -179,15 +186,15 @@ Future<void> _loadBadges() async {
     return Geolocator.distanceBetween(
           widget.currentPosition!.latitude,
           widget.currentPosition!.longitude,
-          widget.event.latitude,
-          widget.event.longitude,
+          _currentEvent.latitude,
+          _currentEvent.longitude,
         ) /
         1000;
   }
 
   Future<void> _openMaps() async {
     final uri = Uri.parse(
-        'https://www.google.com/maps/dir/?api=1&destination=${widget.event.latitude},${widget.event.longitude}');
+        'https://www.google.com/maps/dir/?api=1&destination=${_currentEvent.latitude},${_currentEvent.longitude}');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -376,10 +383,134 @@ void _onMenuScroll() {
     });
   }
 
+  /// Realtime listener for the kermes event document (address, parking, etc.)
+  void _listenToEventDocument() {
+    _eventSubscription = FirebaseFirestore.instance
+        .collection('kermes_events')
+        .doc(widget.event.id)
+        .snapshots()
+        .listen((docSnap) {
+      if (!mounted || !docSnap.exists) return;
+      final data = docSnap.data()!;
+      
+      // Parse address
+      String fullAddress = widget.event.address;
+      String city = widget.event.city;
+      String postalCode = widget.event.postalCode;
+      
+      if (data['address'] is Map) {
+        final addressData = data['address'] as Map;
+        fullAddress = addressData['fullAddress']?.toString() ?? '';
+        city = addressData['city']?.toString() ?? widget.event.city;
+        if (fullAddress.isEmpty) {
+          final street = addressData['street']?.toString() ?? '';
+          final pc = addressData['postalCode']?.toString() ?? '';
+          fullAddress = '$street, $pc $city'.trim();
+        }
+      } else if (data['address'] is String) {
+        fullAddress = data['address'] as String;
+        city = data['city']?.toString() ?? widget.event.city;
+      }
+      postalCode = data['postalCode']?.toString() ?? widget.event.postalCode;
+      
+      // Parse parking
+      final parkingList = <KermesParkingInfo>[];
+      if (data['parkingLocations'] is List) {
+        for (final p in data['parkingLocations']) {
+          if (p is Map) {
+            parkingList.add(KermesParkingInfo(
+              street: p['street']?.toString() ?? '',
+              city: p['city']?.toString() ?? '',
+              postalCode: p['postalCode']?.toString() ?? '',
+              country: p['country']?.toString() ?? '',
+              images: (p['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+              note: (p['note']?.toString().isNotEmpty == true) ? p['note'].toString() : null,
+              latitude: (p['lat'] as num?)?.toDouble(),
+              longitude: (p['lng'] as num?)?.toDouble(),
+            ));
+          }
+        }
+      }
+      
+      // Parse coordinates
+      double lat = widget.event.latitude;
+      double lng = widget.event.longitude;
+      if (data['latitude'] is num) lat = (data['latitude'] as num).toDouble();
+      if (data['longitude'] is num) lng = (data['longitude'] as num).toDouble();
+      
+      final e = widget.event;
+      final prev = _liveEvent;
+      if (fullAddress != (prev?.address ?? e.address) ||
+          city != (prev?.city ?? e.city) ||
+          postalCode != (prev?.postalCode ?? e.postalCode) ||
+          lat != (prev?.latitude ?? e.latitude) ||
+          lng != (prev?.longitude ?? e.longitude) ||
+          parkingList.length != (prev?.parking ?? e.parking).length) {
+        setState(() {
+          _liveEvent = KermesEvent(
+            id: e.id,
+            city: city,
+            postalCode: postalCode,
+            country: data['country']?.toString() ?? e.country,
+            state: data['state']?.toString() ?? e.state,
+            title: data['name']?.toString() ?? data['title']?.toString() ?? e.title,
+            address: fullAddress,
+            phoneNumber: e.phoneNumber,
+            startDate: e.startDate,
+            endDate: e.endDate,
+            latitude: lat,
+            longitude: lng,
+            menu: e.menu,
+            parking: parkingList.isNotEmpty ? parkingList : e.parking,
+            weatherForecast: e.weatherForecast,
+            hasKidsActivities: e.hasKidsActivities,
+            hasFamilyArea: e.hasFamilyArea,
+            hasOutdoor: e.hasOutdoor,
+            hasIndoorArea: e.hasIndoorArea,
+            hasCreditCardPayment: e.hasCreditCardPayment,
+            hasVegetarian: e.hasVegetarian,
+            hasAccessible: e.hasAccessible,
+            hasHalal: e.hasHalal,
+            hasWifi: e.hasWifi,
+            hasLiveMusic: e.hasLiveMusic,
+            hasPrayerRoom: e.hasPrayerRoom,
+            hasFreeEntry: e.hasFreeEntry,
+            hasParking: e.hasParking,
+            hasSleepingAccommodation: e.hasSleepingAccommodation,
+            hasArgelatoIceCream: e.hasArgelatoIceCream,
+            openingTime: data['openingTime']?.toString() ?? e.openingTime,
+            closingTime: data['closingTime']?.toString() ?? e.closingTime,
+            sponsor: e.sponsor,
+            features: e.features,
+            customFeatures: e.customFeatures,
+            hasDelivery: e.hasDelivery,
+            deliveryFee: e.deliveryFee,
+            minCartForFreeDelivery: e.minCartForFreeDelivery,
+            minOrderAmount: e.minOrderAmount,
+            isMenuOnly: e.isMenuOnly,
+            hasTakeaway: e.hasTakeaway,
+            hasDineIn: e.hasDineIn,
+            contactName: e.contactName,
+            headerImage: data['headerImage']?.toString() ?? e.headerImage,
+            generalParkingNote: data['generalParkingNote']?.toString() ?? e.generalParkingNote,
+            activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>?)?.map((x) => x.toString()).toList() ?? e.activeBadgeIds,
+            acceptsDonations: data['acceptsDonations'] == true,
+            selectedDonationFundId: data['selectedDonationFundId']?.toString() ?? e.selectedDonationFundId,
+            selectedDonationFundName: data['selectedDonationFundName']?.toString() ?? e.selectedDonationFundName,
+            isSilaYolu: data['isSilaYolu'] == true,
+            sectionDefs: e.sectionDefs,
+          );
+        });
+      }
+    }, onError: (e) {
+      debugPrint('[KERMES-LIVE] Event stream error: $e');
+    });
+  }
+
   List<KermesMenuItem> get _eventMenu {
     // Prefer realtime data, fallback to initial snapshot
     if (_liveMenu != null && _liveMenu!.isNotEmpty) return _liveMenu!;
-    if (widget.event.menu.isNotEmpty) return widget.event.menu;
+    if (_currentEvent.menu.isNotEmpty) return _currentEvent.menu;
     return [];
   }
 
@@ -485,8 +616,8 @@ void _onMenuScroll() {
         useSafeArea: true,
         builder: (ctx) => KermesCustomizationSheet(
           item: item,
-          eventId: widget.event.id,
-          eventName: widget.event.city,
+          eventId: _currentEvent.id,
+          eventName: _currentEvent.city,
         ),
       );
       return;
@@ -494,7 +625,7 @@ void _onMenuScroll() {
     
     final cartNotifier = ref.read(kermesCartProvider.notifier);
     final added =
-        cartNotifier.addToCart(item, widget.event.id, widget.event.city);
+        cartNotifier.addToCart(item, _currentEvent.id, _currentEvent.city);
     if (!added) _showDifferentKermesWarning(item);
   }
 
@@ -545,7 +676,7 @@ void _onMenuScroll() {
                     fontSize: 15)),
             const SizedBox(height: 12),
             Text(
-                '${widget.event.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.',
+                '${_currentEvent.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.',
                 style: TextStyle(
                     color: Theme.of(dialogContext).brightness == Brightness.dark
                         ? Colors.white54
@@ -562,10 +693,10 @@ void _onMenuScroll() {
             onPressed: () {
               Navigator.pop(dialogContext);
               ref.read(kermesCartProvider.notifier).clearAndAddFromNewKermes(
-                  item, widget.event.id, widget.event.city);
+                  item, _currentEvent.id, _currentEvent.city);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('marketplace.cart_updated_for_city'
-                      .tr(args: [widget.event.city])),
+                      .tr(args: [_currentEvent.city])),
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   behavior: SnackBarBehavior.floating));
             },
@@ -587,7 +718,7 @@ void _onMenuScroll() {
 
   void _shareKermes() {
     HapticFeedback.lightImpact();
-    final event = widget.event;
+    final event = _currentEvent;
     final text = '${event.title}\n${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}\n${event.address}, ${event.postalCode} ${event.city}';
     Share.share(text, subject: event.title);
   }
@@ -934,9 +1065,9 @@ if (_selectedCategory.isEmpty) {
                       fit: StackFit.expand,
                       children: [
                         // Background image
-                        widget.event.menu.isNotEmpty && widget.event.menu.first.allImages.isNotEmpty
+                        _currentEvent.menu.isNotEmpty && _currentEvent.menu.first.allImages.isNotEmpty
                           ? CachedNetworkImage(
-                              imageUrl: widget.event.menu.first.allImages.first,
+                              imageUrl: _currentEvent.menu.first.allImages.first,
                               fit: BoxFit.cover,
                             )
                           : Container(
@@ -1296,7 +1427,7 @@ if (_selectedCategory.isEmpty) {
           ),  // CustomScrollView end
         ],  // Stack children end
       ),  // Stack end
-      bottomNavigationBar: (_totalItems > 0 && !widget.event.isMenuOnly)
+      bottomNavigationBar: (_totalItems > 0 && !_currentEvent.isMenuOnly)
           ? _buildCartBar()
           : null,
     );
@@ -1313,9 +1444,9 @@ Widget _buildHeroSection(BuildContext context) {
         fit: StackFit.expand,
         children: [
           // Background Image
-          widget.event.headerImage != null && widget.event.headerImage!.isNotEmpty
+          _currentEvent.headerImage != null && _currentEvent.headerImage!.isNotEmpty
               ? CachedNetworkImage(
-                  imageUrl: widget.event.headerImage!,
+                  imageUrl: _currentEvent.headerImage!,
                   fit: BoxFit.cover,
                   color: Colors.black.withOpacity(0.1),
                   colorBlendMode: BlendMode.darken,
@@ -1367,7 +1498,7 @@ Widget _buildHeroSection(BuildContext context) {
           ),
 
           // TUNA Sponsor Badge
-          if (widget.event.sponsor == KermesSponsor.tuna)
+          if (_currentEvent.sponsor == KermesSponsor.tuna)
             Positioned(
               top: 56,
               left: 16,
@@ -1421,7 +1552,7 @@ Widget _buildHeroSection(BuildContext context) {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        widget.event.city.toUpperCase(),
+                        _currentEvent.city.toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -1432,7 +1563,7 @@ Widget _buildHeroSection(BuildContext context) {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${widget.event.country.split(' ').first} 🇩🇪',
+                      '${_currentEvent.country.split(' ').first} 🇩🇪',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 12,
@@ -1445,7 +1576,7 @@ Widget _buildHeroSection(BuildContext context) {
 
                 // Title
                 Text(
-                  widget.event.title,
+                  _currentEvent.title,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 30,
@@ -1484,8 +1615,8 @@ Widget _buildHeroSection(BuildContext context) {
                     Builder(
                       builder: (context) {
                         final now = DateTime.now();
-                        final start = widget.event.startDate;
-                        final end = widget.event.endDate;
+                        final start = _currentEvent.startDate;
+                        final end = _currentEvent.endDate;
                         String countdownText;
                         if (now.isBefore(start)) {
                           final days = start.difference(now).inDays;
@@ -1573,7 +1704,7 @@ Widget _buildHeroSection(BuildContext context) {
                                     fit: BoxFit.scaleDown,
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      '${widget.event.startDate.day}.${widget.event.startDate.month} - ${widget.event.endDate.day}.${widget.event.endDate.month}.${widget.event.endDate.year}',
+                                      '${_currentEvent.startDate.day}.${_currentEvent.startDate.month} - ${_currentEvent.endDate.day}.${_currentEvent.endDate.month}.${_currentEvent.endDate.year}',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 13,
@@ -1771,7 +1902,7 @@ Widget _buildHeroSection(BuildContext context) {
                             ),
                           ),
                           Text(
-                            '${widget.event.city}, ${widget.event.country.split(' ').first}',
+                            '${_currentEvent.city}, ${_currentEvent.country.split(' ').first}',
                             style: TextStyle(
                               color: textColor,
                               fontSize: 14,
@@ -1827,11 +1958,11 @@ Widget _buildHeroSection(BuildContext context) {
           const SizedBox(height: 16),
           Text(
             [
-              if (widget.event.address.isNotEmpty) widget.event.address,
-              if (widget.event.postalCode.isNotEmpty || widget.event.city.isNotEmpty)
-                '${widget.event.postalCode} ${widget.event.city}'.trim(),
-              if (widget.event.state?.isNotEmpty == true) widget.event.state!,
-              if (widget.event.country.isNotEmpty) widget.event.country,
+              if (_currentEvent.address.isNotEmpty) _currentEvent.address,
+              if (_currentEvent.postalCode.isNotEmpty || _currentEvent.city.isNotEmpty)
+                '${_currentEvent.postalCode} ${_currentEvent.city}'.trim(),
+              if (_currentEvent.state?.isNotEmpty == true) _currentEvent.state!,
+              if (_currentEvent.country.isNotEmpty) _currentEvent.country,
             ].join('\n'),
             style: TextStyle(
               color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
@@ -1880,7 +2011,7 @@ Widget _buildHeroSection(BuildContext context) {
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
-                        builder: (_) => KermesParkingScreen(event: widget.event),
+                        builder: (_) => KermesParkingScreen(event: _currentEvent),
                       );
                     },
                     child: Container(
@@ -1929,7 +2060,7 @@ Widget _buildHeroSection(BuildContext context) {
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => KermesParkingScreen(event: widget.event),
+          builder: (context) => KermesParkingScreen(event: _currentEvent),
         );
       },
       child: Container(
@@ -2133,7 +2264,7 @@ Widget _buildHeroSection(BuildContext context) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.event.contactName ?? 'Kermes Yetkilisi',
+                        _currentEvent.contactName ?? 'Kermes Yetkilisi',
                         style: TextStyle(
                           color: textColor,
                           fontSize: 16,
@@ -2190,7 +2321,7 @@ Widget _buildHeroSection(BuildContext context) {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          widget.event.phoneNumber,
+                          _currentEvent.phoneNumber,
                           style: TextStyle(
                             color: textColor,
                             fontSize: 15,
@@ -2246,8 +2377,8 @@ Widget _buildHeroSection(BuildContext context) {
     }
 
     final now = DateTime.now();
-    final start = widget.event.startDate;
-    final end = widget.event.endDate;
+    final start = _currentEvent.startDate;
+    final end = _currentEvent.endDate;
 
     // Etkinlik gunleri icin filtrelenecek
     final dailySummaries = _weatherForecast?.getDailySummaries() ?? [];
@@ -2311,7 +2442,7 @@ Widget _buildHeroSection(BuildContext context) {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${widget.event.city} - Etkinlik Gunleri Tahmini',
+                      '${_currentEvent.city} - Etkinlik Gunleri Tahmini',
                       style: TextStyle(
                         color: textColor,
                         fontSize: 15,
@@ -2616,7 +2747,7 @@ Widget _buildHeroSection(BuildContext context) {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                          widget.event.contactName ?? 'Kermes Yetkilisi',
+                          _currentEvent.contactName ?? 'Kermes Yetkilisi',
                           style: TextStyle(
                             color: textColor,
                             fontSize: 16,
@@ -2777,7 +2908,7 @@ Widget _buildHeroSection(BuildContext context) {
         borderRadius: BorderRadius.circular(28),
         onTap: () {
           HapticFeedback.selectionClick();
-          showKermesCheckoutSheet(context, widget.event);
+          showKermesCheckoutSheet(context, _currentEvent);
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -2859,7 +2990,7 @@ Widget _buildHeroSection(BuildContext context) {
 
     // + button with image overlay (36px) or standalone (44px)
     Widget buildAddButton({required double size}) {
-      if (widget.event.isMenuOnly) return const SizedBox.shrink();
+      if (_currentEvent.isMenuOnly) return const SizedBox.shrink();
       return GestureDetector(
         onTap: isAvailable
             ? () {
@@ -2934,8 +3065,8 @@ Widget _buildHeroSection(BuildContext context) {
                       context,
                       item: item,
                       cartQuantity: cartQuantity,
-                      eventId: widget.event.id,
-                      eventName: widget.event.city,
+                      eventId: _currentEvent.id,
+                      eventName: _currentEvent.city,
                       onAdd: () => _addToCart(item),
                       onRemove: () => _removeFromCart(item),
                     );

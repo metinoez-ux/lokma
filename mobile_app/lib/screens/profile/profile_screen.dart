@@ -787,10 +787,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             builder: (context, snap) => Text(
               snap.data ?? '${'profile.version'.tr()} ...',
               style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w200,
-                letterSpacing: 0.5,
-                color: Colors.grey[500],
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0.3,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
           ),
@@ -808,22 +808,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   'Designed & Developed by',
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w200,
-                    letterSpacing: 0.5,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.3,
                     color: isDark
-                        ? Colors.white.withOpacity(0.35)
-                        : Colors.grey[500],
+                        ? Colors.white.withOpacity(0.45)
+                        : Colors.grey[600],
                   ),
                 ),
                 const SizedBox(height: 4),
                 SvgPicture.asset(
                   'assets/images/ozsoft_logo.svg',
-                  height: 20,
+                  height: 22,
                   colorFilter: ColorFilter.mode(
                     isDark
-                        ? Colors.white.withOpacity(0.45)
-                        : Colors.grey.shade500,
+                        ? Colors.white.withOpacity(0.55)
+                        : Colors.grey.shade600,
                     BlendMode.srcIn,
                   ),
                 ),

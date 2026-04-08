@@ -935,7 +935,9 @@
         "sort_nearest_date": "En Yakin Tarih",
         "sort_by_date": "Tarihe gore sirala",
         "sort_nearest_distance": "En Yakin Mesafe",
-        "sort_by_distance": "Mesafeye gore sirala"
+        "sort_by_distance": "Mesafeye gore sirala",
+        "dine_in_service": "Masa Servisi",
+        "order_via_app": "App ile Siparis"
     },
     "marketplace": {
         "sold_out": "Tükendi",

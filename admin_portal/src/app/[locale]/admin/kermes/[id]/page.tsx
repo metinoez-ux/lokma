@@ -1059,6 +1059,35 @@ export default function KermesDetailPage() {
  }
  };
 
+ // Park alanlari icin geocoding helper
+ const geocodeParkingLocations = async (locations: any[]) => {
+  const results = [];
+  for (const loc of locations) {
+   if (loc.lat && loc.lng) { results.push(loc); continue; }
+   const addrParts = [loc.street, loc.postalCode, loc.city, loc.country || 'Deutschland'].filter(Boolean);
+   const q = addrParts.join(', ');
+   if (!q.trim()) { results.push(loc); continue; }
+   try {
+    const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`, {
+     headers: { 'User-Agent': 'LOKMA-Admin/1.0' },
+    });
+    const geoData = await geoRes.json();
+    if (geoData && geoData.length > 0) {
+     console.log(`[PARK-GEO] ${q} -> lat=${geoData[0].lat}, lon=${geoData[0].lon}`);
+     results.push({ ...loc, lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
+    } else {
+     results.push(loc);
+    }
+    // Nominatim rate limit: 1 req/sec
+    await new Promise(r => setTimeout(r, 1100));
+   } catch (geoErr) {
+    console.error('[PARK-GEO] Geocoding error:', geoErr);
+    results.push(loc);
+   }
+  }
+  return results;
+ };
+
  const handleSaveEdits = async () => {
  if (!kermes) return;
  setSaving(true);
@@ -1098,8 +1127,8 @@ export default function KermesDetailPage() {
  deliveryFee: editForm.hasDelivery ? (editForm.deliveryFee || 0) : 0,
  minCartForFreeDelivery: editForm.hasDelivery ? (editForm.minCartForFreeDelivery || 0) : 0,
  minOrderAmount: editForm.hasDelivery ? (editForm.minOrderAmount || 0) : 0,
- // Park alanları
- parkingLocations: editForm.parkingLocations || [],
+ // Park alanlari -- geocode ile koordinat ekle
+ parkingLocations: await geocodeParkingLocations(editForm.parkingLocations || []),
  generalParkingNote: editForm.generalParkingNote || '',
  // Pfand/Depozito
  hasPfandSystem: editForm.hasPfandSystem,
@@ -2560,14 +2589,16 @@ export default function KermesDetailPage() {
  setEditForm({ ...editForm, parkingLocations: updated });
  }}
  onPlaceSelect={(place) => {
- // Tüm adres bileşenlerini otomatik doldur
+ // Tum adres bilesenleri + koordinatlari otomatik doldur
  const updated = [...editForm.parkingLocations];
  updated[idx] = {
  ...updated[idx],
  street: place.street,
  city: place.city,
  postalCode: place.postalCode,
- country: place.country
+ country: place.country,
+ lat: place.lat,
+ lng: place.lng
  };
  setEditForm({ ...editForm, parkingLocations: updated });
  }}
