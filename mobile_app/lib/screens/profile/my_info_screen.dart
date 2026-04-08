@@ -45,6 +45,8 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   late final FocusNode _cityFocusNode;
   List<Map<String, dynamic>> _currentPredictions = [];
   List<Map<String, dynamic>> _cityPredictions = [];
+  // Secim yapildiktan sonra dropdown'in tekrar acilmasini engeller
+  bool _suppressAddressSearch = false;
   
   // API Key from Environment/Config (Hardcoded for immediate fix as per User Request)
   final String _googleMapsApiKey = AppSecrets.googlePlacesApiKey;
@@ -209,6 +211,11 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
 
   // Real-time Autocomplete Suggestions Fetcher
   Future<Iterable<String>> _fetchSuggestionsFromGoogle(String query) async {
+    // Secim yapildiktan sonra yeniden arama tetikleme
+    if (_suppressAddressSearch) {
+      _suppressAddressSearch = false;
+      return [];
+    }
     if (query.length < 3) return [];
     
     final url = Uri.parse(
@@ -216,7 +223,8 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
        "?input=${Uri.encodeComponent(query)}"
        "&key=$_googleMapsApiKey"
        "&language=tr"
-       "&types=address" // Only show street addresses, not businesses
+       "&types=address"
+       "&components=country:de|country:tr|country:at|country:ch"
     );
 
     try {
@@ -238,6 +246,9 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   }
 
   void _onSuggestionSelected(String description) {
+    // Dropdown'un tekrar acilmasini engelle
+    _suppressAddressSearch = true;
+    _addressFocusNode.unfocus();
     final prediction = _currentPredictions.firstWhere(
       (p) => p['description'] == description, 
       orElse: () => <String, dynamic>{},
@@ -286,30 +297,79 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   }
 
   Future<void> _fetchPlaceDetails(String placeId, String description) async {
-      setState(() => _isLoading = true);
-      _addressController.text = description; 
-      
+    setState(() => _isLoading = true);
+    try {
+      // address_components ile dogru field mapping -- TR ve DE icin
       final url = Uri.parse(
-        "https://maps.googleapis.com/maps/api/place/details/json"
-        "?place_id=$placeId"
-        "&fields=geometry"
-        "&key=$_googleMapsApiKey"
+        'https://maps.googleapis.com/maps/api/place/details/json'
+        '?place_id=$placeId'
+        '&fields=address_components'
+        '&key=$_googleMapsApiKey',
       );
-      
-      try {
-        final response = await http.get(url);
-        final data = json.decode(response.body);
-        
-        if (data['status'] == 'OK') {
-           final location = data['result']['geometry']['location'];
-           // Call the existing fill logic with Google coordinates
-           await _fillAddressFromCoordinates(location['lat'], location['lng']);
+      final response = await http.get(url).timeout(const Duration(seconds: 8));
+      final data = json.decode(response.body);
+
+      if (data['status'] == 'OK') {
+        final components = data['result']?['address_components'] as List<dynamic>? ?? [];
+
+        String streetNumber = '';
+        String route = '';
+        String neighborhood = '';
+        String postalCode = '';
+        String locality = '';
+        String adminArea1 = '';
+        String adminArea2 = '';
+        String country = '';
+
+        for (final comp in components) {
+          final types = List<String>.from(comp['types'] ?? []);
+          final longName = comp['long_name']?.toString() ?? '';
+          if (types.contains('street_number'))                    streetNumber = longName;
+          else if (types.contains('route'))                       route = longName;
+          else if (types.contains('neighborhood') ||
+                   types.contains('sublocality_level_1') ||
+                   types.contains('sublocality'))                 neighborhood = longName;
+          else if (types.contains('postal_code'))                 postalCode = longName;
+          else if (types.contains('locality'))                    locality = longName;
+          else if (types.contains('administrative_area_level_1')) adminArea1 = longName;
+          else if (types.contains('administrative_area_level_2')) adminArea2 = longName;
+          else if (types.contains('country'))                     country = longName;
         }
-      } catch (e) {
-        print("Details Error: $e");
-      } finally {
-        setState(() => _isLoading = false);
+
+        // TR: il (adminArea1) sehir olarak kullan; DE/AT/CH: locality
+        String city;
+        if (country == 'Türkiye' || country == 'Turkey') {
+          city = adminArea1.isNotEmpty ? adminArea1
+               : adminArea2.isNotEmpty ? adminArea2
+               : locality;
+          if (neighborhood.isNotEmpty && route.isNotEmpty) {
+            route = '$neighborhood, $route';
+          } else if (neighborhood.isNotEmpty) {
+            route = neighborhood;
+          }
+        } else {
+          city = locality.isNotEmpty ? locality
+               : adminArea2.isNotEmpty ? adminArea2
+               : adminArea1;
+        }
+
+        setState(() {
+          _addressController.text = route.isNotEmpty ? route : description;
+          _houseNumberController.text = streetNumber;
+          _postalCodeController.text = postalCode;
+          _cityController.text = city;
+          _countryController.text = country;
+        });
+      } else {
+        // API basarisiz -- description'i sokak olarak koy
+        setState(() => _addressController.text = description);
       }
+    } catch (e) {
+      debugPrint('Place details error: $e');
+      setState(() => _addressController.text = description);
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveUserData() async {
