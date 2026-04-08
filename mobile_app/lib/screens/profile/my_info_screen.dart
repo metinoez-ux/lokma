@@ -984,41 +984,101 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                       countries: const ['de', 'tr', 'at', 'ch'],
                       isLatLngRequired: true,
                       getPlaceDetailWithLatLng: (prediction) async {
-                        final lat = double.tryParse(prediction.lat ?? '');
-                        final lng = double.tryParse(prediction.lng ?? '');
-                        if (lat != null && lng != null) {
+                        // Direkt Google Places Details API - ulkeye gore dogru field mapping
+                        final placeId = prediction.placeId ?? '';
+                        if (placeId.isNotEmpty) {
                           try {
-                            final placemarks = await placemarkFromCoordinates(lat, lng)
-                                .timeout(const Duration(seconds: 8));
-                            if (placemarks.isNotEmpty) {
-                              final place = placemarks.first;
-                              setFormState(() {
-                                streetCtrl.text = place.thoroughfare ?? '';
-                                houseNumCtrl.text = place.subThoroughfare ?? '';
-                                postalCtrl.text = place.postalCode ?? '';
-                                cityCtrl.text = place.locality ?? place.administrativeArea ?? '';
-                              });
-                            }
-                          } catch (e) {
-                            // Fallback: description'dan parse et
-                            final desc = prediction.description ?? '';
-                            final parts = desc.split(',');
-                            if (parts.isNotEmpty) {
-                              setFormState(() {
-                                streetCtrl.text = parts[0].trim();
-                                if (parts.length >= 2) {
-                                  final plzCity = parts[1].trim();
-                                  final match = RegExp(r'(\d{4,5})\s*(.*)').firstMatch(plzCity);
-                                  if (match != null) {
-                                    postalCtrl.text = match.group(1) ?? '';
-                                    cityCtrl.text = match.group(2) ?? '';
-                                  } else {
-                                    cityCtrl.text = plzCity;
-                                  }
+                            final url = Uri.parse(
+                              'https://maps.googleapis.com/maps/api/place/details/json'
+                              '?place_id=$placeId'
+                              '&fields=address_components'
+                              '&key=${AppSecrets.googlePlacesApiKey}',
+                            );
+                            final response = await http.get(url).timeout(const Duration(seconds: 8));
+                            if (response.statusCode == 200) {
+                              final data = json.decode(response.body);
+                              final components = data['result']?['address_components'] as List<dynamic>? ?? [];
+
+                              String streetNumber = '';
+                              String route = '';
+                              String neighborhood = '';
+                              String postalCode = '';
+                              String locality = '';       // ilce / district
+                              String adminArea1 = '';     // il / state (TR: Bursa, DE: Bayern)
+                              String adminArea2 = '';     // ilce bazen burda (TR)
+                              String country = '';
+
+                              for (final comp in components) {
+                                final types = List<String>.from(comp['types'] ?? []);
+                                final longName = comp['long_name']?.toString() ?? '';
+                                if (types.contains('street_number'))        streetNumber = longName;
+                                else if (types.contains('route'))           route = longName;
+                                else if (types.contains('neighborhood') ||
+                                         types.contains('sublocality_level_1') ||
+                                         types.contains('sublocality'))     neighborhood = longName;
+                                else if (types.contains('postal_code'))     postalCode = longName;
+                                else if (types.contains('locality'))        locality = longName;
+                                else if (types.contains('administrative_area_level_1')) adminArea1 = longName;
+                                else if (types.contains('administrative_area_level_2')) adminArea2 = longName;
+                                else if (types.contains('country'))         country = longName;
+                              }
+
+                              // Ulkeye gore akilli sehir belirleme:
+                              // DE/AT/CH: locality = sehir (Berlin, Wien)
+                              // TR: locality genellikle ilce, adminArea1 = il (Bursa, Istanbul)
+                              String city;
+                              if (country == 'Türkiye' || country == 'Turkey') {
+                                // TR: il (province) daha anlamli
+                                city = adminArea1.isNotEmpty ? adminArea1
+                                     : adminArea2.isNotEmpty ? adminArea2
+                                     : locality;
+                                // Mahalle varsa sokak basina ekle
+                                if (neighborhood.isNotEmpty && route.isNotEmpty) {
+                                  route = '$neighborhood, $route';
+                                } else if (neighborhood.isNotEmpty) {
+                                  route = neighborhood;
                                 }
+                              } else {
+                                // DE/AT/CH: locality en dogru
+                                city = locality.isNotEmpty ? locality
+                                     : adminArea2.isNotEmpty ? adminArea2
+                                     : adminArea1;
+                              }
+
+                              setFormState(() {
+                                streetCtrl.text = route;
+                                houseNumCtrl.text = streetNumber;
+                                postalCtrl.text = postalCode;
+                                cityCtrl.text = city;
                               });
+                              return;
                             }
+                          } catch (_) {
+                            // Places API basarisiz -- fallback'e gec
                           }
+                        }
+
+                        // Fallback: description'dan parse et
+                        final desc = prediction.description ?? '';
+                        final parts = desc.split(',');
+                        if (parts.isNotEmpty) {
+                          setFormState(() {
+                            streetCtrl.text = parts[0].trim();
+                            if (parts.length >= 2) {
+                              final plzCity = parts[1].trim();
+                              final match = RegExp(r'(\d{4,7})\s*(.*)').firstMatch(plzCity);
+                              if (match != null) {
+                                postalCtrl.text = match.group(1) ?? '';
+                                cityCtrl.text = match.group(2)?.trim() ?? '';
+                              } else {
+                                cityCtrl.text = plzCity;
+                              }
+                            }
+                            // Sehir hala bos ise son parcayi dene
+                            if (cityCtrl.text.isEmpty && parts.length >= 3) {
+                              cityCtrl.text = parts[parts.length - 2].trim();
+                            }
+                          });
                         }
                       },
                       itemClick: (prediction) {
