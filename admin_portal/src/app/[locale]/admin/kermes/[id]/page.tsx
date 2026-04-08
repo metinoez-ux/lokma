@@ -417,9 +417,10 @@ export default function KermesDetailPage() {
   if (newKermesAdmins !== undefined) updatePayload.kermesAdmins = newKermesAdmins;
   else updatePayload.kermesAdmins = kermesAdmins;
   
-  // Custom Roles
+  // Custom Roles - hem atamalari hem de rol tanimi kaydet
   if (newCustomRoleAssignments !== undefined) {
       updatePayload.customRoleAssignments = newCustomRoleAssignments;
+      updatePayload.customRoles = editForm.customRoles || [];
       Object.entries(newCustomRoleAssignments).forEach(([roleId, uids]) => {
           const oldUids = customRoleAssignments[roleId] || [];
           const roleName = (editForm.customRoles || []).find((r:any) => r.id === roleId)?.name || 'Özel Görev';

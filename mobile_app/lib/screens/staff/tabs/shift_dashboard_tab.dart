@@ -502,22 +502,45 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         bool isDriver = List<String>.from(data['assignedDrivers'] ?? []).contains(uid);
         bool isWaiter = List<String>.from(data['assignedWaiters'] ?? []).contains(uid);
         
-        // Custom Roles
+        // Custom Roles - customRoles dizisi + direkt customRoleAssignments kontrolu
+        // (customRoles dizisi kayit edilmemis olsa bile system roller goruntulensin)
         final customRolesData = data['customRoles'] as List<dynamic>? ?? [];
         final customAssignments = data['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+
+        // Sistem rollerinin sabit isimleri (kayit edilmemis olsa bile taninan roller)
+        const systemRoleNames = <String, String>{
+          'role_park_system': 'Park Gorevlisi',
+          'role_temizlik_system': 'Temizlik Gorevlisi',
+        };
+        const systemRoleIcons = <String, String>{
+          'role_park_system': '🅿️',
+          'role_temizlik_system': '🧹',
+        };
+
+        // customRoles dizisindeki rolleri isle
+        final Set<String> addedRoleIds = {};
         List<Map<String, dynamic>> dynamicRoles = [];
         for (var cr in customRolesData) {
-            final crId = cr['id'];
-            final crName = cr['name'];
-            final crIcon = cr['icon'];
+            final crId = cr['id']?.toString() ?? '';
+            final crName = cr['name']?.toString() ?? crId;
+            final crIcon = cr['icon']?.toString() ?? '📋';
             final assignedList = List<String>.from(customAssignments[crId] ?? []);
             if (assignedList.contains(uid)) {
-                dynamicRoles.add({
-                  'name': crName.toString(),
-                  'icon': crIcon.toString(),
-                });
+                dynamicRoles.add({'name': crName, 'icon': crIcon});
+                addedRoleIds.add(crId);
             }
         }
+        // customRoleAssignments'daki her entry'yi kontrol et (customRoles'ta tanimlı olmasa da)
+        customAssignments.forEach((roleId, assignedUids) {
+            if (addedRoleIds.contains(roleId)) return; // zaten eklendi
+            final list = List<String>.from(assignedUids ?? []);
+            if (list.contains(uid)) {
+                final roleName = systemRoleNames[roleId] ?? roleId;
+                final roleIcon = systemRoleIcons[roleId] ?? '📋';
+                dynamicRoles.add({'name': roleName, 'icon': roleIcon});
+                addedRoleIds.add(roleId);
+            }
+        });
         
         return _renderAssignmentCardInner(
           capabilities.copyWith(
