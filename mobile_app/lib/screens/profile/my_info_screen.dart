@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -877,11 +878,14 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     required Future<void> Function(Map<String, dynamic>) onSave,
   }) {
     final labelCtrl = TextEditingController(text: initialData?['label']?.toString() ?? '');
+    final searchCtrl = TextEditingController();
     final streetCtrl = TextEditingController(text: initialData?['street']?.toString() ?? '');
     final houseNumCtrl = TextEditingController(text: initialData?['houseNumber']?.toString() ?? '');
     final postalCtrl = TextEditingController(text: initialData?['postalCode']?.toString() ?? '');
     final cityCtrl = TextEditingController(text: initialData?['city']?.toString() ?? '');
     String selectedLabel = initialData?['label']?.toString() ?? '';
+    // Determine if "Diger" is selected (not Ev or Is)
+    bool isDigerSelected = selectedLabel.isNotEmpty && selectedLabel != 'Ev' && selectedLabel != 'İş';
     
     showModalBottomSheet(
       context: context,
@@ -920,46 +924,116 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     Row(
                       children: [
                         _buildLabelChip('Ev', Icons.home_outlined, const Color(0xFF4CAF50), selectedLabel, (val) {
-                          setFormState(() => selectedLabel = val);
+                          setFormState(() { selectedLabel = val; isDigerSelected = false; });
                           labelCtrl.text = val;
                         }),
                         const SizedBox(width: 8),
                         _buildLabelChip('İş', Icons.work_outline, const Color(0xFF2196F3), selectedLabel, (val) {
-                          setFormState(() => selectedLabel = val);
+                          setFormState(() { selectedLabel = val; isDigerSelected = false; });
                           labelCtrl.text = val;
                         }),
                         const SizedBox(width: 8),
                         _buildLabelChip('Diğer', Icons.location_on_outlined, const Color(0xFFEA184A), selectedLabel, (val) {
-                          setFormState(() => selectedLabel = val);
-                          labelCtrl.text = val;
+                          setFormState(() { selectedLabel = val; isDigerSelected = true; });
+                          labelCtrl.text = '';
                         }),
-                        const SizedBox(width: 8),
-                        // Custom label
-                        Expanded(
-                          child: SizedBox(
-                            height: 36,
-                            child: TextField(
-                              controller: labelCtrl,
-                              style: TextStyle(color: textColor, fontSize: 12),
-                              decoration: InputDecoration(
-                                hintText: 'Özel ad...',
-                                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
-                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFEA184A))),
-                                filled: true,
-                                fillColor: cardBg,
-                                isDense: true,
-                              ),
-                              onChanged: (val) => setFormState(() => selectedLabel = val),
-                            ),
-                          ),
-                        ),
                       ],
+                    ),
+                    // "Diger" secilince ozel isim alani -- tam genislikte, rahat kullanim
+                    if (isDigerSelected) ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: labelCtrl,
+                        style: TextStyle(color: textColor, fontSize: 14),
+                        decoration: InputDecoration(
+                          labelText: 'Adres etiketi (ör. Sporthalle)',
+                          labelStyle: TextStyle(color: hintColor, fontSize: 13),
+                          prefixIcon: Icon(Icons.edit_outlined, color: hintColor, size: 20),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEA184A), width: 1.5)),
+                          filled: true,
+                          fillColor: cardBg,
+                        ),
+                        onChanged: (val) => setFormState(() => selectedLabel = val),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+
+                    // Google Places Autocomplete arama alani
+                    Text('Adres Ara', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: hintColor)),
+                    const SizedBox(height: 8),
+                    GooglePlaceAutoCompleteTextField(
+                      textEditingController: searchCtrl,
+                      googleAPIKey: AppSecrets.googlePlacesApiKey,
+                      boxDecoration: const BoxDecoration(),
+                      inputDecoration: InputDecoration(
+                        hintText: 'Sokak, sehir ara...',
+                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+                        prefixIcon: Icon(Icons.search_rounded, color: hintColor, size: 20),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEA184A), width: 1.5)),
+                        filled: true,
+                        fillColor: cardBg,
+                      ),
+                      textStyle: TextStyle(color: textColor, fontSize: 14),
+                      debounceTime: 400,
+                      countries: const ['de', 'tr', 'at', 'ch'],
+                      isLatLngRequired: true,
+                      getPlaceDetailWithLatLng: (prediction) async {
+                        final lat = double.tryParse(prediction.lat ?? '');
+                        final lng = double.tryParse(prediction.lng ?? '');
+                        if (lat != null && lng != null) {
+                          try {
+                            final placemarks = await placemarkFromCoordinates(lat, lng)
+                                .timeout(const Duration(seconds: 8));
+                            if (placemarks.isNotEmpty) {
+                              final place = placemarks.first;
+                              setFormState(() {
+                                streetCtrl.text = place.thoroughfare ?? '';
+                                houseNumCtrl.text = place.subThoroughfare ?? '';
+                                postalCtrl.text = place.postalCode ?? '';
+                                cityCtrl.text = place.locality ?? place.administrativeArea ?? '';
+                              });
+                            }
+                          } catch (e) {
+                            // Fallback: description'dan parse et
+                            final desc = prediction.description ?? '';
+                            final parts = desc.split(',');
+                            if (parts.isNotEmpty) {
+                              setFormState(() {
+                                streetCtrl.text = parts[0].trim();
+                                if (parts.length >= 2) {
+                                  final plzCity = parts[1].trim();
+                                  final match = RegExp(r'(\d{4,5})\s*(.*)').firstMatch(plzCity);
+                                  if (match != null) {
+                                    postalCtrl.text = match.group(1) ?? '';
+                                    cityCtrl.text = match.group(2) ?? '';
+                                  } else {
+                                    cityCtrl.text = plzCity;
+                                  }
+                                }
+                              });
+                            }
+                          }
+                        }
+                      },
+                      itemClick: (prediction) {
+                        searchCtrl.text = prediction.description ?? '';
+                        searchCtrl.selection = TextSelection.fromPosition(
+                          TextPosition(offset: searchCtrl.text.length),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
                     
+                    // Manuel alanlar (autocomplete ile dolan veya manuel girilebilir)
+                    Text('veya manuel girin', style: TextStyle(fontSize: 11, color: hintColor)),
+                    const SizedBox(height: 8),
+
                     // Street + House Number
                     Row(
                       children: [
