@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -37,8 +36,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   
   bool _isLoading = false;
   bool _isSaving = false;
-  String? _dialCode = '+49'; // Default
-  String _phoneCompleteNumber = ''; // tam uluslararasi numara (ornek: +4915112345678)
+  // Telefon alani -- kendi custom implementasyonumuz (packet stripping yok)
+  String _selectedDialCode = '+49';
+  String _selectedCountryFlag = '🇩🇪'; // DE bayragi
+  String _phoneCompleteNumber = ''; // Kaydedilecek tam numara (+4915112345678)
   
   // Autocomplete State
   late final FocusNode _addressFocusNode;
@@ -77,6 +78,78 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     super.deactivate();
   }
 
+  // Dial code'a gore bayrak emoji dondur
+  String _flagForDialCode(String dialCode) {
+    const map = {
+      '+49': '\ud83c\udde9\ud83c\uddea', // DE
+      '+90': '\ud83c\uddf9\ud83c\uddf7', // TR
+      '+43': '\ud83c\udde6\ud83c\uddf9', // AT
+      '+41': '\ud83c\udde8\ud83c\udded', // CH
+      '+31': '\ud83c\uddf3\ud83c\uddf1', // NL
+      '+33': '\ud83c\uddeb\ud83c\uddf7', // FR
+      '+44': '\ud83c\uddec\ud83c\udde7', // GB
+      '+1':  '\ud83c\uddfa\ud83c\uddf8', // US
+      '+32': '\ud83c\udde7\ud83c\uddea', // BE
+      '+39': '\ud83c\uddee\ud83c\uddf9', // IT
+    };
+    return map[dialCode] ?? '\ud83c\uddf8\ud83c\uddee'; // fallback SI bayragi
+  }
+
+  // Ulke kodu secici bottom sheet
+  void _showDialCodePicker(
+    BuildContext ctx,
+    Color textColor, Color cardBg, Color hintColor, Color borderColor, bool isDark,
+  ) {
+    const countries = [
+      {'\ud83c\udde9\ud83c\uddea': '+49', 'name': 'Almanya'},
+      {'\ud83c\uddf9\ud83c\uddf7': '+90', 'name': 'T\u00fcrkiye'},
+      {'\ud83c\udde6\ud83c\uddf9': '+43', 'name': 'Avusturya'},
+      {'\ud83c\udde8\ud83c\udded': '+41', 'name': 'İsvi\u00e7re'},
+      {'\ud83c\uddf3\ud83c\uddf1': '+31', 'name': 'Hollanda'},
+      {'\ud83c\uddeb\ud83c\uddf7': '+33', 'name': 'Fransa'},
+      {'\ud83c\uddec\ud83c\udde7': '+44', 'name': 'Birle\u015fik Krall\u0131k'},
+      {'\ud83c\uddfa\ud83c\uddf8': '+1',  'name': 'ABD'},
+      {'\ud83c\udde7\ud83c\uddea': '+32', 'name': 'Bel\u00e7ika'},
+      {'\ud83c\uddee\ud83c\uddf9': '+39', 'name': '\u0130talya'},
+    ];
+    showModalBottomSheet(
+      context: ctx,
+      backgroundColor: cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('\u00dcLKE KODU SE\u00c7', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14)),
+          ),
+          ...countries.map((c) {
+            final flag = c.keys.first;
+            final dial = c[flag]!;
+            final name = c['name']!;
+            return ListTile(
+              leading: Text(flag, style: const TextStyle(fontSize: 24)),
+              title: Text('$name  $dial', style: TextStyle(color: textColor)),
+              onTap: () {
+                setState(() {
+                  _selectedCountryFlag = flag;
+                  _selectedDialCode = dial;
+                  _phoneCompleteNumber = _phoneController.text.isEmpty
+                      ? '' : '$dial${_phoneController.text}';
+                });
+                Navigator.pop(_);
+              },
+            );
+          }),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -113,13 +186,14 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           _emailController.text = (data['email'] ?? user.email)?.toString() ?? '';
           final rawPhone = (data['phoneNumber'] ?? user.phoneNumber)?.toString() ?? '';
           _phoneCompleteNumber = rawPhone;
-          // Eger +XX ile baslamiyorsa, sadece rakamlari controller'a ver
           if (rawPhone.startsWith('+')) {
-            // +4915112345 gibi -- dial code'u ogren
+            // +4915112345 gibi -- dial code ogren, gerisi numaraya gider
             final matchDial = RegExp(r'^\+(\d{1,3})(.*)').firstMatch(rawPhone);
             if (matchDial != null) {
-              _dialCode = '+${matchDial.group(1)}';
+              _selectedDialCode = '+${matchDial.group(1)}';
               _phoneController.text = matchDial.group(2)?.trim() ?? '';
+              // Ülke bayragini da guncelle
+              _selectedCountryFlag = _flagForDialCode(_selectedDialCode);
             } else {
               _phoneController.text = rawPhone;
             }
@@ -143,7 +217,8 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           _cityController.text = data['city']?.toString() ?? '';
           _postalCodeController.text = data['postalCode']?.toString() ?? '';
           _countryController.text = data['country']?.toString() ?? 'Germany';
-          _dialCode = data['dialCode']?.toString() ?? '+49';
+          _selectedDialCode = data['dialCode']?.toString() ?? '+49';
+          _selectedCountryFlag = _flagForDialCode(_selectedDialCode);
 
           // Fallback for legacy 'deliveryAddress' map if root fields are empty
           if (_addressController.text.isEmpty && data['deliveryAddress'] != null) {
@@ -413,7 +488,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           'city': _cityController.text,
           'postalCode': _postalCodeController.text,
           'country': _countryController.text,
-          'dialCode': _dialCode,
+          'dialCode': _selectedDialCode,
           
           'updatedAt': FieldValue.serverTimestamp(),
         };
@@ -546,44 +621,75 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                 fillColor: cardBg,
               ),
               const SizedBox(height: 12),
-              // Uluslararasi telefon alani -- opsiyonel (sadece kurye siparislerinde zorunlu)
-              IntlPhoneField(
-                controller: _phoneController,
-                initialCountryCode: 'DE',
-                style: TextStyle(color: textColor, fontSize: 15),
-                dropdownTextStyle: TextStyle(color: textColor, fontSize: 15),
-                dropdownIcon: Icon(Icons.arrow_drop_down, color: hintColor),
-                decoration: InputDecoration(
-                  labelText: 'Telefon (isteğe bağlı)',
-                  labelStyle: TextStyle(color: hintColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: borderColor),
+              // Telefon -- custom: bayragi + dial code chip + plain TextField
+              // IntlPhoneField bazi rakamlari (mesela '1') kesiyor, bu nedenle kendi implementasyonumuz
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Ulke kodu chip
+                  GestureDetector(
+                    onTap: () => _showDialCodePicker(context, textColor, cardBg, hintColor, borderColor, isDark),
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        border: Border.all(color: borderColor),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_selectedCountryFlag, style: const TextStyle(fontSize: 20)),
+                          const SizedBox(width: 4),
+                          Text(_selectedDialCode, style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w500)),
+                          Icon(Icons.arrow_drop_down, size: 18, color: hintColor),
+                        ],
+                      ),
+                    ),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: borderColor),
+                  const SizedBox(width: 8),
+                  // Numara alani -- HICBIR kesme yok, sadece bas 0 cikar
+                  Expanded(
+                    child: TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: TextStyle(color: textColor, fontSize: 15),
+                      decoration: InputDecoration(
+                        labelText: 'Telefon (isteğe bağlı)',
+                        labelStyle: TextStyle(color: hintColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE30A17)),
+                        ),
+                        filled: true,
+                        fillColor: cardBg,
+                      ),
+                      onChanged: (val) {
+                        String cleaned = val;
+                        // Sadece basdaki 0'i sil (trunk prefix) -- baska hicbir seye dokunma
+                        if (cleaned.startsWith('0') && cleaned.length > 1) {
+                          cleaned = cleaned.substring(1);
+                          _phoneController.value = TextEditingValue(
+                            text: cleaned,
+                            selection: TextSelection.collapsed(offset: cleaned.length),
+                          );
+                        }
+                        setState(() {
+                          _phoneCompleteNumber = cleaned.isEmpty ? '' : '$_selectedDialCode$cleaned';
+                        });
+                      },
+                    ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE30A17)),
-                  ),
-                  filled: true,
-                  fillColor: cardBg,
-                ),
-                onChanged: (phone) {
-                  setState(() {
-                    _phoneCompleteNumber = phone.completeNumber;
-                    _dialCode = phone.countryCode;
-                  });
-                },
-                validator: (phone) {
-                  // Profil guncelleme icin opsiyonel -- bos birakilabilir
-                  if (phone == null || phone.number.isEmpty) return null;
-                  if (!phone.isValidNumber()) return 'Gecersiz telefon numarasi';
-                  return null;
-                },
-                invalidNumberMessage: 'Gecersiz numara',
+                ],
               ),
               
               const SizedBox(height: 32),
@@ -865,14 +971,14 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                             label,
                             style: TextStyle(
                               color: _getLabelColor(label),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
                               letterSpacing: 0.3,
                             ),
                           ),
                         Text(
                           fullAddress,
-                          style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w500),
+                          style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
