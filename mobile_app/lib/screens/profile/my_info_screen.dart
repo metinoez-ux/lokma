@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:lokma/config/app_secrets.dart';
+import 'package:lokma_app/config/app_secrets.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';

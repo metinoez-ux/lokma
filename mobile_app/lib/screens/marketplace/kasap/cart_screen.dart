@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:lokma/config/app_secrets.dart';
+import 'package:lokma_app/config/app_secrets.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';

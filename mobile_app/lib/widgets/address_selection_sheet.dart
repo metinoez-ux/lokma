@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lokma/config/app_secrets.dart';
+import 'package:lokma_app/config/app_secrets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
