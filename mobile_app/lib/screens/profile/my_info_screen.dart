@@ -360,6 +360,12 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           _cityController.text = city;
           _countryController.text = country;
         });
+        // Cursor'u sona taşı -- backspace/silme calissin
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _addressController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _addressController.text.length),
+          );
+        });
       } else {
         // API basarisiz -- description'i sokak olarak koy
         setState(() => _addressController.text = description);
@@ -986,6 +992,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     final searchCtrl = TextEditingController();
     final streetCtrl = TextEditingController(text: initialData?['street']?.toString() ?? '');
     final houseNumCtrl = TextEditingController(text: initialData?['houseNumber']?.toString() ?? '');
+    final addressLine2Ctrl = TextEditingController(text: initialData?['addressLine2']?.toString() ?? '');
     final postalCtrl = TextEditingController(text: initialData?['postalCode']?.toString() ?? '');
     final cityCtrl = TextEditingController(text: initialData?['city']?.toString() ?? '');
     String selectedLabel = initialData?['label']?.toString() ?? '';
@@ -1203,7 +1210,11 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    
+
+                    // Daire / Kat / Kapi No (opsiyonel)
+                    _buildFormField(addressLine2Ctrl, 'Daire, Kat, Kapı No (Opsiyonel)', Icons.apartment_outlined, isDark, cardBg, textColor, hintColor, borderColor),
+                    const SizedBox(height: 12),
+
                     // PLZ + City
                     Row(
                       children: [
@@ -1236,6 +1247,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                             'label': labelCtrl.text.trim(),
                             'street': streetCtrl.text.trim(),
                             'houseNumber': houseNumCtrl.text.trim(),
+                            'addressLine2': addressLine2Ctrl.text.trim(),
                             'postalCode': postalCtrl.text.trim(),
                             'city': cityCtrl.text.trim(),
                           });
