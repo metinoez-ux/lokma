@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +38,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   bool _isLoading = false;
   bool _isSaving = false;
   String? _dialCode = '+49'; // Default
+  String _phoneCompleteNumber = ''; // tam uluslararasi numara (ornek: +4915112345678)
   
   // Autocomplete State
   late final FocusNode _addressFocusNode;
@@ -100,7 +102,21 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             _nameController.text = (data['fullName'] ?? data['displayName'])?.toString() ?? '';
           }
           _emailController.text = (data['email'] ?? user.email)?.toString() ?? '';
-          _phoneController.text = (data['phoneNumber'] ?? user.phoneNumber)?.toString() ?? '';
+          final rawPhone = (data['phoneNumber'] ?? user.phoneNumber)?.toString() ?? '';
+          _phoneCompleteNumber = rawPhone;
+          // Eger +XX ile baslamiyorsa, sadece rakamlari controller'a ver
+          if (rawPhone.startsWith('+')) {
+            // +4915112345 gibi -- dial code'u ogren
+            final matchDial = RegExp(r'^\+(\d{1,3})(.*)').firstMatch(rawPhone);
+            if (matchDial != null) {
+              _dialCode = '+${matchDial.group(1)}';
+              _phoneController.text = matchDial.group(2)?.trim() ?? '';
+            } else {
+              _phoneController.text = rawPhone;
+            }
+          } else {
+            _phoneController.text = rawPhone;
+          }
           
           // Address handling
           var rawAddress = data['address'];
@@ -314,7 +330,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           'lastName': lastName,
           'fullName': _nameController.text,
           'displayName': _nameController.text, // Sync displayName
-          'phoneNumber': _phoneController.text,
+          'phoneNumber': _phoneCompleteNumber.isNotEmpty ? _phoneCompleteNumber : _phoneController.text,
           'email': _emailController.text,
           
           // Address Fields
@@ -457,15 +473,44 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                 fillColor: cardBg,
               ),
               const SizedBox(height: 12),
-              _buildTextField(
+              // Uluslararasi telefon alani -- opsiyonel (sadece kurye siparislerinde zorunlu)
+              IntlPhoneField(
                 controller: _phoneController,
-                label: 'Telefon',
-                icon: Icons.phone_outlined,
-                keyboardType: TextInputType.phone,
-                textColor: textColor,
-                hintColor: hintColor,
-                borderColor: borderColor,
-                fillColor: cardBg,
+                initialCountryCode: 'DE',
+                style: TextStyle(color: textColor, fontSize: 15),
+                dropdownTextStyle: TextStyle(color: textColor, fontSize: 15),
+                dropdownIcon: Icon(Icons.arrow_drop_down, color: hintColor),
+                decoration: InputDecoration(
+                  labelText: 'Telefon (isteğe bağlı)',
+                  labelStyle: TextStyle(color: hintColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE30A17)),
+                  ),
+                  filled: true,
+                  fillColor: cardBg,
+                ),
+                onChanged: (phone) {
+                  setState(() {
+                    _phoneCompleteNumber = phone.completeNumber;
+                    _dialCode = phone.countryCode;
+                  });
+                },
+                validator: (phone) {
+                  // Profil guncelleme icin opsiyonel -- bos birakilabilir
+                  if (phone == null || phone.number.isEmpty) return null;
+                  if (!phone.isValidNumber()) return 'Gecersiz telefon numarasi';
+                  return null;
+                },
+                invalidNumberMessage: 'Gecersiz numara',
               ),
               
               const SizedBox(height: 32),
