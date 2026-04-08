@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:lokma/config/app_secrets.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -43,7 +44,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   List<Map<String, dynamic>> _cityPredictions = [];
   
   // API Key from Environment/Config (Hardcoded for immediate fix as per User Request)
-  final String _googleMapsApiKey = "AIzaSyCPQZxB0Tt5c4dhh_q2IejHGTd-layUFQE";
+  final String _googleMapsApiKey = AppSecrets.googlePlacesApiKey;
 
   @override
   void initState() {

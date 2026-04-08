@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lokma/config/app_secrets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -1063,7 +1064,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               final lat = snapshot.data![0];
               final lng = snapshot.data![1];
               // Google Street View Static API -- gercek sokak goruntusu
-              final streetViewUrl = 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=$lat,$lng&key=AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo';
+              final streetViewUrl = 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=$lat,$lng&key=${AppSecrets.googlePlacesApiKey}';
 
               return GestureDetector(
                 onTap: () => _launchStreetView(lat, lng),
@@ -1311,7 +1312,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     String? selectedPlaceId;
     
     // Google Places API Key
-    const googleApiKey = 'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo';
+    final googleApiKey = AppSecrets.googlePlacesApiKey;
     
     final result = await showModalBottomSheet<bool>(
       context: context,

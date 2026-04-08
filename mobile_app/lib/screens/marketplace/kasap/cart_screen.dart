@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:lokma/config/app_secrets.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6342,7 +6343,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     String userId,
     bool isDark,
   ) {
-    const String placesApiKey = 'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo';
+    final String placesApiKey = AppSecrets.googlePlacesApiKey;
     final searchController = TextEditingController();
     final streetController = TextEditingController();
     final houseNumberController = TextEditingController();

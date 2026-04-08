@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lokma/config/app_secrets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 
 // Constants
-const String googleApiKey =
-    'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo'; // Ensure this matches everywhere
+final String googleApiKey = AppSecrets.googlePlacesApiKey;
 
 class AddressSelectionSheet extends ConsumerStatefulWidget {
   const AddressSelectionSheet({super.key});
