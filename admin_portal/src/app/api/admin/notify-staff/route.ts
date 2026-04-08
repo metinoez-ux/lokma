@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getFirebaseAdmin, getFirebaseMessaging } from '@/lib/firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export async function POST(req: Request) {
   try {
@@ -10,14 +11,25 @@ export async function POST(req: Request) {
     }
 
     const { db } = getFirebaseAdmin();
-    const nowIso = new Date().toISOString();
-    const notificationsRef = db.collection('users').doc(userId).collection('personnel_notifications');
+    const now = Timestamp.now();
     
+    // Personnel notifications (eski collection, geriye uyumluluk)
+    const personnelRef = db.collection('users').doc(userId).collection('personnel_notifications');
+    await personnelRef.add({
+      title,
+      body,
+      type,
+      createdAt: now,
+      read: false
+    });
+
+    // Ana notifications collection (bildirim gecmisi ekraninda gorunsun)
+    const notificationsRef = db.collection('users').doc(userId).collection('notifications');
     await notificationsRef.add({
       title,
       body,
       type,
-      createdAt: nowIso,
+      createdAt: now,
       read: false
     });
 
