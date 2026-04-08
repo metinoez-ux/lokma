@@ -108,7 +108,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
       if (index < list.length) {
         if (next != null) {
           list[index]['status'] = next;
-          list[index]['statusUpdatedAt'] = FieldValue.serverTimestamp();
+          list[index]['statusUpdatedAt'] = DateTime.now().toIso8601String();
           list[index]['statusUpdatedBy'] =
               FirebaseAuth.instance.currentUser?.uid;
         } else {
@@ -761,7 +761,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                                 );
                                 if (i < list.length) {
                                   list[i]['status'] = 'available';
-                                  list[i]['statusUpdatedAt'] = FieldValue.serverTimestamp();
+                                  list[i]['statusUpdatedAt'] = DateTime.now().toIso8601String();
                                   list[i]['statusUpdatedBy'] = FirebaseAuth.instance.currentUser?.uid;
                                   await docRef.update({'parkingLocations': list});
                                 }
@@ -786,7 +786,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                                 );
                                 if (i < list.length) {
                                   list[i]['status'] = 'full';
-                                  list[i]['statusUpdatedAt'] = FieldValue.serverTimestamp();
+                                  list[i]['statusUpdatedAt'] = DateTime.now().toIso8601String();
                                   list[i]['statusUpdatedBy'] = FirebaseAuth.instance.currentUser?.uid;
                                   await docRef.update({'parkingLocations': list});
                                 }

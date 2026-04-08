@@ -11,12 +11,10 @@ class StaffNotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScreen> {
-
   @override
   void initState() {
     super.initState();
-    // Ekran acilinca tum bildirimleri okundu yap (kisa sure sonra)
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) markAllStaffNotificationsAsRead();
     });
   }
@@ -26,20 +24,19 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     try {
       if (createdAt is Timestamp) {
         dt = createdAt.toDate().toLocal();
-      } else if (createdAt is String) {
+      } else if (createdAt is String && createdAt.isNotEmpty) {
         dt = DateTime.parse(createdAt).toLocal();
       }
     } catch (_) {}
 
     if (dt == null) return '';
-
     final now = DateTime.now();
     final diff = now.difference(dt);
     if (diff.inMinutes < 1) return 'Az once';
     if (diff.inMinutes < 60) return '${diff.inMinutes} dk once';
     if (diff.inHours < 24) return '${diff.inHours} saat once';
-    if (diff.inDays == 1) return 'Dun ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    if (diff.inDays == 1) return 'Dun ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+    return '${dt.day.toString().padLeft(2,'0')}.${dt.month.toString().padLeft(2,'0')}.${dt.year} ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
   }
 
   String _dateGroup(dynamic createdAt) {
@@ -47,11 +44,10 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     try {
       if (createdAt is Timestamp) {
         dt = createdAt.toDate().toLocal();
-      } else if (createdAt is String) {
+      } else if (createdAt is String && createdAt.isNotEmpty) {
         dt = DateTime.parse(createdAt).toLocal();
       }
     } catch (_) {}
-
     if (dt == null) return 'Eskiler';
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -86,15 +82,25 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     }
   }
 
+  void _markRead(Map<String, dynamic> notif) {
+    final id = notif['id'];
+    // Bos veya null ID'ye Firestore erisimi engelle
+    if (id == null || id.toString().trim().isEmpty) return;
+    markStaffNotificationAsRead(id.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final notificationsAsync = ref.watch(staffNotificationsProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
+      backgroundColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF2F2F7),
       appBar: AppBar(
-        title: const Text('Bildirimler', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Bildirimler',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -134,14 +140,14 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
           for (final notif in notifications) {
             final group = _dateGroup(notif['createdAt']);
             if (group != lastGroup) {
-              listItems.add(group); // baslik
+              listItems.add(group);
               lastGroup = group;
             }
             listItems.add(notif);
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             itemCount: listItems.length,
             itemBuilder: (context, index) {
               final item = listItems[index];
@@ -149,14 +155,14 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               // Grup baslik
               if (item is String) {
                 return Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 6),
+                  padding: const EdgeInsets.only(top: 18, bottom: 6, left: 4),
                   child: Text(
                     item,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                      color: isDark ? Colors.grey[500] : Colors.grey[600],
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                      color: isDark ? Colors.grey[500] : Colors.grey[500],
                     ),
                   ),
                 );
@@ -171,38 +177,42 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final iconColor = _colorForType(type, isRead);
               final iconData = _iconForType(type);
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: isRead
-                      ? (isDark ? const Color(0xFF1E1E1E) : Colors.white)
-                      : (isDark ? const Color(0xFF1A1A2E) : const Color(0xFFEFF6FF)),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
+              return GestureDetector(
+                onTap: () => _markRead(notif),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
                     color: isRead
-                        ? (isDark ? Colors.grey[800]! : Colors.grey[200]!)
-                        : iconColor.withOpacity(0.4),
-                    width: isRead ? 0.5 : 1.5,
+                        ? (isDark ? const Color(0xFF1C1C1E) : Colors.white)
+                        : (isDark ? const Color(0xFF1A1A30) : const Color(0xFFEFF6FF)),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isRead
+                          ? (isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade200)
+                          : iconColor.withOpacity(0.5),
+                      width: isRead ? 0.5 : 1.5,
+                    ),
+                    boxShadow: isRead
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: iconColor.withOpacity(0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            )
+                          ],
                   ),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: () {
-                    if (!isRead && notif['id'] != null) {
-                      markStaffNotificationAsRead(notif['id']);
-                    }
-                  },
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Ikon
                         Container(
-                          width: 42,
-                          height: 42,
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            color: iconColor.withOpacity(0.12),
+                            color: iconColor.withOpacity(isRead ? 0.08 : 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(iconData, color: iconColor, size: 22),
@@ -213,50 +223,56 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Baslik
                               Text(
                                 title,
                                 style: TextStyle(
-                                  fontWeight: isRead ? FontWeight.w500 : FontWeight.bold,
-                                  fontSize: 14,
+                                  fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                                  fontSize: isRead ? 15 : 16,
                                   color: isDark ? Colors.white : Colors.black87,
+                                  height: 1.2,
                                 ),
                               ),
+                              // Gövde
                               if (body.isNotEmpty) ...[
-                                const SizedBox(height: 3),
+                                const SizedBox(height: 5),
                                 Text(
                                   body,
                                   style: TextStyle(
-                                    fontSize: 13,
-                                    color: isDark ? Colors.white60 : Colors.black54,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? Colors.white70 : Colors.black.withOpacity(0.65),
+                                    height: 1.4,
                                   ),
                                 ),
                               ],
+                              // Zaman damgasi
                               if (dateStr.isNotEmpty) ...[
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 7),
                                 Text(
                                   dateStr,
                                   style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark ? Colors.grey[600] : Colors.grey[400],
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.grey[400] : Colors.grey[500],
                                   ),
                                 ),
                               ],
                             ],
                           ),
                         ),
-                        // Okunmamis noktasi
-                        if (!isRead) ...[
-                          const SizedBox(width: 8),
+                        const SizedBox(width: 6),
+                        // Okunmamis - kirmizi nokta sag ust
+                        if (!isRead)
                           Container(
-                            width: 9,
-                            height: 9,
-                            margin: const EdgeInsets.only(top: 4),
-                            decoration: BoxDecoration(
-                              color: iconColor,
+                            width: 10,
+                            height: 10,
+                            margin: const EdgeInsets.only(top: 2),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
                               shape: BoxShape.circle,
                             ),
                           ),
-                        ],
                       ],
                     ),
                   ),
@@ -267,7 +283,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(
-          child: Text('Yüklenemedi: $err', style: const TextStyle(color: Colors.red)),
+          child: Text('Yuklenemedi: $err', style: const TextStyle(color: Colors.red)),
         ),
       ),
     );
