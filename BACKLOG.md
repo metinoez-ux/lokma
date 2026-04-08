@@ -32,7 +32,9 @@
 
 ## 🐛 Bug Fix / Revize
 
-_(Bana söylediğinde buraya eklerim)_
+- [ ] **Push Bildirim Tiklaninca Hata** -- Gorev atamasi (kermes_assignment) gibi siparis-disi bildirimler tiklandiginda hata veriyor. `fcm_service.dart` sadece siparis tipli (orderId) bildirimleri yonlendirebiliyor. Siparis-disi tipler icin graceful fallback gerekli (ana sayfa veya staff-hub'a yonlendir).
+  - Dosya: `mobile_app/lib/services/fcm_service.dart` (`_handleMessageOpenedApp`)
+  - Etki: Tum kermes gorev atamalari, acil anonslar, sistem bildirimleri
 
 ## ✅ Tamamlananlar
 

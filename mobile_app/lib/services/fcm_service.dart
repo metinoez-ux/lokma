@@ -329,17 +329,20 @@ class FCMService {
     final type = data['type'];
     final orderId = data['orderId'];
     
-    debugPrint('🔔 Notification type: $type, orderId: $orderId');
+    debugPrint('[FCM] Notification type: $type, orderId: $orderId');
     
     if (type == 'new_delivery' && orderId != null) {
-      debugPrint('🚚 Navigating to driver deliveries for order: $orderId');
       _navigateToDriverDeliveries(orderId);
     } else if (type == 'chat_message' && orderId != null) {
-      debugPrint('💬 Navigating to orders for chat: $orderId');
       _navigateToOrders(orderId: orderId, openChat: true);
-    } else {
-      debugPrint('📦 Navigating to order: $orderId');
+    } else if (type == 'kermes_assignment' || type == 'parking_emergency') {
+      // Kermes gorev atamalari ve park acil anonslari -> Staff Hub
+      _navigateTo('/staff-hub');
+    } else if (orderId != null && orderId.isNotEmpty) {
       _navigateToOrders(orderId: orderId);
+    } else {
+      // Bilinmeyen tip veya orderId yok -> bildirim gecmisine git
+      _navigateTo('/notification-history');
     }
   }
   
@@ -372,10 +375,24 @@ class FCMService {
             }
           }
           GoRouter.of(context).go(path);
-          debugPrint('✅ Navigated to $path');
+          debugPrint('[FCM] Navigated to $path');
         }
       } catch (e) {
-        debugPrint('❌ Navigation error: $e');
+        debugPrint('[FCM] Navigation error: $e');
+      }
+    });
+  }
+  
+  void _navigateTo(String path) {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      try {
+        final context = _navigatorKey.currentContext;
+        if (context != null) {
+          GoRouter.of(context).go(path);
+          debugPrint('[FCM] Navigated to $path');
+        }
+      } catch (e) {
+        debugPrint('[FCM] Navigation error: $e');
       }
     });
   }
