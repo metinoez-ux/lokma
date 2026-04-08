@@ -560,7 +560,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
         filled: true,
         fillColor: cardBg,
-        labelStyle: TextStyle(color: isOptional ? hintColor.withOpacity(0.5) : hintColor, fontSize: 14),
+        labelStyle: TextStyle(color: isOptional ? hintColor.withOpacity(0.5) : hintColor, fontSize: 15, fontWeight: FontWeight.w500),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         isDense: true,
       );
@@ -673,7 +673,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                       style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                       decoration: InputDecoration(
                         labelText: 'Telefon (isteğe bağlı)',
-                        labelStyle: TextStyle(color: hintColor),
+                        labelStyle: TextStyle(color: hintColor, fontSize: 15, fontWeight: FontWeight.w500),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: borderColor),
@@ -1188,7 +1188,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                         style: TextStyle(color: textColor, fontSize: 14),
                         decoration: InputDecoration(
                           labelText: 'Adres etiketi (ör. Sporthalle)',
-                          labelStyle: TextStyle(color: hintColor, fontSize: 13),
+                          labelStyle: TextStyle(color: hintColor, fontSize: 15, fontWeight: FontWeight.w500),
                           prefixIcon: Icon(Icons.edit_outlined, color: hintColor, size: 20),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
@@ -1441,7 +1441,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEA184A))),
         filled: true,
         fillColor: cardBg,
-        labelStyle: TextStyle(color: hintColor, fontSize: 14),
+        labelStyle: TextStyle(color: hintColor, fontSize: 15, fontWeight: FontWeight.w500),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         isDense: true,
       ),
@@ -1494,7 +1494,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         ),
         filled: true,
         fillColor: fillColor,
-        labelStyle: TextStyle(color: hintColor, fontSize: 14),
+        labelStyle: TextStyle(color: hintColor, fontSize: 15, fontWeight: FontWeight.w500),
       ),
       validator: (value) {
         if (!readOnly && (value == null || value.isEmpty)) {
