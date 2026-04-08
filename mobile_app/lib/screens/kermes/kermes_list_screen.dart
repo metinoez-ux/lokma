@@ -47,6 +47,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   String _scopeMode = 'nearby';
   final GlobalKey<PopupMenuButtonState<String>> _scopeMenuKey = GlobalKey<PopupMenuButtonState<String>>();
   bool _menuOpenedBySlider = false;
+  bool _isMenuOpen = false;
 
   // Step-based slider (matches yemek screen pattern)
   static const List<double> _kmSteps = [
@@ -1386,12 +1387,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: 180,
+              expandedHeight: 175,
               collapsedHeight: 120,
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = 180.0;
+                  final expandedHeight = 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -2014,7 +2015,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                       Future.microtask(() {
                                         _scopeMenuKey.currentState?.showButtonMenu();
                                       });
-                                    } else if (!isAtMax && _menuOpenedBySlider) {
+                                    } else if (!isAtMax && _menuOpenedBySlider && _isMenuOpen) {
+                                      // Sola cekilince menüyü kapat
+                                      _menuOpenedBySlider = false;
+                                      Navigator.of(context).pop();
+                                    } else if (!isAtMax) {
                                       _menuOpenedBySlider = false;
                                     }
                                   }
@@ -2089,8 +2094,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
     return PopupMenuButton<String>(
       key: _scopeMenuKey,
+      onOpened: () => setState(() => _isMenuOpen = true),
+      onCanceled: () => setState(() {
+        _isMenuOpen = false;
+        _menuOpenedBySlider = false;
+      }),
       onSelected: (value) {
         _menuOpenedBySlider = false;
+        _isMenuOpen = false;
         HapticFeedback.lightImpact();
         if (value == 'map') {
           // Harita modunu aktif et ve hemen haritayi ac
@@ -2143,7 +2154,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           value: 'silaYolu',
           icon: Icons.route,
           label: 'Sila Yolu Kermesleri',
-          subtitle: 'Almanya guzergahindaki kermesler',
+          subtitle: 'Avrupa-Turkiye guzergahi',
           isSelected: _scopeMode == 'silaYolu',
           isDark: isDark,
         ),
