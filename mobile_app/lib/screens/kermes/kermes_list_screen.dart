@@ -2015,12 +2015,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                       Future.microtask(() {
                                         _scopeMenuKey.currentState?.showButtonMenu();
                                       });
-                                    } else if (!isAtMax && _menuOpenedBySlider && _isMenuOpen) {
+                                    } else if (!isAtMax && _menuOpenedBySlider) {
                                       // Sola cekilince menüyü kapat
                                       _menuOpenedBySlider = false;
-                                      Navigator.of(context).pop();
-                                    } else if (!isAtMax) {
-                                      _menuOpenedBySlider = false;
+                                      if (Navigator.of(context).canPop()) {
+                                        Navigator.of(context).pop();
+                                      }
                                     }
                                   }
                                 }
