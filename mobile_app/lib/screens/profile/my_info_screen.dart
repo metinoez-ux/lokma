@@ -184,25 +184,42 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             _nameController.text = (data['fullName'] ?? data['displayName'])?.toString() ?? '';
           }
           _emailController.text = (data['email'] ?? user.email)?.toString() ?? '';
+
+          // Tel: once dialCode oku (ayri kayitli), sonra onunla bölü
+          // Regex KULLANMA -- '\d{1,3}' greedy oldugundan '491' yakalayip '1' rakamini yitirir.
           final rawPhone = (data['phoneNumber'] ?? user.phoneNumber)?.toString() ?? '';
           _phoneCompleteNumber = rawPhone;
-          if (rawPhone.startsWith('+')) {
-            // +4915112345 gibi -- dial code ogren, gerisi numaraya gider
-            final matchDial = RegExp(r'^\+(\d{1,3})(.*)').firstMatch(rawPhone);
-            if (matchDial != null) {
-              _selectedDialCode = '+${matchDial.group(1)}';
-              _phoneController.text = matchDial.group(2)?.trim() ?? '';
-              // Ülke bayragini da guncelle
-              _selectedCountryFlag = _flagForDialCode(_selectedDialCode);
+
+          // 1. Firestore'daki ayri dialCode alani (en guvenilir)
+          final storedDial = data['dialCode']?.toString() ?? '';
+          if (storedDial.isNotEmpty) {
+            _selectedDialCode = storedDial;
+            _selectedCountryFlag = _flagForDialCode(storedDial);
+            // DialCode prefix'i tipten cikar -- controller'a sadece abone numarasini yaz
+            if (rawPhone.startsWith(storedDial)) {
+              _phoneController.text = rawPhone.substring(storedDial.length).trim();
+            } else {
+              _phoneController.text = rawPhone;
+            }
+          } else if (rawPhone.startsWith('+')) {
+            // 2. Fallback: bilinen kodlar arasinda en uzun eslesen ile split yap
+            const knownDialCodes = ['+49', '+90', '+43', '+41', '+31', '+33', '+44', '+32', '+39', '+1'];
+            String matched = '';
+            for (final code in knownDialCodes) {
+              if (rawPhone.startsWith(code)) { matched = code; break; }
+            }
+            if (matched.isNotEmpty) {
+              _selectedDialCode = matched;
+              _selectedCountryFlag = _flagForDialCode(matched);
+              _phoneController.text = rawPhone.substring(matched.length).trim();
             } else {
               _phoneController.text = rawPhone;
             }
           } else {
             _phoneController.text = rawPhone;
           }
-          
           // Address handling
-          var rawAddress = data['address'];
+          final rawAddress = data['address'];
           if (rawAddress is String) {
             _addressController.text = rawAddress;
           } else if (rawAddress is Map) {
@@ -217,8 +234,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           _cityController.text = data['city']?.toString() ?? '';
           _postalCodeController.text = data['postalCode']?.toString() ?? '';
           _countryController.text = data['country']?.toString() ?? 'Germany';
-          _selectedDialCode = data['dialCode']?.toString() ?? '+49';
-          _selectedCountryFlag = _flagForDialCode(_selectedDialCode);
+
 
           // Fallback for legacy 'deliveryAddress' map if root fields are empty
           if (_addressController.text.isEmpty && data['deliveryAddress'] != null) {
