@@ -2097,7 +2097,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       onOpened: () => setState(() => _isMenuOpen = true),
       onCanceled: () => setState(() {
         _isMenuOpen = false;
-        _menuOpenedBySlider = false;
+        if (_menuOpenedBySlider) {
+          // Slider max idi, kullanici popup'i kapatti (barrier) - slider'i geri al
+          _menuOpenedBySlider = false;
+          if (_currentStepIndex == _kmSteps.length - 1) {
+            _currentStepIndex = _kmSteps.length - 2;
+            _maxDistance = _kmSteps[_currentStepIndex];
+          }
+        }
       }),
       onSelected: (value) {
         _menuOpenedBySlider = false;
@@ -2252,7 +2259,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   label,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     color: disabled
                         ? (isDark ? Colors.grey[600] : Colors.grey[400])
                         : (isDark ? Colors.white : Colors.grey[900]),
@@ -2261,7 +2268,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                     color: disabled
                         ? (isDark ? Colors.grey[700] : Colors.grey[350])
                         : (isDark ? Colors.grey[500] : Colors.grey[500]),
