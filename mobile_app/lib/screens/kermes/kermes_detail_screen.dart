@@ -1434,17 +1434,23 @@ if (_selectedCategory.isEmpty) {
   }
 
   String _getCountryFlag(String country) {
-    final lower = country.toLowerCase();
-    if (lower.contains('avusturya') || lower.contains('austria') || lower == 'at') return '🇦🇹';
-    if (lower.contains('sirbistan') || lower.contains('serbia') || lower == 'rs') return '🇷🇸';
-    if (lower.contains('bulgaristan') || lower.contains('bulgaria') || lower == 'bg') return '🇧🇬';
-    if (lower.contains('turkiye') || lower.contains('turkey') || lower == 'tr') return '🇹🇷';
-    if (lower.contains('hollanda') || lower.contains('netherlands') || lower == 'nl') return '🇳🇱';
-    if (lower.contains('fransa') || lower.contains('france') || lower == 'fr') return '🇫🇷';
-    if (lower.contains('belcika') || lower.contains('belgium') || lower == 'be') return '🇧🇪';
-    if (lower.contains('isvicre') || lower.contains('switzerland') || lower == 'ch') return '🇨🇭';
-    if (lower.contains('macaristan') || lower.contains('hungary') || lower == 'hu') return '🇭🇺';
-    return '🇩🇪'; // Varsayilan Almanya
+    final lower = country.toLowerCase()
+        .replaceAll('\u0131', 'i') // ı -> i
+        .replaceAll('\u00fc', 'u') // ue -> u
+        .replaceAll('\u00f6', 'o') // oe -> o
+        .replaceAll('\u015f', 's') // s-cedilla -> s
+        .replaceAll('\u00e7', 'c') // c-cedilla -> c
+        .replaceAll('\u011f', 'g'); // g-breve -> g
+    if (lower.contains('avusturya') || lower.contains('austria') || lower.contains('osterreich') || lower == 'at') return '\u{1F1E6}\u{1F1F9}';
+    if (lower.contains('sirbistan') || lower.contains('serbia') || lower.contains('serbien') || lower == 'rs') return '\u{1F1F7}\u{1F1F8}';
+    if (lower.contains('bulgaristan') || lower.contains('bulgaria') || lower.contains('bulgarien') || lower == 'bg') return '\u{1F1E7}\u{1F1EC}';
+    if (lower.contains('turkiye') || lower.contains('turkey') || lower.contains('turkei') || lower == 'tr') return '\u{1F1F9}\u{1F1F7}';
+    if (lower.contains('hollanda') || lower.contains('netherlands') || lower.contains('niederlande') || lower == 'nl') return '\u{1F1F3}\u{1F1F1}';
+    if (lower.contains('fransa') || lower.contains('france') || lower.contains('frankreich') || lower == 'fr') return '\u{1F1EB}\u{1F1F7}';
+    if (lower.contains('belcika') || lower.contains('belgium') || lower.contains('belgien') || lower == 'be') return '\u{1F1E7}\u{1F1EA}';
+    if (lower.contains('isvicre') || lower.contains('switzerland') || lower.contains('schweiz') || lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
+    if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
+    return '\u{1F1E9}\u{1F1EA}'; // Varsayilan Almanya
   }
 
 Widget _buildHeroSection(BuildContext context) {
@@ -1635,22 +1641,22 @@ Widget _buildHeroSection(BuildContext context) {
                         if (now.isBefore(start)) {
                           final days = start.difference(now).inDays;
                           if (days == 0) {
-                            countdownText = 'BUGUN BASLIYOR!';
+                            countdownText = 'BUGÜN BASLIYOR!';
                           } else if (days == 1) {
                             countdownText = 'YARIN BASLIYOR!';
                           } else {
-                            countdownText = 'BASLAMASINA $days GUN';
+                            countdownText = 'BASLAMASINA $days G\u00dcN';
                           }
                         } else if (now.isAfter(end)) {
                           countdownText = 'KERMES SONA ERDI';
                         } else {
                           final days = end.difference(now).inDays;
                           if (days == 0) {
-                            countdownText = 'SON GUN!';
+                            countdownText = 'SON G\u00dcN!';
                           } else if (days == 1) {
                             countdownText = 'YARIN SONA ERIYOR';
                           } else {
-                            countdownText = 'BITMESINE $days GUN';
+                            countdownText = 'BITMESINE $days G\u00dcN';
                           }
                         }
                         return Text(
@@ -2456,7 +2462,7 @@ Widget _buildHeroSection(BuildContext context) {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${_currentEvent.city} - Etkinlik Gunleri Tahmini',
+                      '${_currentEvent.city} - Etkinlik Günleri Tahmini',
                       style: TextStyle(
                         color: textColor,
                         fontSize: 15,
@@ -2490,7 +2496,7 @@ Widget _buildHeroSection(BuildContext context) {
                   const SizedBox(height: 6),
                   Text(
                     now.isBefore(start)
-                      ? 'Etkinlik yaklastikca hava durumu burada gorunecek. Tahminler genellikle 5 gun oncesinden itibaren mevcut olur.'
+                      ? 'Etkinlik yaklaştıkca hava durumu burada görünecek. Tahminler genellikle 5 gün öncesinden itibaren mevcut olur.'
                       : 'Kermes alani icin hava durumu verisi alinamadi.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: subtleTextColor, fontSize: 12, height: 1.5),
@@ -2506,7 +2512,7 @@ Widget _buildHeroSection(BuildContext context) {
             Row(
               children: [
                 Text(
-                  'BUGUN',
+                  'BUGÜN',
                   style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.2),
                 ),
                 const SizedBox(width: 8),
@@ -2517,7 +2523,7 @@ Widget _buildHeroSection(BuildContext context) {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    'Kermesin ${_getEventDayNumber(now)}. Gunu',
+                    'Kermesin ${_getEventDayNumber(now)}. Günü',
                     style: const TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -2574,7 +2580,7 @@ Widget _buildHeroSection(BuildContext context) {
           if (hasForecast) ...[
             const SizedBox(height: 20),
             Text(
-              'ETKINLIK GUNLERI',
+              'ETKİNLİK GÜNLERİ',
               style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.2),
             ),
             const SizedBox(height: 12),
@@ -2623,7 +2629,7 @@ Widget _buildHeroSection(BuildContext context) {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      isToday ? 'Bugun - ${dayNum}. Gun' : '${dayNum}. Gun',
+                                      isToday ? 'Bugün - ${dayNum}. Gün' : '${dayNum}. Gün',
                                       style: TextStyle(
                                         color: isToday ? Colors.green : Colors.orange,
                                         fontSize: 10,

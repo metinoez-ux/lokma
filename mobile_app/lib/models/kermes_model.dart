@@ -416,7 +416,10 @@ class KermesParkingInfo {
   final List<String> images; // Yeni: 3 resim desteği
   final double? latitude;
   final double? longitude;
-  final String? note; // Önemli not
+  final String? note;
+  final String? status; // null=belirsiz, 'available'=bos, 'full'=dolu
+  final DateTime? statusUpdatedAt;
+  final String? statusUpdatedBy;
 
   KermesParkingInfo({
     this.address,
@@ -430,6 +433,9 @@ class KermesParkingInfo {
     this.latitude,
     this.longitude,
     this.note,
+    this.status,
+    this.statusUpdatedAt,
+    this.statusUpdatedBy,
   });
   
   // lat ve lng getter'ları (latitude/longitude için kısa isimler)
@@ -472,6 +478,13 @@ class KermesParkingInfo {
       latitude: (json['lat'] ?? json['latitude'])?.toDouble(),
       longitude: (json['lng'] ?? json['longitude'])?.toDouble(),
       note: json['note'] as String?,
+      status: json['status'] as String?,
+      statusUpdatedAt: json['statusUpdatedAt'] != null
+          ? (json['statusUpdatedAt'] is Timestamp
+              ? (json['statusUpdatedAt'] as Timestamp).toDate()
+              : DateTime.tryParse(json['statusUpdatedAt'].toString()))
+          : null,
+      statusUpdatedBy: json['statusUpdatedBy'] as String?,
     );
   }
   
@@ -489,6 +502,9 @@ class KermesParkingInfo {
       if (latitude != null) 'lat': latitude,
       if (longitude != null) 'lng': longitude,
       if (note != null && note!.isNotEmpty) 'note': note,
+      if (status != null) 'status': status,
+      if (statusUpdatedAt != null) 'statusUpdatedAt': statusUpdatedAt,
+      if (statusUpdatedBy != null) 'statusUpdatedBy': statusUpdatedBy,
     };
   }
 }

@@ -133,7 +133,7 @@ class _KermesCardState extends State<KermesCard> {
       parts.add(widget.event.state!);
     }
     if (widget.event.country.isNotEmpty) {
-      parts.add(widget.event.country);
+      parts.add('${widget.event.country} ${_getCountryFlag(widget.event.country)}');
     }
     final formattedLocation = parts.join(' • ');
 
@@ -553,7 +553,7 @@ class _KermesCardState extends State<KermesCard> {
                                     const SizedBox(width: 12),
                                     _buildIconText(
                                         Icons.directions_car,
-                                        '~$_travelTime ${'delivery_modes.minutes_short'.tr()}',
+                                        '~$_travelTime',
                                         primaryRose,
                                         isDark),
                                   ],
@@ -608,6 +608,26 @@ class _KermesCardState extends State<KermesCard> {
   }
 
   // --- Helpers ---
+  String _getCountryFlag(String country) {
+    final lower = country.toLowerCase()
+        .replaceAll('\u0131', 'i')
+        .replaceAll('\u00fc', 'u')
+        .replaceAll('\u00f6', 'o')
+        .replaceAll('\u015f', 's')
+        .replaceAll('\u00e7', 'c')
+        .replaceAll('\u011f', 'g');
+    if (lower.contains('avusturya') || lower.contains('austria') || lower.contains('osterreich') || lower == 'at') return '\u{1F1E6}\u{1F1F9}';
+    if (lower.contains('sirbistan') || lower.contains('serbia') || lower.contains('serbien') || lower == 'rs') return '\u{1F1F7}\u{1F1F8}';
+    if (lower.contains('bulgaristan') || lower.contains('bulgaria') || lower.contains('bulgarien') || lower == 'bg') return '\u{1F1E7}\u{1F1EC}';
+    if (lower.contains('turkiye') || lower.contains('turkey') || lower.contains('turkei') || lower == 'tr') return '\u{1F1F9}\u{1F1F7}';
+    if (lower.contains('hollanda') || lower.contains('netherlands') || lower.contains('niederlande') || lower == 'nl') return '\u{1F1F3}\u{1F1F1}';
+    if (lower.contains('fransa') || lower.contains('france') || lower.contains('frankreich') || lower == 'fr') return '\u{1F1EB}\u{1F1F7}';
+    if (lower.contains('belcika') || lower.contains('belgium') || lower.contains('belgien') || lower == 'be') return '\u{1F1E7}\u{1F1EA}';
+    if (lower.contains('isvicre') || lower.contains('switzerland') || lower.contains('schweiz') || lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
+    if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
+    return '\u{1F1E9}\u{1F1EA}';
+  }
+
   String get _distanceKm {
     if (widget.currentPosition == null) return '';
     final dist = Geolocator.distanceBetween(
@@ -629,8 +649,16 @@ class _KermesCardState extends State<KermesCard> {
           widget.event.longitude,
         ) /
         1000;
-    final mins = (dist / 60 * 60).round();
-    return mins.toString();
+    final totalMins = (dist / 80 * 60).round(); // ortalama 80 km/h surus hizi
+    if (totalMins < 60) return '$totalMins dk';
+    final days = totalMins ~/ (24 * 60);
+    final hours = (totalMins % (24 * 60)) ~/ 60;
+    final mins = totalMins % 60;
+    final parts = <String>[];
+    if (days > 0) parts.add('$days g\u00fcn');
+    if (hours > 0) parts.add('$hours sa');
+    if (mins > 0) parts.add('$mins dk');
+    return parts.join(' ');
   }
 
   Widget _buildFallbackGradient() {

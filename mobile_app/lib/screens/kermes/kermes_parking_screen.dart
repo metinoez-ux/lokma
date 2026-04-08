@@ -186,7 +186,56 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     super.dispose();
   }
   
-  /// Acil park anonsu gönder
+  /// Park alani doluluk statusunu degistir (belirsiz -> bos -> dolu -> belirsiz)
+  Future<void> _toggleParkingStatus(int index) async {
+    if (index >= _parkingList.length) return;
+    HapticFeedback.mediumImpact();
+    
+    final current = _parkingList[index].status;
+    String? newStatus;
+    if (current == null) {
+      newStatus = 'available';
+    } else if (current == 'available') {
+      newStatus = 'full';
+    } else {
+      newStatus = null; // belirsiz'e don
+    }
+    
+    try {
+      // Firestore'daki parkingLocations array'ini guncelle
+      final docRef = FirebaseFirestore.instance.collection('kermes_events').doc(widget.event.id);
+      final doc = await docRef.get();
+      if (!doc.exists) return;
+      
+      final data = doc.data()!;
+      final parkingData = List<Map<String, dynamic>>.from(
+        (data['parkingLocations'] as List<dynamic>? ?? []).map((e) => Map<String, dynamic>.from(e as Map))
+      );
+      
+      if (index < parkingData.length) {
+        if (newStatus != null) {
+          parkingData[index]['status'] = newStatus;
+          parkingData[index]['statusUpdatedAt'] = FieldValue.serverTimestamp();
+          parkingData[index]['statusUpdatedBy'] = FirebaseAuth.instance.currentUser?.uid;
+        } else {
+          parkingData[index].remove('status');
+          parkingData[index].remove('statusUpdatedAt');
+          parkingData[index].remove('statusUpdatedBy');
+        }
+        
+        await docRef.update({'parkingLocations': parkingData});
+      }
+    } catch (e) {
+      debugPrint('[PARK-STATUS] Hata: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Status guncellenemedi'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  /// Acil park anonsu g\u00f6nder
   Future<void> _sendEmergencyAnnouncement() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = TextEditingController();
@@ -357,13 +406,28 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 icon: Icons.location_on,
                 iconColor: primaryRed,
                 title: 'Google Maps',
-                subtitle: 'Detaylı navigasyon',
+                subtitle: 'Detayli navigasyon',
                 isDefault: Platform.isAndroid,
                 onTap: () {
                   Navigator.pop(context);
                   _launchGoogleMaps(address, lat, lng);
                 },
               ),
+              
+              // Street View (sadece koordinat varsa)
+              if (lat != null && lng != null) ...[
+                const SizedBox(height: 12),
+                _buildMapOption(
+                  icon: Icons.streetview,
+                  iconColor: const Color(0xFFFFA000),
+                  title: 'Google Street View',
+                  subtitle: 'Gercek goruntuyu gor',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _launchStreetView(lat!, lng!);
+                  },
+                ),
+              ],
             ],
           ),
         ),
@@ -431,24 +495,26 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   Future<void> _launchAppleMaps(String address, double? lat, double? lng) async {
     Uri url;
     if (lat != null && lng != null) {
-      url = Uri.parse('https://maps.apple.com/?ll=$lat,$lng&q=${Uri.encodeComponent(address)}');
+      // Navigasyon modu: koordinata yonlendir (adres degil)
+      url = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d');
     } else {
-      url = Uri.parse('https://maps.apple.com/?q=${Uri.encodeComponent(address)}');
+      url = Uri.parse('https://maps.apple.com/?daddr=${Uri.encodeComponent(address)}&dirflg=d');
     }
     if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
 
   Future<void> _launchGoogleMaps(String address, double? lat, double? lng) async {
     Uri url;
     if (lat != null && lng != null) {
-      url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+      // Navigasyon modu: tam koordinata yonlendir
+      url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
     } else {
-      url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
+      url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${Uri.encodeComponent(address)}&travelmode=driving');
     }
     if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -863,29 +929,49 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               ),
               child: Row(
                 children: [
-                  // Park numarası
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [Color(0xFF2563EB), Color(0xFF1E40AF)]),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'P${index + 1}',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.white),
+                  // Park numarasi + status indicator
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [Color(0xFF2563EB), Color(0xFF1E40AF)]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'P${index + 1}',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.white),
+                          ),
+                        ),
                       ),
-                    ),
+                      // Status dot
+                      if (info.status != null)
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: info.status == 'available' ? Colors.green : Colors.red,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: _surfaceDark(isDark), width: 2),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   SizedBox(width: 14),
-                  // Adres özeti
+                  // Adres ozeti
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          info.street.isNotEmpty ? info.street : 'Park Alanı ${index + 1}',
+                          info.street.isNotEmpty ? info.street : 'Park Alan\u0131 ${index + 1}',
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -899,23 +985,82 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                             color: isDark ? Colors.grey[300] : Colors.grey[700],
                           ),
                         ),
-                        // Walking distance to kermes venue
-                        FutureBuilder<List<double>?>(
-                          future: _resolveCoordinates(info, '${info.street}, ${info.postalCode} ${info.city}'),
-                          builder: (context, snap) {
-                            if (!snap.hasData || snap.data == null) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: _buildWalkingDistanceChip(snap.data![0], snap.data![1], isDark),
-                            );
-                          },
+                        // Status badge + walking distance
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Row(
+                            children: [
+                              // Status badge
+                              GestureDetector(
+                                onTap: _isAdmin ? () => _toggleParkingStatus(index) : null,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: info.status == 'available'
+                                        ? Colors.green.withOpacity(0.15)
+                                        : info.status == 'full'
+                                            ? Colors.red.withOpacity(0.15)
+                                            : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: info.status == 'available'
+                                          ? Colors.green.withOpacity(0.4)
+                                          : info.status == 'full'
+                                              ? Colors.red.withOpacity(0.4)
+                                              : Colors.grey.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        info.status == 'available' ? Icons.check_circle
+                                            : info.status == 'full' ? Icons.cancel
+                                            : Icons.help_outline,
+                                        size: 12,
+                                        color: info.status == 'available' ? Colors.green
+                                            : info.status == 'full' ? Colors.red
+                                            : Colors.grey,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        info.status == 'available' ? 'Bo\u015f'
+                                            : info.status == 'full' ? 'Dolu'
+                                            : 'Belirsiz',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: info.status == 'available' ? Colors.green
+                                              : info.status == 'full' ? Colors.red
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                      if (_isAdmin) ...[
+                                        const SizedBox(width: 2),
+                                        Icon(Icons.swap_horiz, size: 10, color: Colors.grey),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Walking distance
+                              FutureBuilder<List<double>?>(
+                                future: _resolveCoordinates(info, '${info.street}, ${info.postalCode} ${info.city}'),
+                                builder: (context, snap) {
+                                  if (!snap.hasData || snap.data == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return _buildWalkingDistanceChip(snap.data![0], snap.data![1], isDark);
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  // Genişlet/Daralt ikonu
+                  // Genislet/Daralt ikonu
                   AnimatedRotation(
                     turns: isExpanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
@@ -1121,7 +1266,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
             },
           ),
           
-          // Aksiyon butonları
+          // Aksiyon butonlari
           Row(
             children: [
               // Navigasyon
@@ -1138,11 +1283,21 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
+              // Street View - tam koordinattan acar
+              if (info.lat != null && info.lng != null)
+                IconButton(
+                  onPressed: () => _launchStreetView(info.lat!, info.lng!),
+                  tooltip: 'Street View',
+                  icon: const Icon(Icons.streetview, color: Color(0xFFFFA000)),
+                ),
               // Adresi kopyala
               IconButton(
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: address));
+                  final copyText = info.lat != null && info.lng != null
+                      ? '$address\n${info.lat}, ${info.lng}'
+                      : address;
+                  Clipboard.setData(ClipboardData(text: copyText));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(tr('common.address_copied')),

@@ -10,7 +10,25 @@
 
 ## 📋 Yapılacaklar (Yeni Özellikler)
 
-_(Bana söylediğinde buraya eklerim)_
+- [ ] **Kermes Seyahat Suresi - Gercek Rota Hesaplama** -- Su an 80 km/h sabit ortalama hiz ile hesaplaniyor. Ileride OSRM (ucretsiz, self-host) veya Google Distance Matrix API (cache ile) kullanilarak gercek rota suresi gosterilebilir.
+  - Maliyet analizi: Google API ~$5/1000 istek, OSRM ucretsiz
+  - Oneri: Kermes **detay sayfasinda** tek istek + Firestore cache, **liste ekraninda** mevcut formul korunsun
+  - Oncelik: Dusuk (mevcut cozum yeterli)
+
+- [ ] **Mobil App - Park Alani Yonetimi** -- Kermes personeli (deneme fazinda tum personel, sonra sadece park gorevi atananlar) mobil uygulamadan park alani ekleyebilsin/duzenleyebilsin. Admin paneldeki `kermes_parking_screen.dart` altyapisi mevcut, harita ile konum secme + GPS destegi eklenmeli.
+  - Erisim: Staff Hub > Park Alanlari
+  - Deneme fazi: Tum kermes personeli erisebilir
+  - Uretim fazi: Sadece park gorevi atanan personel
+
+- [x] **Park Alani Doluluk Statusu** -- Belirsiz/Bos/Dolu toggle hem admin panelde hem mobil uygulamada aktif. Firestore realtime ile senkronize. (09.04.2026)
+
+- [ ] **Bildirim Kutusu (Notification Inbox)** -- Push bildirimler gelip gidiyor, gozden kacabiliyor. Tum push bildirimlerin kalici olarak kronolojik listede gorunecegi bir Inbox sayfasi gerekli.
+  - Konum: Mobil app header'da zil ikonu + okunmamis sayisi badge
+  - Icerik: Gorev atamalari, siparis bildirimleri, acil anonslar, sistem bildirimleri
+  - Firestore: `users/{uid}/notifications` sub-collection (her bildirim bir doc)
+  - Cloud Function: `onNotificationSend` trigger'i ile her push bildirim ayni zamanda Firestore'a yazilir
+  - Ozellikler: Okundu/okunmadi durumu, tarihe gore gruplama (bugun/dun/onceki), tek tikla silme
+  - Oncelik: Yuksek
 
 ## 🐛 Bug Fix / Revize
 

@@ -439,7 +439,7 @@ export default function KermesDetailPage() {
 
   // Trigger Notifications
   for (const n of toNotify) {
-      await sendNotif(n.uid, 'Yeni Görev Ataması', `"${formData.title || 'Kermes'}" kermesinde "${n.role}" görevine atandınız.`);
+      await sendNotif(n.uid, 'Yeni Görev Ataması', `"${kermes?.title || editForm.title || 'Kermes'}" kermesinde "${n.role}" görevine atandınız.`);
   }
 
   } catch (error) {
@@ -1092,6 +1092,23 @@ export default function KermesDetailPage() {
  if (!kermes) return;
  setSaving(true);
  try {
+ // Adres degistiyse ve koordinatlar Places ile guncellenmemisse, otomatik geocode yap
+ const addressChanged = editForm.address !== (kermes.address || '') || editForm.city !== (kermes.city || '') || editForm.postalCode !== (kermes.postalCode || '');
+ const coordsUnchanged = editForm.latitude === (kermes.latitude || null) && editForm.longitude === (kermes.longitude || null);
+ if (addressChanged && coordsUnchanged && editForm.address) {
+   try {
+     const geoQuery = [editForm.address, editForm.postalCode, editForm.city, editForm.country || 'Deutschland'].filter(Boolean).join(', ');
+     const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(geoQuery)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+     const geoData = await geoRes.json();
+     if (geoData.status === 'OK' && geoData.results?.[0]) {
+       editForm.latitude = geoData.results[0].geometry.location.lat;
+       editForm.longitude = geoData.results[0].geometry.location.lng;
+       console.log('[AUTO-GEOCODE] Adres degisti, koordinatlar guncellendi:', editForm.latitude, editForm.longitude);
+     }
+   } catch (geoErr) {
+     console.warn('[AUTO-GEOCODE] Geocode basarisiz, eski koordinatlar korunuyor:', geoErr);
+   }
+ }
  const updateData: any = {
  // Temel bilgiler
  title: editForm.title,
@@ -2571,6 +2588,36 @@ export default function KermesDetailPage() {
  <div className="flex items-center gap-2">
  <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">{idx + 1}</span>
  <span className="text-foreground font-medium text-sm">{t('park_i_mkani')} {idx + 1}</span>
+ {/* Status Toggle */}
+ <div className="flex gap-1 ml-2">
+ {[
+   { key: null, label: 'Belirsiz', color: 'gray' },
+   { key: 'available', label: 'Bo\u015f', color: 'green' },
+   { key: 'full', label: 'Dolu', color: 'red' },
+ ].map((opt) => (
+   <button
+     key={opt.label}
+     onClick={() => {
+       const updated = [...editForm.parkingLocations];
+       if (opt.key === null) {
+         delete updated[idx].status;
+       } else {
+         updated[idx] = { ...updated[idx], status: opt.key };
+       }
+       setEditForm({ ...editForm, parkingLocations: updated });
+     }}
+     className={`px-2 py-0.5 text-xs rounded-full border transition ${
+       (loc.status || null) === opt.key
+         ? opt.color === 'green' ? 'bg-green-600/20 border-green-500 text-green-400'
+           : opt.color === 'red' ? 'bg-red-600/20 border-red-500 text-red-400'
+           : 'bg-gray-600/20 border-gray-500 text-gray-400'
+         : 'border-gray-700 text-gray-500 hover:border-gray-500'
+     }`}
+   >
+     {opt.label}
+   </button>
+ ))}
+ </div>
  </div>
  <button onClick={() => {
  const updated = [...editForm.parkingLocations];
@@ -4810,8 +4857,11 @@ export default function KermesDetailPage() {
  setEditForm({ ...editForm, parkingLocations: updated });
  }
  }}
- initialLat={51.0}
- initialLng={9.0}
+  initialLat={editForm.latitude || 51.0}
+  initialLng={editForm.longitude || 9.0}
+  kermesLat={editForm.latitude}
+  kermesLng={editForm.longitude}
+  kermesName={editForm.city || kermes?.title}
  />
 
  {/* Organization Search Modal */}
@@ -4960,7 +5010,56 @@ export default function KermesDetailPage() {
    {assignedWaiters.includes(editPersonData.id) && (
    <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-3 -mt-1 ml-1">Bu personel garson olarak atandi. Masa siparisleri bolumune gore yonlendirilecek.</p>
    )}
-  {/* Özel Görev Düzenleme Modalı */}
+
+   {/* Ozel Gorev Atamalari */}
+   {(editForm.customRoles || []).length > 0 && (
+   <>
+   <h4 className="text-sm font-semibold text-foreground mt-4 mb-2">Ozel Gorevler</h4>
+   {(editForm.customRoles || []).map((role: any) => {
+     const isAssigned = customRoleAssignments[role.id]?.includes(editPersonData.id) || false;
+     return (
+       <div key={role.id} className={`flex items-center justify-between p-3 mb-2 rounded-lg border transition-colors ${
+         isAssigned
+           ? 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800'
+           : 'bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700'
+       }`}>
+       <div className="flex items-center gap-2">
+         {role.icon?.startsWith('http') ? (
+           <img src={role.icon} alt={role.name} className="w-5 h-5 object-cover rounded" />
+         ) : (
+           <span className="text-base">{role.icon}</span>
+         )}
+         <span className="text-sm font-medium text-foreground">{role.name}</span>
+       </div>
+       <button
+         type="button"
+         title={`${role.name} ${isAssigned ? 'gorevinden cikar' : 'olarak ata'}`}
+         onClick={() => {
+           const currentAssigns = customRoleAssignments[role.id] || [];
+           const newAssigns = { ...customRoleAssignments };
+           if (isAssigned) {
+             newAssigns[role.id] = currentAssigns.filter((id: string) => id !== editPersonData.id);
+           } else {
+             newAssigns[role.id] = [...currentAssigns, editPersonData.id];
+           }
+           setCustomRoleAssignments(newAssigns);
+           saveTeamToDb(assignedStaff, assignedDrivers, assignedWaiters, kermesAdmins, newAssigns);
+         }}
+         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+           isAssigned ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'
+         }`}
+       >
+         <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+           isAssigned ? 'translate-x-6' : 'translate-x-1'
+         }`} />
+       </button>
+       </div>
+     );
+   })}
+   </>
+   )}
+
+  {/* \u00d6zel G\u00f6rev D\u00fczenleme Modal\u0131 */}
   {editingCustomRole && (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-card w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-border flex flex-col">

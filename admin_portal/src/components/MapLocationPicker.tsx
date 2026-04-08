@@ -8,6 +8,9 @@ interface MapLocationPickerProps {
  onLocationSelect: (location: SelectedLocation) => void;
  initialLat?: number;
  initialLng?: number;
+ kermesLat?: number | null;
+ kermesLng?: number | null;
+ kermesName?: string;
 }
 
 export interface SelectedLocation {
@@ -25,7 +28,10 @@ export function MapLocationPicker({
  onClose,
  onLocationSelect,
  initialLat = 51.0, // Mitte Deutschlands
- initialLng = 9.0
+ initialLng = 9.0,
+ kermesLat,
+ kermesLng,
+ kermesName
 }: MapLocationPickerProps) {
  const mapRef = useRef<HTMLDivElement>(null);
  const mapInstanceRef = useRef<google.maps.Map | null>(null);
@@ -89,7 +95,12 @@ export function MapLocationPicker({
  ],
  disableDefaultUI: true,
  zoomControl: true,
- mapTypeControl: false,
+ mapTypeControl: true,
+ mapTypeControlOptions: {
+  style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+  position: google.maps.ControlPosition.TOP_RIGHT,
+  mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID],
+ },
  streetViewControl: false,
  fullscreenControl: false,
  });
@@ -299,10 +310,29 @@ export function MapLocationPicker({
  </>
  )}
  </button>
- <div className="hidden sm:flex text-muted-foreground/80 items-center px-2">oder</div>
- <div className="flex-1 text-center text-gray-400 flex items-center justify-center text-sm bg-gray-700/50 rounded-xl py-3 sm:bg-transparent sm:py-0">
- 👆 Standort durch Klick auf die Karte wählen
- </div>
+  <div className="hidden sm:flex text-muted-foreground/80 items-center px-2">oder</div>
+  {kermesLat && kermesLng ? (
+  <button
+  onClick={() => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setCenter({ lat: kermesLat, lng: kermesLng });
+      mapInstanceRef.current.setZoom(15);
+      placeMarker(kermesLat, kermesLng);
+    }
+  }}
+  disabled={!isGoogleReady}
+  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-medium transition disabled:opacity-50"
+  >
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
+  </svg>
+  Kermes Konumu{kermesName ? ` (${kermesName})` : ''}
+  </button>
+  ) : (
+  <div className="flex-1 text-center text-gray-400 flex items-center justify-center text-sm bg-gray-700/50 rounded-xl py-3 sm:bg-transparent sm:py-0">
+  Standort durch Klick auf die Karte wählen
+  </div>
+  )}
  </div>
 
  {/* Error */}
