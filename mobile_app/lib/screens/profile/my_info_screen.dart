@@ -544,7 +544,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
         filled: true,
         fillColor: cardBg,
-        labelStyle: TextStyle(color: isOptional ? hintColor.withOpacity(0.5) : hintColor, fontSize: 13),
+        labelStyle: TextStyle(color: isOptional ? hintColor.withOpacity(0.5) : hintColor, fontSize: 14),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         isDense: true,
       );
@@ -654,7 +654,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     child: TextField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      style: TextStyle(color: textColor, fontSize: 15),
+                      style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                       decoration: InputDecoration(
                         labelText: 'Telefon (isteğe bağlı)',
                         labelStyle: TextStyle(color: hintColor),
@@ -730,7 +730,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                         return TextField(
                           controller: textEditingController,
                           focusNode: focusNode,
-                          style: TextStyle(color: textColor, fontSize: 15),
+                          style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                           decoration: buildInputDecoration(label: 'Sokak / Cadde', icon: Icons.location_on_outlined),
                           onSubmitted: (value) => onFieldSubmitted(),
                         );
@@ -745,7 +745,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     flex: 1,
                     child: TextField(
                       controller: _houseNumberController,
-                      style: TextStyle(color: textColor, fontSize: 15),
+                      style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                       keyboardType: TextInputType.text,
                       textAlign: TextAlign.center,
                       decoration: buildInputDecoration(label: 'No'),
@@ -759,7 +759,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               // Row 2: Adres Satırı 2
               TextField(
                 controller: _addressLine2Controller,
-                style: TextStyle(color: textColor, fontSize: 15),
+                style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                 decoration: buildInputDecoration(label: 'Daire, Kat, Kapı No (Opsiyonel)', icon: Icons.apartment_outlined, isOptional: true),
               ),
               
@@ -772,7 +772,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     flex: 2,
                     child: TextField(
                       controller: _postalCodeController,
-                      style: TextStyle(color: textColor, fontSize: 15),
+                      style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                       keyboardType: TextInputType.number,
                       decoration: buildInputDecoration(label: 'Posta Kodu', icon: Icons.local_post_office_outlined),
                     ),
@@ -792,7 +792,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                         return TextField(
                           controller: textEditingController,
                           focusNode: focusNode,
-                          style: TextStyle(color: textColor, fontSize: 15),
+                          style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                           decoration: buildInputDecoration(label: 'Şehir', icon: Icons.location_city_outlined),
                           onSubmitted: (value) => onFieldSubmitted(),
                         );
@@ -1415,7 +1415,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   Widget _buildFormField(TextEditingController controller, String label, IconData? icon, bool isDark, Color cardBg, Color textColor, Color hintColor, Color borderColor, {TextInputType keyboardType = TextInputType.text}) {
     return TextField(
       controller: controller,
-      style: TextStyle(color: textColor, fontSize: 14),
+      style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
@@ -1425,7 +1425,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEA184A))),
         filled: true,
         fillColor: cardBg,
-        labelStyle: TextStyle(color: hintColor, fontSize: 13),
+        labelStyle: TextStyle(color: hintColor, fontSize: 14),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         isDense: true,
       ),
@@ -1460,7 +1460,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       readOnly: readOnly,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: TextStyle(color: textColor),
+      style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: hintColor),
@@ -1478,7 +1478,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         ),
         filled: true,
         fillColor: fillColor,
-        labelStyle: TextStyle(color: hintColor),
+        labelStyle: TextStyle(color: hintColor, fontSize: 14),
       ),
       validator: (value) {
         if (!readOnly && (value == null || value.isEmpty)) {
