@@ -15,6 +15,7 @@ import 'widgets/shift_action_pill.dart';
 import '../kermes/kermes_unified_kds_screen.dart';
 import '../kermes/kermes_tezgah_screen.dart';
 import 'tabs/staff_pos_wrapper_tab.dart';
+import 'tabs/parking_management_tab.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -177,6 +178,18 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       navItems.add(const BottomNavigationBarItem(
         icon: Icon(Icons.account_balance_wallet),
         label: 'Kasa',
+      ));
+    }
+
+    // 7. Park Yonetimi Tab (Park gorevlisi veya kermes admini)
+    if (capabilities.hasParkRole && capabilities.businessId != null) {
+      tabs.add(ParkingManagementTab(
+        kermesId: capabilities.businessId!,
+        kermesName: capabilities.businessName,
+      ));
+      navItems.add(const BottomNavigationBarItem(
+        icon: Icon(Icons.local_parking),
+        label: 'Park',
       ));
     }
 

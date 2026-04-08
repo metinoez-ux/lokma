@@ -26,6 +26,7 @@ class StaffCapabilities {
   final bool hasTezgahRole;
   final bool hasPosRole;
   final String tezgahName;
+  final bool hasParkRole; // Park Gorevlisi
 
   StaffCapabilities({
     this.isLoading = true,
@@ -49,6 +50,7 @@ class StaffCapabilities {
     this.hasTezgahRole = false,
     this.hasPosRole = false,
     this.tezgahName = '',
+    this.hasParkRole = false,
   });
 
   StaffCapabilities copyWith({
@@ -73,6 +75,7 @@ class StaffCapabilities {
     bool? hasTezgahRole,
     bool? hasPosRole,
     String? tezgahName,
+    bool? hasParkRole,
   }) {
     return StaffCapabilities(
       isLoading: isLoading ?? this.isLoading,
@@ -96,6 +99,7 @@ class StaffCapabilities {
       hasTezgahRole: hasTezgahRole ?? this.hasTezgahRole,
       hasPosRole: hasPosRole ?? this.hasPosRole,
       tezgahName: tezgahName ?? this.tezgahName,
+      hasParkRole: hasParkRole ?? this.hasParkRole,
     );
   }
 }
@@ -154,6 +158,17 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           final hasTezgah = isKermes && earlyPrepZones.isNotEmpty;
           final tName = earlyPrepZones.isNotEmpty ? _deriveTezgahName(earlyPrepZones) : '';
           
+          // Park gorevlisi kontrolu - customRoleAssignments.role_park_system
+          bool earlyHasParkRole = false;
+          try {
+            final kDoc2 = await FirebaseFirestore.instance.collection('kermes_events').doc(roleService.businessId).get();
+            if (kDoc2.exists) {
+              final rAssign = kDoc2.data()?['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+              final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
+              earlyHasParkRole = parkList.contains(user.uid);
+            }
+          } catch(_) {}
+
           state = state.copyWith(
             isLoading: false,
             staffName: roleService.staffName ?? user.displayName ?? '',
@@ -164,13 +179,14 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             hasTablesRole: roleService.role == 'kermes_waiter',
             hasCourierRole: roleService.role == 'kermes_driver',
             hasFinanceRole: true,
-            hasShiftTracking: true, // Allow Kermes staff to use shift tracking
+            hasShiftTracking: true,
             kermesAllowedSections: roleService.kermesAllowedSections,
             userId: user.uid,
             kermesPrepZones: earlyPrepZones,
             hasTezgahRole: hasTezgah,
             hasPosRole: isKermes,
             tezgahName: tName,
+            hasParkRole: earlyHasParkRole || isKermes, // deneme: tum kermes personeli gorebilir
           );
         } else {
           state = state.copyWith(isLoading: false);
@@ -291,6 +307,19 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
       final bool kermesHasTezgah = isKermesDoc && assignedPrepZones.isNotEmpty;
       final String kermesTezgahLabel = assignedPrepZones.isNotEmpty ? _deriveTezgahName(assignedPrepZones) : '';
 
+      // Park gorevlisi kontrolu - kermes doc icindeki customRoleAssignments
+      bool hasParkRole = false;
+      if (isKermesDoc && businessId != null) {
+        try {
+          final kDocCheck = await FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get();
+          if (kDocCheck.exists) {
+            final rAssign = kDocCheck.data()?['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+            final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
+            hasParkRole = parkList.contains(user.uid) || isKermesDoc; // deneme: tum personel
+          }
+        } catch(_) {}
+      }
+
       state = state.copyWith(
         isLoading: false,
         isDriver: isDriver,
@@ -304,14 +333,15 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         maxTables: maxTables,
         isBusinessAdmin: isBusinessAdmin,
         userId: user.uid,
-        hasCourierRole: isDriver, // simplified mapped role
-        hasTablesRole: hasTables, // simplified mapped role
-        hasFinanceRole: true, // everyone on staff hub gets wallet access currently
+        hasCourierRole: isDriver,
+        hasTablesRole: hasTables,
+        hasFinanceRole: true,
         kermesAllowedSections: List<String>.from(data['kermesAllowedSections'] ?? []),
         kermesPrepZones: assignedPrepZones,
         hasTezgahRole: kermesHasTezgah,
         hasPosRole: isKermesDoc,
         tezgahName: kermesTezgahLabel,
+        hasParkRole: hasParkRole,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);
