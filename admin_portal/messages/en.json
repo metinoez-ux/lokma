@@ -4355,7 +4355,19 @@
     "personel_zaten_var_uyari": "A user with this email or phone already exists. Search and assign instead.",
     "isletme_bilgisi_bulunamadi": "Business information not found.",
     "bir_hata_olustu": "An error occurred",
-    "cinsiyet_zorunlu": "Gender selection is required for Kermes staff"
+    "cinsiyet_zorunlu": "Gender selection is required for Kermes staff",
+    "feature_family_area": "Family Area",
+    "feature_parking": "Parking",
+    "feature_accessible": "Accessible",
+    "feature_kids_area": "Kids Area",
+    "feature_outdoor": "Outdoor",
+    "feature_indoor": "Indoor",
+    "feature_live_music": "Live Music",
+    "feature_prayer_room": "Prayer Room",
+    "feature_vegetarian": "Vegetarian",
+    "feature_halal": "Halal",
+    "feature_free_entry": "Free Entry",
+    "feature_wifi": "WiFi"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

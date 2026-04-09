@@ -4332,7 +4332,19 @@
     "personel_zaten_var_uyari": "Un utilisateur avec cet e-mail ou telephone existe deja. Recherchez et assignez.",
     "isletme_bilgisi_bulunamadi": "Informations de l'entreprise introuvables.",
     "bir_hata_olustu": "Une erreur s'est produite",
-    "cinsiyet_zorunlu": "La selection du sexe est requise pour le personnel Kermes"
+    "cinsiyet_zorunlu": "La selection du sexe est requise pour le personnel Kermes",
+    "feature_family_area": "Espace Famille",
+    "feature_parking": "Parking",
+    "feature_accessible": "Accessible",
+    "feature_kids_area": "Espace Enfants",
+    "feature_outdoor": "Plein Air",
+    "feature_indoor": "Interieur",
+    "feature_live_music": "Musique Live",
+    "feature_prayer_room": "Salle de Priere",
+    "feature_vegetarian": "Vegetarien",
+    "feature_halal": "Halal",
+    "feature_free_entry": "Entree Gratuite",
+    "feature_wifi": "WiFi"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrateur d'entreprise",

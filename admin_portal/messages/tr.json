@@ -4357,7 +4357,19 @@
     "personel_olusturuldu": "Personel olusturuldu ve atandi",
     "personel_zaten_var_uyari": "Bu e-posta veya telefon ile kayitli kullanici var. Arama ile bulup atayin.",
     "bir_hata_olustu": "Bir hata olustu",
-    "cinsiyet_zorunlu": "Kermes personeli icin cinsiyet secimi zorunludur"
+    "cinsiyet_zorunlu": "Kermes personeli icin cinsiyet secimi zorunludur",
+    "feature_family_area": "Aile Bolumu",
+    "feature_parking": "Otopark",
+    "feature_accessible": "Engelli Erisimi",
+    "feature_kids_area": "Cocuk Alani",
+    "feature_outdoor": "Acik Alan",
+    "feature_indoor": "Kapali Alan",
+    "feature_live_music": "Canli Muzik",
+    "feature_prayer_room": "Namaz Alani",
+    "feature_vegetarian": "Vejetaryen",
+    "feature_halal": "Helal",
+    "feature_free_entry": "Ucretsiz Giris",
+    "feature_wifi": "WiFi"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 İşletme Admin",

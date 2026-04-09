@@ -4299,7 +4299,19 @@
     "personel_zaten_var_uyari": "Un utente con questa email o telefono esiste gia. Cerca e assegna.",
     "isletme_bilgisi_bulunamadi": "Informazioni aziendali non trovate.",
     "bir_hata_olustu": "Si e verificato un errore",
-    "cinsiyet_zorunlu": "La selezione del genere e obbligatoria per il personale Kermes"
+    "cinsiyet_zorunlu": "La selezione del genere e obbligatoria per il personale Kermes",
+    "feature_family_area": "Area Famiglia",
+    "feature_parking": "Parcheggio",
+    "feature_accessible": "Accessibile",
+    "feature_kids_area": "Area Bambini",
+    "feature_outdoor": "All Aperto",
+    "feature_indoor": "Al Coperto",
+    "feature_live_music": "Musica dal Vivo",
+    "feature_prayer_room": "Sala Preghiera",
+    "feature_vegetarian": "Vegetariano",
+    "feature_halal": "Halal",
+    "feature_free_entry": "Ingresso Gratuito",
+    "feature_wifi": "WiFi"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪Amministrazione aziendale",

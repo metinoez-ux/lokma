@@ -4758,7 +4758,19 @@
     "personel_zaten_var_uyari": "Er bestaat al een gebruiker met dit e-mailadres of telefoonnummer. Zoek en wijs toe.",
     "isletme_bilgisi_bulunamadi": "Bedrijfsinformatie niet gevonden.",
     "bir_hata_olustu": "Er is een fout opgetreden",
-    "cinsiyet_zorunlu": "Geslachtsselectie is vereist voor Kermes-personeel"
+    "cinsiyet_zorunlu": "Geslachtsselectie is vereist voor Kermes-personeel",
+    "feature_family_area": "Familieruimte",
+    "feature_parking": "Parkeren",
+    "feature_accessible": "Toegankelijk",
+    "feature_kids_area": "Kinderhoek",
+    "feature_outdoor": "Buiten",
+    "feature_indoor": "Binnen",
+    "feature_live_music": "Live Muziek",
+    "feature_prayer_room": "Gebedsruimte",
+    "feature_vegetarian": "Vegetarisch",
+    "feature_halal": "Halal",
+    "feature_free_entry": "Gratis Toegang",
+    "feature_wifi": "WiFi"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

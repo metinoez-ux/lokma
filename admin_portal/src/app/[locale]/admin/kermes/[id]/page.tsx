@@ -23,25 +23,26 @@ import CategoryManagementModal from '@/components/admin/CategoryManagementModal'
 interface KermesFeature {
  id: string;
  label: string;
- icon: string;
+ labelKey?: string;
+ icon?: string;
  color: string;
  isActive: boolean;
 }
 
 // Fallback varsayılan özellikler (Firestore erişilemezse)
 const DEFAULT_FEATURES: KermesFeature[] = [
- { id: 'family_area', label: 'Aile Bölümü', icon: '👨‍👩‍👧‍👦', color: '#E91E63', isActive: true },
- { id: 'parking', label: 'Otopark', icon: '🅿️', color: '#2196F3', isActive: true },
- { id: 'accessible', label: 'Engelli Erişimi', icon: '♿', color: '#9C27B0', isActive: true },
- { id: 'kids_area', label: 'Çocuk Alanı', icon: '🧒', color: '#4CAF50', isActive: true },
- { id: 'outdoor', label: 'Açık Alan', icon: '🌳', color: '#8BC34A', isActive: true },
- { id: 'indoor', label: 'Kapalı Alan', icon: '🏠', color: '#FF5722', isActive: true },
- { id: 'live_music', label: 'Canlı Müzik', icon: '🎵', color: '#607D8B', isActive: true },
- { id: 'prayer_room', label: 'Namaz Alanı', icon: '🕌', color: '#795548', isActive: true },
- { id: 'vegetarian', label: 'Vejetaryen', icon: '🥗', color: '#4CAF50', isActive: true },
- { id: 'halal', label: 'Helal', icon: '☪️', color: '#009688', isActive: true },
- { id: 'free_entry', label: 'Ücretsiz Giriş', icon: '🎟️', color: '#FF9800', isActive: true },
- { id: 'wifi', label: 'WiFi', icon: '📶', color: '#3F51B5', isActive: true },
+ { id: 'family_area', label: 'Aile Bölümü', labelKey: 'feature_family_area', icon: '👨‍👩‍👧‍👦', color: '#E91E63', isActive: true },
+ { id: 'parking', label: 'Otopark', labelKey: 'feature_parking', icon: '🅿️', color: '#2196F3', isActive: true },
+ { id: 'accessible', label: 'Engelli Erişimi', labelKey: 'feature_accessible', icon: '♿', color: '#9C27B0', isActive: true },
+ { id: 'kids_area', label: 'Çocuk Alanı', labelKey: 'feature_kids_area', icon: '🧒', color: '#4CAF50', isActive: true },
+ { id: 'outdoor', label: 'Açık Alan', labelKey: 'feature_outdoor', icon: '🌳', color: '#8BC34A', isActive: true },
+ { id: 'indoor', label: 'Kapalı Alan', labelKey: 'feature_indoor', icon: '🏠', color: '#FF5722', isActive: true },
+ { id: 'live_music', label: 'Canlı Müzik', labelKey: 'feature_live_music', icon: '🎵', color: '#607D8B', isActive: true },
+ { id: 'prayer_room', label: 'Namaz Alanı', labelKey: 'feature_prayer_room', icon: '🕌', color: '#795548', isActive: true },
+ { id: 'vegetarian', label: 'Vejetaryen', labelKey: 'feature_vegetarian', icon: '🥗', color: '#4CAF50', isActive: true },
+ { id: 'halal', label: 'Helal', labelKey: 'feature_halal', icon: '☪️', color: '#009688', isActive: true },
+ { id: 'free_entry', label: 'Ücretsiz Giriş', labelKey: 'feature_free_entry', icon: '🎟️', color: '#FF9800', isActive: true },
+ { id: 'wifi', label: 'WiFi', labelKey: 'feature_wifi', icon: '📶', color: '#3F51B5', isActive: true },
 ];
 
 // Varsayılan kategoriler (ilk yüklemede Firebase'e yazılacak)
@@ -1795,7 +1796,8 @@ export default function KermesDetailPage() {
 
  const getFeatureLabel = (featureId: string) => {
  const f = eventFeatures.find(ef => ef.id === featureId);
- return f ? `${f.icon} ${f.label}` : featureId;
+  if (!f) return featureId;
+  try { return f.labelKey ? t(f.labelKey) : f.label; } catch { return f.label; }
  };
 
  if (adminLoading || loading) {
@@ -2156,7 +2158,7 @@ export default function KermesDetailPage() {
  style={editFeatures.includes(f.id) ? { backgroundColor: f.color } : {}}
  >
  {f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>)}
- {f.label}
+ {f.labelKey ? t(f.labelKey) : f.label}
  </button>
  {isSuperAdmin && (
  <>

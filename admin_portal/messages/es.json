@@ -4322,7 +4322,19 @@
     "personel_zaten_var_uyari": "Ya existe un usuario con este correo o telefono. Busque y asigne.",
     "isletme_bilgisi_bulunamadi": "Informacion de la empresa no encontrada.",
     "bir_hata_olustu": "Se ha producido un error",
-    "cinsiyet_zorunlu": "La seleccion de genero es obligatoria para el personal del Kermes"
+    "cinsiyet_zorunlu": "La seleccion de genero es obligatoria para el personal del Kermes",
+    "feature_family_area": "Zona Familiar",
+    "feature_parking": "Aparcamiento",
+    "feature_accessible": "Accesible",
+    "feature_kids_area": "Zona Infantil",
+    "feature_outdoor": "Al Aire Libre",
+    "feature_indoor": "Interior",
+    "feature_live_music": "Musica en Vivo",
+    "feature_prayer_room": "Sala de Oracion",
+    "feature_vegetarian": "Vegetariano",
+    "feature_halal": "Halal",
+    "feature_free_entry": "Entrada Gratuita",
+    "feature_wifi": "WiFi"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrador de empresas",
