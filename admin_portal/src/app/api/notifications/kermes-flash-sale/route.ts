@@ -49,9 +49,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 1. Hedef kitleyi belirle
     let targetTokens = new Set<string>();
-    const tokenToUserId = new Map<string, string>();
+    let targetUserIds = new Set<string>();
 
     const usersRef = db.collection('users');
     const querySnapshot = await usersRef.where('fcmToken', '!=', null).get();
@@ -105,7 +104,7 @@ export async function POST(request: NextRequest) {
 
       if (shouldSend) {
         targetTokens.add(token);
-        tokenToUserId.set(token, doc.id);
+        targetUserIds.add(doc.id);
       }
     });
 
@@ -133,13 +132,14 @@ export async function POST(request: NextRequest) {
       notification: {
         title,
         body: messageBody,
-        ...(itemImage ? { image: itemImage } : {})
+        ...(itemImage ? { imageUrl: itemImage, image: itemImage } : {})
       },
       data: {
         type: 'kermes_flash_sale',
         kermesId: kermesId,
         kermesTitle: kermesTitle || '',
-        click_action: 'FLUTTER_NOTIFICATION_CLICK'
+        click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        ...(itemImage ? { imageUrl: itemImage } : {})
       },
       apns: {
         payload: {
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     const admin = require('firebase-admin');
     const now = admin.firestore.Timestamp.now();
     const MAX_BATCH = 500;
-    const userIds = Array.from(new Set(tokenToUserId.values()));
+    const userIds = Array.from(targetUserIds);
 
     const discountSummary = discountedItems.map((item: any) => ({
       name: item.name,

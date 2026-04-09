@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Hedef kitle: kermes bildirimlerini acmis ve 1km icindeki kullanicilar
     let targetTokens = new Set<string>();
-    const tokenToUserId = new Map<string, string>();
+    let targetUserIds = new Set<string>();
     const usersRef = db.collection('users');
     const querySnapshot = await usersRef.where('fcmToken', '!=', null).get();
 
@@ -83,7 +83,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (shouldSend) { targetTokens.add(token); tokenToUserId.set(token, doc.id); }
+      if (shouldSend) { 
+        targetTokens.add(token); 
+        targetUserIds.add(doc.id); 
+      }
     });
 
     const tokensArray = Array.from(targetTokens);
@@ -104,11 +107,16 @@ export async function POST(request: NextRequest) {
     const title = `${kermesTitle} - Acil Arac Anonsu`;
 
     const fcmPayload: any = {
-      notification: { title, body: message },
+      notification: { 
+        title, 
+        body: message,
+        ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl, image: vehicleImageUrl } : {})
+       },
       data: {
         type: 'kermes_parking',
         kermesId,
         click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl } : {})
       },
       apns: {
         payload: {
@@ -117,17 +125,13 @@ export async function POST(request: NextRequest) {
             badge: 1,
             'mutable-content': 1
           }
+        },
+        fcm_options: {
+          ...(vehicleImageUrl ? { image: vehicleImageUrl } : {})
         }
       },
       tokens: tokensArray,
     };
-
-    // Resim varsa FCM ve Apple (APNs) options'a ekle
-    if (vehicleImageUrl) {
-      fcmPayload.notification.imageUrl = vehicleImageUrl;
-      fcmPayload.data.imageUrl = vehicleImageUrl;
-      fcmPayload.apns.fcm_options = { image: vehicleImageUrl };
-    }
 
     let successCount = 0, failureCount = 0;
     for (let i = 0; i < tokensArray.length; i += 500) {
@@ -137,8 +141,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Inbox kaydi - her kullanicinin notifications sub-collection'ina yaz
+    const admin = require('firebase-admin');
     const now = admin.firestore.Timestamp.now();
-    const userIds = Array.from(new Set(tokenToUserId.values()));
+    const userIds = Array.from(targetUserIds);
     for (let i = 0; i < userIds.length; i += 500) {
       const batch = db.batch();
       for (const userId of userIds.slice(i, i + 500)) {
