@@ -279,6 +279,7 @@ export default function KermesDetailPage() {
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
  const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat'>('bilgi');
+ const [bilgiSubTab, setBilgiSubTab] = useState<'genel' | 'marka' | 'ozellikler' | 'teslimat' | 'imkanlar'>('genel');
  // Mutfak: PrepZone -> Personel atamalari
  const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
  const [eventFeatures, setEventFeatures] = useState<KermesFeature[]>(DEFAULT_FEATURES);
@@ -1898,7 +1899,33 @@ export default function KermesDetailPage() {
 
  {/* Tab Content - Bilgi */}
  {activeTab === 'bilgi' && (
- <div className="space-y-6">
+ <div className="space-y-4">
+
+  {/* ─── BILGI IC TAB NAVIGASYON ─── */}
+  <div className="bg-card rounded-xl p-1.5 flex gap-1 overflow-x-auto">
+    {([
+      { key: 'genel' as const,      label: 'Genel Ayarlar',        icon: '\u2699\uFE0F',  color: 'pink'   },
+      { key: 'marka' as const,      label: 'Marka & Sertifika',    icon: '\uD83C\uDFF7\uFE0F',  color: 'purple' },
+      { key: 'ozellikler' as const, label: 'Kermes Ozellikleri',    icon: '\u2728',  color: 'amber'  },
+      { key: 'teslimat' as const,   label: 'Siparis & Teslimat',   icon: '\uD83D\uDE9A',  color: 'blue'   },
+      { key: 'imkanlar' as const,   label: 'Imkanlar',             icon: '\uD83C\uDFDF\uFE0F',  color: 'teal'   },
+    ]).map(tab => (
+      <button key={tab.key} onClick={() => setBilgiSubTab(tab.key)}
+        className={`px-3 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-shrink-0 ${
+          bilgiSubTab === tab.key
+            ? tab.color === 'pink'   ? 'bg-pink-600 text-white shadow'
+            : tab.color === 'purple' ? 'bg-purple-600 text-white shadow'
+            : tab.color === 'amber'  ? 'bg-amber-600 text-white shadow'
+            : tab.color === 'blue'   ? 'bg-blue-600 text-white shadow'
+            : 'bg-teal-600 text-white shadow'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+        }`}
+      >
+        {tab.icon} {tab.label}
+      </button>
+    ))}
+  </div>
+
  {/* Main Info Card */}
  <div className="bg-card rounded-xl p-6">
  <div className="flex items-center justify-between mb-4">
@@ -2131,7 +2158,12 @@ export default function KermesDetailPage() {
  </div>
  </div>
 
- {/* Features in Edit Mode */}
+ {/* Features in Edit Mode - Tab: ozellikler */}
+ {bilgiSubTab === 'ozellikler' && (
+ <>
+ <div className="pt-4 border-t border-border">
+ <h4 className="text-foreground font-bold text-base mb-3 flex items-center gap-2"><span>\u2728</span> Kermes Ozellikleri</h4>
+ </div>
  <div>
  <label className="text-muted-foreground text-xs block mb-2">{t('etkinlik_ozellikleri_sabit')}</label>
  <div className="flex flex-wrap gap-2">
@@ -2193,11 +2225,14 @@ export default function KermesDetailPage() {
  )}
  </div>
 
- {/* Removed deprecated Yetkili Kişi Bilgileri (Moved to modular card below) */}
+ </>
+ )}
 
- {/* Marka ve Sertifika Rozetleri */}
+ {/* Marka ve Sertifika Rozetleri - Tab: marka */}
+ {bilgiSubTab === 'marka' && (
+ <>
  <div className="pt-4 border-t border-border">
- <h4 className="text-foreground font-medium mb-3">🏷️ Marka & Sertifika Rozetleri</h4>
+ <h4 className="text-foreground font-bold text-base mb-3 flex items-center gap-2"><span>🏷️</span> Marka & Sertifika Rozetleri</h4>
  <div className="flex flex-wrap gap-3">
  {availableBadges.map((badge) => {
  const isSelected = editForm.activeBadgeIds?.includes(badge.id);
@@ -2238,9 +2273,16 @@ export default function KermesDetailPage() {
  </div>
 
 
+ </>
+ )}
+
+ {/* Kurumsal Ayarlar (Pfand & KDV) - Tab: genel */}
+ {bilgiSubTab === 'genel' && (
+ <>
  {/* Kurumsal Ayarlar (Pfand & KDV) */}
  <div className="pt-4 border-t border-border">
- <h4 className="text-foreground font-medium mb-3">🏢 {t('kurumsal_ayarlar') || 'Kurumsal Ayarlar'}</h4>
+ <h4 className="text-foreground font-bold text-base mb-3 flex items-center gap-2"><span>🏢</span> {t('kurumsal_ayarlar') || 'Isletme Ayarlari'}</h4>
+ <p className="text-muted-foreground text-xs mb-4 -mt-2">Depozito (Pfand) ve Katma Deger Vergisi (KDV/MwSt) ayarlari</p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  {/* Pfand Sistemi */}
  <div className="bg-card shadow-sm p-4 rounded-xl border border-border">
@@ -2286,6 +2328,8 @@ export default function KermesDetailPage() {
  </div>
  </div>
  </div>
+ </>
+ )}
 
  </div>
  ) : (
@@ -2328,10 +2372,10 @@ export default function KermesDetailPage() {
  )}
  </div>
 
- {/* Kurumsal Bilgiler */}
- {(kermes.hasPfandSystem || kermes.showKdv) && (
+ {/* Kurumsal Bilgiler - nur bei genel */}
+ {bilgiSubTab === 'genel' && (kermes.hasPfandSystem || kermes.showKdv) && (
  <div className="pt-4 border-t border-border">
- <h4 className="text-muted-foreground/80 text-sm font-medium mb-2">🏢 Kurumsal Bilgiler</h4>
+ <h4 className="text-muted-foreground/80 text-sm font-bold mb-2">🏢 Isletme Bilgileri</h4>
  <div className="grid grid-cols-2 gap-4 text-sm">
  {kermes.hasPfandSystem && (
  <div className="bg-card p-2 rounded border border-gray-600">
@@ -2349,8 +2393,8 @@ export default function KermesDetailPage() {
  </div>
  )}
 
- {/* Features Display */}
- {kermes.features && Array.isArray(kermes.features) && kermes.features.length > 0 && (
+ {/* Features Display - Tab: ozellikler */}
+ {bilgiSubTab === 'ozellikler' && kermes.features && Array.isArray(kermes.features) && kermes.features.length > 0 && (
  <div className="pt-4 border-t border-border">
  <span className="text-muted-foreground/80 text-sm block mb-2">{t('ozellikler')}</span>
  <div className="flex flex-wrap gap-2">
@@ -2372,7 +2416,8 @@ export default function KermesDetailPage() {
  )}
  </div>
 
- {/* Contact Person Card */}
+ {/* Contact Person Card - Tab: genel */}
+ {bilgiSubTab === 'genel' && (
  <div className="bg-card rounded-xl p-6">
  <h3 className="text-foreground font-bold mb-4">{t('yetkili_kisi')}</h3>
  {isEditing ? (
@@ -2401,10 +2446,19 @@ export default function KermesDetailPage() {
  </div>
  )}
  </div>
+ )}
 
- {/* Sipariş ve Teslimat Seçenekleri */}
+ {/* Siparis ve Teslimat Secenekleri - Tab: teslimat */}
+ {bilgiSubTab === 'teslimat' && (
+ <>
  <div className="bg-card rounded-xl p-6">
- <h3 className="text-foreground font-bold mb-4">Sipariş ve Teslimat Seçenekleri</h3>
+ <div className="flex items-center gap-3 mb-4">
+  <div className="w-9 h-9 rounded-lg bg-blue-600/20 flex items-center justify-center text-lg">🚚</div>
+  <div>
+   <h3 className="text-foreground font-bold">Siparis ve Teslimat Secenekleri</h3>
+   <p className="text-muted-foreground text-xs mt-0.5">Siparis modlari, teslimat ucreti ve minimum siparis ayarlari</p>
+  </div>
+ </div>
  {isEditing ? (
  <div className="space-y-4">
  <label className="flex items-center gap-3 cursor-pointer">
@@ -2498,10 +2552,18 @@ export default function KermesDetailPage() {
  )}
  </div>
 
- {/* Yuvarlama ile Destek */}
+ {/* Yuvarlama ile Destek - Tab: genel ayarlar */}
+ </>
+ )}
+
+ {bilgiSubTab === 'genel' && (
+ <>
  <div className="bg-card rounded-xl p-6">
- <h3 className="text-foreground font-bold mb-1">Yuvarlama ile Destek</h3>
- <p className="text-muted-foreground text-xs mb-4">Aktifse, checkout'ta kullaniciya siparis tutamini yuvarlamasina ve farki bagis olarak gondermesine imkan tanirsaniz.</p>
+ <div className="flex items-center gap-3 mb-1">
+  <div className="w-9 h-9 rounded-lg bg-green-600/20 flex items-center justify-center text-lg">🔄</div>
+  <h3 className="text-foreground font-bold">Yuvarlama ile Destek</h3>
+ </div>
+ <p className="text-muted-foreground text-xs mb-4 ml-12">Aktifse, checkout'ta kullaniciya siparis tutamini yuvarlamasina ve farki bagis olarak gondermesine imkan tanirsaniz.</p>
  {isEditing ? (
  <div className="space-y-4">
  <label className="flex items-center gap-3 cursor-pointer">
@@ -2576,8 +2638,11 @@ export default function KermesDetailPage() {
    </span>
   )}
  </div>
+ </>
+ )}
 
- {/* Park Imkanlari Card */}
+ {/* Park Imkanlari Card - Tab: imkanlar */}
+ {bilgiSubTab === 'imkanlar' && (
  <div className="bg-card rounded-xl p-6">
  <h3 className="text-foreground font-bold mb-4">{t('park_i_mkanlari')}</h3>
  {isEditing ? (
@@ -2838,6 +2903,7 @@ export default function KermesDetailPage() {
  </div>
  )}
  </div>
+ )}
  </div>
  )}
 
