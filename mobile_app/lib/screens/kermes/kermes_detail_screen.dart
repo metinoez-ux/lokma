@@ -46,7 +46,8 @@ class KermesDetailScreen extends ConsumerStatefulWidget {
 
 class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   static const Color lokmaPink = Color(0xFFEA184A);
-WeatherForecast? _weatherForecast;
+  WeatherForecast? _weatherForecast;
+  CurrentWeather? _currentWeather;
   bool _isLoadingWeather = true;
   List<KermesFeature> _globalFeatures = [];
   Map<String, KermesBadge> _activeBadges = {};
@@ -161,18 +162,20 @@ Future<void> _loadBadges() async {
 
   Future<void> _fetchLiveWeather() async {
     try {
-      final forecast = await WeatherService.getForecast(
-        lat: _currentEvent.latitude,
-        lon: _currentEvent.longitude,
-      );
+      // Tahmin ve anlık hava durumunu paralel cek
+      final results = await Future.wait([
+        WeatherService.getForecast(lat: _currentEvent.latitude, lon: _currentEvent.longitude),
+        WeatherService.getCurrentWeather(lat: _currentEvent.latitude, lon: _currentEvent.longitude),
+      ]);
+      final forecast = results[0] as WeatherForecast?;
+      final current = results[1] as CurrentWeather?;
 
-      if (mounted && forecast != null) {
+      if (mounted) {
         setState(() {
           _weatherForecast = forecast;
+          _currentWeather = current;
           _isLoadingWeather = false;
         });
-      } else if (mounted) {
-        setState(() => _isLoadingWeather = false);
       }
     } catch (e) {
       if (mounted) {
@@ -2438,14 +2441,48 @@ Widget _buildHeroSection(BuildContext context) {
           // HEADER
           Row(
             children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [Colors.amber, Colors.orange]),
-                  shape: BoxShape.circle,
+              // Anlık hava durumu varsa: dinamik ikon + derece; yoksa sabit güneş
+              if (_currentWeather != null)
+                Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    color: dividerBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      _weatherIcon(_currentWeather!.icon, size: 28),
+                      Positioned(
+                        bottom: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: dividerBg,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${_currentWeather!.temperature.round()}°',
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  width: 40, height: 40,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Colors.amber, Colors.orange]),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 20),
                 ),
-                child: const Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 20),
-              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
