@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as Math;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -237,124 +238,324 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     }
   }
 
-  /// Acil park anonsu g\u00f6nder
+  /// Acil park anonsu gonder - Admin portaldaki gibi form
   Future<void> _sendEmergencyAnnouncement() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final controller = TextEditingController();
-    
-    final result = await showDialog<String>(
+    String plate = '';
+    String color = '';
+    String brand = '';
+    String? imageUrl;
+    bool isSending = false;
+
+    final colorOptions = ['Siyah', 'Beyaz', 'Gri', 'Gumus', 'Mavi', 'Kirmizi', 'Yesil'];
+    final brandOptions = ['VW', 'BMW', 'Mercedes', 'Audi', 'Opel', 'Ford', 'Toyota', 'Renault'];
+
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: _surfaceDark(isDark),
-        title: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.campaign, color: Colors.red, size: 24),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx2).viewInsets.bottom),
+          child: Container(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx2).size.height * 0.85),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Acil Park Anonsu',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Bu mesaj kermesteki tüm kullanıcılara push bildirim olarak gönderilecek.',
-              style: TextStyle(color: Colors.grey[400], fontSize: 13),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              maxLines: 3,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: 'Örn: AB-123 plakalı araç acil çekilmeli!',
-                hintStyle: TextStyle(color: Colors.grey[600]),
-                filled: true,
-                fillColor: _cardBg(isDark),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(tr('İptal'), style: TextStyle(color: Colors.grey[400])),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                Navigator.pop(context, controller.text.trim());
-              }
-            },
-            icon: const Icon(Icons.send, size: 18),
-            label: Text(tr('common.send')),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-    
-    if (result != null && result.isNotEmpty) {
-      await _sendPushNotification(result);
-    }
-  }
-  
-  /// Push notification gönder (Firestore'a kaydet - Cloud Function tetikleyecek)
-  Future<void> _sendPushNotification(String message) async {
-    try {
-      await FirebaseFirestore.instance.collection('kermes_announcements').add({
-        'kermesId': widget.event.id,
-        'kermesTitle': widget.event.title,
-        'message': message,
-        'type': 'parking_emergency',
-        'createdAt': FieldValue.serverTimestamp(),
-        'createdBy': FirebaseAuth.instance.currentUser?.uid,
-        'status': 'pending',
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.onSurface),
-                const SizedBox(width: 12),
-                Text(tr('kermes.emergency_announcement_sent')),
+                // Drag handle
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.grey[500], borderRadius: BorderRadius.circular(2)),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(isDark ? 0.2 : 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.directions_car, color: Colors.red, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Acil Arac Anonsu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(ctx2).colorScheme.onSurface)),
+                            Text(widget.event.title, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx2),
+                        child: Icon(Icons.close, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(color: isDark ? Colors.grey[800] : Colors.grey[200]),
+                // Form
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 12),
+                        // Plaka
+                        Text('Plaka No *', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(ctx2).colorScheme.onSurface)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          textCapitalization: TextCapitalization.characters,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(ctx2).colorScheme.onSurface, letterSpacing: 2),
+                          decoration: InputDecoration(
+                            hintText: 'HS QT 1034',
+                            hintStyle: TextStyle(color: Colors.grey[600]),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF5F5F7),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          ),
+                          onChanged: (v) => plate = v,
+                        ),
+                        const SizedBox(height: 16),
+                        // Renk chips
+                        Text('Araba Rengi', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(ctx2).colorScheme.onSurface)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8, runSpacing: 8,
+                          children: colorOptions.map((c) => GestureDetector(
+                            onTap: () { HapticFeedback.selectionClick(); setSheet(() => color = color == c ? '' : c); },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: color == c ? Colors.red : (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF0F0F2)),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(c, style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600,
+                                color: color == c ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                              )),
+                            ),
+                          )).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        // Marka chips
+                        Text('Araba Markasi', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(ctx2).colorScheme.onSurface)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8, runSpacing: 8,
+                          children: brandOptions.map((b) => GestureDetector(
+                            onTap: () { HapticFeedback.selectionClick(); setSheet(() => brand = brand == b ? '' : b); },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: brand == b ? Colors.red : (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF0F0F2)),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(b, style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600,
+                                color: brand == b ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                              )),
+                            ),
+                          )).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        // Foto ekleme
+                        Text('Arac Fotografi (Opsiyonel)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(ctx2).colorScheme.onSurface)),
+                        const SizedBox(height: 8),
+                        if (imageUrl != null && imageUrl!.isNotEmpty)
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(imageUrl!, height: 150, width: double.infinity, fit: BoxFit.cover),
+                              ),
+                              Positioned(
+                                top: 8, right: 8,
+                                child: GestureDetector(
+                                  onTap: () => setSheet(() => imageUrl = null),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          GestureDetector(
+                            onTap: () async {
+                              final picker = ImagePicker();
+                              final picked = await picker.pickImage(source: ImageSource.camera, maxWidth: 1200, imageQuality: 80);
+                              if (picked == null) return;
+                              setSheet(() {}); // loading indicator
+                              try {
+                                final file = File(picked.path);
+                                final ref = FirebaseStorage.instance.ref().child('kermes_parking/${widget.event.id}/${DateTime.now().millisecondsSinceEpoch}.jpg');
+                                await ref.putFile(file);
+                                final url = await ref.getDownloadURL();
+                                setSheet(() => imageUrl = url);
+                              } catch (e) {
+                                debugPrint('Foto yukleme hatasi: $e');
+                              }
+                            },
+                            child: Container(
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF5F5F7),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[300]!, style: BorderStyle.solid),
+                              ),
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.camera_alt_rounded, color: Colors.grey[500], size: 28),
+                                    const SizedBox(height: 4),
+                                    Text('Foto Cek', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        // Onizleme
+                        if (plate.trim().isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[200]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.preview, size: 16, color: Colors.orange[700]),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'ACIL PARK ANONSU: ${color.isNotEmpty ? "$color " : ""}${brand.isNotEmpty ? "$brand " : ""}(${plate.trim().toUpperCase()}) plakali arac sahibi, lutfen aracinizi acilen cekiniz!',
+                                    style: TextStyle(fontSize: 12, color: isDark ? Colors.orange[300] : Colors.orange[900]),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+                        // Gonder butonu
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: plate.trim().isEmpty || isSending ? null : () async {
+                              setSheet(() => isSending = true);
+                              final success = await _sendParkingAnnouncementViaApi(
+                                plate: plate.trim().toUpperCase(),
+                                color: color,
+                                brand: brand,
+                                vehicleImageUrl: imageUrl,
+                              );
+                              setSheet(() => isSending = false);
+                              if (success && mounted) {
+                                Navigator.pop(ctx2);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(children: [
+                                      const Icon(Icons.check_circle, color: Colors.white),
+                                      const SizedBox(width: 12),
+                                      const Text('Acil arac anonsu gonderildi!'),
+                                    ]),
+                                    backgroundColor: Colors.green,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                );
+                              }
+                            },
+                            icon: isSending
+                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Icon(Icons.campaign, size: 20),
+                            label: Text(isSending ? 'Gonderiliyor...' : 'Acil Anons Gonder', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: Colors.red.withOpacity(0.4),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-        );
+        ),
+      ),
+    );
+  }
+
+  /// API uzerinden park anonsu gonder
+  Future<bool> _sendParkingAnnouncementViaApi({
+    required String plate,
+    required String color,
+    required String brand,
+    String? vehicleImageUrl,
+  }) async {
+    try {
+      String vehicleInfo = '';
+      if (color.isNotEmpty) vehicleInfo += '$color ';
+      if (brand.isNotEmpty) vehicleInfo += '$brand ';
+      vehicleInfo += '($plate)';
+      final message = 'ACIL PARK ANONSU: $vehicleInfo plakali arac sahibi, lutfen aracinizi acilen cekiniz!';
+
+      final uri = Uri.parse('https://lokma.shop/api/notifications/kermes-parking-announcement');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'kermesId': widget.event.id,
+          'kermesTitle': widget.event.title,
+          'message': message,
+          'vehiclePlate': plate,
+          'vehicleColor': color,
+          'vehicleBrand': brand,
+          'vehicleImageUrl': vehicleImageUrl,
+          'targetRadiusKm': 1,
+          'kermesLat': _kermesLat,
+          'kermesLng': _kermesLng,
+          'targetGroups': {'favorites': true, 'staff': true, 'nearby': true},
+        }),
+      );
+
+      debugPrint('[MOBILE-PARKING-PUSH] Response: ${response.statusCode} - ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
       }
+      return false;
     } catch (e) {
+      debugPrint('[MOBILE-PARKING-PUSH] Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr('common.error_e')),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Gonderilemedi: $e'), backgroundColor: Colors.red),
         );
       }
+      return false;
     }
   }
 

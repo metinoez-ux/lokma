@@ -154,10 +154,14 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
   Future<void> _trashGenericNotification(String docId) async {
     final user = _auth.currentUser;
-    if (user == null) return;
-    await FirebaseFirestore.instance
-        .collection('users').doc(user.uid).collection('notifications').doc(docId)
-        .update({'trashedAt': Timestamp.now()});
+    if (user == null || docId.isEmpty) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('users').doc(user.uid).collection('notifications').doc(docId)
+          .update({'trashedAt': Timestamp.now()});
+    } catch (e) {
+      debugPrint('Error trashing notification: $e');
+    }
   }
 
   Future<void> _undoTrashOrderGroup(_OrderGroup group) async {
@@ -252,6 +256,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     final vehicleColor = data['vehicleColor'] as String? ?? '';
     final vehicleBrand = data['vehicleBrand'] as String? ?? '';
     final createdAt = data['createdAt'] as Timestamp?;
+    final kermesId = data['kermesId'] as String? ?? '';
     final kermesTitle = title.replaceAll(' - Acil Arac Anonsu', '').trim();
     final isParking = type == 'kermes_parking';
 
@@ -259,229 +264,164 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        maxChildSize: 0.95,
-        minChildSize: 0.5,
-        builder: (_, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              // Drag handle
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[500],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    // Header
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: isParking
-                                ? (isDark ? Colors.red[900]!.withOpacity(0.3) : Colors.red[50])
-                                : (isDark ? Colors.orange[900]!.withOpacity(0.3) : Colors.orange[50]),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isParking ? Icons.directions_car_rounded : Icons.local_offer_rounded,
-                            color: isParking
-                                ? (isDark ? Colors.red[300] : Colors.red[700])
-                                : (isDark ? Colors.orange[300] : Colors.orange[700]),
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isParking ? 'Acil Arac Anonsu' : 'Flash Sale',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(ctx).colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                kermesTitle,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (createdAt != null)
-                          Text(
-                            timeago.format(createdAt.toDate(), locale: context.locale.languageCode),
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                          ),
-                      ],
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.85),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(margin: const EdgeInsets.only(top: 12, bottom: 8), width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[500], borderRadius: BorderRadius.circular(2))),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  // 1) Message text - prominent, on top
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isParking
+                          ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
+                          : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: isParking ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!)),
                     ),
-                    const SizedBox(height: 20),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Icon(Icons.warning_amber_rounded, size: 18, color: isParking ? (isDark ? Colors.red[300] : Colors.red[700]) : (isDark ? Colors.orange[300] : Colors.orange[700])),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(body, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.4, color: Theme.of(ctx).colorScheme.onSurface))),
+                    ]),
+                  ),
+                  const SizedBox(height: 10),
 
-                    // Image (full width, large)
-                    if (imageUrl != null && imageUrl.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const SizedBox(),
-                          loadingBuilder: (_, child, progress) {
-                            if (progress == null) return child;
-                            return Container(
-                              height: 200,
-                              alignment: Alignment.center,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    if (imageUrl != null && imageUrl.isNotEmpty)
-                      const SizedBox(height: 20),
-
-                    // Vehicle info card (parking only)
-                    if (isParking && vehiclePlate.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF8F8FA),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+                  // 2) Vehicle info - German license plate style
+                  if (isParking && vehiclePlate.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: IntrinsicHeight(
+                        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        // German plate
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFF1A1A1A), width: 2.5),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            // Plate number - prominent
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            // EU blue strip
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                                  width: 2,
+                              width: 24,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF003399),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(3),
+                                  bottomLeft: Radius.circular(3),
                                 ),
                               ),
-                              child: Text(
-                                vehiclePlate.toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 3,
-                                  color: Theme.of(ctx).colorScheme.onSurface,
-                                  fontFamily: 'monospace',
+                              child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+                                Text('*', style: TextStyle(color: Colors.yellow[600], fontSize: 8, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 1),
+                                const Text('D', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900)),
+                              ]),
+                            ),
+                            // Plate text
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              child: Center(
+                                child: Text(
+                                  vehiclePlate.toUpperCase(),
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xFF1A1A1A), fontFamily: 'monospace'),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 14),
-                            // Color & Brand row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (vehicleColor.isNotEmpty) ...[
-                                  Icon(Icons.palette_rounded, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    vehicleColor,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(ctx).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                                if (vehicleColor.isNotEmpty && vehicleBrand.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                                    child: Text('|', style: TextStyle(color: Colors.grey[500], fontSize: 16)),
-                                  ),
-                                if (vehicleBrand.isNotEmpty) ...[
-                                  Icon(Icons.directions_car_filled_rounded, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    vehicleBrand,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(ctx).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
+                          ]),
                         ),
-                      ),
-                    if (isParking && vehiclePlate.isNotEmpty)
-                      const SizedBox(height: 16),
-
-                    // Message body
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isParking
-                            ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
-                            : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isParking
-                              ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!)
-                              : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            size: 20,
-                            color: isParking
-                                ? (isDark ? Colors.red[300] : Colors.red[700])
-                                : (isDark ? Colors.orange[300] : Colors.orange[700]),
-                          ),
+                        if (vehicleColor.isNotEmpty || vehicleBrand.isNotEmpty) ...[
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text(
-                              body,
-                              style: TextStyle(
-                                fontSize: 14,
-                                height: 1.5,
-                                color: Theme.of(ctx).colorScheme.onSurface,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFF1A1A1A), width: 2.5),
+                              ),
+                              child: Center(
+                                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                                  if (vehicleColor.isNotEmpty)
+                                    Text(vehicleColor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A))),
+                                  if (vehicleBrand.isNotEmpty) ...[
+                                    if (vehicleColor.isNotEmpty) const SizedBox(height: 1),
+                                    Text(vehicleBrand, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A))),
+                                  ],
+                                ]),
                               ),
                             ),
                           ),
                         ],
+                      ]),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 10),
                   ],
-                ),
+
+                  // 3) Image - FULL, no crop
+                  if (imageUrl != null && imageUrl.isNotEmpty) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 80,
+                          decoration: BoxDecoration(color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF0F0F2), borderRadius: BorderRadius.circular(14)),
+                          child: Center(child: Icon(Icons.broken_image_rounded, color: Colors.grey[500], size: 32)),
+                        ),
+                        loadingBuilder: (_, child, progress) {
+                          if (progress == null) return child;
+                          return Container(height: 120, alignment: Alignment.center, child: CircularProgressIndicator(strokeWidth: 2, color: isDark ? Colors.grey[400] : Colors.grey[600]));
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // 4) Push delivery stats
+                  if (isParking && kermesId.isNotEmpty && kermesId.length > 3)
+                    FutureBuilder<QuerySnapshot?>(
+                      future: FirebaseFirestore.instance.collection('kermesEvents').doc(kermesId).collection('notificationHistory')
+                          .where('vehiclePlate', isEqualTo: vehiclePlate.isNotEmpty ? vehiclePlate : null)
+                          .limit(1).get()
+                          .then<QuerySnapshot?>((v) => v)
+                          .catchError((_) => null),
+                      builder: (_, snap) {
+                        if (snap.hasError || !snap.hasData || snap.data == null || snap.data!.docs.isEmpty) return const SizedBox();
+                        final h = snap.data!.docs.first.data() as Map<String, dynamic>;
+                        final sent = h['sentCount'] as int? ?? 0;
+                        if (sent == 0) return const SizedBox();
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.green[900]!.withOpacity(0.15) : Colors.green[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? Colors.green[800]!.withOpacity(0.3) : Colors.green[100]!),
+                          ),
+                          child: Row(children: [
+                            Icon(Icons.send_rounded, size: 16, color: isDark ? Colors.green[300] : Colors.green[700]),
+                            const SizedBox(width: 8),
+                            Text('Push bildirim gonderildi: $sent kisi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.green[300] : Colors.green[800])),
+                          ]),
+                        );
+                      },
+                    ),
+                  const SizedBox(height: 16),
+                ]),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1261,45 +1201,46 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         child: card,
                       );
                     }
-                    return GestureDetector(
-                      onTap: () {
-                        final type = data['type'] as String?;
-                        if (type == 'kermes_flash_sale' || type == 'kermes_parking') {
-                          _showNotificationDetailSheet(context, data);
+                    return _buildDismissible(
+                      key: Key('generic_$docId'),
+                      isDark: isDark,
+                      applySwipeHint: isHintTarget,
+                      swipeHintOffset: _swipeHintOffset,
+                      onDismissed: () async {
+                        await _trashGenericNotification(docId);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context)
+                            ..clearSnackBars()
+                            ..showSnackBar(
+                            SnackBar(
+                              content: Text('notifications.notification_trashed'.tr()),
+                              duration: const Duration(seconds: 3),
+                              showCloseIcon: true,
+                              action: SnackBarAction(
+                                label: 'notifications.undo'.tr(),
+                                textColor: const Color(0xFFEA184A),
+                                onPressed: () => _undoTrashGeneric(docId),
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
                         }
                       },
-                      onLongPress: () {
-                        HapticFeedback.mediumImpact();
-                        setState(() {
-                          _isEditMode = true;
-                          _selectedIds.add(docId);
-                        });
-                      },
-                      child: _buildDismissible(
-                        key: Key('generic_$docId'),
-                        isDark: isDark,
-                        applySwipeHint: isHintTarget,
-                        swipeHintOffset: _swipeHintOffset,
-                        onDismissed: () async {
-                          await _trashGenericNotification(docId);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context)
-                              ..clearSnackBars()
-                              ..showSnackBar(
-                              SnackBar(
-                                content: Text('notifications.notification_trashed'.tr()),
-                                duration: const Duration(seconds: 3),
-                                showCloseIcon: true,
-                                action: SnackBarAction(
-                                  label: 'notifications.undo'.tr(),
-                                  textColor: const Color(0xFFEA184A),
-                                  onPressed: () => _undoTrashGeneric(docId),
-                                ),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                            );
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          final type = data['type'] as String?;
+                          if (type == 'kermes_flash_sale' || type == 'kermes_parking') {
+                            _showNotificationDetailSheet(context, data);
                           }
+                        },
+                        onLongPress: () {
+                          HapticFeedback.mediumImpact();
+                          setState(() {
+                            _isEditMode = true;
+                            _selectedIds.add(docId);
+                          });
                         },
                         child: card,
                       ),
@@ -1309,7 +1250,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
               );
                         },
                       ),
-              // ── Floating bottom bar for edit mode ──
+              // -- Floating bottom bar for edit mode --
               if (_isEditMode && _selectedIds.isNotEmpty)
                 Positioned(
                   left: 16, right: 16, bottom: 16,
@@ -1353,7 +1294,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                 ),
             ],
           ),
-            ),
+              ),
             ],
           );
         },
