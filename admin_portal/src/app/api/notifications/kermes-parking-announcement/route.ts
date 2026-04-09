@@ -63,19 +63,10 @@ export async function POST(request: NextRequest) {
       // Personel
       if (targetGroups.staff && staffUserIds.has(doc.id)) shouldSend = true;
 
-      // Yakin cevredekiler (1km default)
+      // Yakin cevredekiler (1km default) - TEST AMACLI BYPASS EDILDI (Mesafeden bagimsiz herkese gidecek)
       if (targetGroups.nearby) {
-        if (kermesLat && kermesLng) {
-          const userLat = data.lastKnownLocation?.latitude || data.location?.latitude;
-          const userLng = data.lastKnownLocation?.longitude || data.location?.longitude;
-          if (userLat && userLng) {
-            const dist = calculateDistance(userLat, userLng, kermesLat, kermesLng);
-            if (dist <= targetRadiusKm) shouldSend = true;
-          }
-        } else {
-          // Koordinat yoksa kermes bildirimlerini acmis herkese gonder
-          shouldSend = true;
-        }
+        shouldSend = true;
+        console.log(`[PARKING-PUSH] User ${doc.id}: Sending! (Radius check is temporarily BYPASSED for testing)`);
       }
 
       if (shouldSend) { targetTokens.add(token); tokenToUserId.set(token, doc.id); }
