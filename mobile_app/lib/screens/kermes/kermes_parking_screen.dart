@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:lokma_app/config/app_secrets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
@@ -1407,8 +1408,8 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               if (info.lat != null && info.lng != null)
                 IconButton(
                   onPressed: () => _launchStreetView(info.lat!, info.lng!),
-                  tooltip: 'Street View',
-                  icon: const FaIcon(FontAwesomeIcons.binoculars, color: Color(0xFFFFA000), size: 20),
+                  tooltip: 'Street View / 360',
+                  icon: Icon(Icons.view_in_ar_rounded, color: Color(0xFFFFA000), size: 24),
                 ),
               // Adresi kopyala
               IconButton(
@@ -1572,14 +1573,23 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     }
   }
   
-  /// Gelişmiş park ekleme dialog'u - GPS, Google Places ve resim ekleme özelliği ile
-  Future<void> _showAddParkingDialogFull() async {
+  /// Gelişmiş park ekleme ve düzenleme dialog'u - GPS, Google Places ve resim ekleme özelliği ile
+  Future<void> _showAddParkingDialogFull({KermesParkingInfo? existingParking, int? editIndex}) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final streetController = TextEditingController();
-    final cityController = TextEditingController();
-    final postalCodeController = TextEditingController();
-    final noteController = TextEditingController();
+    final isEdit = existingParking != null;
+    final streetController = TextEditingController(text: existingParking?.street ?? '');
+    final cityController = TextEditingController(text: existingParking?.city ?? '');
+    final postalCodeController = TextEditingController(text: existingParking?.postalCode ?? '');
+    final noteController = TextEditingController(text: existingParking?.note ?? '');
     final addressSearchController = TextEditingController();
+    
+    // Varolan online resimleri yükle
+    List<String> existingImages = List.from(existingParking?.images ?? []);
+    if (existingImages.isEmpty && existingParking?.imageUrl != null) {
+      existingImages.add(existingParking!.imageUrl!);
+    }
+    List<String> imagesToDelete = [];
+    
     List<File> selectedImages = [];
     bool isUploading = false;
     bool isGettingLocation = false;
@@ -1632,7 +1642,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     ),
                     Expanded(
                       child: Text(
-                        'Yeni Park Alanı',
+                        isEdit ? 'Park Alanını Düzenle' : 'Yeni Park Alanı',
                         style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
                       ),
@@ -1951,7 +1961,44 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         spacing: 12,
                         runSpacing: 12,
                         children: [
-                          // Mevcut seçili resimler
+                          // Mevcut (veritabanindaki) resimleri goster
+                          ...existingImages.asMap().entries.map((entry) => Stack(
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  image: DecorationImage(
+                                    image: CachedNetworkImageProvider(entry.value),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setModalState(() {
+                                      imagesToDelete.add(entry.value);
+                                      existingImages.removeAt(entry.key);
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface, size: 16),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )),
+                          // Yeni seçilen (lokal) resimler
                           ...selectedImages.asMap().entries.map((entry) => Stack(
                             children: [
                               Container(
@@ -1986,7 +2033,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                             ],
                           )),
                           // Resim ekleme butonu
-                          if (selectedImages.length < 3)
+                          if ((selectedImages.length + existingImages.length) < 3)
                             GestureDetector(
                               onTap: () async {
                                 final picker = ImagePicker();
@@ -2045,7 +2092,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         
                         try {
                           // Resimleri Firebase Storage'a yükle
-                          List<String> imageUrls = [];
+                          List<String> imageUrls = List.from(existingImages);
                           for (int i = 0; i < selectedImages.length; i++) {
                             final file = selectedImages[i];
                             final fileName = 'parking_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
@@ -2055,20 +2102,48 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                             imageUrls.add(url);
                           }
                           
-                          // Firestore'a kaydet
+                          // Firestore payload
                           final newParking = {
                             'street': streetController.text,
                             'city': cityController.text,
                             'postalCode': postalCodeController.text,
-                            'country': 'Deutschland',
+                            'country': existingParking?.country ?? 'Deutschland',
                             'note': noteController.text.isNotEmpty ? noteController.text : null,
-                            'images': imageUrls,
+                            'images': imageUrls, // Storage GC sonrası kalan resimler
                             if (selectedPlaceId != null) 'placeId': selectedPlaceId,
+                            if (isEdit && existingParking!.latitude != null) 'latitude': existingParking.latitude,
+                            if (isEdit && existingParking!.longitude != null) 'longitude': existingParking.longitude,
+                            if (isEdit && existingParking!.status != null) 'status': existingParking.status,
+                            if (isEdit && existingParking!.statusUpdatedAt != null) 'statusUpdatedAt': existingParking.statusUpdatedAt,
+                            if (isEdit && existingParking!.statusUpdatedBy != null) 'statusUpdatedBy': existingParking.statusUpdatedBy,
                           };
                           
-                          await FirebaseFirestore.instance.collection('kermes_events').doc(widget.event.id).update({
-                            'parkingLocations': FieldValue.arrayUnion([newParking]),
-                          });
+                          final docRef = FirebaseFirestore.instance.collection('kermes_events').doc(widget.event.id);
+                          
+                          if (isEdit) {
+                            final doc = await docRef.get();
+                            if (doc.exists) {
+                              final data = doc.data()!;
+                              final pList = List<Map<String, dynamic>>.from(
+                                (data['parkingLocations'] as List<dynamic>? ?? []).map((e) => Map<String, dynamic>.from(e as Map))
+                              );
+                              if (editIndex != null && editIndex < pList.length) {
+                                pList[editIndex] = newParking;
+                                await docRef.update({'parkingLocations': pList});
+                              }
+                            }
+                          } else {
+                            await docRef.update({
+                              'parkingLocations': FieldValue.arrayUnion([newParking]),
+                            });
+                          }
+
+                          // Storage Garbage Collector (Silinen resimleri kalıcı olarak imha et)
+                          for (String url in imagesToDelete) {
+                            try {
+                              await FirebaseStorage.instance.refFromURL(url).delete();
+                            } catch (_) {}
+                          }
                           
                           if (mounted) Navigator.pop(context, true);
                         } catch (e) {

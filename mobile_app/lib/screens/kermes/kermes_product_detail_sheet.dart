@@ -90,7 +90,8 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
     super.dispose();
   }
 
-  double get _totalPrice => item.price * _quantity;
+  double get _effectivePrice => item.isDiscounted ? item.discountPrice! : item.price;
+  double get _totalPrice => _effectivePrice * _quantity;
 
   String _buildNotePreview() {
     final hasRecipient = _recipientName?.trim().isNotEmpty ?? false;
@@ -595,15 +596,40 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                   ],
                   const SizedBox(height: 4),
 
-                  // Price
-                  Text(
-                    'ab ${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: textPrimary,
-                      fontWeight: FontWeight.w700,
+                  // Price (with discount support)
+                  if (item.isDiscounted) ...[
+                    Row(
+                      children: [
+                        Text(
+                          '${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: textSecondary,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: textSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${CurrencyUtils.getCurrencySymbol()}${item.discountPrice!.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ] else
+                    Text(
+                      'ab ${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
 
                   // Description
                   if (item.description != null) ...[

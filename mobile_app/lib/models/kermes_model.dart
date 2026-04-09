@@ -128,7 +128,8 @@ class KermesEvent {
   final bool hasDineIn; // Masa (Dine-in)
   
   // Yetkili Kişi
-  final String? contactName; // Admin Portal'dan gelen yetkili adı
+  final String? contactName; // Admin Portal'dan gelen yetkili adi
+  final String? contactPhone; // Admin Portal'dan gelen yetkili telefonu
   final String? headerImage; // Admin Portal'dan seçilen baslik gorseli
   
   // Sponsorlu Urun Reklam Altyapisi
@@ -216,6 +217,7 @@ class KermesEvent {
     this.hasTakeaway = true, // Eski kermesler için varsayılan Gel-Al açıktır
     this.hasDineIn = false,
     this.contactName,
+    this.contactPhone,
     this.headerImage,
     this.generalParkingNote,
     // Sponsorlu urunler
@@ -249,6 +251,7 @@ class KermesMenuItem {
   final dynamic nameData; // Raw localization map
   final String? secondaryName;  // 2. isim (örn: Almanca/Türkçe alternatif)
   final double price;
+  final double? discountPrice; // İndirimli Flash-Sale satış fiyatı
   final String? description; // Fallback or TR value
   final dynamic descriptionData; // Raw localization map
   final String? detailedDescription;  // Detaylı tarif
@@ -274,6 +277,9 @@ class KermesMenuItem {
   /// Bu urun multi-step combo menu mu? (ornegin: Tavuk Sis Menu = ana urun + yan urun + icecek secimi)
   bool get isComboMenu => optionGroups.isNotEmpty;
 
+  /// Ürün anlık olarak indirimde mi?
+  bool get isDiscounted => discountPrice != null && discountPrice! > 0 && discountPrice! < price;
+
   /// Stok takibi aktifse ve stok 0 ise tukenmis
   bool get isSoldOut => stockEnabled && (currentStock ?? 0) <= 0;
 
@@ -285,6 +291,7 @@ class KermesMenuItem {
     this.nameData,
     this.secondaryName,
     required this.price,
+    this.discountPrice,
     this.description,
     this.descriptionData,
     this.detailedDescription,
@@ -328,6 +335,7 @@ class KermesMenuItem {
       nameData: json['name'],
       secondaryName: _extractString(json['secondaryName'], isNullable: true),
       price: (json['price'] ?? 0.0).toDouble(),
+      discountPrice: json['discountPrice'] != null ? (json['discountPrice'] as num).toDouble() : null,
       description: _extractString(json['description'], isNullable: true),
       descriptionData: json['description'],
       detailedDescription: _extractString(json['detailedDescription'], isNullable: true),

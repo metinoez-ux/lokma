@@ -231,6 +231,7 @@ interface KermesProduct {
  secondaryName?: string; // 2. isim
  price: number;
  costPrice?: number; // Maliyet fiyatı
+ discountPrice?: number; // Akşam pazarı indirimli fiyatı
  category: string;
  description?: string;
  detailedDescription?: string; // Detaylı açıklama
@@ -480,6 +481,9 @@ export default function KermesDetailPage() {
 
  // Add product modal
  const [showAddModal, setShowAddModal] = useState(false);
+ const [showFlashSaleModal, setShowFlashSaleModal] = useState(false);
+ const [isSendingFlashSale, setIsSendingFlashSale] = useState(false);
+ const [flashSaleRadius, setFlashSaleRadius] = useState<number>(2);
  const [modalView, setModalView] = useState<'select' | 'catalog' | 'master' | 'custom'>('select');
  const [selectedCategory, setSelectedCategory] = useState('');
  const [searchQuery, setSearchQuery] = useState('');
@@ -513,6 +517,7 @@ export default function KermesDetailPage() {
  product: KermesProduct;
  price: number;
  costPrice: number;
+ discountPrice?: number;
  category: string;
  unit: string;
  secondaryName: string;
@@ -1169,9 +1174,10 @@ export default function KermesDetailPage() {
  hasPfandSystem: editForm.hasPfandSystem,
  pfandAmount: editForm.pfandAmount || 0,
  // KDV
+ pricingMode: editForm.pricingMode || 'brut',
  showKdv: editForm.showKdv,
  kdvRate: editForm.kdvRate || 7,
- pricesIncludeKdv: editForm.pricesIncludeKdv,
+ pricesIncludeKdv: editForm.pricingMode === 'brut',
  // Başlık görseli
  headerImage: editForm.headerImage || null,
  headerImageId: editForm.headerImageId || null,
@@ -1530,6 +1536,7 @@ export default function KermesDetailPage() {
  const updateData: any = {
  price: editProduct.price,
  costPrice: editProduct.costPrice || null,
+ discountPrice: editProduct.discountPrice || null,
  category: editProduct.category,
  unit: editProduct.unit || t('adet'),
  secondaryName: editProduct.secondaryName || null,
@@ -1761,6 +1768,48 @@ export default function KermesDetailPage() {
  };
 
  // Silme butonuna basinca modal ac
+ const handleSendFlashSale = async () => {
+   setIsSendingFlashSale(true);
+   try {
+     const discountedItems = products.filter(p => p.discountPrice && p.discountPrice! > 0 && !p.isSoldOut && p.isAvailable);
+     if (discountedItems.length === 0) {
+       toast.error(t('hata_olustu') || 'İndirimde ürün bulunmuyor.');
+       return;
+     }
+     
+     const response = await fetch('/api/notifications/kermes-flash-sale', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         kermesId,
+         kermesTitle: kermes.title,
+         targetRadiusKm: flashSaleRadius,
+         kermesLat: kermes.parkingInfo?.latitude || kermes.address?.location?.latitude,
+         kermesLng: kermes.parkingInfo?.longitude || kermes.address?.location?.longitude,
+         discountedItems: discountedItems.map(p => ({
+           id: p.id,
+           name: p.name,
+           price: p.price,
+           discountPrice: p.discountPrice,
+           image: p.imageUrls?.[0] || p.imageUrl || null
+         })),
+       }),
+     });
+     
+     const data = await response.json();
+     if (data.success) {
+       toast.success(`Bildirim başarıyla ${data.sentCount} kişiye gönderildi!`);
+       setShowFlashSaleModal(false);
+     } else {
+       toast.error(data.error || t('hata_olustu'));
+     }
+   } catch (error) {
+     toast.error(String(error));
+   } finally {
+     setIsSendingFlashSale(false);
+   }
+ };
+
  const handleDeleteProduct = (product: KermesProduct) => {
  setDeleteConfirm(product);
  };
@@ -2169,7 +2218,7 @@ export default function KermesDetailPage() {
  <>
  <button type="button" title="Duezenle" onClick={() => setEditingFeature({...f})}
  className="w-4 h-4 rounded-full bg-blue-600/80 hover:bg-blue-500 text-white flex items-center justify-center text-[9px] leading-none transition opacity-0 group-hover:opacity-100">&#9998;</button>
- <button type="button" title="Sil" onClick={() => { setEventFeatures(prev => prev.filter(ef => ef.id !== f.id)); setEditFeatures(prev => prev.filter(ef => ef !== f.id)); }}
+ <button type="button" title="Sil" onClick={async () => { setEventFeatures(prev => prev.filter(ef => ef.id !== f.id)); setEditFeatures(prev => prev.filter(ef => ef !== f.id)); try { const featRef = doc(db, 'settings', 'kermes_features'); const snap = await getDoc(featRef); if (snap.exists()) { const allFeats = (snap.data().features || []).map((feat: any) => feat.id === f.id ? { ...feat, isActive: false } : feat); await updateDoc(featRef, { features: allFeats }); } } catch(e) { console.error('Feature deactivate error:', e); } }}
  className="w-4 h-4 rounded-full bg-red-600/80 hover:bg-red-500 text-white flex items-center justify-center text-[9px] leading-none transition opacity-0 group-hover:opacity-100">x</button>
  </>
  )}
@@ -2720,7 +2769,7 @@ export default function KermesDetailPage() {
  <>
  <button type="button" title="Duzenle" onClick={() => setEditingFeature({...f})}
  className="w-4 h-4 rounded-full bg-blue-600/80 hover:bg-blue-500 text-white flex items-center justify-center text-[9px] leading-none transition opacity-0 group-hover:opacity-100">&#9998;</button>
- <button type="button" title="Sil" onClick={() => { setEventFeatures(prev => prev.filter(ef => ef.id !== f.id)); setEditFeatures(prev => prev.filter(ef => ef !== f.id)); }}
+ <button type="button" title="Sil" onClick={async () => { setEventFeatures(prev => prev.filter(ef => ef.id !== f.id)); setEditFeatures(prev => prev.filter(ef => ef !== f.id)); try { const featRef = doc(db, 'settings', 'kermes_features'); const snap = await getDoc(featRef); if (snap.exists()) { const allFeats = (snap.data().features || []).map((feat: any) => feat.id === f.id ? { ...feat, isActive: false } : feat); await updateDoc(featRef, { features: allFeats }); } } catch(e) { console.error('Feature deactivate error:', e); } }}
  className="w-4 h-4 rounded-full bg-red-600/80 hover:bg-red-500 text-white flex items-center justify-center text-[9px] leading-none transition opacity-0 group-hover:opacity-100">x</button>
  </>
  )}
@@ -4098,7 +4147,7 @@ export default function KermesDetailPage() {
   </div>
   )}
 
-   {/* Tab Content - Siparisler */}
+{/* Tab Content - Siparisler */}
    {activeTab === 'siparisler' && (
      <KermesSiparislerTab kermesId={kermesId} />
    )}
@@ -4114,6 +4163,13 @@ export default function KermesDetailPage() {
  className="px-3 py-2 bg-amber-600/20 text-amber-800 dark:text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-600/40 flex items-center gap-1"
  title="Tum stok takipli urunlerin stogunu baslangic degerine sifirlar">
  <span className="material-symbols-outlined text-base">restart_alt</span> Gun Basla
+ </button>
+ )}
+ {products.some(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable) && (
+ <button onClick={() => setShowFlashSaleModal(true)}
+ className="px-3 py-2 bg-pink-600/20 text-pink-800 dark:text-pink-400 rounded-lg text-sm font-medium hover:bg-pink-600/40 flex items-center gap-1"
+ title="Indirimli urunleri push bildirimde paylas">
+ <span className="material-symbols-outlined text-base">campaign</span> {t('flash_sale_title') || 'Aksam Pazari'}
  </button>
  )}
  <button onClick={() => setShowCategoryModal(true)}
@@ -4179,6 +4235,7 @@ export default function KermesDetailPage() {
  product,
  price: product.price,
  costPrice: product.costPrice || 0,
+ discountPrice: product.discountPrice || 0,
  category: product.category,
  unit: product.unit || t('adet'),
  secondaryName: product.secondaryName || '',
@@ -4626,12 +4683,20 @@ export default function KermesDetailPage() {
  {/* Fiyat Bilgileri */}
  <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-xl p-4">
  <h3 className="text-foreground text-sm font-medium mb-3">💰 Fiyat Bilgileri</h3>
- <div className="grid grid-cols-2 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <div>
  <label className="text-muted-foreground text-xs block mb-1">{t('satis_fiyati')}</label>
  <input type="number" step="0.50" min="0" value={editProduct.price || ''}
  onChange={(e) => setEditProduct({ ...editProduct, price: parseFloat(e.target.value) || 0 })}
  className="w-full px-3 py-2 bg-background text-green-800 dark:text-green-400 text-xl font-bold rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-green-500/50" placeholder="0.00" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-xs block mb-1">
+ {t('indirimli_fiyat') || '⚡ İndirimli Fiyat (€)'}
+ </label>
+ <input type="number" step="0.50" min="0" value={editProduct.discountPrice || ''}
+ onChange={(e) => setEditProduct({ ...editProduct, discountPrice: parseFloat(e.target.value) || 0 })}
+ className="w-full px-3 py-2 bg-background text-pink-600 dark:text-pink-400 text-xl font-bold rounded-lg border border-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-500/50" placeholder="0.00" />
  </div>
  <div>
  <label className="text-muted-foreground text-xs block mb-1">{t('maliyet_fiyati')}</label>
@@ -5643,6 +5708,100 @@ export default function KermesDetailPage() {
  <button type="button" onClick={() => setEditingFeature(null)} className="flex-1 py-2 bg-muted/50 text-foreground rounded-lg text-sm hover:bg-muted transition">Iptal</button>
  <button type="button" onClick={() => { setEventFeatures(prev => prev.map(ef => ef.id === editingFeature.id ? editingFeature : ef)); setEditingFeature(null); }}
  className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">Kaydet</button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ 
+  {/* Flash Sale Push Notification Modal */}
+ {showFlashSaleModal && (
+ <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => !isSendingFlashSale && setShowFlashSaleModal(false)}>
+ <div className="bg-card rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+ 
+ {/* Header */}
+ <div className="p-4 border-b border-border bg-gradient-to-r from-pink-600/10 to-rose-600/10 dark:from-pink-900/20 dark:to-rose-900/20 flex items-center gap-3">
+ <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400">
+ <span className="material-symbols-outlined">campaign</span>
+ </div>
+ <div>
+ <h3 className="font-bold text-foreground">{t('flash_sale_title')}</h3>
+ <p className="text-xs text-muted-foreground">{kermes.title} - {t('flash_sale_desc')}</p>
+ </div>
+ <button onClick={() => setShowFlashSaleModal(false)} disabled={isSendingFlashSale} className="ml-auto text-muted-foreground hover:text-foreground">
+ <span className="material-symbols-outlined">close</span>
+ </button>
+ </div>
+ 
+ {/* Content */}
+ <div className="p-5 flex-1 overflow-y-auto">
+ <div className="bg-amber-50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-400 p-3 rounded-lg text-xs leading-relaxed mb-4 border border-amber-200 dark:border-amber-900/30 flex gap-2">
+ <span className="material-symbols-outlined text-base shrink-0">info</span>
+ <div>
+ {t('flash_sale_info')}
+ </div>
+ </div>
+
+ <div className="mb-5 bg-border/20 p-3 rounded-xl border border-border flex items-center justify-between">
+   <div className="flex flex-col">
+     <span className="text-sm font-bold flex items-center gap-1"><span className="material-symbols-outlined text-sm text-pink-600">my_location</span> {t('flash_sale_target_radius')}</span>
+     <span className="text-xs text-muted-foreground">{t('flash_sale_target_desc')}</span>
+   </div>
+   <select 
+     value={flashSaleRadius} 
+     onChange={(e) => setFlashSaleRadius(Number(e.target.value))}
+     className="px-4 py-2 bg-background border border-input rounded-lg text-sm font-bold shadow-sm focus:ring-2 focus:ring-pink-500/50"
+   >
+     <option value={1}>1 KM (Sadece Çok Yakın)</option>
+     <option value={2}>2 KM</option>
+     <option value={5}>5 KM</option>
+     <option value={10}>10 KM</option>
+     <option value={50}>50 KM (Tüm Şehir)</option>
+   </select>
+ </div>
+ 
+ <h4 className="font-medium text-sm text-foreground mb-2">{t('flash_sale_products')}</h4>
+ <div className="space-y-2 mb-4">
+ {products.filter(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable).map(product => (
+ <div key={product.id} className="flex justify-between items-center p-2 rounded-lg bg-background border border-border">
+ <span className="text-sm font-medium">{product.name}</span>
+ <div className="flex items-center gap-2">
+ <span className="text-xs text-muted-foreground line-through">{product.price.toFixed(2)}€</span>
+ <span className="text-sm font-bold text-pink-600 dark:text-pink-400">{product.discountPrice?.toFixed(2)}€</span>
+ </div>
+ </div>
+ ))}
+ </div>
+ 
+ <h4 className="font-medium text-sm text-foreground mb-2 mt-4">{t('flash_sale_preview')}</h4>
+ <div className="bg-background rounded-2xl p-4 shadow-sm border border-border mt-2">
+ <div className="flex gap-3">
+ <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center shrink-0">
+ <span className="material-symbols-outlined text-white text-sm">local_mall</span>
+ </div>
+ <div>
+ <h5 className="font-bold text-sm text-foreground mb-1">🌙 {kermes.title} - Akşam Pazarı Başladı!</h5>
+ <p className="text-xs text-muted-foreground leading-relaxed">
+ {(() => {
+ const topDiscount = products.filter(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable).sort((a,b) => ((b.price - b.discountPrice!)/b.price) - ((a.price - a.discountPrice!)/a.price))[0];
+ return topDiscount ? `🔥 Son fırsatlar! ${topDiscount.name} ${topDiscount.price.toFixed(2)}€ yerine sadece ${topDiscount.discountPrice?.toFixed(2)}€! ⏳ Tüm indirimler stoklarla sınırlıdır, tükenmeden yetişin! 🏃‍♂️` : 'İndirimli ürünlerimiz başladı, stoklar bitmeden yetişin!';
+ })()}
+ </p>
+ </div>
+ </div>
+ </div>
+ </div>
+ 
+ {/* Footer */}
+ <div className="p-4 border-t border-border flex gap-3 bg-muted/30">
+ <button onClick={() => setShowFlashSaleModal(false)} disabled={isSendingFlashSale} className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-background border border-input hover:bg-muted text-foreground transition">
+ {t('flash_sale_cancel')}
+ </button>
+ <button onClick={handleSendFlashSale} disabled={isSendingFlashSale} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-700 text-white transition disabled:opacity-50 flex items-center justify-center gap-2">
+ {isSendingFlashSale ? (
+ <>{t('flash_sale_sending')} <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span></>
+ ) : t('flash_sale_send')}
+ </button>
  </div>
  </div>
  </div>

@@ -168,7 +168,23 @@ Future<void> _loadBadges() async {
         WeatherService.getCurrentWeather(lat: _currentEvent.latitude, lon: _currentEvent.longitude),
       ]);
       final forecast = results[0] as WeatherForecast?;
-      final current = results[1] as CurrentWeather?;
+      CurrentWeather? current = results[1] as CurrentWeather?;
+
+      // Fallback: API limit asildiysa, forecast'ten anlik hava durumunu turet
+      if (current == null && forecast != null && forecast.hourlyForecasts.isNotEmpty) {
+        final now = DateTime.now();
+        final nearest = forecast.hourlyForecasts.reduce((a, b) =>
+          (a.dateTime.difference(now).abs() < b.dateTime.difference(now).abs()) ? a : b
+        );
+        current = CurrentWeather(
+          temperature: nearest.temperature,
+          feelsLike: nearest.feelsLike,
+          description: nearest.description,
+          icon: nearest.icon,
+          windSpeed: nearest.windSpeed,
+          humidity: 0,
+        );
+      }
 
       if (mounted) {
         setState(() {
@@ -493,7 +509,8 @@ void _onMenuScroll() {
             isMenuOnly: e.isMenuOnly,
             hasTakeaway: e.hasTakeaway,
             hasDineIn: e.hasDineIn,
-            contactName: e.contactName,
+            contactName: data['contactName']?.toString() ?? e.contactName,
+            contactPhone: data['contactPhone']?.toString() ?? e.contactPhone,
             headerImage: data['headerImage']?.toString() ?? e.headerImage,
             generalParkingNote: data['generalParkingNote']?.toString() ?? e.generalParkingNote,
             activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>?)?.map((x) => x.toString()).toList() ?? e.activeBadgeIds,
@@ -705,8 +722,7 @@ void _onMenuScroll() {
                    const SizedBox(width: 8),
                    Expanded(
                      child: Text(
-                       '$name
-$phone',
+                       '$name\n$phone',
                        style: TextStyle(
                          fontWeight: FontWeight.w600,
                          color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white : Colors.black87,
@@ -3229,6 +3245,8 @@ Widget _buildHeroSection(BuildContext context) {
                       cartQuantity: cartQuantity,
                       eventId: _currentEvent.id,
                       eventName: _currentEvent.city,
+                      isMenuOnly: _currentEvent.isMenuOnly,
+                      contactName: _currentEvent.contactName,
                       onAdd: () => _addToCart(item),
                       onRemove: () => _removeFromCart(item),
                     );
@@ -3313,15 +3331,40 @@ Widget _buildHeroSection(BuildContext context) {
                             ),
                           ),
                         const SizedBox(height: 2),
-                        // Price
-                        Text(
-                          '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                          style: TextStyle(
-                            color: isAvailable ? textColor : subtleTextColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
+                        // Price (with discount support)
+                        if (item.isDiscounted) ...[
+                          Row(
+                            children: [
+                              Text(
+                                '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
+                                style: TextStyle(
+                                  color: subtleTextColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: subtleTextColor,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${item.discountPrice!.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                        ] else
+                          Text(
+                            '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
+                            style: TextStyle(
+                              color: isAvailable ? textColor : subtleTextColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                       ],
                     ),
                   ),

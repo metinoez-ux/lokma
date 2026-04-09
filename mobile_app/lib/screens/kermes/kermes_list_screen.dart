@@ -495,6 +495,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               hasTakeaway: true, // Kermesler için her zaman Gel-Al açıktır
               hasDineIn: true, // Kermesler için her zaman Yerinde (Masa) açıktır
               contactName: contactName,
+              contactPhone: data['contactPhone']?.toString() ?? phoneNumber,
               headerImage: data['headerImage']?.toString(),
               openingTime: openingTime,
               closingTime: closingTime,

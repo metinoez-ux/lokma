@@ -1485,7 +1485,19 @@
     "abonelikBilgileri": "AbonelikBilgileri",
     "deneme": "Deneme",
     "durduruldu": "Durduruldu",
-    "anonim": "Anonim"
+    "anonim": "Anonim",
+    "indirimli_fiyat": "⚡ İndirimli Fiyat (€)",
+    "flash_sale_btn": "Akşam Pazarı Flash-Sale",
+    "flash_sale_title": "Akşam Pazarı Bildirimi (Flash Sale)",
+    "flash_sale_desc": "Müşterilere Push Gönderilecek",
+    "flash_sale_info": "Bildirim şu kişilere gidecektir: Bu kermesi favorisine alanlar, kampanya bildirimlerini açık tutanlar ve seçilen çaptaki alıcılar.",
+    "flash_sale_target_radius": "Hedef Mesafe Çapı",
+    "flash_sale_target_desc": "Kermes etrafındaki kaç km mesafeye gitsin?",
+    "flash_sale_products": "Gönderilecek İndirimli Ürünler",
+    "flash_sale_preview": "Telefonlarda Çıkacak Önizleme:",
+    "flash_sale_cancel": "İptal",
+    "flash_sale_send": "Şimdi Gönder",
+    "flash_sale_sending": "Gönderiliyor"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",
@@ -4344,7 +4356,12 @@
     "feature_vegetarian": "Vegetarien",
     "feature_halal": "Halal",
     "feature_free_entry": "Entree Gratuite",
-    "feature_wifi": "WiFi"
+    "feature_wifi": "WiFi",
+    "fiyat_ayarlari": "Parametres de prix",
+    "para_birimi": "Devise",
+    "fiyat_gosterim_modu": "Mode affichage prix",
+    "urun_gorseli": "Image du produit",
+    "indirimli_fiyat": "Prix reduit"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrateur d'entreprise",
