@@ -478,14 +478,14 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: _parkRed.withOpacity(0.12),
+                                color: const Color(0xFF2563EB).withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Center(
                                 child: Text(
                                   '${i + 1}',
                                   style: const TextStyle(
-                                    color: _parkRed,
+                                    color: Color(0xFF2563EB),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
