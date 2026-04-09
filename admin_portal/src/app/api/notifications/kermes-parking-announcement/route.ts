@@ -63,10 +63,20 @@ export async function POST(request: NextRequest) {
       // Personel
       if (targetGroups.staff && staffUserIds.has(doc.id)) shouldSend = true;
 
-      // Yakin cevredekiler (1km default) - TEST AMACLI BYPASS EDILDI (Mesafeden bagimsiz herkese gidecek)
-      if (targetGroups.nearby) {
-        shouldSend = true;
-        console.log(`[PARKING-PUSH] User ${doc.id}: Sending! (Radius check is temporarily BYPASSED for testing)`);
+      // Yakin cevredekiler (1km default)
+      if (targetGroups.nearby && data.lastKnownLocation) {
+        try {
+          const uLat = data.lastKnownLocation.latitude;
+          const uLng = data.lastKnownLocation.longitude;
+          if (uLat && uLng && kermesLat && kermesLng) {
+            const distance = calculateDistance(kermesLat, kermesLng, uLat, uLng);
+            if (distance <= targetRadiusKm) {
+              shouldSend = true;
+            }
+          }
+        } catch (e) {
+          console.warn('Distance calc error for user', doc.id, e);
+        }
       }
 
       if (shouldSend) { targetTokens.add(token); tokenToUserId.set(token, doc.id); }
