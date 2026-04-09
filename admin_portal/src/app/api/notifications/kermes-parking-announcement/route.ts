@@ -57,17 +57,21 @@ export async function POST(request: NextRequest) {
 
       // Favoriler
       if (targetGroups.favorites) {
-        if ((data.favoriteKermes || []).includes(kermesId) || (data.favorites || []).includes(kermesId)) shouldSend = true;
+        if ((data.favoriteKermes || []).includes(kermesId) || (data.favorites || []).includes(kermesId)) {
+          shouldSend = true;
+        }
       }
 
       // Personel
-      if (targetGroups.staff && staffUserIds.has(doc.id)) shouldSend = true;
+      if (targetGroups.staff && staffUserIds.has(doc.id)) {
+        shouldSend = true;
+      }
 
-      // Yakin cevredekiler (1km default)
-      if (targetGroups.nearby && data.lastKnownLocation) {
+      // Yakin cevredekiler (1km default) - Sadece homeLatitude varsa test et
+      if (targetGroups.nearby && !shouldSend) {
         try {
-          const uLat = data.lastKnownLocation.latitude;
-          const uLng = data.lastKnownLocation.longitude;
+          const uLat = data.homeLatitude;
+          const uLng = data.homeLongitude;
           if (uLat && uLng && kermesLat && kermesLng) {
             const distance = calculateDistance(kermesLat, kermesLng, uLat, uLng);
             if (distance <= targetRadiusKm) {
