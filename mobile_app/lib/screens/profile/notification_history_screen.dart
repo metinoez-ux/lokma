@@ -1018,7 +1018,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                     return GestureDetector(
                       onTap: () {
                         final type = data['type'] as String?;
-                        if (type == 'kermes_flash_sale') {
+                        if (type == 'kermes_flash_sale' || type == 'kermes_parking') {
                           final kermesId = data['kermesId'] as String?;
                           if (kermesId != null && kermesId.isNotEmpty) {
                             context.push('/kermesler/$kermesId');
