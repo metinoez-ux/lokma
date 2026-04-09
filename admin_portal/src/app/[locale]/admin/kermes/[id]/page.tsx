@@ -320,7 +320,7 @@ export default function KermesDetailPage() {
  minCartForFreeDelivery: 0,
  minOrderAmount: 0, // Minimum sipariş tutarı
  // Park imkanları
- parkingLocations: [] as { street: string; city: string; postalCode: string; country: string; note: string; images: string[] }[],
+ parkingLocations: [] as { street: string; city: string; postalCode: string; country: string; note: string; images: string[]; status?: string | null; lat?: number; lng?: number }[],
  generalParkingNote: '',
  // Pfand/Depozito sistemi
  hasPfandSystem: false,
@@ -483,7 +483,7 @@ export default function KermesDetailPage() {
  const [showStockImageModal, setShowStockImageModal] = useState(false);
 
  // Ürün ekleme öncesi düzenleme modalı
- const [editingCustomRole, setEditingCustomRole] = useState<{ id: string; name: string; icon: string; } | null>(null);
+ const [editingCustomRole, setEditingCustomRole] = useState<{ id: string; name: string; icon: string; color: string; } | null>(null);
  const [isUploadingRoleIcon, setIsUploadingRoleIcon] = useState(false);
 
  const [editBeforeAdd, setEditBeforeAdd] = useState<{
@@ -558,8 +558,8 @@ export default function KermesDetailPage() {
  descriptionSecondary: data.descriptionSecondary || '',
  secondaryLanguage: data.secondaryLanguage || 'de',
  // Tarih/Saat
- date: startD ? startD.toISOString().split('T')[0] : '',
- endDate: endD ? endD.toISOString().split('T')[0] : '',
+ date: startD ? (startD as Date).toISOString().split('T')[0] : '',
+ endDate: endD ? (endD as Date).toISOString().split('T')[0] : '',
  openingTime: normalizeTimeString(data.openingTime || '') || '',
  closingTime: normalizeTimeString(data.closingTime || '') || '',
  // Konum
@@ -1889,7 +1889,7 @@ export default function KermesDetailPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
           Siparisler
         </button>
-        {(isSuperAdmin || isAdmin) && (
+        {(isSuperAdmin || isKermesAdminOfThis) && (
           <button onClick={() => setActiveTab('tahsilat')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
             Tahsilat
@@ -1926,8 +1926,8 @@ export default function KermesDetailPage() {
  description: kermes?.description || '',
  descriptionSecondary: kermes?.descriptionSecondary || '',
  secondaryLanguage: kermes?.secondaryLanguage || 'de',
- date: startD ? startD.toISOString().split('T')[0] : '',
- endDate: endD ? endD.toISOString().split('T')[0] : '',
+ date: startD ? (startD as Date).toISOString().split('T')[0] : '',
+ endDate: endD ? (endD as Date).toISOString().split('T')[0] : '',
  openingTime: normalizeTimeString(kermes?.openingTime || '') || '',
  closingTime: normalizeTimeString(kermes?.closingTime || '') || '',
  address: kermes?.address || '',
@@ -1964,6 +1964,7 @@ export default function KermesDetailPage() {
  latitude: kermes?.latitude || null,
  longitude: kermes?.longitude || null,
  customRoles: kermes?.customRoles || [],
+  isSilaYolu: (kermes as any)?.isSilaYolu || false,
  });
  setEditFeatures(kermes?.features || []);
  setEditCustomFeatures(kermes?.customFeatures || []);

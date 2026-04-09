@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, orderBy, updateDoc, doc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { db } from '@/lib/firebase';
 import { useTranslations } from 'next-intl';
 
 interface KermesTahsilatTabProps {

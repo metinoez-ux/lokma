@@ -36,6 +36,8 @@ interface ParkingLocation {
  country: string;
  note: string;
  images: string[];
+ lat?: number;
+ lng?: number;
 }
 
 // Varsayılan özellikler (Firestore'dan yüklenemezse)
