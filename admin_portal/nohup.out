@@ -1488,3 +1488,652 @@ Project Console: https://console.firebase.google.com/project/aylar-a45af/overvie
 Hosting URL: https://lokma.web.app
 No Firebase app associated with site lokma, injecting project default config.
   You can link a Web app to a Hosting site here https://console.firebase.google.com/project/aylar-a45af/settings/general/web
+
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ ⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+
+ ⚠ Invalid next.config.ts options detected: 
+
+ ⚠     Unrecognized key(s) in object: 'eslint'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+
+   ▲ Next.js 16.0.10 (Turbopack)
+
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · serverActions
+
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+   Creating an optimized production build ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ ✓ Compiled successfully in 15.4s
+
+   Skipping validation of types
+
+   Collecting page data using 9 workers ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+   Generating static pages using 9 workers (0/8) ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+   Generating static pages using 9 workers (2/8) 
+
+   Generating static pages using 9 workers (4/8) 
+
+   Generating static pages using 9 workers (6/8) 
+
+ ✓ Generating static pages using 9 workers (8/8) in 459.5ms
+
+   Finalizing page optimization ...
+
+
+
+Route (app)
+┌ ○ /_not-found
+├ ƒ /[locale]
+├ ƒ /[locale]/about
+├ ƒ /[locale]/account
+├ ƒ /[locale]/admin
+├ ƒ /[locale]/admin/account
+├ ƒ /[locale]/admin/activity-logs
+├ ƒ /[locale]/admin/admins
+├ ƒ /[locale]/admin/ai-menu
+├ ƒ /[locale]/admin/ameise
+├ ƒ /[locale]/admin/analytics
+├ ƒ /[locale]/admin/benutzerverwaltung
+├ ƒ /[locale]/admin/business
+├ ƒ /[locale]/admin/business/[id]
+├ ƒ /[locale]/admin/business/[id]/categories
+├ ƒ /[locale]/admin/business/[id]/orders
+├ ƒ /[locale]/admin/business/[id]/performance
+├ ƒ /[locale]/admin/business/[id]/products
+├ ƒ /[locale]/admin/butchers
+├ ƒ /[locale]/admin/butchers/[id]
+├ ƒ /[locale]/admin/butchers/[id]/orders
+├ ƒ /[locale]/admin/butchers/[id]/products
+├ ƒ /[locale]/admin/categories
+├ ƒ /[locale]/admin/commissions
+├ ƒ /[locale]/admin/coupons
+├ ƒ /[locale]/admin/customers
+├ ƒ /[locale]/admin/dashboard
+├ ƒ /[locale]/admin/deals
+├ ƒ /[locale]/admin/delivery-settings
+├ ƒ /[locale]/admin/drivers/performance
+├ ƒ /[locale]/admin/drivers/tips
+├ ƒ /[locale]/admin/erp/products
+├ ƒ /[locale]/admin/funeral/members
+├ ƒ /[locale]/admin/image-generator
+├ ƒ /[locale]/admin/imports/asia-express
+├ ƒ /[locale]/admin/imports/dovgan
+├ ƒ /[locale]/admin/imports/ean-enrichment
+├ ƒ /[locale]/admin/imports/foodpaket
+├ ƒ /[locale]/admin/invitations
+├ ƒ /[locale]/admin/invoices
+├ ƒ /[locale]/admin/invoices/[id]
+├ ƒ /[locale]/admin/kermes
+├ ƒ /[locale]/admin/kermes/[id]
+├ ƒ /[locale]/admin/kermes/[id]/products
+├ ƒ /[locale]/admin/kermes/new
+├ ƒ /[locale]/admin/orders
+├ ƒ /[locale]/admin/orders/create
+├ ƒ /[locale]/admin/orders/suppliers
+├ ƒ /[locale]/admin/partners
+├ ƒ /[locale]/admin/plans
+├ ƒ /[locale]/admin/products
+├ ƒ /[locale]/admin/promotion-templates
+├ ƒ /[locale]/admin/promotions
+├ ƒ /[locale]/admin/reports
+├ ƒ /[locale]/admin/reservations
+├ ƒ /[locale]/admin/sectors
+├ ƒ /[locale]/admin/settings
+├ ƒ /[locale]/admin/settings/api-keys
+├ ƒ /[locale]/admin/settings/company
+├ ƒ /[locale]/admin/settings/donation-funds
+├ ƒ /[locale]/admin/settings/free-drink
+├ ƒ /[locale]/admin/settings/iot
+├ ƒ /[locale]/admin/settings/kermes-badges
+├ ƒ /[locale]/admin/settings/kermes-categories
+├ ƒ /[locale]/admin/settings/kermes-features
+├ ƒ /[locale]/admin/settings/kermes-gender-types
+├ ƒ /[locale]/admin/settings/kermes-menus
+├ ƒ /[locale]/admin/settings/kermes-stock-images
+├ ƒ /[locale]/admin/settings/notification-sound
+├ ƒ /[locale]/admin/settings/printer
+├ ƒ /[locale]/admin/settings/sponsored
+├ ƒ /[locale]/admin/shop
+├ ƒ /[locale]/admin/shop/orders
+├ ƒ /[locale]/admin/shop/products
+├ ƒ /[locale]/admin/sponsored-ads
+├ ƒ /[locale]/admin/staff
+├ ƒ /[locale]/admin/staff-dashboard
+├ ƒ /[locale]/admin/staff-shifts
+├ ƒ /[locale]/admin/subscription
+├ ƒ /[locale]/admin/superadmins
+├ ƒ /[locale]/admin/table-orders
+├ ƒ /[locale]/admin/ui-translations
+├ ƒ /[locale]/admin/volunteers
+├ ƒ /[locale]/agb
+├ ƒ /[locale]/careers
+├ ƒ /[locale]/categories
+├ ƒ /[locale]/changelog
+├ ƒ /[locale]/ciftciden
+├ ƒ /[locale]/contact
+├ ƒ /[locale]/cookies
+├ ƒ /[locale]/dashboard
+├ ƒ /[locale]/dashboard/notifications
+├ ƒ /[locale]/datenschutz
+├ ƒ /[locale]/dinein/[businessId]/table/[tableNum]
+├ ƒ /[locale]/el-lezzetleri
+├ ƒ /[locale]/feedback
+├ ƒ /[locale]/force-password-reset
+├ ƒ /[locale]/group/[id]
+├ ƒ /[locale]/hardware
+├ ƒ /[locale]/how-it-works
+├ ƒ /[locale]/impressum
+├ ƒ /[locale]/kermes-display/[kermesId]/[sectionId]
+├ ƒ /[locale]/kurye
+├ ƒ /[locale]/kvkk
+├ ƒ /[locale]/login
+├ ƒ /[locale]/partner
+├ ƒ /[locale]/partner/apply
+├ ƒ /[locale]/press
+├ ƒ /[locale]/pricing
+├ ƒ /[locale]/profile
+├ ƒ /[locale]/profile/edit
+├ ƒ /[locale]/register
+├ ƒ /[locale]/support
+├ ƒ /[locale]/test-kermes-card
+├ ƒ /[locale]/vendor
+├ ƒ /[locale]/vendor/pricing
+├ ƒ /[locale]/widerruf
+├ ƒ /api/admin/api-keys
+├ ƒ /api/admin/auth-providers
+├ ƒ /api/admin/clear-password-flag
+├ ƒ /api/admin/consolidate-businesses
+├ ƒ /api/admin/create-user
+├ ƒ /api/admin/customer-service
+├ ƒ /api/admin/delete-user
+├ ƒ /api/admin/env-check
+├ ƒ /api/admin/google-place
+├ ƒ /api/admin/kermes
+├ ƒ /api/admin/kermes/cleanup
+├ ƒ /api/admin/lexware/send-invoice
+├ ƒ /api/admin/notify-staff
+├ ƒ /api/admin/orders/cancel
+├ ƒ /api/admin/organizations
+├ ƒ /api/admin/rename-collections
+├ ƒ /api/admin/reset-user-password
+├ ƒ /api/admin/sectors
+├ ƒ /api/admin/seed-kasap-template
+├ ƒ /api/admin/seed-tuna-products
+├ ƒ /api/admin/send-invitation
+├ ƒ /api/admin/subscription/manage
+├ ƒ /api/admin/update-coordinates
+├ ƒ /api/admin/update-user
+├ ƒ /api/ai-menu/models
+├ ƒ /api/ai-menu/parse
+├ ƒ /api/ai/generate-image
+├ ƒ /api/businesses/export
+├ ƒ /api/businesses/import
+├ ƒ /api/cleanup-test-data
+├ ƒ /api/create-payment-intent
+├ ƒ /api/create-terminal-payment-intent
+├ ƒ /api/demo-data/cleanup
+├ ƒ /api/demo-data/seed
+├ ƒ /api/directions
+├ ƒ /api/email/send
+├ ƒ /api/get-terminal-location
+├ ƒ /api/import-asia-express
+├ ƒ /api/kermes/notify-assignment
+├ ƒ /api/legal-report
+├ ƒ /api/metrics
+├ ƒ /api/notifications/kermes-flash-sale
+├ ƒ /api/notifications/send
+├ ƒ /api/orders/notify
+├ ƒ /api/orders/partial-refund
+├ ƒ /api/places
+├ ƒ /api/print
+├ ƒ /api/print/health
+├ ƒ /api/print/printer-alert
+├ ƒ /api/proxy
+├ ƒ /api/refund-payment
+├ ƒ /api/save-products
+├ ƒ /api/save-products-chunked
+├ ƒ /api/seed-businesses
+├ ƒ /api/sms/send
+├ ƒ /api/staff/invite
+├ ƒ /api/stripe-connect
+├ ƒ /api/super-admin/add
+├ ƒ /api/terminal-connection-token
+├ ƒ /api/test
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/whatsapp/send
+├ ○ /robots.txt
+└ ○ /sitemap.xml
+
+
+ƒ Proxy (Middleware)
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Building a Cloud Function to run this application. This is needed due to:
+ • middleware
+ • non-static component /[locale]/about/page
+ • non-static component /[locale]/account/page
+ • non-static component /[locale]/admin/account/page
+ • non-static component /[locale]/admin/activity-logs/page
+ • and 174 other reasons, use --debug to see more
+
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'lokmaportal@0.1.0',
+npm warn EBADENGINE   required: { node: '20' },
+npm warn EBADENGINE   current: { node: 'v24.10.0', npm: '11.6.0' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'firebase-frameworks@0.11.8',
+npm warn EBADENGINE   required: { node: '^16.0.0 || ^18.0.0 || ^20.0.0 || ^22.0.0' },
+npm warn EBADENGINE   current: { node: 'v24.10.0', npm: '11.6.0' }
+npm warn EBADENGINE }
+
+up to date in 4s
+
+93 packages are looking for funding
+  run `npm fund` for details
+i  hosting: The following function(s) are pinned to site lokma and will be deployed as well: ssrlokma
+
+=== Deploying to 'aylar-a45af'...
+
+i  deploying functions, hosting
+i  functions: preparing codebase firebase-frameworks-lokma for deployment
+i  functions: ensuring required API cloudfunctions.googleapis.com is enabled...
+i  functions: ensuring required API cloudbuild.googleapis.com is enabled...
+i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled...
+⚠  functions: Runtime Node.js 20 will be deprecated on 2026-04-30 and will be decommissioned on 2026-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+i  functions: Loading and analyzing source code for codebase firebase-frameworks-lokma to determine what to deploy
+Serving at port 8842
+
+i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled...
+i  functions: Loaded environment variables from .env.
+i  functions: preparing .firebase/lokma/functions directory for uploading...
+i  functions: packaged /Users/metinoz/Developer/LOKMA_MASTER/admin_portal/.firebase/lokma/functions (151.57 MB) for uploading
+i  functions: ensuring required API run.googleapis.com is enabled...
+i  functions: ensuring required API eventarc.googleapis.com is enabled...
+i  functions: ensuring required API pubsub.googleapis.com is enabled...
+i  functions: ensuring required API storage.googleapis.com is enabled...
+i  functions: generating the service identity for pubsub.googleapis.com...
+i  functions: generating the service identity for eventarc.googleapis.com...
+✔  functions: .firebase/lokma/functions source uploaded successfully
+i  hosting[lokma]: beginning deploy...
+i  hosting[lokma]: found 254 files in .firebase/lokma/hosting
+i  hosting: adding files to version [0/254] (0%)
+i  hosting: upload complete
+✔  hosting[lokma]: file upload complete
+i  functions: updating Node.js 20 (2nd Gen) function firebase-frameworks-lokma:ssrlokma(europe-west1)...
+✔  functions[firebase-frameworks-lokma:ssrlokma(europe-west1)] Successful update operation.
+Function URL (firebase-frameworks-lokma:ssrlokma(europe-west1)): https://ssrlokma-lsp6loxj7q-ew.a.run.app
+i  hosting[lokma]: finalizing version...
+✔  hosting[lokma]: version finalized
+i  hosting[lokma]: releasing new version...
+✔  hosting[lokma]: release complete
+
+✔  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/aylar-a45af/overview
+Hosting URL: https://lokma.web.app
+No Firebase app associated with site lokma, injecting project default config.
+  You can link a Web app to a Hosting site here https://console.firebase.google.com/project/aylar-a45af/settings/general/web
+
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ ⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+
+ ⚠ Invalid next.config.ts options detected: 
+
+ ⚠     Unrecognized key(s) in object: 'eslint'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+
+   ▲ Next.js 16.0.10 (Turbopack)
+
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · serverActions
+
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+   Creating an optimized production build ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ ✓ Compiled successfully in 15.3s
+
+   Skipping validation of types
+
+   Collecting page data using 9 workers ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+   Generating static pages using 9 workers (0/8) ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+   Generating static pages using 9 workers (2/8) 
+
+   Generating static pages using 9 workers (4/8) 
+
+   Generating static pages using 9 workers (6/8) 
+
+ ✓ Generating static pages using 9 workers (8/8) in 439.1ms
+
+   Finalizing page optimization ...
+
+
+
+Route (app)
+┌ ○ /_not-found
+├ ƒ /[locale]
+├ ƒ /[locale]/about
+├ ƒ /[locale]/account
+├ ƒ /[locale]/admin
+├ ƒ /[locale]/admin/account
+├ ƒ /[locale]/admin/activity-logs
+├ ƒ /[locale]/admin/admins
+├ ƒ /[locale]/admin/ai-menu
+├ ƒ /[locale]/admin/ameise
+├ ƒ /[locale]/admin/analytics
+├ ƒ /[locale]/admin/benutzerverwaltung
+├ ƒ /[locale]/admin/business
+├ ƒ /[locale]/admin/business/[id]
+├ ƒ /[locale]/admin/business/[id]/categories
+├ ƒ /[locale]/admin/business/[id]/orders
+├ ƒ /[locale]/admin/business/[id]/performance
+├ ƒ /[locale]/admin/business/[id]/products
+├ ƒ /[locale]/admin/butchers
+├ ƒ /[locale]/admin/butchers/[id]
+├ ƒ /[locale]/admin/butchers/[id]/orders
+├ ƒ /[locale]/admin/butchers/[id]/products
+├ ƒ /[locale]/admin/categories
+├ ƒ /[locale]/admin/commissions
+├ ƒ /[locale]/admin/coupons
+├ ƒ /[locale]/admin/customers
+├ ƒ /[locale]/admin/dashboard
+├ ƒ /[locale]/admin/deals
+├ ƒ /[locale]/admin/delivery-settings
+├ ƒ /[locale]/admin/drivers/performance
+├ ƒ /[locale]/admin/drivers/tips
+├ ƒ /[locale]/admin/erp/products
+├ ƒ /[locale]/admin/funeral/members
+├ ƒ /[locale]/admin/image-generator
+├ ƒ /[locale]/admin/imports/asia-express
+├ ƒ /[locale]/admin/imports/dovgan
+├ ƒ /[locale]/admin/imports/ean-enrichment
+├ ƒ /[locale]/admin/imports/foodpaket
+├ ƒ /[locale]/admin/invitations
+├ ƒ /[locale]/admin/invoices
+├ ƒ /[locale]/admin/invoices/[id]
+├ ƒ /[locale]/admin/kermes
+├ ƒ /[locale]/admin/kermes/[id]
+├ ƒ /[locale]/admin/kermes/[id]/products
+├ ƒ /[locale]/admin/kermes/new
+├ ƒ /[locale]/admin/orders
+├ ƒ /[locale]/admin/orders/create
+├ ƒ /[locale]/admin/orders/suppliers
+├ ƒ /[locale]/admin/partners
+├ ƒ /[locale]/admin/plans
+├ ƒ /[locale]/admin/products
+├ ƒ /[locale]/admin/promotion-templates
+├ ƒ /[locale]/admin/promotions
+├ ƒ /[locale]/admin/reports
+├ ƒ /[locale]/admin/reservations
+├ ƒ /[locale]/admin/sectors
+├ ƒ /[locale]/admin/settings
+├ ƒ /[locale]/admin/settings/api-keys
+├ ƒ /[locale]/admin/settings/company
+├ ƒ /[locale]/admin/settings/donation-funds
+├ ƒ /[locale]/admin/settings/free-drink
+├ ƒ /[locale]/admin/settings/iot
+├ ƒ /[locale]/admin/settings/kermes-badges
+├ ƒ /[locale]/admin/settings/kermes-categories
+├ ƒ /[locale]/admin/settings/kermes-features
+├ ƒ /[locale]/admin/settings/kermes-gender-types
+├ ƒ /[locale]/admin/settings/kermes-menus
+├ ƒ /[locale]/admin/settings/kermes-stock-images
+├ ƒ /[locale]/admin/settings/notification-sound
+├ ƒ /[locale]/admin/settings/printer
+├ ƒ /[locale]/admin/settings/sponsored
+├ ƒ /[locale]/admin/shop
+├ ƒ /[locale]/admin/shop/orders
+├ ƒ /[locale]/admin/shop/products
+├ ƒ /[locale]/admin/sponsored-ads
+├ ƒ /[locale]/admin/staff
+├ ƒ /[locale]/admin/staff-dashboard
+├ ƒ /[locale]/admin/staff-shifts
+├ ƒ /[locale]/admin/subscription
+├ ƒ /[locale]/admin/superadmins
+├ ƒ /[locale]/admin/table-orders
+├ ƒ /[locale]/admin/ui-translations
+├ ƒ /[locale]/admin/volunteers
+├ ƒ /[locale]/agb
+├ ƒ /[locale]/careers
+├ ƒ /[locale]/categories
+├ ƒ /[locale]/changelog
+├ ƒ /[locale]/ciftciden
+├ ƒ /[locale]/contact
+├ ƒ /[locale]/cookies
+├ ƒ /[locale]/dashboard
+├ ƒ /[locale]/dashboard/notifications
+├ ƒ /[locale]/datenschutz
+├ ƒ /[locale]/dinein/[businessId]/table/[tableNum]
+├ ƒ /[locale]/el-lezzetleri
+├ ƒ /[locale]/feedback
+├ ƒ /[locale]/force-password-reset
+├ ƒ /[locale]/group/[id]
+├ ƒ /[locale]/hardware
+├ ƒ /[locale]/how-it-works
+├ ƒ /[locale]/impressum
+├ ƒ /[locale]/kermes-display/[kermesId]/[sectionId]
+├ ƒ /[locale]/kurye
+├ ƒ /[locale]/kvkk
+├ ƒ /[locale]/login
+├ ƒ /[locale]/partner
+├ ƒ /[locale]/partner/apply
+├ ƒ /[locale]/press
+├ ƒ /[locale]/pricing
+├ ƒ /[locale]/profile
+├ ƒ /[locale]/profile/edit
+├ ƒ /[locale]/register
+├ ƒ /[locale]/support
+├ ƒ /[locale]/test-kermes-card
+├ ƒ /[locale]/vendor
+├ ƒ /[locale]/vendor/pricing
+├ ƒ /[locale]/widerruf
+├ ƒ /api/admin/api-keys
+├ ƒ /api/admin/auth-providers
+├ ƒ /api/admin/clear-password-flag
+├ ƒ /api/admin/consolidate-businesses
+├ ƒ /api/admin/create-user
+├ ƒ /api/admin/customer-service
+├ ƒ /api/admin/delete-user
+├ ƒ /api/admin/env-check
+├ ƒ /api/admin/google-place
+├ ƒ /api/admin/kermes
+├ ƒ /api/admin/kermes/cleanup
+├ ƒ /api/admin/lexware/send-invoice
+├ ƒ /api/admin/notify-staff
+├ ƒ /api/admin/orders/cancel
+├ ƒ /api/admin/organizations
+├ ƒ /api/admin/rename-collections
+├ ƒ /api/admin/reset-user-password
+├ ƒ /api/admin/sectors
+├ ƒ /api/admin/seed-kasap-template
+├ ƒ /api/admin/seed-tuna-products
+├ ƒ /api/admin/send-invitation
+├ ƒ /api/admin/subscription/manage
+├ ƒ /api/admin/update-coordinates
+├ ƒ /api/admin/update-user
+├ ƒ /api/ai-menu/models
+├ ƒ /api/ai-menu/parse
+├ ƒ /api/ai/generate-image
+├ ƒ /api/businesses/export
+├ ƒ /api/businesses/import
+├ ƒ /api/cleanup-test-data
+├ ƒ /api/create-payment-intent
+├ ƒ /api/create-terminal-payment-intent
+├ ƒ /api/demo-data/cleanup
+├ ƒ /api/demo-data/seed
+├ ƒ /api/directions
+├ ƒ /api/email/send
+├ ƒ /api/get-terminal-location
+├ ƒ /api/import-asia-express
+├ ƒ /api/kermes/notify-assignment
+├ ƒ /api/legal-report
+├ ƒ /api/metrics
+├ ƒ /api/notifications/kermes-flash-sale
+├ ƒ /api/notifications/send
+├ ƒ /api/orders/notify
+├ ƒ /api/orders/partial-refund
+├ ƒ /api/places
+├ ƒ /api/print
+├ ƒ /api/print/health
+├ ƒ /api/print/printer-alert
+├ ƒ /api/proxy
+├ ƒ /api/refund-payment
+├ ƒ /api/save-products
+├ ƒ /api/save-products-chunked
+├ ƒ /api/seed-businesses
+├ ƒ /api/sms/send
+├ ƒ /api/staff/invite
+├ ƒ /api/stripe-connect
+├ ƒ /api/super-admin/add
+├ ƒ /api/terminal-connection-token
+├ ƒ /api/test
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/whatsapp/send
+├ ○ /robots.txt
+└ ○ /sitemap.xml
+
+
+ƒ Proxy (Middleware)
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Building a Cloud Function to run this application. This is needed due to:
+ • middleware
+ • non-static component /[locale]/about/page
+ • non-static component /[locale]/account/page
+ • non-static component /[locale]/admin/account/page
+ • non-static component /[locale]/admin/activity-logs/page
+ • and 174 other reasons, use --debug to see more
+
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'lokmaportal@0.1.0',
+npm warn EBADENGINE   required: { node: '20' },
+npm warn EBADENGINE   current: { node: 'v24.10.0', npm: '11.6.0' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'firebase-frameworks@0.11.8',
+npm warn EBADENGINE   required: { node: '^16.0.0 || ^18.0.0 || ^20.0.0 || ^22.0.0' },
+npm warn EBADENGINE   current: { node: 'v24.10.0', npm: '11.6.0' }
+npm warn EBADENGINE }
+
+up to date in 3s
+
+93 packages are looking for funding
+  run `npm fund` for details
+i  hosting: The following function(s) are pinned to site lokma and will be deployed as well: ssrlokma
+
+=== Deploying to 'aylar-a45af'...
+
+i  deploying functions, hosting
+i  functions: preparing codebase firebase-frameworks-lokma for deployment
+i  functions: ensuring required API cloudfunctions.googleapis.com is enabled...
+i  functions: ensuring required API cloudbuild.googleapis.com is enabled...
+i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled...
+⚠  functions: Runtime Node.js 20 will be deprecated on 2026-04-30 and will be decommissioned on 2026-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+i  functions: Loading and analyzing source code for codebase firebase-frameworks-lokma to determine what to deploy
+Serving at port 8840
+
+i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled...
+i  functions: Loaded environment variables from .env.
+i  functions: preparing .firebase/lokma/functions directory for uploading...
+i  functions: packaged /Users/metinoz/Developer/LOKMA_MASTER/admin_portal/.firebase/lokma/functions (151.57 MB) for uploading
+i  functions: ensuring required API run.googleapis.com is enabled...
+i  functions: ensuring required API eventarc.googleapis.com is enabled...
+i  functions: ensuring required API pubsub.googleapis.com is enabled...
+i  functions: ensuring required API storage.googleapis.com is enabled...
+i  functions: generating the service identity for pubsub.googleapis.com...
+i  functions: generating the service identity for eventarc.googleapis.com...
+✔  functions: .firebase/lokma/functions source uploaded successfully
+i  hosting[lokma]: beginning deploy...
+i  hosting[lokma]: found 254 files in .firebase/lokma/hosting
+i  hosting: adding files to version [0/254] (0%)
+i  hosting: upload complete
+✔  hosting[lokma]: file upload complete
+i  functions: updating Node.js 20 (2nd Gen) function firebase-frameworks-lokma:ssrlokma(europe-west1)...
+✔  functions[firebase-frameworks-lokma:ssrlokma(europe-west1)] Successful update operation.
+Function URL (firebase-frameworks-lokma:ssrlokma(europe-west1)): https://ssrlokma-lsp6loxj7q-ew.a.run.app
+i  hosting[lokma]: finalizing version...
+✔  hosting[lokma]: version finalized
+i  hosting[lokma]: releasing new version...
+✔  hosting[lokma]: release complete
+
+✔  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/aylar-a45af/overview
+Hosting URL: https://lokma.web.app

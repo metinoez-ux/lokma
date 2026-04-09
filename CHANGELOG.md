@@ -8,6 +8,7 @@
 
 | Tarih | Hash | Aciklama | Not |
 |-------|------|----------|-----|
+| 2026-04-09 07:48 CET | `f6db470` | fix: changelog pagination (50/sayfa) + mobil Safari uyumluluk | - |
 | 2026-04-09 07:27 CET | `92feb5a` | feat: LOKMA Time Machine - online changelog sayfasi | - |
 | 2026-04-09 07:20 CET | `b0bdd2a` | chore: LOKMA Time Machine changelog olusturuldu | - |
 | 2026-04-09 07:18 CET | `c989fe3` | fix: chip persist, discount price UI, weather fallback, i18n | - |
