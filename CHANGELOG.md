@@ -8,6 +8,8 @@
 
 | Tarih | Hash | Aciklama | Not |
 |-------|------|----------|-----|
+| 2026-04-09 07:27 CET | `92feb5a` | feat: LOKMA Time Machine - online changelog sayfasi | - |
+| 2026-04-09 07:20 CET | `b0bdd2a` | chore: LOKMA Time Machine changelog olusturuldu | - |
 | 2026-04-09 07:18 CET | `c989fe3` | fix: chip persist, discount price UI, weather fallback, i18n | - |
 | 2026-04-09 05:45 CET | `7ed4479` | fix: Feature Edit Modal root'a tasindi | - |
 | 2026-04-09 04:30 CET | `b6bce44` | refactor: Kermes ordering config + Menu-Only popup | - |
