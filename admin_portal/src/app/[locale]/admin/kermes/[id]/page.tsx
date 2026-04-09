@@ -2149,13 +2149,18 @@ export default function KermesDetailPage() {
  <label className="text-muted-foreground text-xs block mb-2">{t('etkinlik_ozellikleri_sabit')}</label>
  <div className="flex flex-wrap gap-2">
  {eventFeatures.map(f => (
- <button key={f.id} type="button" onClick={() => toggleFeature(f.id)}
- className={`px-3 py-1 rounded-full text-xs font-medium transition ${editFeatures.includes(f.id) ? 'bg-pink-600 text-white' : 'bg-gray-700 text-muted-foreground'
- }`}
+ <span key={f.id} className="inline-flex items-center gap-0.5">
+ <button type="button" onClick={() => toggleFeature(f.id)}
+ className={`px-3 py-1 rounded-full text-xs font-semibold transition ${editFeatures.includes(f.id) ? 'text-white' : 'bg-gray-700 text-muted-foreground'}`}
  style={editFeatures.includes(f.id) ? { backgroundColor: f.color } : {}}
  >
  {f.icon} {f.label}
  </button>
+ {isSuperAdmin && (
+ <button type="button" title="Ozellik sil (Super Admin)" onClick={() => { setEventFeatures(prev => prev.filter(ef => ef.id !== f.id)); setEditFeatures(prev => prev.filter(ef => ef !== f.id)); }}
+ className="w-4 h-4 rounded-full bg-red-600/80 hover:bg-red-500 text-white flex items-center justify-center text-[9px] leading-none transition -ml-1">x</button>
+ )}
+ </span>
  ))}
  </div>
  </div>
