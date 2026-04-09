@@ -206,6 +206,11 @@ interface KermesEvent {
  showKdv?: boolean;
  kdvRate?: number;
  pricesIncludeKdv?: boolean;
+  // Fiyat Ayarlari
+  currency?: string;
+  pricingMode?: 'net' | 'brut';
+  foodTaxRate?: number;
+  nonFoodTaxRate?: number;
  // Başlık görseli (Stok veya özel)
  headerImage?: string;
  headerImageId?: string; // Stok görsel ID'si (kullanım sayacı için)
@@ -280,7 +285,7 @@ export default function KermesDetailPage() {
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
  const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat'>('bilgi');
-  const [bilgiSubTab, setBilgiSubTab] = useState<'genel' | 'marka' | 'ozellikler' | 'teslimat' | 'imkanlar'>('genel');
+  const [bilgiSubTab, setBilgiSubTab] = useState<'genel' | 'marka' | 'ozellikler' | 'teslimat' | 'fiyat' | 'imkanlar'>('genel');
  // Mutfak: PrepZone -> Personel atamalari
  const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
  const [eventFeatures, setEventFeatures] = useState<KermesFeature[]>(DEFAULT_FEATURES);
@@ -330,6 +335,11 @@ export default function KermesDetailPage() {
  showKdv: false,
  kdvRate: 7,
  pricesIncludeKdv: true,
+ // Fiyat Ayarlari
+ currency: 'EUR',
+ pricingMode: 'brut' as 'net' | 'brut',
+ foodTaxRate: 7,
+ nonFoodTaxRate: 19,
  // Başlık görseli
  headerImage: '',
  headerImageId: '',
@@ -596,6 +606,10 @@ export default function KermesDetailPage() {
  showKdv: data.showKdv || false,
  kdvRate: data.kdvRate || 7,
  pricesIncludeKdv: data.pricesIncludeKdv !== false,
+    currency: data.currency || (data.country === 'Turkiye' || data.country === 'Turkey' ? 'TRY' : 'EUR'),
+    pricingMode: data.pricingMode || (data.pricesIncludeKdv !== false ? 'brut' : 'net'),
+    foodTaxRate: data.foodTaxRate ?? 7,
+    nonFoodTaxRate: data.nonFoodTaxRate ?? 19,
  // Başlık görseli
  headerImage: data.headerImage || '',
  headerImageId: data.headerImageId || '',
@@ -1910,7 +1924,7 @@ export default function KermesDetailPage() {
 
   {/* Sub-Tab Navigation */}
   <div className="bg-card rounded-xl p-1.5 flex gap-1 overflow-x-auto">
-   {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Ozellikler',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'imkanlar' as const,l:'Park Ayarlari',c:'bg-teal-600'}]).map(t=>(
+   {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Ozellikler',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'fiyat' as const,l:'Fiyat Ayarlari',c:'bg-emerald-600'},{k:'imkanlar' as const,l:'Park Ayarlari',c:'bg-teal-600'}]).map(t=>(
     <button key={t.k} onClick={()=>setBilgiSubTab(t.k)} className={`px-3 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-shrink-0 ${bilgiSubTab===t.k?t.c+' text-white shadow':'text-muted-foreground hover:text-foreground hover:bg-muted/60'}`}>{t.l}</button>
    ))}
    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
@@ -1940,6 +1954,10 @@ export default function KermesDetailPage() {
     parkingLocations: kermes?.parkingLocations || [], generalParkingNote: kermes?.generalParkingNote || '',
     hasPfandSystem: kermes?.hasPfandSystem || false, pfandAmount: kermes?.pfandAmount || 0.25,
     showKdv: kermes?.showKdv || false, kdvRate: kermes?.kdvRate || 7,
+    currency: kermes?.currency || (kermes?.country === 'Turkiye' || kermes?.country === 'Turkey' ? 'TRY' : 'EUR'),
+    pricingMode: (kermes as any)?.pricingMode || (kermes?.pricesIncludeKdv !== false ? 'brut' : 'net'),
+    foodTaxRate: (kermes as any)?.foodTaxRate ?? 7,
+    nonFoodTaxRate: (kermes as any)?.nonFoodTaxRate ?? 19,
     pricesIncludeKdv: kermes?.pricesIncludeKdv !== false,
     headerImage: kermes?.headerImage || '', headerImageId: kermes?.headerImageId || '',
     sponsor: kermes?.sponsor || 'none', activeBadgeIds: kermes?.activeBadgeIds || [],
@@ -2816,6 +2834,130 @@ export default function KermesDetailPage() {
  )}
  {(!kermes.features || kermes.features.length === 0) && (
  <p className="text-muted-foreground text-sm">Henuz ozellik eklenmedi.</p>
+ )}
+ </div>
+ )}
+ </div>
+ )}
+
+ {/* TAB: Fiyat Ayarlari */}
+ {bilgiSubTab === 'fiyat' && (
+ <div className="bg-card rounded-xl p-6">
+ <h3 className="text-foreground font-bold mb-4">Fiyat Ayarlari</h3>
+ {isEditing ? (
+ <div className="space-y-6">
+
+ {/* Para Birimi */}
+ <div className="bg-muted/20 border border-border rounded-xl p-4">
+ <h4 className="text-foreground font-medium mb-3">Para Birimi</h4>
+ <select value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })}
+ className="w-full px-3 py-2.5 bg-background text-foreground rounded-lg border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-shadow text-sm">
+ <option value="EUR">EUR - Euro</option>
+ <option value="TRY">TRY - Turk Lirasi</option>
+ <option value="USD">USD - ABD Dolari</option>
+ <option value="GBP">GBP - Ingiliz Sterlini</option>
+ <option value="CHF">CHF - Isvicre Frangi</option>
+ <option value="NOK">NOK - Norvec Kronu</option>
+ <option value="SEK">SEK - Isvec Kronu</option>
+ <option value="DKK">DKK - Danimarka Kronu</option>
+ </select>
+ <p className="text-muted-foreground text-xs mt-2">Kermesteki fiyatlar bu para biriminde gosterilir. Ulke bilgisinden otomatik doldurulur.</p>
+ </div>
+
+ {/* Net / Brut Fiyat Modu */}
+ <div className="bg-muted/20 border border-border rounded-xl p-4">
+ <h4 className="text-foreground font-medium mb-3">Fiyat Gosterim Modu</h4>
+ <div className="flex gap-3">
+ <button type="button" onClick={() => setEditForm({ ...editForm, pricingMode: 'brut' })}
+ className={`flex-1 px-4 py-3 rounded-lg border-2 transition text-sm font-medium ${editForm.pricingMode === 'brut' ? 'bg-green-600/20 border-green-500 text-green-400' : 'bg-muted/30 border-border text-muted-foreground hover:border-gray-500'}`}>
+ <div className="font-bold mb-1">Brut (KDV Dahil)</div>
+ <div className="text-xs opacity-80">Fiyatlar vergi dahil gosterilir</div>
+ </button>
+ <button type="button" onClick={() => setEditForm({ ...editForm, pricingMode: 'net' })}
+ className={`flex-1 px-4 py-3 rounded-lg border-2 transition text-sm font-medium ${editForm.pricingMode === 'net' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-muted/30 border-border text-muted-foreground hover:border-gray-500'}`}>
+ <div className="font-bold mb-1">Net (KDV Haric)</div>
+ <div className="text-xs opacity-80">Fiyatlar vergisiz gosterilir, vergi kasada eklenir</div>
+ </button>
+ </div>
+ </div>
+
+ {/* Vergi Oranlari (Brut secildiginde) */}
+ {editForm.pricingMode === 'brut' && (
+ <div className="bg-muted/20 border border-border rounded-xl p-4">
+ <h4 className="text-foreground font-medium mb-3">Vergi Oranlari</h4>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div className="bg-card shadow-sm p-4 rounded-xl border border-border">
+ <label className="text-muted-foreground text-xs block mb-1.5">Yiyecek & Icecek Vergi Orani (%)</label>
+ <input type="number" step="0.1" min="0" max="100" value={editForm.foodTaxRate}
+ onChange={(e) => setEditForm({ ...editForm, foodTaxRate: parseFloat(e.target.value) || 0 })}
+ className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-shadow" />
+ <p className="text-muted-foreground text-xs mt-1.5">Almanya: 7%, Turkiye: 10%</p>
+ </div>
+ <div className="bg-card shadow-sm p-4 rounded-xl border border-border">
+ <label className="text-muted-foreground text-xs block mb-1.5">Diger Urunler Vergi Orani (%)</label>
+ <input type="number" step="0.1" min="0" max="100" value={editForm.nonFoodTaxRate}
+ onChange={(e) => setEditForm({ ...editForm, nonFoodTaxRate: parseFloat(e.target.value) || 0 })}
+ className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-shadow" />
+ <p className="text-muted-foreground text-xs mt-1.5">Almanya: 19%, Turkiye: 20%</p>
+ </div>
+ </div>
+ <p className="text-muted-foreground text-xs mt-3">Bu oranlar menudeki urunlere otomatik uygulanir. Yiyecek kategorisindeki urunlere yiyecek orani, diger urunlere genel oran uygulanir.</p>
+ </div>
+ )}
+
+ {/* Pfand (Depozito) Sistemi */}
+ <div className="bg-muted/20 border border-border rounded-xl p-4">
+ <div className="flex items-center justify-between mb-2">
+ <h4 className="text-foreground font-medium">Pfand (Depozito) Sistemi</h4>
+ <label className="relative inline-flex items-center cursor-pointer">
+ <input type="checkbox" checked={editForm.hasPfandSystem} onChange={(e) => setEditForm({ ...editForm, hasPfandSystem: e.target.checked })} className="sr-only peer" />
+ <div className="w-11 h-6 bg-slate-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background dark:after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 transition-colors"></div>
+ </label>
+ </div>
+ {editForm.hasPfandSystem && (
+ <div className="mt-3">
+ <label className="text-muted-foreground text-xs block mb-1.5">{t('pfand_ucreti')}</label>
+ <div className="flex items-center gap-2">
+ <input type="number" step="0.01" value={editForm.pfandAmount} onChange={(e) => setEditForm({ ...editForm, pfandAmount: parseFloat(e.target.value) || 0 })}
+ className="w-32 px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-shadow" />
+ <span className="text-muted-foreground text-sm">{editForm.currency}</span>
+ </div>
+ </div>
+ )}
+ </div>
+
+ </div>
+ ) : (
+ <div className="space-y-4">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div className="flex justify-between text-sm">
+ <span className="text-muted-foreground/80">Para Birimi</span>
+ <span className="text-foreground font-medium">{kermes?.currency || 'EUR'}</span>
+ </div>
+ <div className="flex justify-between text-sm">
+ <span className="text-muted-foreground/80">Fiyat Modu</span>
+ <span className={`font-medium ${(kermes as any)?.pricingMode === 'net' ? 'text-blue-400' : 'text-green-400'}`}>
+ {(kermes as any)?.pricingMode === 'net' ? 'Net (KDV Haric)' : 'Brut (KDV Dahil)'}
+ </span>
+ </div>
+ </div>
+ {(kermes as any)?.pricingMode !== 'net' && (
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border">
+ <div className="flex justify-between text-sm">
+ <span className="text-muted-foreground/80">Yiyecek Vergi Orani</span>
+ <span className="text-foreground">%{(kermes as any)?.foodTaxRate ?? 7}</span>
+ </div>
+ <div className="flex justify-between text-sm">
+ <span className="text-muted-foreground/80">Diger Vergi Orani</span>
+ <span className="text-foreground">%{(kermes as any)?.nonFoodTaxRate ?? 19}</span>
+ </div>
+ </div>
+ )}
+ {kermes?.hasPfandSystem && (
+ <div className="flex justify-between text-sm pt-2 border-t border-border">
+ <span className="text-muted-foreground/80">Pfand (Depozito)</span>
+ <span className="text-green-400 font-medium">{kermes.pfandAmount} {kermes?.currency || 'EUR'}</span>
+ </div>
  )}
  </div>
  )}
