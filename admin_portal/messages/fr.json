@@ -4361,7 +4361,18 @@
     "para_birimi": "Devise",
     "fiyat_gosterim_modu": "Mode affichage prix",
     "urun_gorseli": "Image du produit",
-    "indirimli_fiyat": "Prix reduit"
+    "indirimli_fiyat": "Prix reduit",
+    "flash_sale_title": "Notification Vente Flash",
+    "flash_sale_desc": "Push aux clients",
+    "flash_sale_info": "Notification aux: favoris, abonnes et utilisateurs dans le rayon cible.",
+    "flash_sale_target_radius": "Rayon Cible",
+    "flash_sale_target_desc": "Combien de km autour?",
+    "flash_sale_products": "Produits en Promotion",
+    "flash_sale_preview": "Apercu sur le telephone:",
+    "flash_sale_cancel": "Annuler",
+    "flash_sale_send": "Envoyer",
+    "flash_sale_sending": "Envoi en cours",
+    "flash_sale_btn": "Vente Flash"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrateur d'entreprise",

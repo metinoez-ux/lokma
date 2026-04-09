@@ -148,21 +148,21 @@ class LNl extends L {
   String get cardMessage => 'Kaartbericht';
 
   @override
-  String get checkoutButton => 'Siparişi Onayla';
+  String get checkoutButton => 'Bestellen en betalen';
 
   @override
   String get checkoutTermsPrefix =>
-      'Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, ';
+      'Door op Bestellen en betalen te klikken, gaat u akkoord met de inhoud van het winkelmandje, de ingevoerde gegevens, ons ';
 
   @override
-  String get privacyPolicy => 'Gizlilik Politikamızı';
+  String get privacyPolicy => 'Privacybeleid';
 
   @override
-  String get termsConjunction => ' ve ';
+  String get termsConjunction => ' en onze ';
 
   @override
-  String get termsOfUse => 'Kullanım Koşullarımızı';
+  String get termsOfUse => 'Gebruiksvoorwaarden';
 
   @override
-  String get checkoutTermsSuffix => ' kabul etmiş olursunuz.';
+  String get checkoutTermsSuffix => '.';
 }

@@ -4787,7 +4787,18 @@
     "para_birimi": "Valuta",
     "fiyat_gosterim_modu": "Prijsweergavemodus",
     "urun_gorseli": "Productafbeelding",
-    "indirimli_fiyat": "Kortingsprijs"
+    "indirimli_fiyat": "Kortingsprijs",
+    "flash_sale_title": "Flash Sale Melding",
+    "flash_sale_desc": "Push naar klanten",
+    "flash_sale_info": "Melding gaat naar: favorieten, campagne-abonnees en gebruikers binnen de doelradius.",
+    "flash_sale_target_radius": "Doelradius",
+    "flash_sale_target_desc": "Hoeveel km rond het evenement?",
+    "flash_sale_products": "Afgeprijsde Producten",
+    "flash_sale_preview": "Voorbeeld op telefoon:",
+    "flash_sale_cancel": "Annuleren",
+    "flash_sale_send": "Nu Verzenden",
+    "flash_sale_sending": "Verzenden",
+    "flash_sale_btn": "Flash Sale"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

@@ -148,21 +148,21 @@ class LIt extends L {
   String get cardMessage => 'Messaggio del biglietto';
 
   @override
-  String get checkoutButton => 'Siparişi Onayla';
+  String get checkoutButton => 'Ordina e paga';
 
   @override
   String get checkoutTermsPrefix =>
-      'Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, ';
+      'Cliccando su Ordina e paga, accetti il contenuto del carrello, i dati inseriti, la nostra ';
 
   @override
-  String get privacyPolicy => 'Gizlilik Politikamızı';
+  String get privacyPolicy => 'Informativa sulla Privacy';
 
   @override
-  String get termsConjunction => ' ve ';
+  String get termsConjunction => ' e i nostri ';
 
   @override
-  String get termsOfUse => 'Kullanım Koşullarımızı';
+  String get termsOfUse => 'Termini di Utilizzo';
 
   @override
-  String get checkoutTermsSuffix => ' kabul etmiş olursunuz.';
+  String get checkoutTermsSuffix => '.';
 }

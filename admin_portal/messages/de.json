@@ -4361,7 +4361,18 @@
     "para_birimi": "Waehrung",
     "fiyat_gosterim_modu": "Preisanzeigemodus",
     "urun_gorseli": "Produktbild",
-    "indirimli_fiyat": "Rabattpreis"
+    "indirimli_fiyat": "Rabattpreis",
+    "flash_sale_title": "Abendmarkt Benachrichtigung",
+    "flash_sale_desc": "Push an Kunden senden",
+    "flash_sale_info": "Benachrichtigung geht an: Favoriten, Kampagnen-Abonnenten und Nutzer im Zielradius.",
+    "flash_sale_target_radius": "Zielradius",
+    "flash_sale_target_desc": "Wie viele km rund um das Event?",
+    "flash_sale_products": "Reduzierte Produkte",
+    "flash_sale_preview": "Vorschau auf dem Handy:",
+    "flash_sale_cancel": "Abbrechen",
+    "flash_sale_send": "Jetzt senden",
+    "flash_sale_sending": "Wird gesendet",
+    "flash_sale_btn": "Abendmarkt"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Geschäftsadministrator",

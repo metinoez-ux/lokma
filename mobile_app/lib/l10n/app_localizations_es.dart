@@ -149,21 +149,21 @@ class LEs extends L {
   String get cardMessage => 'Mensaje de tarjeta';
 
   @override
-  String get checkoutButton => 'Siparişi Onayla';
+  String get checkoutButton => 'Pedir y pagar';
 
   @override
   String get checkoutTermsPrefix =>
-      'Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, ';
+      'Al hacer clic en Pedir y pagar, acepta el contenido del carrito, los datos que ha introducido, nuestra ';
 
   @override
-  String get privacyPolicy => 'Gizlilik Politikamızı';
+  String get privacyPolicy => 'Política de Privacidad';
 
   @override
-  String get termsConjunction => ' ve ';
+  String get termsConjunction => ' y nuestros ';
 
   @override
-  String get termsOfUse => 'Kullanım Koşullarımızı';
+  String get termsOfUse => 'Términos de Uso';
 
   @override
-  String get checkoutTermsSuffix => ' kabul etmiş olursunuz.';
+  String get checkoutTermsSuffix => '.';
 }

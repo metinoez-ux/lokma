@@ -1788,7 +1788,7 @@ export default function KermesDetailPage() {
          kermesLng: kermes.parkingInfo?.longitude || kermes.address?.location?.longitude,
          discountedItems: discountedItems.map(p => ({
            id: p.id,
-           name: p.name,
+           name: getLocalizedText(p.name, locale),
            price: p.price,
            discountPrice: p.discountPrice,
            image: p.imageUrls?.[0] || p.imageUrl || null
@@ -3655,6 +3655,33 @@ export default function KermesDetailPage() {
       </button>
     );
   })}
+  {/* Kermes Admin Toggle - sadece canManageStaff */}
+  {canManageStaff && (
+  <button
+    type="button"
+    onClick={() => {
+      if (kermesAdmins.includes(staff.id)) {
+        const newAdmins = kermesAdmins.filter(id => id !== staff.id);
+        setKermesAdmins(newAdmins);
+        saveTeamToDb(assignedStaff, assignedDrivers, assignedWaiters, newAdmins);
+        showToast(`${staff.displayName || staff.name || 'Personel'} admin yetkisi kaldirildi`, 'success');
+      } else {
+        const newAdmins = [...kermesAdmins, staff.id];
+        setKermesAdmins(newAdmins);
+        saveTeamToDb(assignedStaff, assignedDrivers, assignedWaiters, newAdmins);
+        showToast(`${staff.displayName || staff.name || 'Personel'} Kermes Admin yapildi`, 'success');
+      }
+    }}
+    className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-bold transition-colors border ${
+      kermesAdmins.includes(staff.id)
+        ? 'bg-purple-600 text-white border-purple-700 hover:bg-purple-700'
+        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 border-transparent'
+    }`}
+    title={kermesAdmins.includes(staff.id) ? 'Kermes Admin yetkisini kaldir' : 'Kermes Admin yap (personel yonetim yetkisi verir)'}
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill={kermesAdmins.includes(staff.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  </button>
+  )}
  <button 
  type="button" 
  onClick={() => setEditPersonData({
@@ -4169,7 +4196,7 @@ export default function KermesDetailPage() {
  <button onClick={() => setShowFlashSaleModal(true)}
  className="px-3 py-2 bg-pink-600/20 text-pink-800 dark:text-pink-400 rounded-lg text-sm font-medium hover:bg-pink-600/40 flex items-center gap-1"
  title="Indirimli urunleri push bildirimde paylas">
- <span className="material-symbols-outlined text-base">campaign</span> {t('flash_sale_title') || 'Aksam Pazari'}
+ <span className="material-symbols-outlined text-base">campaign</span> {t('flash_sale_btn')}
  </button>
  )}
  <button onClick={() => setShowCategoryModal(true)}
@@ -5407,6 +5434,41 @@ export default function KermesDetailPage() {
    <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-3 -mt-1 ml-1">Bu personel garson olarak atandi. Masa siparisleri bolumune gore yonlendirilecek.</p>
    )}
 
+   {/* Kermes Admin Toggle - sadece canManageStaff */}
+   {canManageStaff && (
+   <>
+   <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800">
+   <div className="flex items-center gap-2">
+   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-purple-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+   <span className="text-sm font-medium text-foreground">Kermes Admin Yap</span>
+   </div>
+   <button
+   type="button"
+   title="Kermes Admin olarak ata/cikar"
+   onClick={() => {
+   if (kermesAdmins.includes(editPersonData.id)) {
+   const na = kermesAdmins.filter((aid: string) => aid !== editPersonData.id);
+   setKermesAdmins(na);
+   saveTeamToDb(assignedStaff, assignedDrivers, assignedWaiters, na);
+   showToast('Admin yetkisi kaldirildi', 'success');
+   } else {
+   const na = [...kermesAdmins, editPersonData.id];
+   setKermesAdmins(na);
+   saveTeamToDb(assignedStaff, assignedDrivers, assignedWaiters, na);
+   showToast('Kermes Admin yapildi', 'success');
+   }
+   }}
+   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${kermesAdmins.includes(editPersonData.id) ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+   >
+   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${kermesAdmins.includes(editPersonData.id) ? 'translate-x-6' : 'translate-x-1'}`} />
+   </button>
+   </div>
+   {kermesAdmins.includes(editPersonData.id) && (
+   <p className="text-xs text-purple-600 dark:text-purple-400 mb-3 -mt-1 ml-1">Bu personel Kermes Admin olarak atandi. Personel yonetim yetkisine sahip.</p>
+   )}
+   </>
+   )}
+
    {/* Ozel Gorev Atamalari */}
    {(editForm.customRoles || []).length > 0 && (
    <>
@@ -5764,7 +5826,7 @@ export default function KermesDetailPage() {
  <div className="space-y-2 mb-4">
  {products.filter(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable).map(product => (
  <div key={product.id} className="flex justify-between items-center p-2 rounded-lg bg-background border border-border">
- <span className="text-sm font-medium">{product.name}</span>
+ <span className="text-sm font-medium">{getLocalizedText(product.name, locale)}</span>
  <div className="flex items-center gap-2">
  <span className="text-xs text-muted-foreground line-through">{product.price.toFixed(2)}€</span>
  <span className="text-sm font-bold text-pink-600 dark:text-pink-400">{product.discountPrice?.toFixed(2)}€</span>
@@ -5784,7 +5846,7 @@ export default function KermesDetailPage() {
  <p className="text-xs text-muted-foreground leading-relaxed">
  {(() => {
  const topDiscount = products.filter(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable).sort((a,b) => ((b.price - b.discountPrice!)/b.price) - ((a.price - a.discountPrice!)/a.price))[0];
- return topDiscount ? `🔥 Son fırsatlar! ${topDiscount.name} ${topDiscount.price.toFixed(2)}€ yerine sadece ${topDiscount.discountPrice?.toFixed(2)}€! ⏳ Tüm indirimler stoklarla sınırlıdır, tükenmeden yetişin! 🏃‍♂️` : 'İndirimli ürünlerimiz başladı, stoklar bitmeden yetişin!';
+ return topDiscount ? `🔥 Son firsatlar! ${getLocalizedText(topDiscount.name, locale)} ${topDiscount.price.toFixed(2)}€ yerine sadece ${topDiscount.discountPrice?.toFixed(2)}€! ⏳ Tum indirimler stoklarla sinirlidir, tukenmeden yetisin! 🏃‍♂️` : 'Indirimli urunlerimiz basladi, stoklar bitmeden yetisin!';
  })()}
  </p>
  </div>

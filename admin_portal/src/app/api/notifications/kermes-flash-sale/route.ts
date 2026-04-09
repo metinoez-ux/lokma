@@ -27,17 +27,12 @@ export async function POST(request: NextRequest) {
     const { db } = getFirebaseAdmin();
     const messaging = getFirebaseMessaging();
 
-    // 1. Hedef kitleyi belirle (Tokens listesi)
-    // - Favoriler (favoriteKermes includes kermesId)
-    // - Lokma genel kermes bildirimleri açık olanlar (notificationPreferences.kermesNotifications == true)
-    
-    // Uygulamanızın net user lokasyon seması bilinmediğinden ve distance query 
-    // Firestore'da spesifik GeoHash gerektirdiğinden, burada en aktif preference tabanli kitlenizi kullaniyoruz:
+    // 1. Hedef kitleyi belirle (Tokens listesi + userId mapping)
     let targetTokens = new Set<string>();
+    const tokenToUserId = new Map<string, string>(); // token -> userId mapping for inbox
 
     const usersRef = db.collection('users');
     
-    // Kampanya bildirimini acan kullanicilari aliyoruz. LOKMA preferences:
     const querySnapshot = await usersRef.where('fcmToken', '!=', null).get();
     
     querySnapshot.forEach(doc => {
@@ -47,7 +42,7 @@ export async function POST(request: NextRequest) {
 
       let shouldSend = false;
 
-      // 1. Durum: Kermesi favoriye almis mi? (Varsayilan data field'lari)
+      // 1. Durum: Kermesi favoriye almis mi?
       if (data.favoriteKermes && Array.isArray(data.favoriteKermes) && data.favoriteKermes.includes(kermesId)) {
         shouldSend = true;
       }
@@ -63,14 +58,12 @@ export async function POST(request: NextRequest) {
           shouldSend = true;
         }
       } else {
-        // Eski/Flat model destek kontrolu (MIRA)
         if (data.notifyOrderPush !== false) {
-           // Eger acikca kapali degilse eski modellere kampanyayi atabiliriz
            shouldSend = true;
         }
       }
 
-      // 3. Durum: Konum verisi olan kullanıcıların aradaki distance(KM) hesabı
+      // 3. Durum: Konum verisi olan kullanicilarin distance hesabi
       if (!shouldSend && kermesLat && kermesLng && data.lastKnownLocation && data.lastKnownLocation.latitude && data.lastKnownLocation.longitude) {
          const dist = calculateDistance(
            data.lastKnownLocation.latitude, data.lastKnownLocation.longitude, 
@@ -81,18 +74,18 @@ export async function POST(request: NextRequest) {
 
       if (shouldSend) {
         targetTokens.add(token);
+        tokenToUserId.set(token, doc.id);
       }
     });
 
     const tokensArray = Array.from(targetTokens);
 
     if (tokensArray.length === 0) {
-      return NextResponse.json({ success: false, error: 'Hedef kitlede FCM token bulunamadı.' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Hedef kitlede FCM token bulunamadi.' }, { status: 404 });
     }
 
-    // 2. Bildirim İcerigini Olustur
-    // En yuksek indirim oranina sahip urunu buluyoruz
-    const sortedItems = [...discountedItems].sort((a, b) => {
+    // 2. Bildirim icerigini olustur
+    const sortedItems = [...discountedItems].sort((a: any, b: any) => {
       const percA = (a.price - a.discountPrice) / a.price;
       const percB = (b.price - b.discountPrice) / b.price;
       return percB - percA;
@@ -101,10 +94,10 @@ export async function POST(request: NextRequest) {
     const topItem = sortedItems[0];
     const itemImage = topItem.image;
 
-    const title = `🌙 ${kermesTitle} - Akşam Pazarı Başladı!`;
-    const messageBody = `🔥 Son fırsatlar! ${topItem.name} ${topItem.price.toFixed(2)}€ yerine sadece ${topItem.discountPrice.toFixed(2)}€! ⏳ Tüm indirimler stoklarla sınırlıdır, tükenmeden yetişin! 🏃‍♂️`;
+    const title = `${kermesTitle} - Aksam Pazari Basladi!`;
+    const messageBody = `Son firsatlar! ${topItem.name} ${topItem.price.toFixed(2)} EUR yerine sadece ${topItem.discountPrice.toFixed(2)} EUR! Tum indirimler stoklarla sinirlidir, tukenmeden yetisin!`;
 
-    // FCM Payload Standardı (IOS ve Android için)
+    // FCM Payload
     const message = {
       notification: {
         title,
@@ -114,14 +107,15 @@ export async function POST(request: NextRequest) {
       data: {
         type: 'kermes_flash_sale',
         kermesId: kermesId,
-        click_action: 'FLUTTER_NOTIFICATION_CLICK' // Eski Android versiyon destegi
+        kermesTitle: kermesTitle || '',
+        click_action: 'FLUTTER_NOTIFICATION_CLICK'
       },
       apns: {
         payload: {
           aps: {
             sound: 'default',
             badge: 1,
-            'mutable-content': 1 // Eger resim varsa IOS zengin bildirim
+            'mutable-content': 1
           }
         },
         fcm_options: {
@@ -131,7 +125,7 @@ export async function POST(request: NextRequest) {
       tokens: tokensArray,
     };
 
-    // Firebase 500'luk chunklar halinde multicast atabilir
+    // 3. FCM Push gonder (500'luk chunk)
     const chunkSize = 500;
     let successCount = 0;
     let failureCount = 0;
@@ -145,11 +139,54 @@ export async function POST(request: NextRequest) {
       failureCount += response.failureCount;
     }
 
+    // 4. Firestore Inbox'a kaydet - her kullanicinin notifications sub-collection'ina
+    const now = new Date();
+    const batch = db.batch();
+    let batchCount = 0;
+    const MAX_BATCH = 500;
+    const userIds = Array.from(tokenToUserId.values());
+
+    // Indirimli urunlerin ozet listesi
+    const discountSummary = discountedItems.map((item: any) => ({
+      name: item.name,
+      price: item.price,
+      discountPrice: item.discountPrice,
+    }));
+
+    for (const userId of userIds) {
+      const notifRef = db.collection('users').doc(userId).collection('notifications').doc();
+      batch.set(notifRef, {
+        type: 'kermes_flash_sale',
+        tag: 'kampanya',
+        title: title,
+        body: messageBody,
+        kermesId: kermesId,
+        kermesTitle: kermesTitle || '',
+        discountedItems: discountSummary,
+        imageUrl: itemImage || null,
+        read: false,
+        createdAt: now,
+      });
+      batchCount++;
+
+      // Firestore batch limiti 500 - asarsa commit et, yeni batch ac
+      if (batchCount >= MAX_BATCH) {
+        await batch.commit();
+        batchCount = 0;
+      }
+    }
+
+    // Kalan kayitlari commit et
+    if (batchCount > 0) {
+      await batch.commit();
+    }
+
     return NextResponse.json({
       success: true,
       sentCount: successCount,
       failedCount: failureCount,
-      targetSize: tokensArray.length
+      targetSize: tokensArray.length,
+      inboxSaved: userIds.length,
     });
 
   } catch (error) {

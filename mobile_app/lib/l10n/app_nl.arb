@@ -1,6 +1,5 @@
 {
   "@@locale": "nl",
-  
   "appName": "LOKMA",
   "search": "Zoeken",
   "searchHint": "Eten, restaurant of markt zoeken...",
@@ -9,10 +8,8 @@
   "searching": "Zoeken...",
   "popularSearches": "Populaire zoekopdrachten",
   "showMore": "Meer tonen",
-  
   "maxDistance": "Maximale afstand",
   "kmUnit": "km",
-  
   "categoryButcher": "Slager",
   "categoryMarket": "Markt",
   "categoryRestaurant": "Restaurant",
@@ -21,15 +18,12 @@
   "categoryPastry": "Bakkerij",
   "categoryCoffee": "Koffie",
   "categoryImbiss": "Snackbar",
-  
   "businesses": "Bedrijven",
   "products": "Producten",
   "categories": "Categorieën",
-  
   "order": "Bestellen",
   "go": "Ga",
   "orderAgain": "Opnieuw bestellen",
-  
   "profile": "Profiel",
   "welcome": "Welkom",
   "loginPrompt": "Log in om uw bestellingen te volgen en exclusieve aanbiedingen te ontvangen.",
@@ -38,22 +32,24 @@
   "loginWithApple": "Inloggen met Apple",
   "loginWithGoogle": "Inloggen met Google",
   "logout": "Uitloggen",
-  
   "myOrders": "Mijn bestellingen",
   "myFavorites": "Mijn favorieten",
   "myAddresses": "Mijn adressen",
   "paymentMethods": "Betaalmethoden",
   "notifications": "Meldingen",
   "help": "Hulp",
-  
   "home": "Startpagina",
   "orders": "Bestellingen",
-  
   "comingSoon": "Binnenkort beschikbaar",
-  
   "sendFlowers": "Bloemen sturen",
   "sameDay": "Levering dezelfde dag",
   "recipientName": "Naam ontvanger",
   "recipientPhone": "Telefoon ontvanger",
-  "cardMessage": "Kaartbericht"
+  "cardMessage": "Kaartbericht",
+  "checkoutButton": "Bestellen en betalen",
+  "checkoutTermsPrefix": "Door op Bestellen en betalen te klikken, gaat u akkoord met de inhoud van het winkelmandje, de ingevoerde gegevens, ons ",
+  "checkoutTermsSuffix": ".",
+  "privacyPolicy": "Privacybeleid",
+  "termsConjunction": " en onze ",
+  "termsOfUse": "Gebruiksvoorwaarden"
 }

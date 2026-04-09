@@ -8,6 +8,7 @@
 
 | Tarih | Hash | Aciklama | Not |
 |-------|------|----------|-----|
+| 2026-04-09 08:02 CET | `11f3cdb` | chore: changelog pagination deploy | MTN: buraya kadar ok |
 | 2026-04-09 07:48 CET | `f6db470` | fix: changelog pagination (50/sayfa) + mobil Safari uyumluluk | - |
 | 2026-04-09 07:27 CET | `92feb5a` | feat: LOKMA Time Machine - online changelog sayfasi | - |
 | 2026-04-09 07:20 CET | `b0bdd2a` | chore: LOKMA Time Machine changelog olusturuldu | - |

@@ -289,6 +289,10 @@ class FCMService {
         emoji = '💬';
         accentColor = const Color(0xFF9C27B0);
         break;
+      case 'kermes_flash_sale':
+        emoji = '🌟';
+        accentColor = const Color(0xFFE91E63);
+        break;
       default:
         emoji = '🔔';
         accentColor = const Color(0xFF6C63FF);
@@ -310,6 +314,11 @@ class FCMService {
               _navigateToDriverDeliveries(orderId);
             } else if (type == 'chat_message' && orderId != null) {
               _navigateToOrders(orderId: orderId, openChat: true);
+            } else if (type == 'kermes_flash_sale') {
+              final kermesId = data['kermesId'];
+              if (kermesId != null && kermesId.isNotEmpty) {
+                _navigateTo('/kermesler/$kermesId');
+              }
             } else {
               _navigateToOrders(orderId: orderId);
             }
@@ -335,13 +344,18 @@ class FCMService {
       _navigateToDriverDeliveries(orderId);
     } else if (type == 'chat_message' && orderId != null) {
       _navigateToOrders(orderId: orderId, openChat: true);
+    } else if (type == 'kermes_flash_sale') {
+      final kermesId = data['kermesId'];
+      if (kermesId != null && kermesId.isNotEmpty) {
+        _navigateTo('/kermesler/$kermesId');
+      } else {
+        _navigateTo('/notification-history');
+      }
     } else if (type == 'kermes_assignment' || type == 'parking_emergency') {
-      // Kermes gorev atamalari ve park acil anonslari -> Staff Hub
       _navigateTo('/staff-hub');
     } else if (orderId != null && orderId.isNotEmpty) {
       _navigateToOrders(orderId: orderId);
     } else {
-      // Bilinmeyen tip veya orderId yok -> bildirim gecmisine git
       _navigateTo('/notification-history');
     }
   }

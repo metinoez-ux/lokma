@@ -1,6 +1,5 @@
 {
   "@@locale": "it",
-  
   "appName": "LOKMA",
   "search": "Cerca",
   "searchHint": "Cerca cibo, ristorante o mercato...",
@@ -9,10 +8,8 @@
   "searching": "Ricerca in corso...",
   "popularSearches": "Ricerche popolari",
   "showMore": "Mostra di più",
-  
   "maxDistance": "Distanza massima",
   "kmUnit": "km",
-  
   "categoryButcher": "Macelleria",
   "categoryMarket": "Mercato",
   "categoryRestaurant": "Ristorante",
@@ -21,15 +18,12 @@
   "categoryPastry": "Pasticceria",
   "categoryCoffee": "Caffè",
   "categoryImbiss": "Fast food",
-  
   "businesses": "Attività",
   "products": "Prodotti",
   "categories": "Categorie",
-  
   "order": "Ordina",
   "go": "Vai",
   "orderAgain": "Ordina di nuovo",
-  
   "profile": "Profilo",
   "welcome": "Benvenuto",
   "loginPrompt": "Accedi per monitorare i tuoi ordini e ricevere offerte esclusive.",
@@ -38,22 +32,24 @@
   "loginWithApple": "Accedi con Apple",
   "loginWithGoogle": "Accedi con Google",
   "logout": "Esci",
-  
   "myOrders": "I miei ordini",
   "myFavorites": "I miei preferiti",
   "myAddresses": "I miei indirizzi",
   "paymentMethods": "Metodi di pagamento",
   "notifications": "Notifiche",
   "help": "Aiuto",
-  
   "home": "Home",
   "orders": "Ordini",
-  
   "comingSoon": "Prossimamente",
-  
   "sendFlowers": "Invia fiori",
   "sameDay": "Consegna in giornata",
   "recipientName": "Nome del destinatario",
   "recipientPhone": "Telefono del destinatario",
-  "cardMessage": "Messaggio del biglietto"
+  "cardMessage": "Messaggio del biglietto",
+  "checkoutButton": "Ordina e paga",
+  "checkoutTermsPrefix": "Cliccando su Ordina e paga, accetti il contenuto del carrello, i dati inseriti, la nostra ",
+  "checkoutTermsSuffix": ".",
+  "privacyPolicy": "Informativa sulla Privacy",
+  "termsConjunction": " e i nostri ",
+  "termsOfUse": "Termini di Utilizzo"
 }

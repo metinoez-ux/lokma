@@ -4351,7 +4351,18 @@
     "para_birimi": "Moneda",
     "fiyat_gosterim_modu": "Modo de visualizacion de precios",
     "urun_gorseli": "Imagen del producto",
-    "indirimli_fiyat": "Precio con descuento"
+    "indirimli_fiyat": "Precio con descuento",
+    "flash_sale_title": "Notificacion de Oferta",
+    "flash_sale_desc": "Push a los clientes",
+    "flash_sale_info": "Notificacion para: favoritos, suscriptores de campanas y usuarios en el radio objetivo.",
+    "flash_sale_target_radius": "Radio Objetivo",
+    "flash_sale_target_desc": "Cuantos km alrededor del evento?",
+    "flash_sale_products": "Productos con Descuento",
+    "flash_sale_preview": "Vista previa en el telefono:",
+    "flash_sale_cancel": "Cancelar",
+    "flash_sale_send": "Enviar Ahora",
+    "flash_sale_sending": "Enviando",
+    "flash_sale_btn": "Oferta Flash"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrador de empresas",

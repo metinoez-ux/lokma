@@ -4328,7 +4328,18 @@
     "para_birimi": "Valuta",
     "fiyat_gosterim_modu": "Modalita visualizzazione prezzi",
     "urun_gorseli": "Immagine prodotto",
-    "indirimli_fiyat": "Prezzo scontato"
+    "indirimli_fiyat": "Prezzo scontato",
+    "flash_sale_title": "Notifica Offerta Lampo",
+    "flash_sale_desc": "Push ai clienti",
+    "flash_sale_info": "Notifica a: preferiti, iscritti e utenti nel raggio target.",
+    "flash_sale_target_radius": "Raggio Target",
+    "flash_sale_target_desc": "Quanti km intorno?",
+    "flash_sale_products": "Prodotti Scontati",
+    "flash_sale_preview": "Anteprima telefono:",
+    "flash_sale_cancel": "Annulla",
+    "flash_sale_send": "Invia Ora",
+    "flash_sale_sending": "Invio in corso",
+    "flash_sale_btn": "Offerta Lampo"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪Amministrazione aziendale",

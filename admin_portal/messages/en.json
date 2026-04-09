@@ -4384,7 +4384,18 @@
     "para_birimi": "Currency",
     "fiyat_gosterim_modu": "Price Display Mode",
     "urun_gorseli": "Product Image",
-    "indirimli_fiyat": "Discount Price"
+    "indirimli_fiyat": "Discount Price",
+    "flash_sale_title": "Flash Sale Notification",
+    "flash_sale_desc": "Push notification to customers",
+    "flash_sale_info": "Notification goes to: favorites, campaign subscribers and users within target radius.",
+    "flash_sale_target_radius": "Target Radius",
+    "flash_sale_target_desc": "How many km around the event?",
+    "flash_sale_products": "Discounted Products",
+    "flash_sale_preview": "Phone Preview:",
+    "flash_sale_cancel": "Cancel",
+    "flash_sale_send": "Send Now",
+    "flash_sale_sending": "Sending",
+    "flash_sale_btn": "Flash Sale"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

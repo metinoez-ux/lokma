@@ -4386,7 +4386,18 @@
     "para_birimi": "Para Birimi",
     "fiyat_gosterim_modu": "Fiyat Gosterim Modu",
     "urun_gorseli": "Urun Gorseli",
-    "indirimli_fiyat": "Indirimli Fiyat"
+    "indirimli_fiyat": "Indirimli Fiyat",
+    "flash_sale_title": "Aksam Pazari Bildirimi",
+    "flash_sale_desc": "Musterilere Push Gonderilecek",
+    "flash_sale_info": "Bildirim, kermesi favorisine alanlar, kampanya bildirimlerini acanlar ve secilen captaki alicilara gider.",
+    "flash_sale_target_radius": "Hedef Mesafe Capi",
+    "flash_sale_target_desc": "Kermes etrafindaki kac km mesafeye gitsin?",
+    "flash_sale_products": "Gonderilecek Indirimli Urunler",
+    "flash_sale_preview": "Telefonlarda Cikacak Onizleme:",
+    "flash_sale_cancel": "Iptal",
+    "flash_sale_send": "Simdi Gonder",
+    "flash_sale_sending": "Gonderiliyor",
+    "flash_sale_btn": "Aksam Pazari"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 İşletme Admin",

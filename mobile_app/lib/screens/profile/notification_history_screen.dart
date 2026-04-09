@@ -1016,6 +1016,15 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       );
                     }
                     return GestureDetector(
+                      onTap: () {
+                        final type = data['type'] as String?;
+                        if (type == 'kermes_flash_sale') {
+                          final kermesId = data['kermesId'] as String?;
+                          if (kermesId != null && kermesId.isNotEmpty) {
+                            context.push('/kermesler/$kermesId');
+                          }
+                        }
+                      },
                       onLongPress: () {
                         HapticFeedback.mediumImpact();
                         setState(() {
@@ -3550,17 +3559,29 @@ class _GenericNotificationCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[800] : Colors.grey[100],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.notifications_active_rounded,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-                size: 20,
-              ),
+            Builder(
+              builder: (context) {
+                final type = data['type'] as String?;
+                final isFlashSale = type == 'kermes_flash_sale';
+                final tag = data['tag'] as String?;
+                final isCampaign = tag == 'kampanya' || isFlashSale;
+                return Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isCampaign
+                        ? (isDark ? const Color(0xFF880E4F).withOpacity(0.3) : const Color(0xFFFCE4EC))
+                        : (isDark ? Colors.grey[800] : Colors.grey[100]),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isCampaign ? Icons.local_mall_rounded : Icons.notifications_active_rounded,
+                    color: isCampaign
+                        ? (isDark ? const Color(0xFFE91E63) : const Color(0xFFC2185B))
+                        : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                    size: 20,
+                  ),
+                );
+              },
             ),
             const SizedBox(width: 14),
             Expanded(

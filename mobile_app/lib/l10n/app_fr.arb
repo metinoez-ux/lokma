@@ -1,6 +1,5 @@
 {
   "@@locale": "fr",
-  
   "appName": "LOKMA",
   "search": "Rechercher",
   "searchHint": "Rechercher nourriture, restaurant ou marché...",
@@ -9,10 +8,8 @@
   "searching": "Recherche en cours...",
   "popularSearches": "Recherches populaires",
   "showMore": "Afficher plus",
-  
   "maxDistance": "Distance maximale",
   "kmUnit": "km",
-  
   "categoryButcher": "Boucherie",
   "categoryMarket": "Marché",
   "categoryRestaurant": "Restaurant",
@@ -21,15 +18,12 @@
   "categoryPastry": "Pâtisserie",
   "categoryCoffee": "Café",
   "categoryImbiss": "Restauration rapide",
-  
   "businesses": "Commerces",
   "products": "Produits",
   "categories": "Catégories",
-  
   "order": "Commander",
   "go": "Aller",
   "orderAgain": "Commander à nouveau",
-  
   "profile": "Profil",
   "welcome": "Bienvenue",
   "loginPrompt": "Connectez-vous pour suivre vos commandes et recevoir des offres exclusives.",
@@ -38,22 +32,24 @@
   "loginWithApple": "Se connecter avec Apple",
   "loginWithGoogle": "Se connecter avec Google",
   "logout": "Déconnexion",
-  
   "myOrders": "Mes commandes",
   "myFavorites": "Mes favoris",
   "myAddresses": "Mes adresses",
   "paymentMethods": "Moyens de paiement",
   "notifications": "Notifications",
   "help": "Aide",
-  
   "home": "Accueil",
   "orders": "Commandes",
-  
   "comingSoon": "Bientôt disponible",
-  
   "sendFlowers": "Envoyer des fleurs",
   "sameDay": "Livraison le jour même",
   "recipientName": "Nom du destinataire",
   "recipientPhone": "Téléphone du destinataire",
-  "cardMessage": "Message de carte"
+  "cardMessage": "Message de carte",
+  "checkoutButton": "Commander et payer",
+  "checkoutTermsPrefix": "En cliquant sur Commander et payer, vous acceptez le contenu du panier, les données que vous avez saisies, notre ",
+  "checkoutTermsSuffix": ".",
+  "privacyPolicy": "Politique de Confidentialité",
+  "termsConjunction": " et nos ",
+  "termsOfUse": "Conditions d utilisation"
 }
