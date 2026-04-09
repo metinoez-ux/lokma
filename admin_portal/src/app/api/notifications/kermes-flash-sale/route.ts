@@ -171,7 +171,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Firestore Inbox'a kaydet
-    const now = new Date();
+    const admin = require('firebase-admin');
+    const now = admin.firestore.Timestamp.now();
     const MAX_BATCH = 500;
     const userIds = Array.from(new Set(tokenToUserId.values()));
 
@@ -204,6 +205,11 @@ export async function POST(request: NextRequest) {
       
       await batch.commit();
     }
+
+    // Gecmis kaydi
+    await db.collection('kermesEvents').doc(kermesId).collection('notificationHistory').add({
+      type: 'flash_sale', title, body: messageBody, sentCount: successCount, sentAt: now,
+    });
 
     return NextResponse.json({
       success: true,

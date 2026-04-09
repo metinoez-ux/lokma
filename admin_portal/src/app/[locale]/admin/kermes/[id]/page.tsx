@@ -285,7 +285,7 @@ export default function KermesDetailPage() {
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
- const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat'>('bilgi');
+ const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat' | 'bildirimler'>('bilgi');
   const [bilgiSubTab, setBilgiSubTab] = useState<'genel' | 'marka' | 'ozellikler' | 'teslimat' | 'fiyat' | 'imkanlar'>('genel');
  // Mutfak: PrepZone -> Personel atamalari
  const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
@@ -487,6 +487,22 @@ export default function KermesDetailPage() {
  const [flashTargetFavorites, setFlashTargetFavorites] = useState(true);
  const [flashTargetStaff, setFlashTargetStaff] = useState(true);
  const [flashTargetNearby, setFlashTargetNearby] = useState(true);
+  const [showParkingModal, setShowParkingModal] = useState(false);
+  const [isSendingParking, setIsSendingParking] = useState(false);
+  const [vehiclePlate, setVehiclePlate] = useState('');
+  const [vehicleColor, setVehicleColor] = useState('');
+  const [vehicleBrand, setVehicleBrand] = useState('');
+  const [vehicleImageUrl, setVehicleImageUrl] = useState('');
+  const [parkRadius, setParkRadius] = useState<number>(1);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [isSendingManual, setIsSendingManual] = useState(false);
+  const [manualTitle, setManualTitle] = useState('');
+  const [manualBody, setManualBody] = useState('');
+  const [manualTargetFavorites, setManualTargetFavorites] = useState(true);
+  const [manualTargetStaff, setManualTargetStaff] = useState(true);
+  const [manualTargetNearby, setManualTargetNearby] = useState(true);
+  const [manualRadius, setManualRadius] = useState<number>(5);
+  const [notifHistory, setNotifHistory] = useState<any[]>([]);
  const [modalView, setModalView] = useState<'select' | 'catalog' | 'master' | 'custom'>('select');
  const [selectedCategory, setSelectedCategory] = useState('');
  const [searchQuery, setSearchQuery] = useState('');
@@ -1787,8 +1803,8 @@ export default function KermesDetailPage() {
          kermesId,
          kermesTitle: kermes.title,
          targetRadiusKm: flashSaleRadius,
-         kermesLat: kermes.parkingInfo?.latitude || kermes.address?.location?.latitude,
-         kermesLng: kermes.parkingInfo?.longitude || kermes.address?.location?.longitude,
+         kermesLat: kermes.latitude || null,
+         kermesLng: kermes.longitude || null,
          targetGroups: {
            favorites: flashTargetFavorites,
            staff: flashTargetStaff,
@@ -1818,6 +1834,114 @@ export default function KermesDetailPage() {
    }
  };
 
+
+  // ── Park Anons handler ──
+  const handleSendParkingAnnouncement = async () => {
+    if (!vehiclePlate.trim()) {
+      toast.error('Plaka bilgisi zorunlu.');
+      return;
+    }
+    setIsSendingParking(true);
+    try {
+      const plateUpper = vehiclePlate.trim().toUpperCase();
+      // Dogru gramer: "Siyah Mercedes (HS QT 3410) plakali arac sahibi..."
+      let vehicleInfo = '';
+      if (vehicleColor.trim()) vehicleInfo += vehicleColor.trim() + ' ';
+      if (vehicleBrand.trim()) vehicleInfo += vehicleBrand.trim() + ' ';
+      vehicleInfo += `(${plateUpper})`;
+      const message = `ACIL PARK ANONSU: ${vehicleInfo} plakalı araç sahibi, lütfen aracınızı acilen çekiniz!`;
+      console.log('[PARKING-PUSH] Sending:', { kermesId, message, kermesLat: kermes.latitude, kermesLng: kermes.longitude });
+      const response = await fetch('/api/notifications/kermes-parking-announcement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kermesId,
+          kermesTitle: kermes.title,
+          message,
+          vehiclePlate: plateUpper,
+          vehicleColor: vehicleColor.trim(),
+          vehicleBrand: vehicleBrand.trim(),
+          vehicleImageUrl: vehicleImageUrl || null,
+          targetRadiusKm: parkRadius,
+          kermesLat: kermes.latitude || null,
+          kermesLng: kermes.longitude || null,
+          targetGroups: { favorites: false, staff: false, nearby: true },
+        }),
+      });
+      console.log('[PARKING-PUSH] Response status:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[PARKING-PUSH] Error response:', errorText);
+        toast.error(`API hatasi: ${response.status}`);
+        return;
+      }
+      const data = await response.json();
+      console.log('[PARKING-PUSH] Result:', data);
+      if (data.success) {
+        toast.success(`Acil arac anonsu gonderildi! (${data.sentCount} kisi)`);
+        setShowParkingModal(false);
+        setVehiclePlate(''); setVehicleColor(''); setVehicleBrand(''); setVehicleImageUrl('');
+      } else {
+        toast.error(data.error || 'Gonderilemedi');
+      }
+    } catch (error) {
+      toast.error(String(error));
+    } finally {
+      setIsSendingParking(false);
+    }
+  };
+
+  // ── Manuel Bildirim handler ──
+  const handleSendManualNotification = async () => {
+    if (!manualTitle.trim() || !manualBody.trim()) {
+      toast.error('Baslik ve icerik bos birakilamaz.');
+      return;
+    }
+    setIsSendingManual(true);
+    try {
+      const response = await fetch('/api/notifications/kermes-manual-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kermesId,
+          kermesTitle: kermes.title,
+          title: manualTitle.trim(),
+          body: manualBody.trim(),
+          targetRadiusKm: manualRadius,
+          kermesLat: kermes.latitude || null,
+          kermesLng: kermes.longitude || null,
+          targetGroups: { favorites: manualTargetFavorites, staff: manualTargetStaff, nearby: manualTargetNearby },
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success(`Bildirim gonderildi! (${data.sentCount} kisi)`);
+        setShowManualModal(false);
+        setManualTitle('');
+        setManualBody('');
+      } else {
+        toast.error(data.error || 'Gönderilemedi');
+      }
+    } catch (error) {
+      toast.error(String(error));
+    } finally {
+      setIsSendingManual(false);
+    }
+  };
+
+  // ── Bildirim Gecmisi yukle ──
+  const loadNotifHistory = async () => {
+    try {
+      const { getFirestore } = await import('firebase/firestore');
+      const firestore = getFirestore();
+      const histRef = collection(firestore, 'kermesEvents', kermesId, 'notificationHistory');
+      const q = query(histRef, orderBy('sentAt', 'desc'), limit(50));
+      const snap = await getDocs(q);
+      setNotifHistory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+      console.warn('notifHistory load error:', e);
+    }
+  };
  const handleDeleteProduct = (product: KermesProduct) => {
  setDeleteConfirm(product);
  };
@@ -1971,6 +2095,12 @@ export default function KermesDetailPage() {
           <button onClick={() => setActiveTab('tahsilat')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
             Tahsilat
+          </button>
+        )}
+        {(isSuperAdmin || isKermesAdminOfThis) && (
+          <button onClick={() => setActiveTab('bildirimler')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+            <span className="material-symbols-outlined text-base align-middle mr-1">notifications</span>Bildirimler
           </button>
         )}
       </div>
@@ -4200,13 +4330,6 @@ export default function KermesDetailPage() {
  <span className="material-symbols-outlined text-base">restart_alt</span> Gun Basla
  </button>
  )}
- {products.some(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable) && (
- <button onClick={() => setShowFlashSaleModal(true)}
- className="px-3 py-2 bg-pink-600/20 text-pink-800 dark:text-pink-400 rounded-lg text-sm font-medium hover:bg-pink-600/40 flex items-center gap-1"
- title="Indirimli urunleri push bildirimde paylas">
- <span className="material-symbols-outlined text-base">campaign</span> {t('flash_sale_btn')}
- </button>
- )}
  <button onClick={() => setShowCategoryModal(true)}
  className="px-3 py-2 bg-purple-600/20 text-purple-800 dark:text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-600/40">
  {t('kategori_ekle')}
@@ -5784,6 +5907,127 @@ export default function KermesDetailPage() {
  )}
 
  
+
+ {/* ── Tab Content: Bildirimler ── */}
+ {activeTab === 'bildirimler' && (
+ <div className="space-y-6">
+   <div className="flex items-center gap-3 mb-2">
+     <span className="material-symbols-outlined text-2xl text-violet-500">notifications_active</span>
+     <div>
+       <h3 className="text-lg font-bold text-foreground">Push Bildirimler</h3>
+       <p className="text-sm text-muted-foreground">Kermes ziyaretcilerine bildirim gonderin</p>
+     </div>
+   </div>
+
+   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+     {/* Kart 1: Aksam Pazari */}
+     <button onClick={() => setShowFlashSaleModal(true)}
+       disabled={!products.some(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable)}
+       className="group p-5 rounded-xl border border-border bg-card hover:bg-pink-600/5 hover:border-pink-500/40 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
+       <div className="flex items-center gap-3 mb-3">
+         <div className="w-10 h-10 rounded-lg bg-pink-600/15 flex items-center justify-center">
+           <span className="material-symbols-outlined text-xl text-pink-500">campaign</span>
+         </div>
+         <div>
+           <h4 className="font-bold text-sm text-foreground">Aksam Pazari (Flash Sale)</h4>
+           <p className="text-xs text-muted-foreground">Indirimli urunleri duyur</p>
+         </div>
+       </div>
+       <p className="text-xs text-muted-foreground leading-relaxed">
+         Indirimde olan urunleri secilen hedef kitleye push bildirim olarak gonderin.
+       </p>
+       {products.some(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable) ? (
+         <div className="mt-3 px-2 py-1 bg-pink-600/10 text-pink-500 rounded text-xs font-medium w-fit">
+           {products.filter(p => p.discountPrice && p.discountPrice > 0 && !p.isSoldOut && p.isAvailable).length} indirimli urun mevcut
+         </div>
+       ) : (
+         <div className="mt-3 px-2 py-1 bg-muted/50 text-muted-foreground rounded text-xs w-fit">
+           Indirimli urun yok
+         </div>
+       )}
+     </button>
+
+     {/* Kart 2: Acil Arac Anonsu */}
+     <button onClick={() => setShowParkingModal(true)}
+       className="group p-5 rounded-xl border border-border bg-card hover:bg-red-600/5 hover:border-red-500/40 transition-all text-left">
+       <div className="flex items-center gap-3 mb-3">
+         <div className="w-10 h-10 rounded-lg bg-red-600/15 flex items-center justify-center">
+           <span className="material-symbols-outlined text-xl text-red-500">car_crash</span>
+         </div>
+         <div>
+           <h4 className="font-bold text-sm text-foreground">Acil Arac Anonsu</h4>
+           <p className="text-xs text-muted-foreground">Araç çekilmeli bildirimi</p>
+         </div>
+       </div>
+       <p className="text-xs text-muted-foreground leading-relaxed">
+         Yanlış park eden araçların sahiplerini acil olarak bilgilendirin. Plaka, renk ve marka ile anons yapın.
+       </p>
+     </button>
+
+     {/* Kart 3: Genel Duyuru / Manuel */}
+     <button onClick={() => setShowManualModal(true)}
+       className="group p-5 rounded-xl border border-border bg-card hover:bg-emerald-600/5 hover:border-emerald-500/40 transition-all text-left">
+       <div className="flex items-center gap-3 mb-3">
+         <div className="w-10 h-10 rounded-lg bg-emerald-600/15 flex items-center justify-center">
+           <span className="material-symbols-outlined text-xl text-emerald-500">edit_notifications</span>
+         </div>
+         <div>
+           <h4 className="font-bold text-sm text-foreground">Genel Duyuru</h4>
+           <p className="text-xs text-muted-foreground">Serbest bildirim yaz</p>
+         </div>
+       </div>
+       <p className="text-xs text-muted-foreground leading-relaxed">
+         Kendi baslik ve iceriginizle ozel bir push bildirim gonderin.
+       </p>
+     </button>
+
+     {/* Kart 4: Bildirim Gecmisi */}
+     <button onClick={loadNotifHistory}
+       className="group p-5 rounded-xl border border-border bg-card hover:bg-amber-600/5 hover:border-amber-500/40 transition-all text-left">
+       <div className="flex items-center gap-3 mb-3">
+         <div className="w-10 h-10 rounded-lg bg-amber-600/15 flex items-center justify-center">
+           <span className="material-symbols-outlined text-xl text-amber-500">history</span>
+         </div>
+         <div>
+           <h4 className="font-bold text-sm text-foreground">Bildirim Gecmisi</h4>
+           <p className="text-xs text-muted-foreground">Gonderilen bildirimleri gor</p>
+         </div>
+       </div>
+       <p className="text-xs text-muted-foreground leading-relaxed">
+         Bu kermes icin daha once gonderilen tum bildirimlerin kaydini goruntuleyin.
+       </p>
+     </button>
+   </div>
+
+   {/* Bildirim Gecmisi Listesi */}
+   {notifHistory.length > 0 && (
+     <div className="mt-6">
+       <h4 className="font-bold text-sm text-foreground mb-3 flex items-center gap-2">
+         <span className="material-symbols-outlined text-base text-amber-500">history</span>
+         Son Gonderilen Bildirimler
+       </h4>
+       <div className="space-y-2">
+         {notifHistory.map((n: any) => (
+           <div key={n.id} className="p-3 rounded-lg bg-card border border-border flex items-center gap-3">
+             <span className="material-symbols-outlined text-base text-muted-foreground">
+               {n.type === 'flash_sale' ? 'campaign' : n.type === 'parking' ? 'local_parking' : 'notifications'}
+             </span>
+             <div className="flex-1 min-w-0">
+               <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+               <p className="text-xs text-muted-foreground truncate">{n.body}</p>
+             </div>
+             <div className="text-right shrink-0">
+               <p className="text-xs text-muted-foreground">{n.sentCount || 0} kisi</p>
+               <p className="text-xs text-muted-foreground">{n.sentAt?.toDate?.()?.toLocaleDateString('tr-TR') || ''}</p>
+             </div>
+           </div>
+         ))}
+       </div>
+     </div>
+   )}
+ </div>
+ )}
+
   {/* Flash Sale Push Notification Modal */}
  {showFlashSaleModal && (
  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => !isSendingFlashSale && setShowFlashSaleModal(false)}>
@@ -5921,6 +6165,191 @@ export default function KermesDetailPage() {
  </div>
  </div>
  )}
+
+ {/* -- Acil Arac Anonsu Modal -- */}
+ {showParkingModal && (
+ <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => !isSendingParking && setShowParkingModal(false)}>
+ <div className="bg-card rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+   {/* Header */}
+   <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-red-600/10">
+     <div className="p-2 rounded-lg bg-red-600/20"><span className="material-symbols-outlined text-red-500">car_crash</span></div>
+     <div>
+       <h3 className="font-bold text-foreground">Acil Arac Anonsu</h3>
+       <p className="text-xs text-muted-foreground">{kermes.title} - Araç çekilmeli!</p>
+     </div>
+     <button onClick={() => setShowParkingModal(false)} disabled={isSendingParking} className="ml-auto text-muted-foreground hover:text-foreground">
+       <span className="material-symbols-outlined">close</span>
+     </button>
+   </div>
+   {/* Content */}
+   <div className="p-5 flex-1 overflow-y-auto space-y-4">
+     {/* Uyari */}
+     <div className="flex items-start gap-2 p-3 rounded-lg bg-red-600/10 border border-red-500/20">
+       <span className="material-symbols-outlined text-red-500 text-base mt-0.5">warning</span>
+       <p className="text-xs text-red-400">Bu bildirim 1km yarıçaptaki tüm kermes bildirimlerini açmış kullanıcılara gönderilir.</p>
+     </div>
+     {/* Plaka */}
+     <div>
+       <label className="text-sm font-medium text-foreground">Plaka No <span className="text-red-500">*</span></label>
+       <input type="text" value={vehiclePlate} onChange={e => setVehiclePlate(e.target.value.toUpperCase())}
+         placeholder="34 ABC 123"
+         className="mt-1 w-full px-3 py-2.5 bg-background border border-input rounded-lg text-sm font-bold tracking-wider uppercase focus:ring-2 focus:ring-red-500/50" />
+     </div>
+     {/* Renk */}
+     <div>
+       <label className="text-sm font-medium text-foreground">Araba Rengi</label>
+       <div className="mt-1.5 flex flex-wrap gap-1.5">
+         {['Siyah', 'Beyaz', 'Gri', 'Gümüş', 'Mavi'].map(c => (
+           <button key={c} type="button" onClick={() => setVehicleColor(vehicleColor === c ? '' : c)}
+             className={`px-3 py-1 rounded-full text-xs font-medium border transition ${vehicleColor === c ? 'bg-red-600 text-white border-red-600' : 'bg-background border-border text-muted-foreground hover:border-red-500/40'}`}>
+             {c}
+           </button>
+         ))}
+       </div>
+       <input type="text" value={vehicleColor} onChange={e => setVehicleColor(e.target.value)}
+         placeholder="Ya da farklı renk yazın..."
+         className="mt-1.5 w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-red-500/50" />
+     </div>
+     {/* Marka */}
+     <div>
+       <label className="text-sm font-medium text-foreground">Araba Markası</label>
+       <div className="mt-1.5 flex flex-wrap gap-1.5">
+         {['VW', 'BMW', 'Mercedes', 'Audi', 'Opel'].map(b => (
+           <button key={b} type="button" onClick={() => setVehicleBrand(vehicleBrand === b ? '' : b)}
+             className={`px-3 py-1 rounded-full text-xs font-medium border transition ${vehicleBrand === b ? 'bg-red-600 text-white border-red-600' : 'bg-background border-border text-muted-foreground hover:border-red-500/40'}`}>
+             {b}
+           </button>
+         ))}
+       </div>
+       <input type="text" value={vehicleBrand} onChange={e => setVehicleBrand(e.target.value)}
+         placeholder="Ya da farklı marka yazın..."
+         className="mt-1.5 w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-red-500/50" />
+     </div>
+     {/* Resim Ekleme */}
+     <div>
+       <label className="text-sm font-medium text-foreground">Araç Fotoğrafı (Opsiyonel)</label>
+       <div className="mt-1">
+         {vehicleImageUrl ? (
+           <div className="relative">
+             <img src={vehicleImageUrl} alt="Arac" className="w-full h-40 object-cover rounded-lg border border-border" />
+             <button onClick={() => setVehicleImageUrl('')} className="absolute top-2 right-2 p-1 bg-black/60 rounded-full text-white hover:bg-black/80">
+               <span className="material-symbols-outlined text-sm">close</span>
+             </button>
+           </div>
+         ) : (
+           <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-red-500/40 hover:bg-red-600/5 transition">
+             <span className="material-symbols-outlined text-2xl text-muted-foreground mb-1">add_a_photo</span>
+             <span className="text-xs text-muted-foreground">Resim yükle</span>
+             <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+               const file = e.target.files?.[0];
+               if (!file) return;
+               try {
+                 const { getStorage } = await import('firebase/storage');
+                 const storage = getStorage();
+                 const storageRef = ref(storage, `kermes/${kermesId}/parking/${Date.now()}_${file.name}`);
+                 await uploadBytes(storageRef, file);
+                 const url = await getDownloadURL(storageRef);
+                 setVehicleImageUrl(url);
+               } catch (err) { console.error('Upload error:', err); }
+             }} />
+           </label>
+         )}
+       </div>
+     </div>
+     {/* Onizleme */}
+     {vehiclePlate.trim() && (
+       <div className="p-3 rounded-lg bg-red-600/10 border border-red-500/20">
+         <p className="text-xs font-medium text-foreground mb-1">Push Önizleme:</p>
+         <p className="text-xs text-muted-foreground">
+           ACIL PARK ANONSU: {vehicleColor.trim() ? `${vehicleColor.trim()} ` : ''}{vehicleBrand.trim() ? `${vehicleBrand.trim()} ` : ''}({vehiclePlate.trim().toUpperCase()}) plakalı araç sahibi, lütfen aracınızı acilen çekiniz!
+         </p>
+       </div>
+     )}
+   </div>
+   {/* Footer */}
+   <div className="border-t border-border px-5 py-3 flex gap-3">
+     <button onClick={() => setShowParkingModal(false)} disabled={isSendingParking} className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-background border border-input hover:bg-muted text-foreground transition">Iptal</button>
+     <button onClick={handleSendParkingAnnouncement} disabled={isSendingParking || !vehiclePlate.trim()}
+       className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50 flex items-center justify-center gap-2">
+       {isSendingParking ? (<>Gönderiliyor <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span></>) : 'Acil Anons Gönder'}
+     </button>
+   </div>
+ </div>
+ </div>
+ )}
+
+ {/* ── Manuel Bildirim Modal ── */}
+ {showManualModal && (
+ <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => !isSendingManual && setShowManualModal(false)}>
+ <div className="bg-card rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+   {/* Header */}
+   <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+     <div className="p-2 rounded-lg bg-emerald-600/15"><span className="material-symbols-outlined text-emerald-500">edit_notifications</span></div>
+     <div>
+       <h3 className="font-bold text-foreground">Genel Duyuru</h3>
+       <p className="text-xs text-muted-foreground">{kermes.title}</p>
+     </div>
+     <button onClick={() => setShowManualModal(false)} disabled={isSendingManual} className="ml-auto text-muted-foreground hover:text-foreground">
+       <span className="material-symbols-outlined">close</span>
+     </button>
+   </div>
+   {/* Content */}
+   <div className="p-5 flex-1 overflow-y-auto space-y-4">
+     <div>
+       <label className="text-sm font-medium text-foreground">Baslik</label>
+       <input type="text" value={manualTitle} onChange={e => setManualTitle(e.target.value)}
+         placeholder="Bildirim basligi..."
+         className="mt-1 w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50" />
+     </div>
+     <div>
+       <label className="text-sm font-medium text-foreground">Icerik</label>
+       <textarea value={manualBody} onChange={e => setManualBody(e.target.value)}
+         placeholder="Bildirim icerigi..."
+         className="mt-1 w-full px-3 py-2 bg-background border border-input rounded-lg text-sm resize-none h-24 focus:ring-2 focus:ring-emerald-500/50" />
+     </div>
+     {/* Hedef Kitle */}
+     <div>
+       <h4 className="font-medium text-sm text-foreground mb-2">Hedef Kitle</h4>
+       <div className="space-y-2">
+         <label className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border cursor-pointer hover:bg-muted/50 transition">
+           <input type="checkbox" checked={manualTargetFavorites} onChange={e => setManualTargetFavorites(e.target.checked)} className="w-4 h-4 rounded accent-emerald-600" />
+           <span className="material-symbols-outlined text-base text-pink-600">favorite</span>
+           <span className="text-sm font-medium">Favoriler</span>
+         </label>
+         <label className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border cursor-pointer hover:bg-muted/50 transition">
+           <input type="checkbox" checked={manualTargetStaff} onChange={e => setManualTargetStaff(e.target.checked)} className="w-4 h-4 rounded accent-emerald-600" />
+           <span className="material-symbols-outlined text-base text-blue-500">badge</span>
+           <span className="text-sm font-medium">Personel & Adminler</span>
+         </label>
+         <label className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border cursor-pointer hover:bg-muted/50 transition">
+           <input type="checkbox" checked={manualTargetNearby} onChange={e => setManualTargetNearby(e.target.checked)} className="w-4 h-4 rounded accent-emerald-600" />
+           <span className="material-symbols-outlined text-base text-green-500">near_me</span>
+           <span className="text-sm font-medium">Yakin Cevredekiler</span>
+         </label>
+       </div>
+       {manualTargetNearby && (
+         <div className="mt-2 flex items-center gap-2">
+           <span className="text-sm text-muted-foreground">Yaricap:</span>
+           <select value={manualRadius} onChange={e => setManualRadius(Number(e.target.value))}
+             className="px-3 py-1.5 bg-background border border-input rounded-lg text-sm font-bold">
+             <option value={1}>1 KM</option><option value={2}>2 KM</option><option value={5}>5 KM</option><option value={10}>10 KM</option><option value={50}>50 KM</option>
+           </select>
+         </div>
+       )}
+     </div>
+   </div>
+   {/* Footer */}
+   <div className="border-t border-border px-5 py-3 flex gap-3">
+     <button onClick={() => setShowManualModal(false)} disabled={isSendingManual} className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-background border border-input hover:bg-muted text-foreground transition">Iptal</button>
+     <button onClick={handleSendManualNotification} disabled={isSendingManual || (!manualTargetFavorites && !manualTargetStaff && !manualTargetNearby) || !manualTitle.trim() || !manualBody.trim()}
+       className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition disabled:opacity-50 flex items-center justify-center gap-2">
+       {isSendingManual ? (<>Gönderiliyor <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span></>) : 'Gonder'}
+     </button>
+   </div>
+ </div>
+ </div>
+ )}
+
 
  </div>
  );
