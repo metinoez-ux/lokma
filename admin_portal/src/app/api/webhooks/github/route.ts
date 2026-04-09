@@ -1,22 +1,36 @@
 import { NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
+import * as crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
     const authHeader = req.headers.get('authorization');
+    const signature = req.headers.get('x-hub-signature-256');
     const secret = process.env.GITHUB_WEBHOOK_SECRET;
 
-    // Eger ENV henuz girilmediyse guvenlik acigi yaratmamak icin patlat
     if (!secret) {
       return NextResponse.json({ error: 'GITHUB_WEBHOOK_SECRET not configured' }, { status: 500 });
     }
 
-    if (authHeader !== `Bearer ${secret}`) {
+    const payloadText = await req.text();
+    let isAuthorized = false;
+
+    if (authHeader === `Bearer ${secret}`) {
+      isAuthorized = true;
+    } else if (signature) {
+      const hmac = crypto.createHmac('sha256', secret);
+      const digest = 'sha256=' + hmac.update(payloadText).digest('hex');
+      if (crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = JSON.parse(payloadText);
 
     if (!body.commits || !body.commits.length) {
       return NextResponse.json({ message: 'No commits found' }, { status: 200 });
