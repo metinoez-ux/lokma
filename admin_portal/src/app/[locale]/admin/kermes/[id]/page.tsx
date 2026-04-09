@@ -1913,6 +1913,56 @@ export default function KermesDetailPage() {
    {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Ozellikler',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'imkanlar' as const,l:'Park Ayarlari',c:'bg-teal-600'}]).map(t=>(
     <button key={t.k} onClick={()=>setBilgiSubTab(t.k)} className={`px-3 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-shrink-0 ${bilgiSubTab===t.k?t.c+' text-white shadow':'text-muted-foreground hover:text-foreground hover:bg-muted/60'}`}>{t.l}</button>
    ))}
+   <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+    {!isEditing ? (
+    <button onClick={() => {
+    const startD = kermes?.date?.toDate?.() || kermes?.startDate?.toDate?.() || (kermes?.date?.seconds ? new Date(kermes.date.seconds * 1000) : (kermes?.startDate?.seconds ? new Date(kermes.startDate.seconds * 1000) : null));
+    const endD = kermes?.endDate?.toDate?.() || (kermes?.endDate?.seconds ? new Date(kermes.endDate.seconds * 1000) : null);
+    setEditForm({
+    title: kermes?.title || '', titleSecondary: kermes?.titleSecondary || '',
+    description: kermes?.description || '', descriptionSecondary: kermes?.descriptionSecondary || '',
+    secondaryLanguage: kermes?.secondaryLanguage || 'de',
+    date: startD ? (startD as Date).toISOString().split('T')[0] : '',
+    endDate: endD ? (endD as Date).toISOString().split('T')[0] : '',
+    openingTime: normalizeTimeString(kermes?.openingTime || '') || '',
+    closingTime: normalizeTimeString(kermes?.closingTime || '') || '',
+    address: kermes?.address || '', secondStreetName: kermes?.secondStreetName || '',
+    city: kermes?.city || '', postalCode: kermes?.postalCode || '',
+    country: kermes?.country || '',
+    contactName: kermes?.contactName || '', contactFirstName: kermes?.contactFirstName || '',
+    contactLastName: kermes?.contactLastName || '', contactPhone: kermes?.contactPhone || '',
+    phoneCountryCode: kermes?.phoneCountryCode || '+49',
+    isMenuOnly: kermes?.isMenuOnly || false,
+    hasTakeaway: kermes?.hasTakeaway !== false, hasDineIn: kermes?.hasDineIn ?? true,
+    hasDelivery: kermes?.hasDelivery || false,
+    deliveryFee: kermes?.deliveryFee || 0, minCartForFreeDelivery: kermes?.minCartForFreeDelivery || 0,
+    minOrderAmount: kermes?.minOrderAmount || 0,
+    parkingLocations: kermes?.parkingLocations || [], generalParkingNote: kermes?.generalParkingNote || '',
+    hasPfandSystem: kermes?.hasPfandSystem || false, pfandAmount: kermes?.pfandAmount || 0.25,
+    showKdv: kermes?.showKdv || false, kdvRate: kermes?.kdvRate || 7,
+    pricesIncludeKdv: kermes?.pricesIncludeKdv !== false,
+    headerImage: kermes?.headerImage || '', headerImageId: kermes?.headerImageId || '',
+    sponsor: kermes?.sponsor || 'none', activeBadgeIds: kermes?.activeBadgeIds || [],
+    acceptsDonations: kermes?.acceptsDonations || false,
+    selectedDonationFundId: kermes?.selectedDonationFundId || '',
+    selectedDonationFundName: kermes?.selectedDonationFundName || '',
+    latitude: kermes?.latitude || null, longitude: kermes?.longitude || null,
+    customRoles: kermes?.customRoles || [],
+    isSilaYolu: (kermes as any)?.isSilaYolu || false,
+    });
+    setEditFeatures(kermes?.features || []);
+    setEditCustomFeatures(kermes?.customFeatures || []);
+    setIsEditing(true);
+    }} className="px-3 py-1.5 bg-gray-700 text-gray-100 rounded-lg text-xs hover:bg-gray-600 transition border border-gray-600">
+    {t('duzenle') || 'Duzenle'}
+    </button>
+    ) : (
+    <>
+    <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 bg-gray-600 text-gray-300 rounded-lg text-xs hover:bg-gray-500 transition border border-gray-500">{t('cancel_btn')}</button>
+    <button onClick={handleSaveEdits} disabled={saving} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-500 transition font-semibold disabled:opacity-50">{saving ? '...' : t('kaydet')}</button>
+    </>
+    )}
+   </div>
   </div>
 
  {/* TAB: Genel Ayarlar */}
@@ -1920,74 +1970,7 @@ export default function KermesDetailPage() {
  <>
  {/* Main Info Card */}
  <div className="bg-card rounded-xl p-6">
- <div className="flex items-center justify-between mb-4">
- <h3 className="text-foreground font-bold">📋 Kermes Bilgileri</h3>
- {!isEditing ? (
- <button onClick={() => {
- const startD = kermes?.date?.toDate?.() || kermes?.startDate?.toDate?.() || (kermes?.date?.seconds ? new Date(kermes.date.seconds * 1000) : (kermes?.startDate?.seconds ? new Date(kermes.startDate.seconds * 1000) : null));
- const endD = kermes?.endDate?.toDate?.() || (kermes?.endDate?.seconds ? new Date(kermes.endDate.seconds * 1000) : null);
- 
- setEditForm({
- title: kermes?.title || '',
- titleSecondary: kermes?.titleSecondary || '',
- description: kermes?.description || '',
- descriptionSecondary: kermes?.descriptionSecondary || '',
- secondaryLanguage: kermes?.secondaryLanguage || 'de',
- date: startD ? (startD as Date).toISOString().split('T')[0] : '',
- endDate: endD ? (endD as Date).toISOString().split('T')[0] : '',
- openingTime: normalizeTimeString(kermes?.openingTime || '') || '',
- closingTime: normalizeTimeString(kermes?.closingTime || '') || '',
- address: kermes?.address || '',
- secondStreetName: kermes?.secondStreetName || '',
- city: kermes?.city || '',
- postalCode: kermes?.postalCode || '',
- country: kermes?.country || '',
- contactName: kermes?.contactName || '',
- contactFirstName: kermes?.contactFirstName || '',
- contactLastName: kermes?.contactLastName || '',
- contactPhone: kermes?.contactPhone || '',
- phoneCountryCode: kermes?.phoneCountryCode || '+49',
- isMenuOnly: kermes?.isMenuOnly || false,
- hasTakeaway: kermes?.hasTakeaway !== false,
- hasDineIn: kermes?.hasDineIn ?? true,
- hasDelivery: kermes?.hasDelivery || false,
- deliveryFee: kermes?.deliveryFee || 0,
- minCartForFreeDelivery: kermes?.minCartForFreeDelivery || 0,
- minOrderAmount: kermes?.minOrderAmount || 0,
- parkingLocations: kermes?.parkingLocations || [],
- generalParkingNote: kermes?.generalParkingNote || '',
- hasPfandSystem: kermes?.hasPfandSystem || false,
- pfandAmount: kermes?.pfandAmount || 0.25,
- showKdv: kermes?.showKdv || false,
- kdvRate: kermes?.kdvRate || 7,
- pricesIncludeKdv: kermes?.pricesIncludeKdv !== false,
- headerImage: kermes?.headerImage || '',
- headerImageId: kermes?.headerImageId || '',
- sponsor: kermes?.sponsor || 'none',
- activeBadgeIds: kermes?.activeBadgeIds || [],
- acceptsDonations: kermes?.acceptsDonations || false,
- selectedDonationFundId: kermes?.selectedDonationFundId || '',
- selectedDonationFundName: kermes?.selectedDonationFundName || '',
- latitude: kermes?.latitude || null,
- longitude: kermes?.longitude || null,
- customRoles: kermes?.customRoles || [],
-  isSilaYolu: (kermes as any)?.isSilaYolu || false,
- });
- setEditFeatures(kermes?.features || []);
- setEditCustomFeatures(kermes?.customFeatures || []);
- setIsEditing(true);
- }} className="px-3 py-1 bg-muted/50 text-foreground/90 dark:bg-gray-700 dark:text-gray-100 rounded-lg text-sm hover:bg-gray-600">
- ✏️ Düzenle
- </button>
- ) : (
- <div className="flex gap-2">
- <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-600 text-white rounded-lg text-sm">{t('cancel_btn')}</button>
- <button onClick={handleSaveEdits} disabled={saving} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm disabled:opacity-50">
- {saving ? '...' : t('kaydet')}
- </button>
- </div>
- )}
- </div>
+  <h3 className="text-foreground font-bold mb-4">Kermes Bilgileri</h3>
 
  {isEditing ? (
  <div className="space-y-4">
