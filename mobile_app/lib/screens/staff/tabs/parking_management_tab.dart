@@ -230,7 +230,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                                     if (marks.isNotEmpty) {
                                       final m = marks.first;
                                       setSheet(() {
-                                        streetCtrl.text = '${m.street ?? ''} ${m.subThoroughfare ?? ''}'.trim();
+                                        streetCtrl.text = '${m.thoroughfare ?? m.street ?? ''} ${m.subThoroughfare ?? ''}'.trim();
                                         cityCtrl.text = m.locality ?? m.subAdministrativeArea ?? '';
                                         postalCtrl.text = m.postalCode ?? '';
                                       });
