@@ -5910,7 +5910,7 @@ export default function KermesDetailPage() {
 
  {/* ── Tab Content: Bildirimler ── */}
  {activeTab === 'bildirimler' && (
- <div className="space-y-6">
+ <div className="max-w-5xl mx-auto space-y-6">
    <div className="flex items-center gap-3 mb-2">
      <span className="material-symbols-outlined text-2xl text-violet-500">notifications_active</span>
      <div>
