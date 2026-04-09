@@ -1865,7 +1865,7 @@ export default function KermesDetailPage() {
           targetRadiusKm: parkRadius,
           kermesLat: kermes.latitude || null,
           kermesLng: kermes.longitude || null,
-          targetGroups: { favorites: false, staff: false, nearby: true },
+          targetGroups: targetGroups,
         }),
       });
       console.log('[PARKING-PUSH] Response status:', response.status);
