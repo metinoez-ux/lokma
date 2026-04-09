@@ -19,6 +19,9 @@ void showKermesProductDetailSheet(
   required int cartQuantity,
   required String eventId,
   required String eventName,
+  required bool isMenuOnly,
+  String? contactName,
+  String? contactPhone,
   required VoidCallback onAdd,
   required VoidCallback onRemove,
 }) {
@@ -32,6 +35,9 @@ void showKermesProductDetailSheet(
       cartQuantity: cartQuantity,
       eventId: eventId,
       eventName: eventName,
+      isMenuOnly: isMenuOnly,
+      contactName: contactName,
+      contactPhone: contactPhone,
       onAdd: onAdd,
       onRemove: onRemove,
     ),
@@ -43,6 +49,9 @@ class _KermesProductSheet extends ConsumerStatefulWidget {
   final int cartQuantity;
   final String eventId;
   final String eventName;
+  final bool isMenuOnly;
+  final String? contactName;
+  final String? contactPhone;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
 
@@ -51,6 +60,9 @@ class _KermesProductSheet extends ConsumerStatefulWidget {
     required this.cartQuantity,
     required this.eventId,
     required this.eventName,
+    required this.isMenuOnly,
+    this.contactName,
+    this.contactPhone,
     required this.onAdd,
     required this.onRemove,
   });
@@ -320,7 +332,102 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
     );
   }
 
+  void _showMenuOnlyDialog() {
+    final phone = widget.contactPhone ?? '';
+    final name = widget.contactName ?? 'Yetkili';
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(dialogContext).brightness == Brightness.dark
+            ? const Color(0xFF1E1E1E)
+            : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: const Color(0xFFE50D6B), size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Sadece Dijital Menü',
+                style: TextStyle(
+                  color: Theme.of(dialogContext).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Bu Kermes henüz dijital online sipariş alma imkanı sunmuyor.',
+                style: TextStyle(
+                    color: Theme.of(dialogContext).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black87,
+                    fontSize: 15)),
+            const SizedBox(height: 12),
+            Text(
+                'Sorularınız için Kermes Yetkilisine danışabilirsiniz:',
+                style: TextStyle(
+                    color: Theme.of(dialogContext).brightness == Brightness.dark
+                        ? Colors.white54
+                        : Colors.black54,
+                    fontSize: 14)),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(dialogContext).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.black.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                   Icon(Icons.person, size: 20, color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white70 : Colors.black54),
+                   const SizedBox(width: 8),
+                   Expanded(
+                     child: Text(
+                       '$name\n$phone',
+                       style: TextStyle(
+                         fontWeight: FontWeight.w600,
+                         color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                         fontSize: 14,
+                       ),
+                     ),
+                   )
+                ],
+              ),
+            )
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE50D6B),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            child: Text('common.ok'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _addToCartAndClose() {
+    if (widget.isMenuOnly) {
+       _showMenuOnlyDialog();
+       return;
+    }
+    
     // Multi-step: show customization sheet for combo items
     if (item.isComboMenu) {
       // Capture parent navigator context before popping

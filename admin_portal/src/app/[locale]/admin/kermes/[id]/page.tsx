@@ -1924,7 +1924,7 @@ export default function KermesDetailPage() {
 
   {/* Sub-Tab Navigation */}
   <div className="bg-card rounded-xl p-1.5 flex gap-1 overflow-x-auto">
-   {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Ozellikler',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'fiyat' as const,l:'Fiyat Ayarlari',c:'bg-emerald-600'},{k:'imkanlar' as const,l:'Park Ayarlari',c:'bg-teal-600'}]).map(t=>(
+   {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Ozellikler',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'fiyat' as const,l: t('fiyat_ayarlari') || 'Fiyat Ayarlari',c:'bg-emerald-600'},{k:'imkanlar' as const,l:'Park Ayarlari',c:'bg-teal-600'}]).map(t=>(
     <button key={t.k} onClick={()=>setBilgiSubTab(t.k)} className={`px-3 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-shrink-0 ${bilgiSubTab===t.k?t.c+' text-white shadow':'text-muted-foreground hover:text-foreground hover:bg-muted/60'}`}>{t.l}</button>
    ))}
    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
@@ -2516,12 +2516,6 @@ export default function KermesDetailPage() {
  <>
  <div className="pl-6 space-y-3 border-l-2 border-gray-700 ml-2 mt-4">
  <label className="flex items-center gap-3 cursor-pointer">
- <input type="checkbox" checked={editForm.hasTakeaway}
- onChange={(e) => setEditForm({ ...editForm, hasTakeaway: e.target.checked })}
- className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
- <span className="text-foreground">Gel-Al İmkanı (Takeaway)</span>
- </label>
- <label className="flex items-center gap-3 cursor-pointer">
  <input type="checkbox" checked={editForm.hasDineIn}
  onChange={(e) => setEditForm({ ...editForm, hasDineIn: e.target.checked })}
  className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
@@ -2843,13 +2837,13 @@ export default function KermesDetailPage() {
  {/* TAB: Fiyat Ayarlari */}
  {bilgiSubTab === 'fiyat' && (
  <div className="bg-card rounded-xl p-6">
- <h3 className="text-foreground font-bold mb-4">Fiyat Ayarlari</h3>
+ <h3 className="text-foreground font-bold mb-4">{t('fiyat_ayarlari') || 'Fiyat Ayarlari'}</h3>
  {isEditing ? (
  <div className="space-y-6">
 
  {/* Para Birimi */}
  <div className="bg-muted/20 border border-border rounded-xl p-4">
- <h4 className="text-foreground font-medium mb-3">Para Birimi</h4>
+ <h4 className="text-foreground font-medium mb-3">{t('para_birimi') || 'Para Birimi'}</h4>
  <select value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })}
  className="w-full px-3 py-2.5 bg-background text-foreground rounded-lg border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-shadow text-sm">
  <option value="EUR">EUR - Euro</option>
@@ -2866,7 +2860,7 @@ export default function KermesDetailPage() {
 
  {/* Net / Brut Fiyat Modu */}
  <div className="bg-muted/20 border border-border rounded-xl p-4">
- <h4 className="text-foreground font-medium mb-3">Fiyat Gosterim Modu</h4>
+ <h4 className="text-foreground font-medium mb-3">{t('fiyat_gosterim_modu') || 'Fiyat Gösterim Modu'}</h4>
  <div className="flex gap-3">
  <button type="button" onClick={() => setEditForm({ ...editForm, pricingMode: 'brut' })}
  className={`flex-1 px-4 py-3 rounded-lg border-2 transition text-sm font-medium ${editForm.pricingMode === 'brut' ? 'bg-green-600/20 border-green-500 text-green-400' : 'bg-muted/30 border-border text-muted-foreground hover:border-gray-500'}`}>
