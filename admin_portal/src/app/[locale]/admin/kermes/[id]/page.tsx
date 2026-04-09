@@ -1865,7 +1865,7 @@ export default function KermesDetailPage() {
           targetRadiusKm: parkRadius,
           kermesLat: kermes.latitude || null,
           kermesLng: kermes.longitude || null,
-          targetGroups: targetGroups,
+          targetGroups: { favorites: true, staff: true, nearby: true }, // Park anonsu her zaman personellere ve favorilere gitmeli
         }),
       });
       console.log('[PARKING-PUSH] Response status:', response.status);
