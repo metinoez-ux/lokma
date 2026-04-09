@@ -136,6 +136,359 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
     );
   }
 
+  // Park alani sil
+  Future<void> _deleteParkingLocation(int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Park Alanini Sil'),
+        content: const Text('Bu park alanini silmek istediginizden emin misiniz?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Iptal')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sil', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _parkingList.removeAt(index));
+    try {
+      final updatedList = _parkingList.map((e) => Map<String, dynamic>.from(e)).toList();
+      await FirebaseFirestore.instance
+          .collection('kermes_events')
+          .doc(widget.kermesId)
+          .update({'parkingLocations': updatedList});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Park alani silindi'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Silme hatasi: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // Park alani duzenle sheet'i
+  Future<void> _showEditSheet(int index) async {
+    final p = _parkingList[index];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final noteCtrl = TextEditingController(text: p['note'] as String? ?? '');
+    List<String> existingImages = List<String>.from(
+      (p['images'] as List<dynamic>? ?? []).map((e) => e.toString())
+    );
+    if (p['imageUrl'] != null && existingImages.isEmpty) {
+      existingImages = [p['imageUrl'] as String];
+    }
+    List<File> newImages = [];
+    bool saving = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useRootNavigator: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx2).viewInsets.bottom),
+          child: Container(
+            height: MediaQuery.of(ctx2).size.height * 0.82,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                // Handle
+                Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.grey[600], borderRadius: BorderRadius.circular(2)),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+                  child: Row(
+                    children: [
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx2)),
+                      Expanded(
+                        child: Text(
+                          p['street'] as String? ?? 'Park Alani ${index + 1}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // Sil butonu
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        tooltip: 'Park alanini sil',
+                        onPressed: () async {
+                          Navigator.pop(ctx2);
+                          await _deleteParkingLocation(index);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // --- Durum ---
+                        const Text('Doluluk Durumu', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _StatusChip(
+                              label: 'Belirsiz',
+                              icon: Icons.help_outline,
+                              active: (_parkingList[index]['status'] as String?) == null ||
+                                  (_parkingList[index]['status'] as String?) == 'unknown',
+                              color: Colors.orange,
+                              onTap: () {
+                                _setStatus(index, null);
+                                setSheet(() {});
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            _StatusChip(
+                              label: 'Bos',
+                              icon: Icons.check_circle,
+                              active: (_parkingList[index]['status'] as String?) == 'available',
+                              color: Colors.green,
+                              onTap: () {
+                                _setStatus(index, 'available');
+                                setSheet(() {});
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            _StatusChip(
+                              label: 'Dolu',
+                              icon: Icons.block,
+                              active: (_parkingList[index]['status'] as String?) == 'full',
+                              color: Colors.red,
+                              onTap: () {
+                                _setStatus(index, 'full');
+                                setSheet(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // --- Not ---
+                        const Text('Park Notu', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: noteCtrl,
+                          maxLines: 3,
+                          keyboardType: TextInputType.multiline,
+                          decoration: InputDecoration(
+                            hintText: 'Ornek: Bu alana park etmek yasaktir...',
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F7),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // --- Fotograflar ---
+                        const Text('Fotograflar', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                        const SizedBox(height: 10),
+                        // Mevcut fotograflar
+                        if (existingImages.isNotEmpty)
+                          SizedBox(
+                            height: 90,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: existingImages.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: 8),
+                              itemBuilder: (_, imgIdx) => Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(
+                                      existingImages[imgIdx],
+                                      width: 90, height: 90,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        width: 90, height: 90,
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.broken_image),
+                                      ),
+                                    ),
+                                  ),
+                                  // Sil X butonu
+                                  Positioned(
+                                    top: 2, right: 2,
+                                    child: GestureDetector(
+                                      onTap: () => setSheet(() => existingImages.removeAt(imgIdx)),
+                                      child: Container(
+                                        width: 22, height: 22,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        // Yeni secilen (upload edilmemis) fotograflar
+                        if (newImages.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 90,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: newImages.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: 8),
+                              itemBuilder: (_, imgIdx) => Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.file(
+                                      newImages[imgIdx],
+                                      width: 90, height: 90,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 2, right: 2,
+                                    child: GestureDetector(
+                                      onTap: () => setSheet(() => newImages.removeAt(imgIdx)),
+                                      child: Container(
+                                        width: 22, height: 22,
+                                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                        child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 10),
+                        // Foto ekle butonu (max 3)
+                        if (existingImages.length + newImages.length < 3)
+                          GestureDetector(
+                            onTap: () async {
+                              final picker = ImagePicker();
+                              final picked = await picker.pickImage(
+                                source: ImageSource.gallery,
+                                imageQuality: 75,
+                              );
+                              if (picked != null) {
+                                setSheet(() => newImages.add(File(picked.path)));
+                              }
+                            },
+                            child: Container(
+                              height: 56,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB).withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.3), style: BorderStyle.solid),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add_photo_alternate, color: Color(0xFF2563EB)),
+                                  SizedBox(width: 8),
+                                  Text('Fotograf Ekle', style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 80),
+                      ],
+                    ),
+                  ),
+                ),
+                // Kaydet butonu
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: saving ? null : () async {
+                        setSheet(() => saving = true);
+                        try {
+                          // Yeni fotograflari yukle
+                          List<String> uploadedUrls = [];
+                          for (final file in newImages) {
+                            final ref = FirebaseStorage.instance
+                                .ref('kermes/${widget.kermesId}/parking/$index/${DateTime.now().millisecondsSinceEpoch}.jpg');
+                            await ref.putFile(file);
+                            uploadedUrls.add(await ref.getDownloadURL());
+                          }
+                          final allImages = [...existingImages, ...uploadedUrls];
+                          // Lokal guncelle
+                          setState(() {
+                            _parkingList[index]['note'] = noteCtrl.text.trim();
+                            _parkingList[index]['images'] = allImages;
+                            _parkingList[index].remove('imageUrl');
+                          });
+                          // Firestore'a yaz
+                          final updatedList = _parkingList.map((e) => Map<String, dynamic>.from(e)).toList();
+                          await FirebaseFirestore.instance
+                              .collection('kermes_events')
+                              .doc(widget.kermesId)
+                              .update({'parkingLocations': updatedList});
+                          if (mounted) Navigator.pop(ctx2);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Park alani guncellendi'), backgroundColor: Colors.green),
+                            );
+                          }
+                        } catch (e) {
+                          setSheet(() => saving = false);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: saving
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text('Kaydet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // Park alani ekle
   Future<void> _showAddSheet() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -519,10 +872,15 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                             ),
                             // Navigasyon
                             IconButton(
-                              icon:
-                                  const Icon(Icons.navigation, color: Color(0xFF2563EB)),
+                              icon: const Icon(Icons.navigation, color: Color(0xFF2563EB)),
                               onPressed: () => _navigate(p),
                               tooltip: 'Navigasyon',
+                            ),
+                            // Duzenle
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined, color: Colors.grey),
+                              onPressed: () => _showEditSheet(i),
+                              tooltip: 'Duzenle / Not / Fotograf',
                             ),
                           ],
                         ),
