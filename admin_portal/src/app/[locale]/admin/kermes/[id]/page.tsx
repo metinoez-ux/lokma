@@ -1873,19 +1873,23 @@ export default function KermesDetailPage() {
         const errorText = await response.text();
         console.error('[PARKING-PUSH] Error response:', errorText);
         toast.error(`API hatasi: ${response.status}`);
-        return;
-      }
-      const data = await response.json();
-      console.log('[PARKING-PUSH] Result:', data);
-      if (data.success) {
-        toast.success(`Acil arac anonsu gonderildi! (${data.sentCount} kisi)`);
-        setShowParkingModal(false);
-        setVehiclePlate(''); setVehicleColor(''); setVehicleBrand(''); setVehicleImageUrl('');
       } else {
-        toast.error(data.error || 'Gonderilemedi');
+        const data = await response.json();
+        console.log('[PARKING-PUSH] Result:', data);
+        if (data.success) {
+          const cnt = data.sentCount || 0;
+          toast.success(`Acil arac anonsu ${cnt} kisiye gonderildi!`);
+        } else {
+          toast.error(data.error || 'Gonderilemedi');
+        }
       }
+      // Her durumda modali kapat ve formu sifirla
+      setShowParkingModal(false);
+      setVehiclePlate(''); setVehicleColor(''); setVehicleBrand(''); setVehicleImageUrl('');
     } catch (error) {
+      console.error('[PARKING-PUSH] Exception:', error);
       toast.error(String(error));
+      setShowParkingModal(false);
     } finally {
       setIsSendingParking(false);
     }

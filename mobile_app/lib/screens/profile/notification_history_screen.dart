@@ -740,11 +740,11 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
           final List<dynamic> listItems = [];
           if (currentItems.isNotEmpty) {
-            listItems.add('Aktuelle Bestellungen');
+            listItems.add('Neu');
             listItems.addAll(currentItems);
           }
           if (pastItems.isNotEmpty) {
-            listItems.add('Kapanmış Siparişler');
+            listItems.add('Fruhere');
             listItems.addAll(pastItems);
           }
 
