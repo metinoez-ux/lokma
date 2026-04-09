@@ -557,6 +557,84 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     }
   }
 
+  /// Fotograflari tam ekranda goster (swipe destekli)
+  void _showPhotoFullscreen(List<String> images, int initialIndex) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.92),
+      builder: (ctx) {
+        int currentPage = initialIndex;
+        return StatefulBuilder(
+          builder: (ctx2, setDialog) {
+            return GestureDetector(
+              onTap: () => Navigator.pop(ctx2),
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                body: SafeArea(
+                  child: Stack(
+                    children: [
+                      // Foto swipe
+                      PageView.builder(
+                        controller: PageController(initialPage: initialIndex),
+                        itemCount: images.length,
+                        onPageChanged: (p) => setDialog(() => currentPage = p),
+                        itemBuilder: (_, idx) => InteractiveViewer(
+                          child: Center(
+                            child: CachedNetworkImage(
+                              imageUrl: images[idx],
+                              fit: BoxFit.contain,
+                              placeholder: (_, __) => const Center(child: CircularProgressIndicator(color: Colors.white)),
+                              errorWidget: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white54, size: 64),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Kapat butonu
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(ctx2),
+                          child: Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ),
+                      // Sayfa gostergesi (birden fazla resim varsa)
+                      if (images.length > 1)
+                        Positioned(
+                          bottom: 16,
+                          left: 0, right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(images.length, (i) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: i == currentPage ? 20 : 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: i == currentPage ? Colors.white : Colors.white38,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            )),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   /// Calculate walking distance and time from parking to kermes venue
   Widget _buildWalkingDistanceChip(double parkLat, double parkLng, bool isDark) {
     final kermesLat = _kermesLat;
@@ -1265,8 +1343,48 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               );
             },
           ),
-          
+
+          // --- Fotograflar (varsa) ---
+          if (info.allImages.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            SizedBox(
+              height: 76,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: info.allImages.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, imgIdx) {
+                  final imgUrl = info.allImages[imgIdx];
+                  return GestureDetector(
+                    onTap: () => _showPhotoFullscreen(info.allImages, imgIdx),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: CachedNetworkImage(
+                        imageUrl: imgUrl,
+                        width: 76,
+                        height: 76,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          width: 76, height: 76,
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          child: const Icon(Icons.image, color: Colors.grey, size: 28),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          width: 76, height: 76,
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          child: const Icon(Icons.broken_image, color: Colors.grey, size: 28),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           // Aksiyon butonlari
+
           Row(
             children: [
               // Navigasyon
