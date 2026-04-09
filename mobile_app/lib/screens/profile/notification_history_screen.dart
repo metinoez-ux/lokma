@@ -242,6 +242,251 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     setState(() { _selectedIds.clear(); _isEditMode = false; });
   }
 
+  void _showNotificationDetailSheet(BuildContext context, Map<String, dynamic> data) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final type = data['type'] as String?;
+    final title = data['title'] as String? ?? '';
+    final body = data['body'] as String? ?? '';
+    final imageUrl = data['imageUrl'] as String?;
+    final vehiclePlate = data['vehiclePlate'] as String? ?? '';
+    final vehicleColor = data['vehicleColor'] as String? ?? '';
+    final vehicleBrand = data['vehicleBrand'] as String? ?? '';
+    final createdAt = data['createdAt'] as Timestamp?;
+    final kermesTitle = title.replaceAll(' - Acil Arac Anonsu', '').trim();
+    final isParking = type == 'kermes_parking';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (_, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Drag handle
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[500],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isParking
+                                ? (isDark ? Colors.red[900]!.withOpacity(0.3) : Colors.red[50])
+                                : (isDark ? Colors.orange[900]!.withOpacity(0.3) : Colors.orange[50]),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isParking ? Icons.directions_car_rounded : Icons.local_offer_rounded,
+                            color: isParking
+                                ? (isDark ? Colors.red[300] : Colors.red[700])
+                                : (isDark ? Colors.orange[300] : Colors.orange[700]),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isParking ? 'Acil Arac Anonsu' : 'Flash Sale',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(ctx).colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                kermesTitle,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (createdAt != null)
+                          Text(
+                            timeago.format(createdAt.toDate(), locale: context.locale.languageCode),
+                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Image (full width, large)
+                    if (imageUrl != null && imageUrl.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox(),
+                          loadingBuilder: (_, child, progress) {
+                            if (progress == null) return child;
+                            return Container(
+                              height: 200,
+                              alignment: Alignment.center,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    if (imageUrl != null && imageUrl.isNotEmpty)
+                      const SizedBox(height: 20),
+
+                    // Vehicle info card (parking only)
+                    if (isParking && vehiclePlate.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF8F8FA),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            // Plate number - prominent
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                vehiclePlate.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 3,
+                                  color: Theme.of(ctx).colorScheme.onSurface,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            // Color & Brand row
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (vehicleColor.isNotEmpty) ...[
+                                  Icon(Icons.palette_rounded, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    vehicleColor,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(ctx).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ],
+                                if (vehicleColor.isNotEmpty && vehicleBrand.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    child: Text('|', style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                                  ),
+                                if (vehicleBrand.isNotEmpty) ...[
+                                  Icon(Icons.directions_car_filled_rounded, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    vehicleBrand,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(ctx).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (isParking && vehiclePlate.isNotEmpty)
+                      const SizedBox(height: 16),
+
+                    // Message body
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isParking
+                            ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
+                            : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isParking
+                              ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!)
+                              : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 20,
+                            color: isParking
+                                ? (isDark ? Colors.red[300] : Colors.red[700])
+                                : (isDark ? Colors.orange[300] : Colors.orange[700]),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              body,
+                              style: TextStyle(
+                                fontSize: 14,
+                                height: 1.5,
+                                color: Theme.of(ctx).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   bool _isActiveOrder(_OrderGroup group) {
     const active = {'pending', 'accepted', 'preparing', 'ready', 'onTheWay', 'readyForPickup'};
     final latest = group.statuses.last['status'] as String? ?? '';
@@ -1020,14 +1265,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       onTap: () {
                         final type = data['type'] as String?;
                         if (type == 'kermes_flash_sale' || type == 'kermes_parking') {
-                          final kermesId = data['kermesId'] as String?;
-                          if (kermesId != null && kermesId.isNotEmpty) {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => KermesMenuWrapper(kermesId: kermesId),
-                              ),
-                            );
-                          }
+                          _showNotificationDetailSheet(context, data);
                         }
                       },
                       onLongPress: () {
