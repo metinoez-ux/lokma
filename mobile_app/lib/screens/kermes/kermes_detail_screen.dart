@@ -2441,33 +2441,41 @@ Widget _buildHeroSection(BuildContext context) {
           // HEADER
           Row(
             children: [
-              // Anlık hava durumu varsa: dinamik ikon + derece; yoksa sabit güneş
+              // Anlık hava durumu varsa: büyük derece ortada, ikon sağ üstte
               if (_currentWeather != null)
-                Container(
-                  width: 56, height: 56,
-                  decoration: BoxDecoration(
-                    color: dividerBg,
-                    shape: BoxShape.circle,
-                  ),
+                SizedBox(
+                  width: 58, height: 58,
                   child: Stack(
-                    alignment: Alignment.center,
                     children: [
-                      _weatherIcon(_currentWeather!.icon, size: 28),
-                      Positioned(
-                        bottom: 4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: dividerBg,
-                            borderRadius: BorderRadius.circular(8),
+                      // Arka plan daire
+                      Container(
+                        width: 58, height: 58,
+                        decoration: BoxDecoration(
+                          color: dividerBg,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${_currentWeather!.temperature.round()}°',
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            height: 1,
                           ),
-                          child: Text(
-                            '${_currentWeather!.temperature.round()}°',
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        ),
+                      ),
+                      // Sağ üst köşede hava ikonu
+                      Positioned(
+                        top: 0, right: 0,
+                        child: Container(
+                          width: 22, height: 22,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _weatherIcon(_currentWeather!.icon, size: 14),
                           ),
                         ),
                       ),
