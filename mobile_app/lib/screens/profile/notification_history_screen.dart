@@ -16,6 +16,7 @@ import '../../models/product_option.dart';
 import '../../utils/currency_utils.dart';
 import 'notification_trash_screen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../kermes/kermes_menu_wrapper.dart';
 
 class NotificationHistoryScreen extends ConsumerStatefulWidget {
   final String? openOrderId;
@@ -1021,7 +1022,11 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         if (type == 'kermes_flash_sale' || type == 'kermes_parking') {
                           final kermesId = data['kermesId'] as String?;
                           if (kermesId != null && kermesId.isNotEmpty) {
-                            context.push('/kermesler/$kermesId');
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => KermesMenuWrapper(kermesId: kermesId),
+                              ),
+                            );
                           }
                         }
                       },
