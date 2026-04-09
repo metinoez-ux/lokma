@@ -94,7 +94,6 @@ export async function POST(request: NextRequest) {
     if (tokensArray.length === 0) {
       // Hedef kitle bos - yine de basarili kabul et, kullaniciya bildir
       // Gecmis kaydi yaz
-      const admin = require('firebase-admin');
       const now = admin.firestore.Timestamp.now();
       await db.collection('kermesEvents').doc(kermesId).collection('notificationHistory').add({
         type: 'acil_arac', title: `${kermesTitle} - Acil Arac Anonsu`, body: message,
@@ -141,7 +140,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Inbox kaydi - her kullanicinin notifications sub-collection'ina yaz
-    const admin = require('firebase-admin');
     const now = admin.firestore.Timestamp.now();
     const userIds = Array.from(targetUserIds);
     for (let i = 0; i < userIds.length; i += 500) {
