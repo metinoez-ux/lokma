@@ -42,13 +42,11 @@ export async function POST(request: NextRequest) {
     let targetTokens = new Set<string>();
     let targetUserIds = new Set<string>();
     const usersRef = db.collection('users');
-    const querySnapshot = await usersRef.where('fcmToken', '!=', null).get();
+    const querySnapshot = await usersRef.get();
 
     querySnapshot.forEach((doc: any) => {
       const data = doc.data();
-      const token = data.fcmToken || data.customerFcmToken;
-      if (!token) return;
-
+      
       // Kermes bildirimlerini kapatmis kullanicilari atla
       const prefs = data.notificationPreferences;
       if (prefs && prefs.kermesNotifications === false && prefs.promotions === false) return;
@@ -67,7 +65,7 @@ export async function POST(request: NextRequest) {
         shouldSend = true;
       }
 
-      // Yakin cevredekiler (1km default) - Sadece homeLatitude varsa test et
+      // Yakin cevredekiler (1km default)
       if (targetGroups.nearby && !shouldSend) {
         try {
           const uLat = data.homeLatitude;
@@ -84,22 +82,18 @@ export async function POST(request: NextRequest) {
       }
 
       if (shouldSend) { 
-        targetTokens.add(token); 
         targetUserIds.add(doc.id); 
+        const token = data.fcmToken || data.customerFcmToken;
+        if (token) targetTokens.add(token);
       }
     });
 
     const tokensArray = Array.from(targetTokens);
-    console.log(`[PARKING-PUSH] Found ${tokensArray.length} target tokens from ${querySnapshot.size} total users`);
-    if (tokensArray.length === 0) {
-      // Hedef kitle bos - yine de basarili kabul et, kullaniciya bildir
-      // Gecmis kaydi yaz
-      const now = admin.firestore.Timestamp.now();
-      await db.collection('kermesEvents').doc(kermesId).collection('notificationHistory').add({
-        type: 'acil_arac', title: `${kermesTitle} - Acil Arac Anonsu`, body: message,
-        vehiclePlate: vehiclePlate || null, sentCount: 0, sentAt: now, note: 'Hedef kitlede kullanici bulunamadi',
-      });
-      return NextResponse.json({ success: true, sentCount: 0, failedCount: 0, warning: 'Yakin cevreda bildirim alabilecek kullanici bulunamadi. Anons gecmise kaydedildi.' });
+    console.log(`[PARKING-PUSH] Found ${tokensArray.length} tokens and ${targetUserIds.size} users for inbox!`);
+
+    if (targetUserIds.size === 0) {
+      // Hedef kitle hic yoksa hicbir sey yapma
+      return NextResponse.json({ success: true, sentCount: 0, failedCount: 0, warning: 'Hedef kitlede kullanici bulunamadi.' });
     }
 
     // Acil Arac Anonsu baslik
@@ -133,10 +127,12 @@ export async function POST(request: NextRequest) {
     };
 
     let successCount = 0, failureCount = 0;
-    for (let i = 0; i < tokensArray.length; i += 500) {
-      const chunk = tokensArray.slice(i, i + 500);
-      const resp = await messaging.sendEachForMulticast({ ...fcmPayload, tokens: chunk });
-      successCount += resp.successCount; failureCount += resp.failureCount;
+    if (tokensArray.length > 0) {
+      for (let i = 0; i < tokensArray.length; i += 500) {
+        const chunk = tokensArray.slice(i, i + 500);
+        const resp = await messaging.sendEachForMulticast({ ...fcmPayload, tokens: chunk });
+        successCount += resp.successCount; failureCount += resp.failureCount;
+      }
     }
 
     // Inbox kaydi - her kullanicinin notifications sub-collection'ina yaz

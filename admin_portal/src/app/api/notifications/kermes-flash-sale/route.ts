@@ -57,8 +57,6 @@ export async function POST(request: NextRequest) {
     
     querySnapshot.forEach(doc => {
       const data = doc.data();
-      const token = data.fcmToken || data.customerFcmToken;
-      if (!token) return;
 
       // ZORUNLU: Kullanicinin kermes bildirimlerini acmis olmasi gerekiyor
       const prefs = data.notificationPreferences;
@@ -103,15 +101,16 @@ export async function POST(request: NextRequest) {
       }
 
       if (shouldSend) {
-        targetTokens.add(token);
         targetUserIds.add(doc.id);
+        const token = data.fcmToken || data.customerFcmToken;
+        if (token) targetTokens.add(token);
       }
     });
 
     const tokensArray = Array.from(targetTokens);
 
-    if (tokensArray.length === 0) {
-      return NextResponse.json({ success: false, error: 'Hedef kitlede FCM token bulunamadi.' }, { status: 404 });
+    if (targetUserIds.size === 0) {
+      return NextResponse.json({ success: false, error: 'Hedef kitle bos.' }, { status: 404 });
     }
 
     // 2. Bildirim icerigini olustur
