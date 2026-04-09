@@ -1799,6 +1799,10 @@ export default function KermesDetailPage() {
   if (!f) return featureId;
   try { return f.labelKey ? t(f.labelKey) : f.label; } catch { return f.label; }
  };
+  const getFeatureIcon = (featureId: string) => {
+  const f = eventFeatures.find(ef => ef.id === featureId);
+  return f?.icon || '';
+  };
 
  if (adminLoading || loading) {
  return (
@@ -1906,7 +1910,7 @@ export default function KermesDetailPage() {
 
   {/* Sub-Tab Navigation */}
   <div className="bg-card rounded-xl p-1.5 flex gap-1 overflow-x-auto">
-   {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Kermes Ozellikleri',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'imkanlar' as const,l:'Imkanlar',c:'bg-teal-600'}]).map(t=>(
+   {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Ozellikler',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'imkanlar' as const,l:'Park Ayarlari',c:'bg-teal-600'}]).map(t=>(
     <button key={t.k} onClick={()=>setBilgiSubTab(t.k)} className={`px-3 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-shrink-0 ${bilgiSubTab===t.k?t.c+' text-white shadow':'text-muted-foreground hover:text-foreground hover:bg-muted/60'}`}>{t.l}</button>
    ))}
   </div>
@@ -2674,6 +2678,165 @@ export default function KermesDetailPage() {
  </div>
 
  </>
+ )}
+
+ {/* TAB: Marka & Sertifika */}
+ {bilgiSubTab === 'marka' && (
+ <div className="bg-card rounded-xl p-6">
+ <h3 className="text-foreground font-bold mb-4">Marka & Sertifika</h3>
+ {isEditing ? (
+ <div className="space-y-6">
+ {/* Header Image */}
+ <div>
+ <label className="text-muted-foreground text-xs block mb-2">{t('baslik_gorseli')}</label>
+ <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-lg p-4">
+ {editForm.headerImage ? (
+ <div className="relative">
+ <img src={editForm.headerImage} alt={t('baslik_gorseli')} className="w-full h-32 object-cover rounded-lg" />
+ <button type="button" onClick={() => setEditForm({ ...editForm, headerImage: '', headerImageId: '' })}
+ className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white rounded text-xs">{t('kaldir')}</button>
+ </div>
+ ) : (
+ <button type="button" onClick={() => setShowStockImageModal(true)}
+ className="w-full h-32 border-2 border-dashed border-gray-500 rounded-lg hover:border-cyan-500 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-cyan-800 dark:text-cyan-400">
+ <span className="text-3xl">&#x1f5bc;&#xfe0f;</span>
+ <span className="text-sm">{t('stok_gorsel_sec')}</span>
+ </button>
+ )}
+ <p className="text-muted-foreground/80 text-xs mt-2 text-center">{t('onerilen_1200_675px_16_9')}</p>
+ </div>
+ </div>
+
+ {/* Marka & Sertifika Rozetleri */}
+ <div>
+ <h4 className="text-foreground font-medium mb-3">Marka & Sertifika Rozetleri</h4>
+ <div className="flex flex-wrap gap-3">
+ {availableBadges.map((badge) => {
+ const isSelected = editForm.activeBadgeIds?.includes(badge.id);
+ return (
+ <button key={badge.id} type="button" onClick={() => {
+ const currentIds = editForm.activeBadgeIds || [];
+ setEditForm({ ...editForm, activeBadgeIds: isSelected ? currentIds.filter(id => id !== badge.id) : [...currentIds, badge.id] });
+ }}
+ className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${isSelected ? 'bg-pink-600/20 border-pink-500 text-pink-500' : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'}`}>
+ {badge.iconUrl && (<div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center p-0.5"><img src={badge.iconUrl} alt={badge.name} className="w-full h-full object-contain" /></div>)}
+ <span className="text-sm font-medium">{badge.name}</span>
+ </button>
+ );
+ })}
+ {availableBadges.length === 0 && (<p className="text-sm text-muted-foreground w-full py-2">Henuz aktif rozet bulunmuyor.</p>)}
+ </div>
+ </div>
+ </div>
+ ) : (
+ <div className="space-y-4">
+ {kermes?.headerImage && (
+ <div>
+ <img src={kermes.headerImage} alt="Header" className="w-full h-32 object-cover rounded-lg" />
+ </div>
+ )}
+ {kermes?.activeBadgeIds && kermes.activeBadgeIds.length > 0 && (
+ <div>
+ <span className="text-muted-foreground/80 text-sm block mb-2">Aktif Rozetler</span>
+ <div className="flex flex-wrap gap-2">
+ {kermes.activeBadgeIds.map((badgeId: string) => {
+ const badge = availableBadges.find(b => b.id === badgeId);
+ return badge ? (
+ <span key={badgeId} className="px-3 py-1 bg-purple-600/20 text-purple-800 dark:text-purple-400 rounded-full text-xs flex items-center gap-1.5">
+ {badge.iconUrl && <img src={badge.iconUrl} alt="" className="w-4 h-4 object-contain rounded-sm" />}
+ {badge.name}
+ </span>
+ ) : null;
+ })}
+ </div>
+ </div>
+ )}
+ {(!kermes?.headerImage && (!kermes?.activeBadgeIds || kermes.activeBadgeIds.length === 0)) && (
+ <p className="text-muted-foreground text-sm">Henuz marka veya sertifika bilgisi eklenmedi.</p>
+ )}
+ </div>
+ )}
+ </div>
+ )}
+
+ {/* TAB: Ozellikler */}
+ {bilgiSubTab === 'ozellikler' && (
+ <div className="bg-card rounded-xl p-6">
+ <h3 className="text-foreground font-bold mb-4">Ozellikler</h3>
+ {isEditing ? (
+ <div className="space-y-6">
+ {/* Sabit Ozellikler */}
+ <div>
+ <label className="text-muted-foreground text-xs block mb-2">{t('etkinlik_ozellikleri_sabit')}</label>
+ <div className="flex flex-wrap gap-2">
+ {eventFeatures.map(f => (
+ <span key={f.id} className="inline-flex items-center gap-0.5 group">
+ <button type="button" onClick={() => toggleFeature(f.id)}
+ className={`px-3 py-1 rounded-full text-xs font-semibold transition inline-flex items-center gap-1.5 ${editFeatures.includes(f.id) ? 'text-white' : 'bg-gray-700 text-muted-foreground'}`}
+ style={editFeatures.includes(f.id) ? { backgroundColor: f.color } : {}}>
+ {f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>)}
+ {f.labelKey ? t(f.labelKey) : f.label}
+ </button>
+ {isSuperAdmin && (
+ <>
+ <button type="button" title="Duzenle" onClick={() => setEditingFeature({...f})}
+ className="w-4 h-4 rounded-full bg-blue-600/80 hover:bg-blue-500 text-white flex items-center justify-center text-[9px] leading-none transition opacity-0 group-hover:opacity-100">&#9998;</button>
+ <button type="button" title="Sil" onClick={() => { setEventFeatures(prev => prev.filter(ef => ef.id !== f.id)); setEditFeatures(prev => prev.filter(ef => ef !== f.id)); }}
+ className="w-4 h-4 rounded-full bg-red-600/80 hover:bg-red-500 text-white flex items-center justify-center text-[9px] leading-none transition opacity-0 group-hover:opacity-100">x</button>
+ </>
+ )}
+ </span>
+ ))}
+ </div>
+ </div>
+
+ {/* Ozel Ozellikler - Max 3 */}
+ <div>
+ <label className="text-muted-foreground text-xs block mb-2">{t('ozel_ozellikler_max_3')}</label>
+ <div className="flex flex-wrap gap-2 mb-2">
+ {editCustomFeatures.map((cf, idx) => (
+ <span key={idx} className="px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white flex items-center gap-1">
+ {cf}
+ <button type="button" onClick={() => setEditCustomFeatures(editCustomFeatures.filter((_, i) => i !== idx))}
+ className="w-4 h-4 rounded-full bg-blue-800 hover:bg-blue-700 flex items-center justify-center text-xs">x</button>
+ </span>
+ ))}
+ </div>
+ {editCustomFeatures.length < 3 && (
+ <div className="flex gap-2">
+ <input type="text" placeholder={t('yeni_ozellik_adi')} id="custom-feature-input-tab"
+ className="flex-1 px-3 py-1 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow text-xs"
+ onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.value.trim() && editCustomFeatures.length < 3) { setEditCustomFeatures([...editCustomFeatures, input.value.trim()]); input.value = ''; } } }} />
+ <button type="button" onClick={() => { const input = document.getElementById('custom-feature-input-tab') as HTMLInputElement; if (input?.value.trim() && editCustomFeatures.length < 3) { setEditCustomFeatures([...editCustomFeatures, input.value.trim()]); input.value = ''; } }}
+ className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-500 transition font-medium">+ {t('ekle')}</button>
+ </div>
+ )}
+ </div>
+ </div>
+ ) : (
+ <div className="space-y-4">
+ {kermes.features && Array.isArray(kermes.features) && kermes.features.length > 0 && (
+ <div>
+ <span className="text-muted-foreground/80 text-sm block mb-2">{t('ozellikler')}</span>
+ <div className="flex flex-wrap gap-2">
+ {kermes.features.map((fId: string) => (
+ <span key={fId} className="px-3 py-1 bg-pink-600/20 text-pink-800 dark:text-pink-400 rounded-full text-xs inline-flex items-center gap-1">
+ {(() => { const ic = getFeatureIcon(fId); return ic ? (ic.startsWith('http') ? <img src={ic} alt="" className="w-3.5 h-3.5 object-contain rounded-sm" /> : <span>{ic}</span>) : null; })()}
+ {getFeatureLabel(fId)}
+ </span>
+ ))}
+ {kermes.customFeatures && kermes.customFeatures.map((cf: string, idx: number) => (
+ <span key={`custom-${idx}`} className="px-3 py-1 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-full text-xs">{cf}</span>
+ ))}
+ </div>
+ </div>
+ )}
+ {(!kermes.features || kermes.features.length === 0) && (
+ <p className="text-muted-foreground text-sm">Henuz ozellik eklenmedi.</p>
+ )}
+ </div>
+ )}
+ </div>
  )}
 
  {/* TAB: Imkanlar */}
