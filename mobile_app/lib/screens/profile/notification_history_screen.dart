@@ -3537,6 +3537,7 @@ class _GenericNotificationCard extends StatelessWidget {
     final body = data['body'] as String? ?? '';
     final createdAt = data['createdAt'] as Timestamp?;
     final isRead = data['read'] as bool? ?? true;
+    final imageUrl = data['imageUrl'] as String?;
 
     String timeString = '';
     if (createdAt != null) {
@@ -3554,72 +3555,87 @@ class _GenericNotificationCard extends StatelessWidget {
           width: isRead ? 1 : 1.5,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Builder(
-              builder: (context) {
-                final type = data['type'] as String?;
-                final isFlashSale = type == 'kermes_flash_sale';
-                final tag = data['tag'] as String?;
-                final isCampaign = tag == 'kampanya' || isFlashSale;
-                return Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isCampaign
-                        ? (isDark ? const Color(0xFF880E4F).withOpacity(0.3) : const Color(0xFFFCE4EC))
-                        : (isDark ? Colors.grey[800] : Colors.grey[100]),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isCampaign ? Icons.local_mall_rounded : Icons.notifications_active_rounded,
-                    color: isCampaign
-                        ? (isDark ? const Color(0xFFE91E63) : const Color(0xFFC2185B))
-                        : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                    size: 20,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 15,
-                      fontWeight: isRead ? FontWeight.w500 : FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    body,
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[400] : Colors.grey[700],
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                  if (timeString.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      timeString,
-                      style: TextStyle(
-                        color: isDark ? Colors.grey[600] : Colors.grey[500],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+              child: Image.network(
+                imageUrl,
+                height: 140,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const SizedBox(),
               ),
             ),
-          ],
-        ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Builder(
+                  builder: (context) {
+                    final type = data['type'] as String?;
+                    final isFlashSale = type == 'kermes_flash_sale';
+                    final tag = data['tag'] as String?;
+                    final isCampaign = tag == 'kampanya' || isFlashSale;
+                    return Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isCampaign
+                            ? (isDark ? const Color(0xFF880E4F).withOpacity(0.3) : const Color(0xFFFCE4EC))
+                            : (isDark ? Colors.grey[800] : Colors.grey[100]),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isCampaign ? Icons.local_mall_rounded : Icons.notifications_active_rounded,
+                        color: isCampaign
+                            ? (isDark ? const Color(0xFFE91E63) : const Color(0xFFC2185B))
+                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                        size: 20,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 15,
+                          fontWeight: isRead ? FontWeight.w500 : FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        body,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[700],
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                      if (timeString.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          timeString,
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[600] : Colors.grey[500],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

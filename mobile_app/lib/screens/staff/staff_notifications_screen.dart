@@ -62,7 +62,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
   IconData _iconForType(String? type) {
     switch (type) {
       case 'kermes_assignment': return Icons.assignment_ind;
-      case 'parking_emergency': return Icons.local_parking;
+      case 'parking_emergency':
+      case 'kermes_parking': return Icons.local_parking;
       case 'order_status':
       case 'kermes_order_created': return Icons.receipt_long;
       case 'new_delivery': return Icons.delivery_dining;
@@ -75,7 +76,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     if (isRead) return Colors.grey;
     switch (type) {
       case 'kermes_assignment': return Colors.purple;
-      case 'parking_emergency': return Colors.orange;
+      case 'parking_emergency':
+      case 'kermes_parking': return Colors.orange;
       case 'new_delivery': return Colors.amber;
       case 'chat_message': return Colors.teal;
       default: return Colors.blue;
@@ -174,6 +176,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final title = notif['title'] as String? ?? 'Bildirim';
               final body = notif['body'] as String? ?? '';
               final dateStr = _formatDate(notif['createdAt']);
+              final imageUrl = notif['imageUrl'] as String?;
               final iconColor = _colorForType(type, isRead);
               final iconData = _iconForType(type);
 
@@ -202,79 +205,94 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                             )
                           ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Ikon
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: iconColor.withOpacity(isRead ? 0.08 : 0.15),
-                            borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (imageUrl != null && imageUrl.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                          child: Image.network(
+                            imageUrl,
+                            height: 140,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const SizedBox(),
                           ),
-                          child: Icon(iconData, color: iconColor, size: 22),
                         ),
-                        const SizedBox(width: 12),
-                        // Metin
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Baslik
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
-                                  fontSize: isRead ? 15 : 16,
-                                  color: isDark ? Colors.white : Colors.black87,
-                                  height: 1.2,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Ikon
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: iconColor.withOpacity(isRead ? 0.08 : 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(iconData, color: iconColor, size: 22),
+                            ),
+                            const SizedBox(width: 12),
+                            // Metin
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Baslik
+                                  Text(
+                                    title,
+                                    style: TextStyle(
+                                      fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                                      fontSize: isRead ? 15 : 16,
+                                      color: isDark ? Colors.white : Colors.black87,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  // Gövde
+                                  if (body.isNotEmpty) ...[
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      body,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark ? Colors.white70 : Colors.black.withOpacity(0.65),
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ],
+                                  // Zaman damgasi
+                                  if (dateStr.isNotEmpty) ...[
+                                    const SizedBox(height: 7),
+                                    Text(
+                                      dateStr,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            // Okunmamis - kirmizi nokta sag ust
+                            if (!isRead)
+                              Container(
+                                width: 10,
+                                height: 10,
+                                margin: const EdgeInsets.only(top: 2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
                                 ),
                               ),
-                              // Gövde
-                              if (body.isNotEmpty) ...[
-                                const SizedBox(height: 5),
-                                Text(
-                                  body,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark ? Colors.white70 : Colors.black.withOpacity(0.65),
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                              // Zaman damgasi
-                              if (dateStr.isNotEmpty) ...[
-                                const SizedBox(height: 7),
-                                Text(
-                                  dateStr,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.grey[400] : Colors.grey[500],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                          ],
                         ),
-                        const SizedBox(width: 6),
-                        // Okunmamis - kirmizi nokta sag ust
-                        if (!isRead)
-                          Container(
-                            width: 10,
-                            height: 10,
-                            margin: const EdgeInsets.only(top: 2),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );

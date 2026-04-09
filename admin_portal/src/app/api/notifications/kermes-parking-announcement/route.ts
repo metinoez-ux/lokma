@@ -96,13 +96,23 @@ export async function POST(request: NextRequest) {
         kermesId,
         click_action: 'FLUTTER_NOTIFICATION_CLICK',
       },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+            'mutable-content': 1
+          }
+        }
+      },
       tokens: tokensArray,
     };
 
-    // Resim varsa FCM'e ekle
+    // Resim varsa FCM ve Apple (APNs) options'a ekle
     if (vehicleImageUrl) {
       fcmPayload.notification.imageUrl = vehicleImageUrl;
       fcmPayload.data.imageUrl = vehicleImageUrl;
+      fcmPayload.apns.fcm_options = { image: vehicleImageUrl };
     }
 
     let successCount = 0, failureCount = 0;
