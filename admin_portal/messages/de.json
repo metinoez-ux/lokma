@@ -4372,7 +4372,14 @@
     "flash_sale_cancel": "Abbrechen",
     "flash_sale_send": "Jetzt senden",
     "flash_sale_sending": "Wird gesendet",
-    "flash_sale_btn": "Abendmarkt"
+    "flash_sale_btn": "Abendmarkt",
+    "flash_sale_target_audience": "Zielgruppe",
+    "flash_sale_group_favorites": "Kermes-Favoriten",
+    "flash_sale_group_favorites_desc": "Nutzer, die dieses Kermes als Favorit markiert haben",
+    "flash_sale_group_staff": "Personal & Admins",
+    "flash_sale_group_staff_desc": "Personal und Administratoren dieses Kermes",
+    "flash_sale_group_nearby": "In der Naehe",
+    "flash_sale_group_nearby_desc": "Nutzer im eingestellten km-Radius um das Kermes"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Geschäftsadministrator",

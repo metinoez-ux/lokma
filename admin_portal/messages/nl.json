@@ -4798,7 +4798,14 @@
     "flash_sale_cancel": "Annuleren",
     "flash_sale_send": "Nu Verzenden",
     "flash_sale_sending": "Verzenden",
-    "flash_sale_btn": "Flash Sale"
+    "flash_sale_btn": "Flash Sale",
+    "flash_sale_target_audience": "Doelgroep",
+    "flash_sale_group_favorites": "Kermes Favorieten",
+    "flash_sale_group_favorites_desc": "Gebruikers die dit kermes als favoriet hebben gemarkeerd",
+    "flash_sale_group_staff": "Personeel & Admins",
+    "flash_sale_group_staff_desc": "Personeel en beheerders van dit kermes",
+    "flash_sale_group_nearby": "In de Buurt",
+    "flash_sale_group_nearby_desc": "Gebruikers binnen de ingestelde km-radius rond het kermes"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

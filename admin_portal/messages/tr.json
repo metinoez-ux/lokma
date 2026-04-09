@@ -4397,7 +4397,14 @@
     "flash_sale_cancel": "Iptal",
     "flash_sale_send": "Simdi Gonder",
     "flash_sale_sending": "Gonderiliyor",
-    "flash_sale_btn": "Aksam Pazari"
+    "flash_sale_btn": "Aksam Pazari",
+    "flash_sale_target_audience": "Hedef Kitle",
+    "flash_sale_group_favorites": "Kermes Favorileri",
+    "flash_sale_group_favorites_desc": "Bu kermesi favorilerine ekleyen kullanicilar",
+    "flash_sale_group_staff": "Personel & Adminler",
+    "flash_sale_group_staff_desc": "Bu kermesin personeli ve adminleri",
+    "flash_sale_group_nearby": "Yakin Cevredekiler",
+    "flash_sale_group_nearby_desc": "Kermes alaninin belirli km yakinindaki kullanicilar"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 İşletme Admin",

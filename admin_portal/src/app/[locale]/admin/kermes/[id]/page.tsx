@@ -484,6 +484,9 @@ export default function KermesDetailPage() {
  const [showFlashSaleModal, setShowFlashSaleModal] = useState(false);
  const [isSendingFlashSale, setIsSendingFlashSale] = useState(false);
  const [flashSaleRadius, setFlashSaleRadius] = useState<number>(2);
+ const [flashTargetFavorites, setFlashTargetFavorites] = useState(true);
+ const [flashTargetStaff, setFlashTargetStaff] = useState(true);
+ const [flashTargetNearby, setFlashTargetNearby] = useState(true);
  const [modalView, setModalView] = useState<'select' | 'catalog' | 'master' | 'custom'>('select');
  const [selectedCategory, setSelectedCategory] = useState('');
  const [searchQuery, setSearchQuery] = useState('');
@@ -1786,6 +1789,11 @@ export default function KermesDetailPage() {
          targetRadiusKm: flashSaleRadius,
          kermesLat: kermes.parkingInfo?.latitude || kermes.address?.location?.latitude,
          kermesLng: kermes.parkingInfo?.longitude || kermes.address?.location?.longitude,
+         targetGroups: {
+           favorites: flashTargetFavorites,
+           staff: flashTargetStaff,
+           nearby: flashTargetNearby,
+         },
          discountedItems: discountedItems.map(p => ({
            id: p.id,
            name: getLocalizedText(p.name, locale),
@@ -5804,6 +5812,44 @@ export default function KermesDetailPage() {
  </div>
  </div>
 
+ <h4 className="font-medium text-sm text-foreground mb-2">{t('flash_sale_target_audience') || 'Hedef Kitle'}</h4>
+ <div className="space-y-2 mb-4">
+   {/* Checkbox 1: Favoriler */}
+   <label className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border cursor-pointer hover:bg-muted/50 transition">
+     <input type="checkbox" checked={flashTargetFavorites} onChange={(e) => setFlashTargetFavorites(e.target.checked)}
+       className="w-4 h-4 rounded accent-pink-600" />
+     <span className="material-symbols-outlined text-base text-pink-600">favorite</span>
+     <div className="flex-1">
+       <span className="text-sm font-medium">{t('flash_sale_group_favorites') || 'Kermes Favorileri'}</span>
+       <p className="text-xs text-muted-foreground">{t('flash_sale_group_favorites_desc') || 'Bu kermesi favorilerine ekleyen kullanicilar'}</p>
+     </div>
+   </label>
+
+   {/* Checkbox 2: Personel & Admin */}
+   <label className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border cursor-pointer hover:bg-muted/50 transition">
+     <input type="checkbox" checked={flashTargetStaff} onChange={(e) => setFlashTargetStaff(e.target.checked)}
+       className="w-4 h-4 rounded accent-pink-600" />
+     <span className="material-symbols-outlined text-base text-blue-500">badge</span>
+     <div className="flex-1">
+       <span className="text-sm font-medium">{t('flash_sale_group_staff') || 'Personel & Adminler'}</span>
+       <p className="text-xs text-muted-foreground">{t('flash_sale_group_staff_desc') || 'Bu kermesin personeli ve adminleri'}</p>
+     </div>
+   </label>
+
+   {/* Checkbox 3: Yakin Cevre */}
+   <label className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border cursor-pointer hover:bg-muted/50 transition">
+     <input type="checkbox" checked={flashTargetNearby} onChange={(e) => setFlashTargetNearby(e.target.checked)}
+       className="w-4 h-4 rounded accent-pink-600" />
+     <span className="material-symbols-outlined text-base text-green-500">near_me</span>
+     <div className="flex-1">
+       <span className="text-sm font-medium">{t('flash_sale_group_nearby') || 'Yakin Cevredekiler'}</span>
+       <p className="text-xs text-muted-foreground">{t('flash_sale_group_nearby_desc') || 'Kermes alaninin belirli km yakinindaki kullanicilar'}</p>
+     </div>
+   </label>
+ </div>
+
+ {/* Radius secimi sadece "Yakin Cevre" aktifse goster */}
+ {flashTargetNearby && (
  <div className="mb-5 bg-border/20 p-3 rounded-xl border border-border flex items-center justify-between">
    <div className="flex flex-col">
      <span className="text-sm font-bold flex items-center gap-1"><span className="material-symbols-outlined text-sm text-pink-600">my_location</span> {t('flash_sale_target_radius')}</span>
@@ -5814,13 +5860,20 @@ export default function KermesDetailPage() {
      onChange={(e) => setFlashSaleRadius(Number(e.target.value))}
      className="px-4 py-2 bg-background border border-input rounded-lg text-sm font-bold shadow-sm focus:ring-2 focus:ring-pink-500/50"
    >
-     <option value={1}>1 KM (Sadece Çok Yakın)</option>
+     <option value={1}>1 KM</option>
      <option value={2}>2 KM</option>
      <option value={5}>5 KM</option>
      <option value={10}>10 KM</option>
-     <option value={50}>50 KM (Tüm Şehir)</option>
+     <option value={50}>50 KM</option>
    </select>
  </div>
+ )}
+
+ {!flashTargetFavorites && !flashTargetStaff && !flashTargetNearby && (
+   <div className="bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 p-3 rounded-lg text-xs border border-red-200 dark:border-red-900/30 mb-4">
+     En az bir hedef grup secmelisiniz.
+   </div>
+ )}
  
  <h4 className="font-medium text-sm text-foreground mb-2">{t('flash_sale_products')}</h4>
  <div className="space-y-2 mb-4">
@@ -5859,7 +5912,7 @@ export default function KermesDetailPage() {
  <button onClick={() => setShowFlashSaleModal(false)} disabled={isSendingFlashSale} className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-background border border-input hover:bg-muted text-foreground transition">
  {t('flash_sale_cancel')}
  </button>
- <button onClick={handleSendFlashSale} disabled={isSendingFlashSale} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-700 text-white transition disabled:opacity-50 flex items-center justify-center gap-2">
+ <button onClick={handleSendFlashSale} disabled={isSendingFlashSale || (!flashTargetFavorites && !flashTargetStaff && !flashTargetNearby)} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-700 text-white transition disabled:opacity-50 flex items-center justify-center gap-2">
  {isSendingFlashSale ? (
  <>{t('flash_sale_sending')} <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span></>
  ) : t('flash_sale_send')}

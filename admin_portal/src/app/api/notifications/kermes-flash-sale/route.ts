@@ -4,7 +4,7 @@ import { getFirebaseMessaging, getFirebaseAdmin } from '@/lib/firebase-admin';
 export const dynamic = "force-dynamic";
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371; // Dunyanin yaricapi (km)
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -17,9 +17,16 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { kermesId, kermesTitle, discountedItems, targetRadiusKm = 2, kermesLat, kermesLng } = body;
+    const { 
+      kermesId, 
+      kermesTitle, 
+      discountedItems, 
+      targetRadiusKm = 2, 
+      kermesLat, 
+      kermesLng,
+      targetGroups = { favorites: true, staff: true, nearby: true },
+    } = body;
 
-    // Validate request
     if (!kermesId || !discountedItems || discountedItems.length === 0) {
       return NextResponse.json({ error: 'Eksik parametreler.' }, { status: 400 });
     }
@@ -27,12 +34,26 @@ export async function POST(request: NextRequest) {
     const { db } = getFirebaseAdmin();
     const messaging = getFirebaseMessaging();
 
-    // 1. Hedef kitleyi belirle (Tokens listesi + userId mapping)
+    // 0. Kermes personel/admin listesini al (staff checkbox icin)
+    let staffUserIds = new Set<string>();
+    if (targetGroups.staff) {
+      try {
+        const staffSnap = await db.collection('kermesEvents').doc(kermesId).collection('staff').get();
+        staffSnap.forEach(doc => {
+          const data = doc.data();
+          const uid = data.userId || doc.id;
+          if (uid) staffUserIds.add(uid);
+        });
+      } catch (e) {
+        console.warn('Staff collection read warning:', e);
+      }
+    }
+
+    // 1. Hedef kitleyi belirle
     let targetTokens = new Set<string>();
-    const tokenToUserId = new Map<string, string>(); // token -> userId mapping for inbox
+    const tokenToUserId = new Map<string, string>();
 
     const usersRef = db.collection('users');
-    
     const querySnapshot = await usersRef.where('fcmToken', '!=', null).get();
     
     querySnapshot.forEach(doc => {
@@ -40,36 +61,46 @@ export async function POST(request: NextRequest) {
       const token = data.fcmToken || data.customerFcmToken;
       if (!token) return;
 
-      let shouldSend = false;
-
-      // 1. Durum: Kermesi favoriye almis mi?
-      if (data.favoriteKermes && Array.isArray(data.favoriteKermes) && data.favoriteKermes.includes(kermesId)) {
-        shouldSend = true;
-      }
-      if (data.favorites && data.favorites.includes(kermesId)) {
-        shouldSend = true;
-      }
-
-      // 2. Durum: Genel kermes veya lokma pazarlama bildirimi aciksa
-      if (data.notificationPreferences) {
-        if (data.notificationPreferences.kermesNotifications === true || 
-            data.notificationPreferences.promotions === true ||
-            data.notificationPreferences.marketing === true) {
-          shouldSend = true;
+      // ZORUNLU: Kullanicinin kermes bildirimlerini acmis olmasi gerekiyor
+      const prefs = data.notificationPreferences;
+      if (prefs) {
+        // Eger acikca kapatmissa -> atla
+        if (prefs.kermesNotifications === false && prefs.promotions === false && prefs.marketing === false) {
+          return;
         }
       } else {
-        if (data.notifyOrderPush !== false) {
-           shouldSend = true;
+        // Eski model: eger acikca kapattiysa atla
+        if (data.notifyOrderPush === false) {
+          return;
         }
       }
 
-      // 3. Durum: Konum verisi olan kullanicilarin distance hesabi
-      if (!shouldSend && kermesLat && kermesLng && data.lastKnownLocation && data.lastKnownLocation.latitude && data.lastKnownLocation.longitude) {
-         const dist = calculateDistance(
-           data.lastKnownLocation.latitude, data.lastKnownLocation.longitude, 
-           kermesLat, kermesLng
-         );
-         if (dist <= targetRadiusKm) shouldSend = true;
+      let shouldSend = false;
+
+      // Grup 1: Kermes Favorileri
+      if (targetGroups.favorites) {
+        if (data.favoriteKermes && Array.isArray(data.favoriteKermes) && data.favoriteKermes.includes(kermesId)) {
+          shouldSend = true;
+        }
+        if (data.favorites && Array.isArray(data.favorites) && data.favorites.includes(kermesId)) {
+          shouldSend = true;
+        }
+      }
+
+      // Grup 2: Personel & Adminler
+      if (targetGroups.staff && staffUserIds.has(doc.id)) {
+        shouldSend = true;
+      }
+
+      // Grup 3: Yakin Cevredekiler (konum bazli)
+      if (targetGroups.nearby && kermesLat && kermesLng) {
+        if (data.lastKnownLocation && data.lastKnownLocation.latitude && data.lastKnownLocation.longitude) {
+          const dist = calculateDistance(
+            data.lastKnownLocation.latitude, data.lastKnownLocation.longitude, 
+            kermesLat, kermesLng
+          );
+          if (dist <= targetRadiusKm) shouldSend = true;
+        }
       }
 
       if (shouldSend) {
@@ -125,7 +156,7 @@ export async function POST(request: NextRequest) {
       tokens: tokensArray,
     };
 
-    // 3. FCM Push gonder (500'luk chunk)
+    // 3. FCM Push gonder
     const chunkSize = 500;
     let successCount = 0;
     let failureCount = 0;
@@ -139,45 +170,38 @@ export async function POST(request: NextRequest) {
       failureCount += response.failureCount;
     }
 
-    // 4. Firestore Inbox'a kaydet - her kullanicinin notifications sub-collection'ina
+    // 4. Firestore Inbox'a kaydet
     const now = new Date();
-    const batch = db.batch();
-    let batchCount = 0;
     const MAX_BATCH = 500;
-    const userIds = Array.from(tokenToUserId.values());
+    const userIds = Array.from(new Set(tokenToUserId.values()));
 
-    // Indirimli urunlerin ozet listesi
     const discountSummary = discountedItems.map((item: any) => ({
       name: item.name,
       price: item.price,
       discountPrice: item.discountPrice,
     }));
 
-    for (const userId of userIds) {
-      const notifRef = db.collection('users').doc(userId).collection('notifications').doc();
-      batch.set(notifRef, {
-        type: 'kermes_flash_sale',
-        tag: 'kampanya',
-        title: title,
-        body: messageBody,
-        kermesId: kermesId,
-        kermesTitle: kermesTitle || '',
-        discountedItems: discountSummary,
-        imageUrl: itemImage || null,
-        read: false,
-        createdAt: now,
-      });
-      batchCount++;
-
-      // Firestore batch limiti 500 - asarsa commit et, yeni batch ac
-      if (batchCount >= MAX_BATCH) {
-        await batch.commit();
-        batchCount = 0;
+    // Firestore batch'leri 500 limitini asmamali
+    for (let i = 0; i < userIds.length; i += MAX_BATCH) {
+      const batch = db.batch();
+      const chunk = userIds.slice(i, i + MAX_BATCH);
+      
+      for (const userId of chunk) {
+        const notifRef = db.collection('users').doc(userId).collection('notifications').doc();
+        batch.set(notifRef, {
+          type: 'kermes_flash_sale',
+          tag: 'kampanya',
+          title: title,
+          body: messageBody,
+          kermesId: kermesId,
+          kermesTitle: kermesTitle || '',
+          discountedItems: discountSummary,
+          imageUrl: itemImage || null,
+          read: false,
+          createdAt: now,
+        });
       }
-    }
-
-    // Kalan kayitlari commit et
-    if (batchCount > 0) {
+      
       await batch.commit();
     }
 

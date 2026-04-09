@@ -4395,7 +4395,14 @@
     "flash_sale_cancel": "Cancel",
     "flash_sale_send": "Send Now",
     "flash_sale_sending": "Sending",
-    "flash_sale_btn": "Flash Sale"
+    "flash_sale_btn": "Flash Sale",
+    "flash_sale_target_audience": "Target Audience",
+    "flash_sale_group_favorites": "Kermes Favorites",
+    "flash_sale_group_favorites_desc": "Users who favorited this kermes",
+    "flash_sale_group_staff": "Staff & Admins",
+    "flash_sale_group_staff_desc": "Staff and admins of this kermes",
+    "flash_sale_group_nearby": "Nearby Users",
+    "flash_sale_group_nearby_desc": "Users within the set km radius around the kermes"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",
