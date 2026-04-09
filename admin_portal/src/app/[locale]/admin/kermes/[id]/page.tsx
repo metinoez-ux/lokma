@@ -2178,63 +2178,7 @@ export default function KermesDetailPage() {
  </div>
  </div>
 
- {/* Feature Edit Modal (Super Admin) */}
- {editingFeature && isSuperAdmin && (
- <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setEditingFeature(null)}>
- <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
- <h3 className="text-foreground font-bold mb-4">Ozellik Duzenle</h3>
- <div className="space-y-4">
- <div>
- <label className="text-muted-foreground text-xs block mb-1">Ad</label>
- <input type="text" value={editingFeature.label} onChange={(e) => setEditingFeature({...editingFeature, label: e.target.value})}
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input text-sm" />
- </div>
- <div>
- <label className="text-muted-foreground text-xs block mb-1">Ikon (emoji veya bos birakin)</label>
- <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-lg bg-muted/50 border border-border flex items-center justify-center overflow-hidden flex-shrink-0">
- {editingFeature.icon ? (editingFeature.icon.startsWith('http') ? <img src={editingFeature.icon} alt="" className="w-full h-full object-contain" /> : <span className="text-xl">{editingFeature.icon}</span>) : <span className="text-muted-foreground text-xs">-</span>}
- </div>
- <input type="text" value={editingFeature.icon?.startsWith('http') ? '' : (editingFeature.icon || '')} placeholder="Emoji girin..."
- onChange={(e) => setEditingFeature({...editingFeature, icon: e.target.value})}
- disabled={!!editingFeature.icon?.startsWith('http')}
- className="flex-1 px-3 py-2 bg-background text-foreground rounded-lg border border-input text-sm disabled:opacity-50" />
- </div>
- <div className="mt-2">
- <label className="text-muted-foreground text-[10px] block mb-1">veya resim yukle</label>
- <input type="file" accept="image/*" onChange={async (e) => {
- const file = e.target.files?.[0];
- if (!file) return;
- try {
- const { ref: storageRef, uploadBytes: ub, getDownloadURL: gdl } = await import('firebase/storage');
- const fileRef = storageRef(storage, 'kermes_features/' + Date.now() + '_' + file.name);
- await ub(fileRef, file);
- const url = await gdl(fileRef);
- setEditingFeature({...editingFeature, icon: url});
- } catch (err) { console.error('Upload error:', err); }
- }} className="text-xs text-muted-foreground" />
- {editingFeature.icon?.startsWith('http') && (
- <button type="button" onClick={() => setEditingFeature({...editingFeature, icon: ''})} className="text-xs text-red-400 hover:text-red-300 mt-1">Resmi kaldir</button>
- )}
- </div>
- </div>
- <div>
- <label className="text-muted-foreground text-xs block mb-1">Renk</label>
- <div className="flex items-center gap-2">
- <input type="color" value={editingFeature.color} onChange={(e) => setEditingFeature({...editingFeature, color: e.target.value})}
- className="w-8 h-8 rounded cursor-pointer border-0" />
- <span className="text-xs text-muted-foreground">{editingFeature.color}</span>
- </div>
- </div>
- </div>
- <div className="flex gap-2 mt-6">
- <button type="button" onClick={() => setEditingFeature(null)} className="flex-1 py-2 bg-muted/50 text-foreground rounded-lg text-sm hover:bg-muted transition">Iptal</button>
- <button type="button" onClick={() => { setEventFeatures(prev => prev.map(ef => ef.id === editingFeature.id ? editingFeature : ef)); setEditingFeature(null); }}
- className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">Kaydet</button>
- </div>
- </div>
- </div>
- )}
+
 
  {/* Custom Features - Max 3 */}
  <div>
@@ -5646,6 +5590,64 @@ export default function KermesDetailPage() {
  </div>
  </div>
  )}
+ {/* Feature Edit Modal (Super Admin) Node */}
+ {editingFeature && isSuperAdmin && (
+ <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setEditingFeature(null)}>
+ <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+ <h3 className="text-foreground font-bold mb-4">Ozellik Duzenle</h3>
+ <div className="space-y-4">
+ <div>
+ <label className="text-muted-foreground text-xs block mb-1">Ad</label>
+ <input type="text" value={editingFeature.label} onChange={(e) => setEditingFeature({...editingFeature, label: e.target.value})}
+ className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input text-sm" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-xs block mb-1">Ikon (emoji veya bos birakin)</label>
+ <div className="flex items-center gap-3">
+ <div className="w-10 h-10 rounded-lg bg-muted/50 border border-border flex items-center justify-center overflow-hidden flex-shrink-0">
+ {editingFeature.icon ? (editingFeature.icon.startsWith('http') ? <img src={editingFeature.icon} alt="" className="w-full h-full object-contain" /> : <span className="text-xl">{editingFeature.icon}</span>) : <span className="text-muted-foreground text-xs">-</span>}
+ </div>
+ <input type="text" value={editingFeature.icon?.startsWith('http') ? '' : (editingFeature.icon || '')} placeholder="Emoji girin..."
+ onChange={(e) => setEditingFeature({...editingFeature, icon: e.target.value})}
+ disabled={!!editingFeature.icon?.startsWith('http')}
+ className="flex-1 px-3 py-2 bg-background text-foreground rounded-lg border border-input text-sm disabled:opacity-50" />
+ </div>
+ <div className="mt-2">
+ <label className="text-muted-foreground text-[10px] block mb-1">veya resim yukle</label>
+ <input type="file" accept="image/*" onChange={async (e) => {
+ const file = e.target.files?.[0];
+ if (!file) return;
+ try {
+ const { ref: storageRef, uploadBytes: ub, getDownloadURL: gdl } = await import('firebase/storage');
+ const fileRef = storageRef(storage, 'kermes_features/' + Date.now() + '_' + file.name);
+ await ub(fileRef, file);
+ const url = await gdl(fileRef);
+ setEditingFeature({...editingFeature, icon: url});
+ } catch (err) { console.error('Upload error:', err); }
+ }} className="text-xs text-muted-foreground" />
+ {editingFeature.icon?.startsWith('http') && (
+ <button type="button" onClick={() => setEditingFeature({...editingFeature, icon: ''})} className="text-xs text-red-400 hover:text-red-300 mt-1">Resmi kaldir</button>
+ )}
+ </div>
+ </div>
+ <div>
+ <label className="text-muted-foreground text-xs block mb-1">Renk</label>
+ <div className="flex items-center gap-2">
+ <input type="color" value={editingFeature.color} onChange={(e) => setEditingFeature({...editingFeature, color: e.target.value})}
+ className="w-8 h-8 rounded cursor-pointer border-0" />
+ <span className="text-xs text-muted-foreground">{editingFeature.color}</span>
+ </div>
+ </div>
+ </div>
+ <div className="flex gap-2 mt-6">
+ <button type="button" onClick={() => setEditingFeature(null)} className="flex-1 py-2 bg-muted/50 text-foreground rounded-lg text-sm hover:bg-muted transition">Iptal</button>
+ <button type="button" onClick={() => { setEventFeatures(prev => prev.map(ef => ef.id === editingFeature.id ? editingFeature : ef)); setEditingFeature(null); }}
+ className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">Kaydet</button>
+ </div>
+ </div>
+ </div>
+ )}
+
  </div>
  );
 }
