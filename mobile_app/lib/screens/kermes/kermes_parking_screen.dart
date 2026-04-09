@@ -18,6 +18,7 @@ import 'package:google_places_flutter/model/prediction.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // LOKMA Kermes tema renkleri
 const Color primaryRed = Color(0xFFFF3333);
@@ -1407,7 +1408,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 IconButton(
                   onPressed: () => _launchStreetView(info.lat!, info.lng!),
                   tooltip: 'Street View',
-                  icon: const Icon(Icons.streetview, color: Color(0xFFFFA000)),
+                  icon: const FaIcon(FontAwesomeIcons.binoculars, color: Color(0xFFFFA000), size: 20),
                 ),
               // Adresi kopyala
               IconButton(
