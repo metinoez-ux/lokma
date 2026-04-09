@@ -29,16 +29,7 @@ export async function POST(request: NextRequest) {
     const messaging = getFirebaseMessaging();
     const admin = require('firebase-admin');
 
-    // Staff listesi
-    let staffUserIds = new Set<string>();
-    if (targetGroups.staff) {
-      try {
-        const staffSnap = await db.collection('kermesEvents').doc(kermesId).collection('staff').get();
-        staffSnap.forEach((doc: any) => { const uid = doc.data().userId || doc.id; if (uid) staffUserIds.add(uid); });
-      } catch (e) { console.warn('Staff read warning:', e); }
-    }
-
-    // Hedef kitle: kermes bildirimlerini acmis ve 1km icindeki kullanicilar
+    // Hedef kitle tespiti - tum kullanicilari tara
     let targetTokens = new Set<string>();
     let targetUserIds = new Set<string>();
     const usersRef = db.collection('users');
@@ -53,16 +44,31 @@ export async function POST(request: NextRequest) {
 
       let shouldSend = false;
 
-      // Favoriler
+      // Favoriler - favoriteKermes array'i kontrol et
       if (targetGroups.favorites) {
         if ((data.favoriteKermes || []).includes(kermesId) || (data.favorites || []).includes(kermesId)) {
           shouldSend = true;
         }
       }
 
-      // Personel
-      if (targetGroups.staff && staffUserIds.has(doc.id)) {
-        shouldSend = true;
+      // Personel - 3 farkli yeri kontrol et:
+      // 1. assignments array (asil kaynak)
+      // 2. businessId / butcherId eslesmesi
+      if (targetGroups.staff) {
+        // assignments array kontrolu
+        const assignments = data.assignments as any[] || [];
+        if (Array.isArray(assignments)) {
+          for (const a of assignments) {
+            if (a && a.id === kermesId) {
+              shouldSend = true;
+              break;
+            }
+          }
+        }
+        // businessId / butcherId kontrolu
+        if (data.businessId === kermesId || data.butcherId === kermesId) {
+          shouldSend = true;
+        }
       }
 
       // Yakin cevredekiler (1km default)

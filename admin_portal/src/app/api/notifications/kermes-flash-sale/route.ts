@@ -34,39 +34,22 @@ export async function POST(request: NextRequest) {
     const { db } = getFirebaseAdmin();
     const messaging = getFirebaseMessaging();
 
-    // 0. Kermes personel/admin listesini al (staff checkbox icin)
-    let staffUserIds = new Set<string>();
-    if (targetGroups.staff) {
-      try {
-        const staffSnap = await db.collection('kermesEvents').doc(kermesId).collection('staff').get();
-        staffSnap.forEach(doc => {
-          const data = doc.data();
-          const uid = data.userId || doc.id;
-          if (uid) staffUserIds.add(uid);
-        });
-      } catch (e) {
-        console.warn('Staff collection read warning:', e);
-      }
-    }
-
     let targetTokens = new Set<string>();
     let targetUserIds = new Set<string>();
 
     const usersRef = db.collection('users');
-    const querySnapshot = await usersRef.where('fcmToken', '!=', null).get();
+    const querySnapshot = await usersRef.get();
     
     querySnapshot.forEach(doc => {
       const data = doc.data();
 
-      // ZORUNLU: Kullanicinin kermes bildirimlerini acmis olmasi gerekiyor
+      // Kermes bildirimlerini kapatmis kullanicilari atla
       const prefs = data.notificationPreferences;
       if (prefs) {
-        // Eger acikca kapatmissa -> atla
         if (prefs.kermesNotifications === false && prefs.promotions === false && prefs.marketing === false) {
           return;
         }
       } else {
-        // Eski model: eger acikca kapattiysa atla
         if (data.notifyOrderPush === false) {
           return;
         }
@@ -84,9 +67,20 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Grup 2: Personel & Adminler
-      if (targetGroups.staff && staffUserIds.has(doc.id)) {
-        shouldSend = true;
+      // Grup 2: Personel & Adminler - assignments array + businessId/butcherId kontrolu
+      if (targetGroups.staff) {
+        const assignments = data.assignments as any[] || [];
+        if (Array.isArray(assignments)) {
+          for (const a of assignments) {
+            if (a && a.id === kermesId) {
+              shouldSend = true;
+              break;
+            }
+          }
+        }
+        if (data.businessId === kermesId || data.butcherId === kermesId) {
+          shouldSend = true;
+        }
       }
 
       // Grup 3: Yakin Cevredekiler (konum bazli)
