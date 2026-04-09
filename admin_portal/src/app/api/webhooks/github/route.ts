@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
 
 export async function POST(req: Request) {
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
 
     const description = `Bu guncelleme icerisinde toplam ${changes.length} adet degisiklik tespiti, ${totalAdded} yeni dosya, ${totalModified} degisen dosya kayit altina alindi.`;
 
+    const { db: adminDb } = getFirebaseAdmin();
     const docRef = adminDb.collection('changelog').doc();
     await docRef.set({
       version: `v0.9.${Math.floor(Date.now() / 100000)}`, // Otomatik mini versiyon
