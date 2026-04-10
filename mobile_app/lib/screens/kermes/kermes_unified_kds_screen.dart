@@ -440,6 +440,9 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                           sectionColor = Colors.purple;
                           sectionLabel = section.isNotEmpty ? section : 'Masa';
                         }
+                        // tableNumber zaten M ile basliyorsa tekrar M ekleme
+                        final tNum = order.tableNumber!;
+                        final tableDisplay = tNum.toUpperCase().startsWith('M') ? tNum : 'M$tNum';
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
@@ -448,7 +451,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                             border: Border.all(color: sectionColor.withOpacity(0.4)),
                           ),
                           child: Text(
-                            '$sectionLabel - M${order.tableNumber}',
+                            '$sectionLabel - $tableDisplay',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sectionColor),
                           ),
                         );
