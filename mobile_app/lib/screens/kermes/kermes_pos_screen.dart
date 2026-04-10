@@ -628,7 +628,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
               decoration: BoxDecoration(
                 color: isDark
                     ? lokmaPink
-                    : lokmaPink.withOpacity(0.10),
+                    : const Color(0xFFF5F0E8),
               ),
               child: Text(
                 cat,
