@@ -222,17 +222,39 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Baslik
+          // Baslik + toplam siparis badge
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'Bana Atanan \"Ocak Ba\u015f\u0131\" G\u00f6revlerim',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.grey[400] : const Color(0xFF555555),
-                letterSpacing: 0.3,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Bana Atanan \"Ocak Ba\u015f\u0131\" G\u00f6revlerim',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.grey[400] : const Color(0xFF555555),
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                if ((zoneCounts['T\u00fcm\u00fc'] ?? 0) > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: warningOrange,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${zoneCounts['T\u00fcm\u00fc']} Sipari\u015f',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           SingleChildScrollView(
@@ -311,23 +333,16 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
               border: Border(bottom: BorderSide(color: accentColor, width: 3)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(color: accentColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                  child: Text(
-                    "${orders.length} Sipariş",
-                    style: TextStyle(fontWeight: FontWeight.bold, color: accentColor, fontSize: 13),
-                  ),
-                ),
-              ],
+            child: Center(
+              child: Text(
+                '${orders.length} Sipari\u015f',
+                style: TextStyle(fontWeight: FontWeight.w700, color: accentColor, fontSize: 13),
+              ),
             ),
           ),
           Expanded(
