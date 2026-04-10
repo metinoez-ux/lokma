@@ -86,8 +86,8 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                 indicatorColor: lokmaPink,
                 indicatorWeight: 3,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 0),
-                labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.5),
-                unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.5),
                 tabs: [
                   Tab(
                     child: Row(
@@ -226,7 +226,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'Benim Ocak Basi Gorevlerim',
+              'Bana Atanan \"Ocak Ba\u015f\u0131\" G\u00f6revlerim',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
