@@ -114,42 +114,42 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
             // Tab bar - is akisi gosterimi
             Container(
               color: isDark ? const Color(0xFF252525) : const Color(0xFFE8E8E8),
-              child: TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: isDark ? Colors.grey[400] : const Color(0xFF555555),
-                indicator: BoxDecoration(
-                  color: lokmaPink,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                dividerColor: Colors.transparent,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 0),
-                labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 0.5),
-                unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-                tabs: [
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('YENI'),
-                        const SizedBox(width: 4),
-                        Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
-                      ],
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: isDark ? Colors.grey[400] : const Color(0xFF555555),
+                    indicator: BoxDecoration(
+                      color: lokmaPink,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicatorPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                    dividerColor: Colors.transparent,
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 0),
+                    labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                    unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                    tabs: const [
+                      Tab(text: 'YENI'),
+                      Tab(text: 'HAZIRLANIYOR'),
+                      Tab(text: 'TESLIME HAZIR'),
+                    ],
+                  ),
+                  // Chevron oklari tab'larin arasinda (overlay)
+                  Positioned(
+                    left: MediaQuery.of(context).size.width / 3 - 10,
+                    child: IgnorePointer(
+                      child: Icon(Icons.chevron_right, size: 20, color: isDark ? Colors.grey[500] : Colors.grey[500]),
                     ),
                   ),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('HAZIRLANIYOR'),
-                        const SizedBox(width: 4),
-                        Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
-                      ],
+                  Positioned(
+                    left: MediaQuery.of(context).size.width * 2 / 3 - 10,
+                    child: IgnorePointer(
+                      child: Icon(Icons.chevron_right, size: 20, color: isDark ? Colors.grey[500] : Colors.grey[500]),
                     ),
                   ),
-                  const Tab(text: 'TESLIME HAZIR'),
                 ],
               ),
             ),
