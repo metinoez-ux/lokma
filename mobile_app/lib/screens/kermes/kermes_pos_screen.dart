@@ -409,7 +409,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     ref.watch(kermesCategoryProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cartState = ref.watch(kermesCartProvider);
-    final isTablet = MediaQuery.of(context).size.width > 768;
+    final isTablet = MediaQuery.of(context).size.width >= 600;
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
