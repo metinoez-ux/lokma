@@ -8,7 +8,6 @@ import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
-import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'kermes_checkout_sheet.dart';
 import 'kermes_customization_sheet.dart';
@@ -580,19 +579,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     );
   }
 
-  Widget? _buildStaffFAB() {
-    final uid = widget.staffId ?? FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null || uid.isEmpty) return null;
-    return KermesStaffStatusFAB(
-      kermesId: widget.event.id,
-      staffId: uid,
-      staffName: widget.staffName ?? 'Kasiyer',
-      role: 'counter',
-      sectionId: widget.allowedSections.isNotEmpty
-          ? widget.allowedSections.first
-          : null,
-    );
-  }
+
 
   /// Tablet layout: Sol taraf menu, sag taraf sepet
   Widget _buildTabletLayout(bool isDark, double screenWidth) {

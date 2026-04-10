@@ -310,7 +310,9 @@ class _KermesTezgahScreenState extends ConsumerState<KermesTezgahScreen>
               padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
               child: Row(
                 children: [
-                  if (order.customerName.isNotEmpty) ...[
+                  if (order.customerName.isNotEmpty &&
+                      order.customerName != 'POS Siparis' &&
+                      order.customerName != 'Stant Musteri') ...[
                     Icon(Icons.person_outline, size: 14,
                         color: isDark ? Colors.white54 : Colors.grey),
                     const SizedBox(width: 4),
