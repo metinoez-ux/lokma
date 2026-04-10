@@ -81,10 +81,15 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
             Container(
               color: isDark ? const Color(0xFF252525) : const Color(0xFFE8E8E8),
               child: TabBar(
-                labelColor: lokmaPink,
+                labelColor: Colors.white,
                 unselectedLabelColor: isDark ? Colors.grey[400] : const Color(0xFF555555),
-                indicatorColor: lokmaPink,
-                indicatorWeight: 3,
+                indicator: BoxDecoration(
+                  color: lokmaPink,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicatorPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                dividerColor: Colors.transparent,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 0),
                 labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 0.5),
                 unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.5),
@@ -274,7 +279,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                       fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                     )),
                     selected: isActive,
-                    selectedColor: lokmaPink,
+                    selectedColor: warningOrange,
                     backgroundColor: isDark ? const Color(0xFF333333) : const Color(0xFFF0F0F0),
                     onSelected: (selected) {
                       if (selected) {
@@ -291,7 +296,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                         decoration: BoxDecoration(
-                          color: lokmaPink,
+                          color: warningOrange,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
