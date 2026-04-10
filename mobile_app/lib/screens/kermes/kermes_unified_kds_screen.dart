@@ -24,14 +24,28 @@ class KermesUnifiedKdsScreen extends ConsumerStatefulWidget {
   ConsumerState<KermesUnifiedKdsScreen> createState() => _KermesUnifiedKdsScreenState();
 }
 
-class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen> {
+class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
+    with TickerProviderStateMixin {
   String _activeFilter = 'Tümü';
   Set<String> _previousOrderIds = {};
+  late final TabController _tabController;
 
   static const Color lokmaPink = Color(0xFFEA184A);
   static const Color successGreen = Color(0xFF2E7D32);
   static const Color warningOrange = Color(0xFFE65100);
   static const Color preparingBlue = Color(0xFF1565C0);
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   Future<void> _toggleItemStatus(
     KermesOrder order,
@@ -79,14 +93,11 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
 
   /// Mevcut tab bosaldiysa sonraki tab'a otomatik gec
   void _autoSwitchTabIfEmpty() {
-    // Stream'den gelen data Firestore'dan gelecek, kisa bir delay ile kontrol et
     Future.delayed(const Duration(milliseconds: 400), () {
       if (!mounted) return;
-      final tabController = DefaultTabController.of(context);
-      final currentIndex = tabController.index;
-      // Sadece YENI (0) ve HAZIRLANIYOR (1) tab'larinda otomatik gec
+      final currentIndex = _tabController.index;
       if (currentIndex < 2) {
-        tabController.animateTo(currentIndex + 1);
+        _tabController.animateTo(currentIndex + 1);
       }
     });
   }
@@ -96,9 +107,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final orderService = ref.read(kermesOrderServiceProvider);
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFEAEAEA),
         body: Column(
           children: [
@@ -106,6 +115,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
             Container(
               color: isDark ? const Color(0xFF252525) : const Color(0xFFE8E8E8),
               child: TabBar(
+                controller: _tabController,
                 labelColor: Colors.white,
                 unselectedLabelColor: isDark ? Colors.grey[400] : const Color(0xFF555555),
                 indicator: BoxDecoration(
@@ -123,6 +133,8 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        const Text('\u2B50', style: TextStyle(fontSize: 13)),
+                        const SizedBox(width: 4),
                         const Text('YENI'),
                         const SizedBox(width: 4),
                         Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
@@ -133,13 +145,24 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('HAZIRLANIYOR'),
-                        const SizedBox(width: 4),
-                        Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                        const Text('\uD83D\uDD25', style: TextStyle(fontSize: 12)),
+                        const SizedBox(width: 3),
+                        const Text('HAZIRLA..'),
+                        const SizedBox(width: 3),
+                        Icon(Icons.chevron_right, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
                       ],
                     ),
                   ),
-                  const Tab(text: 'TESLIME HAZIR'),
+                  const Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('\u2705', style: TextStyle(fontSize: 13)),
+                        SizedBox(width: 4),
+                        Text('TESLIME HAZIR'),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -227,6 +250,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                       if (zoneList.length > 1) _buildFilterBar(zoneList, isDark, zoneCounts),
                       Expanded(
                         child: TabBarView(
+                          controller: _tabController,
                           children: [
                             _buildKanbanColumn(pendingOrders, isDark, warningOrange),
                             _buildKanbanColumn(preparingOrders, isDark, preparingBlue),
@@ -241,7 +265,6 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
             ),
           ],
         ),
-      ),
     );
   }
 
