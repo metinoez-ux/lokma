@@ -133,8 +133,6 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('\u2B50', style: TextStyle(fontSize: 13)),
-                        const SizedBox(width: 4),
                         const Text('YENI'),
                         const SizedBox(width: 4),
                         Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
@@ -145,24 +143,13 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('\uD83D\uDD25', style: TextStyle(fontSize: 12)),
-                        const SizedBox(width: 3),
-                        const Text('HAZIRLA..'),
-                        const SizedBox(width: 3),
-                        Icon(Icons.chevron_right, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                        const Text('HAZIRLANIYOR'),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
                       ],
                     ),
                   ),
-                  const Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('\u2705', style: TextStyle(fontSize: 13)),
-                        SizedBox(width: 4),
-                        Text('TESLIME HAZIR'),
-                      ],
-                    ),
-                  ),
+                  const Tab(text: 'TESLIME HAZIR'),
                 ],
               ),
             ),
