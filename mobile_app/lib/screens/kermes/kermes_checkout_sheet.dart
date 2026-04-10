@@ -558,11 +558,22 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         final rootNavContext = Navigator.of(context, rootNavigator: true).context;
         Navigator.pop(context);
 
-        if (widget.isPosMode && _deliveryType == DeliveryType.gelAl) {
-          // POS tezgahtan teslim: McDonald's numara dialog
+        if (widget.isPosMode) {
+          // POS modu: her zaman POS dialog goster (tezgah veya masa)
           final posName = _posNameController.text.trim();
+          String? subtitle;
+          if (_deliveryType == DeliveryType.masada && _tableController.text.isNotEmpty) {
+            // Masa bilgisi
+            String sectionName = '';
+            if (_selectedSectionId != null) {
+              final sec = widget.event.sectionDefs.where((s) => s.id == _selectedSectionId).firstOrNull;
+              if (sec != null) sectionName = '${sec.name} - ';
+            }
+            subtitle = '${sectionName}Masa ${_tableController.text}';
+          }
           _showPOSOrderNumberDialog(rootNavContext, orderNumber,
-              abbreviatedName: posName.isNotEmpty ? _abbreviateName(posName) : null);
+              abbreviatedName: posName.isNotEmpty ? _abbreviateName(posName) : null,
+              tableInfo: subtitle);
         } else {
           showOrderQRDialog(
             rootNavContext,
@@ -588,7 +599,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
 
   /// POS tezgahtan teslim: McDonald's siparis numarasi dialog
-  void _showPOSOrderNumberDialog(BuildContext ctx, String orderNumber, {String? abbreviatedName}) {
+  void _showPOSOrderNumberDialog(BuildContext ctx, String orderNumber, {String? abbreviatedName, String? tableInfo}) {
     final isDark = Theme.of(ctx).brightness == Brightness.dark;
     showDialog(
       context: ctx,
@@ -614,7 +625,30 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700,
                   color: isDark ? Colors.white : Colors.black87)),
               const SizedBox(height: 8),
-              Text('Musteriye verilecek numara:',
+              // Masa bilgisi varsa goster
+              if (tableInfo != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.table_restaurant, size: 16, color: Colors.purple[300]),
+                      const SizedBox(width: 6),
+                      Text(tableInfo, style: TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600,
+                        color: Colors.purple[300],
+                      )),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(tableInfo != null ? 'Garson masaya goturecek:' : 'Musteriye verilecek numara:',
                 style: TextStyle(fontSize: 14, color: isDark ? Colors.grey[400] : Colors.grey[600])),
               const SizedBox(height: 20),
               Container(
@@ -650,7 +684,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         ),
                       ),
                     ] else ...[
-                      Text('Tezgahtan Teslim',
+                      Text(tableInfo != null ? 'Masaya Servis' : 'Tezgahtan Teslim',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
                           color: isDark ? Colors.grey[400] : Colors.grey[600])),
                     ],
