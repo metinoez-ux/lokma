@@ -37,7 +37,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   Timer? _shiftTimer;
   final ValueNotifier<Duration> _shiftElapsedNotifier = ValueNotifier(Duration.zero);
   bool _shiftLoading = false;
-  bool _showMesai = false;
+  bool _showMesai = true;
 
   @override
   void initState() {
