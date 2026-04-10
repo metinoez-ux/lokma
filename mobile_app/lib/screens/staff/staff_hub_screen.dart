@@ -850,16 +850,19 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: _showMesai
-          ? const ShiftDashboardTab()
-          : tabs.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : tabs.length == 1
-                  ? tabs.first
-                  : IndexedStack(
-                      index: _selectedNavIndex,
-                      children: tabs,
-                    ),
+      body: Padding(
+        padding: EdgeInsets.only(bottom: navItems.length >= 2 ? 40 : 0),
+        child: _showMesai
+            ? const ShiftDashboardTab()
+            : tabs.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : tabs.length == 1
+                    ? tabs.first
+                    : IndexedStack(
+                        index: _selectedNavIndex,
+                        children: tabs,
+                      ),
+      ),
       bottomNavigationBar: navItems.length >= 2
           ? Stack(
               clipBehavior: Clip.none,
