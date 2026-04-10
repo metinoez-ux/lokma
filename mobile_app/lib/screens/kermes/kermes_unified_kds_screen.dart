@@ -136,6 +136,21 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     _activeFilter = 'T\u00fcm\u00fc';
                   }
 
+                  // Zone bazli aktif siparis sayilarini hesapla (pending + preparing)
+                  final activeOrders = sectionFilteredOrders.where(
+                    (o) => o.status == KermesOrderStatus.pending || o.status == KermesOrderStatus.preparing
+                  ).toList();
+                  final Map<String, int> zoneCounts = {};
+                  for (final zone in zoneList) {
+                    if (zone == 'T\u00fcm\u00fc') {
+                      zoneCounts[zone] = activeOrders.length;
+                    } else {
+                      zoneCounts[zone] = activeOrders.where(
+                        (o) => o.items.any((item) => item.prepZones.contains(zone))
+                      ).length;
+                    }
+                  }
+
                   // Filter out orders that don't match the zone filter AT ALL
                   final displayOrders = _activeFilter == 'T\u00fcm\u00fc'
                       ? sectionFilteredOrders
@@ -159,7 +174,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Zone filter sadece birden fazla zone varsa goster
-                      if (zoneList.length > 1) _buildFilterBar(zoneList, isDark),
+                      if (zoneList.length > 1) _buildFilterBar(zoneList, isDark, zoneCounts),
                       Expanded(
                         child: TabBarView(
                           children: [
@@ -180,7 +195,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
     );
   }
 
-  Widget _buildFilterBar(List<String> zones, bool isDark) {
+  Widget _buildFilterBar(List<String> zones, bool isDark, Map<String, int> zoneCounts) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -189,13 +204,39 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
         child: Row(
           children: zones.map((zone) {
             final isActive = _activeFilter == zone;
+            final count = zoneCounts[zone] ?? 0;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                label: Text(zone, style: TextStyle(
-                  color: isActive ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                )),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(zone, style: TextStyle(
+                      color: isActive ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                    )),
+                    if (count > 0) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Colors.white.withOpacity(0.25)
+                              : lokmaPink,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '$count',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 selected: isActive,
                 selectedColor: lokmaPink,
                 backgroundColor: isDark ? const Color(0xFF333333) : const Color(0xFFF0F0F0),
