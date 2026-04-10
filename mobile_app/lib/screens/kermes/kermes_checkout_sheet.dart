@@ -733,8 +733,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       }
     }
     
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       height: MediaQuery.of(context).size.height * 0.92,
+      margin: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
