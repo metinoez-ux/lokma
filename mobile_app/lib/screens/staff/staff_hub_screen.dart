@@ -677,7 +677,18 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.storefront), label: 'Tezgah'));
     }
 
-    // 3. POS Tab
+    // 3. POS Tab -- sag tarafa tasindi (asagida)
+
+    // --- SOL TARAF BITTI, ORTAYA SPACER EKLE ---
+    final int leftCount = tabs.length;
+
+    // Spacer for center shift control
+    tabs.add(const SizedBox.shrink());
+    navItems.add(const BottomNavigationBarItem(icon: SizedBox(width: 24, height: 24), label: ''));
+
+    // --- SAG TARAF BASLIYOR ---
+
+    // 3. POS Tab (sag tarafta)
     if (capabilities.hasPosRole && capabilities.businessId != null) {
       tabs.add(isOnShift
           ? StaffPosWrapperTab(
@@ -689,15 +700,6 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           : _buildShiftLockedPlaceholder(isDark));
       navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'POS'));
     }
-
-    // --- SOL TARAF BITTI, ORTAYA SPACER EKLE ---
-    final int leftCount = tabs.length;
-
-    // Spacer for center shift control
-    tabs.add(const SizedBox.shrink());
-    navItems.add(const BottomNavigationBarItem(icon: SizedBox(width: 24, height: 24), label: ''));
-
-    // --- SAG TARAF BASLIYOR ---
 
     // 4. Courier Tab
     if (capabilities.isDriver && capabilities.businessId != null) {
@@ -850,19 +852,16 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.only(bottom: navItems.length >= 2 ? 40 : 0),
-        child: _showMesai
-            ? const ShiftDashboardTab()
-            : tabs.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : tabs.length == 1
-                    ? tabs.first
-                    : IndexedStack(
-                        index: _selectedNavIndex,
-                        children: tabs,
-                      ),
-      ),
+      body: _showMesai
+          ? const ShiftDashboardTab()
+          : tabs.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : tabs.length == 1
+                  ? tabs.first
+                  : IndexedStack(
+                      index: _selectedNavIndex,
+                      children: tabs,
+                    ),
       bottomNavigationBar: navItems.length >= 2
           ? Stack(
               clipBehavior: Clip.none,
