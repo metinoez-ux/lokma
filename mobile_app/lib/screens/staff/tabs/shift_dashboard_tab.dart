@@ -878,9 +878,266 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                  ),
                );
             }),
-          ]
+          ],
+          // Detaylari Goruntule butonu
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () {
+              final capabilities = ref.read(staffCapabilitiesProvider);
+              _showShiftHistorySheet(isDark, capabilities.businessId);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withOpacity(0.04) : Colors.blueAccent.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isDark ? Colors.white10 : Colors.blueAccent.withOpacity(0.15)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history, size: 16, color: Colors.blueAccent.withOpacity(0.7)),
+                  const SizedBox(width: 6),
+                  Text('Detaylari Goruntule', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.blueAccent.withOpacity(0.8))),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right, size: 16, color: Colors.blueAccent.withOpacity(0.5)),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showShiftHistorySheet(bool isDark, String? businessId) {
+    if (businessId == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(color: Colors.grey[500], borderRadius: BorderRadius.circular(2)),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.history, color: Colors.blueAccent, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text('Mesai Gecmisi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87))),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: Icon(Icons.close, color: isDark ? Colors.white54 : Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _shiftService.getShiftHistory(
+                        businessId: businessId,
+                        staffId: FirebaseAuth.instance.currentUser?.uid,
+                        limit: 200,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
+                        }
+                        final shifts = snapshot.data ?? [];
+                        if (shifts.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.work_off, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                const SizedBox(height: 16),
+                                Text('Henuz mesai kaydi yok', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 16)),
+                              ],
+                            ),
+                          );
+                        }
+
+                        // Gun bazli grupla
+                        final grouped = <String, List<Map<String, dynamic>>>{};
+                        for (final s in shifts) {
+                          final started = (s['startedAt'] as Timestamp?)?.toDate();
+                          final dayKey = started != null
+                              ? '${started.day.toString().padLeft(2, '0')}.${started.month.toString().padLeft(2, '0')}.${started.year}'
+                              : 'Bilinmiyor';
+                          grouped.putIfAbsent(dayKey, () => []);
+                          grouped[dayKey]!.add(s);
+                        }
+
+                        final dayKeys = grouped.keys.toList();
+
+                        return ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: dayKeys.length,
+                          itemBuilder: (ctx, dayIndex) {
+                            final dayKey = dayKeys[dayIndex];
+                            final dayShifts = grouped[dayKey]!;
+
+                            int dayActiveMin = 0;
+                            int dayPauseMin = 0;
+                            for (final s in dayShifts) {
+                              dayActiveMin += ((s['totalMinutes'] as num?)?.toInt() ?? 0);
+                              dayPauseMin += ((s['pauseMinutes'] as num?)?.toInt() ?? 0);
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  margin: EdgeInsets.only(top: dayIndex > 0 ? 20 : 0, bottom: 10),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? Colors.white.withOpacity(0.06) : Colors.blueAccent.withOpacity(0.06),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(dayKey, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black87)),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.work, size: 14, color: Colors.green.shade400),
+                                          const SizedBox(width: 4),
+                                          Text('${dayActiveMin ~/ 60}s ${dayActiveMin % 60}dk', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green)),
+                                          const SizedBox(width: 10),
+                                          Icon(Icons.pause_circle, size: 14, color: Colors.orange.shade400),
+                                          const SizedBox(width: 4),
+                                          Text('${dayPauseMin ~/ 60}s ${dayPauseMin % 60}dk', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.orange)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                ...dayShifts.map((shift) {
+                                  final started = (shift['startedAt'] as Timestamp?)?.toDate();
+                                  final ended = (shift['endedAt'] as Timestamp?)?.toDate();
+                                  final active = (shift['totalMinutes'] as num?)?.toInt() ?? 0;
+                                  final status = shift['status'] as String? ?? '';
+                                  final pauseLog = List<Map<String, dynamic>>.from(
+                                    (shift['pauseLog'] as List<dynamic>?) ?? [],
+                                  );
+                                  final prepZones = List<String>.from(shift['assignedPrepZones'] ?? []);
+
+                                  String fmtTime(DateTime? dt) {
+                                    if (dt == null) return '--:--';
+                                    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                  }
+
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF252525) : Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 8, height: 8,
+                                              decoration: BoxDecoration(
+                                                color: status == 'ended' ? Colors.green : (status == 'paused' ? Colors.orange : Colors.green),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '${fmtTime(started)} - ${status == 'ended' ? fmtTime(ended) : 'Devam Ediyor'}',
+                                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : Colors.black87),
+                                            ),
+                                            const Spacer(),
+                                            if (status == 'ended')
+                                              Text('${active}dk', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.green)),
+                                          ],
+                                        ),
+                                        if (prepZones.isNotEmpty) ...[
+                                          const SizedBox(height: 6),
+                                          Wrap(
+                                            spacing: 6,
+                                            children: prepZones.map((z) => Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.pink.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(z, style: const TextStyle(fontSize: 11, color: Colors.pink, fontWeight: FontWeight.w600)),
+                                            )).toList(),
+                                          ),
+                                        ],
+                                        if (pauseLog.isNotEmpty) ...[
+                                          const SizedBox(height: 8),
+                                          ...pauseLog.map((p) {
+                                            final pStart = (p['pausedAt'] as Timestamp?)?.toDate();
+                                            final pEnd = (p['resumedAt'] as Timestamp?)?.toDate();
+                                            final pDuration = pStart != null && pEnd != null
+                                                ? pEnd.difference(pStart).inMinutes
+                                                : (pStart != null ? DateTime.now().difference(pStart).inMinutes : 0);
+                                            return Padding(
+                                              padding: const EdgeInsets.only(left: 16, top: 4),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.pause_circle_outline, size: 14, color: Colors.orange.shade400),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    '${fmtTime(pStart)} - ${pEnd != null ? fmtTime(pEnd) : 'Devam'}',
+                                                    style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey.shade600),
+                                                  ),
+                                                  const Spacer(),
+                                                  Text(
+                                                    '${pDuration}dk',
+                                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.orange.shade400),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }),
+                                        ],
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
