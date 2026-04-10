@@ -37,6 +37,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   Timer? _shiftTimer;
   final ValueNotifier<Duration> _shiftElapsedNotifier = ValueNotifier(Duration.zero);
   bool _shiftLoading = false;
+  bool _showMesai = false;
 
   @override
   void initState() {
@@ -329,7 +330,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     if (label.isEmpty) return 'Personel Paneli';
     // Nav label -> okunakli baslik
     switch (label) {
-      case 'Mutfak': return 'Mutfak';
+      case 'Mutfak': return 'Mutfak (Ocak Basi)';
       case 'Tezgah': return 'Tezgah';
       case 'POS': return 'Kermes POS';
       case 'Kurye': return 'Kurye';
@@ -374,8 +375,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
     if (_shiftLoading) {
       return Container(
-        width: 56,
-        height: 56,
+        width: 64,
+        height: 64,
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
           shape: BoxShape.circle,
@@ -389,8 +390,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       return GestureDetector(
         onTap: _handleStartShift,
         child: Container(
-          width: 56,
-          height: 56,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
@@ -402,25 +403,31 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               BoxShadow(color: Colors.green.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
             ],
           ),
-          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
+          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 34),
         ),
       );
     }
 
-    // Mesai aktif -> tek clean buton (timer) tiklaninca sheet acar
+    // Mesai aktif -> dolgu gradient buton
     final accentColor = isPaused ? Colors.orange : Colors.green;
+    final gradientColors = isPaused
+        ? [const Color(0xFFE65100), const Color(0xFFFFA726)]
+        : [const Color(0xFF2E7D32), const Color(0xFF66BB6A)];
 
     return GestureDetector(
       onTap: () => _showShiftActionsSheet(isDark),
       child: Container(
-        width: 56,
-        height: 56,
+        width: 64,
+        height: 64,
         decoration: BoxDecoration(
-          color: accentColor.withOpacity(0.15),
-          border: Border.all(color: accentColor.withOpacity(0.5), width: 2),
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: accentColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 3)),
+            BoxShadow(color: accentColor.withOpacity(0.5), blurRadius: 14, offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -428,16 +435,16 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           children: [
             Icon(
               isPaused ? Icons.pause_circle_filled : Icons.timer,
-              color: accentColor,
-              size: 20,
+              color: Colors.white,
+              size: 22,
             ),
             Text(
               _formatDuration(_shiftElapsedNotifier.value),
-              style: TextStyle(
-                color: accentColor,
-                fontSize: 9,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
                 fontWeight: FontWeight.w900,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ],
@@ -696,9 +703,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Kasa'));
     }
 
-    // 9. Shift Dashboard (Mesai - en sonda)
-    tabs.add(const ShiftDashboardTab());
-    navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.timer), label: 'Mesai'));
+    // Mesai artik bottom nav'da yok - header'daki ikon ile acilir
 
     if (_selectedNavIndex >= tabs.length) {
       _selectedNavIndex = 0;
@@ -708,7 +713,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     final int centerIndex = leftCount;
 
     // Aktif tab basligi
-    final activeTitle = _getActiveTabTitle(_selectedNavIndex, navItems);
+    final activeTitle = _showMesai ? 'Mesai' : _getActiveTabTitle(_selectedNavIndex, navItems);
     // Subtitle: staffName - kermesName
     final staffLabel = capabilities.staffName.isNotEmpty ? capabilities.staffName : 'Personel';
     final subtitle = capabilities.businessName.isNotEmpty
@@ -727,13 +732,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           children: [
             Text(
               activeTitle,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
             Text(
               subtitle,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.white70),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
@@ -747,6 +752,16 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               onPressed: () => _openQrScanner(capabilities.businessId),
               tooltip: 'QR Tara',
             ),
+          // Mesai butonu - header'a tasindi
+          IconButton(
+            icon: Icon(
+              _shiftService.isOnShift ? Icons.timer : Icons.timer_outlined,
+              size: 22,
+              color: _showMesai ? Colors.yellowAccent : Colors.white,
+            ),
+            onPressed: () => setState(() => _showMesai = !_showMesai),
+            tooltip: 'Mesai',
+          ),
           // Bildirim zili - en sagda
           Stack(
             alignment: Alignment.center,
@@ -783,14 +798,16 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: tabs.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : tabs.length == 1
-              ? tabs.first
-              : IndexedStack(
-                  index: _selectedNavIndex,
-                  children: tabs,
-                ),
+      body: _showMesai
+          ? const ShiftDashboardTab()
+          : tabs.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : tabs.length == 1
+                  ? tabs.first
+                  : IndexedStack(
+                      index: _selectedNavIndex,
+                      children: tabs,
+                    ),
       bottomNavigationBar: navItems.length >= 2
           ? Stack(
               clipBehavior: Clip.none,
@@ -801,7 +818,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   onTap: (index) {
                     // Skip center spacer
                     if (index == centerIndex) return;
-                    setState(() => _selectedNavIndex = index);
+                    setState(() {
+                      _selectedNavIndex = index;
+                      _showMesai = false;
+                    });
                   },
                   type: BottomNavigationBarType.fixed,
                   items: navItems,
