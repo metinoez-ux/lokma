@@ -401,17 +401,21 @@ class KermesOrderService {
               .map((doc) => KermesOrder.fromDocument(doc))
               .toList();
 
-          // Bolum filtresi uygula: sipariste bu bolume ait en az bir item olmali
           if (sectionFilter != null && sectionFilter.isNotEmpty) {
             orders = orders.where((order) {
               // Masa siparisi ise tableSection'a bak
               if (order.tableSection != null) {
                 return sectionFilter.contains(order.tableSection);
               }
-              // Diger siparisler icin prepZone'a bak
+              // Hic prepZone'u olmayan urunler (zone atanmamis) herkese aittir
+              final hasAnyZonedItem = order.items.any((item) => item.prepZones.isNotEmpty);
+              if (!hasAnyZonedItem) return true; // zone atanmamis -> tum tezgahlarda gorun
+              
+              // Zone'lu urunler icin filtre uygula
               return order.items.any((item) =>
-                item.prepZones.isNotEmpty && sectionFilter.any((s) =>
-                  item.prepZones.any((zone) => zone.startsWith(s.substring(0, 1)))
+                item.prepZones.isEmpty || // zone'suz item -> gecir
+                sectionFilter.any((s) =>
+                  item.prepZones.any((zone) => zone.toLowerCase().startsWith(s.substring(0, 1).toLowerCase()))
                 )
               );
             }).toList();
