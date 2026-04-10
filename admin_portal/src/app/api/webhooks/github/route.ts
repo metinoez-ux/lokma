@@ -5,9 +5,8 @@ import * as crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    const authHeader = req.headers.get('authorization');
     const signature = req.headers.get('x-hub-signature-256');
-    const secret = process.env.GITHUB_WEBHOOK_SECRET;
+    const secret = (process.env.GITHUB_WEBHOOK_SECRET || '').trim();
 
     if (!secret) {
       return NextResponse.json({ error: 'GITHUB_WEBHOOK_SECRET not configured' }, { status: 500 });
@@ -16,14 +15,23 @@ export async function POST(req: Request) {
     const payloadText = await req.text();
     let isAuthorized = false;
 
-    if (authHeader === `Bearer ${secret}`) {
-      isAuthorized = true;
-    } else if (signature) {
+    // Check HMAC signature (GitHub standard)
+    if (signature) {
       const hmac = crypto.createHmac('sha256', secret);
       const digest = 'sha256=' + hmac.update(payloadText).digest('hex');
-      if (crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))) {
-        isAuthorized = true;
+      try {
+        if (crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))) {
+          isAuthorized = true;
+        }
+      } catch {
+        // length mismatch
       }
+    }
+
+    // Fallback: Bearer token auth
+    const authHeader = req.headers.get('authorization');
+    if (!isAuthorized && authHeader === `Bearer ${secret}`) {
+      isAuthorized = true;
     }
 
     if (!isAuthorized) {
@@ -36,34 +44,52 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'No commits found' }, { status: 200 });
     }
 
-    const changes = body.commits.map((c: any) => c.message);
-    const author = body.pusher?.name || 'GitHub Actions';
-    const mainTitle = changes[0].split('\n')[0] || 'Sistem Guncellemesi'; // Ilk commitin ilk satiri
-    const totalAdded = body.commits.reduce((sum: number, c: any) => sum + (c.added ? c.added.length : 0), 0);
-    const totalModified = body.commits.reduce((sum: number, c: any) => sum + (c.modified ? c.modified.length : 0), 0);
-    const totalRemoved = body.commits.reduce((sum: number, c: any) => sum + (c.removed ? c.removed.length : 0), 0);
-
-    const description = `Bu guncelleme icerisinde toplam ${changes.length} adet degisiklik tespiti, ${totalAdded} yeni dosya, ${totalModified} degisen dosya kayit altina alindi.`;
-
     const { db: adminDb } = getFirebaseAdmin();
-    const docRef = adminDb.collection('changelog').doc();
-    await docRef.set({
-      version: `v0.9.${Math.floor(Date.now() / 100000)}`, // Otomatik mini versiyon
-      title: mainTitle,
-      description,
-      changes,
-      type: 'feature',
-      isDraft: false,
-      author: author,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      tags: ['automation', 'github', 'push']
-    });
+    const batch = adminDb.batch();
+    let count = 0;
 
-    return NextResponse.json({ success: true, id: docRef.id });
+    for (const commit of body.commits) {
+      const msg = commit.message || '';
+      const firstLine = msg.split('\n')[0];
+      const restLines = msg.split('\n').slice(1).filter((l: string) => l.trim()).join(' | ');
 
-  } catch (error: any) {
+      // Format timestamp from commit
+      const commitDate = commit.timestamp ? new Date(commit.timestamp) : new Date();
+      const ts = new Intl.DateTimeFormat('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+        timeZone: 'Europe/Berlin',
+      }).format(commitDate);
+
+      // Detect note from conventional commit prefix
+      let note = '-';
+      if (firstLine.startsWith('fix')) note = 'bugfix';
+      else if (firstLine.startsWith('feat')) note = 'feature';
+      else if (firstLine.startsWith('chore')) note = 'chore';
+      else if (firstLine.startsWith('refactor')) note = 'refactor';
+      else if (firstLine.startsWith('style')) note = 'style';
+      else if (firstLine.startsWith('docs')) note = 'docs';
+      else if (firstLine.startsWith('perf')) note = 'perf';
+
+      const docRef = adminDb.collection('changelog').doc();
+      batch.set(docRef, {
+        hash: (commit.id || '').substring(0, 7),
+        timestamp: ts,
+        description: firstLine + (restLines ? ` -- ${restLines}` : ''),
+        note,
+        createdAt: commitDate.getTime(),
+        author: commit.author?.name || body.pusher?.name || 'unknown',
+      });
+      count++;
+    }
+
+    await batch.commit();
+
+    return NextResponse.json({ success: true, written: count });
+
+  } catch (error: unknown) {
     console.error('Github Webhook error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
