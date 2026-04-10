@@ -301,6 +301,16 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       return;
     }
 
+    // Nakit odeme: alinan tutari sor
+    double? cashReceived;
+    double? changeGiven;
+    if (_paymentMethod == PaymentMethodType.cash) {
+      final result = await _showCashReceivedDialog(_totalCartAmount);
+      if (result == null) return; // iptal edildi
+      cashReceived = result;
+      changeGiven = (cashReceived - _totalCartAmount).clamp(0.0, double.infinity);
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -374,6 +384,8 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         createdByStaffId: widget.staffId,
         createdByStaffName: widget.staffName,
         tableSection: _selectedTableSection,
+        cashReceived: cashReceived,
+        changeGiven: changeGiven,
         orderSource: orderSource,
         isInstantDelivery: isInstant,
       );
@@ -1787,5 +1799,178 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       default:
         return lokmaPink;
     }
+  }
+
+  /// Nakit alinan tutar dialog - hizli butonlar + ozel giris
+  Future<double?> _showCashReceivedDialog(double orderTotal) async {
+    final controller = TextEditingController();
+    double? selectedAmount;
+
+    // Hizli tutarlar: tam tutar + yayin banknot yuvarlama
+    final quickAmounts = <double>[orderTotal];
+    for (final note in [5.0, 10.0, 20.0, 50.0, 100.0]) {
+      final rounded = (orderTotal / note).ceil() * note;
+      if (rounded > orderTotal && !quickAmounts.contains(rounded.toDouble())) {
+        quickAmounts.add(rounded.toDouble());
+      }
+    }
+    quickAmounts.sort();
+
+    return showDialog<double>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final change = selectedAmount != null
+                ? (selectedAmount! - orderTotal).clamp(0.0, double.infinity)
+                : 0.0;
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  const Icon(Icons.money, color: Colors.green, size: 24),
+                  const SizedBox(width: 10),
+                  const Expanded(child: Text('Nakit Odeme', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Siparis tutari
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: lokmaPink.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: lokmaPink.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Siparis Tutari:', style: TextStyle(fontSize: 14)),
+                          Text(
+                            '${orderTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: lokmaPink),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Hizli tutarlar
+                    const Text('Alinan Tutar:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: quickAmounts.map((amount) {
+                        final isExact = amount == orderTotal;
+                        final isSelected = selectedAmount == amount;
+                        return GestureDetector(
+                          onTap: () {
+                            setDialogState(() {
+                              selectedAmount = amount;
+                              controller.text = amount.toStringAsFixed(2);
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? successGreen
+                                  : isExact
+                                      ? successGreen.withOpacity(0.1)
+                                      : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isSelected ? successGreen : Colors.grey.shade300,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Text(
+                              isExact ? 'Tam ${amount.toStringAsFixed(2)}' : '${amount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Manuel tutar girisi
+                    TextField(
+                      controller: controller,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        hintText: 'Ozel tutar gir...',
+                        hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+                        prefixIcon: const Icon(Icons.euro, color: Colors.green),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                      onChanged: (val) {
+                        final parsed = double.tryParse(val.replaceAll(',', '.'));
+                        setDialogState(() => selectedAmount = parsed);
+                      },
+                    ),
+
+                    // Para ustu gosterimi
+                    if (selectedAmount != null && change > 0) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Para Ustu:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                            Text(
+                              '${change.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, null),
+                  child: const Text('Iptal', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: selectedAmount != null && selectedAmount! >= orderTotal
+                      ? () => Navigator.pop(ctx, selectedAmount)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: successGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: const Text('Onayla', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -958,7 +959,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 child: SizedBox(
                   height: 44,
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showCashHistory(),
                     icon: const Icon(Icons.history, size: 16),
                     label: const Text('Gecmis', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
@@ -970,6 +971,351 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCashHistory() {
+    final user = FirebaseAuth.instance.currentUser;
+    final capabilities = ref.read(staffCapabilitiesProvider);
+    final businessId = capabilities.businessId;
+    if (user == null || businessId == null) return;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.receipt_long, color: Colors.orange, size: 24),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Nakit Siparis Gecmisi',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: Icon(Icons.close, color: isDark ? Colors.white54 : Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Order list
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('kermes_orders')
+                          .where('kermesId', isEqualTo: businessId)
+                          .where('createdByStaffId', isEqualTo: user.uid)
+                          .where('paymentMethod', isEqualTo: 'cash')
+                          .orderBy('createdAt', descending: true)
+                          .limit(50)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator(color: Colors.orange));
+                        }
+                        final docs = snapshot.data?.docs ?? [];
+                        if (docs.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.receipt_long, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Henuz nakit siparis yok',
+                                  style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: docs.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (ctx, index) {
+                            final data = docs[index].data() as Map<String, dynamic>;
+                            return _buildCashOrderCard(data, isDark);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCashOrderCard(Map<String, dynamic> data, bool isDark) {
+    final orderNumber = data['orderNumber'] as String? ?? '---';
+    final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+    final cashReceived = (data['cashReceived'] as num?)?.toDouble();
+    final changeGiven = (data['changeGiven'] as num?)?.toDouble();
+    final customerName = data['customerName'] as String? ?? '';
+    final status = data['status'] as String? ?? 'pending';
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+    final items = data['items'] as List<dynamic>? ?? [];
+    final deliveryType = data['deliveryType'] as String? ?? 'gelAl';
+    final tableNumber = data['tableNumber'] as String?;
+    final settled = data['settledToRegister'] as bool? ?? false;
+
+    final dateStr = createdAt != null
+        ? DateFormat('dd.MM.yyyy HH:mm', 'tr').format(createdAt)
+        : '---';
+
+    Color statusColor;
+    String statusText;
+    switch (status) {
+      case 'delivered':
+        statusColor = Colors.green;
+        statusText = 'Teslim Edildi';
+        break;
+      case 'cancelled':
+        statusColor = Colors.red;
+        statusText = 'Iptal';
+        break;
+      case 'preparing':
+        statusColor = Colors.orange;
+        statusText = 'Hazirlaniyor';
+        break;
+      case 'ready':
+        statusColor = Colors.blue;
+        statusText = 'Hazir';
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusText = 'Beklemede';
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF252525) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: settled
+              ? Colors.green.withOpacity(0.3)
+              : Colors.orange.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(isDark ? 0.1 : 0.05),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  '#$orderNumber',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (settled) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text('Kasaya Aktarildi', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+                const Spacer(),
+                Text(
+                  dateStr,
+                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          // Items
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Musteri & teslimat
+                if (customerName.isNotEmpty && customerName != 'POS Siparis')
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Icon(Icons.person_outline, size: 14, color: isDark ? Colors.white38 : Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          customerName,
+                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(
+                          deliveryType == 'masada' ? Icons.table_restaurant : Icons.storefront,
+                          size: 14,
+                          color: isDark ? Colors.white38 : Colors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          deliveryType == 'masada'
+                              ? 'Masa ${tableNumber ?? ''}'
+                              : deliveryType == 'kurye'
+                                  ? 'Kurye'
+                                  : 'Tezgahtan',
+                          style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                // Siparis kalemleri
+                ...items.take(5).map((item) {
+                  final m = item as Map<String, dynamic>;
+                  final qty = m['quantity'] ?? 1;
+                  final name = m['name'] ?? '';
+                  final price = (m['price'] as num?)?.toDouble() ?? 0.0;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 22,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white10 : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text('$qty', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black87),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          '${price.toStringAsFixed(2)} EUR',
+                          style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                if (items.length > 5)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '+${items.length - 5} daha...',
+                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.grey),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Finance summary
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.04) : Colors.orange.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange.withOpacity(0.15)),
+            ),
+            child: Column(
+              children: [
+                _financeRow('Siparis Tutari', '${totalAmount.toStringAsFixed(2)} EUR', isDark, bold: true),
+                if (cashReceived != null)
+                  _financeRow('Alinan Nakit', '${cashReceived.toStringAsFixed(2)} EUR', isDark, color: Colors.green),
+                if (changeGiven != null && changeGiven > 0)
+                  _financeRow('Para Ustu', '${changeGiven.toStringAsFixed(2)} EUR', isDark, color: Colors.orange),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _financeRow(String label, String value, bool isDark, {bool bold = false, Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.black54)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: bold ? 15 : 13,
+              fontWeight: bold ? FontWeight.bold : FontWeight.w500,
+              color: color ?? (isDark ? Colors.white : Colors.black87),
+            ),
           ),
         ],
       ),

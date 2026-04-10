@@ -142,6 +142,10 @@ class KermesOrder {
   final String? createdByStaffName; // Garson adi
   final String? tableSection;      // Masanin ait oldugu bolum (Kadin Bolumu, Erkek Bolumu vb.)
 
+  // Nakit odeme detaylari
+  final double? cashReceived;        // Musterinin verdigi nakit tutar
+  final double? changeGiven;         // Verilen para ustu
+
   // Tezgah & Stant POS alanlari
   final String orderSource;          // 'app' | 'pos_garson' | 'pos_stant'
   final String? assignedTezgah;      // Siparisi birlestirme noktasi (ornegin "KT1")
@@ -173,6 +177,8 @@ class KermesOrder {
     this.createdByStaffId,
     this.createdByStaffName,
     this.tableSection,
+    this.cashReceived,
+    this.changeGiven,
     this.orderSource = 'app',
     this.assignedTezgah,
     this.isInstantDelivery = false,
@@ -228,6 +234,8 @@ class KermesOrder {
       if (createdByStaffId != null) 'createdByStaffId': createdByStaffId,
       if (createdByStaffName != null) 'createdByStaffName': createdByStaffName,
       if (tableSection != null) 'tableSection': tableSection,
+      if (cashReceived != null) 'cashReceived': cashReceived,
+      if (changeGiven != null) 'changeGiven': changeGiven,
       'orderSource': orderSource,
       if (assignedTezgah != null) 'assignedTezgah': assignedTezgah,
       if (isInstantDelivery) 'isInstantDelivery': isInstantDelivery,
@@ -274,6 +282,8 @@ class KermesOrder {
       createdByStaffId: map['createdByStaffId'] as String?,
       createdByStaffName: map['createdByStaffName'] as String?,
       tableSection: map['tableSection'] as String?,
+      cashReceived: (map['cashReceived'] as num?)?.toDouble(),
+      changeGiven: (map['changeGiven'] as num?)?.toDouble(),
       orderSource: map['orderSource'] as String? ?? 'app',
       assignedTezgah: map['assignedTezgah'] as String?,
       isInstantDelivery: map['isInstantDelivery'] as bool? ?? false,
@@ -356,6 +366,8 @@ class KermesOrder {
     String? createdByStaffId,
     String? createdByStaffName,
     String? tableSection,
+    double? cashReceived,
+    double? changeGiven,
     String? orderSource,
     String? assignedTezgah,
     bool? isInstantDelivery,
@@ -386,6 +398,8 @@ class KermesOrder {
       createdByStaffId: createdByStaffId ?? this.createdByStaffId,
       createdByStaffName: createdByStaffName ?? this.createdByStaffName,
       tableSection: tableSection ?? this.tableSection,
+      cashReceived: cashReceived ?? this.cashReceived,
+      changeGiven: changeGiven ?? this.changeGiven,
       orderSource: orderSource ?? this.orderSource,
       assignedTezgah: assignedTezgah ?? this.assignedTezgah,
       isInstantDelivery: isInstantDelivery ?? this.isInstantDelivery,
