@@ -339,7 +339,6 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       case 'Masalar': return 'Masa Servisi';
       case 'Rezervasyon': return 'Rezervasyonlar';
       case 'Park': return 'Park Yonetimi';
-      case 'Kasa': return 'Kasa';
       case 'Mesai': return 'Mesai';
       default: return label;
     }
@@ -754,11 +753,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.local_parking), label: 'Park'));
     }
 
-    // 8. Finance Tab
-    if (capabilities.hasFinanceRole && capabilities.businessId != null) {
-      tabs.add(FinanceWalletTab(userId: capabilities.userId, isDark: isDark, driverState: driverState));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Kasa'));
-    }
+    // 8. Finance Tab - artik Mesai dashboard'a tasindi, navbardan kaldirildi
 
     // Mesai artik bottom nav'da yok - header'daki ikon ile acilir
 

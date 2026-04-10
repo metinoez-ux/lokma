@@ -176,7 +176,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildAssignmentCard(capabilities, isDark),
-              
+              _buildFinanceCard(isDark),
 
               _buildStatsCard(isDark),
               const SizedBox(height: 24),
@@ -830,10 +830,107 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   Color _getRoleColor(String roleName) {
     if (roleName.toLowerCase().contains('park')) return Colors.blueAccent;
     if (roleName.toLowerCase().contains('temizlik')) return Colors.purpleAccent;
-    if (roleName.toLowerCase().contains('sürücü')) return Colors.orange;
+    if (roleName.toLowerCase().contains('surucu')) return Colors.orange;
     if (roleName.toLowerCase().contains('garson')) return Colors.green;
     return Colors.pinkAccent;
   }
 
+  Widget _buildFinanceCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          if (!isDark) BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.account_balance_wallet, color: Colors.orange),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Kasa & Tahsilat',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 30),
+          // Unsettled cash
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(isDark ? 0.08 : 0.05),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.orange.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.money, color: Colors.orange, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Teslim Edilecek Nakit', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
+                    const SizedBox(height: 2),
+                    Text('0.00 EUR', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.account_balance_wallet, size: 16),
+                    label: const Text('Kasaya Teslim Et', style: TextStyle(fontSize: 12)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.history, size: 16),
+                    label: const Text('Gecmis', style: TextStyle(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: isDark ? Colors.white70 : Colors.black87,
+                      side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
 }
