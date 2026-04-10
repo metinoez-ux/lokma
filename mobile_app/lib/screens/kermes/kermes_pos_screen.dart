@@ -408,7 +408,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       appBar: AppBar(
         backgroundColor: lokmaPink,
         foregroundColor: Colors.white,
