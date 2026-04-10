@@ -1835,8 +1835,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                   const Expanded(child: Text('Nakit Odeme', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                 ],
               ),
-              content: SizedBox(
-                width: double.maxFinite,
+              content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
