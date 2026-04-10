@@ -322,6 +322,26 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     });
   }
 
+  /// Aktif tab'in basligini getir (BottomNavItem label'indan)
+  String _getActiveTabTitle(int index, List<BottomNavigationBarItem> items) {
+    if (index < 0 || index >= items.length) return 'Personel Paneli';
+    final label = items[index].label ?? '';
+    if (label.isEmpty) return 'Personel Paneli';
+    // Nav label -> okunakli baslik
+    switch (label) {
+      case 'Mutfak': return 'Mutfak';
+      case 'Tezgah': return 'Tezgah';
+      case 'POS': return 'Kermes POS';
+      case 'Kurye': return 'Kurye';
+      case 'Masalar': return 'Masa Servisi';
+      case 'Rezervasyon': return 'Rezervasyonlar';
+      case 'Park': return 'Park Yonetimi';
+      case 'Kasa': return 'Kasa';
+      case 'Mesai': return 'Mesai';
+      default: return label;
+    }
+  }
+
   Widget _buildShiftLockedPlaceholder(bool isDark) {
     return Center(
       child: Padding(
@@ -687,33 +707,35 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     // Center spacer index
     final int centerIndex = leftCount;
 
+    // Aktif tab basligi
+    final activeTitle = _getActiveTabTitle(_selectedNavIndex, navItems);
+    // Subtitle: staffName - kermesName
+    final staffLabel = capabilities.staffName.isNotEmpty ? capabilities.staffName : 'Personel';
+    final subtitle = capabilities.businessName.isNotEmpty
+        ? '$staffLabel - ${capabilities.businessName}'
+        : staffLabel;
+
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFEA184A),
+        foregroundColor: Colors.white,
         titleSpacing: 0,
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    capabilities.staffName.isNotEmpty ? capabilities.staffName : 'Personel Paneli',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  if (capabilities.businessName.isNotEmpty)
-                    Text(
-                      capabilities.businessName,
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                ],
-              ),
+            Text(
+              activeTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+            Text(
+              subtitle,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.white70),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ],
         ),
@@ -721,7 +743,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           // QR buton
           if (showQr)
             IconButton(
-              icon: const Icon(Icons.qr_code_scanner, size: 22),
+              icon: const Icon(Icons.qr_code_scanner, size: 22, color: Colors.white),
               onPressed: () => _openQrScanner(capabilities.businessId),
               tooltip: 'QR Tara',
             ),
@@ -730,7 +752,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications),
+                icon: const Icon(Icons.notifications, color: Colors.white),
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const StaffNotificationsScreen(),
@@ -745,13 +767,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: Colors.redAccent,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
                     child: Text(
                       unreadCount > 99 ? '99+' : unreadCount.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Color(0xFFEA184A), fontSize: 8, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ),

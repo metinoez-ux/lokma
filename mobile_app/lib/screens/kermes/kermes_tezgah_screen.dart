@@ -67,41 +67,6 @@ class _KermesTezgahScreenState extends ConsumerState<KermesTezgahScreen>
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF0F0F0),
-      appBar: AppBar(
-        backgroundColor: lokmaPink,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.storefront, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  'Tezgah - ${widget.tezgahName}',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-            Text(
-              widget.kermesName,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-            ),
-          ],
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
-          tabs: const [
-            Tab(icon: Icon(Icons.shopping_bag_outlined, size: 18), text: 'Gel Al'),
-            Tab(icon: Icon(Icons.table_restaurant_outlined, size: 18), text: 'Masa'),
-            Tab(icon: Icon(Icons.delivery_dining_outlined, size: 18), text: 'Kurye'),
-          ],
-        ),
-      ),
       floatingActionButton: staffId.isNotEmpty
           ? KermesStaffStatusFAB(
               kermesId: widget.kermesId,
@@ -113,38 +78,59 @@ class _KermesTezgahScreenState extends ConsumerState<KermesTezgahScreen>
                   : null,
             )
           : null,
-      body: StreamBuilder<List<KermesOrder>>(
-        stream: orderService.getTezgahOrdersStream(
-          widget.kermesId,
-          sectionFilter: widget.allowedSections.isNotEmpty ? widget.allowedSections : null,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: lokmaPink));
-          }
+      body: Column(
+        children: [
+          // Tab bar - header disinda, beyaz/koyu arka planla
+          Container(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: lokmaPink,
+              labelColor: lokmaPink,
+              unselectedLabelColor: Colors.grey,
+              tabs: const [
+                Tab(icon: Icon(Icons.shopping_bag_outlined, size: 18), text: 'Gel Al'),
+                Tab(icon: Icon(Icons.table_restaurant_outlined, size: 18), text: 'Masa'),
+                Tab(icon: Icon(Icons.delivery_dining_outlined, size: 18), text: 'Kurye'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<List<KermesOrder>>(
+              stream: orderService.getTezgahOrdersStream(
+                widget.kermesId,
+                sectionFilter: widget.allowedSections.isNotEmpty ? widget.allowedSections : null,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: lokmaPink));
+                }
 
-          final allOrders = snapshot.data ?? [];
+                final allOrders = snapshot.data ?? [];
 
-          // Teslimat tipine gore ayir
-          final gelAlOrders = allOrders
-              .where((o) => o.deliveryType == DeliveryType.gelAl)
-              .toList();
-          final masaOrders = allOrders
-              .where((o) => o.deliveryType == DeliveryType.masada)
-              .toList();
-          final kuryeOrders = allOrders
-              .where((o) => o.deliveryType == DeliveryType.kurye)
-              .toList();
+                // Teslimat tipine gore ayir
+                final gelAlOrders = allOrders
+                    .where((o) => o.deliveryType == DeliveryType.gelAl)
+                    .toList();
+                final masaOrders = allOrders
+                    .where((o) => o.deliveryType == DeliveryType.masada)
+                    .toList();
+                final kuryeOrders = allOrders
+                    .where((o) => o.deliveryType == DeliveryType.kurye)
+                    .toList();
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildOrderList(gelAlOrders, 'Gel Al', Icons.shopping_bag_outlined, isDark),
-              _buildOrderList(masaOrders, 'Masa', Icons.table_restaurant_outlined, isDark),
-              _buildOrderList(kuryeOrders, 'Kurye', Icons.delivery_dining_outlined, isDark),
-            ],
-          );
-        },
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildOrderList(gelAlOrders, 'Gel Al', Icons.shopping_bag_outlined, isDark),
+                    _buildOrderList(masaOrders, 'Masa', Icons.table_restaurant_outlined, isDark),
+                    _buildOrderList(kuryeOrders, 'Kurye', Icons.delivery_dining_outlined, isDark),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

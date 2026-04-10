@@ -64,8 +64,6 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -75,108 +73,100 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
       length: 3,
       child: Scaffold(
         backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFEAEAEA),
-        appBar: AppBar(
-          backgroundColor: lokmaPink,
-          foregroundColor: Colors.white,
-          automaticallyImplyLeading: false,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.local_fire_department_rounded, size: 22),
-                  const SizedBox(width: 8),
-                  const Text('Mutfak (Ocak Başı)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+        body: Column(
+          children: [
+            // Tab bar - header disinda, beyaz/koyu arka planla
+            Container(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              child: const TabBar(
+                labelColor: Color(0xFFEA184A),
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: Color(0xFFEA184A),
+                indicatorWeight: 3,
+                labelPadding: EdgeInsets.symmetric(horizontal: 4),
+                tabs: [
+                  Tab(text: 'GELENLER'),
+                  Tab(text: 'HAZIRLANIYOR'),
+                  Tab(text: 'TESLIME HAZIR'),
                 ],
               ),
-              Text(widget.kermesName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
-            ],
-          ),
-          bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            labelPadding: EdgeInsets.symmetric(horizontal: 4),
-            tabs: [
-              Tab(text: 'GELENLER'),
-              Tab(text: 'HAZIRLANIYOR'),
-              Tab(text: 'TESLİME HAZIR'),
-            ],
-          ),
-        ),
-        body: StreamBuilder<List<KermesOrder>>(
-          // Aktif tüm siparişleri getirir
-          stream: orderService.getActiveOrders(widget.kermesId),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
+            ),
+            Expanded(
+              child: StreamBuilder<List<KermesOrder>>(
+                // Aktif tum siparisleri getirir
+                stream: orderService.getActiveOrders(widget.kermesId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-            if (snapshot.hasError) {
-              return Center(child: Text('Hata: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-            }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Hata: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+                  }
 
-            final allOrders = snapshot.data ?? [];
+                  final allOrders = snapshot.data ?? [];
 
-            // Optional order visibility control by table section
-            final sectionFilteredOrders = widget.allowedSections.isEmpty
-                ? allOrders
-                : allOrders.where((o) =>
-                    o.tableSection == null ||
-                    o.tableSection!.isEmpty ||
-                    widget.allowedSections.contains(o.tableSection)).toList();
+                  // Optional order visibility control by table section
+                  final sectionFilteredOrders = widget.allowedSections.isEmpty
+                      ? allOrders
+                      : allOrders.where((o) =>
+                          o.tableSection == null ||
+                          o.tableSection!.isEmpty ||
+                          widget.allowedSections.contains(o.tableSection)).toList();
 
-            // Collect unique zones for the filter chip
-            final Set<String> zones = {};
-            for (var order in sectionFilteredOrders) {
-              for (var item in order.items) {
-                zones.addAll(item.prepZones.where((z) => z.isNotEmpty));
-              }
-            }
-            final zoneList = zones.toList()..sort();
-            zoneList.insert(0, 'Tümü');
+                  // Collect unique zones for the filter chip
+                  final Set<String> zones = {};
+                  for (var order in sectionFilteredOrders) {
+                    for (var item in order.items) {
+                      zones.addAll(item.prepZones.where((z) => z.isNotEmpty));
+                    }
+                  }
+                  final zoneList = zones.toList()..sort();
+                  zoneList.insert(0, 'Tümü');
 
-            // Ensure active filter is still valid (fallback to Tümü)
-            if (!zoneList.contains(_activeFilter)) {
-              _activeFilter = 'Tümü';
-            }
+                  // Ensure active filter is still valid (fallback to Tümü)
+                  if (!zoneList.contains(_activeFilter)) {
+                    _activeFilter = 'Tümü';
+                  }
 
-            // Filter out orders that don't match the zone filter AT ALL
-            final displayOrders = _activeFilter == 'Tümü'
-                ? sectionFilteredOrders
-                : sectionFilteredOrders.where((order) {
-                    return order.items.any((item) => item.prepZones.contains(_activeFilter));
-                  }).toList();
+                  // Filter out orders that don't match the zone filter AT ALL
+                  final displayOrders = _activeFilter == 'Tümü'
+                      ? sectionFilteredOrders
+                      : sectionFilteredOrders.where((order) {
+                          return order.items.any((item) => item.prepZones.contains(_activeFilter));
+                        }).toList();
 
-            // Haptic on slightly distinct new orders
-            final currentIds = displayOrders.map((o) => o.id).toSet();
-            if (_previousOrderIds.isNotEmpty && currentIds.difference(_previousOrderIds).isNotEmpty) {
-              HapticFeedback.heavyImpact();
-            }
-            _previousOrderIds = currentIds;
+                  // Haptic on slightly distinct new orders
+                  final currentIds = displayOrders.map((o) => o.id).toSet();
+                  if (_previousOrderIds.isNotEmpty && currentIds.difference(_previousOrderIds).isNotEmpty) {
+                    HapticFeedback.heavyImpact();
+                  }
+                  _previousOrderIds = currentIds;
 
-            // Bucket orders
-            final pendingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.pending).toList();
-            final preparingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.preparing).toList();
-            final readyOrders = displayOrders.where((o) => o.status == KermesOrderStatus.ready).toList();
+                  // Bucket orders
+                  final pendingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.pending).toList();
+                  final preparingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.preparing).toList();
+                  final readyOrders = displayOrders.where((o) => o.status == KermesOrderStatus.ready).toList();
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildFilterBar(zoneList, isDark),
-                Expanded(
-                  child: TabBarView(
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildKanbanColumn(pendingOrders, isDark, warningOrange),
-                      _buildKanbanColumn(preparingOrders, isDark, preparingBlue),
-                      _buildKanbanColumn(readyOrders, isDark, successGreen),
+                      _buildFilterBar(zoneList, isDark),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            _buildKanbanColumn(pendingOrders, isDark, warningOrange),
+                            _buildKanbanColumn(preparingOrders, isDark, preparingBlue),
+                            _buildKanbanColumn(readyOrders, isDark, successGreen),
+                          ],
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-              ],
-            );
-          },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

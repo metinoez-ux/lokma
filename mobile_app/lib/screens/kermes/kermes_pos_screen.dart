@@ -560,33 +560,6 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
-      appBar: AppBar(
-        backgroundColor: lokmaPink,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Kermes POS - ${widget.event.title}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            Text(widget.staffName ?? 'Kasiyer',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
-          ],
-        ),
-        actions: [
-          // Aktif siparisler toggle
-          IconButton(
-            icon: Icon(
-              _showActiveOrders ? Icons.menu : Icons.list_alt,
-              color: Colors.white,
-            ),
-            onPressed: () =>
-                setState(() => _showActiveOrders = !_showActiveOrders),
-            tooltip:
-                _showActiveOrders ? 'Menü' : 'Aktif Siparişler',
-          ),
-        ],
-      ),
       body: _showActiveOrders
           ? _buildActiveOrdersView(isDark)
           : isTablet
