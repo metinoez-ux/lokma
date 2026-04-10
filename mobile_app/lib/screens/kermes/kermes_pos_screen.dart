@@ -313,7 +313,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       final orderItems = cartState.items.map((ci) {
         String itemName = ci.menuItem.name;
         if (ci.selectedOptions.isNotEmpty) {
-          final optionsStr = ci.selectedOptions.map((o) => o.name).join(', ');
+          final optionsStr = ci.selectedOptions.map((o) => o.optionName).join(', ');
           itemName = '$itemName ($optionsStr)';
         }
         return KermesOrderItem(
@@ -1002,7 +1002,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      item.selectedOptions.map((o) => o.name).join(', '),
+                      item.selectedOptions.map((o) => o.optionName).join(', '),
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark ? Colors.white54 : Colors.black54,
@@ -1297,40 +1297,39 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         child: ElevatedButton(
           onPressed: cartState.isEmpty || _isSubmitting ? null : _submitOrder,
           style: ElevatedButton.styleFrom(
-              backgroundColor: successGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 0,
-              disabledBackgroundColor:
-                  isDark ? Colors.white12 : Colors.grey.shade300,
+            backgroundColor: successGreen,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.check_circle, size: 22),
-                      const SizedBox(width: 8),
-                      Text(
-                        'SIPARIS VER - ${_totalCartAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
+            elevation: 0,
+            disabledBackgroundColor:
+                isDark ? Colors.white12 : Colors.grey.shade300,
           ),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'SIPARIS VER - ${_totalCartAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );

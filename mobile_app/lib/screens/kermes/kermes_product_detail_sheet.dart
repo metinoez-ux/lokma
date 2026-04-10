@@ -25,6 +25,23 @@ void showKermesProductDetailSheet(
   required VoidCallback onAdd,
   required VoidCallback onRemove,
 }) {
+  if (item.isComboMenu) {
+    // Combo menu (multi-step) urunler icin *her zaman* doğrudan customization sheet
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      builder: (ctx) => KermesCustomizationSheet(
+        item: item,
+        eventId: eventId,
+        eventName: eventName,
+      ),
+    );
+    return;
+  }
+
+  // Zaten sepetteyse veya non-combo ise normal detay sheet goster
   HapticFeedback.lightImpact();
   showModalBottomSheet(
     context: context,

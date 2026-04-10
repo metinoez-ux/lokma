@@ -419,7 +419,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       final orderItems = cartState.items.map((item) {
         String itemName = item.menuItem.name;
         if (item.selectedOptions.isNotEmpty) {
-          final optionsStr = item.selectedOptions.map((o) => o.name).join(', ');
+          final optionsStr = item.selectedOptions.map((o) => o.optionName).join(', ');
           itemName = '$itemName ($optionsStr)';
         }
         return KermesOrderItem(
