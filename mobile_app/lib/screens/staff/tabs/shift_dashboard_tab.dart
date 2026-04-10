@@ -119,9 +119,44 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
       final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
       for (final s in shifts) {
-        final active = (s['totalMinutes'] as num?)?.toInt() ?? 0;
-        final pause = (s['pauseMinutes'] as num?)?.toInt() ?? 0;
+        final status = s['status'] as String? ?? '';
         final date = s['date'] as String?;
+        
+        int active;
+        int pause;
+        
+        if (status == 'ended') {
+          // Ended shift: Firestore'daki hesaplanmis degerleri kullan
+          active = (s['totalMinutes'] as num?)?.toInt() ?? 0;
+          pause = (s['pauseMinutes'] as num?)?.toInt() ?? 0;
+        } else {
+          // Aktif/paused shift: pauseLog'dan canli hesapla
+          final started = (s['startedAt'] as Timestamp?)?.toDate();
+          final pauseLog = List<Map<String, dynamic>>.from(
+            (s['pauseLog'] as List<dynamic>?) ?? [],
+          );
+          
+          // Toplam mola suresi hesapla
+          int totalPauseSec = 0;
+          for (final p in pauseLog) {
+            final pStart = (p['pausedAt'] as Timestamp?)?.toDate();
+            final pEnd = (p['resumedAt'] as Timestamp?)?.toDate();
+            if (pStart != null) {
+              final end = pEnd ?? DateTime.now();
+              totalPauseSec += end.difference(pStart).inSeconds;
+            }
+          }
+          pause = totalPauseSec ~/ 60;
+          
+          // Aktif sure = toplam sure - mola suresi
+          if (started != null) {
+            final totalSec = DateTime.now().difference(started).inSeconds;
+            active = (totalSec - totalPauseSec) ~/ 60;
+            if (active < 0) active = 0;
+          } else {
+            active = 0;
+          }
+        }
 
         tTotal += active;
 

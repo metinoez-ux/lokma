@@ -627,18 +627,44 @@ class ShiftService {
 
       for (final doc in snap.docs) {
         final data = doc.data();
-        final active = (data['totalMinutes'] as num?)?.toInt() ?? 0;
-        final pause = (data['pauseMinutes'] as num?)?.toInt() ?? 0;
         final date = data['date'] as String?;
         final status = data['status'] as String? ?? '';
 
-        // Only count ended shifts (current shift is calculated live)
+        int active;
+        int pause;
+
         if (status == 'ended') {
-          totalKermes += active;
-          if (date == dateStr) {
-            todayActive += active;
-            todayPause += pause;
+          active = (data['totalMinutes'] as num?)?.toInt() ?? 0;
+          pause = (data['pauseMinutes'] as num?)?.toInt() ?? 0;
+        } else {
+          // Aktif/paused shift: pauseLog'dan canli hesapla
+          final started = (data['startedAt'] as Timestamp?)?.toDate();
+          final pauseLog = List<Map<String, dynamic>>.from(
+            (data['pauseLog'] as List<dynamic>?) ?? [],
+          );
+          int totalPauseSec = 0;
+          for (final p in pauseLog) {
+            final pStart = (p['pausedAt'] as Timestamp?)?.toDate();
+            final pEnd = (p['resumedAt'] as Timestamp?)?.toDate();
+            if (pStart != null) {
+              final end = pEnd ?? DateTime.now();
+              totalPauseSec += end.difference(pStart).inSeconds;
+            }
           }
+          pause = totalPauseSec ~/ 60;
+          if (started != null) {
+            final totalSec = DateTime.now().difference(started).inSeconds;
+            active = (totalSec - totalPauseSec) ~/ 60;
+            if (active < 0) active = 0;
+          } else {
+            active = 0;
+          }
+        }
+
+        totalKermes += active;
+        if (date == dateStr) {
+          todayActive += active;
+          todayPause += pause;
         }
       }
 
