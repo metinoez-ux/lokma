@@ -750,19 +750,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InkWell(
-          onTap: () {
-            // Her urune tıklanınca detay/customization sheet ac
-            showKermesProductDetailSheet(
-              context,
-              item: item,
-              cartQuantity: qty,
-              eventId: widget.event.id,
-              eventName: widget.event.city,
-              isMenuOnly: false,
-              onAdd: () => _addToCart(item),
-              onRemove: () => _removeFromCart(item),
-            );
-          },
+          onTap: () => _addToCart(item),
           onLongPress: () { if (hasQty) _removeFromCart(item); },
           child: Container(
             padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
@@ -859,6 +847,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
   /// Sepet paneli (tablet sag panel)
   Widget _buildCartPanel(bool isDark) {
+    final cartState = ref.watch(kermesCartProvider);
     return Column(
       children: [
         // Sepet baslik
