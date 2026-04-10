@@ -421,7 +421,28 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       _showKermesDateBlockDialog();
       return;
     }
-    
+
+    // Nakit odeme: alinan tutari sor
+    double? cashReceived;
+    double? changeGiven;
+    if (_paymentMethod == PaymentMethodType.cash) {
+      final cartState = ref.read(kermesCartProvider);
+      // Pfand dahil toplam hesapla
+      final bool hasPfandSystem = widget.event.hasPfandSystem;
+      final double pfandAmount = widget.event.pfandAmount;
+      int pfandCount = 0;
+      if (hasPfandSystem) {
+        for (final item in cartState.items) {
+          if (item.menuItem.hasPfand) pfandCount += item.quantity;
+        }
+      }
+      final double preTotal = cartState.totalAmount + (pfandCount * pfandAmount) + _donationAmount;
+      final result = await _showCashReceivedDialog(preTotal);
+      if (result == null) return; // iptal edildi
+      cashReceived = result;
+      changeGiven = (cashReceived - preTotal).clamp(0.0, double.infinity);
+    }
+
     setState(() => _isSubmitting = true);
     
     try {
@@ -522,6 +543,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         assignedWaiterName: staffName,
         createdByStaffId: staffId,
         createdByStaffName: staffName,
+        cashReceived: cashReceived,
+        changeGiven: changeGiven,
       );
       
       // Siparişi kaydet
@@ -3382,6 +3405,179 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Nakit alinan tutar dialog - hizli butonlar + ozel giris
+  Future<double?> _showCashReceivedDialog(double orderTotal) async {
+    final controller = TextEditingController();
+    double? selectedAmount;
+
+    final quickAmounts = <double>[orderTotal];
+    for (final note in [5.0, 10.0, 20.0, 50.0, 100.0]) {
+      final rounded = (orderTotal / note).ceil() * note;
+      if (rounded > orderTotal && !quickAmounts.contains(rounded.toDouble())) {
+        quickAmounts.add(rounded.toDouble());
+      }
+    }
+    quickAmounts.sort();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const successGreen = Color(0xFF2E7D32);
+
+    return showDialog<double>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final change = selectedAmount != null
+                ? (selectedAmount! - orderTotal).clamp(0.0, double.infinity)
+                : 0.0;
+
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  const Icon(Icons.money, color: Colors.green, size: 24),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('Nakit Odeme', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87))),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Siparis tutari
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: lokmaPink.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: lokmaPink.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Siparis Tutari:', style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : Colors.black87)),
+                          Text(
+                            '${orderTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: lokmaPink),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text('Alinan Tutar:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: quickAmounts.map((amount) {
+                        final isExact = amount == orderTotal;
+                        final isSelected = selectedAmount == amount;
+                        return GestureDetector(
+                          onTap: () {
+                            setDialogState(() {
+                              selectedAmount = amount;
+                              controller.text = amount.toStringAsFixed(2);
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? successGreen
+                                  : isExact
+                                      ? successGreen.withOpacity(0.1)
+                                      : (isDark ? Colors.white10 : Colors.grey.shade100),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isSelected ? successGreen : (isDark ? Colors.white24 : Colors.grey.shade300),
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Text(
+                              isExact ? 'Tam ${amount.toStringAsFixed(2)}' : '${amount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: controller,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                      decoration: InputDecoration(
+                        hintText: 'Ozel tutar gir...',
+                        hintStyle: TextStyle(fontSize: 14, color: isDark ? Colors.white38 : Colors.grey.shade400),
+                        prefixIcon: Icon(Icons.euro, color: isDark ? Colors.green.shade300 : Colors.green),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                      onChanged: (val) {
+                        final parsed = double.tryParse(val.replaceAll(',', '.'));
+                        setDialogState(() => selectedAmount = parsed);
+                      },
+                    ),
+
+                    if (selectedAmount != null && change > 0) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Para Ustu:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87)),
+                            Text(
+                              '${change.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, null),
+                  child: Text('Iptal', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: selectedAmount != null && selectedAmount! >= orderTotal
+                      ? () => Navigator.pop(ctx, selectedAmount)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: successGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: const Text('Onayla', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
