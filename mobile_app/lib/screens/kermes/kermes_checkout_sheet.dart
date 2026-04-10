@@ -1614,7 +1614,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   Widget _buildDeliveryStep() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
