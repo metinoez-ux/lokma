@@ -326,6 +326,49 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
         .fold(0, (sum, item) => sum + item.quantity);
   }
 
+  void increaseQuantity(String uniqueKey) {
+    final existingIndex = state.items.indexWhere((item) => item.uniqueKey == uniqueKey);
+    if (existingIndex >= 0) {
+      final updatedItems = List<KermesCartItem>.from(state.items);
+      updatedItems[existingIndex] = updatedItems[existingIndex].copyWith(
+        quantity: updatedItems[existingIndex].quantity + 1,
+      );
+      state = KermesCartState(
+        eventId: state.eventId,
+        eventName: state.eventName,
+        items: updatedItems,
+      );
+      _saveCartToStorage();
+    }
+  }
+
+  void decreaseQuantity(String uniqueKey) {
+    final existingIndex = state.items.indexWhere((item) => item.uniqueKey == uniqueKey);
+    if (existingIndex >= 0) {
+      final item = state.items[existingIndex];
+      if (item.quantity <= 1) {
+        final newItems = List<KermesCartItem>.from(state.items);
+        newItems.removeAt(existingIndex);
+        state = KermesCartState(
+          eventId: newItems.isEmpty ? null : state.eventId,
+          eventName: newItems.isEmpty ? null : state.eventName,
+          items: newItems,
+        );
+      } else {
+        final updatedItems = List<KermesCartItem>.from(state.items);
+        updatedItems[existingIndex] = item.copyWith(
+          quantity: item.quantity - 1,
+        );
+        state = KermesCartState(
+          eventId: state.eventId,
+          eventName: state.eventName,
+          items: updatedItems,
+        );
+      }
+      _saveCartToStorage();
+    }
+  }
+
   /// Sepetten ürün çıkar (ID ile) - Lieferando cart uyumluluğu
   void removeItem(String itemId) {
     removeFromCart(itemId);
