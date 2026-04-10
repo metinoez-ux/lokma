@@ -1046,10 +1046,20 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                           .where('kermesId', isEqualTo: businessId)
                           .where('createdByStaffId', isEqualTo: user.uid)
                           .where('paymentMethod', isEqualTo: 'cash')
-                          .orderBy('createdAt', descending: true)
-                          .limit(50)
                           .snapshots(),
                       builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32),
+                              child: Text(
+                                'Veri yuklenirken hata: ${snapshot.error}',
+                                style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        }
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator(color: Colors.orange));
                         }
@@ -1070,13 +1080,22 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                           );
                         }
 
+                        // Client-side siralama (composite index gerektirmemek icin)
+                        final sortedDocs = List<QueryDocumentSnapshot>.from(docs);
+                        sortedDocs.sort((a, b) {
+                          final aTime = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                          final bTime = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                          if (aTime == null || bTime == null) return 0;
+                          return bTime.compareTo(aTime); // descending
+                        });
+
                         return ListView.separated(
                           controller: scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: docs.length,
+                          itemCount: sortedDocs.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (ctx, index) {
-                            final data = docs[index].data() as Map<String, dynamic>;
+                            final data = sortedDocs[index].data() as Map<String, dynamic>;
                             return _buildCashOrderCard(data, isDark);
                           },
                         );
