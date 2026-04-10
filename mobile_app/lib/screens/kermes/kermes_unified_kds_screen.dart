@@ -48,15 +48,26 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
       } else if (item.itemStatus == KermesItemStatus.preparing) {
         newStatus = KermesItemStatus.ready;
       } else {
-        return; // Zaten hazır
+        return; // Zaten hazir
       }
 
       await orderService.updateItemStatus(
         orderId: order.id,
         itemIndex: itemIndex,
         newStatus: newStatus,
-        zone: _activeFilter == 'Tümü' ? null : _activeFilter,
+        zone: _activeFilter == 'T\u00fcm\u00fc' ? null : _activeFilter,
       );
+
+      // Otomatik tab gecisi: bu sipariste baska islenecek item kaldi mi?
+      if (mounted) {
+        // Mevcut sipariste ayni statuslu baska item var mi kontrol et
+        final sameStatusItems = order.items.where((i) => i.itemStatus == item.itemStatus).toList();
+        // Bu item dahil sadece 1 tane kaldiysa (yani az once son item'i toggle ettik)
+        // ve siparisin tum itemlari artik bir sonraki status'a geciyorsa
+        if (sameStatusItems.length <= 1) {
+          _autoSwitchTabIfEmpty();
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -64,6 +75,20 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
         );
       }
     }
+  }
+
+  /// Mevcut tab bosaldiysa sonraki tab'a otomatik gec
+  void _autoSwitchTabIfEmpty() {
+    // Stream'den gelen data Firestore'dan gelecek, kisa bir delay ile kontrol et
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final tabController = DefaultTabController.of(context);
+      final currentIndex = tabController.index;
+      // Sadece YENI (0) ve HAZIRLANIYOR (1) tab'larinda otomatik gec
+      if (currentIndex < 2) {
+        tabController.animateTo(currentIndex + 1);
+      }
+    });
   }
 
   @override
