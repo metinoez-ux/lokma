@@ -95,8 +95,8 @@ class StaffPosWrapperTab extends ConsumerWidget {
   }
 
   /// Event doc + products koleksiyonunu birlestiren stream
+  /// Products subcollection degistiginde aninda yansir
   Stream<List<Object>> _combineStreams(FirebaseFirestore db) {
-    final eventStream = db.collection('kermes_events').doc(kermesId).snapshots();
     final productsStream = db
         .collection('kermes_events')
         .doc(kermesId)
@@ -104,14 +104,10 @@ class StaffPosWrapperTab extends ConsumerWidget {
         .where('isAvailable', isEqualTo: true)
         .snapshots();
 
-    return eventStream.asyncMap((eventDoc) async {
-      final productsSnap = await db
-          .collection('kermes_events')
-          .doc(kermesId)
-          .collection('products')
-          .where('isAvailable', isEqualTo: true)
-          .get();
-      return [eventDoc, productsSnap.docs];
+    // Products degistiginde event doc'u da taze cek
+    return productsStream.asyncMap((productsSnap) async {
+      final eventDoc = await db.collection('kermes_events').doc(kermesId).get();
+      return <Object>[eventDoc, productsSnap.docs];
     });
   }
 
