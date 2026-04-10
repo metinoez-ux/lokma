@@ -246,20 +246,31 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   }
 
   Future<void> _handlePauseResumeShift() async {
-    if (mounted) setState(() => _shiftLoading = true);
-    HapticFeedback.mediumImpact();
     if (_shiftService.shiftStatus == 'paused') {
+      // Devam et - kontrol gereksiz
+      if (mounted) setState(() => _shiftLoading = true);
+      HapticFeedback.mediumImpact();
       await _shiftService.resumeShift();
       _pauseStartedAt = null;
       _pauseElapsedNotifier.value = Duration.zero;
+      if (mounted) setState(() => _shiftLoading = false);
     } else {
+      // Mola ver - prepZone guard
+      final blocked = await _checkPrepZoneActiveOrders(action: 'mola');
+      if (blocked) return;
+      if (mounted) setState(() => _shiftLoading = true);
+      HapticFeedback.mediumImpact();
       await _shiftService.pauseShift();
       _pauseStartedAt = DateTime.now();
+      if (mounted) setState(() => _shiftLoading = false);
     }
-    if (mounted) setState(() => _shiftLoading = false);
   }
 
   Future<void> _handleEndShift() async {
+    // PrepZone guard: aktif siparis varsa ve baska personel yoksa engelle
+    final blocked = await _checkPrepZoneActiveOrders(action: 'mesai bitir');
+    if (blocked) return;
+
     final tables = _shiftService.currentTables;
     final isDriver = _shiftService.isDeliveryDriver;
     final isDiger = _shiftService.isOtherRole;
@@ -317,6 +328,195 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       if (summary != null) {
         ShiftDialogs.showShiftSummaryDialog(context, summary);
       }
+    }
+  }
+
+  /// PrepZone aktif siparis korumasi:
+  /// Eger personelin prepZone'larinda aktif (pending/preparing) siparis varsa
+  /// ve o zone'da baska aktif personel yoksa, mola/mesai bitirme engellenir.
+  /// Returns true if blocked (should not proceed).
+  Future<bool> _checkPrepZoneActiveOrders({required String action}) async {
+    final myPrepZones = _shiftService.currentPrepZones;
+    if (myPrepZones.isEmpty) return false;
+
+    final businessId = _shiftService.currentBusinessId;
+    if (businessId == null) return false;
+
+    final db = FirebaseFirestore.instance;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return false;
+
+    try {
+      // 1. Aktif siparisleri kontrol et
+      final ordersSnap = await db
+          .collection('kermes_orders')
+          .where('kermesId', isEqualTo: businessId)
+          .where('status', whereIn: ['pending', 'preparing'])
+          .get();
+
+      // Siparislerdeki item'larin prepZone'lari ile personelin zone'larini esle
+      final Map<String, int> zoneOrderCounts = {};
+      for (final zone in myPrepZones) {
+        int count = 0;
+        for (final doc in ordersSnap.docs) {
+          final items = (doc.data()['items'] as List<dynamic>?) ?? [];
+          final hasZoneItem = items.any((item) {
+            final itemZones = item['prepZone'];
+            if (itemZones is List) return itemZones.contains(zone);
+            if (itemZones is String) return itemZones == zone;
+            return false;
+          });
+          if (hasZoneItem) count++;
+        }
+        if (count > 0) zoneOrderCounts[zone] = count;
+      }
+
+      if (zoneOrderCounts.isEmpty) return false; // Aktif siparis yok
+
+      // 2. Baska aktif personel bu zone'lara bakiyor mu?
+      final roleService = StaffRoleService();
+      final isKermes = roleService.businessType == 'kermes';
+      final parentCol = isKermes ? 'kermes_events' : 'businesses';
+
+      final otherShifts = await db
+          .collection(parentCol)
+          .doc(businessId)
+          .collection('shifts')
+          .where('status', isEqualTo: 'active')
+          .get();
+
+      final Set<String> coveredByOthers = {};
+      for (final doc in otherShifts.docs) {
+        final data = doc.data();
+        if (data['staffId'] == uid) continue; // Kendimi atla
+        final otherZones = List<String>.from(
+          (data['assignedPrepZones'] as List<dynamic>?) ?? [],
+        );
+        coveredByOthers.addAll(otherZones);
+      }
+
+      // Baska personel tarafindan karsilanmayan zone'lari bul
+      final uncoveredZones = <String, int>{};
+      for (final entry in zoneOrderCounts.entries) {
+        if (!coveredByOthers.contains(entry.key)) {
+          uncoveredZones[entry.key] = entry.value;
+        }
+      }
+
+      if (uncoveredZones.isEmpty) return false; // Baska personel karsiyor
+
+      // 3. Uyari goster
+      if (!mounted) return true;
+      HapticFeedback.heavyImpact();
+
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      await showDialog(
+        context: context,
+        builder: (ctx) => Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64, height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 36),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Aktif Siparisler Var!',
+                  style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Asagidaki mutfak istasyonlarinda tamamlanmamis siparisler bulunuyor ve su an baska aktif personel yok:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ...uncoveredZones.entries.map((entry) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.restaurant, color: Colors.orange, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${entry.value} siparis',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+                const SizedBox(height: 8),
+                Text(
+                  'Lutfen once siparisleri tamamlayin veya baska bir personelin bu istasyonu devralmasini bekleyin.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[500] : Colors.grey[500],
+                    height: 1.3,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Anladim', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      return true; // Engellendi
+    } catch (e) {
+      debugPrint('[Shift] PrepZone guard error: $e');
+      return false; // Hata durumunda engelleme
     }
   }
 
