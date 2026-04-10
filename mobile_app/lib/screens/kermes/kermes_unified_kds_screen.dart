@@ -227,23 +227,25 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                   ),
                   if (count > 0)
                     Positioned(
-                      top: -4,
-                      right: -6,
+                      top: -6,
+                      right: -8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                         decoration: BoxDecoration(
                           color: lokmaPink,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                            width: 1.5,
+                            width: 2,
                           ),
                         ),
                         child: Text(
                           '$count',
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.w800,
                           ),
                         ),

@@ -151,11 +151,13 @@ class StaffPosWrapperTab extends ConsumerWidget {
               ? (d['imageUrls'] as List).first as String
               : null);
 
-      // prepZones - bu koleksiyonda yoksa bos birakilir
-      final prepZones = (d['prepZones'] as List?)
-              ?.map((z) => z.toString())
-              .toList() ??
-          [];
+      // prepZones - admin portal 'prepZone' (tekil) olarak yazar
+      final rawPrepZones = d['prepZones'] ?? d['prepZone'];
+      final prepZones = (rawPrepZones is List)
+              ? rawPrepZones.map((z) => z.toString()).toList().cast<String>()
+              : (rawPrepZones is String && rawPrepZones.isNotEmpty)
+                  ? [rawPrepZones]
+                  : <String>[];
 
       // optionGroups parsing
       final List<OptionGroup> optionGroups = [];
