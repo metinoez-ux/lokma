@@ -12,6 +12,7 @@ import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'kermes_checkout_sheet.dart';
 import 'kermes_customization_sheet.dart';
+import 'kermes_product_detail_sheet.dart';
 import '../../utils/currency_utils.dart';
 import 'package:lokma_app/providers/kermes_category_provider.dart';
 /// Kermes POS Ekrani - Garson/Kasiyer icin hizli siparis alma
@@ -702,7 +703,19 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InkWell(
-          onTap: () => _addToCart(item),
+          onTap: () {
+            // Her urune tıklanınca detay/customization sheet ac
+            showKermesProductDetailSheet(
+              context,
+              item: item,
+              cartQuantity: qty,
+              eventId: widget.event.id,
+              eventName: widget.event.city,
+              isMenuOnly: false,
+              onAdd: () => _addToCart(item),
+              onRemove: () => _removeFromCart(item),
+            );
+          },
           onLongPress: () { if (hasQty) _removeFromCart(item); },
           child: Container(
             padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
