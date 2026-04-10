@@ -29,12 +29,14 @@ class KermesCheckoutSheet extends ConsumerStatefulWidget {
   final KermesEvent event;
   final String? initialTableNumber;
   final int? initialDeliveryMode;
+  final bool isPosMode;
   
   const KermesCheckoutSheet({
     super.key, 
     required this.event,
     this.initialTableNumber,
     this.initialDeliveryMode,
+    this.isPosMode = false,
   });
   
   @override
@@ -206,10 +208,13 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   bool get _isKermesFuture => DateTime.now().isBefore(widget.event.startDate);
   /// Toplam adim sayisi
-  int get _totalSteps => 4;
+  int get _totalSteps => widget.isPosMode ? 3 : 4;
 
   /// Adim baslik listesi
   List<String> get _stepTitles {
+    if (widget.isPosMode) {
+      return ['Sepetim', 'Teslimat', 'Odeme'];
+    }
     return [
       'Sepetim',
       'Teslimat',
@@ -267,6 +272,14 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
   /// Step index -> mantiksal adim adi
   String _getEffectiveStep(int step) {
+    if (widget.isPosMode) {
+      switch (step) {
+        case 0: return 'cart';
+        case 1: return 'delivery';
+        case 2: return 'payment';
+        default: return 'cart';
+      }
+    }
     switch (step) {
       case 0: return 'cart';
       case 1: return 'delivery';
@@ -503,17 +516,22 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       // Başarı - QR göster (kullanıcıya orderNumber göster)
       if (mounted) {
         final rootNavContext = Navigator.of(context, rootNavigator: true).context;
-        Navigator.pop(context); // Checkout sheet'i kapat
-        
-        showOrderQRDialog(
-          rootNavContext,
-          orderId: docId,
-          orderNumber: orderNumber,
-          kermesId: widget.event.id,
-          kermesName: widget.event.city,
-          totalAmount: totalAmount,
-          isPaid: _paymentMethod == PaymentMethodType.card,
-        );
+        Navigator.pop(context);
+
+        if (widget.isPosMode && _deliveryType == DeliveryType.gelAl) {
+          // POS tezgahtan teslim: McDonald's numara dialog
+          _showPOSOrderNumberDialog(rootNavContext, orderNumber);
+        } else {
+          showOrderQRDialog(
+            rootNavContext,
+            orderId: docId,
+            orderNumber: orderNumber,
+            kermesId: widget.event.id,
+            kermesName: widget.event.city,
+            totalAmount: totalAmount,
+            isPaid: _paymentMethod == PaymentMethodType.card,
+          );
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -525,6 +543,77 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  /// POS tezgahtan teslim: McDonald's siparis numarasi dialog
+  void _showPOSOrderNumberDialog(BuildContext ctx, String orderNumber) {
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+    showDialog(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (dctx) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72, height: 72,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle_rounded, color: Color(0xFF2E7D32), size: 44),
+              ),
+              const SizedBox(height: 20),
+              Text('Siparis Alindi!',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87)),
+              const SizedBox(height: 8),
+              Text('Musteriye verilecek numara:',
+                style: TextStyle(fontSize: 14, color: isDark ? Colors.grey[400] : Colors.grey[600])),
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                decoration: BoxDecoration(
+                  color: lokmaPink.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: lokmaPink.withOpacity(0.3), width: 1.5),
+                ),
+                child: Column(
+                  children: [
+                    Text('#', style: TextStyle(fontSize: 24, color: lokmaPink.withOpacity(0.7))),
+                    Text(orderNumber, style: const TextStyle(
+                      fontSize: 64, fontWeight: FontWeight.w900, color: lokmaPink, letterSpacing: -2)),
+                    Text('Tezgahtan Teslim',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(dctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: lokmaPink, foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Yeni Siparis Al',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
   
   @override
@@ -1422,7 +1511,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     );
   }
 
-  /// Step 2: Teslimat Türü
+  /// Step 2: Teslimat Turu (normal + POS modu)
   Widget _buildDeliveryStep() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
@@ -1431,17 +1520,19 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Siparissinizi nasil almak istersiniz?',
+            widget.isPosMode
+                ? 'Siparis nasil teslim edilecek?'
+                : 'Siparissinizi nasil almak istersiniz?',
             style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 24),
           
-          // Gel Al
+          // Tezgahtan Teslim (Gel Al)
           _buildOptionCard(
-            icon: Icons.shopping_bag_outlined,
+            icon: Icons.storefront_outlined,
             iconColor: Colors.amber,
-            title: 'Gel Al',
-            subtitle: 'Tezgahtan kendiniz alın',
+            title: widget.isPosMode ? 'Tezgahtan Teslim' : 'Gel Al',
+            subtitle: widget.isPosMode ? 'Musteri tezgahtan alacak' : 'Tezgahtan kendiniz alin',
             badge: widget.event.hasTakeaway ? null : 'KAPALI',
             badgeColor: Colors.grey,
             isSelected: _deliveryType == DeliveryType.gelAl,
@@ -1453,12 +1544,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           if (_deliveryType == DeliveryType.gelAl) _buildSectionSelector(includeFamily: false),
           const SizedBox(height: 12),
           
-          // Masada
+          // Masaya Servis
           _buildOptionCard(
             icon: Icons.table_restaurant,
             iconColor: Colors.purple,
             title: 'Masaya Servis',
-            subtitle: 'Masanıza getirelim',
+            subtitle: widget.isPosMode ? 'Garson masaya goturecek' : 'Masaniza getirelim',
             badge: widget.event.hasDineIn ? null : 'KAPALI',
             badgeColor: Colors.grey,
             isSelected: _deliveryType == DeliveryType.masada,
@@ -1476,7 +1567,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                  child: Row(children: [
                    const Icon(Icons.check_circle, color: Colors.green), const SizedBox(width: 8),
                    Expanded(child: Text("${widget.event.sectionDefs.firstWhere((s) => s.id == _selectedSectionId, orElse: () => widget.event.sectionDefs.first).name} - Masa ${_tableController.text}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
-                   TextButton(onPressed: () => setState(() { _tableController.clear(); _selectedSectionId = null; }), child: Text("Değiştir", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)))
+                   TextButton(onPressed: () => setState(() { _tableController.clear(); _selectedSectionId = null; }), child: Text("Degistir", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)))
                  ])
               )
             else ...[
@@ -1500,29 +1591,48 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Center(
                   child: TextButton(
                     onPressed: () => setState(() => _showManualSectionSelection = true),
-                    child: const Text('Masada QR kod yok mu? Bölüm seçerek devam et', style: TextStyle(color: Colors.grey)),
+                    child: const Text('Masada QR kod yok mu? Bolum secerek devam et', style: TextStyle(color: Colors.grey)),
                   ),
                 ),
               if (_showManualSectionSelection)
                 _buildSectionSelector(includeFamily: true),
+              // Manuel masa numarasi girisi (POS icin her zaman goster)
+              if (widget.isPosMode) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _tableController,
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15),
+                  decoration: InputDecoration(
+                    hintText: 'Masa No girin',
+                    prefixIcon: const Icon(Icons.tag, size: 18, color: lokmaPink),
+                    filled: true,
+                    fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: lokmaPink, width: 1.5)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+              ],
             ],
           ],
-          const SizedBox(height: 12),
-          
-          // Kurye
-          _buildOptionCard(
-            icon: Icons.delivery_dining,
-            iconColor: Colors.teal,
-            title: 'Kurye ile Teslimat',
-            subtitle: 'Adresinize getirelim',
-            badge: widget.event.hasDelivery ? null : 'KAPALI',
-            badgeColor: Colors.grey,
-            isSelected: _deliveryType == DeliveryType.kurye,
-            isDisabled: !widget.event.hasDelivery,
-            onTap: widget.event.hasDelivery 
-                ? () => setState(() => _deliveryType = DeliveryType.kurye)
-                : null,
-          ),
+          // Kurye (POS modunda gizle)
+          if (!widget.isPosMode) ...[
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              icon: Icons.delivery_dining,
+              iconColor: Colors.teal,
+              title: 'Kurye ile Teslimat',
+              subtitle: 'Adresinize getirelim',
+              badge: widget.event.hasDelivery ? null : 'KAPALI',
+              badgeColor: Colors.grey,
+              isSelected: _deliveryType == DeliveryType.kurye,
+              isDisabled: !widget.event.hasDelivery,
+              onTap: widget.event.hasDelivery 
+                  ? () => setState(() => _deliveryType = DeliveryType.kurye)
+                  : null,
+            ),
+          ],
         ],
       ),
     );

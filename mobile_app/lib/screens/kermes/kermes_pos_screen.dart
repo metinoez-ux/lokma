@@ -57,9 +57,6 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   DeliveryType _deliveryType = DeliveryType.gelAl;
   PaymentMethodType _paymentMethod = PaymentMethodType.cash;
 
-  // Musteri bilgileri
-  final _customerNameController = TextEditingController();
-
   // States
   bool _isSubmitting = false;
   bool _showActiveOrders = false;
@@ -84,7 +81,6 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     _scrollController.dispose();
     _chipScrollController.dispose();
     _tableController.dispose();
-    _customerNameController.dispose();
     super.dispose();
   }
 
@@ -336,9 +332,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         orderNumber: orderNumber,
         kermesId: widget.event.id,
         kermesName: widget.event.title,
-        customerName: _customerNameController.text.trim().isNotEmpty
-            ? _customerNameController.text.trim()
-            : (_isStantMode ? 'Stant Musteri' : 'POS Siparis'),
+        customerName: _isStantMode ? 'Stant Musteri' : 'POS Siparis',
         customerPhone: '',
         deliveryType: _isStantMode ? DeliveryType.gelAl : _deliveryType,
         tableNumber: _deliveryType == DeliveryType.masada && !_isStantMode
@@ -374,23 +368,31 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
       if (!mounted) return;
 
-      // Basari mesaji
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text('Siparis #$orderNumber olusturuldu'),
-            ],
-          ),
-          backgroundColor: successGreen,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
       // Sepeti temizle
       _clearCart();
+
+      // Tezgahtan teslim ise McDonald's usulu numara dialog goster
+      // Masada ise sadece snackbar yeterli
+      if (_deliveryType == DeliveryType.masada || _isStantMode) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(_deliveryType == DeliveryType.masada
+                    ? 'Masa ${_tableController.text} - Siparis #$orderNumber'
+                    : 'Stant Siparis #$orderNumber'),
+              ],
+            ),
+            backgroundColor: successGreen,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        // Tezgahtan teslim - buyuk numara dialog
+        _showOrderNumberDialog(orderNumber);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -402,6 +404,111 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  /// McDonald's usulu siparis numarasi dialog (Tezgahtan Teslim)
+  void _showOrderNumberDialog(String orderNumber) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: successGreen.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle_rounded, color: successGreen, size: 44),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Siparis Alindi!',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Musteriye verilecek numara:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                decoration: BoxDecoration(
+                  color: lokmaPink.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: lokmaPink.withOpacity(0.3), width: 1.5),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '#',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w400,
+                        color: lokmaPink.withOpacity(0.7),
+                      ),
+                    ),
+                    Text(
+                      orderNumber,
+                      style: const TextStyle(
+                        fontSize: 64,
+                        fontWeight: FontWeight.w900,
+                        color: lokmaPink,
+                        letterSpacing: -2,
+                      ),
+                    ),
+                    Text(
+                      'Tezgahtan Teslim',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: lokmaPink,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Yeni Siparis Al',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1008,10 +1115,11 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
             padding: const EdgeInsets.only(left: 8),
             child: Text(
               '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.black54,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -1035,8 +1143,8 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           Row(
             children: [
               _buildOptionChip(
-                label: 'Gel Al',
-                icon: Icons.shopping_bag_outlined,
+                label: 'Tezgahtan',
+                icon: Icons.storefront_outlined,
                 isSelected: _deliveryType == DeliveryType.gelAl && !_isStantMode,
                 onTap: () => setState(() {
                   _isStantMode = false;
@@ -1175,42 +1283,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
               ),
             ],
           ),
-          // Musteri adi (opsiyonel)
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 40,
-            child: TextField(
-              controller: _customerNameController,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 14,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Musteri Adi (opsiyonel)',
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.white38 : Colors.grey,
-                  fontSize: 14,
-                ),
-                prefixIcon:
-                    const Icon(Icons.person_outline, size: 18, color: lokmaPink),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                      color: isDark ? Colors.white24 : Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                      color: isDark ? Colors.white24 : Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: lokmaPink),
-                ),
-              ),
-            ),
-          ),
+
         ],
       ),
     );
@@ -1401,6 +1474,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => KermesCheckoutSheet(
         event: widget.event,
+        isPosMode: true,
       ),
     );
   }
