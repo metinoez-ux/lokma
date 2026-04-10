@@ -609,11 +609,13 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                                 icon: Icons.add_a_photo,
                                 label: 'Fotograf Ekle',
                                 color: Colors.teal,
-                                onTap: images.length >= 3 ? null : () async {
-                                  final picker = ImagePicker();
-                                  final file = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-                                  if (file != null) setSheet(() => images.add(File(file.path)));
-                                },
+                                onTap: (pickedLat == null && streetCtrl.text.trim().isEmpty) || images.length >= 3
+                                    ? null
+                                    : () async {
+                                        final picker = ImagePicker();
+                                        final file = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+                                        if (file != null) setSheet(() => images.add(File(file.path)));
+                                      },
                               ),
                             ),
                           ],
@@ -727,7 +729,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _parkRed,
+                          backgroundColor: const Color(0xFF2563EB),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
