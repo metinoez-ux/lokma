@@ -380,12 +380,40 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                   children: [
                     Text("#${order.orderNumber}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
                     const SizedBox(width: 8),
-                    if (order.tableNumber != null && order.tableNumber!.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                        child: Text(order.tableNumber!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
-                      )
+                    if (order.tableNumber != null && order.tableNumber!.isNotEmpty) ...[
+                      Builder(builder: (context) {
+                        // Bolum rengini belirle
+                        final section = order.tableSection ?? '';
+                        final sectionLower = section.toLowerCase();
+                        Color sectionColor;
+                        String sectionLabel;
+                        if (sectionLower.contains('kadin') || sectionLower.contains('kad\u0131n') || sectionLower.contains('han\u0131m') || sectionLower.contains('female')) {
+                          sectionColor = const Color(0xFFD32F2F); // Kirmizi
+                          sectionLabel = 'Han\u0131mlar';
+                        } else if (sectionLower.contains('erkek') || sectionLower.contains('male')) {
+                          sectionColor = const Color(0xFF1565C0); // Mavi
+                          sectionLabel = 'Erkekler';
+                        } else if (sectionLower.contains('aile') || sectionLower.contains('family') || sectionLower.contains('mixed')) {
+                          sectionColor = const Color(0xFF2E7D32); // Yesil
+                          sectionLabel = 'Aile';
+                        } else {
+                          sectionColor = Colors.purple;
+                          sectionLabel = section.isNotEmpty ? section : 'Masa';
+                        }
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: sectionColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: sectionColor.withOpacity(0.4)),
+                          ),
+                          child: Text(
+                            '$sectionLabel - M${order.tableNumber}',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sectionColor),
+                          ),
+                        );
+                      }),
+                    ]
                     else 
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
