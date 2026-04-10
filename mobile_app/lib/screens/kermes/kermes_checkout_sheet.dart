@@ -422,10 +422,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       return;
     }
 
-    // Nakit odeme: alinan tutari sor
+    // Nakit odeme: alinan tutari sor (sadece POS modunda)
     double? cashReceived;
     double? changeGiven;
-    if (_paymentMethod == PaymentMethodType.cash) {
+    if (_paymentMethod == PaymentMethodType.cash && widget.isPosMode) {
       final cartState = ref.read(kermesCartProvider);
       // Pfand dahil toplam hesapla
       final bool hasPfandSystem = widget.event.hasPfandSystem;
