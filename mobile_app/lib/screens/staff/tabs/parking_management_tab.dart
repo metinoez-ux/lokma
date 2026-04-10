@@ -765,7 +765,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
           FloatingActionButton.extended(
             heroTag: 'acil_anons',
             onPressed: _showAnnouncementSheet,
-            backgroundColor: Colors.orange[800],
+            backgroundColor: Colors.red,
             icon: const Icon(Icons.campaign, color: Colors.white, size: 20),
             label: const Text('Acil Anons',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
@@ -774,7 +774,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
           FloatingActionButton.extended(
             heroTag: 'park_ekle',
             onPressed: _showAddSheet,
-            backgroundColor: _parkRed,
+            backgroundColor: const Color(0xFF2563EB),
             icon: const Icon(Icons.add_location_alt, color: Colors.white),
             label: const Text('Park Alani Ekle',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
@@ -826,7 +826,7 @@ class _ParkingManagementTabState extends State<ParkingManagementTab> {
                     color: cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: statusColor.withOpacity(0.3),
+                      color: const Color(0xFF2563EB).withOpacity(0.2),
                       width: 1,
                     ),
                     boxShadow: [
