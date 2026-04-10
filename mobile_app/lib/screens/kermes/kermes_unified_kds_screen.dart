@@ -547,16 +547,74 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
             ),
             const SizedBox(width: 8),
             
-            // Name
+            // Name and Options
             Expanded(
-              child: Text(
-                item.name,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isActiveMatch ? FontWeight.w600 : FontWeight.w400,
-                  color: textColor,
-                  decoration: item.itemStatus == KermesItemStatus.ready ? TextDecoration.lineThrough : null,
-                ),
+              child: Builder(
+                builder: (context) {
+                  final name = item.name;
+                  if (!name.contains('(')) {
+                    return Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isActiveMatch ? FontWeight.w600 : FontWeight.w400,
+                        color: textColor,
+                        decoration: item.itemStatus == KermesItemStatus.ready ? TextDecoration.lineThrough : null,
+                      ),
+                    );
+                  }
+                  
+                  final parts = name.split('(');
+                  final mainName = parts[0].trim();
+                  final optionsStr = parts.sublist(1).join('(').replaceAll(')', '').trim();
+                  final options = optionsStr.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        mainName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: isActiveMatch ? FontWeight.w600 : FontWeight.w400,
+                          color: textColor,
+                          decoration: item.itemStatus == KermesItemStatus.ready ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      if (options.isNotEmpty)
+                        const SizedBox(height: 2),
+                      ...options.map((opt) => Padding(
+                        padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '• ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isActiveMatch ? FontWeight.w500 : FontWeight.w400,
+                                color: isActiveMatch ? (isDark ? Colors.white70 : Colors.black54) : textColor.withOpacity(0.5),
+                                decoration: item.itemStatus == KermesItemStatus.ready ? TextDecoration.lineThrough : null,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                opt,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isActiveMatch ? FontWeight.w500 : FontWeight.w400,
+                                  color: isActiveMatch ? (isDark ? Colors.white70 : Colors.black54) : textColor.withOpacity(0.5),
+                                  decoration: item.itemStatus == KermesItemStatus.ready ? TextDecoration.lineThrough : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                    ],
+                  );
+                }
               ),
             ),
             
