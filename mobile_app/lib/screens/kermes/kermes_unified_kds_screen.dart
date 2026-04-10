@@ -10,12 +10,14 @@ class KermesUnifiedKdsScreen extends ConsumerStatefulWidget {
   final String kermesId;
   final String kermesName;
   final List<String> allowedSections;
+  final List<String> staffPrepZones; // Personelin atanmis hazirlik alanlari
 
   const KermesUnifiedKdsScreen({
     super.key,
     required this.kermesId,
     required this.kermesName,
     this.allowedSections = const [],
+    this.staffPrepZones = const [],
   });
 
   @override
@@ -114,23 +116,28 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                           o.tableSection!.isEmpty ||
                           widget.allowedSections.contains(o.tableSection)).toList();
 
-                  // Collect unique zones for the filter chip
-                  final Set<String> zones = {};
-                  for (var order in sectionFilteredOrders) {
-                    for (var item in order.items) {
-                      zones.addAll(item.prepZones.where((z) => z.isNotEmpty));
+                  // Zone chipleri: personelin atanmis prepZone'larindan olustur
+                  final zoneList = <String>['T\u00fcm\u00fc'];
+                  if (widget.staffPrepZones.isNotEmpty) {
+                    zoneList.addAll(widget.staffPrepZones);
+                  } else {
+                    // Fallback: siparislerden topla
+                    final Set<String> zones = {};
+                    for (var order in sectionFilteredOrders) {
+                      for (var item in order.items) {
+                        zones.addAll(item.prepZones.where((z) => z.isNotEmpty));
+                      }
                     }
+                    zoneList.addAll(zones.toList()..sort());
                   }
-                  final zoneList = zones.toList()..sort();
-                  zoneList.insert(0, 'Tümü');
 
-                  // Ensure active filter is still valid (fallback to Tümü)
+                  // Ensure active filter is still valid (fallback to Tumu)
                   if (!zoneList.contains(_activeFilter)) {
-                    _activeFilter = 'Tümü';
+                    _activeFilter = 'T\u00fcm\u00fc';
                   }
 
                   // Filter out orders that don't match the zone filter AT ALL
-                  final displayOrders = _activeFilter == 'Tümü'
+                  final displayOrders = _activeFilter == 'T\u00fcm\u00fc'
                       ? sectionFilteredOrders
                       : sectionFilteredOrders.where((order) {
                           return order.items.any((item) => item.prepZones.contains(_activeFilter));

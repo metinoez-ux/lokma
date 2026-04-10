@@ -1010,6 +1010,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               kermesId: capabilities.businessId!,
               kermesName: capabilities.businessName,
               allowedSections: capabilities.kermesAllowedSections,
+              staffPrepZones: capabilities.kermesPrepZones,
             )
           : _buildShiftLockedPlaceholder(isDark));
       navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Mutfak'));
