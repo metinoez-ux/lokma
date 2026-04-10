@@ -429,13 +429,13 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                         String sectionLabel;
                         if (sectionLower.contains('kadin') || sectionLower.contains('kad\u0131n') || sectionLower.contains('han\u0131m') || sectionLower.contains('female')) {
                           sectionColor = const Color(0xFFD32F2F); // Kirmizi
-                          sectionLabel = 'Han\u0131mlar';
+                          sectionLabel = 'Han\u0131mlar B\u00f6l\u00fcm\u00fc';
                         } else if (sectionLower.contains('erkek') || sectionLower.contains('male')) {
                           sectionColor = const Color(0xFF1565C0); // Mavi
-                          sectionLabel = 'Erkekler';
+                          sectionLabel = 'Erkekler B\u00f6l\u00fcm\u00fc';
                         } else if (sectionLower.contains('aile') || sectionLower.contains('family') || sectionLower.contains('mixed')) {
                           sectionColor = const Color(0xFF2E7D32); // Yesil
-                          sectionLabel = 'Aile';
+                          sectionLabel = 'Aile B\u00f6l\u00fcm\u00fc';
                         } else {
                           sectionColor = Colors.purple;
                           sectionLabel = section.isNotEmpty ? section : 'Masa';
