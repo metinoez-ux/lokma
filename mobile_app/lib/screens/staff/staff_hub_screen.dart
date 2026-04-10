@@ -457,80 +457,135 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
   void _showShiftActionsSheet(bool isDark) {
     final isPaused = _shiftService.shiftStatus == 'paused';
+    final capabilities = ref.read(staffCapabilitiesProvider);
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle
-                Container(
-                  width: 40, height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(color: Colors.grey[500], borderRadius: BorderRadius.circular(2)),
-                ),
-                // Timer display
-                Text(
-                  _formatDuration(_shiftElapsedNotifier.value),
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: isPaused ? Colors.orange : Colors.green,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-                if (isPaused)
-                  Text('Mola', style: TextStyle(fontSize: 13, color: Colors.orange[300], fontWeight: FontWeight.w600)),
-                const SizedBox(height: 20),
-                // 1. Gorevleri Guncelle
-                _buildSheetAction(
-                  icon: Icons.settings_suggest,
-                  label: 'Gorevleri Guncelle',
-                  color: Colors.blueAccent,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _handleRoleSettings();
-                  },
-                ),
-                const SizedBox(height: 10),
-                // 2. Mola Ver / Devam Et
-                _buildSheetAction(
-                  icon: isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                  label: isPaused ? 'Devam Et' : 'Mola Ver',
-                  color: isPaused ? Colors.green : Colors.orange,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _handlePauseResumeShift();
-                  },
-                ),
-                const SizedBox(height: 10),
-                // 3. Mesai Bitir
-                _buildSheetAction(
-                  icon: Icons.stop_rounded,
-                  label: 'Mesai Bitir',
-                  color: Colors.redAccent,
-                  isDark: isDark,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _handleEndShift();
-                  },
-                ),
-              ],
+      builder: (ctx) => FutureBuilder<Map<String, int>>(
+        future: capabilities.businessId != null
+            ? _shiftService.getTodayStats(businessId: capabilities.businessId!)
+            : Future.value({'todayActive': 0, 'todayPause': 0, 'totalKermes': 0}),
+        builder: (ctx, snapshot) {
+          final stats = snapshot.data ?? {'todayActive': 0, 'todayPause': 0, 'totalKermes': 0};
+
+          // Current shift elapsed
+          final currentElapsed = _shiftElapsedNotifier.value;
+          final currentActiveMin = currentElapsed.inMinutes;
+
+          // Add current shift to totals
+          final todayTotalMin = (stats['todayActive'] ?? 0) + currentActiveMin;
+          final todayPauseMin = stats['todayPause'] ?? 0;
+          final totalKermesMin = (stats['totalKermes'] ?? 0) + currentActiveMin;
+
+          String fmtMin(int mins) {
+            final h = mins ~/ 60;
+            final m = mins % 60;
+            if (h > 0) return '${h}s ${m}dk';
+            return '${m}dk';
+          }
+
+          return Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
-          ),
-        ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle
+                    Container(
+                      width: 40, height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(color: Colors.grey[500], borderRadius: BorderRadius.circular(2)),
+                    ),
+                    // Timer display
+                    Text(
+                      _formatDuration(_shiftElapsedNotifier.value),
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: isPaused ? Colors.orange : Colors.green,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (isPaused)
+                      Text('Mola', style: TextStyle(fontSize: 13, color: Colors.orange[300], fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 12),
+                    // Stats summary
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStatColumn('Bugun', fmtMin(todayTotalMin), Colors.green, isDark),
+                          Container(width: 1, height: 30, color: Colors.grey.withOpacity(0.2)),
+                          _buildStatColumn('Mola', fmtMin(todayPauseMin), Colors.orange, isDark),
+                          Container(width: 1, height: 30, color: Colors.grey.withOpacity(0.2)),
+                          _buildStatColumn('Top. Kermes', fmtMin(totalKermesMin), Colors.blueAccent, isDark),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // 1. Gorevleri Guncelle
+                    _buildSheetAction(
+                      icon: Icons.settings_suggest,
+                      label: 'Gorevleri Guncelle',
+                      color: Colors.blueAccent,
+                      isDark: isDark,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _handleRoleSettings();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    // 2. Mola Ver / Devam Et
+                    _buildSheetAction(
+                      icon: isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                      label: isPaused ? 'Devam Et' : 'Mola Ver',
+                      color: isPaused ? Colors.green : Colors.orange,
+                      isDark: isDark,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _handlePauseResumeShift();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    // 3. Mesai Bitir
+                    _buildSheetAction(
+                      icon: Icons.stop_rounded,
+                      label: 'Mesai Bitir',
+                      color: Colors.redAccent,
+                      isDark: isDark,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _handleEndShift();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
+    );
+  }
+
+  Widget _buildStatColumn(String label, String value, Color color, bool isDark) {
+    return Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.grey[600])),
+      ],
     );
   }
 

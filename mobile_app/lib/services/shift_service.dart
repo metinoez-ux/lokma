@@ -597,8 +597,15 @@ class ShiftService {
 
   /// Get total minutes of completed shifts for today
   Future<int> getPastTodayActiveMinutes({required String businessId}) async {
+    final stats = await getTodayStats(businessId: businessId);
+    return stats['todayActive'] ?? 0;
+  }
+
+  /// Get comprehensive stats: todayActive, todayPause, totalKermes (all in minutes)
+  /// Tasks are concurrent - 1 shift with 3 tasks = 1 hour, not 3 hours
+  Future<Map<String, int>> getTodayStats({required String businessId}) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return 0;
+    if (user == null) return {'todayActive': 0, 'todayPause': 0, 'totalKermes': 0};
 
     try {
       final roleService = StaffRoleService();
@@ -606,23 +613,43 @@ class ShiftService {
       final parentCollection = isKermes ? 'kermes_events' : 'businesses';
 
       final dateStr = _todayString();
+      // All shifts for this user at this business
       final snap = await _db
           .collection(parentCollection)
           .doc(businessId)
           .collection('shifts')
           .where('staffId', isEqualTo: user.uid)
-          .where('date', isEqualTo: dateStr)
-          .where('status', isEqualTo: 'ended')
           .get();
 
-      int totalMinutes = 0;
+      int todayActive = 0;
+      int todayPause = 0;
+      int totalKermes = 0;
+
       for (final doc in snap.docs) {
-        totalMinutes += (doc.data()['totalMinutes'] as num? ?? 0).toInt();
+        final data = doc.data();
+        final active = (data['totalMinutes'] as num?)?.toInt() ?? 0;
+        final pause = (data['pauseMinutes'] as num?)?.toInt() ?? 0;
+        final date = data['date'] as String?;
+        final status = data['status'] as String? ?? '';
+
+        // Only count ended shifts (current shift is calculated live)
+        if (status == 'ended') {
+          totalKermes += active;
+          if (date == dateStr) {
+            todayActive += active;
+            todayPause += pause;
+          }
+        }
       }
-      return totalMinutes;
+
+      return {
+        'todayActive': todayActive,
+        'todayPause': todayPause,
+        'totalKermes': totalKermes,
+      };
     } catch (e) {
-      debugPrint('[Shift] Error getting past today minutes: $e');
-      return 0;
+      debugPrint('[Shift] Error getting today stats: $e');
+      return {'todayActive': 0, 'todayPause': 0, 'totalKermes': 0};
     }
   }
 

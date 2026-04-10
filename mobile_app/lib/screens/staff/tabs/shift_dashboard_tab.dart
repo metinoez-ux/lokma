@@ -86,13 +86,15 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
 
             List<String> roleTokens = [];
             if (pZones.isNotEmpty) roleTokens.addAll(pZones);
-            if (isDriver) roleTokens.add('Sürücü');
+            if (isDriver) roleTokens.add('Surucu');
             if (tables.isNotEmpty) roleTokens.add('Garson');
-            if (isOther && roleTokens.isEmpty) roleTokens.add('Diğer');
+            if (isOther && roleTokens.isEmpty) roleTokens.add('Diger');
             if (roleTokens.isEmpty) roleTokens.add('Genel Alan');
             
+            // Concurrent: distribute active time evenly across roles
+            final perRole = roleTokens.isNotEmpty ? (active / roleTokens.length).round() : active;
             for (var t in roleTokens) {
-               todayRoles[t] = (todayRoles[t] ?? 0) + active;
+               todayRoles[t] = (todayRoles[t] ?? 0) + perRole;
             }
           }
         }
