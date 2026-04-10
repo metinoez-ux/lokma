@@ -129,6 +129,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       maxTables: capabilities.maxTables,
       assignedTables: capabilities.assignedTables,
       kermesPrepZones: capabilities.kermesPrepZones,
+      kermesCustomRoles: capabilities.kermesCustomRoles,
       isUpdating: true,
       currentMasa: _shiftService.currentTables.isNotEmpty,
       currentKurye: _shiftService.isDeliveryDriver,
@@ -180,6 +181,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         maxTables: capabilities.maxTables,
         assignedTables: capabilities.assignedTables,
         kermesPrepZones: capabilities.kermesPrepZones,
+        kermesCustomRoles: capabilities.kermesCustomRoles,
       );
       if (result == null) return;
 

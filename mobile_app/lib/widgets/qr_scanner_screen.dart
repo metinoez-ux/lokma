@@ -22,12 +22,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.prompt),
-        backgroundColor: Colors.transparent,
+        title: Text(widget.prompt, style: const TextStyle(color: Colors.white, fontSize: 16)),
+        backgroundColor: Colors.black54,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           )
         ],

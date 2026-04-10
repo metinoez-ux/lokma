@@ -12,23 +12,27 @@ class ShiftDialogs {
     required int maxTables,
     required List<int> assignedTables,
     required List<String> kermesPrepZones,
+    List<Map<String, String>> kermesCustomRoles = const [],
     bool isUpdating = false,
     bool currentMasa = false,
     bool currentKurye = false,
     bool currentDiger = false,
     List<int> currentTables = const [],
     List<String> currentPrepZones = const [],
+    List<String> currentCustomRoles = const [],
   }) async {
     bool masaEnabled = currentMasa;
     bool kuryeEnabled = currentKurye;
     bool digerEnabled = currentDiger;
     final Set<int> selectedTables = Set<int>.from(currentTables);
     final Set<String> selectedPrepZones = Set<String>.from(currentPrepZones);
+    final Set<String> selectedCustomRoles = Set<String>.from(currentCustomRoles);
     final max = maxTables;
 
     final bool showKurye = isDriver;
     final bool showMasa = hasTables;
     final bool showPrepZones = kermesPrepZones.isNotEmpty;
+    final bool showCustomRoles = kermesCustomRoles.isNotEmpty;
 
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
@@ -38,7 +42,7 @@ class ShiftDialogs {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             final isDark = Theme.of(ctx).brightness == Brightness.dark;
-            final hasAnyRole = digerEnabled || kuryeEnabled || (masaEnabled && selectedTables.isNotEmpty) || selectedPrepZones.isNotEmpty;
+            final hasAnyRole = digerEnabled || kuryeEnabled || (masaEnabled && selectedTables.isNotEmpty) || selectedPrepZones.isNotEmpty || selectedCustomRoles.isNotEmpty;
             final canStart = hasAnyRole;
 
             return Container(
@@ -200,6 +204,45 @@ class ShiftDialogs {
                             }).toList(),
                             const SizedBox(height: 12),
                           ],
+                          if (showCustomRoles) ...[
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4, bottom: 8, top: 4),
+                              child: Text('Atanmis Gorevler', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                            ),
+                            ...kermesCustomRoles.map((role) {
+                              final roleId = role['id'] ?? '';
+                              final roleName = role['name'] ?? '';
+                              final isSelected = selectedCustomRoles.contains(roleId);
+                              IconData roleIcon = Icons.assignment;
+                              Color roleColor = Colors.blueGrey;
+                              if (roleId.contains('temizlik')) {
+                                roleIcon = Icons.cleaning_services;
+                                roleColor = Colors.cyan;
+                              } else if (roleId.contains('park')) {
+                                roleIcon = Icons.local_parking;
+                                roleColor = Colors.blue;
+                              }
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: _buildRoleToggle(
+                                  context: ctx,
+                                  icon: roleIcon,
+                                  title: roleName,
+                                  subtitle: isSelected ? 'Bu gorevde calisiyorsunuz' : 'Secili degil',
+                                  color: roleColor,
+                                  isEnabled: isSelected,
+                                  onChanged: (val) => setSheetState(() {
+                                    if (val) {
+                                      selectedCustomRoles.add(roleId);
+                                    } else {
+                                      selectedCustomRoles.remove(roleId);
+                                    }
+                                  }),
+                                ),
+                              );
+                            }).toList(),
+                            const SizedBox(height: 12),
+                          ],
                           if (showKurye) ...[
                             _buildRoleToggle(
                               context: ctx,
@@ -242,6 +285,7 @@ class ShiftDialogs {
                                     'isDeliveryDriver': kuryeEnabled,
                                     'isDiger': digerEnabled,
                                     'prepZones': selectedPrepZones.toList(),
+                                    'customRoles': selectedCustomRoles.toList(),
                                   });
                                 }
                               }
@@ -543,7 +587,8 @@ class ShiftDialogs {
     if (masa && tableCount > 0) parts.add('$tableCount masa');
     if (kurye) parts.add('sürücü');
     if (diger) parts.add('diğer');
-    if (prepCount > 0) parts.add('$prepCount ocakbaşı');
+    if (prepCount > 0) parts.add('$prepCount ocakbasi');
+    final customCount = parts.length;
     if (parts.isEmpty) {
       return isUp ? 'Vardiyayı Bitir' : 'En az bir görev seçin';
     }

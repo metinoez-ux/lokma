@@ -76,6 +76,7 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
         maxTables: capabilities.maxTables,
         assignedTables: capabilities.assignedTables,
         kermesPrepZones: capabilities.kermesPrepZones,
+        kermesCustomRoles: capabilities.kermesCustomRoles,
       );
       if (result == null) return;
 
@@ -110,6 +111,7 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
       maxTables: capabilities.maxTables,
       assignedTables: capabilities.assignedTables,
       kermesPrepZones: capabilities.kermesPrepZones,
+      kermesCustomRoles: capabilities.kermesCustomRoles,
       isUpdating: true,
       currentMasa: _shiftService.currentTables.isNotEmpty,
       currentKurye: _shiftService.isDeliveryDriver,

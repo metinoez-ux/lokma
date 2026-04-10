@@ -27,6 +27,7 @@ class StaffCapabilities {
   final bool hasPosRole;
   final String tezgahName;
   final bool hasParkRole; // Park Gorevlisi
+  final List<Map<String, String>> kermesCustomRoles; // Atanmis ozel gorevler [{id, name}]
 
   StaffCapabilities({
     this.isLoading = true,
@@ -51,6 +52,7 @@ class StaffCapabilities {
     this.hasPosRole = false,
     this.tezgahName = '',
     this.hasParkRole = false,
+    this.kermesCustomRoles = const [],
   });
 
   StaffCapabilities copyWith({
@@ -76,6 +78,7 @@ class StaffCapabilities {
     bool? hasPosRole,
     String? tezgahName,
     bool? hasParkRole,
+    List<Map<String, String>>? kermesCustomRoles,
   }) {
     return StaffCapabilities(
       isLoading: isLoading ?? this.isLoading,
@@ -100,6 +103,7 @@ class StaffCapabilities {
       hasPosRole: hasPosRole ?? this.hasPosRole,
       tezgahName: tezgahName ?? this.tezgahName,
       hasParkRole: hasParkRole ?? this.hasParkRole,
+      kermesCustomRoles: kermesCustomRoles ?? this.kermesCustomRoles,
     );
   }
 }
@@ -158,14 +162,26 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           final hasTezgah = isKermes && earlyPrepZones.isNotEmpty;
           final tName = earlyPrepZones.isNotEmpty ? _deriveTezgahName(earlyPrepZones) : '';
           
-          // Park gorevlisi kontrolu - customRoleAssignments.role_park_system
+          // Park gorevlisi + diger custom roller
           bool earlyHasParkRole = false;
+          List<Map<String, String>> earlyCustomRoles = [];
           try {
             final kDoc2 = await FirebaseFirestore.instance.collection('kermes_events').doc(roleService.businessId).get();
             if (kDoc2.exists) {
               final rAssign = kDoc2.data()?['customRoleAssignments'] as Map<String, dynamic>? ?? {};
               final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
               earlyHasParkRole = parkList.contains(user.uid);
+              final allRoles = List<Map<String, dynamic>>.from(
+                (kDoc2.data()?['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],
+              );
+              for (final role in allRoles) {
+                final roleId = role['id'] as String? ?? '';
+                final roleName = role['name'] as String? ?? '';
+                final uids = List<String>.from(rAssign[roleId] ?? []);
+                if (uids.contains(user.uid)) {
+                  earlyCustomRoles.add({'id': roleId, 'name': roleName});
+                }
+              }
             }
           } catch(_) {}
 
@@ -186,7 +202,8 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             hasTezgahRole: hasTezgah,
             hasPosRole: isKermes,
             tezgahName: tName,
-            hasParkRole: earlyHasParkRole || isKermes, // deneme: tum kermes personeli gorebilir
+            hasParkRole: earlyHasParkRole || isKermes,
+            kermesCustomRoles: earlyCustomRoles,
           );
         } else {
           state = state.copyWith(isLoading: false);
@@ -307,15 +324,27 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
       final bool kermesHasTezgah = isKermesDoc && assignedPrepZones.isNotEmpty;
       final String kermesTezgahLabel = assignedPrepZones.isNotEmpty ? _deriveTezgahName(assignedPrepZones) : '';
 
-      // Park gorevlisi kontrolu - kermes doc icindeki customRoleAssignments
+      // Park gorevlisi + diger custom roller
       bool hasParkRole = false;
+      List<Map<String, String>> normalCustomRoles = [];
       if (isKermesDoc && businessId != null) {
         try {
           final kDocCheck = await FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get();
           if (kDocCheck.exists) {
             final rAssign = kDocCheck.data()?['customRoleAssignments'] as Map<String, dynamic>? ?? {};
             final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
-            hasParkRole = parkList.contains(user.uid) || isKermesDoc; // deneme: tum personel
+            hasParkRole = parkList.contains(user.uid) || isKermesDoc;
+            final allRoles = List<Map<String, dynamic>>.from(
+              (kDocCheck.data()?['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],
+            );
+            for (final role in allRoles) {
+              final roleId = role['id'] as String? ?? '';
+              final roleName = role['name'] as String? ?? '';
+              final uids = List<String>.from(rAssign[roleId] ?? []);
+              if (uids.contains(user.uid)) {
+                normalCustomRoles.add({'id': roleId, 'name': roleName});
+              }
+            }
           }
         } catch(_) {}
       }
@@ -342,6 +371,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         hasPosRole: isKermesDoc,
         tezgahName: kermesTezgahLabel,
         hasParkRole: hasParkRole,
+        kermesCustomRoles: normalCustomRoles,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);
