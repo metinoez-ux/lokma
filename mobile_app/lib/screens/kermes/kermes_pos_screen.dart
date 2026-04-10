@@ -36,8 +36,6 @@ class KermesPOSScreen extends ConsumerStatefulWidget {
 }
 
 class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
-  // Sepet
-  final List<_POSCartItem> _cart = [];
 
   // Kategori scroll-spy
   String _selectedCategory = 'Tumu';
@@ -268,8 +266,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   /// Sepetteki urun miktarini al
   int _getCartQuantity(String name) {
     final cart = ref.read(kermesCartProvider);
-    final item = cart.items.where((i) => i.menuItem.name == name).firstOrNull;
-    return item?.quantity ?? 0;
+    return cart.items
+        .where((i) => i.menuItem.name == name)
+        .fold(0, (sum, i) => sum + i.quantity);
   }
 
   /// Sepeti temizle
@@ -279,7 +278,8 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
   /// Siparis olustur
   Future<void> _submitOrder() async {
-    if (_cart.isEmpty) return;
+    final cartState = ref.read(kermesCartProvider);
+    if (cartState.isEmpty) return;
 
     // Masa numarasi kontrolu
     if (_deliveryType == DeliveryType.masada &&
@@ -309,12 +309,17 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
       final orderId = '${widget.event.id}_$orderNumber';
 
-      // Cart itemlari KermesOrderItem'a donustur (prepZone'u otomatik ata)
-      final orderItems = _cart.map((ci) {
+      // Cart itemlari KermesOrderItem'a donustur
+      final orderItems = cartState.items.map((ci) {
+        String itemName = ci.menuItem.name;
+        if (ci.selectedOptions.isNotEmpty) {
+          final optionsStr = ci.selectedOptions.map((o) => o.name).join(', ');
+          itemName = '$itemName ($optionsStr)';
+        }
         return KermesOrderItem(
-          name: ci.menuItem.name,
+          name: itemName,
           quantity: ci.quantity,
-          price: ci.menuItem.price,
+          price: ci.totalPrice, // Use totalPrice inside order
           prepZones: ci.menuItem.prepZones,
           category: ci.menuItem.category,
           imageUrl: ci.menuItem.imageUrl,
@@ -489,13 +494,24 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     );
   }
 
-  /// Telefon layout: Urunler + altta sepet bar
+  /// Telefon layout: Urunler + altta sepet bar (Floating Pill stili)
   Widget _buildPhoneLayout(bool isDark) {
-    return Column(
+    final cartState = ref.watch(kermesCartProvider);
+    return Stack(
       children: [
-        _buildCategoryBar(isDark),
-        Expanded(child: _buildProductList(isDark)),
-        if (_cart.isNotEmpty) _buildBottomCartBar(isDark),
+        Column(
+          children: [
+            _buildCategoryBar(isDark),
+            Expanded(child: _buildProductList(isDark)),
+          ],
+        ),
+        if (cartState.isNotEmpty)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildBottomCartBar(isDark),
+          ),
       ],
     );
   }
@@ -503,7 +519,8 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   /// Kategori chip bari - kullanici tarafiyla ayni sliding pill animasyonu
   Widget _buildCategoryBar(bool isDark) {
     final cats = _categories;
-    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+    final scaffoldBg = isDark ? const Color(0xFF121212) : Colors.white;
+    final cartState = ref.watch(kermesCartProvider);
 
     return Container(
       color: scaffoldBg,
@@ -546,6 +563,13 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
               children: cats.map((cat) {
                 _tabKeys.putIfAbsent(cat, () => GlobalKey());
                 final isSelected = cat == _selectedCategory;
+                
+                // Seçili kategorideki ürün sayısını bul
+                final categoryQty = cartState.items.where((e) {
+                  if (cat == 'Tumu') return true;
+                  return e.menuItem.category == cat;
+                }).fold<int>(0, (sum, e) => sum + e.quantity);
+
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: GestureDetector(
@@ -560,17 +584,40 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(50),
                       ),
-                      child: AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutCubic,
-                        style: TextStyle(
-                          color: isSelected
-                              ? (isDark ? Colors.black : Colors.white)
-                              : (isDark ? Colors.white70 : Colors.black54),
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                        child: Text(cat),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? (isDark ? Colors.black : Colors.white)
+                                  : (isDark ? Colors.white70 : Colors.black54),
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                            child: Text(cat),
+                          ),
+                          if (categoryQty > 0) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: isSelected && !isDark ? Colors.white : lokmaPink,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '$categoryQty',
+                                style: TextStyle(
+                                  color: isSelected && !isDark ? Colors.black : Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
@@ -851,7 +898,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
         // Sepet itemlari
         Expanded(
-          child: _cart.isEmpty
+          child: cartState.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -872,9 +919,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                 )
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: _cart.length,
+                  itemCount: cartState.items.length,
                   itemBuilder: (context, index) {
-                    final item = _cart[index];
+                    final item = cartState.items[index];
                     return _buildCartItem(item, isDark);
                   },
                 ),
@@ -890,10 +937,11 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   }
 
   /// Tek Cart item satiri
-  Widget _buildCartItem(_POSCartItem item, bool isDark) {
+  Widget _buildCartItem(KermesCartItem item, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Miktar kontrolleri
           Container(
@@ -905,7 +953,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 InkWell(
-                  onTap: () => _removeFromCart(item.menuItem),
+                  onTap: () => ref.read(kermesCartProvider.notifier).decreaseQuantity(item.uniqueKey),
                   borderRadius: BorderRadius.circular(8),
                   child: const Padding(
                     padding: EdgeInsets.all(6),
@@ -924,7 +972,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                   ),
                 ),
                 InkWell(
-                  onTap: () => _addToCart(item.menuItem),
+                  onTap: () => ref.read(kermesCartProvider.notifier).increaseQuantity(item.uniqueKey),
                   borderRadius: BorderRadius.circular(8),
                   child: const Padding(
                     padding: EdgeInsets.all(6),
@@ -935,22 +983,42 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          // Urun adi
+          // Urun adi ve opsiyonlar
           Expanded(
-            child: Text(
-              item.menuItem.name,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.menuItem.name,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (item.selectedOptions.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      item.selectedOptions.map((o) => o.name).join(', '),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.white54 : Colors.black54,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
             ),
           ),
           // Fiyat
-          Text(
-            '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Text(
+              '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
             style: TextStyle(
               color: isDark ? Colors.white70 : Colors.black54,
               fontSize: 14,
@@ -1220,15 +1288,15 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
   /// Siparis ver butonu
   Widget _buildSubmitButton(bool isDark) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: _cart.isEmpty || _isSubmitting ? null : _submitOrder,
-            style: ElevatedButton.styleFrom(
+    final cartState = ref.watch(kermesCartProvider);
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: SizedBox(
+        width: double.infinity,
+        height: 54,
+        child: ElevatedButton(
+          onPressed: cartState.isEmpty || _isSubmitting ? null : _submitOrder,
+          style: ElevatedButton.styleFrom(
               backgroundColor: successGreen,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
@@ -1268,78 +1336,70 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     );
   }
 
-  /// Telefon icin alt sepet bari
+  /// Telefon icin alt sepet bari (Marketplace stili)
   Widget _buildBottomCartBar(bool isDark) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          border: Border(
-            top: BorderSide(
-                color: isDark ? Colors.white12 : Colors.grey.shade200),
+    final cartState = ref.watch(kermesCartProvider);
+    return Container(
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
+      decoration: BoxDecoration(
+        color: lokmaPink,
+        borderRadius: BorderRadius.circular(100),
+        boxShadow: [
+          BoxShadow(
+            color: lokmaPink.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Sepet ozeti
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: lokmaPink.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.shopping_cart, color: lokmaPink, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$_totalCartItems urun',
-                    style: const TextStyle(
-                      color: lokmaPink,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(100),
+          onTap: () => _showPhoneCheckout(isDark),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${cartState.totalItems}',
+                        style: const TextStyle(
+                          color: lokmaPink,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            // Siparis ver butonu
-            SizedBox(
-              height: 44,
-              child: ElevatedButton(
-                onPressed: _isSubmitting
-                    ? null
-                    : () {
-                        // Telefonda full-screen checkout acar
-                        _showPhoneCheckout(isDark);
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: successGreen,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
+                  ],
                 ),
-                child: Text(
-                  '${_totalCartAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} - Onayla',
-                  style: const TextStyle(
-                    fontSize: 14,
+                const Text(
+                  'Sepeti Görüntüle',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
+                Text(
+                  '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1601,22 +1661,5 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       default:
         return lokmaPink;
     }
-  }
-}
-
-/// POS sepet ogesi (gecici, kalici degil)
-class _POSCartItem {
-  final KermesMenuItem menuItem;
-  final int quantity;
-
-  _POSCartItem({required this.menuItem, required this.quantity});
-
-  double get totalPrice => menuItem.price * quantity;
-
-  _POSCartItem copyWith({int? quantity}) {
-    return _POSCartItem(
-      menuItem: menuItem,
-      quantity: quantity ?? this.quantity,
-    );
   }
 }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/kermes_model.dart';
+import '../../../models/product_option.dart';
 import '../../kermes/kermes_pos_screen.dart';
 
 /// Wrapper tab: kermes_events/{id}/products alt koleksiyonundan urunleri okur
@@ -160,6 +161,15 @@ class StaffPosWrapperTab extends ConsumerWidget {
               .toList() ??
           [];
 
+      // optionGroups parsing
+      final List<OptionGroup> optionGroups = [];
+      final ogData = d['optionGroups'];
+      if (ogData is Iterable) {
+        optionGroups.addAll(ogData.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>)));
+      } else if (ogData is Map) {
+        optionGroups.addAll(ogData.values.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>)));
+      }
+
       return KermesMenuItem(
         name: name,
         price: price,
@@ -167,6 +177,7 @@ class StaffPosWrapperTab extends ConsumerWidget {
         imageUrl: imageUrl,
         prepZones: prepZones,
         isAvailable: true,
+        optionGroups: optionGroups,
       );
     } catch (_) {
       return null;

@@ -416,15 +416,22 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       final double totalAmount = cartState.totalAmount + pfandTotal + _donationAmount;
       
       // Sipariş öğelerini oluştur
-      final orderItems = cartState.items.map((item) => KermesOrderItem(
-        name: item.menuItem.name,
-        quantity: item.quantity,
-        price: item.menuItem.price,
-        productId: item.menuItem.name,
-        prepZones: item.menuItem.prepZones,
-        category: item.menuItem.category,
-        imageUrl: item.menuItem.imageUrl,
-      )).toList();
+      final orderItems = cartState.items.map((item) {
+        String itemName = item.menuItem.name;
+        if (item.selectedOptions.isNotEmpty) {
+          final optionsStr = item.selectedOptions.map((o) => o.name).join(', ');
+          itemName = '$itemName ($optionsStr)';
+        }
+        return KermesOrderItem(
+          name: itemName,
+          quantity: item.quantity,
+          price: item.totalPrice, // Use totalPrice inside order to preserve addon prices
+          productId: item.menuItem.name,
+          prepZones: item.menuItem.prepZones,
+          category: item.menuItem.category,
+          imageUrl: item.menuItem.imageUrl,
+        );
+      }).toList();
       
       // Guest profil servisi
       final guestProfileService = ref.read(guestProfileServiceProvider);
