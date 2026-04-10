@@ -77,19 +77,39 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
         backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFEAEAEA),
         body: Column(
           children: [
-            // Tab bar - header disinda, beyaz/koyu arka planla
+            // Tab bar - is akisi gosterimi
             Container(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              child: const TabBar(
-                labelColor: Color(0xFFEA184A),
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Color(0xFFEA184A),
+              color: isDark ? const Color(0xFF252525) : const Color(0xFFE8E8E8),
+              child: TabBar(
+                labelColor: lokmaPink,
+                unselectedLabelColor: isDark ? Colors.grey[400] : const Color(0xFF555555),
+                indicatorColor: lokmaPink,
                 indicatorWeight: 3,
-                labelPadding: EdgeInsets.symmetric(horizontal: 4),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 0),
+                labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5),
                 tabs: [
-                  Tab(text: 'GELENLER'),
-                  Tab(text: 'HAZIRLANIYOR'),
-                  Tab(text: 'TESLIME HAZIR'),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('YENI'),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('HAZIRLANIYOR'),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                      ],
+                    ),
+                  ),
+                  const Tab(text: 'TESLIME HAZIR'),
                 ],
               ),
             ),
@@ -197,9 +217,25 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
 
   Widget _buildFilterBar(List<String> zones, bool isDark, Map<String, int> zoneCounts) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      child: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Baslik
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Benim Ocak Basi Gorevlerim',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.grey[400] : const Color(0xFF555555),
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+          SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: zones.map((zone) {
@@ -256,6 +292,8 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
             );
           }).toList(),
         ),
+      ),
+        ],
       ),
     );
   }
