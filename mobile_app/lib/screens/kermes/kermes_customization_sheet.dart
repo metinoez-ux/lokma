@@ -129,6 +129,7 @@ class _KermesCustomizationSheetState
   void _addToCart() {
     if (widget.editMode && widget.onEdit != null) {
       widget.onEdit!(_selectedOptions);
+      // Not: Edit mode quantity degisimleri kermes_cart_provider'da ayri yonetilir veya cagirildigi yerden halledilir
       Navigator.pop(context);
       HapticFeedback.heavyImpact();
       return;
@@ -139,6 +140,7 @@ class _KermesCustomizationSheetState
       widget.eventId,
       widget.eventName,
       selectedOptions: _selectedOptions,
+      quantity: _quantity, // <-- FIX: Artik miktar ekleniyor
     );
     if (added) {
       Navigator.pop(context);

@@ -166,26 +166,26 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
   /// Sepete urun ekle
   /// Farkli kermes'ten ekleme yapiliyorsa false doner (uyari gosterilmeli)
   /// Ayni kermes'ten ekleme yapiliyorsa true doner
-  bool addToCart(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const []}) {
+  bool addToCart(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const [], int quantity = 1}) {
     // Farkli bir kermes'ten ekleme yapiliyorsa false dondur
     if (state.eventId != null && state.eventId != eventId) {
       return false;
     }
 
-    _addItemInternal(menuItem, eventId, eventName, selectedOptions: selectedOptions);
+    _addItemInternal(menuItem, eventId, eventName, selectedOptions: selectedOptions, quantity: quantity);
     _saveCartToStorage();
     return true;
   }
 
   /// Sepeti temizle ve yeni kermes'ten ekle (kullanici onayladiktan sonra)
-  void clearAndAddFromNewKermes(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const []}) {
+  void clearAndAddFromNewKermes(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const [], int quantity = 1}) {
     state = KermesCartState(
       eventId: eventId,
       eventName: eventName,
       items: [
         KermesCartItem(
           menuItem: menuItem,
-          quantity: 1,
+          quantity: quantity,
           eventId: eventId,
           eventName: eventName,
           selectedOptions: selectedOptions,
@@ -204,7 +204,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
   String? get currentKermesName => state.eventName;
 
   /// Ic ekleme metodu
-  void _addItemInternal(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const []}) {
+  void _addItemInternal(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const [], int quantity = 1}) {
     // Benzersiz key ile eslestir (combo secenekleri dahil)
     final newKey = _buildUniqueKey(menuItem.name, selectedOptions);
     final existingIndex = state.items.indexWhere(
@@ -216,7 +216,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
       final updatedItems = List<KermesCartItem>.from(state.items);
       final existingItem = updatedItems[existingIndex];
       updatedItems[existingIndex] = existingItem.copyWith(
-        quantity: existingItem.quantity + 1,
+        quantity: existingItem.quantity + quantity,
       );
       state = KermesCartState(
         eventId: state.eventId ?? eventId,
@@ -232,7 +232,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
           ...state.items,
           KermesCartItem(
             menuItem: menuItem,
-            quantity: 1,
+            quantity: quantity,
             eventId: eventId,
             eventName: eventName,
             selectedOptions: selectedOptions,
@@ -319,12 +319,11 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
     }
   }
 
-  /// Belirli bir ürünün miktarını al
+  /// Belirli bir ürünün toplam miktarını al (tüm kombinasyonlardaki miktarını topla)
   int getQuantity(String menuItemName) {
-    final item = state.items.where(
-      (item) => item.menuItem.name == menuItemName,
-    ).firstOrNull;
-    return item?.quantity ?? 0;
+    return state.items
+        .where((item) => item.menuItem.name == menuItemName)
+        .fold(0, (sum, item) => sum + item.quantity);
   }
 
   /// Sepetten ürün çıkar (ID ile) - Lieferando cart uyumluluğu
