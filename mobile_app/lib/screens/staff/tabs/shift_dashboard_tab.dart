@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../services/shift_service.dart';
+import '../../../services/staff_role_service.dart';
 import '../providers/staff_hub_provider.dart';
 
 
@@ -31,15 +32,18 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   int _pastTodayPauseMin = 0;
   Map<String, int> _pastTodayRoleActiveMin = {};
 
+  DateTime? _lastPausedAt;
+  Timer? _pauseTimer;
+
   Map<String, dynamic>? _weatherInfo;
   bool _weatherLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Re-verify shift state just in case
     _reloadShiftState();
     _fetchWeather();
+    _initPauseTracking();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final capabilities = ref.read(staffCapabilitiesProvider);
@@ -47,6 +51,52 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         _loadStats(capabilities.businessId!);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _pauseTimer?.cancel();
+    super.dispose();
+  }
+
+  void _initPauseTracking() {
+    // Eger shift paused ise, Firestore'dan pausedAt'i al
+    if (_shiftService.shiftStatus == 'paused' &&
+        _shiftService.currentShiftId != null &&
+        _shiftService.currentBusinessId != null) {
+      _fetchPausedAt();
+    }
+    // Her 30 saniyede mola sayacini guncelle
+    _pauseTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_shiftService.shiftStatus == 'paused' && _lastPausedAt != null && mounted) {
+        setState(() {}); // Rebuild to update pause counter
+      }
+    });
+  }
+
+  Future<void> _fetchPausedAt() async {
+    try {
+      final roleService = StaffRoleService();
+      final isKermes = roleService.businessType == 'kermes';
+      final parentCol = isKermes ? 'kermes_events' : 'businesses';
+      final doc = await FirebaseFirestore.instance
+          .collection(parentCol)
+          .doc(_shiftService.currentBusinessId)
+          .collection('shifts')
+          .doc(_shiftService.currentShiftId)
+          .get();
+      if (doc.exists) {
+        final pauseLog = List<Map<String, dynamic>>.from(
+          (doc.data()?['pauseLog'] as List<dynamic>?) ?? [],
+        );
+        if (pauseLog.isNotEmpty && pauseLog.last['resumedAt'] == null) {
+          final pausedAt = (pauseLog.last['pausedAt'] as Timestamp).toDate();
+          if (mounted) setState(() => _lastPausedAt = pausedAt);
+        }
+      }
+    } catch (e) {
+      debugPrint('[Shift] Error fetching pausedAt: $e');
+    }
   }
 
   Future<void> _loadStats(String businessId) async {
@@ -150,10 +200,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     if (mounted) setState(() => _shiftLoading = false);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -730,9 +777,18 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     int currentActiveMs = 0;
     // Removed realtime calculation to avoid UI jank since appbar pill does it anyway
     
+    // Canli mola suresi: shift paused ise, pauseLog'un son acik entry'sinden hesapla
+    int currentPauseMin = 0;
+    if (_shiftService.shiftStatus == 'paused' && _shiftService.currentShiftId != null) {
+      // Mola baslangic zamani _lastPausedAt'tan hesaplanir
+      if (_lastPausedAt != null) {
+        currentPauseMin = DateTime.now().difference(_lastPausedAt!).inMinutes;
+      }
+    }
+
     final totalMin = _pastTotalActiveMin + currentActiveMs;
     final todayMin = _pastTodayActiveMin + currentActiveMs;
-    final todayPause = _pastTodayPauseMin;
+    final todayPause = _pastTodayPauseMin + currentPauseMin;
 
     final totalStr = '${totalMin ~/ 60}s ${totalMin % 60}dk';
     final todayStr = '${todayMin ~/ 60}s ${todayMin % 60}dk';
