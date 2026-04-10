@@ -78,14 +78,15 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
         appBar: AppBar(
           backgroundColor: lokmaPink,
           foregroundColor: Colors.white,
+          automaticallyImplyLeading: false,
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.dashboard_customize, size: 20),
+                  const Icon(Icons.local_fire_department_rounded, size: 22),
                   const SizedBox(width: 8),
-                  const Text('Unified Mutfak', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  const Text('Mutfak (Ocak Başı)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
                 ],
               ),
               Text(widget.kermesName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),

@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/kermes_model.dart';
 import '../../kermes/kermes_pos_screen.dart';
 
-/// Wrapper tab to load KermesEvent from Firestore and feed it to KermesPOSScreen.
-/// POS requires a full KermesEvent object (for menu data), so this wrapper
-/// streams the event doc and renders the POS screen once loaded.
+/// Wrapper tab: kermes_events/{id}/products alt koleksiyonundan urunleri okur
+/// (Eskiden bos olan 'menu' arrayini kullaniyordu)
 class StaffPosWrapperTab extends ConsumerWidget {
   final String kermesId;
   final String staffId;
@@ -24,58 +23,65 @@ class StaffPosWrapperTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final db = FirebaseFirestore.instance;
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('kermes_events')
-          .doc(kermesId)
-          .snapshots(),
+    // Event bilgisi + urunler paralel stream
+    return StreamBuilder<List<Object>>(
+      stream: _combineStreams(db),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircularProgressIndicator(
-                  color: Color(0xFFEA184A),
-                ),
+                const CircularProgressIndicator(color: Color(0xFFEA184A)),
                 const SizedBox(height: 16),
                 Text(
                   'POS yukleniyor...',
-                  style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.grey,
-                  ),
+                  style: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
                 ),
               ],
             ),
           );
         }
 
-        if (!snapshot.hasData || !snapshot.data!.exists) {
+        if (snapshot.hasError || !snapshot.hasData) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: isDark ? Colors.white24 : Colors.grey.shade300,
-                ),
+                Icon(Icons.error_outline, size: 48,
+                    color: isDark ? Colors.white24 : Colors.grey.shade300),
                 const SizedBox(height: 16),
                 Text(
-                  'Kermes verisi bulunamadi',
-                  style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.grey,
-                    fontSize: 16,
-                  ),
+                  'Yukleme hatasi',
+                  style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 16),
                 ),
               ],
             ),
           );
         }
 
-        final data = snapshot.data!.data() as Map<String, dynamic>;
-        final event = _buildKermesEvent(kermesId, data);
+        final eventDoc = snapshot.data![0] as DocumentSnapshot;
+        final productDocs = snapshot.data![1] as List<DocumentSnapshot>;
+
+        if (!eventDoc.exists) {
+          return Center(
+            child: Text(
+              'Kermes verisi bulunamadi',
+              style: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
+            ),
+          );
+        }
+
+        final data = eventDoc.data() as Map<String, dynamic>;
+        final menuItems = productDocs
+            .map((doc) => _parseMenuItem(doc))
+            .where((item) => item != null)
+            .cast<KermesMenuItem>()
+            .toList();
+
+        final event = _buildKermesEvent(kermesId, data, menuItems);
 
         return KermesPOSScreen(
           event: event,
@@ -87,16 +93,88 @@ class StaffPosWrapperTab extends ConsumerWidget {
     );
   }
 
-  /// Build a KermesEvent from Firestore doc data.
-  /// Only populates fields needed for POS (menu, title, id, basic config).
-  KermesEvent _buildKermesEvent(String id, Map<String, dynamic> data) {
-    // Parse menu items
-    final menuData = data['menu'] as List<dynamic>? ?? [];
-    final menuItems = menuData
-        .map((item) => KermesMenuItem.fromJson(item as Map<String, dynamic>))
-        .toList();
+  /// Event doc + products koleksiyonunu birlestiren stream
+  Stream<List<Object>> _combineStreams(FirebaseFirestore db) {
+    final eventStream = db.collection('kermes_events').doc(kermesId).snapshots();
+    final productsStream = db
+        .collection('kermes_events')
+        .doc(kermesId)
+        .collection('products')
+        .where('isAvailable', isEqualTo: true)
+        .snapshots();
 
-    // Parse features
+    return eventStream.asyncMap((eventDoc) async {
+      final productsSnap = await db
+          .collection('kermes_events')
+          .doc(kermesId)
+          .collection('products')
+          .where('isAvailable', isEqualTo: true)
+          .get();
+      return [eventDoc, productsSnap.docs];
+    });
+  }
+
+  /// Firestore products koleksiyonundaki bir belgeyi KermesMenuItem'a donustur
+  KermesMenuItem? _parseMenuItem(DocumentSnapshot doc) {
+    try {
+      final d = doc.data() as Map<String, dynamic>;
+
+      // Aktif mi? (isActive veya isAvailable kontrolu)
+      final isActive = d['isActive'] as bool? ?? true;
+      final isAvailable = d['isAvailable'] as bool? ?? true;
+      if (!isActive || !isAvailable) return null;
+
+      // Stok kontrolu
+      if (d['outOfStock'] == true) return null;
+
+      // isim: multilingual map veya string
+      String name;
+      final nameField = d['name'];
+      if (nameField is Map) {
+        name = (nameField['tr'] as String?)?.isNotEmpty == true
+            ? nameField['tr'] as String
+            : (nameField['de'] as String? ?? doc.id);
+      } else {
+        name = (nameField as String?) ?? doc.id;
+      }
+
+      // Fiyat: int veya double
+      final priceRaw = d['sellingPrice'] ?? d['price'];
+      final price = (priceRaw as num?)?.toDouble() ?? 0.0;
+
+      // Kategori
+      final category = d['category'] as String? ??
+          ((d['categories'] as List?)?.isNotEmpty == true
+              ? (d['categories'] as List).first as String
+              : null);
+
+      // Resim
+      final imageUrl = d['imageUrl'] as String? ??
+          ((d['imageUrls'] as List?)?.isNotEmpty == true
+              ? (d['imageUrls'] as List).first as String
+              : null);
+
+      // prepZones - bu koleksiyonda yoksa bos birakilir
+      final prepZones = (d['prepZones'] as List?)
+              ?.map((z) => z.toString())
+              .toList() ??
+          [];
+
+      return KermesMenuItem(
+        name: name,
+        price: price,
+        category: category,
+        imageUrl: imageUrl,
+        prepZones: prepZones,
+        isAvailable: true,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  KermesEvent _buildKermesEvent(
+      String id, Map<String, dynamic> data, List<KermesMenuItem> menuItems) {
     final features = List<String>.from(data['features'] ?? []);
 
     return KermesEvent(

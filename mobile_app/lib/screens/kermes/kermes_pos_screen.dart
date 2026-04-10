@@ -32,52 +32,173 @@ class KermesPOSScreen extends ConsumerStatefulWidget {
 }
 
 class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
-  // Sepet (POS icin ayri, kalici sepetten bagimsiz)
+  // Sepet
   final List<_POSCartItem> _cart = [];
 
-  // Kategori filtreleme
+  // Kategori scroll-spy
   String _selectedCategory = 'Tumu';
+  bool _isUserScrolling = true;
+  final ScrollController _scrollController = ScrollController();
+  final ScrollController _chipScrollController = ScrollController();
+  final Map<String, GlobalKey> _sectionKeys = {};
+  final Map<String, GlobalKey> _tabKeys = {};
+
+  // Sliding pill
+  double _pillLeft = 0;
+  double _pillWidth = 60;
+  bool _pillInitialized = false;
+  final GlobalKey _chipRowKey = GlobalKey();
 
   // Masa ve teslimat
   final _tableController = TextEditingController();
-  String? _selectedTableSection; // Secili masa bolumu
+  String? _selectedTableSection;
   DeliveryType _deliveryType = DeliveryType.gelAl;
   PaymentMethodType _paymentMethod = PaymentMethodType.cash;
 
-  // Musteri bilgileri (opsiyonel - POS'ta hizli akis icin)
+  // Musteri bilgileri
   final _customerNameController = TextEditingController();
 
   // States
   bool _isSubmitting = false;
   bool _showActiveOrders = false;
-  bool _isStantMode = false; // Stant modu: aninda teslim (POS kasa)
+  bool _isStantMode = false;
 
   // Renkler
   static const Color lokmaPink = Color(0xFFEA184A);
   static const Color successGreen = Color(0xFF2E7D32);
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition('Tumu');
+    });
+  }
+
+  @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _chipScrollController.dispose();
     _tableController.dispose();
     _customerNameController.dispose();
     super.dispose();
   }
 
-  /// Menu verilerinden tum kategorileri cikart
-  List<String> get _categories {
-    final cats = <String>{};
-    for (final item in widget.event.menu) {
-      if (item.category != null && item.category!.isNotEmpty) {
-        cats.add(item.category!);
+  void _onScroll() {
+    if (!_isUserScrolling) return;
+
+    if (_scrollController.hasClients && _scrollController.offset < 10) {
+      if (_selectedCategory != 'Tumu') {
+        setState(() => _selectedCategory = 'Tumu');
+        _scrollChipTo('Tumu');
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) _updatePillPosition('Tumu');
+        });
+      }
+      return;
+    }
+
+    String? visible;
+    for (final entry in _sectionKeys.entries) {
+      final ctx = entry.value.currentContext;
+      if (ctx == null) continue;
+      final box = ctx.findRenderObject() as RenderBox?;
+      if (box == null) continue;
+      final pos = box.localToGlobal(Offset.zero, ancestor: context.findRenderObject());
+      if (pos.dy > 100 && pos.dy < 350) {
+        visible = entry.key;
+        break;
       }
     }
 
+    if (visible != null && visible != _selectedCategory) {
+      setState(() => _selectedCategory = visible!);
+      _scrollChipTo(visible!);
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted) _updatePillPosition(visible!);
+      });
+    }
+  }
+
+  void _scrollChipTo(String category) {
+    final key = _tabKeys[category];
+    if (key?.currentContext == null || !_chipScrollController.hasClients) return;
+    final box = key!.currentContext!.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final chipPos = box.localToGlobal(Offset.zero);
+    final chipW = box.size.width;
+    final vpW = _chipScrollController.position.viewportDimension;
+    final delta = chipPos.dx + chipW / 2 - vpW / 2;
+    final target = (_chipScrollController.offset + delta)
+        .clamp(0.0, _chipScrollController.position.maxScrollExtent);
+    _chipScrollController.animateTo(target,
+        duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+  }
+
+  void _updatePillPosition([String? cat]) {
+    final category = cat ?? _selectedCategory;
+    final tabKey = _tabKeys[category];
+    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) return;
+    final chipBox = tabKey!.currentContext!.findRenderObject() as RenderBox?;
+    final rowBox = _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null || rowBox == null) return;
+    final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
+    if (mounted) {
+      setState(() {
+        _pillLeft = chipPos.dx;
+        _pillWidth = chipBox.size.width;
+        _pillInitialized = true;
+      });
+    }
+  }
+
+  void _selectCategory(String category) {
+    if (_selectedCategory == category) return;
+    setState(() => _selectedCategory = category);
+    _isUserScrolling = false;
+    _scrollChipTo(category);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition(category);
+    });
+
+    if (category == 'Tumu') {
+      _scrollController.animateTo(0,
+          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    } else {
+      final key = _sectionKeys[category];
+      if (key?.currentContext != null && _scrollController.hasClients) {
+        final box = key!.currentContext!.findRenderObject() as RenderBox?;
+        final scrollBox = context.findRenderObject() as RenderBox?;
+        if (box != null && scrollBox != null) {
+          final pos = box.localToGlobal(Offset.zero, ancestor: scrollBox);
+          final target = _scrollController.offset + pos.dy - 110;
+          _scrollController.animateTo(
+            target.clamp(0.0, _scrollController.position.maxScrollExtent),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      }
+    }
+
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _isUserScrolling = true;
+    });
+  }
+
+  /// Kategorisiz urunler dahil tum kategoriler
+  List<String> get _categoriesWithoutAll {
+    final cats = <String>{};
+    for (final item in widget.event.menu) {
+      if (item.isAvailable) cats.add(item.category ?? 'Diger');
+    }
     final categoriesAsync = ref.read(kermesCategoryProvider);
     final sortOrder = categoriesAsync.maybeWhen(
       data: (c) => c.map((e) => e.name).toList(),
       orElse: () => const <String>[],
     );
-
     final sorted = cats.toList();
     if (sortOrder.isNotEmpty) {
       sorted.sort((a, b) {
@@ -86,18 +207,22 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         return (iA == -1 ? 999 : iA).compareTo(iB == -1 ? 999 : iB);
       });
     }
-
-    return ['Tumu', ...sorted];
+    return sorted;
   }
 
-  /// Filtrelenmis menu itemlari
-  List<KermesMenuItem> get _filteredItems {
-    if (_selectedCategory == 'Tumu') {
-      return widget.event.menu.where((i) => i.isAvailable).toList();
+  List<String> get _categories => ['Tumu', ..._categoriesWithoutAll];
+
+  Map<String, List<KermesMenuItem>> get _groupedMenu {
+    final grouped = <String, List<KermesMenuItem>>{};
+    for (final cat in _categoriesWithoutAll) grouped[cat] = [];
+    for (final item in widget.event.menu) {
+      if (!item.isAvailable) continue;
+      final cat = item.category ?? 'Diger';
+      grouped[cat] ??= [];
+      grouped[cat]!.add(item);
     }
-    return widget.event.menu
-        .where((i) => i.isAvailable && i.category == _selectedCategory)
-        .toList();
+    grouped.removeWhere((_, v) => v.isEmpty);
+    return grouped;
   }
 
   /// Sepetteki urun sayisi
@@ -292,11 +417,12 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       appBar: AppBar(
         backgroundColor: lokmaPink,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Kermes POS - ${widget.event.title}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
             Text(widget.staffName ?? 'Kasiyer',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
           ],
@@ -428,7 +554,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           child: Column(
             children: [
               _buildCategoryBar(isDark),
-              Expanded(child: _buildProductGrid(isDark, crossAxisCount: 4)),
+              Expanded(child: _buildProductList(isDark)),
             ],
           ),
         ),
@@ -454,236 +580,307 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     return Column(
       children: [
         _buildCategoryBar(isDark),
-        Expanded(child: _buildProductGrid(isDark, crossAxisCount: 2)),
+        Expanded(child: _buildProductList(isDark)),
         if (_cart.isNotEmpty) _buildBottomCartBar(isDark),
       ],
     );
   }
 
-  /// Kategori filtreleme bari
+  /// Kategori chip bari - kullanici tarafiyla ayni sliding pill animasyonu
   Widget _buildCategoryBar(bool isDark) {
+    final cats = _categories;
+    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+
     return Container(
+      color: scaffoldBg,
       height: 52,
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView.builder(
+      child: SingleChildScrollView(
+        controller: _chipScrollController,
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final cat = _categories[index];
-          final isSelected = cat == _selectedCategory;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(cat),
-              selected: isSelected,
-              onSelected: (_) {
-                HapticFeedback.selectionClick();
-                setState(() => _selectedCategory = cat);
-              },
-              selectedColor: lokmaPink.withOpacity(0.15),
-              checkmarkColor: lokmaPink,
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? lokmaPink
-                    : isDark
-                        ? Colors.white70
-                        : Colors.black87,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                fontSize: 13,
+        padding: const EdgeInsets.only(left: 16, right: 4, top: 4, bottom: 8),
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            // 1. Sliding pill
+            if (_pillInitialized)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutBack,
+                left: _pillLeft,
+                top: 0,
+                bottom: 0,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutBack,
+                  width: _pillWidth,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white : const Color(0xFF3E3E3F),
+                    borderRadius: BorderRadius.circular(50),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              side: BorderSide(
-                color: isSelected ? lokmaPink : Colors.transparent,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+            // 2. Chip texts
+            Row(
+              key: _chipRowKey,
+              children: cats.map((cat) {
+                _tabKeys.putIfAbsent(cat, () => GlobalKey());
+                final isSelected = cat == _selectedCategory;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      _selectCategory(cat);
+                    },
+                    child: Container(
+                      key: _tabKeys[cat],
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutCubic,
+                        style: TextStyle(
+                          color: isSelected
+                              ? (isDark ? Colors.black : Colors.white)
+                              : (isDark ? Colors.white70 : Colors.black54),
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                        child: Text(cat),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
 
-  /// Urun grid'i - kocaman, renkli butonlar
-  Widget _buildProductGrid(bool isDark, {required int crossAxisCount}) {
-    final items = _filteredItems;
+  /// Gruplu liste - kategori basliklariyla, kullanici menu gibi alt alta
+  Widget _buildProductList(bool isDark) {
+    final grouped = _groupedMenu;
 
-    if (items.isEmpty) {
+    if (grouped.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.restaurant_menu,
-                size: 64,
+            Icon(Icons.restaurant_menu, size: 64,
                 color: isDark ? Colors.white24 : Colors.grey.shade300),
             const SizedBox(height: 16),
-            Text(
-              'Bu kategoride urun bulunamadi',
-              style: TextStyle(
-                color: isDark ? Colors.white54 : Colors.grey.shade600,
-                fontSize: 16,
-              ),
-            ),
+            Text('Menu yuklenemedi',
+                style: TextStyle(color: isDark ? Colors.white54 : Colors.grey.shade600, fontSize: 16)),
           ],
         ),
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.1,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) =>
-          _buildProductButton(items[index], isDark),
+    // Section keys olustur
+    for (final cat in grouped.keys) {
+      _sectionKeys[cat] ??= GlobalKey();
+    }
+
+    final sections = grouped.entries.toList();
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.only(bottom: 120),
+      itemCount: sections.length,
+      itemBuilder: (context, sectionIndex) {
+        final cat = sections[sectionIndex].key;
+        final items = sections[sectionIndex].value;
+        return Column(
+          key: _sectionKeys[cat],
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Kategori basligi - tam genislik, belirgin renk
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 16, bottom: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? lokmaPink
+                    : lokmaPink.withOpacity(0.10),
+              ),
+              child: Text(
+                cat,
+                style: TextStyle(
+                  color: isDark ? Colors.white : lokmaPink,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+            ...items.map((item) => _buildMenuStyleItem(item, isDark)),
+          ],
+        );
+      },
     );
   }
 
-  /// Tek urun butonu (POS stili - kocaman, renkli)
-  Widget _buildProductButton(KermesMenuItem item, bool isDark) {
+  /// Kullanici tarafindaki _buildMenuItem ile birebir ayni stil
+  Widget _buildMenuStyleItem(KermesMenuItem item, bool isDark) {
     final qty = _getCartQuantity(item.name);
     final hasQty = qty > 0;
+    final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
 
-    // Kategori bazli renk
-    final categoryColor = _getCategoryColor(item.category);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    Widget addButton({required double size}) {
+      return GestureDetector(
         onTap: () => _addToCart(item),
-        onLongPress: () {
-          if (hasQty) _removeFromCart(item);
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: hasQty
-                ? categoryColor.withOpacity(isDark ? 0.25 : 0.12)
-                : isDark
-                    ? const Color(0xFF1E1E1E)
-                    : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: hasQty ? categoryColor : Colors.transparent,
-              width: hasQty ? 2.5 : 0,
-            ),
-            boxShadow: [
-              if (!isDark)
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // Urun bilgisi
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Urun adi
-                    Text(
-                      item.name,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    // PrepZones (kucuk tag)
-                    if (item.prepZones.isNotEmpty)
-                      Wrap(
-                        spacing: 4,
-                        children: item.prepZones.map((zone) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: categoryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            zone,
-                            style: TextStyle(
-                              color: categoryColor,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        )).toList(),
-                      ),
-                    const Spacer(),
-                    // Fiyat
-                    Text(
-                      '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                      style: TextStyle(
-                        color: categoryColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+        child: hasQty
+            ? Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white : Colors.black87,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 4, offset: const Offset(0, 2)),
                   ],
                 ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$qty',
+                  style: TextStyle(
+                    color: isDark ? Colors.black : Colors.white,
+                    fontSize: size == 36 ? 14 : 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            : Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: Icon(Icons.add, color: lokmaPink, size: size == 36 ? 20 : 24),
               ),
-              // Miktar badge
-              if (hasQty)
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: categoryColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$qty',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: () => _addToCart(item),
+          onLongPress: () { if (hasQty) _removeFromCart(item); },
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+            color: Colors.transparent,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Sol: isim + fiyat
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (item.description != null && item.description!.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          item.description!,
+                          style: TextStyle(color: subtleColor, fontSize: 13, height: 1.3),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              // Ekle butonu (sag alt)
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: categoryColor.withOpacity(isDark ? 0.3 : 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.add,
-                    color: categoryColor,
-                    size: 22,
-                  ),
+                const SizedBox(width: 16),
+                // Sag: resim + + butonu
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (hasImage)
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: SizedBox(
+                              width: 96,
+                              height: 96,
+                              child: Image.network(
+                                item.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: isDark ? Colors.white10 : Colors.grey[100],
+                                  child: Icon(Icons.restaurant, size: 36,
+                                      color: isDark ? Colors.white24 : Colors.grey[400]),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: -4,
+                            bottom: -4,
+                            child: addButton(size: 36),
+                          ),
+                        ],
+                      )
+                    else
+                      addButton(size: 44),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.2),
+        ),
+      ],
     );
   }
 

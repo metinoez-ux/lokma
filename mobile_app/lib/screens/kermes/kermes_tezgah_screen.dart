@@ -70,16 +70,17 @@ class _KermesTezgahScreenState extends ConsumerState<KermesTezgahScreen>
       appBar: AppBar(
         backgroundColor: lokmaPink,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.storefront, size: 20),
+                const Icon(Icons.storefront, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   'Tezgah - ${widget.tezgahName}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
