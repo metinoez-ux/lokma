@@ -38,6 +38,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   final ShiftService _shiftService = ShiftService();
   Timer? _shiftTimer;
   final ValueNotifier<Duration> _shiftElapsedNotifier = ValueNotifier(Duration.zero);
+  final ValueNotifier<Duration> _pauseElapsedNotifier = ValueNotifier(Duration.zero);
+  DateTime? _pauseStartedAt;
   bool _shiftLoading = false;
   bool _showMesai = true;
 
@@ -54,17 +56,51 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   void dispose() {
     _shiftTimer?.cancel();
     _shiftElapsedNotifier.dispose();
+    _pauseElapsedNotifier.dispose();
     super.dispose();
   }
 
   void _startTimerFresh() {
     _shiftTimer?.cancel();
+    // Eger shift paused ise ve pauseStartedAt bilinmiyorsa, Firestore'dan al
+    if (_shiftService.shiftStatus == 'paused' && _pauseStartedAt == null) {
+      _fetchPauseStartedAt();
+    }
     _shiftTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      if (_shiftService.isOnShift && _shiftService.shiftStartedAt != null && _shiftService.shiftStatus != 'paused') {
-        _shiftElapsedNotifier.value = DateTime.now().difference(_shiftService.shiftStartedAt!);
+      if (_shiftService.isOnShift && _shiftService.shiftStartedAt != null) {
+        if (_shiftService.shiftStatus == 'paused') {
+          // Mola suresi canli say
+          if (_pauseStartedAt != null) {
+            _pauseElapsedNotifier.value = DateTime.now().difference(_pauseStartedAt!);
+          }
+        } else {
+          _shiftElapsedNotifier.value = DateTime.now().difference(_shiftService.shiftStartedAt!);
+        }
       }
     });
+  }
+
+  Future<void> _fetchPauseStartedAt() async {
+    try {
+      final roleService = StaffRoleService();
+      final isKermes = roleService.businessType == 'kermes';
+      final parentCol = isKermes ? 'kermes_events' : 'businesses';
+      final doc = await FirebaseFirestore.instance
+          .collection(parentCol)
+          .doc(_shiftService.currentBusinessId)
+          .collection('shifts')
+          .doc(_shiftService.currentShiftId)
+          .get();
+      if (doc.exists) {
+        final pauseLog = List<Map<String, dynamic>>.from(
+          (doc.data()?['pauseLog'] as List<dynamic>?) ?? [],
+        );
+        if (pauseLog.isNotEmpty && pauseLog.last['resumedAt'] == null) {
+          _pauseStartedAt = (pauseLog.last['pausedAt'] as Timestamp).toDate();
+        }
+      }
+    } catch (_) {}
   }
 
   String _formatDuration(Duration duration) {
@@ -214,8 +250,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     HapticFeedback.mediumImpact();
     if (_shiftService.shiftStatus == 'paused') {
       await _shiftService.resumeShift();
+      _pauseStartedAt = null;
+      _pauseElapsedNotifier.value = Duration.zero;
     } else {
       await _shiftService.pauseShift();
+      _pauseStartedAt = DateTime.now();
     }
     if (mounted) setState(() => _shiftLoading = false);
   }
@@ -441,13 +480,16 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               color: Colors.white,
               size: 22,
             ),
-            Text(
-              _formatDuration(_shiftElapsedNotifier.value),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                fontFeatures: [FontFeature.tabularFigures()],
+            ValueListenableBuilder<Duration>(
+              valueListenable: isPaused ? _pauseElapsedNotifier : _shiftElapsedNotifier,
+              builder: (_, dur, __) => Text(
+                _formatDuration(dur),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ],
