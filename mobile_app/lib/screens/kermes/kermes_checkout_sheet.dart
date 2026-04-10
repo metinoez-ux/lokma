@@ -1650,32 +1650,47 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-              if (!_showManualSectionSelection)
-                Center(
-                  child: TextButton(
-                    onPressed: () => setState(() => _showManualSectionSelection = true),
-                    child: const Text('Masada QR kod yok mu? Bolum secerek devam et', style: TextStyle(color: Colors.grey)),
-                  ),
-                ),
-              if (_showManualSectionSelection)
+              // POS modunda bolum seciciyi hep goster
+              if (widget.isPosMode) ...[ 
                 _buildSectionSelector(includeFamily: true),
+              ] else ...[
+                if (!_showManualSectionSelection)
+                  Center(
+                    child: TextButton(
+                      onPressed: () => setState(() => _showManualSectionSelection = true),
+                      child: const Text('Masada QR kod yok mu? Bolum secerek devam et', style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                if (_showManualSectionSelection)
+                  _buildSectionSelector(includeFamily: true),
+              ],
               // Manuel masa numarasi girisi (POS icin her zaman goster)
               if (widget.isPosMode) ...[
                 const SizedBox(height: 8),
-                TextField(
-                  controller: _tableController,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15),
-                  decoration: InputDecoration(
-                    hintText: 'Masa No girin',
-                    prefixIcon: const Icon(Icons.tag, size: 18, color: lokmaPink),
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: lokmaPink, width: 1.5)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                ),
+                Builder(builder: (context) {
+                  // Secili bolum ismini bul
+                  String sectionLabel = '';
+                  if (_selectedSectionId != null) {
+                    final sec = widget.event.sectionDefs.where((s) => s.id == _selectedSectionId).firstOrNull;
+                    if (sec != null) sectionLabel = '${sec.name} - ';
+                  }
+                  return TextField(
+                    controller: _tableController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15),
+                    decoration: InputDecoration(
+                      hintText: '${sectionLabel}Masa No girin',
+                      prefixIcon: const Icon(Icons.tag, size: 18, color: lokmaPink),
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: lokmaPink, width: 1.5)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      prefixText: sectionLabel.isNotEmpty ? sectionLabel : null,
+                      prefixStyle: const TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 15),
+                    ),
+                  );
+                }),
               ],
             ],
           ],
