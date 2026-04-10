@@ -151,7 +151,8 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildFilterBar(zoneList, isDark),
+                      // Zone filter sadece birden fazla zone varsa goster
+                      if (zoneList.length > 1) _buildFilterBar(zoneList, isDark),
                       Expanded(
                         child: TabBarView(
                           children: [
@@ -218,7 +219,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
               border: Border(bottom: BorderSide(color: accentColor, width: 3)),
