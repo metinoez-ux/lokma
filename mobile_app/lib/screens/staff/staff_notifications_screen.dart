@@ -86,9 +86,153 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
 
   void _markRead(Map<String, dynamic> notif) {
     final id = notif['id'];
-    // Bos veya null ID'ye Firestore erisimi engelle
     if (id == null || id.toString().trim().isEmpty) return;
     markStaffNotificationAsRead(id.toString());
+  }
+
+  void _showNotificationDetailSheet(BuildContext context, Map<String, dynamic> data) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final type = data['type'] as String?;
+    final body = data['body'] as String? ?? '';
+    final imageUrl = data['imageUrl'] as String?;
+    final vehiclePlate = data['vehiclePlate'] as String? ?? '';
+    final vehicleColor = data['vehicleColor'] as String? ?? '';
+    final vehicleBrand = data['vehicleBrand'] as String? ?? '';
+    final isParking = type == 'kermes_parking';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.85),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(margin: const EdgeInsets.only(top: 12, bottom: 8), width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[500], borderRadius: BorderRadius.circular(2))),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  // 1) Mesaj
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isParking
+                          ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
+                          : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: isParking ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!)),
+                    ),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Icon(Icons.warning_amber_rounded, size: 18, color: isParking ? (isDark ? Colors.red[300] : Colors.red[700]) : (isDark ? Colors.orange[300] : Colors.orange[700])),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(body, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.4, color: Theme.of(ctx).colorScheme.onSurface))),
+                    ]),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // 2) Arac bilgisi - Alman plaka stili
+                  if (isParking && vehiclePlate.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: IntrinsicHeight(
+                        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFF1A1A1A), width: 2.5),
+                            ),
+                            child: Row(mainAxisSize: MainAxisSize.min, children: [
+                              Container(
+                                width: 24,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF003399),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(3),
+                                    bottomLeft: Radius.circular(3),
+                                  ),
+                                ),
+                                child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+                                  Text('*', style: TextStyle(color: Colors.yellow[600], fontSize: 8, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 1),
+                                  const Text('D', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900)),
+                                ]),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                child: Center(
+                                  child: Text(
+                                    vehiclePlate.toUpperCase(),
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xFF1A1A1A), fontFamily: 'monospace'),
+                                  ),
+                                ),
+                              ),
+                            ]),
+                          ),
+                          if (vehicleColor.isNotEmpty || vehicleBrand.isNotEmpty) ...[
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: isDark ? Colors.white54 : const Color(0xFF1A1A1A), width: 2.5),
+                                ),
+                                child: Center(
+                                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                                    if (vehicleColor.isNotEmpty)
+                                      Text(vehicleColor, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                                    if (vehicleBrand.isNotEmpty) ...[
+                                      if (vehicleColor.isNotEmpty) const SizedBox(height: 1),
+                                      Text(vehicleBrand, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                                    ],
+                                  ]),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ]),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // 3) Resim - tam boyut
+                  if (imageUrl != null && imageUrl.isNotEmpty) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 80,
+                          decoration: BoxDecoration(color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF0F0F2), borderRadius: BorderRadius.circular(14)),
+                          child: Center(child: Icon(Icons.broken_image_rounded, color: Colors.grey[500], size: 32)),
+                        ),
+                        loadingBuilder: (_, child, progress) {
+                          if (progress == null) return child;
+                          return Container(height: 120, alignment: Alignment.center, child: CircularProgressIndicator(strokeWidth: 2, color: isDark ? Colors.grey[400] : Colors.grey[600]));
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  const SizedBox(height: 16),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -180,8 +324,16 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final iconColor = _colorForType(type, isRead);
               final iconData = _iconForType(type);
 
+              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale';
+
               return GestureDetector(
-                onTap: () => _markRead(notif),
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  _markRead(notif);
+                  if (hasDetail) {
+                    _showNotificationDetailSheet(context, notif);
+                  }
+                },
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
@@ -239,7 +391,6 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Baslik
                                   Text(
                                     title,
                                     style: TextStyle(
@@ -249,7 +400,6 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                       height: 1.2,
                                     ),
                                   ),
-                                  // Gövde
                                   if (body.isNotEmpty) ...[
                                     const SizedBox(height: 5),
                                     Text(
@@ -262,7 +412,6 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                       ),
                                     ),
                                   ],
-                                  // Zaman damgasi
                                   if (dateStr.isNotEmpty) ...[
                                     const SizedBox(height: 7),
                                     Text(
@@ -278,7 +427,6 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                               ),
                             ),
                             const SizedBox(width: 6),
-                            // Okunmamis - kirmizi nokta sag ust
                             if (!isRead)
                               Container(
                                 width: 10,
@@ -288,6 +436,11 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                   color: Colors.red,
                                   shape: BoxShape.circle,
                                 ),
+                              ),
+                            if (hasDetail)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Icon(Icons.chevron_right, size: 18, color: isDark ? Colors.grey[600] : Colors.grey[400]),
                               ),
                           ],
                         ),

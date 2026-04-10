@@ -879,6 +879,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
 
       final hasBaseRestaurant = roleService.businessId != null && roleService.businessType != 'kermes';
+      // Deduplicate: remove kermes entries that match the base businessId
+      final baseId = roleService.businessId;
+      if (baseId != null) {
+        kermeses.removeWhere((k) => k.id == baseId);
+      }
       final totalOptions = (hasBaseRestaurant ? 1 : 0) + kermeses.length;
 
       if (!context.mounted) return;

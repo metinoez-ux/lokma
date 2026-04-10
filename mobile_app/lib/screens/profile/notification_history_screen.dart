@@ -346,15 +346,15 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                               decoration: BoxDecoration(
                                 color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color(0xFF1A1A1A), width: 2.5),
+                                border: Border.all(color: isDark ? Colors.white54 : const Color(0xFF1A1A1A), width: 2.5),
                               ),
                               child: Center(
                                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                                   if (vehicleColor.isNotEmpty)
-                                    Text(vehicleColor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A))),
+                                    Text(vehicleColor, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                                   if (vehicleBrand.isNotEmpty) ...[
                                     if (vehicleColor.isNotEmpty) const SizedBox(height: 1),
-                                    Text(vehicleBrand, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A))),
+                                    Text(vehicleBrand, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                                   ],
                                 ]),
                               ),
