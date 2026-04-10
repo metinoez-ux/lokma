@@ -2852,8 +2852,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Grup/Aile toggle - sadece cart step'te (step 0)
-          if (_currentStep == 0) ...[
+          // Grup/Aile toggle - sadece cart step'te (step 0) ve NORMAL modda
+          if (_currentStep == 0 && !widget.isPosMode) ...[
             Container(
               height: 40,
               padding: const EdgeInsets.all(3),
