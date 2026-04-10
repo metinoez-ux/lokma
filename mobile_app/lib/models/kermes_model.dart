@@ -349,7 +349,7 @@ class KermesMenuItem {
       hasPfand: json['hasPfand'] ?? false,
       isAvailable: json['isAvailable'] ?? true,
       optionGroups: _parseOptionGroups(json['optionGroups']),
-      prepZones: _parseStringList(json['prepZone']),
+      prepZones: _parseStringList(json['prepZones'] ?? json['prepZone']),
       stockEnabled: json['stockEnabled'] ?? false,
       initialStock: json['initialStock'] != null ? (json['initialStock'] as num).toInt() : null,
       currentStock: json['currentStock'] != null ? (json['currentStock'] as num).toInt() : null,
