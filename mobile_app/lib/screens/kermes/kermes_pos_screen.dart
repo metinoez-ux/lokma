@@ -9,6 +9,8 @@ import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
+import 'package:lokma_app/providers/kermes_cart_provider.dart';
+import 'kermes_checkout_sheet.dart';
 import '../../utils/currency_utils.dart';
 import 'package:lokma_app/providers/kermes_category_provider.dart';
 /// Kermes POS Ekrani - Garson/Kasiyer icin hizli siparis alma
@@ -226,61 +228,33 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   }
 
   /// Sepetteki urun sayisi
-  int get _totalCartItems => _cart.fold(0, (s, item) => s + item.quantity);
+  int get _totalCartItems => ref.read(kermesCartProvider).totalItems;
 
   /// Sepet toplam tutari
-  double get _totalCartAmount =>
-      _cart.fold(0.0, (s, item) => s + item.totalPrice);
+  double get _totalCartAmount => ref.read(kermesCartProvider).totalAmount;
 
-  /// Sepete urun ekle
+  /// Sepete urun ekle - global kermesCartProvider kullanir
   void _addToCart(KermesMenuItem menuItem) {
     HapticFeedback.lightImpact();
-    setState(() {
-      final existingIndex =
-          _cart.indexWhere((item) => item.menuItem.name == menuItem.name);
-      if (existingIndex >= 0) {
-        _cart[existingIndex] = _cart[existingIndex]
-            .copyWith(quantity: _cart[existingIndex].quantity + 1);
-      } else {
-        _cart.add(_POSCartItem(menuItem: menuItem, quantity: 1));
-      }
-    });
+    ref.read(kermesCartProvider.notifier).addItem(menuItem);
   }
 
   /// Sepetten urun cikar
   void _removeFromCart(KermesMenuItem menuItem) {
     HapticFeedback.lightImpact();
-    setState(() {
-      final existingIndex =
-          _cart.indexWhere((item) => item.menuItem.name == menuItem.name);
-      if (existingIndex >= 0) {
-        if (_cart[existingIndex].quantity <= 1) {
-          _cart.removeAt(existingIndex);
-        } else {
-          _cart[existingIndex] = _cart[existingIndex]
-              .copyWith(quantity: _cart[existingIndex].quantity - 1);
-        }
-      }
-    });
+    ref.read(kermesCartProvider.notifier).removeItem(menuItem.name);
   }
 
   /// Sepetteki urun miktarini al
   int _getCartQuantity(String name) {
-    final item = _cart.where((i) => i.menuItem.name == name).firstOrNull;
+    final cart = ref.read(kermesCartProvider);
+    final item = cart.items.where((i) => i.menuItem.name == name).firstOrNull;
     return item?.quantity ?? 0;
   }
 
   /// Sepeti temizle
   void _clearCart() {
-    setState(() {
-      _cart.clear();
-      _tableController.clear();
-      _customerNameController.clear();
-      if (!_isStantMode) {
-        _deliveryType = DeliveryType.gelAl;
-      }
-      _paymentMethod = PaymentMethodType.cash;
-    });
+    ref.read(kermesCartProvider.notifier).clearCart();
   }
 
   /// Siparis olustur
@@ -409,6 +383,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   Widget build(BuildContext context) {
     ref.watch(kermesCategoryProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cartState = ref.watch(kermesCartProvider);
     final isTablet = MediaQuery.of(context).size.width > 768;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -428,100 +403,19 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           ],
         ),
         actions: [
-          // Stant Modu toggle
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: _isStantMode
-                  ? Colors.white.withOpacity(0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-              border: _isStantMode
-                  ? Border.all(color: Colors.white54)
-                  : null,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.storefront,
-                  color: _isStantMode ? Colors.white : Colors.white54,
-                  size: 16,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Stant',
-                  style: TextStyle(
-                    color: _isStantMode ? Colors.white : Colors.white54,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(
-                  height: 28,
-                  width: 36,
-                  child: Switch(
-                    value: _isStantMode,
-                    onChanged: (val) {
-                      HapticFeedback.mediumImpact();
-                      setState(() {
-                        _isStantMode = val;
-                        if (val) {
-                          _deliveryType = DeliveryType.gelAl;
-                        }
-                      });
-                    },
-                    activeColor: Colors.white,
-                    activeTrackColor: successGreen,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ],
-            ),
-          ),
           // Aktif siparisler toggle
           IconButton(
             icon: Icon(
-              _showActiveOrders ? Icons.grid_view : Icons.list_alt,
+              _showActiveOrders ? Icons.menu : Icons.list_alt,
               color: Colors.white,
             ),
             onPressed: () =>
                 setState(() => _showActiveOrders = !_showActiveOrders),
             tooltip:
-                _showActiveOrders ? 'Menu Gorunumu' : 'Aktif Siparisler',
+                _showActiveOrders ? 'Menü' : 'Aktif Siparişler',
           ),
-          // Sepet temizle
-          if (_cart.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep, color: Colors.white),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Sepeti Temizle'),
-                    content:
-                        const Text('Sepetteki tum urunler silinecek.'),
-                    actions: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Iptal')),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            _clearCart();
-                          },
-                          child: const Text('Temizle',
-                              style: TextStyle(color: Colors.red))),
-                    ],
-                  ),
-                );
-              },
-              tooltip: 'Sepeti Temizle',
-            ),
         ],
       ),
-      floatingActionButton: _buildStaffFAB(),
       body: _showActiveOrders
           ? _buildActiveOrdersView(isDark)
           : isTablet
@@ -1048,14 +942,15 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       ),
       child: Column(
         children: [
-          // Teslimat turu toggle
+          // Teslimat / siparis turu
           Row(
             children: [
               _buildOptionChip(
                 label: 'Gel Al',
                 icon: Icons.shopping_bag_outlined,
-                isSelected: _deliveryType == DeliveryType.gelAl,
+                isSelected: _deliveryType == DeliveryType.gelAl && !_isStantMode,
                 onTap: () => setState(() {
+                  _isStantMode = false;
                   _deliveryType = DeliveryType.gelAl;
                   _tableController.clear();
                 }),
@@ -1063,15 +958,28 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
               ),
               const SizedBox(width: 8),
               _buildOptionChip(
-                label: 'Masa',
+                label: 'Masada',
                 icon: Icons.table_restaurant_outlined,
-                isSelected: _deliveryType == DeliveryType.masada,
+                isSelected: _deliveryType == DeliveryType.masada && !_isStantMode,
                 onTap: () => setState(() {
+                  _isStantMode = false;
                   _deliveryType = DeliveryType.masada;
-                  // Eger sadece 1 izinli bolum varsa otomatik sec
                   if (widget.allowedSections.length == 1) {
                     _selectedTableSection = widget.allowedSections.first;
                   }
+                }),
+                isDark: isDark,
+              ),
+              const SizedBox(width: 8),
+              _buildOptionChip(
+                label: 'Stant Kasa',
+                icon: Icons.storefront_outlined,
+                isSelected: _isStantMode,
+                color: successGreen,
+                onTap: () => setState(() {
+                  _isStantMode = true;
+                  _deliveryType = DeliveryType.gelAl;
+                  _tableController.clear();
                 }),
                 isDark: isDark,
               ),
@@ -1411,13 +1319,8 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(ctx).size.height * 0.7,
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: _buildCartPanel(isDark),
+      builder: (ctx) => KermesCheckoutSheet(
+        event: widget.event,
       ),
     );
   }
