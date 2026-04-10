@@ -57,6 +57,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   DeliveryType _deliveryType = DeliveryType.gelAl;
   PaymentMethodType _paymentMethod = PaymentMethodType.cash;
 
+  // POS opsiyonel musteri ismi (Starbucks stili)
+  final _posCustomerController = TextEditingController();
+
   // States
   bool _isSubmitting = false;
   bool _showActiveOrders = false;
@@ -81,7 +84,16 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     _scrollController.dispose();
     _chipScrollController.dispose();
     _tableController.dispose();
+    _posCustomerController.dispose();
     super.dispose();
+  }
+
+  /// GDPR uyumlu isim kisaltmasi: "Metin Oz" -> "M. O."
+  String _abbreviateName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return fullName;
+    if (parts.length == 1) return parts.first;
+    return parts.map((p) => p.isNotEmpty ? '${p[0].toUpperCase()}.' : '').join(' ');
   }
 
   void _onScroll() {
@@ -332,7 +344,11 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         orderNumber: orderNumber,
         kermesId: widget.event.id,
         kermesName: widget.event.title,
-        customerName: _isStantMode ? 'Stant Musteri' : 'POS Siparis',
+        customerName: _isStantMode
+            ? 'Stant Musteri'
+            : (_posCustomerController.text.trim().isNotEmpty
+                ? _posCustomerController.text.trim()
+                : 'POS Siparis'),
         customerPhone: '',
         deliveryType: _isStantMode ? DeliveryType.gelAl : _deliveryType,
         tableNumber: _deliveryType == DeliveryType.masada && !_isStantMode
@@ -391,7 +407,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         );
       } else {
         // Tezgahtan teslim - buyuk numara dialog
-        _showOrderNumberDialog(orderNumber);
+        final posName = _posCustomerController.text.trim();
+        _showOrderNumberDialog(orderNumber,
+            abbreviatedName: posName.isNotEmpty ? _abbreviateName(posName) : null);
       }
     } catch (e) {
       if (!mounted) return;
@@ -407,7 +425,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   }
 
   /// McDonald's usulu siparis numarasi dialog (Tezgahtan Teslim)
-  void _showOrderNumberDialog(String orderNumber) {
+  void _showOrderNumberDialog(String orderNumber, {String? abbreviatedName}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
@@ -474,14 +492,35 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                         letterSpacing: -2,
                       ),
                     ),
-                    Text(
-                      'Tezgahtan Teslim',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    // Isim varsa kisaltilmis goster (GDPR uyumlu)
+                    if (abbreviatedName != null && abbreviatedName.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: lokmaPink.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          abbreviatedName,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            letterSpacing: 1,
+                          ),
+                        ),
                       ),
-                    ),
+                    ] else ...[
+                      Text(
+                        'Tezgahtan Teslim',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1283,6 +1322,58 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
               ),
             ],
           ),
+          // Tezgahtan teslim ise opsiyonel musteri ismi (Starbucks stili)
+          if (_deliveryType == DeliveryType.gelAl && !_isStantMode) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 44,
+              child: TextField(
+                controller: _posCustomerController,
+                textCapitalization: TextCapitalization.words,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 14,
+                ),
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Musteri adi (opsiyonel)',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.grey,
+                    fontSize: 13,
+                  ),
+                  prefixIcon: const Icon(Icons.person_outline, size: 18, color: lokmaPink),
+                  suffixIcon: _posCustomerController.text.trim().isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Chip(
+                            label: Text(
+                              _abbreviateName(_posCustomerController.text.trim()),
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                            ),
+                            backgroundColor: lokmaPink.withOpacity(0.1),
+                            side: BorderSide(color: lokmaPink.withOpacity(0.3)),
+                            padding: EdgeInsets.zero,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        )
+                      : null,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: lokmaPink),
+                  ),
+                ),
+              ),
+            ),
+          ],
 
         ],
       ),

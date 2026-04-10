@@ -126,6 +126,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   // Bagis/yuvarlama
   double _donationAmount = 0.0;
   String _donationTarget = 'none'; // 'kermesOrg' | 'fund' | 'none'
+
+  // POS modu - opsiyonel musteri ismi (Datenschutz: sadece kisaltma gosterilir)
+  final _posNameController = TextEditingController();
   
   // Renkler
   static const Color lokmaPink = Color(0xFFEA184A);
@@ -137,7 +140,17 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     _nameController.dispose();
     _phoneController.dispose();
     _tableController.dispose();
+    _posNameController.dispose();
     super.dispose();
+  }
+
+  /// GDPR uyumlu isim kisaltmasi: "Metin Oz" -> "M. O."
+  /// Eger tek kelime verildiyse aynen gosterilir: "Metin" -> "Metin"
+  String _abbreviateName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return fullName;
+    if (parts.length == 1) return parts.first; // Tek isim: olduğu gibi göster
+    return parts.map((p) => p.isNotEmpty ? '${p[0].toUpperCase()}.' : '').join(' ');
   }
 
   /// Grup siparisi olustur ve paylasim sheet'ini goster
@@ -487,7 +500,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         kermesId: widget.event.id,
         kermesName: widget.event.city,
         userId: guestProfile?.id,
-        customerName: _nameController.text.trim(),
+        customerName: widget.isPosMode
+            ? (_posNameController.text.trim().isNotEmpty
+                ? _posNameController.text.trim()
+                : 'POS Siparis')
+            : _nameController.text.trim(),
         customerPhone: _completePhoneNumber.isNotEmpty ? _completePhoneNumber : _phoneController.text.trim(),
         deliveryType: _deliveryType ?? DeliveryType.gelAl,
         tableNumber: _tableController.text.isNotEmpty ? _tableController.text : null,
@@ -520,7 +537,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
         if (widget.isPosMode && _deliveryType == DeliveryType.gelAl) {
           // POS tezgahtan teslim: McDonald's numara dialog
-          _showPOSOrderNumberDialog(rootNavContext, orderNumber);
+          final posName = _posNameController.text.trim();
+          _showPOSOrderNumberDialog(rootNavContext, orderNumber,
+              abbreviatedName: posName.isNotEmpty ? _abbreviateName(posName) : null);
         } else {
           showOrderQRDialog(
             rootNavContext,
@@ -546,7 +565,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
 
   /// POS tezgahtan teslim: McDonald's siparis numarasi dialog
-  void _showPOSOrderNumberDialog(BuildContext ctx, String orderNumber) {
+  void _showPOSOrderNumberDialog(BuildContext ctx, String orderNumber, {String? abbreviatedName}) {
     final isDark = Theme.of(ctx).brightness == Brightness.dark;
     showDialog(
       context: ctx,
@@ -588,9 +607,30 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     Text('#', style: TextStyle(fontSize: 24, color: lokmaPink.withOpacity(0.7))),
                     Text(orderNumber, style: const TextStyle(
                       fontSize: 64, fontWeight: FontWeight.w900, color: lokmaPink, letterSpacing: -2)),
-                    Text('Tezgahtan Teslim',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                    // Isim varsa kısaltılmış göster (GDPR uyumlu)
+                    if (abbreviatedName != null && abbreviatedName.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: lokmaPink.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          abbreviatedName,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      Text('Tezgahtan Teslim',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                    ],
                   ],
                 ),
               ),
@@ -2456,6 +2496,95 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
+          
+          // POS modu - opsiyonel musteri ismi (Starbucks stili)
+          if (widget.isPosMode && _deliveryType == DeliveryType.gelAl) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.person_outline, size: 18,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Müşteri Adı (opsiyonel)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _posNameController,
+                    textCapitalization: TextCapitalization.words,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'Orn: Metin Oz',
+                      hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: lokmaPink, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      suffixIcon: _posNameController.text.isNotEmpty
+                          // Kisaltma on-izlemesi
+                          ? Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: Chip(
+                                label: Text(
+                                  _abbreviateName(_posNameController.text.trim()),
+                                  style: const TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.w700),
+                                ),
+                                backgroundColor: lokmaPink.withOpacity(0.1),
+                                side: BorderSide(color: lokmaPink.withOpacity(0.3)),
+                                padding: EdgeInsets.zero,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Numara board\'unda: ${_posNameController.text.trim().isNotEmpty ? _abbreviateName(_posNameController.text.trim()) : "numara ile cagrilir"}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.grey[600] : Colors.grey[500],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           
           // Nakit - her zaman gosterilir
           _buildOptionCard(
