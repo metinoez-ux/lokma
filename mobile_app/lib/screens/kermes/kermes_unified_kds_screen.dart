@@ -332,19 +332,6 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
       color: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F7),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-              border: Border(bottom: BorderSide(color: accentColor, width: 3)),
-            ),
-            child: Center(
-              child: Text(
-                '${orders.length} Sipari\u015f',
-                style: TextStyle(fontWeight: FontWeight.w700, color: accentColor, fontSize: 13),
-              ),
-            ),
-          ),
           Expanded(
             child: orders.isEmpty
                 ? Center(
