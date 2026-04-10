@@ -197,7 +197,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
 
   Widget _buildFilterBar(List<String> zones, bool isDark, Map<String, int> zoneCounts) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -206,46 +206,50 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
             final isActive = _activeFilter == zone;
             final count = zoneCounts[zone] ?? 0;
             return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(zone, style: TextStyle(
+              padding: const EdgeInsets.only(right: 12, top: 4),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  FilterChip(
+                    label: Text(zone, style: TextStyle(
                       color: isActive ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
                       fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                     )),
-                    if (count > 0) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    selected: isActive,
+                    selectedColor: lokmaPink,
+                    backgroundColor: isDark ? const Color(0xFF333333) : const Color(0xFFF0F0F0),
+                    onSelected: (selected) {
+                      if (selected) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _activeFilter = zone);
+                      }
+                    },
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      top: -4,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.white.withOpacity(0.25)
-                              : lokmaPink,
+                          color: lokmaPink,
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                            width: 1.5,
+                          ),
                         ),
                         child: Text(
                           '$count',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-                    ],
-                  ],
-                ),
-                selected: isActive,
-                selectedColor: lokmaPink,
-                backgroundColor: isDark ? const Color(0xFF333333) : const Color(0xFFF0F0F0),
-                onSelected: (selected) {
-                  if (selected) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _activeFilter = zone);
-                  }
-                },
+                    ),
+                ],
               ),
             );
           }).toList(),
