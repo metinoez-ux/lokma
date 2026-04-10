@@ -1,12 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
-import 'package:lokma_app/services/staff_role_service.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
-import 'package:lokma_app/widgets/kermes/kermes_staff_status_fab.dart';
 import '../../utils/currency_utils.dart';
 
 /// Kermes Tezgah Ekrani - Siparis Birlestirme Noktasi
@@ -60,24 +57,10 @@ class _KermesTezgahScreenState extends ConsumerState<KermesTezgahScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final orderService = ref.read(kermesOrderServiceProvider);
 
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final staffRole = StaffRoleService();
-    final staffId = currentUser?.uid ?? '';
-    final staffName = staffRole.staffName ?? 'Personel';
+
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF0F0F0),
-      floatingActionButton: staffId.isNotEmpty
-          ? KermesStaffStatusFAB(
-              kermesId: widget.kermesId,
-              staffId: staffId,
-              staffName: staffName,
-              role: 'counter',
-              sectionId: widget.allowedSections.isNotEmpty
-                  ? widget.allowedSections.first
-                  : null,
-            )
-          : null,
       body: Column(
         children: [
           // Tab bar - header disinda, beyaz/koyu arka planla
