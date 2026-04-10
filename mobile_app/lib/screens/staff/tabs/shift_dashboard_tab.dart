@@ -836,6 +836,41 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   }
 
   Widget _buildFinanceCard(bool isDark) {
+    final user = FirebaseAuth.instance.currentUser;
+    final capabilities = ref.watch(staffCapabilitiesProvider);
+    final businessId = capabilities.businessId;
+
+    if (user == null || businessId == null) {
+      return _buildFinanceCardContent(isDark, 0.0);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('kermes_orders')
+          .where('kermesId', isEqualTo: businessId)
+          .where('createdByStaffId', isEqualTo: user.uid)
+          .where('paymentMethod', isEqualTo: 'cash')
+          .snapshots(),
+      builder: (context, snapshot) {
+        double unsettledCash = 0.0;
+        if (snapshot.hasData) {
+          for (final doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final status = data['status'] as String? ?? '';
+            if (status == 'cancelled') continue;
+            final settledToRegister = data['settledToRegister'] as bool? ?? false;
+            if (!settledToRegister) {
+              final amount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+              unsettledCash += amount;
+            }
+          }
+        }
+        return _buildFinanceCardContent(isDark, unsettledCash);
+      },
+    );
+  }
+
+  Widget _buildFinanceCardContent(bool isDark, double unsettledCash) {
     return Container(
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.only(bottom: 20),
@@ -862,13 +897,14 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             ],
           ),
           const Divider(height: 30),
-          // Unsettled cash
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(isDark ? 0.08 : 0.05),
+              color: unsettledCash > 0
+                  ? Colors.orange.withOpacity(isDark ? 0.12 : 0.08)
+                  : Colors.orange.withOpacity(isDark ? 0.08 : 0.05),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.orange.withOpacity(0.2)),
+              border: Border.all(color: Colors.orange.withOpacity(unsettledCash > 0 ? 0.4 : 0.2)),
             ),
             child: Row(
               children: [
@@ -886,7 +922,14 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                   children: [
                     Text('Teslim Edilecek Nakit', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
                     const SizedBox(height: 2),
-                    Text('0.00 EUR', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+                    Text(
+                      '${unsettledCash.toStringAsFixed(2)} EUR',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: unsettledCash > 0 ? Colors.orange : (isDark ? Colors.white : Colors.black),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -899,7 +942,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 child: SizedBox(
                   height: 44,
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: unsettledCash > 0 ? () {} : null,
                     icon: const Icon(Icons.account_balance_wallet, size: 16),
                     label: const Text('Kasaya Teslim Et', style: TextStyle(fontSize: 12)),
                     style: ElevatedButton.styleFrom(
