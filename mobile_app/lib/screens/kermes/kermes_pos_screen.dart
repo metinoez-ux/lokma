@@ -64,6 +64,11 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   bool _showActiveOrders = false;
   bool _isStantMode = false;
 
+  // Arama
+  final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
+  String _searchQuery = '';
+
   // Renkler
   static const Color lokmaPink = Color(0xFFEA184A);
   static const Color successGreen = Color(0xFF2E7D32);
@@ -84,7 +89,29 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
     _chipScrollController.dispose();
     _tableController.dispose();
     _posCustomerController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Turkce karakter normalizasyonu: corba -> corba, kofte -> kofte
+  static String _normalize(String s) {
+    final buf = StringBuffer();
+    for (int i = 0; i < s.length; i++) {
+      final c = s[i];
+      switch (c) {
+        case '\u00e7': case '\u00c7': buf.write('c'); break; // c, C
+        case '\u011f': case '\u011e': buf.write('g'); break; // g, G
+        case '\u0131':                buf.write('i'); break; // dotless i
+        case '\u0130':                buf.write('i'); break; // dotted I
+        case '\u00f6': case '\u00d6': buf.write('o'); break; // o, O
+        case '\u015f': case '\u015e': buf.write('s'); break; // s, S
+        case '\u00fc': case '\u00dc': buf.write('u'); break; // u, U
+        case '\u00e4': case '\u00c4': buf.write('a'); break; // a, A (German)
+        default: buf.write(c.toLowerCase());
+      }
+    }
+    return buf.toString();
   }
 
   /// GDPR uyumlu isim kisaltmasi: "Metin Oz" -> "M. O."
@@ -590,8 +617,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           flex: 3,
           child: Column(
             children: [
-              _buildCategoryBar(isDark),
-              Expanded(child: _buildProductList(isDark)),
+              _buildSearchBar(isDark),
+              if (_searchQuery.isEmpty) _buildCategoryBar(isDark),
+              Expanded(child: _searchQuery.isNotEmpty ? _buildSearchResults(isDark) : _buildProductList(isDark)),
             ],
           ),
         ),
@@ -619,8 +647,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
       children: [
         Column(
           children: [
-            _buildCategoryBar(isDark),
-            Expanded(child: _buildProductList(isDark)),
+            _buildSearchBar(isDark),
+            if (_searchQuery.isEmpty) _buildCategoryBar(isDark),
+            Expanded(child: _searchQuery.isNotEmpty ? _buildSearchResults(isDark) : _buildProductList(isDark)),
           ],
         ),
         if (cartState.isNotEmpty)
@@ -631,6 +660,191 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
             child: _buildBottomCartBar(isDark),
           ),
       ],
+    );
+  }
+
+  /// POS arama cubugu
+  Widget _buildSearchBar(bool isDark) {
+    return Container(
+      color: isDark ? const Color(0xFF121212) : Colors.white,
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        onChanged: (val) => setState(() => _searchQuery = val.trim()),
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 15,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Urun ara...',
+          hintStyle: TextStyle(
+            color: isDark ? Colors.white38 : Colors.grey.shade400,
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(Icons.search, size: 20, color: isDark ? Colors.white54 : Colors.grey),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? GestureDetector(
+                  onTap: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                    _searchFocusNode.unfocus();
+                  },
+                  child: Icon(Icons.close, size: 18, color: isDark ? Colors.white54 : Colors.grey),
+                )
+              : null,
+          filled: true,
+          fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F2),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: lokmaPink, width: 1.5),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Arama sonuclari - normalize edilmis Turkce arama
+  Widget _buildSearchResults(bool isDark) {
+    final normalizedQuery = _normalize(_searchQuery);
+    final results = widget.event.menu.where((item) {
+      if (!item.isAvailable) return false;
+      final normalizedName = _normalize(item.name);
+      final normalizedCat = _normalize(item.category ?? '');
+      return normalizedName.contains(normalizedQuery) || normalizedCat.contains(normalizedQuery);
+    }).toList();
+
+    if (results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 48, color: isDark ? Colors.white24 : Colors.grey.shade300),
+            const SizedBox(height: 12),
+            Text(
+              '"$_searchQuery" bulunamadi',
+              style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 15),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 100, top: 4),
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final item = results[index];
+        final qty = _getCartQuantity(item.name);
+        return InkWell(
+          onTap: () {
+            _addToCart(item);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: isDark ? Colors.white10 : Colors.grey.shade200),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Resim
+                if (item.imageUrl != null && item.imageUrl!.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      item.imageUrl!,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white10 : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.restaurant, size: 20, color: isDark ? Colors.white24 : Colors.grey.shade400),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white10 : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.restaurant, size: 20, color: isDark ? Colors.white24 : Colors.grey.shade400),
+                  ),
+                const SizedBox(width: 12),
+                // Isim + kategori + fiyat
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (item.category != null)
+                        Text(
+                          item.category!,
+                          style: TextStyle(color: isDark ? Colors.white38 : Colors.grey, fontSize: 12),
+                        ),
+                    ],
+                  ),
+                ),
+                // Fiyat
+                Text(
+                  '${item.price.toStringAsFixed(2)} \u20ac',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Sepet badge / ekle butonu
+                if (qty > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: lokmaPink,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$qty',
+                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: lokmaPink.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, size: 18, color: lokmaPink),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
