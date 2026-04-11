@@ -451,7 +451,7 @@ class WalletBusinessCard extends ConsumerWidget {
                             name,
                             style: GoogleFonts.inter(
                               color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
                             maxLines: 1,
@@ -478,8 +478,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                           .colorScheme
                                           .onSurface
                                           .withOpacity(0.9),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w300,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                   if (reviewText.isNotEmpty) ...[
@@ -491,8 +491,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                             .colorScheme
                                             .onSurface
                                             .withOpacity(0.7),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w300,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
                                       ),
                                     ),
                                   ],
@@ -517,8 +517,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                             .colorScheme
                                             .onSurface
                                             .withOpacity(0.7),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w300,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -556,8 +556,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                             tr('marketplace.free_delivery_label'),
                                             style: GoogleFonts.inter(
                                                 color: tunaGreen,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w300),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400),
                                           )
                                         else
                                           Text(
@@ -567,8 +567,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                                   .colorScheme
                                                   .onSurface
                                                   .withOpacity(0.7),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w300,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
                                             ),
                                           ),
                                         if (hasMinOrder) ...[
@@ -593,8 +593,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                                   .colorScheme
                                                   .onSurface
                                                   .withOpacity(0.7),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w300,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
                                             ),
                                           ),
                                         ],
@@ -620,8 +620,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                                 .colorScheme
                                                 .onSurface
                                                 .withOpacity(0.8),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w300,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w400,
                                           ),
                                         ),
                                         if (hasReservation &&
