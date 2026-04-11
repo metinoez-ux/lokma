@@ -89,7 +89,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
     // 🆕 Lieferando tarzı: Tema uyumlu arka plan
     final backgroundColor = isDark ? const Color(0xFF0D0D0D) : const Color(0xFFF2EEE9);
     final textColor = isDark ? Colors.white : Colors.black87;
-    final hintColor = isDark ? Colors.grey[500] : Colors.grey[400];
+    final hintColor = isDark ? Colors.grey[400] : Colors.grey[500];
     final cardColor = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
 
     // Status bar rengi tema ile uyumlu
@@ -182,7 +182,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                           textInputAction: TextInputAction.search,
                           decoration: InputDecoration(
                             hintText: tr('discovery.search_food_restaurant_cuisine'),
-                            hintStyle: TextStyle(color: hintColor, fontSize: 14, fontWeight: FontWeight.w300),
+                            hintStyle: TextStyle(color: hintColor, fontSize: 14, fontWeight: FontWeight.w400),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
                             isDense: true,
