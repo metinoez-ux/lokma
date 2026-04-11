@@ -6708,18 +6708,37 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   'postalCode': postalCodeController.text.trim(),
                                   'city': cityController.text.trim(),
                                 };
-                                await FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(userId)
-                                    .collection('savedAddresses')
-                                    .add({
-                                  ...addr,
-                                  'label': labelController.text.trim(),
-                                  'createdAt': FieldValue.serverTimestamp(),
+                                try {
+                                  if (userId.isNotEmpty) {
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(userId)
+                                        .collection('savedAddresses')
+                                        .add({
+                                      ...addr,
+                                      'label': labelController.text.trim(),
+                                      'createdAt': FieldValue.serverTimestamp(),
+                                    });
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Sadece bu sipariş için kullanılacak (Misafir girişi)')),
+                                    );
+                                  }
+                                } catch (e) {
+                                  debugPrint('Adres kaydetme hatası: $e');
+                                }
+                                
+                                if (!mounted) return;
+                                setState(() {
+                                  _selectedDeliveryAddress = addr;
+                                  _addressGeocoded = false; // Reset geocoding flag so it re-resolves coordinates in main screen
                                 });
-                                setState(() => _selectedDeliveryAddress = addr);
-                                parentSetSheetState(() {});
-                                setPickerState(() {});
+                                
+                                try {
+                                  parentSetSheetState(() {});
+                                  setPickerState(() {});
+                                } catch (_) {}
+                                
                                 if (formCtx.mounted) Navigator.pop(formCtx);
                                 if (parentCtx.mounted) Navigator.pop(parentCtx);
                               },
@@ -6752,10 +6771,19 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   'postalCode': postalCodeController.text.trim(),
                                   'city': cityController.text.trim(),
                                 };
-                                setState(() => _selectedDeliveryAddress = addr);
-                                parentSetSheetState(() {});
-                                Navigator.pop(formCtx);
-                                Navigator.pop(parentCtx);
+                                
+                                if (!mounted) return;
+                                setState(() {
+                                  _selectedDeliveryAddress = addr;
+                                  _addressGeocoded = false;
+                                });
+                                
+                                try {
+                                  parentSetSheetState(() {});
+                                } catch (_) {}
+                                
+                                if (formCtx.mounted) Navigator.pop(formCtx);
+                                if (parentCtx.mounted) Navigator.pop(parentCtx);
                               },
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
