@@ -2901,8 +2901,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                        '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
                                        style: TextStyle(
                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                                         fontSize: 13,
-                                         fontWeight: FontWeight.w500,
+                                         fontSize: 14,
+                                         fontWeight: FontWeight.w600,
                                        ),
                                      ),
                                    ],
@@ -2920,8 +2920,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         '${parseSafelyDouble(data?['rating']).toStringAsFixed(1).replaceAll('.', ',')}${parseSafelyInt(data?['reviewCount']) > 0 ? ' (${parseSafelyInt(data?['reviewCount'])})' : ''}',
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],
@@ -2963,8 +2963,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    Text(
                                       tr('marketplace.table_reservation'),
                                      style: TextStyle(
-                                       fontSize: 13,
-                                       fontWeight: FontWeight.w500,
+                                       fontSize: 14,
+                                       fontWeight: FontWeight.w600,
                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                      ),
                                    ),
@@ -2980,7 +2980,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                data!['cuisineType'].toString(),
                                style: TextStyle(
                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                 fontSize: 13,
+                                 fontSize: 14,
+                                 fontWeight: FontWeight.w500,
                                ),
                              ),
                               if (_isMasaMode || !isOpen || isPausedForCurrentTab)
@@ -2990,7 +2991,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                'marketplace.business_type_${data!['type'].toString().toLowerCase()}'.tr(),
                                style: TextStyle(
                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                 fontSize: 13,
+                                 fontSize: 14,
+                                 fontWeight: FontWeight.w500,
                                ),
                              ),
                               if (_isMasaMode || !isOpen || isPausedForCurrentTab)
@@ -3030,7 +3032,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                        color: isPausedForCurrentTab
                                            ? Colors.orange
                                            : (isOpen ? Colors.green : Colors.red),
-                                       fontSize: isPausedForCurrentTab ? 11 : 13,
+                                       fontSize: isPausedForCurrentTab ? 12 : 14,
                                        fontWeight: FontWeight.w600,
                                      ),
                                      maxLines: 1,
@@ -3057,8 +3059,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                      color: parseSafelyDouble(data?['deliveryFee']) == 0
                                          ? const Color(0xFF4CAF50)
                                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                     fontSize: 13,
-                                     fontWeight: parseSafelyDouble(data?['deliveryFee']) == 0 ? FontWeight.w600 : FontWeight.w400,
+                                     fontSize: 14,
+                                     fontWeight: parseSafelyDouble(data?['deliveryFee']) == 0 ? FontWeight.w600 : FontWeight.w500,
                                    ),
                                  ),
                                ],
@@ -3072,7 +3074,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                'Min. ${parseSafelyDouble(data?['minDeliveryOrder']).toStringAsFixed(2).replaceAll('.00', '')}${CurrencyUtils.getCurrencySymbol()}',
                                style: TextStyle(
                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                 fontSize: 13,
+                                 fontSize: 14,
+                                 fontWeight: FontWeight.w500,
                                ),
                              ),
                            ],
@@ -4034,7 +4037,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           style: TextStyle(
                             color: isAvailable ? textPrimary : textSecondary,
                             fontSize: 16,
-                            fontWeight: FontWeight.w300,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
 
@@ -4064,7 +4067,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   },
                                   borderRadius: BorderRadius.circular(8),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFF5F0E8),
                                       borderRadius: BorderRadius.circular(8),
@@ -4081,7 +4084,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           child: Text(
                                             ci.selectedOptions.map((o) => o.optionName).join(', '),
                                             style: TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
                                               color: textSecondary,
                                               height: 1.2,
                                             ),
@@ -4093,7 +4097,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         Text(
                                           '${CurrencyUtils.getCurrencySymbol()}${ci.unitPrice.toStringAsFixed(2)}',
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 13,
                                             color: textPrimary,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -4101,8 +4105,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         if (ci.quantity > 0) ...[
                                           const SizedBox(width: 4),
                                           Container(
-                                            width: 20,
-                                            height: 20,
+                                            width: 22,
+                                            height: 22,
                                             decoration: BoxDecoration(
                                               color: isDark ? Colors.white : Colors.black87,
                                               shape: BoxShape.circle,
@@ -4111,7 +4115,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             child: Text(
                                               '${ci.quantity.toInt()}',
                                               style: TextStyle(
-                                                fontSize: 10,
+                                                fontSize: 11,
                                                 fontWeight: FontWeight.w600,
                                                 color: Theme.of(context).colorScheme.surface,
                                               ),
