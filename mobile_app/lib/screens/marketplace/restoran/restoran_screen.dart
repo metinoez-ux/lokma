@@ -1949,9 +1949,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           children: [
             Icon(icon, size: 16, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
             const SizedBox(width: 8),
-            Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+            Text(label, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
             const Spacer(),
-            Text(time, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+            Text(time, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
           ],
         ),
       );
@@ -1992,7 +1992,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 20,
-                    fontWeight: FontWeight.w300,
+                    fontWeight: FontWeight.w500,
                     height: 1.15,
                     letterSpacing: 0.5,
                     color: Theme.of(dialogCtx).colorScheme.onSurface,
@@ -2032,9 +2032,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       : 'marketplace.closed_plan_later'.tr(),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w200,
-                    letterSpacing: 0.5,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.3,
                     color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
                     height: 1.3,
                   ),
