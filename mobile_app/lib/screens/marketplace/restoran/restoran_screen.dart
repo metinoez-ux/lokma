@@ -1203,7 +1203,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               Expanded(
                 child: Text(
                   tr('discovery.search_food_restaurant_cuisine'),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w200),
+                  style: TextStyle(color: Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w400),
                 ),
               ),
               const SizedBox(width: 8),
