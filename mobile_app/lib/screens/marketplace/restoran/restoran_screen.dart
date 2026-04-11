@@ -1048,7 +1048,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               ? Icons.notifications_rounded
                               : Icons.notifications_outlined,
                           color: isDark ? Colors.white70 : Colors.grey[700],
-                          size: 20,
+                          size: 22,
                         ),
                       ),
                       // Badge - red to match other badges
@@ -1123,7 +1123,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         child: Icon(
                           hasAny ? Icons.favorite : Icons.favorite_border,
                           color: lokmaPink,
-                          size: 20,
+                          size: 22,
                         ),
                       ),
                       if (hasAny)
