@@ -316,7 +316,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                         style: TextStyle(
                           color: textColor.withOpacity(
                               isActive ? 0.85 : 0.7),
-                          fontWeight: FontWeight.w400,
+                          fontWeight: FontWeight.w500,
                           fontSize: widget.compact ? 9 : 10,
                           overflow: TextOverflow.ellipsis,
                           height: 1.0,

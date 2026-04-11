@@ -901,30 +901,69 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey : Colors.grey.shade600;
     final handleColor = isDark ? Colors.white24 : Colors.grey.shade300;
-    
+    final accent = _getAccent(context);
+
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+
+    // Tab-aware hours
+    List<dynamic>? perDayHours;
+    String tabLabel;
+    if (_deliveryModeIndex == 0) {
+      perDayHours = data?['deliveryHours'] as List<dynamic>?;
+      tabLabel = tr('delivery_modes.delivery');
+    } else if (_deliveryModeIndex == 1) {
+      perDayHours = data?['pickupHours'] as List<dynamic>?;
+      tabLabel = tr('delivery_modes.pickup');
+    } else {
+      perDayHours = data?['openingHours'] as List<dynamic>?;
+      tabLabel = tr('delivery_modes.dine_in');
+    }
+    // Fallback to general opening hours
+    perDayHours ??= data?['openingHours'] as List<dynamic>?;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: sheetBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40, height: 4,
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
-            ),
-            Text('marketplace.weekly_hours'.tr(), style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 24),
-            _buildGeneralHoursTab(isDark, textColor, isDark ? Colors.grey : Colors.grey.shade600, _getAccent(context)),
-            const SizedBox(height: 24),
-          ],
+      isScrollControlled: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.55,
+        child: Container(
+          decoration: BoxDecoration(
+            color: sheetBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              Text(
+                'marketplace.weekly_hours'.tr(),
+                style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                tabLabel,
+                style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w400),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: _buildServiceHoursTab(
+                  '', '',
+                  isDark, textColor, subtitleColor, accent,
+                  perDayHours: perDayHours,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2559,9 +2598,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         selectedIndex: _deliveryModeIndex,
                         tabs: [
                           TabItem(
-                            title: parseSafelyDouble(data?['deliveryFee']) > 0
-                                ? '${tr('delivery_modes.delivery')} (${parseSafelyDouble(data?['deliveryFee']).toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()})'
-                                : '${tr('delivery_modes.delivery')} (${tr('kermes.free_delivery')})',
+                            title: tr('delivery_modes.delivery'),
                             subtitle: _getEstimatedDeliveryTime(),
                             icon: Icons.delivery_dining,
                           ),
@@ -2798,7 +2835,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                        style: TextStyle(
                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                          fontSize: 14,
-                                         fontWeight: FontWeight.w400,
+                                         fontWeight: FontWeight.w500,
                                        ),
                                      ),
                                    ),
