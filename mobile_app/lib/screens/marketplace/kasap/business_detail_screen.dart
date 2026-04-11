@@ -693,11 +693,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         : 'marketplace.closed_plan_later'.tr(),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w200,
-                      letterSpacing: 0.5,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.3,
                       color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
-                      height: 1.3, // Reduced
+                      height: 1.3,
                     ),
                   ),
                   
