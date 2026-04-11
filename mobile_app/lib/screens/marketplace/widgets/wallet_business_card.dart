@@ -106,8 +106,8 @@ class WalletBusinessCard extends ConsumerWidget {
                       Text(
                         unavailableReason,
                         style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w200,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
                           letterSpacing: 0.5,
                           color: Colors.white.withOpacity(0.9),
                         ),
