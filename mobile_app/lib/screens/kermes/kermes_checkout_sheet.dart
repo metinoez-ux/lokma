@@ -520,7 +520,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         orderNumber: orderNumber,
         kermesId: widget.event.id,
         kermesName: widget.event.city,
-        userId: guestProfile?.id,
+        userId: (!isStaff && FirebaseAuth.instance.currentUser != null) 
+            ? FirebaseAuth.instance.currentUser!.uid 
+            : guestProfile?.id,
         customerName: widget.isPosMode
             ? (_posNameController.text.trim().isNotEmpty
                 ? _posNameController.text.trim()
@@ -1004,19 +1006,19 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                                     ),
                                   ),
                                   if (isMultiStep)
-                                    Icon(Icons.edit_outlined, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                                    Icon(Icons.edit_outlined, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[600]), // Increased size
                                 ],
                               ),
                               if (cartItem.selectedOptions.isNotEmpty) ...[
                                 const SizedBox(height: 3),
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 12),
+                                  padding: const EdgeInsets.only(left: 4), // Reduced left padding
                                   child: Text(
                                     cartItem.selectedOptions.map((o) => o.optionName).join(', '),
                                     style: TextStyle(
-                                      color: isDark ? Colors.grey[400] : Colors.grey[500],
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400,
+                                      color: isDark ? Colors.grey[300] : Colors.grey[700], // Darker/more visible
+                                      fontSize: 14.5, // Increased size
+                                      fontWeight: FontWeight.w600, // Increased weight
                                       fontStyle: FontStyle.italic,
                                     ),
                                     maxLines: 2,
@@ -1123,14 +1125,14 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       children: [
                         Text(
                           '${cartState.totalItems} urun',
-                          style: TextStyle(color: subtleTextColor, fontSize: 14),
+                          style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[800], fontSize: 15.5, fontWeight: FontWeight.w600),
                         ),
                         Text(
                           '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -3149,14 +3151,14 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   children: [
                     Text(
                       '${cartState.totalItems} urun',
-                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 11),
+                      style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                     Text(
                       '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],

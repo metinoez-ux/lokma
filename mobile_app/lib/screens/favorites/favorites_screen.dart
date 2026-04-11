@@ -136,120 +136,34 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     final textSubtle = isDark ? const Color(0xFF888888) : Colors.grey[600]!;
     final borderSubtle = isDark ? const Color(0xFF262626) : Colors.grey[200]!;
 
-    // meat_orders streams
-    final ownOrdersStream = FirebaseFirestore.instance
-        .collection('meat_orders')
-        .where('userId', isEqualTo: user.uid)
+    // Fetch only explicitly favorited orders
+    final favoriteOrdersStream = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('favoriteOrders')
         .orderBy('createdAt', descending: true)
-        .limit(20)
         .snapshots();
 
-    final groupOrdersStream = FirebaseFirestore.instance
-        .collection('meat_orders')
-        .where('participantUserIds', arrayContains: user.uid)
-        .orderBy('createdAt', descending: true)
-        .limit(10)
-        .snapshots();
-
-    // kermes_orders streams
-    final kermesOwnOrdersStream = FirebaseFirestore.instance
-        .collection('kermes_orders')
-        .where('userId', isEqualTo: user.uid)
-        .orderBy('createdAt', descending: true)
-        .limit(20)
-        .snapshots();
-
-    return StreamBuilder<List<QuerySnapshot>>(
-      stream: _combineStreams([ownOrdersStream, groupOrdersStream, kermesOwnOrdersStream]),
+    return StreamBuilder<QuerySnapshot>(
+      stream: favoriteOrdersStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
         }
 
         if (snapshot.hasError) {
-          debugPrint('orders error: ${snapshot.error}');
-          // Fallback: only own orders without orderBy due to missing index
-          final fallbackMeat = FirebaseFirestore.instance
-              .collection('meat_orders')
-              .where('userId', isEqualTo: user.uid)
-              .limit(20)
-              .snapshots();
-          final fallbackKermes = FirebaseFirestore.instance
-              .collection('kermes_orders')
-              .where('userId', isEqualTo: user.uid)
-              .limit(20)
-              .snapshots();
-
-          return StreamBuilder<List<QuerySnapshot>>(
-            stream: _combineStreams([fallbackMeat, fallbackKermes]),
-            builder: (context, fallbackSnapshot) {
-              if (fallbackSnapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
-              }
-              if (fallbackSnapshot.hasError) {
-                return _buildEmptyState(
-                  icon: Icons.error_outline,
-                  title: tr('common.hata_olustu'),
-                  subtitle: tr('common.siparislerinizi_yuklerken_hata'),
-                  isDark: isDark,
-                );
-              }
-              if (!fallbackSnapshot.hasData || fallbackSnapshot.data!.isEmpty) {
-                return _buildEmptyState(
-                  icon: Icons.receipt_long_outlined,
-                  title: tr('common.favori_siparis_yok'),
-                  subtitle: tr('common.siparislerinizi_bookmark_ile_f'),
-                  isDark: isDark,
-                );
-              }
-              
-              final List<QueryDocumentSnapshot> docs = [];
-              for (final qs in fallbackSnapshot.data!) {
-                docs.addAll(qs.docs);
-              }
-              
-              if (docs.isEmpty) {
-                return _buildEmptyState(
-                  icon: Icons.receipt_long_outlined,
-                  title: tr('common.favori_siparis_yok'),
-                  subtitle: tr('common.siparislerinizi_bookmark_ile_f'),
-                  isDark: isDark,
-                );
-              }
-
-              docs.sort((a, b) {
-                final aData = a.data() as Map<String, dynamic>;
-                final bData = b.data() as Map<String, dynamic>;
-                final aTime = aData['createdAt'] as Timestamp?;
-                final bTime = bData['createdAt'] as Timestamp?;
-                if (aTime == null && bTime == null) return 0;
-                if (aTime == null) return 1;
-                if (bTime == null) return -1;
-                return bTime.compareTo(aTime);
-              });
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  final doc = docs[index];
-                  final data = doc.data() as Map<String, dynamic>;
-                  return _buildFavoriteOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
-                },
-              );
-            },
+          debugPrint('favorite orders error: ${snapshot.error}');
+          return _buildEmptyState(
+            icon: Icons.error_outline,
+            title: tr('common.hata_olustu'),
+            subtitle: tr('common.siparislerinizi_yuklerken_hata'),
+            isDark: isDark,
           );
         }
 
-        // Merge and deduplicate docs from both streams
-        final allSnapshots = snapshot.data ?? [];
-        final Map<String, QueryDocumentSnapshot> uniqueDocs = {};
-        for (final qs in allSnapshots) {
-          for (final doc in qs.docs) {
-            uniqueDocs[doc.id] = doc;
-          }
-        }
+        final docs = snapshot.data?.docs ?? [];
 
-        if (uniqueDocs.isEmpty) {
+        if (docs.isEmpty) {
           return _buildEmptyState(
             icon: Icons.receipt_long_outlined,
             title: tr('common.favori_siparis_yok'),
@@ -258,24 +172,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           );
         }
 
-        // Sort by createdAt descending
-        final sortedDocs = uniqueDocs.values.toList();
-        sortedDocs.sort((a, b) {
-          final aData = a.data() as Map<String, dynamic>;
-          final bData = b.data() as Map<String, dynamic>;
-          final aTime = aData['createdAt'] as Timestamp?;
-          final bTime = bData['createdAt'] as Timestamp?;
-          if (aTime == null && bTime == null) return 0;
-          if (aTime == null) return 1;
-          if (bTime == null) return -1;
-          return bTime.compareTo(aTime);
-        });
-
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: sortedDocs.length,
+          itemCount: docs.length,
           itemBuilder: (context, index) {
-            final doc = sortedDocs[index];
+            final doc = docs[index];
             final data = doc.data() as Map<String, dynamic>;
             return _buildFavoriteOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
           },
@@ -527,14 +428,32 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                       ],
                     ),
                   ),
-                  // Bookmark icon
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Icon(
-                      Icons.bookmark,
-                      color: const Color(0xFFEA184A),
-                      size: 28,
-                    ),
+                  // Favorite icon and tag
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Icon(
+                          Icons.favorite,
+                          color: const Color(0xFFEA184A),
+                          size: 28,
+                        ),
+                      ),
+                      if (data['favoriteName'] != null && data['favoriteName'].toString().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            data['favoriteName'].toString(),
+                            style: TextStyle(
+                              color: const Color(0xFFEA184A),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),

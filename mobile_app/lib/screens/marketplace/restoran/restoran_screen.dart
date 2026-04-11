@@ -980,8 +980,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           isLoading ? 'marketplace.getting_location'.tr() : cityName,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -990,9 +990,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           Text(
                             streetInfo,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,

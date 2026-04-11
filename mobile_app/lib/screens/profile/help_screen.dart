@@ -157,17 +157,16 @@ class HelpScreen extends StatelessWidget {
                   style: TextStyle(color: textSubtle, fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 15,
+                  runSpacing: 15,
                   children: [
                     _buildSocialIcon(FontAwesomeIcons.instagram, const Color(0xFFE1306C), 'https://instagram.com/lokma_app'),
-                    const SizedBox(width: 15),
                     _buildSocialIcon(FontAwesomeIcons.xTwitter, textPrimary, 'https://x.com/lokma_app'),
-                    const SizedBox(width: 15),
                     _buildSocialIcon(FontAwesomeIcons.facebook, const Color(0xFF1877F2), 'https://www.facebook.com/lokmaapp'),
-                    const SizedBox(width: 15),
-                    _buildSocialIcon(FontAwesomeIcons.youtube, const Color(0xFFFF0000), 'https://youtube.com/@loka_app'),
-                    const SizedBox(width: 15),
+                    _buildSocialIcon(FontAwesomeIcons.youtube, const Color(0xFFFF0000), 'https://youtube.com/@lokma_app'),
+                    _buildSocialIcon(FontAwesomeIcons.tiktok, textPrimary, 'https://www.tiktok.com/@lokma_app'),
                     _buildSocialIcon(FontAwesomeIcons.whatsapp, const Color(0xFF25D366), 'https://wa.me/491784443475'),
                   ],
                 ),

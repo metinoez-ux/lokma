@@ -6731,7 +6731,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 if (!mounted) return;
                                 setState(() {
                                   _selectedDeliveryAddress = addr;
-                                  _addressGeocoded = false; // Reset geocoding flag so it re-resolves coordinates in main screen
                                 });
                                 
                                 try {
@@ -6775,7 +6774,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 if (!mounted) return;
                                 setState(() {
                                   _selectedDeliveryAddress = addr;
-                                  _addressGeocoded = false;
                                 });
                                 
                                 try {

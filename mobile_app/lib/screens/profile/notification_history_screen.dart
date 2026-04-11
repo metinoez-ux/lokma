@@ -1146,6 +1146,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       isActive: isActive,
                       metaFn: _meta,
                       favoriteName: _favoriteNames[item.orderId],
+                      onFavoriteTap: () => _showFavoriteNameSheet(item),
                     );
                     if (_isEditMode) {
                       if (isActive) return Opacity(opacity: 0.5, child: card);
@@ -1797,6 +1798,7 @@ class _OrderTimelineCard extends ConsumerStatefulWidget {
   final bool isActive;
   final Map<String, dynamic> Function(String) metaFn;
   final String? favoriteName;
+  final VoidCallback? onFavoriteTap;
 
   const _OrderTimelineCard({
     required this.group,
@@ -1805,6 +1807,7 @@ class _OrderTimelineCard extends ConsumerStatefulWidget {
     this.isActive = false,
     required this.metaFn,
     this.favoriteName,
+    this.onFavoriteTap,
   });
 
   @override
@@ -2167,31 +2170,48 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          if (headerDateStr.isNotEmpty)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  headerDateStr,
-                                  style: TextStyle(
-                                    color: cardSubtleColor,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w400,
-                                    letterSpacing: 0.3,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.onFavoriteTap != null)
+                                GestureDetector(
+                                  onTap: widget.onFavoriteTap,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Icon(
+                                      widget.favoriteName != null ? Icons.favorite : Icons.favorite_border,
+                                      color: widget.favoriteName != null ? const Color(0xFFEA184A) : cardSubtleColor,
+                                      size: 16,
+                                    ),
                                   ),
                                 ),
-                                if (!widget.isFirst) ...[
-                                  const SizedBox(width: 2),
-                                  Icon(
-                                    _expanded
-                                        ? Icons.keyboard_arrow_up_rounded
-                                        : Icons.keyboard_arrow_down_rounded,
-                                    color: cardSubtleColor,
-                                    size: 20,
-                                  ),
-                                ],
-                              ],
-                            ),
+                              if (headerDateStr.isNotEmpty)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      headerDateStr,
+                                      style: TextStyle(
+                                        color: cardSubtleColor,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w400,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    if (!widget.isFirst) ...[
+                                      const SizedBox(width: 2),
+                                      Icon(
+                                        _expanded
+                                            ? Icons.keyboard_arrow_up_rounded
+                                            : Icons.keyboard_arrow_down_rounded,
+                                        color: cardSubtleColor,
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                            ],
+                          ),
                           if (group.businessName.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 2),

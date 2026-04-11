@@ -338,8 +338,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         );
       }
     } else {
-      // Show naming dialog
-      final name = await _showFavoriteNameDialog();
+      // Show naming sheet
+      final name = await _showFavoriteNameSheet();
       if (name == null) return; // cancelled
       final order = widget.order;
       await docRef.set({
@@ -374,54 +374,179 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     }
   }
 
-  Future<String?> _showFavoriteNameDialog() {
-    final controller = TextEditingController();
+  Future<String?> _showFavoriteNameSheet() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return showDialog<String>(
+    final nameController = TextEditingController();
+    String? selectedPreset;
+
+    final presets = [
+      {'name': 'Aile', 'icon': Icons.family_restroom},
+      {'name': 'Arkadaşlar', 'icon': Icons.groups},
+      {'name': 'Spor Kulübü', 'icon': Icons.sports_soccer},
+      {'name': 'İş', 'icon': Icons.work_outline},
+      {'name': 'Özel', 'icon': Icons.star_outline},
+    ];
+
+    return showModalBottomSheet<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'orders.favorite_name_title'.tr(),
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-          decoration: InputDecoration(
-            hintText: 'orders.favorite_name_hint'.tr(),
-            hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400], fontSize: 14),
-            filled: true,
-            fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[100],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('orders.cancel'.tr(), style: TextStyle(color: Colors.grey[500])),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isEmpty) return;
-              Navigator.pop(ctx, text);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEA184A),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text('orders.save'.tr()),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24, right: 24, top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[600] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Title
+                  Row(
+                    children: [
+                      Icon(Icons.favorite_rounded, color: const Color(0xFFEA184A), size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        'orders.favorite_name_title'.tr(),
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '#${widget.order.orderNumber ?? widget.order.id.substring(0, 6).toUpperCase()} - ${widget.order.butcherName}',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Preset chips
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: presets.map((p) {
+                      final name = p['name'] as String;
+                      final icon = p['icon'] as IconData;
+                      final isSelected = selectedPreset == name;
+                      return GestureDetector(
+                        onTap: () {
+                          setSheetState(() {
+                            selectedPreset = isSelected ? null : name;
+                            if (!isSelected) nameController.text = name;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFFEA184A)
+                                : (isDark ? const Color(0xFF2C2C2E) : Colors.grey[100]),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFFEA184A)
+                                  : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(icon, size: 16,
+                                color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
+                              const SizedBox(width: 6),
+                              Text(name, style: TextStyle(
+                                color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                                fontSize: 13,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              )),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  // Custom name input
+                  TextField(
+                    controller: nameController,
+                    autofocus: false,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'orders.favorite_name_hint'.tr(),
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                      prefixIcon: Icon(Icons.edit, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    onChanged: (val) {
+                      setSheetState(() => selectedPreset = null);
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // Save button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final text = nameController.text.trim();
+                        if (text.isEmpty) {
+                          ScaffoldMessenger.of(context)
+                            ..clearSnackBars()
+                            ..showSnackBar(SnackBar(
+                              content: Text('orders.favorite_name_hint'.tr()),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ));
+                          return;
+                        }
+                        Navigator.pop(ctx, text);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEA184A),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: Text('orders.save'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1239,7 +1364,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     GestureDetector(
                       onTap: _toggleFavorite,
                       child: Icon(
-                        _isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
                         color: _isFavorite ? const Color(0xFFEA184A) : (isDark ? Colors.grey[500] : Colors.grey[400]),
                         size: 24,
                       ),

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../router/app_router.dart';
 import '../widgets/in_app_notification.dart';
 
@@ -230,11 +231,25 @@ class FCMService {
     }
     
     try {
+      // Safely determine the user's localized language context
+      String currentLang = 'tr';
+      try {
+        final context = _navigatorKey.currentContext;
+        if (context != null) {
+          currentLang = context.locale.languageCode;
+        } else {
+          currentLang = Platform.localeName.split('_')[0].toLowerCase();
+        }
+      } catch (e) {
+        debugPrint('Language detection error in FCMService: $e');
+      }
+
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'fcmToken': token,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+        'language': currentLang,
       }, SetOptions(merge: true));
-      debugPrint('✅ FCM Token saved to Firestore for user: ${user.uid}');
+      debugPrint('✅ FCM Token and language ($currentLang) saved to Firestore for user: ${user.uid}');
     } catch (e) {
       debugPrint('Error saving FCM token: $e');
       try {

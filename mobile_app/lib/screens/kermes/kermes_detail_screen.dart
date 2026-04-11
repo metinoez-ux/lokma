@@ -1041,6 +1041,119 @@ void _onMenuScroll() {
     );
   }
 
+  void _showCategorySelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white54 : Colors.black45;
+    final handleColor = isDark ? Colors.white24 : Colors.black12;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.6,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle + Close button
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
+                ),
+                Positioned(
+                  right: 12,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: textSecondary, size: 22),
+                  ),
+                ),
+              ],
+            ),
+            // Title
+            Padding(
+              padding: const EdgeInsets.only(left: 20, bottom: 12),
+              child: Text(tr('marketplace.categories'), style: TextStyle(color: textPrimary, fontSize: 22, fontWeight: FontWeight.w600)),
+            ),
+            // Category list
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final catName = _categories[index];
+                  final isSelected = _selectedCategory == catName;
+                  
+                  // Get product names for this category
+                  String productPreview = '';
+                  final allProducts = _eventMenu;
+                  if (catName == 'marketplace.category_all'.tr()) {
+                    productPreview = allProducts.take(4).map((p) => p.name).join(', ');
+                  } else {
+                    final catProducts = allProducts.where((p) => _getCategoryForItem(p) == catName).toList();
+                    productPreview = catProducts.take(4).map((p) => p.name).join(', ');
+                  }
+                  if (productPreview.length > 60) {
+                    productPreview = '${productPreview.substring(0, 57)}...';
+                  }
+                  
+                  return InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _selectCategory(catName);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  catName,
+                                  style: TextStyle(
+                                    color: textPrimary,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                    fontSize: 17,
+                                  ),
+                                ),
+                                if (productPreview.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    productPreview,
+                                    style: TextStyle(color: textSecondary, fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (isSelected)
+                            Icon(Icons.check, color: textPrimary, size: 22),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1423,6 +1536,18 @@ if (_selectedCategory.isEmpty) {
                                     }).toList(),
                                   ),
                                 ],
+                              ),
+                            ),
+                          ),
+                          // ≡ More icon (Lieferando-style, no border)
+                          GestureDetector(
+                            onTap: _showCategorySelector,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 12, left: 2),
+                              child: Icon(
+                                Icons.format_list_bulleted,
+                                color: isDark ? Colors.white70 : Colors.black54,
+                                size: 22,
                               ),
                             ),
                           ),

@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { getPushTranslations, getUserLanguage } from "./utils/translation";
 
 const db = admin.firestore();
 
@@ -17,11 +18,12 @@ export const onKermesOrderCreatedNotif = onDocumentCreated(
     const totalAmount = orderData.totalAmount as number || 0;
     const kermesId = orderData.kermesId as string | undefined;
 
-    // 1. Müşteriye bildirim gönder (userId varsa)
     const userId = orderData.userId as string | undefined;
     if (userId && !userId.startsWith("guest_")) {
-      const title = "Siparişiniz Alındı";
-      const body = `#${orderNumber} numaralı siparişiniz sistemimize ulaştı.`;
+      const userLang = await getUserLanguage(userId);
+      const trans = await getPushTranslations(userLang);
+      const title = trans.kermesOrderReceivedTitle || "Siparişiniz Alındı";
+      const body = (trans.kermesOrderReceivedBody || "#{{orderNumber}} numaralı siparişiniz sistemimize ulaştı.").replace("{{orderNumber}}", orderNumber);
       const notifType = "kermes_order_created";
 
       try {
@@ -101,10 +103,17 @@ export const onKermesOrderCreatedNotif = onDocumentCreated(
               }
             });
 
-            const staffTitle = `🔔 Yeni Sipariş (${kermesName})!`;
-            let staffBody = `#${orderNumber} - ${totalAmount.toFixed(2)}€`;
+            const staffLang = "tr"; // Multicast default for staff
+            const trans = await getPushTranslations(staffLang);
+            const staffTitle = (trans.kermesNewStaffTitle || `🔔 Yeni Sipariş ({{kermesName}})!`).replace("{{kermesName}}", kermesName);
+            let staffBody = (trans.kermesNewStaffBody || `#{{orderNumber}} - {{amount}}€ [{{deliveryType}}]`)
+                .replace("{{orderNumber}}", orderNumber)
+                .replace("{{amount}}", totalAmount.toFixed(2));
+            
             if (orderData.deliveryType) {
-              staffBody += ` [${orderData.deliveryType}]`;
+              staffBody = staffBody.replace("{{deliveryType}}", orderData.deliveryType);
+            } else {
+              staffBody = staffBody.replace(" [{{deliveryType}}]", "").replace("[{{deliveryType}}]", "");
             }
 
             const sendObj = (tokens: string[], isWeb: boolean) => ({
@@ -178,8 +187,10 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
 
       if (!userId) return;
 
-      const title = "Ödemeniz Alındı";
-      const body = `#${orderNumber} numaralı siparişinizin ödemesi başarıyla alınmıştır. Teşekkür ederiz!`;
+      const userLang = await getUserLanguage(userId);
+      const trans = await getPushTranslations(userLang);
+      const title = trans.kermesPaymentReceivedTitle || "Ödemeniz Alındı";
+      const body = (trans.kermesPaymentReceivedBody || "#{{orderNumber}} numaralı siparişinizin ödemesi başarıyla alınmıştır. Teşekkür ederiz!").replace("{{orderNumber}}", orderNumber);
       const notifType = "kermes_order_paid";
 
       // DB'ye kaydet
@@ -277,8 +288,10 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
               }
             });
 
-            const staffTitle = `💳 Ödeme Alındı!`;
-            const staffBody = `#${orderNumber2} numaralı siparişin ödemesi yapıldı.`;
+            const staffLang = "tr";
+            const trans = await getPushTranslations(staffLang);
+            const staffTitle = trans.kermesPaymentStaffTitle || `💳 Ödeme Alındı!`;
+            const staffBody = (trans.kermesPaymentStaffBody || `#{{orderNumber}} numaralı siparişin ödemesi yapıldı.`).replace("{{orderNumber}}", orderNumber2);
 
             const sendObj = (tokens: string[], isWeb: boolean) => ({
               notification: { title: staffTitle, body: staffBody },

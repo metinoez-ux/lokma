@@ -456,7 +456,7 @@ class _KermesCardState extends State<KermesCard> {
                               _buildModalityPill(
                                 Icons.delivery_dining,
                                 widget.event.deliveryFee > 0
-                                    ? '${'delivery_modes.delivery'.tr()} (${widget.event.deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()})'
+                                    ? '${'delivery_modes.delivery'.tr()} (${widget.event.deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()})'
                                     : '${'delivery_modes.delivery'.tr()} (${'kermes.free_delivery'.tr()})',
                               ),
                           ],
@@ -504,7 +504,7 @@ class _KermesCardState extends State<KermesCard> {
                                             color: isDark
                                                 ? Colors.grey[300]
                                                 : Colors.grey[700],
-                                            fontSize: 13.5,
+                                            fontSize: 14.5,
                                             fontWeight: FontWeight.w500,
                                           ),
                                           maxLines: 1,
@@ -573,15 +573,15 @@ class _KermesCardState extends State<KermesCard> {
                                   Text(
                                     'kermes.courier_fee'.tr(args: [
                                       widget.event.deliveryFee > 0
-                                          ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}'
+                                          ? '${widget.event.deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
                                           : 'kermes.free_delivery'.tr()
                                     ]),
                                     style: TextStyle(
                                       color: isDark
                                           ? Colors.green[400]
                                           : const Color(0xFF059669),
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15, // Bir tık daha büyütüldü
+                                      fontWeight: FontWeight.w700, // Daha net olsun diye w700'e çekildi
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -679,13 +679,13 @@ class _KermesCardState extends State<KermesCard> {
       IconData icon, String text, Color iconColor, bool isDark) {
     return Row(
       children: [
-        Icon(icon, size: 17, color: iconColor),
+        Icon(icon, size: 18, color: iconColor),
         const SizedBox(width: 4),
         Text(
           text,
           style: TextStyle(
             color: isDark ? Colors.grey[300] : Colors.grey[700],
-            fontSize: 13.5,
+            fontSize: 14.5,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -888,14 +888,14 @@ class _KermesCardState extends State<KermesCard> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: Colors.white, size: 12),
+                Icon(icon, color: Colors.white, size: 13),
                 const SizedBox(width: 4),
                 Text(
                   tooltip,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 12, 
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],

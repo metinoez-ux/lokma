@@ -2562,8 +2562,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ),
                 // Title: Search Bar when scrolled, else Service Toggle
-                // In masa mode: always show search bar (no toggle needed)
-                title: (_showSearchBar || _isMasaMode)
+                // In QR mode: always show search bar (no toggle needed)
+                title: (_showSearchBar || (widget.initialTableNumber != null || widget.isReservationIntent))
                     ? GestureDetector(
                         onTap: () => _showMenuSearchOverlay(),
                         child: Container(
