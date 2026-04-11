@@ -12,8 +12,13 @@ import 'package:lokma_app/providers/product_favorites_provider.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import '../../utils/currency_utils.dart';
 import '../marketplace/widgets/wallet_business_card.dart';
-
-
+import 'package:lokma_app/models/kermes_model.dart';
+import 'package:lokma_app/widgets/kermes_card.dart';
+import 'package:lokma_app/services/kermes_favorite_service.dart';
+import 'package:lokma_app/providers/user_location_provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:lokma_app/services/kermes_favorite_service.dart';
+import 'package:lokma_app/providers/user_location_provider.dart';
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -131,7 +136,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     final textSubtle = isDark ? const Color(0xFF888888) : Colors.grey[600]!;
     final borderSubtle = isDark ? const Color(0xFF262626) : Colors.grey[200]!;
 
-    // Two streams: own orders + group participant orders
+    // meat_orders streams
     final ownOrdersStream = FirebaseFirestore.instance
         .collection('meat_orders')
         .where('userId', isEqualTo: user.uid)
@@ -146,8 +151,16 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         .limit(10)
         .snapshots();
 
+    // kermes_orders streams
+    final kermesOwnOrdersStream = FirebaseFirestore.instance
+        .collection('kermes_orders')
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .limit(20)
+        .snapshots();
+
     return StreamBuilder<List<QuerySnapshot>>(
-      stream: _combineStreams([ownOrdersStream, groupOrdersStream]),
+      stream: _combineStreams([ownOrdersStream, groupOrdersStream, kermesOwnOrdersStream]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
@@ -155,18 +168,33 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
         if (snapshot.hasError) {
           debugPrint('orders error: ${snapshot.error}');
-          // Fallback: only own orders without orderBy
-          return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('meat_orders')
-                .where('userId', isEqualTo: user.uid)
-                .limit(20)
-                .snapshots(),
+          // Fallback: only own orders without orderBy due to missing index
+          final fallbackMeat = FirebaseFirestore.instance
+              .collection('meat_orders')
+              .where('userId', isEqualTo: user.uid)
+              .limit(20)
+              .snapshots();
+          final fallbackKermes = FirebaseFirestore.instance
+              .collection('kermes_orders')
+              .where('userId', isEqualTo: user.uid)
+              .limit(20)
+              .snapshots();
+
+          return StreamBuilder<List<QuerySnapshot>>(
+            stream: _combineStreams([fallbackMeat, fallbackKermes]),
             builder: (context, fallbackSnapshot) {
               if (fallbackSnapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
               }
-              if (!fallbackSnapshot.hasData || fallbackSnapshot.data!.docs.isEmpty || fallbackSnapshot.hasError) {
+              if (fallbackSnapshot.hasError) {
+                return _buildEmptyState(
+                  icon: Icons.error_outline,
+                  title: tr('common.hata_olustu'),
+                  subtitle: tr('common.siparislerinizi_yuklerken_hata'),
+                  isDark: isDark,
+                );
+              }
+              if (!fallbackSnapshot.hasData || fallbackSnapshot.data!.isEmpty) {
                 return _buildEmptyState(
                   icon: Icons.receipt_long_outlined,
                   title: tr('common.favori_siparis_yok'),
@@ -174,7 +202,21 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                   isDark: isDark,
                 );
               }
-              final docs = fallbackSnapshot.data!.docs.toList();
+              
+              final List<QueryDocumentSnapshot> docs = [];
+              for (final qs in fallbackSnapshot.data!) {
+                docs.addAll(qs.docs);
+              }
+              
+              if (docs.isEmpty) {
+                return _buildEmptyState(
+                  icon: Icons.receipt_long_outlined,
+                  title: tr('common.favori_siparis_yok'),
+                  subtitle: tr('common.siparislerinizi_bookmark_ile_f'),
+                  isDark: isDark,
+                );
+              }
+
               docs.sort((a, b) {
                 final aData = a.data() as Map<String, dynamic>;
                 final bData = b.data() as Map<String, dynamic>;
@@ -276,8 +318,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   }
 
   Widget _buildFavoriteOrderCard(String orderId, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final businessName = data['businessName']?.toString() ?? data['butcherName']?.toString() ?? tr('common.i_sletme');
-    final businessId = data['businessId']?.toString() ?? data['butcherId']?.toString() ?? '';
+    final bool isKermesOrder = data.containsKey('kermesId');
+    final businessName = isKermesOrder ? data['kermesName']?.toString() ?? 'Kermes' : data['businessName']?.toString() ?? data['butcherName']?.toString() ?? tr('common.i_sletme');
+    final businessId = isKermesOrder ? data['kermesId']?.toString() ?? '' : data['businessId']?.toString() ?? data['butcherId']?.toString() ?? '';
     final totalAmount = (data['grandTotal'] ?? data['totalAmount'] ?? data['total'] ?? 0).toDouble();
     final items = data['items'] as List<dynamic>?;
     final itemCount = items?.length ?? (data['itemCount'] ?? 0);
@@ -288,26 +331,36 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         : '';
 
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('businesses').doc(businessId).get(),
+      future: isKermesOrder 
+          ? FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get()
+          : FirebaseFirestore.instance.collection('businesses').doc(businessId).get(),
       builder: (context, businessSnapshot) {
         String? imageUrl;
         bool isTuna = false;
         
         if (businessSnapshot.hasData && businessSnapshot.data != null && businessSnapshot.data!.exists) {
           final businessData = businessSnapshot.data!.data() as Map<String, dynamic>?;
-          imageUrl = businessData?['imageUrl'] ?? businessData?['logoUrl'];
-          isTuna = businessData?['isTuna'] == true || 
-                   businessData?['isTunaPartner'] == true ||
-                   businessData?['isTunaApproved'] == true ||
-                   businessData?['brand']?.toString().toLowerCase() == 'tuna' ||
-                   (businessData?['name']?.toString().toLowerCase().contains('tuna') ?? false) ||
-                   (businessData?['companyName']?.toString().toLowerCase().contains('tuna') ?? false);
+          imageUrl = isKermesOrder 
+              ? (businessData?['headerImage'] ?? businessData?['imageUrl'])
+              : (businessData?['imageUrl'] ?? businessData?['logoUrl']);
+          if (!isKermesOrder) {
+            isTuna = businessData?['isTuna'] == true || 
+                     businessData?['isTunaPartner'] == true ||
+                     businessData?['isTunaApproved'] == true ||
+                     businessData?['brand']?.toString().toLowerCase() == 'tuna' ||
+                     (businessData?['name']?.toString().toLowerCase().contains('tuna') ?? false) ||
+                     (businessData?['companyName']?.toString().toLowerCase().contains('tuna') ?? false);
+          }
         }
 
         return GestureDetector(
           onTap: () {
             if (businessId.isNotEmpty) {
-              context.push('/kasap/$businessId');
+              if (isKermesOrder) {
+                context.push('/kermes/$businessId');
+              } else {
+                context.push('/kasap/$businessId');
+              }
             }
           },
           child: Container(
@@ -454,7 +507,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                         GestureDetector(
                           onTap: () {
                             if (businessId.isNotEmpty) {
-                              context.push('/kasap/$businessId');
+                              if (isKermesOrder) {
+                                context.push('/kermes/$businessId');
+                              } else {
+                                context.push('/kasap/$businessId');
+                              }
                             }
                           },
                           child: Text(
@@ -571,10 +628,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         ),
         // Business list
         Expanded(
-          child: FutureBuilder<List<DocumentSnapshot>>(
-            future: _fetchBusinessDocs(favoriteIds),
+          child: FutureBuilder<List<dynamic>>(
+            future: _fetchAllFavorites(favoriteIds),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                 return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
               }
 
@@ -587,10 +644,33 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                 );
               }
 
+              // Apply instantaneous filter for unfavorited items (so UI updates instantly without waiting for Future completion)
+              final validData = snapshot.data!.where((item) {
+                if (item is KermesEvent) return true; // Kermes uses its own provider
+                final doc = item as DocumentSnapshot;
+                return favoriteIds.contains(doc.id);
+              }).toList();
+              
+              if (validData.isEmpty && snapshot.connectionState != ConnectionState.waiting) {
+                return _buildEmptyState(
+                  icon: Icons.store_outlined,
+                  title: tr('common.i_sletme_bulunamadi'),
+                  subtitle: tr('common.favori_isletmeleriniz_yuklenem'),
+                  isDark: isDark,
+                );
+              }
+
               // Apply filter
-              final filtered = snapshot.data!.where((doc) {
+              final filtered = validData.where((item) {
                 if (_businessFilter == 'all') return true;
-                final data = doc.data() as Map<String, dynamic>;
+                
+                if (item is KermesEvent) {
+                  return _businessFilter == 'kermes';
+                }
+                
+                final doc = item as DocumentSnapshot;
+                final data = doc.data() as Map<String, dynamic>? ?? {};
+                
                 if (_businessFilter == 'tuna') {
                   return data['isTuna'] == true ||
                          data['isTunaPartner'] == true ||
@@ -619,9 +699,38 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                 padding: const EdgeInsets.all(16),
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
-                  final doc = filtered[index];
-                  final data = doc.data() as Map<String, dynamic>;
-                  return _buildBusinessCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
+                  final item = filtered[index];
+                  
+                  if (item is KermesEvent) {
+                    final userLoc = ref.watch(userLocationProvider).value;
+                    Position? currentPos;
+                    if (userLoc != null && userLoc.isValid) {
+                      currentPos = Position(
+                        latitude: userLoc.latitude,
+                        longitude: userLoc.longitude,
+                        timestamp: DateTime.now(),
+                        accuracy: 0,
+                        altitude: 0,
+                        altitudeAccuracy: 0,
+                        heading: 0,
+                        headingAccuracy: 0,
+                        speed: 0,
+                        speedAccuracy: 0,
+                      );
+                    }
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: KermesCard(
+                        event: item,
+                        currentPosition: currentPos,
+                      ),
+                    );
+                  } else {
+                    final doc = item as DocumentSnapshot;
+                    final data = doc.data() as Map<String, dynamic>? ?? {};
+                    return _buildBusinessCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
+                  }
                 },
               );
             },
@@ -634,14 +743,66 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
 
 
-  Future<List<DocumentSnapshot>> _fetchBusinessDocs(List<String> ids) async {
-    if (ids.isEmpty) return [];
+  Future<List<dynamic>> _fetchAllFavorites(List<String> businessIds) async {
+    final List<dynamic> results = [];
     
-    final List<DocumentSnapshot> results = [];
-    for (String id in ids) {
-      final doc = await FirebaseFirestore.instance.collection('businesses').doc(id).get();
-      if (doc.exists) results.add(doc);
+    // 1. Fetch businesses
+    if (businessIds.isNotEmpty) {
+      for (String id in businessIds) {
+        if (id.isEmpty) continue;
+        try {
+          final doc = await FirebaseFirestore.instance.collection('businesses').doc(id).get();
+          if (doc.exists) results.add(doc);
+        } catch (e) {
+          debugPrint('Error fetching business $id: $e');
+        }
+      }
     }
+    
+    // 2. Fetch kermeses
+    try {
+      final kermesIds = await KermesFavoriteService.instance.getFavoriteIds();
+      for (String id in kermesIds) {
+        if (id.isEmpty) continue;
+        final doc = await FirebaseFirestore.instance.collection('kermes_events').doc(id).get();
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          final fullAddress = data['address'] is Map ? data['address']['fullAddress'] ?? '' : data['address']?.toString() ?? '';
+          final city = data['city'] ?? (data['address'] is Map ? data['address']['city'] : null) ?? 'Bilinmiyor';
+          final features = (data['features'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
+          
+          results.add(KermesEvent(
+            id: doc.id,
+            city: city,
+            title: data['name'] ?? data['title'] ?? 'Kermes',
+            address: fullAddress,
+            phoneNumber: data['contactPhone']?.toString() ?? data['phoneNumber']?.toString() ?? '',
+            startDate: (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            endDate: (data['endDate'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(hours: 12)),
+            latitude: (data['latitude'] as num?)?.toDouble() ?? (data['lat'] as num?)?.toDouble() ?? 51.0,
+            longitude: (data['longitude'] as num?)?.toDouble() ?? (data['lng'] as num?)?.toDouble() ?? 6.0,
+            menu: [],
+            parking: [],
+            weatherForecast: [],
+            openingTime: data['openingTime'] ?? '10:00',
+            closingTime: data['closingTime'] ?? '20:00',
+            headerImage: data['headerImage']?.toString(),
+            hasDelivery: data['hasDelivery'] == true,
+            deliveryFee: (data['deliveryFee'] ?? 0).toDouble(),
+            hasKidsActivities: features.contains('kids') || features.contains('kids_area'),
+            hasFamilyArea: features.contains('family_area') || features.contains('family_tents'),
+            hasOutdoor: features.contains('outdoor'),
+            hasIndoorArea: features.contains('indoor'),
+            hasCreditCardPayment: features.contains('card_payment'),
+            activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+            customFeatures: (data['customFeatures'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+          ));
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching kermes favorites: $e');
+    }
+    
     return results;
   }
 
@@ -722,167 +883,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     );
   }
 
-  /// For legacy favorites (no productName), fetch product info from Firestore
   Widget _buildProductCardFromFavorite(FavoriteProduct fav, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    // If legacy (no product name), look up the product from Firestore
     final isLegacy = fav.productName.isEmpty;
+    final hasBusinessId = fav.businessId.isNotEmpty;
 
-    if (isLegacy && fav.businessId.isNotEmpty) {
-      // businessId var -- direkt document okuma (collectionGroup'a gerek yok)
-      return FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('businesses').doc(fav.businessId)
-            .collection('products').doc(fav.sku)
-            .get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: surfaceCard,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: borderSubtle),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: 60, height: 60,
-                      color: isDark ? Colors.grey[800] : Colors.grey[200],
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Container(
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey[700] : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            // Urun artik yok
-            return _buildProductCardUI(
-              name: fav.sku.length > 12 ? '${fav.sku.substring(0, 12)}...' : fav.sku,
-              imageUrl: '',
-              price: 0,
-              businessId: fav.businessId,
-              sku: fav.sku,
-              surfaceCard: surfaceCard,
-              textPrimary: textSubtle,
-              textSubtle: textSubtle,
-              borderSubtle: borderSubtle,
-              isDark: isDark,
-              isDeleted: true,
-            );
-          }
-
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final productName = _extractProductName(data) ?? fav.sku;
-          final productImage = data['imageUrl']?.toString() ?? '';
-          final productPrice = (data['appSellingPrice'] ?? data['sellingPrice'] ?? data['price'] ?? 0).toDouble();
-
-          // Provider'i zenginlestir (bir kerelik)
-          Future.microtask(() {
-            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(fav.sku); // cikar
-            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
-              fav.sku,
-              businessId: fav.businessId,
-              productName: productName,
-              imageUrl: productImage,
-              price: productPrice,
-            ); // detayli olarak tekrar ekle
-          });
-
-          return _buildProductCardUI(
-            name: productName,
-            imageUrl: productImage,
-            price: productPrice,
-            businessId: fav.businessId,
-            sku: fav.sku,
-            surfaceCard: surfaceCard,
-            textPrimary: textPrimary,
-            textSubtle: textSubtle,
-            borderSubtle: borderSubtle,
-            isDark: isDark,
-          );
-        },
-      );
-    }
-
-    if (isLegacy) {
-      // businessId de yok -- gercek legacy veri, detay cekilemez. collectionGroup ile ariyoruz.
-      return FutureBuilder<DocumentSnapshot?>(
-        future: _findLegacyProduct(fav.sku),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            );
-          }
-
-          if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-            return _buildProductCardUI(
-              name: fav.sku.length > 12 ? '${fav.sku.substring(0, 12)}...' : fav.sku,
-              imageUrl: '',
-              price: 0,
-              businessId: '',
-              sku: fav.sku,
-              surfaceCard: surfaceCard,
-              textPrimary: textSubtle,
-              textSubtle: textSubtle,
-              borderSubtle: borderSubtle,
-              isDark: isDark,
-              isDeleted: true,
-            );
-          }
-
-          final doc = snapshot.data!;
-          final data = doc.data() as Map<String, dynamic>;
-          final productName = _extractProductName(data) ?? fav.sku;
-          final productImage = data['imageUrl']?.toString() ?? '';
-          final productPrice = (data['appSellingPrice'] ?? data['sellingPrice'] ?? data['price'] ?? 0).toDouble();
-          final foundBusinessId = doc.reference.parent.parent?.id ?? '';
-
-          // Provider'i zenginlestir (bir kerelik)
-          Future.microtask(() {
-            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(fav.sku); // cikar
-            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
-              fav.sku,
-              businessId: foundBusinessId,
-              productName: productName,
-              imageUrl: productImage,
-              price: productPrice,
-            ); // detayli olarak tekrar ekle
-          });
-
-          return _buildProductCardUI(
-            name: productName,
-            imageUrl: productImage,
-            price: productPrice,
-            businessId: foundBusinessId,
-            sku: fav.sku,
-            surfaceCard: surfaceCard,
-            textPrimary: textPrimary,
-            textSubtle: textSubtle,
-            borderSubtle: borderSubtle,
-            isDark: isDark,
-          );
-        },
-      );
-    }
-
-    // Non-legacy: use stored data directly
-    return _buildProductCardUI(
+    // Use cached UI for initial display while fetching if it's not legacy
+    final cachedUI = isLegacy ? null : _buildProductCardUI(
       name: fav.productName,
       imageUrl: fav.imageUrl,
       price: fav.price,
@@ -893,6 +899,119 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
       textSubtle: textSubtle,
       borderSubtle: borderSubtle,
       isDark: isDark,
+    );
+
+    Future<DocumentSnapshot?> future;
+    if (hasBusinessId) {
+      future = FirebaseFirestore.instance
+          .collection('businesses').doc(fav.businessId)
+          .collection('products').doc(fav.sku)
+          .get();
+    } else {
+      future = _findLegacyProduct(fav.sku);
+    }
+
+    return FutureBuilder<DocumentSnapshot?>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          if (cachedUI != null) return cachedUI;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: surfaceCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: borderSubtle),
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 60, height: 60,
+                    color: isDark ? Colors.grey[800] : Colors.grey[200],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Container(
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey[700] : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || !snapshot.data!.exists) {
+          // Urun artik yok - otomatik listeden cikar
+          Future.microtask(() {
+            try {
+              if (mounted) {
+                ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(fav.sku);
+              }
+            } catch (_) {}
+          });
+          return const SizedBox.shrink(); // Ekranda gosterme
+        }
+
+        final doc = snapshot.data!;
+        final data = doc.data() as Map<String, dynamic>;
+        
+        // Eger urun silinmis veya gizlenmisse
+        if (data['isActive'] == false || data['isArchived'] == true) {
+          Future.microtask(() {
+            try {
+              if (mounted) {
+                ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(fav.sku);
+              }
+            } catch (_) {}
+          });
+          return const SizedBox.shrink(); // Ekranda gosterme
+        }
+
+        final productName = _extractProductName(data) ?? fav.sku;
+        final productImage = data['imageUrl']?.toString() ?? '';
+        final productPrice = (data['appSellingPrice'] ?? data['sellingPrice'] ?? data['price'] ?? 0).toDouble();
+        final foundBusinessId = hasBusinessId ? fav.businessId : (doc.reference.parent.parent?.id ?? '');
+
+        // Sadece degisiklik varsa provider'i guncelle
+        if (isLegacy || fav.businessId != foundBusinessId || fav.productName != productName || fav.price != productPrice) {
+          Future.microtask(() {
+            try {
+              if (mounted) {
+                ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(fav.sku); // cikar
+                ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
+                  fav.sku,
+                  businessId: foundBusinessId,
+                  productName: productName,
+                  imageUrl: productImage,
+                  price: productPrice,
+                ); // detayli olarak tekrar ekle
+              }
+            } catch (_) {}
+          });
+        }
+
+        return _buildProductCardUI(
+          name: productName,
+          imageUrl: productImage,
+          price: productPrice,
+          businessId: foundBusinessId,
+          sku: fav.sku,
+          surfaceCard: surfaceCard,
+          textPrimary: textPrimary,
+          textSubtle: textSubtle,
+          borderSubtle: borderSubtle,
+          isDark: isDark,
+        );
+      },
     );
   }
 
