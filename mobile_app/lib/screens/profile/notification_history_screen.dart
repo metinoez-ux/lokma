@@ -1310,6 +1310,22 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     if (user == null) return;
     if (group.orderId.isEmpty) return;
     
+    // Fetch full order to extract items!
+    final order = await OrderService().getOrder(group.orderId);
+    final int finalItemCount = order != null ? order.items.length : group.itemCount;
+    final List<Map<String, dynamic>> finalItems = order != null 
+        ? order.items.map((item) => {
+            'productId': item.sku,
+            'productName': item.name,
+            'quantity': item.quantity,
+            'unitPrice': item.price,
+            'unit': item.unit,
+            'imageUrl': item.imageUrl,
+            'itemNote': item.itemNote,
+            'selectedOptions': item.selectedOptions,
+          }).toList() 
+        : [];
+
     await FirebaseFirestore.instance
         .collection('users').doc(user.uid)
         .collection('favoriteOrders').doc(group.orderId)
@@ -1318,7 +1334,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       'businessName': group.businessName,
       'businessId': group.businessId,
       'totalAmount': group.totalAmount ?? 0,
-      'itemCount': group.itemCount,
+      'itemCount': finalItemCount,
+      'items': finalItems,
       'favoriteName': favoriteName,
       'orderType': group.orderType,
       'createdAt': Timestamp.now(),
@@ -2124,6 +2141,43 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── NEW TOP ROW: Only the Favorite Badge/Heart at top right ──
+                  if (widget.onFavoriteTap != null) ...[
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: GestureDetector(
+                        onTap: widget.onFavoriteTap,
+                        child: (widget.favoriteName != null && widget.favoriteName!.isNotEmpty)
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEA184A).withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.favorite_rounded, size: 15, color: Color(0xFFEA184A)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      widget.favoriteName!,
+                                      style: const TextStyle(
+                                        color: Color(0xFFEA184A),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Icon(Icons.favorite_border, size: 22, color: cardSubtleColor),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   // ── Row 1: Order type + number (left) + Date+Business (right)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2173,18 +2227,6 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (widget.onFavoriteTap != null)
-                                GestureDetector(
-                                  onTap: widget.onFavoriteTap,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: Icon(
-                                      widget.favoriteName != null ? Icons.favorite : Icons.favorite_border,
-                                      color: widget.favoriteName != null ? const Color(0xFFEA184A) : cardSubtleColor,
-                                      size: 16,
-                                    ),
-                                  ),
-                                ),
                               if (headerDateStr.isNotEmpty)
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -2193,8 +2235,8 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                                       headerDateStr,
                                       style: TextStyle(
                                         color: cardSubtleColor,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w400,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
                                         letterSpacing: 0.3,
                                       ),
                                     ),
@@ -2219,8 +2261,8 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                                 group.businessName,
                                 style: TextStyle(
                                   color: cardSubtleColor,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w400,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -2313,31 +2355,6 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           );
                         },
                       ),
-                      // Favorite badge (left of amount)
-                      if (widget.favoriteName != null && widget.favoriteName!.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEA184A).withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.favorite_rounded, size: 13, color: Color(0xFFEA184A)),
-                              const SizedBox(width: 3),
-                              Text(
-                                widget.favoriteName!,
-                                style: const TextStyle(
-                                  color: Color(0xFFEA184A),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       if (group.totalAmount != null && group.totalAmount! > 0)
                         Text(
                           '${group.totalAmount!.toStringAsFixed(2)} \u20ac',
@@ -2989,54 +3006,97 @@ void showChatBottomSheetGlobal(
                     controller: scrollCtrl,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
-                      // Status
-                      _OrderStatusRow(order: order, isDark: isDark),
-                      const SizedBox(height: 16),
-                      // Date
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today, size: 15, color: Colors.grey[500]),
-                          const SizedBox(width: 6),
-                          Text(
-                            () {
-                                      final dt = pendingAt ?? order.createdAt;
-                                      return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-                                    }(),
-                            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
-                          ),
-                        ],
-                      ),
-                      // Scheduled delivery/pickup time
-                      if (order.isScheduledOrder || order.scheduledTime != null) ...[
-                        const SizedBox(height: 10),
+                      // Status & Dates Logic
+                      if (order.status == OrderStatus.delivered && (order.isScheduledOrder || order.scheduledTime != null))
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF3E2723) : const Color(0xFFFFF3E0),
+                            color: isDark ? const Color(0xFF1B5E20).withOpacity(0.3) : const Color(0xFFE8F5E9),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFFFFB74D).withOpacity(0.3) : const Color(0xFFFFE0B2),
-                            ),
+                            border: Border.all(color: isDark ? const Color(0xFF4CAF50).withOpacity(0.3) : const Color(0xFFA5D6A7)),
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.schedule, size: 16, color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100)),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  order.scheduledTime != null
-                                      ? '${'notifications.scheduled_delivery'.tr()}: ${order.scheduledTime!.day.toString().padLeft(2, '0')}.${order.scheduledTime!.month.toString().padLeft(2, '0')}.${order.scheduledTime!.year} ${order.scheduledTime!.hour.toString().padLeft(2, '0')}:${order.scheduledTime!.minute.toString().padLeft(2, '0')}'
-                                      : 'notifications.scheduled_delivery'.tr(),
-                                  style: TextStyle(
-                                    color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                              Row(
+                                children: [
+                                  Icon(Icons.check_circle, size: 16, color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'orders.status_delivered'.tr(),
+                                    style: TextStyle(
+                                      color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
                                   ),
-                                ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${'notifications.scheduled_delivery'.tr()}: ${order.scheduledTime!.day.toString().padLeft(2, '0')}.${order.scheduledTime!.month.toString().padLeft(2, '0')}.${order.scheduledTime!.year} ${order.scheduledTime!.hour.toString().padLeft(2, '0')}:${order.scheduledTime!.minute.toString().padLeft(2, '0')}',
+                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 13),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                () {
+                                  final dt = pendingAt ?? order.createdAt;
+                                  return '${'notifications.delivery_address_desc'.tr()} / ${'orders.status_delivered'.tr()}: ${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                }(),
+                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 13, fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
+                        )
+                      else ...[
+                        _OrderStatusRow(order: order, isDark: isDark),
+                        const SizedBox(height: 16),
+                        // Date
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today, size: 15, color: Colors.grey[500]),
+                            const SizedBox(width: 6),
+                            Text(
+                              () {
+                                        final dt = pendingAt ?? order.createdAt;
+                                        return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                      }(),
+                              style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
+                            ),
+                          ],
                         ),
+                        // Scheduled delivery/pickup time
+                        if (order.isScheduledOrder || order.scheduledTime != null) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF3E2723) : const Color(0xFFFFF3E0),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isDark ? const Color(0xFFFFB74D).withOpacity(0.3) : const Color(0xFFFFE0B2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.schedule, size: 16, color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    order.scheduledTime != null
+                                        ? '${'notifications.scheduled_delivery'.tr()}: ${order.scheduledTime!.day.toString().padLeft(2, '0')}.${order.scheduledTime!.month.toString().padLeft(2, '0')}.${order.scheduledTime!.year} ${order.scheduledTime!.hour.toString().padLeft(2, '0')}:${order.scheduledTime!.minute.toString().padLeft(2, '0')}'
+                                        : 'notifications.scheduled_delivery'.tr(),
+                                    style: TextStyle(
+                                      color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                       const SizedBox(height: 16),
                       // Items header
@@ -3093,7 +3153,7 @@ void showChatBottomSheetGlobal(
                               ),
                               Text(
                                 '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
-                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
+                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(width: 10),
                               Text(
@@ -3200,9 +3260,9 @@ void showChatBottomSheetGlobal(
                               Text(
                                 'notifications.payment_method_label'.tr(),
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w400,
-                                  color: isDark ? Colors.grey[500] : Colors.grey[500],
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
                                   letterSpacing: 0.3,
                                 ),
                               ),
@@ -3216,7 +3276,7 @@ void showChatBottomSheetGlobal(
                                       const SizedBox(width: 8),
                                       Text(
                                         _getPaymentMethodLabel(order.paymentMethod!),
-                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : Colors.black87),
                                       ),
                                     ],
                                   ),
@@ -3236,7 +3296,7 @@ void showChatBottomSheetGlobal(
                                       }
                                       return Text(
                                         '${'notifications.last_action_label'.tr()}: $relativeTime',
-                                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[500]),
                                       );
                                     },
                                   ),

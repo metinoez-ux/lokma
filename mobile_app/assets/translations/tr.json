@@ -1367,7 +1367,7 @@
         "sort_newest": "En yeniden",
         "sort_oldest": "En eskiden",
         "delivery_address_label": "Sipariş Adresi",
-        "delivery_order_label": "Lieferbestellung",
+        "delivery_order_label": "Teslimat Siparişi",
         "pickup_order_label": "Gel Al Sipariş",
         "payment_card_on_delivery": "Kapıda Kart",
         "payment_card_nfc": "Kapida Kart (NFC)",

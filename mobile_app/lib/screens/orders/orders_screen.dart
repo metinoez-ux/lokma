@@ -30,6 +30,7 @@ class OrdersScreen extends ConsumerStatefulWidget {
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   static const Color lokmaRed = Color(0xFFEA184A);
+  bool _showAllPastOrders = false;
 
   bool _isActiveOrder(OrderStatus status) {
     return status == OrderStatus.pending ||
@@ -191,38 +192,50 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 ),
               ),
             ],
-            // Past orders — collapsed section
+            // Past orders — list with pagination
             if (completedOrders.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  initiallyExpanded: false,
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 4),
-                  title: Row(
-                    children: [
-                      Icon(Icons.history, size: 20, color: subtitleColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${'orders.past_orders'.tr()} (${completedOrders.length})',
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                child: Row(
                   children: [
-                    for (final order in completedOrders)
-                      _OrderCard(
-                        order: order,
-                        isDark: isDark,
-                        autoOpen: false,
+                    Icon(Icons.history, size: 20, color: subtitleColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${'orders.past_orders'.tr()} (${completedOrders.length})',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
                   ],
                 ),
               ),
+              for (final order in (_showAllPastOrders ? completedOrders : completedOrders.take(10)))
+                _OrderCard(
+                  order: order,
+                  isDark: isDark,
+                  autoOpen: false,
+                ),
+              if (!_showAllPastOrders && completedOrders.length > 10)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 16),
+                  child: Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _showAllPastOrders = true;
+                        });
+                      },
+                      icon: Icon(Icons.expand_more, color: lokmaRed),
+                      label: Text(
+                        'common.show_more'.tr(),
+                        style: const TextStyle(color: lokmaRed, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ),
             ],
             // Group order history — collapsed section
             const SizedBox(height: 8),
@@ -389,6 +402,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
 
     return showModalBottomSheet<String>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -704,6 +718,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1293,8 +1308,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         'Sipariş No: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                         style: TextStyle(
                           color: subtitleColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -1304,15 +1319,19 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         order.butcherName,
                         style: TextStyle(
                           color: textColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 17.5,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 4),
                       // Status and date
                       Text(
                         '${_getStatusText(order.status)} • ${_formatDate(order.createdAt)}',
-                        style: TextStyle(color: subtitleColor, fontSize: 13),
+                        style: TextStyle(
+                          color: subtitleColor, 
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       // Order mode tag (Kurye / Gel Al / Masa / Grup Siparişi)

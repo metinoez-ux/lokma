@@ -16,9 +16,9 @@ import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/widgets/kermes_card.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../widgets/order_bottom_sheet_helper.dart';
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -33,6 +33,23 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   late TabController _tabController;
   int _selectedIndex = 0;
   String _businessFilter = 'all'; // 'all', 'tuna', 'kermes', tr('common.kasap')
+
+  // Cache for Business Documents to prevent FutureBuilder jank in list scrolls
+  final Map<String, DocumentSnapshot> _businessCache = {};
+
+  Future<DocumentSnapshot> _getCachedBusiness(bool isKermesOrder, String businessId) async {
+    if (businessId.isEmpty) throw Exception('Empty business ID');
+    final cacheKey = '${isKermesOrder ? 'kermes' : 'kasap'}_$businessId';
+    if (_businessCache.containsKey(cacheKey)) {
+      return _businessCache[cacheKey]!;
+    }
+    final doc = await (isKermesOrder 
+        ? FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get()
+        : FirebaseFirestore.instance.collection('businesses').doc(businessId).get());
+    
+    _businessCache[cacheKey] = doc;
+    return doc;
+  }
 
   @override
   void initState() {
@@ -122,7 +139,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   // --- TAB 3: FAVORITE ORDERS ---
   Widget _buildOrderHistory(bool isDark) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    if (user == null || user.uid.isEmpty) {
       return _buildEmptyState(
         icon: Icons.login_rounded,
         title: tr('common.giris_yapin'),
@@ -219,7 +236,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   }
 
   Widget _buildFavoriteOrderCard(String orderId, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final bool isKermesOrder = data.containsKey('kermesId');
+    final bool isKermesOrder = data['kermesId'] != null && data['kermesId'].toString().isNotEmpty;
     final businessName = isKermesOrder ? data['kermesName']?.toString() ?? 'Kermes' : data['businessName']?.toString() ?? data['butcherName']?.toString() ?? tr('common.i_sletme');
     final businessId = isKermesOrder ? data['kermesId']?.toString() ?? '' : data['businessId']?.toString() ?? data['butcherId']?.toString() ?? '';
     final totalAmount = (data['grandTotal'] ?? data['totalAmount'] ?? data['total'] ?? 0).toDouble();
@@ -231,10 +248,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         ? '${createdAt.toDate().day.toString().padLeft(2, '0')}.${createdAt.toDate().month.toString().padLeft(2, '0')}.${createdAt.toDate().year}'
         : '';
 
+    final cacheKey = '${isKermesOrder ? 'kermes' : 'kasap'}_$businessId';
+    final cachedDoc = _businessCache[cacheKey];
+
     return FutureBuilder<DocumentSnapshot>(
-      future: isKermesOrder 
-          ? FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get()
-          : FirebaseFirestore.instance.collection('businesses').doc(businessId).get(),
+      initialData: cachedDoc,
+      future: cachedDoc != null || businessId.isEmpty ? null : _getCachedBusiness(isKermesOrder, businessId),
       builder: (context, businessSnapshot) {
         String? imageUrl;
         bool isTuna = false;
@@ -243,7 +262,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           final businessData = businessSnapshot.data!.data() as Map<String, dynamic>?;
           imageUrl = isKermesOrder 
               ? (businessData?['headerImage'] ?? businessData?['imageUrl'])
-              : (businessData?['imageUrl'] ?? businessData?['logoUrl']);
+              : (businessData?['logoUrl'] ?? businessData?['imageUrl']);
           if (!isKermesOrder) {
             isTuna = businessData?['isTuna'] == true || 
                      businessData?['isTunaPartner'] == true ||
@@ -256,12 +275,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
         return GestureDetector(
           onTap: () {
-            if (businessId.isNotEmpty) {
-              if (isKermesOrder) {
-                context.push('/kermes/$businessId');
-              } else {
-                context.push('/kasap/$businessId');
-              }
+            if (orderId.isNotEmpty) {
+              OrderBottomSheetHelper.showOrderDetailGlobal(context, orderId);
             }
           },
           child: Container(
@@ -368,8 +383,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                           children: [
                             Expanded(
                               child: Text(
-                                '$itemCount ${tr('common.urun_kucuk')} - ${CurrencyUtils.getCurrencySymbol()}${totalAmount.toStringAsFixed(2)}',
-                                style: TextStyle(color: textSubtle, fontSize: 12),
+                                '$itemCount ${tr('common.urun')} - ${CurrencyUtils.getCurrencySymbol()}${totalAmount.toStringAsFixed(2)}',
+                                style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w600),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -407,12 +422,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                         // "Siparisi Goruntule" button
                         GestureDetector(
                           onTap: () {
-                            if (businessId.isNotEmpty) {
-                              if (isKermesOrder) {
-                                context.push('/kermes/$businessId');
-                              } else {
-                                context.push('/kasap/$businessId');
-                              }
+                            if (orderId.isNotEmpty) {
+                              // Instant bottom sheet popup without navigation
+                              OrderBottomSheetHelper.showOrderDetailGlobal(context, orderId);
                             }
                           },
                           child: Text(
@@ -821,7 +833,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     );
 
     Future<DocumentSnapshot?> future;
-    if (hasBusinessId) {
+    if (hasBusinessId && fav.sku.isNotEmpty) {
       future = FirebaseFirestore.instance
           .collection('businesses').doc(fav.businessId)
           .collection('products').doc(fav.sku)
