@@ -1184,6 +1184,79 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     );
   }
 
+  void _openMoreMenu(bool isDark, List<Map<String, dynamic>> allDests, int startIndex) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.only(top: 16, bottom: 48, left: 24, right: 24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40, height: 5,
+                  decoration: BoxDecoration(color: Colors.grey[600], borderRadius: BorderRadius.circular(3)),
+                  margin: const EdgeInsets.only(bottom: 24),
+                ),
+                Text('Diğer Görevler', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black87)),
+                const SizedBox(height: 28),
+                Wrap(
+                  spacing: 24,
+                  runSpacing: 24,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    for (int i = startIndex; i < allDests.length; i++)
+                      _buildRoleMenuItem(ctx, allDests[i]['icon'] as IconData, allDests[i]['label'] as String, allDests[i]['color'] as Color, isDark, () {
+                        setState(() {
+                          _selectedNavIndex = i;
+                        });
+                      }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _buildRoleMenuItem(BuildContext ctx, IconData icon, String label, Color color, bool isDark, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(ctx);
+        onTap();
+      },
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          children: [
+            Container(
+              width: 64, height: 64,
+              decoration: BoxDecoration(
+                color: color.withOpacity(isDark ? 0.15 : 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 10),
+            Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? Colors.white70 : Colors.black87)
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final capabilities = ref.watch(staffCapabilitiesProvider);
@@ -1196,141 +1269,196 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     final bool isOnShift = _shiftService.isOnShift;
     final bool showQr = capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole;
 
-    List<Widget> tabs = [];
-    List<BottomNavigationBarItem> navItems = [];
+    List<Map<String, dynamic>> allDestinations = [];
 
-    // ========================================
-    // OPERATIF TAB'LAR - mesai aktif degilse kilitli
-    // ========================================
+    // 0. Ana Pano (Mesai)
+    allDestinations.add({
+      'widget': const ShiftDashboardTab(),
+      'icon': Icons.dashboard_rounded,
+      'label': 'Ana Pano',
+      'color': Colors.blueGrey
+    });
 
-    // 1. KDS / Mutfak Tab
+    // 1. Mutfak
     if (capabilities.kermesPrepZones.isNotEmpty && capabilities.businessId != null) {
-      tabs.add(isOnShift
-          ? KermesUnifiedKdsScreen(
-              kermesId: capabilities.businessId!,
-              kermesName: capabilities.businessName,
-              allowedSections: capabilities.kermesAllowedSections,
-              staffPrepZones: capabilities.kermesPrepZones,
-            )
-          : _buildShiftLockedPlaceholder(isDark));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Mutfak'));
+      allDestinations.add({
+        'widget': isOnShift ? KermesUnifiedKdsScreen(
+          kermesId: capabilities.businessId!,
+          kermesName: capabilities.businessName,
+          allowedSections: capabilities.kermesAllowedSections,
+          staffPrepZones: capabilities.kermesPrepZones,
+        ) : _buildShiftLockedPlaceholder(isDark), 
+        'icon': Icons.kitchen, 'label': 'Mutfak', 'color': Colors.orange
+      });
     }
 
-    // 2. Tezgah Tab
+    // 2. Tezgah
     if (capabilities.hasTezgahRole && capabilities.businessId != null) {
-      tabs.add(isOnShift
-          ? KermesTezgahScreen(
-              kermesId: capabilities.businessId!,
-              kermesName: capabilities.businessName,
-              tezgahName: capabilities.tezgahName.isNotEmpty ? capabilities.tezgahName : 'T1',
-              allowedSections: capabilities.kermesAllowedSections,
-            )
-          : _buildShiftLockedPlaceholder(isDark));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.storefront), label: 'Tezgah'));
+      allDestinations.add({
+        'widget': isOnShift ? KermesTezgahScreen(
+          kermesId: capabilities.businessId!,
+          kermesName: capabilities.businessName,
+          tezgahName: capabilities.tezgahName.isNotEmpty ? capabilities.tezgahName : 'T1',
+          allowedSections: capabilities.kermesAllowedSections,
+        ) : _buildShiftLockedPlaceholder(isDark), 
+        'icon': Icons.storefront, 'label': 'Tezgah', 'color': Colors.blue
+      });
     }
 
-    // 3. POS Tab -- sag tarafa tasindi (asagida)
-
-    // --- SOL TARAF BITTI, ORTAYA SPACER EKLE ---
-    final int leftCount = tabs.length;
-
-    // Spacer for center shift control
-    tabs.add(const SizedBox.shrink());
-    navItems.add(const BottomNavigationBarItem(icon: SizedBox(width: 24, height: 24), label: ''));
-
-    // --- SAG TARAF BASLIYOR ---
-
-    // 3. POS Tab (sag tarafta)
+    // 3. POS
     if (capabilities.hasPosRole && capabilities.businessId != null) {
-      tabs.add(isOnShift
-          ? StaffPosWrapperTab(
-              kermesId: capabilities.businessId!,
-              staffId: capabilities.userId,
-              staffName: capabilities.staffName,
-              allowedSections: capabilities.kermesAllowedSections,
-            )
-          : _buildShiftLockedPlaceholder(isDark));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'POS'));
+      allDestinations.add({
+        'widget': isOnShift ? StaffPosWrapperTab(
+          kermesId: capabilities.businessId!,
+          staffId: capabilities.userId,
+          staffName: capabilities.staffName,
+          allowedSections: capabilities.kermesAllowedSections,
+        ) : _buildShiftLockedPlaceholder(isDark), 
+        'icon': Icons.point_of_sale, 'label': 'POS', 'color': Colors.teal
+      });
     }
 
-    // 4. Courier Tab
+    // 4. Kurye
     if (capabilities.isDriver && capabilities.businessId != null) {
-      tabs.add(isOnShift
-          ? CourierTab(businessIds: [capabilities.businessId!], userId: capabilities.userId, isDark: isDark)
-          : _buildShiftLockedPlaceholder(isDark));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.delivery_dining), label: 'Kurye'));
+      allDestinations.add({
+        'widget': isOnShift ? CourierTab(businessIds: [capabilities.businessId!], userId: capabilities.userId, isDark: isDark) : _buildShiftLockedPlaceholder(isDark), 
+        'icon': Icons.delivery_dining, 'label': 'Kurye', 'color': Colors.indigo
+      });
     }
 
-    // 5. Waiter Tab
+    // 5. Masalar
     if (capabilities.hasTablesRole && capabilities.businessId != null) {
-      tabs.add(isOnShift
-          ? WaiterTablesTab(
-              businessId: capabilities.businessId!,
-              isDark: isDark,
-              onTableSelected: (session, num) {
-                final query = Uri(path: '/waiter-order', queryParameters: {
-                  'businessId': capabilities.businessId,
-                  'businessName': capabilities.businessName,
-                  'tableNumber': num.toString(),
-                }).toString();
-                context.push(query);
-              },
-              onEmptyTableSelected: (num) {
-                final query = Uri(path: '/waiter-order', queryParameters: {
-                  'businessId': capabilities.businessId,
-                  'businessName': capabilities.businessName,
-                  'tableNumber': num.toString(),
-                }).toString();
-                context.push(query);
-              },
-              onWalkinOrderSelected: () {
-                final query = Uri(path: '/waiter-order', queryParameters: {
-                  'businessId': capabilities.businessId,
-                  'businessName': capabilities.businessName,
-                }).toString();
-                context.push(query);
-              },
-            )
-          : _buildShiftLockedPlaceholder(isDark));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.table_restaurant), label: 'Masalar'));
+      allDestinations.add({
+        'widget': isOnShift ? WaiterTablesTab(
+          businessId: capabilities.businessId!,
+          isDark: isDark,
+          onTableSelected: (session, num) {
+            final query = Uri(path: '/waiter-order', queryParameters: {
+              'businessId': capabilities.businessId,
+              'businessName': capabilities.businessName,
+              'tableNumber': num.toString(),
+            }).toString();
+            context.push(query);
+          },
+          onEmptyTableSelected: (num) {
+            final query = Uri(path: '/waiter-order', queryParameters: {
+              'businessId': capabilities.businessId,
+              'businessName': capabilities.businessName,
+              'tableNumber': num.toString(),
+            }).toString();
+            context.push(query);
+          },
+          onWalkinOrderSelected: () {
+            final query = Uri(path: '/waiter-order', queryParameters: {
+              'businessId': capabilities.businessId,
+              'businessName': capabilities.businessName,
+            }).toString();
+            context.push(query);
+          },
+        ) : _buildShiftLockedPlaceholder(isDark), 
+        'icon': Icons.table_restaurant, 'label': 'Masalar', 'color': Colors.pink
+      });
     }
 
-    // 6. Reservations Tab
+    // 6. Rezervasyon
     if (capabilities.hasReservation && capabilities.businessId != null) {
-      tabs.add(const StaffReservationsScreen(hideAppBar: true));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Rezervasyon'));
+      allDestinations.add({
+        'widget': const StaffReservationsScreen(hideAppBar: true), 
+        'icon': Icons.book_online, 'label': 'Rezerv.', 'color': Colors.cyan
+      });
     }
 
-    // 7. Park Yonetimi Tab
+    // 7. Park
     if (capabilities.hasParkRole && capabilities.businessId != null) {
-      tabs.add(ParkingManagementTab(kermesId: capabilities.businessId!, kermesName: capabilities.businessName));
-      navItems.add(const BottomNavigationBarItem(icon: Icon(Icons.local_parking), label: 'Park'));
+      allDestinations.add({
+        'widget': ParkingManagementTab(kermesId: capabilities.businessId!, kermesName: capabilities.businessName), 
+        'icon': Icons.local_parking, 'label': 'Park', 'color': Colors.purple
+      });
     }
 
-    // 8. Finance Tab - artik Mesai dashboard'a tasindi, navbardan kaldirildi
-
-    // Mesai artik bottom nav'da yok - header'daki ikon ile acilir
-
-    if (_selectedNavIndex >= tabs.length) {
+    if (_selectedNavIndex >= allDestinations.length) {
       _selectedNavIndex = 0;
     }
 
-    // Center spacer index
-    final int centerIndex = leftCount;
+    final int maxTabs = 4;
+    final int navRolesCount = allDestinations.length - 1;
+    final bool hasMore = navRolesCount > maxTabs;
+    final int maxVisibleRoles = hasMore ? maxTabs - 1 : navRolesCount;
 
-    // Aktif tab basligi
-    final activeTitle = _showMesai ? 'Mesai' : _getActiveTabTitle(_selectedNavIndex, navItems);
-    // Subtitle: staffName - kermesName
+    Widget buildNavItem(int index, IconData icon, String label) {
+      final isSelected = _selectedNavIndex == index;
+      final color = isSelected 
+          ? Colors.blueAccent 
+          : (isDark ? Colors.grey.shade400 : Colors.grey.shade600);
+          
+      return Expanded(
+        child: InkWell(
+          highlightColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          onTap: () {
+            if (hasMore && index == allDestinations.length) { 
+               _openMoreMenu(isDark, allDestinations, maxVisibleRoles + 1);
+            } else {
+               setState(() => _selectedNavIndex = index);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: _selectedNavIndex == index ? 26 : 24),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color, 
+                  fontSize: 11, 
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    List<Widget> bottomNavChildren = [];
+    for (int i = 1; i <= maxVisibleRoles; i++) {
+       bottomNavChildren.add(buildNavItem(i, allDestinations[i]['icon'] as IconData, allDestinations[i]['label'] as String));
+    }
+    if (hasMore) {
+       bottomNavChildren.add(buildNavItem(allDestinations.length, Icons.more_horiz_rounded, 'Daha Fazla'));
+    }
+
+    final int half = (bottomNavChildren.length + 1) ~/ 2; 
+    final List<Widget> leftSide = bottomNavChildren.sublist(0, half);
+    final List<Widget> rightSide = bottomNavChildren.sublist(half);
+
+    final int displayIndex = _selectedNavIndex < allDestinations.length ? _selectedNavIndex : 0;
+    final activeTitle = allDestinations[displayIndex]['label'] as String;
     final staffLabel = capabilities.staffName.isNotEmpty ? capabilities.staffName : 'Personel';
-    final subtitle = capabilities.businessName.isNotEmpty
-        ? '$staffLabel - ${capabilities.businessName}'
-        : staffLabel;
+    final subtitle = capabilities.businessName.isNotEmpty ? capabilities.businessName : staffLabel;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
       appBar: AppBar(
         backgroundColor: const Color(0xFFEA184A),
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false, // Remove default back button
+        leading: IconButton(
+          icon: const Icon(Icons.manage_accounts_rounded, color: Colors.white),
+          tooltip: 'Ayarlar ve Ana Pano',
+          onPressed: () {
+            if (_selectedNavIndex != 0) {
+              setState(() => _selectedNavIndex = 0);
+            } else {
+              _handleWorkplaceSwitch(); // If already on home, act as profile/settings
+            }
+          },
+        ),
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1338,42 +1466,30 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           children: [
             Text(
               activeTitle,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
             Text(
               subtitle,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white70),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
           ],
         ),
         actions: [
-          // QR buton
           if (showQr)
             IconButton(
               icon: const Icon(Icons.qr_code_scanner, size: 22, color: Colors.white),
               onPressed: () => _openQrScanner(capabilities.businessId),
               tooltip: 'QR Tara',
             ),
-          // Mesai butonu - header'a tasindi
-          IconButton(
-            icon: Icon(
-              _shiftService.isOnShift ? Icons.timer : Icons.timer_outlined,
-              size: 22,
-              color: _showMesai ? Colors.yellowAccent : Colors.white,
-            ),
-            onPressed: () => setState(() => _showMesai = !_showMesai),
-            tooltip: 'Mesai',
-          ),
-          // Bildirim zili - en sagda
           Stack(
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications, color: Colors.white),
+                icon: const Icon(Icons.notifications_rounded, color: Colors.white),
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const StaffNotificationsScreen(),
@@ -1401,53 +1517,49 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 ),
             ],
           ),
+          IconButton(
+            icon: const Icon(Icons.exit_to_app_rounded, color: Colors.white),
+            tooltip: 'Geri / Çıkış',
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+          ),
           const SizedBox(width: 4),
         ],
       ),
-      body: _showMesai
-          ? const ShiftDashboardTab()
-          : tabs.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : tabs.length == 1
-                  ? tabs.first
-                  : IndexedStack(
-                      index: _selectedNavIndex,
-                      children: tabs,
-                    ),
-      bottomNavigationBar: navItems.length >= 2
-          ? Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.topCenter,
-              children: [
-                BottomNavigationBar(
-                  currentIndex: _selectedNavIndex,
-                  onTap: (index) {
-                    // Skip center spacer
-                    if (index == centerIndex) return;
-                    setState(() {
-                      _selectedNavIndex = index;
-                      _showMesai = false;
-                    });
-                  },
-                  type: BottomNavigationBarType.fixed,
-                  items: navItems,
-                  backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                  selectedItemColor: Colors.blueAccent,
-                  unselectedItemColor: Colors.grey,
-                  selectedFontSize: 11,
-                  unselectedFontSize: 11,
-                ),
-                // Center shift control button - overlayed
-                Positioned(
-                  top: -16,
-                  child: ValueListenableBuilder<Duration>(
-                    valueListenable: _shiftElapsedNotifier,
-                    builder: (context, elapsed, _) => _buildCenterShiftControl(isDark),
-                  ),
-                ),
-              ],
-            )
-          : null,
+      body: allDestinations.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : IndexedStack(
+              index: displayIndex,
+              children: allDestinations.map((e) => e['widget'] as Widget).toList(),
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: ValueListenableBuilder<Duration>(
+        valueListenable: _shiftElapsedNotifier,
+        builder: (context, elapsed, _) => _buildCenterShiftControl(isDark),
+      ),
+      bottomNavigationBar: bottomNavChildren.isNotEmpty ? BottomAppBar(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6,
+        clipBehavior: Clip.antiAlias,
+        elevation: 16,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (leftSide.isNotEmpty)
+                Expanded(child: Row(children: leftSide)),
+              const SizedBox(width: 80),
+              if (rightSide.isNotEmpty)
+                Expanded(child: Row(children: rightSide)),
+            ],
+          ),
+        ),
+      ) : null,
     );
   }
 }

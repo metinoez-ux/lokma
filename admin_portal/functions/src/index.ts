@@ -3708,3 +3708,4 @@ export { onUserAccountDeleted } from "./accountDeletion";
 export { kermesWaiterTimeoutCheck, onKermesOrderReady } from "./kermesWaiterFunctions";
 export { onKermesOrderPaidStock, onKermesOrderCancelledStock } from "./kermesStockFunctions";
 export { onKermesOrderCreatedNotif, onKermesOrderPaidNotif } from "./kermesCustomerNotifications";
+export { onKermesRosterCreated } from "./kermesRosterFunctions";

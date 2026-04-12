@@ -8,12 +8,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../services/shift_service.dart';
 import '../../../services/staff_role_service.dart';
 import '../providers/staff_hub_provider.dart';
+import '../../kermes/staff/kermes_schedule_screen.dart';
+import '../../kermes/staff/kermes_admin_roster_screen.dart';
+import '../../kermes/staff/kermes_admin_staff_assignment_screen.dart';
 
 
 class ShiftDashboardTab extends ConsumerStatefulWidget {
@@ -260,7 +264,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             children: [
               _buildAssignmentCard(capabilities, isDark),
               _buildFinanceCard(isDark),
-
+              _buildKermesAdminManagementCard(capabilities, isDark),
               _buildStatsCard(isDark),
               const SizedBox(height: 24),
             ],
@@ -470,6 +474,10 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         uids = List<String>.from(data['assignedDrivers'] ?? []);
       } else if (roleOrZone == 'Garson') {
         uids = List<String>.from(data['assignedWaiters'] ?? []);
+      } else if (roleOrZone == 'Kermes Admini') {
+        uids = List<String>.from(data['kermesAdmins'] ?? []);
+      } else if (roleOrZone == 'Kermes Görevlisi') {
+        uids = List<String>.from(data['assignedStaff'] ?? []);
       } else {
         // PrepZone or fallback
         final prepZoneAssignments = data['prepZoneAssignments'] as Map<String, dynamic>? ?? {};
@@ -596,6 +604,157 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     return result;
   }
 
+  Future<List<Map<String, dynamic>>> _fetchKermesAdminsData(List<String> adminUids, String? currentUserGender) async {
+    if (adminUids.isEmpty) return [];
+
+    List<Map<String, dynamic>> adminsList = [];
+    final Map<String, Map<String, dynamic>> adminsMap = {};
+
+    for (int i = 0; i < adminUids.length; i += 10) {
+      final chunk = adminUids.sublist(i, (i + 10 > adminUids.length) ? adminUids.length : i + 10);
+      try {
+        final snapAdmins = await FirebaseFirestore.instance.collection('admins').where(FieldPath.documentId, whereIn: chunk).get();
+        for (var doc in snapAdmins.docs) adminsMap[doc.id] = doc.data();
+      } catch(_) {}
+      try {
+        final snapUsers = await FirebaseFirestore.instance.collection('users').where(FieldPath.documentId, whereIn: chunk).get();
+        for (var doc in snapUsers.docs) {
+           if (adminsMap.containsKey(doc.id)) {
+              final d = adminsMap[doc.id]!;
+              final u = doc.data();
+              for (var entry in u.entries) {
+                 if (entry.value != null && entry.value.toString().isNotEmpty) {
+                    d[entry.key] = entry.value;
+                 }
+              }
+           } else {
+              adminsMap[doc.id] = doc.data();
+           }
+        }
+      } catch(_) {}
+    }
+
+    for (var uid in adminUids) {
+       final d = adminsMap[uid];
+       if (d == null) continue;
+       if (d['isActive'] == false) continue;
+
+       String adminGender = '';
+       final sections = List<String>.from(d['kermesAllowedSections'] ?? []);
+       final prepZones = List<String>.from(d['kermesPrepZones'] ?? []);
+       for (var s in [...sections, ...prepZones]) {
+          if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
+              adminGender = 'female'; break; 
+          } else if (s.contains('Erkek')) {
+              adminGender = 'male'; break;
+          }
+       }
+
+       if (adminGender.isEmpty) {
+          final g = (d['gender'] as String?)?.toLowerCase() ?? '';
+          if (g == 'kadin' || g == 'kadın' || g == 'female') adminGender = 'female';
+          if (g == 'erkek' || g == 'male') adminGender = 'male';
+       }
+
+       if (currentUserGender != null && currentUserGender.isNotEmpty && adminGender.isNotEmpty && adminGender != currentUserGender) {
+          continue; 
+       }
+
+       final adminName = d['staffName'] ?? d['name'] ?? d['displayName'] ?? 'Adsız Yetkili';
+       final adminPhone = d['phone'] ?? d['phoneNumber'] ?? '';
+
+       adminsList.add({
+           'uid': uid,
+           'name': adminName,
+           'phone': adminPhone,
+           'gender': adminGender,
+       });
+    }
+
+    adminsList.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+    return adminsList;
+  }
+
+  Widget _buildKermesAdminsSection(String businessId, String? userAreaGender, bool isDark, List<String> kermesAdminsUids) {
+    if (kermesAdminsUids.isEmpty) return const SizedBox.shrink();
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fetchKermesAdminsData(kermesAdminsUids, userAreaGender),
+      builder: (context, snapshot) {
+         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+            return const SizedBox(); 
+         }
+         if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox();
+         
+         final adminsList = snapshot.data!;
+         
+         return Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             _buildCustomRow(
+               'Kermes Yetkilileri:',
+               adminsList.map((a) => _buildKermesAdminChip(a['name'] as String, a['phone'] as String, a['gender'] as String, userAreaGender, isDark)).toList(),
+               isDark
+             ),
+             const SizedBox(height: 15),
+           ],
+         );
+      }
+    );
+  }
+
+  Widget _buildKermesAdminChip(String name, String phone, String adminGender, String? currentUserGender, bool isDark) {
+    bool canCall = false;
+    if (phone.isNotEmpty) {
+      if (currentUserGender != null && currentUserGender.isNotEmpty && adminGender.isNotEmpty) {
+        if (currentUserGender == adminGender) canCall = true;
+      } else {
+        canCall = true;
+      }
+    }
+
+    return InkWell(
+      onTap: canCall ? () async {
+        final Uri launchUri = Uri(scheme: 'tel', path: phone);
+        if (await canLaunchUrl(launchUri)) {
+          await launchUrl(launchUri);
+        }
+      } : null,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFF222222),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+          ]
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+             const Icon(Icons.admin_panel_settings, size: 14, color: Colors.white),
+             const SizedBox(width: 6),
+             Flexible(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+             ),
+             if (canCall) ...[
+                const SizedBox(width: 6),
+                const Icon(Icons.phone, size: 12, color: Colors.greenAccent),
+             ]
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAssignmentCard(StaffCapabilities capabilities, bool isDark) {
     if (capabilities.businessId == null) {
       return const SizedBox.shrink();
@@ -663,6 +822,11 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             }
         });
         
+        final kermesAdmins = List<String>.from(data['kermesAdmins'] ?? []);
+
+        final startDateTs = data['startDate'] as Timestamp?;
+        final endDateTs = data['endDate'] as Timestamp?;
+
         return _renderAssignmentCardInner(
           capabilities.copyWith(
             kermesPrepZones: livePrepZones,
@@ -670,17 +834,21 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             hasTablesRole: isWaiter,
           ), 
           isDark,
-          dynamicRoles: dynamicRoles
+          dynamicRoles: dynamicRoles,
+          kermesAdmins: kermesAdmins,
+          startDate: startDateTs?.toDate(),
+          endDate: endDateTs?.toDate(),
         );
       }
     );
   }
 
-  Widget _renderAssignmentCardInner(StaffCapabilities capabilities, bool isDark, {List<Map<String, dynamic>> dynamicRoles = const []}) {
+  Widget _renderAssignmentCardInner(StaffCapabilities capabilities, bool isDark, {List<Map<String, dynamic>> dynamicRoles = const [], List<String> kermesAdmins = const [], DateTime? startDate, DateTime? endDate}) {
     List<String> gorevler = [];
+    if (capabilities.isBusinessAdmin) gorevler.add("Kermes Admini");
     if (capabilities.isDriver) gorevler.add("Sürücü");
     if (capabilities.hasTablesRole) gorevler.add("Garson");
-    if (gorevler.isEmpty && capabilities.kermesAllowedSections.isEmpty) {
+    if (gorevler.isEmpty && capabilities.kermesAllowedSections.isEmpty && dynamicRoles.isEmpty) {
       gorevler.add("Kermes Görevlisi");
     }
 
@@ -739,8 +907,14 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             ],
           ),
           const Divider(height: 30),
+          _buildInfoRow('Personel:', capabilities.staffName.isNotEmpty ? capabilities.staffName : 'Personel', isDark),
+          const SizedBox(height: 15),
           _buildInfoRow('Aktif Etkinlik:', capabilities.businessName.isNotEmpty ? capabilities.businessName : 'Bekleniyor...', isDark),
           const SizedBox(height: 15),
+          if (startDate != null && endDate != null) ...[
+            _buildInfoRow('Tarih:', '${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}', isDark),
+            const SizedBox(height: 15),
+          ],
           if (bolumText.isNotEmpty) ...[
             _buildInfoRow('Bölüm:', bolumText, isDark),
             const SizedBox(height: 15),
@@ -754,8 +928,87 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 ...gorevler.map((g) => _buildClickableChip(g, g, capabilities.businessId, isDark)),
                 ...dynamicRoles.map((g) => _buildClickableChip(g['name'] as String, g['name'] as String, capabilities.businessId, isDark)),
             ], isDark),
+            const SizedBox(height: 15),
           ],
-          const SizedBox(height: 20),
+          
+          if (capabilities.businessId != null) ...[
+             Builder(builder: (context) {
+                String? currentUserGender;
+                final List<String> allUserSections = [...capabilities.kermesAllowedSections, ...capabilities.kermesPrepZones];
+                for (var s in allUserSections) {
+                  if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
+                      currentUserGender = 'female'; break; 
+                  } else if (s.contains('Erkek')) {
+                      currentUserGender = 'male'; break;
+                  }
+                }
+                return _buildKermesAdminsSection(capabilities.businessId!, currentUserGender, isDark, kermesAdmins);
+             }),
+          ],
+
+          const SizedBox(height: 15),
+
+          // Vardiya Navigation Buttons
+          if (capabilities.businessId != null) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? Colors.cyan.shade900 : Colors.cyan.shade100,
+                      foregroundColor: isDark ? Colors.cyan.shade100 : Colors.cyan.shade900,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.calendar_month, size: 18),
+                    label: const Text('Vardiya Planım', style: TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => KermesScheduleScreen(
+                            kermesId: capabilities.businessId!,
+                            kermesTitle: capabilities.businessName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (capabilities.isBusinessAdmin) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? Colors.pink.shade900 : Colors.pink.shade100,
+                        foregroundColor: isDark ? Colors.pink.shade100 : Colors.pink.shade900,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.manage_accounts, size: 18),
+                      label: const Text('Vardiya Yönetimi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => KermesAdminRosterScreen(
+                              kermesId: capabilities.businessId!,
+                              kermesTitle: capabilities.businessName,
+                              assignedStaffIds: [], // We made it self-fetching if empty
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ]
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -800,7 +1053,13 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   Widget _buildClickableChip(String label, String targetKey, String? businessId, bool isDark) {
     MaterialColor colorBase = Colors.pink;
     final l = label.toLowerCase();
-    if (l.contains('sürücü') || l.contains('surucu')) {
+    
+    bool isAdmin = false;
+    
+    if (l.contains('admin')) {
+      colorBase = Colors.red;
+      isAdmin = true;
+    } else if (l.contains('sürücü') || l.contains('surucu')) {
       colorBase = Colors.blue;
     } else if (l.contains('garson')) {
       colorBase = Colors.teal;
@@ -833,6 +1092,10 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (isAdmin) ...[
+               Icon(Icons.admin_panel_settings, size: 14, color: isDark ? colorBase.shade200 : colorBase.shade700),
+               const SizedBox(width: 4),
+            ],
             Flexible(
                child: Text(
                  label,
@@ -844,8 +1107,10 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                  overflow: TextOverflow.ellipsis,
                ),
             ),
-            const SizedBox(width: 4),
-            Icon(Icons.touch_app, size: 14, color: isDark ? colorBase.shade200 : colorBase.shade700),
+            if (!isAdmin) ...[
+               const SizedBox(width: 4),
+               Icon(Icons.touch_app, size: 14, color: isDark ? colorBase.shade200 : colorBase.shade700),
+            ]
           ],
         ),
       ),
@@ -1236,6 +1501,105 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     if (roleName.toLowerCase().contains('surucu')) return Colors.orange;
     if (roleName.toLowerCase().contains('garson')) return Colors.green;
     return Colors.pinkAccent;
+  }
+
+  Widget _buildKermesAdminManagementCard(StaffCapabilities capabilities, bool isDark) {
+    // Only visible if user is an Admin of this Kermes
+    if (!capabilities.isBusinessAdmin || capabilities.businessId == null) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.purple.withOpacity(0.3), width: 1.5),
+        boxShadow: [
+          if (!isDark) BoxShadow(color: Colors.purple.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.admin_panel_settings, color: Colors.purple, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Kermes Yönetimi',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Personel yetkilendirmelerini ve vardiya planlamalarını yönetin.',
+            style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+          ),
+          const Divider(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => KermesAdminStaffAssignmentScreen(
+                        kermesId: capabilities.businessId!,
+                        kermesTitle: capabilities.businessName,
+                      )));
+                    },
+                    icon: const Icon(Icons.people, size: 18),
+                    label: const Text('Personeller', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? Colors.purple.withOpacity(0.2) : Colors.purple.withOpacity(0.12),
+                      foregroundColor: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => KermesAdminRosterScreen(
+                        kermesId: capabilities.businessId!,
+                        kermesTitle: capabilities.businessName,
+                        assignedStaffIds: const [], 
+                      )));
+                    },
+                    icon: const Icon(Icons.calendar_month, size: 18),
+                    label: const Text('Vardiyalar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? Colors.purple.withOpacity(0.2) : Colors.purple.withOpacity(0.12),
+                      foregroundColor: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildFinanceCard(bool isDark) {

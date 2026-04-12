@@ -17,6 +17,7 @@ import { getLocalizedText } from '@/lib/utils';
 import TableManagementPanel from '@/components/TableManagementPanel';
 import KermesTahsilatTab from './KermesTahsilatTab';
 import KermesSiparislerTab from './KermesSiparislerTab';
+import KermesRosterTab from './KermesRosterTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
 
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
@@ -236,6 +237,7 @@ interface KermesProduct {
  description?: string;
  detailedDescription?: string; // Detaylı açıklama
  isAvailable: boolean;
+ isSoldOut?: boolean;
  isCustom?: boolean;
  sourceType?: 'master' | 'kermes_catalog' | 'custom';
  barcode?: string;
@@ -248,14 +250,21 @@ interface KermesProduct {
  serviceType?: 'instant' | 'prepped'; // instant=sicak/aninda, prepped=onceden hazir
  counterAvailability?: 'all' | 'source'; // all=her tezgahta, source=sadece hazirlandigi yerde
  // Stok takip
- stockEnabled?: boolean;
- initialStock?: number;
- currentStock?: number;
- lowStockThreshold?: number;
- lastStockUpdateBy?: string;
- lastStockUpdateAt?: any;
- optionGroups?: any[];
+  stockEnabled?: boolean;
+  initialStock?: number;
+  currentStock?: number;
+  lowStockThreshold?: number;
+  lastStockUpdateBy?: string;
+  lastStockUpdateAt?: any;
+  optionGroups?: any[];
 }
+
+export const EXTENDED_SYSTEM_ROLES: KermesCustomRole[] = [
+  { id: 'role_temizlik', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300' },
+  { id: 'role_park', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  { id: 'role_cocuk', name: 'Çocuk Görevlisi', icon: '👶', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300' },
+  { id: 'role_vip', name: 'Özel Misafir (VIP)', icon: '⭐', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+];
 
 interface MasterProduct {
  id: string;
@@ -285,7 +294,7 @@ export default function KermesDetailPage() {
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
- const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat' | 'bildirimler'>('bilgi');
+ const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'vardiya' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat' | 'bildirimler'>('bilgi');
   const [bilgiSubTab, setBilgiSubTab] = useState<'genel' | 'marka' | 'ozellikler' | 'teslimat' | 'fiyat' | 'imkanlar'>('genel');
  // Mutfak: PrepZone -> Personel atamalari
  const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
@@ -1052,7 +1061,8 @@ export default function KermesDetailPage() {
  }
  };
  const handleDeletePersonCompletely = async (personId: string) => {
- if (!confirm('Bu personeli sistemden tamamen silmek istediğinize emin misiniz?')) return;
+  const answer = prompt('Bu personeli sistemden TAMAMEN silmek istediğinize emin misiniz?\nİşlemi onaylamak için büyük harflerle EVET yazın:');
+  if (answer !== 'EVET') { showToast('Silme işlemi iptal edildi', 'info'); return; }
  
  try {
  // Remove from assignments first
@@ -2078,6 +2088,10 @@ export default function KermesDetailPage() {
  <button onClick={() => setActiveTab('personel')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  👥 Personel {assignedStaffDetails.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{assignedStaffDetails.length}</span>}
+ </button>
+ <button onClick={() => setActiveTab('vardiya')}
+ className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'vardiya' ? 'bg-cyan-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ 📅 Vardiya Planı
  </button>
  <button onClick={() => setActiveTab('gorevler')}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'gorevler' ? 'bg-purple-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
@@ -3690,8 +3704,8 @@ export default function KermesDetailPage() {
  {assignedWaiters.includes(staff.id) && (
  <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded">Garson</span>
  )}
- {/* Custom Roles Badges */}
- {(editForm.customRoles || []).filter(r => (customRoleAssignments[r.id] || []).includes(staff.id)).map(r => (
+ {/* Custom & Extended System Roles Badges */}
+ {[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])].filter(r => (customRoleAssignments[r.id] || []).includes(staff.id)).map(r => (
    <span key={r.id} className={`ml-1 flex-shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded ${r.color || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
      {r.name}
    </span>
@@ -3769,7 +3783,7 @@ export default function KermesDetailPage() {
  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
  </button>
   {/* Custom Roles Assignment */}
-  {(editForm.customRoles || []).map(r => {
+  {[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])].map(r => {
     const isAssigned = customRoleAssignments[r.id]?.includes(staff.id) || false;
     return (
       <button
@@ -3793,7 +3807,7 @@ export default function KermesDetailPage() {
         }`}
         title={`${r.name} ${isAssigned ? 'Görevinden Çıkar' : 'Olarak Ata'}`}
       >
-        <span>{r.icon}</span>
+        <span>{r.icon.startsWith('http') ? <img src={r.icon} alt={r.name} className="w-4 h-4 object-cover rounded" /> : r.icon}</span>
       </button>
     );
   })}
@@ -3905,7 +3919,7 @@ export default function KermesDetailPage() {
 
      <div className="space-y-4">
       <h4 className="font-semibold text-sm border-b border-border pb-2">Sabit Sistem Görevleri (Kilitli)</h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
        <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
         <span className="text-xl">👥</span>
         <div>
@@ -3934,29 +3948,54 @@ export default function KermesDetailPage() {
          <div className="text-xs text-muted-foreground">Kermesi yönetme tam yetkisi</div>
         </div>
        </div>
+       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
+        <span className="text-xl">🧹</span>
+        <div>
+         <div className="font-medium text-sm">Temizlik Görevlisi</div>
+         <div className="text-xs text-muted-foreground">Etkinlik alanı temizliği ve düzeni</div>
+        </div>
+       </div>
+       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
+        <span className="text-xl">🅿️</span>
+        <div>
+         <div className="font-medium text-sm">Park Görevlisi</div>
+         <div className="text-xs text-muted-foreground">Araç park yönlendirme ve düzeni</div>
+        </div>
+       </div>
+       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
+        <span className="text-xl">👶</span>
+        <div>
+         <div className="font-medium text-sm">Çocuk Görevlisi</div>
+         <div className="text-xs text-muted-foreground">Çocuk oyun alanı gözetimi</div>
+        </div>
+       </div>
+       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
+        <span className="text-xl">⭐</span>
+        <div>
+         <div className="font-medium text-sm">Özel Misafir (VIP)</div>
+         <div className="text-xs text-muted-foreground">Protokol ve özel misafir ağırlama</div>
+        </div>
+       </div>
       </div>
 
       <div className="mt-8">
        <div className="flex items-center justify-between border-b border-border pb-2 mb-4">
         <h4 className="font-semibold text-sm">Özel Görevler (Dinamik)</h4>
-        <button 
-          onClick={() => {
-            const roleName = prompt('Yeni Görev Adı (Örn: Temizlik Görevlisi):');
-            if (roleName) {
-              const roleIcon = prompt('Emoji / İkon (Örn: 🧹):') || '📋';
-              const newRole = {
+        {isSuperAdmin && (
+          <button 
+            onClick={() => {
+              setEditingCustomRole({
                 id: 'role_' + Math.random().toString(36).substr(2, 9),
-                name: roleName.trim(),
-                icon: roleIcon.trim(),
+                name: '',
+                icon: '📋',
                 color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-              };
-              setEditForm(prev => ({ ...prev, customRoles: [...(prev.customRoles || []), newRole] }));
-            }
-          }}
-          className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg transition"
-        >
-          + Yeni Özel Görev Ekle
-        </button>
+              });
+            }}
+            className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg transition"
+          >
+            + Yeni Özel Görev Ekle
+          </button>
+        )}
        </div>
        
        {(editForm.customRoles || []).length === 0 ? (
@@ -3965,14 +4004,13 @@ export default function KermesDetailPage() {
          </div>
        ) : (
          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                     {(editForm.customRoles || []).map(r => {
-              const isSystemRole = r.id === 'role_park_system' || r.id === 'role_temizlik_system';
+                     {(editForm.customRoles || []).filter(r => !['role_temizlik_system', 'role_park_system'].includes(r.id)).map(r => {
               const canEditRole = isSuperAdmin;
-              const canDeleteRole = isSuperAdmin && !isSystemRole;
+              const canDeleteRole = isSuperAdmin;
               return (
              <div key={r.id} className="p-3 bg-background border border-border rounded-lg flex items-center justify-between">
                <div className="flex items-center gap-3">
-                 {r.icon.startsWith('http') ? (
+                 {r.icon?.startsWith('http') ? (
                     <img src={r.icon} alt={r.name} className="w-6 h-6 object-cover rounded" />
                  ) : (
                     <span className="text-xl">{r.icon}</span>
@@ -3980,24 +4018,36 @@ export default function KermesDetailPage() {
                  <span className="font-medium text-sm">{r.name}</span>
                </div>
                <div className="flex items-center gap-1">
-                 <button 
-                   onClick={() => setEditingCustomRole(r)}
-                   className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-1.5 rounded transition"
-                   title="Görev Düzenle"
-                 >
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                 </button>
-                 <button 
-                   onClick={() => {
-                     if (confirm('Bu görevi silmek istediğinize emin misiniz?')) {
-                       setEditForm(prev => ({ ...prev, customRoles: prev.customRoles.filter(cr => cr.id !== r.id) }));
-                     }
-                   }}
-                   className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded transition"
-                   title="Görevi Sil"
-                 >
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                 </button>
+                 {canEditRole && (
+                     <button 
+                       onClick={() => setEditingCustomRole(r)}
+                       className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-1.5 rounded transition"
+                       title="Görev Düzenle"
+                     >
+                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                     </button>
+                 )}
+                 {canDeleteRole && (
+                     <button 
+                       onClick={async () => {
+                         if (confirm('Bu görevi silmek istediğinize emin misiniz?')) {
+                           const newRoles = editForm.customRoles.filter(cr => cr.id !== r.id);
+                           setEditForm(prev => ({ ...prev, customRoles: newRoles }));
+                           try {
+                             await updateDoc(doc(db, 'kermes_events', kermesId as string), { customRoles: newRoles });
+                             showToast('Görev silindi', 'success');
+                           } catch (e) {
+                             console.error(e);
+                             showToast('Silinirken hata oluştu', 'error');
+                           }
+                         }
+                       }}
+                       className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded transition"
+                       title="Görevi Sil"
+                     >
+                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                     </button>
+                 )}
                </div>
              </div>
             ); })}
@@ -5646,6 +5696,7 @@ export default function KermesDetailPage() {
            isAssigned ? 'translate-x-6' : 'translate-x-1'
          }`} />
        </button>
+
        </div>
      );
    })}
@@ -5763,18 +5814,30 @@ export default function KermesDetailPage() {
           </button>
           <button 
             type="button" 
-            onClick={() => {
+            onClick={async () => {
               if (editingCustomRole) {
-                setEditForm(prev => {
-                  const newRoles = (prev.customRoles || []).map(r => r.id === editingCustomRole.id ? editingCustomRole : r);
-                  return { ...prev, customRoles: newRoles };
-                });
-                setEditingCustomRole(null);
+                if (!editingCustomRole.name.trim()) return showToast("Görev adı zorunludur", "error");
+                
+                const exists = (editForm.customRoles || []).some(r => r.id === editingCustomRole.id);
+                const newRoles = exists 
+                  ? (editForm.customRoles || []).map(r => r.id === editingCustomRole.id ? editingCustomRole : r)
+                  : [...(editForm.customRoles || []), editingCustomRole];
+                
+                setEditForm(prev => ({ ...prev, customRoles: newRoles }));
+                
+                try {
+                  await updateDoc(doc(db, 'kermes_events', kermesId as string), { customRoles: newRoles });
+                  showToast('Görev başarıyla kaydedildi.', 'success');
+                  setEditingCustomRole(null);
+                } catch (err) {
+                  console.error(err);
+                  showToast('Görev kaydedilirken hata oluştu.', 'error');
+                }
               }
             }} 
             className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm"
           >
-            Tamamla
+            Kaydet
           </button>
         </div>
       </div>
@@ -6354,6 +6417,18 @@ export default function KermesDetailPage() {
  </div>
  )}
 
+ {activeTab === "vardiya" && (
+  <KermesRosterTab
+    kermesId={kermesId as string}
+    assignedStaffIds={[...new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters])]}
+    workspaceStaff={assignedStaffDetails}
+    adminUid={adminUid}
+    kermesStart={editForm.date}
+    kermesEnd={editForm.endDate}
+    isSuperAdmin={isSuperAdmin}
+    adminGender={admin?.gender || admin?.profile?.gender || 'unknown'}
+  />
+ )}
 
  </div>
  );

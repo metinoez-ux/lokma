@@ -76,8 +76,9 @@ class OrderBottomSheetHelper {
                             Text(
                               '${'notifications.order_number'.tr()} #${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                               style: TextStyle(
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                fontSize: 13,
+                                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -314,9 +315,9 @@ class OrderBottomSheetHelper {
                                   Text(
                                     'notifications.delivery_address_label'.tr(),
                                     style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w400,
-                                      color: isDark ? Colors.grey[500] : Colors.grey[500],
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                                       letterSpacing: 0.3,
                                     ),
                                   ),
@@ -387,7 +388,7 @@ class OrderBottomSheetHelper {
                                       }
                                       return Text(
                                         '${'notifications.last_action_label'.tr()}: $relativeTime',
-                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[500]),
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                                       );
                                     },
                                   ),

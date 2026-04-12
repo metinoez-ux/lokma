@@ -109,13 +109,33 @@ class StaffCapabilities {
 }
 
 class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
+  StreamSubscription? _adminSub;
+  StreamSubscription? _kermesSub;
+  String? _lastListeningBusinessId;
+
   @override
   StaffCapabilities build() {
+    ref.onDispose(() {
+      _adminSub?.cancel();
+      _kermesSub?.cancel();
+    });
     // Return initial state synchronously first
     final initialState = StaffCapabilities();
-    // Then kick off async load
-    Future.microtask(_loadCapabilities);
+    // Then kick off async load via listeners
+    Future.microtask(_setupListeners);
     return initialState;
+  }
+
+  void _setupListeners() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      state = state.copyWith(isLoading: false);
+      return;
+    }
+    
+    _adminSub = FirebaseFirestore.instance.collection('admins').doc(user.uid).snapshots().listen((_) {
+      _loadCapabilities();
+    });
   }
 
   Future<void> _loadCapabilities() async {
@@ -164,15 +184,32 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           
           // Park gorevlisi + diger custom roller
           bool earlyHasParkRole = false;
+          bool earlyHasPosRole = false;
+          bool earlyIsDriver = roleService.role == 'kermes_driver';
+          bool earlyHasTables = roleService.role == 'kermes_waiter';
           List<Map<String, String>> earlyCustomRoles = [];
+          
           try {
             final kDoc2 = await FirebaseFirestore.instance.collection('kermes_events').doc(roleService.businessId).get();
             if (kDoc2.exists) {
-              final rAssign = kDoc2.data()?['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+              final dataMap = kDoc2.data()!;
+              
+              final drivers = List<String>.from(dataMap['assignedDrivers'] ?? []);
+              if (drivers.contains(user.uid)) earlyIsDriver = true;
+              
+              final waiters = List<String>.from(dataMap['assignedWaiters'] ?? []);
+              if (waiters.contains(user.uid)) earlyHasTables = true;
+
+              final rAssign = dataMap['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+              
               final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
               earlyHasParkRole = parkList.contains(user.uid);
+              
+              final posList = List<String>.from(rAssign['role_pos_system'] ?? []);
+              earlyHasPosRole = posList.contains(user.uid);
+
               final allRoles = List<Map<String, dynamic>>.from(
-                (kDoc2.data()?['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],
+                (dataMap['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],
               );
               for (final role in allRoles) {
                 final roleId = role['id'] as String? ?? '';
@@ -191,18 +228,18 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             phoneNumber: user.phoneNumber ?? '',
             businessName: roleService.businessName ?? '',
             businessId: roleService.businessId,
-            isDriver: roleService.role == 'kermes_driver',
-            hasTablesRole: roleService.role == 'kermes_waiter',
-            hasCourierRole: roleService.role == 'kermes_driver',
+            isDriver: earlyIsDriver,
+            hasTablesRole: earlyHasTables,
+            hasCourierRole: earlyIsDriver,
             hasFinanceRole: true,
             hasShiftTracking: true,
             kermesAllowedSections: roleService.kermesAllowedSections,
             userId: user.uid,
             kermesPrepZones: earlyPrepZones,
             hasTezgahRole: hasTezgah,
-            hasPosRole: isKermes,
+            hasPosRole: earlyHasPosRole,
             tezgahName: tName,
-            hasParkRole: earlyHasParkRole || isKermes,
+            hasParkRole: earlyHasParkRole,
             kermesCustomRoles: earlyCustomRoles,
           );
         } else {
@@ -324,18 +361,44 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
       final bool kermesHasTezgah = isKermesDoc && assignedPrepZones.isNotEmpty;
       final String kermesTezgahLabel = assignedPrepZones.isNotEmpty ? _deriveTezgahName(assignedPrepZones) : '';
 
-      // Park gorevlisi + diger custom roller
+      bool kermesIsAdmin = isBusinessAdmin;
       bool hasParkRole = false;
+      bool kermesIsDriver = isDriver;
+      bool kermesHasTables = hasTables;
+      bool hasPosRole = false;
+
       List<Map<String, String>> normalCustomRoles = [];
+      
       if (isKermesDoc && businessId != null) {
         try {
           final kDocCheck = await FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get();
           if (kDocCheck.exists) {
-            final rAssign = kDocCheck.data()?['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+            final dataMap = kDocCheck.data()!;
+            
+            // Check driver assignment
+            final drivers = List<String>.from(dataMap['assignedDrivers'] ?? []);
+            if (drivers.contains(user.uid)) kermesIsDriver = true;
+            
+            // Check waiters
+            final waiters = List<String>.from(dataMap['assignedWaiters'] ?? []);
+            if (waiters.contains(user.uid)) kermesHasTables = true;
+
+            final rAssign = dataMap['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+            
+            // Check kermes true admin status overrides
+            final kAdmins = List<String>.from(dataMap['kermesAdmins'] ?? []);
+            kermesIsAdmin = kAdmins.contains(user.uid) || (userRole == 'admin' && adminType == 'super');
+            
+            // Check park
             final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
-            hasParkRole = parkList.contains(user.uid) || isKermesDoc;
+            hasParkRole = parkList.contains(user.uid); 
+            
+            // POS Role: Granted to Business Admins and explicitly assigned POS users
+            final posList = List<String>.from(rAssign['role_pos_system'] ?? []);
+            hasPosRole = posList.contains(user.uid) || kermesIsAdmin;
+
             final allRoles = List<Map<String, dynamic>>.from(
-              (kDocCheck.data()?['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],
+              (dataMap['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],
             );
             for (final role in allRoles) {
               final roleId = role['id'] as String? ?? '';
@@ -349,26 +412,36 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         } catch(_) {}
       }
 
+      if (businessId != null && isKermesDoc) {
+        if (_lastListeningBusinessId != businessId) {
+          _kermesSub?.cancel();
+          _kermesSub = FirebaseFirestore.instance.collection('kermes_events').doc(businessId).snapshots().listen((_) {
+            if (!state.isLoading) _loadCapabilities();
+          });
+          _lastListeningBusinessId = businessId;
+        }
+      }
+
       state = state.copyWith(
         isLoading: false,
-        isDriver: isDriver,
+        isDriver: kermesIsDriver,
         hasReservation: hasReservation,
-        hasTables: hasTables,
+        hasTables: kermesHasTables,
         hasShiftTracking: hasShiftTracking,
         staffName: staffName,
         phoneNumber: phoneNumber,
         businessName: businessName,
         businessId: businessId,
         maxTables: maxTables,
-        isBusinessAdmin: isBusinessAdmin,
+        isBusinessAdmin: isKermesDoc ? kermesIsAdmin : isBusinessAdmin,
         userId: user.uid,
-        hasCourierRole: isDriver,
-        hasTablesRole: hasTables,
+        hasCourierRole: kermesIsDriver,
+        hasTablesRole: kermesHasTables,
         hasFinanceRole: true,
         kermesAllowedSections: List<String>.from(data['kermesAllowedSections'] ?? []),
         kermesPrepZones: assignedPrepZones,
         hasTezgahRole: kermesHasTezgah,
-        hasPosRole: isKermesDoc,
+        hasPosRole: hasPosRole,
         tezgahName: kermesTezgahLabel,
         hasParkRole: hasParkRole,
         kermesCustomRoles: normalCustomRoles,

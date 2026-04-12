@@ -1,0 +1,189 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.onKermesRosterCreated = void 0;
+const admin = __importStar(require("firebase-admin"));
+const firestore_1 = require("firebase-functions/v2/firestore");
+const params_1 = require("firebase-functions/params");
+const resend_1 = require("resend");
+const db = admin.firestore();
+const messaging = admin.messaging();
+const resendApiKey = (0, params_1.defineSecret)("RESEND_API_KEY");
+/**
+ * Triggered when a new roster entry is assigned to a staff member in a Kermes Event.
+ * Sends Push Notification, Inbox item, and an Email with Calendar links.
+ */
+exports.onKermesRosterCreated = (0, firestore_1.onDocumentCreated)({
+    document: "kermes_events/{kermesId}/rosters/{rosterId}",
+    secrets: [resendApiKey]
+}, async (event) => {
+    const roster = event.data?.data();
+    if (!roster)
+        return;
+    const userId = roster.userId;
+    const role = roster.role || "Görevli";
+    const dateStr = roster.date; // YYYY-MM-DD
+    const startStr = roster.startTime; // HH:MM
+    const endStr = roster.endTime; // HH:MM
+    const kermesId = event.params.kermesId;
+    if (!userId)
+        return;
+    try {
+        // 1. Fetch User Data
+        const userDoc = await db.collection("users").doc(userId).get();
+        if (!userDoc.exists) {
+            console.log(`[Roster Notify] User ${userId} not found`);
+            return;
+        }
+        const userData = userDoc.data();
+        // 2. Fetch Kermes Event Data for context
+        const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
+        const kermesName = kermesDoc.exists ? (kermesDoc.data()?.name || "Kermes") : "Kermes";
+        // Format Title & Body
+        const title = `📅 Yeni Vardiya Ataması: ${kermesName}`;
+        const body = `${dateStr} tarihinde saat ${startStr} - ${endStr} arasında ${role} olarak görevlendirildiniz.`;
+        // Prepare date links for calendar (Format: YYYYMMDDTHHMMSSZ)
+        // Note: Simplistic UTC mapping. For absolute accuracy a timezone library would be used, but standard YYYYMMDD string works for most templates.
+        const dateStrClean = dateStr.replace(/-/g, '');
+        const startClean = startStr.replace(':', '') + '00';
+        const endClean = endStr.replace(':', '') + '00';
+        const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Kermes+Vardiyasi+-+${encodeURIComponent(role)}&dates=${dateStrClean}T${startClean}/${dateStrClean}T${endClean}&details=${encodeURIComponent(kermesName)}`;
+        // 3. Add to Inbox (users/{uid}/notifications)
+        await db.collection("users").doc(userId).collection("notifications").add({
+            title,
+            body,
+            type: "roster_shift",
+            kermesId,
+            role,
+            date: dateStr,
+            startTime: startStr,
+            endTime: endStr,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            read: false,
+            deepLinkUrl: "roster_dashboard" // Instruct app to route to their staff dashboard
+        });
+        console.log(`[Roster Notify] Inbox stored for ${userId}`);
+        // 4. Send Push Notification
+        const fcmTokens = [];
+        if (userData.fcmToken)
+            fcmTokens.push(userData.fcmToken);
+        if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
+            userData.fcmTokens.forEach((t) => {
+                if (t && !fcmTokens.includes(t))
+                    fcmTokens.push(t);
+            });
+        }
+        if (fcmTokens.length > 0) {
+            const message = {
+                notification: { title, body },
+                data: {
+                    type: "roster_shift",
+                    kermesId,
+                    role,
+                    date: dateStr,
+                    startTime: startStr,
+                    endTime: endStr
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            sound: "default",
+                            "content-available": 1,
+                        },
+                    },
+                },
+                tokens: fcmTokens,
+            };
+            try {
+                await messaging.sendEachForMulticast(message);
+                console.log(`[Roster Notify] FCM sent to ${fcmTokens.length} devices limit for ${userId}`);
+            }
+            catch (pushErr) {
+                console.error("[Roster Notify] FCM error:", pushErr);
+            }
+        }
+        // 5. Send Transactional Email via Resend
+        if (userData.email) {
+            const resend = new resend_1.Resend(resendApiKey.value());
+            const emailHtml = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a1a1a; color: #ffffff; border-radius: 8px; overflow: hidden;">
+                        <div style="background: #1565C0; padding: 20px; text-align: center;">
+                            <h2 style="margin: 0; color: #ffffff;">📅 Yeni Vardiya Ataması</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <p style="font-size: 16px; color: #e0e0e0;">Merhaba ${userData.name || 'Personel'},</p>
+                            <p style="font-size: 16px; color: #e0e0e0;"><strong>${kermesName}</strong> etkinliğinde yeni bir görev / mesai saatine atandınız:</p>
+                            
+                            <div style="background: #2a2a2a; border-left: 4px solid #1565C0; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Tarih:</strong> ${dateStr}</p>
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Saat:</strong> ${startStr} - ${endStr}</p>
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Görev:</strong> ${role}</p>
+                            </div>
+                            
+                            <div style="text-align: center; margin-top: 30px;">
+                                <a href="${googleCalUrl}" style="background-color: #2E7D32; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+                                    Google Takvime Ekle
+                                </a>
+                            </div>
+                            
+                            <p style="margin-top: 30px; font-size: 12px; color: #888888; text-align: center;">
+                                LOKMA Marketplace Staff Management<br>
+                                Ekipten ayrılmak veya mazeret bildirmek için Kermes yetkilinizle iletişime geçin.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            try {
+                await resend.emails.send({
+                    from: "LOKMA Marketplace <noreply@lokma.shop>",
+                    to: userData.email,
+                    subject: `📅 Yeni Vardiya Ataması: ${kermesName}`,
+                    html: emailHtml,
+                });
+                console.log(`[Roster Notify] Email sent to ${userData.email}`);
+            }
+            catch (emailErr) {
+                console.error("[Roster Notify] Email error:", emailErr);
+            }
+        }
+        else {
+            console.log(`[Roster Notify] User ${userId} has no email address`);
+        }
+    }
+    catch (error) {
+        console.error("[Roster Notify] Top level error:", error);
+    }
+});
+//# sourceMappingURL=kermesRosterFunctions.js.map

@@ -122,43 +122,27 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
           children: [
             // Tab bar - is akisi gosterimi
             Container(
-              color: isDark ? const Color(0xFF252525) : const Color(0xFFE8E8E8),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: isDark ? Colors.grey[400] : const Color(0xFF555555),
-                    indicator: BoxDecoration(
-                      color: lokmaPink,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicatorPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                    dividerColor: Colors.transparent,
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 0),
-                    labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 0.5),
-                    unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-                    tabs: const [
-                      Tab(text: 'YENI'),
-                      Tab(text: 'HAZIRLANIYOR'),
-                      Tab(text: 'TESLIME HAZIR'),
-                    ],
-                  ),
-                  // Chevron oklari tab'larin arasinda (overlay)
-                  Positioned(
-                    left: MediaQuery.of(context).size.width / 3 - 10,
-                    child: IgnorePointer(
-                      child: Icon(Icons.chevron_right, size: 20, color: isDark ? Colors.grey[500] : Colors.grey[500]),
-                    ),
-                  ),
-                  Positioned(
-                    left: MediaQuery.of(context).size.width * 2 / 3 - 10,
-                    child: IgnorePointer(
-                      child: Icon(Icons.chevron_right, size: 20, color: isDark ? Colors.grey[500] : Colors.grey[500]),
-                    ),
-                  ),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF161616) : Colors.white,
+              ),
+              child: TabBar(
+                controller: _tabController,
+                labelColor: Colors.white,
+                unselectedLabelColor: isDark ? Colors.grey[400] : const Color(0xFF777777),
+                indicator: BoxDecoration(
+                  color: lokmaPink,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicatorPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                dividerColor: Colors.transparent,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 0),
+                labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.3),
+                unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.3),
+                tabs: const [
+                  Tab(text: 'YENI'),
+                  Tab(text: 'HAZIRLANIYOR'),
+                  Tab(text: 'TESLIME HAZIR'),
                 ],
               ),
             ),
@@ -269,105 +253,86 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
 
   Widget _buildFilterBar(List<String> zones, bool isDark, Map<String, int> zoneCounts) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Baslik + toplam siparis badge
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Bana Atanan \"Ocak Ba\u015f\u0131\" G\u00f6revlerim',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.grey[400] : const Color(0xFF555555),
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-                if ((zoneCounts['T\u00fcm\u00fc'] ?? 0) > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: warningOrange,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${zoneCounts['T\u00fcm\u00fc']} Sipari\u015f',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF161616) : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 10,
           ),
-          SingleChildScrollView(
+        ],
+      ),
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
         child: Row(
           children: zones.map((zone) {
             final isActive = _activeFilter == zone;
             final count = zoneCounts[zone] ?? 0;
             return Padding(
               padding: const EdgeInsets.only(right: 12, top: 4),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  FilterChip(
-                    label: Text(zone, style: TextStyle(
-                      color: isActive ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                    )),
-                    selected: isActive,
-                    selectedColor: warningOrange,
-                    backgroundColor: isDark ? const Color(0xFF333333) : const Color(0xFFF0F0F0),
-                    onSelected: (selected) {
-                      if (selected) {
-                        HapticFeedback.selectionClick();
-                        setState(() => _activeFilter = zone);
-                      }
-                    },
-                  ),
-                  if (count > 0)
-                    Positioned(
-                      top: -6,
-                      right: -8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                        decoration: BoxDecoration(
-                          color: warningOrange,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                            width: 2,
-                          ),
-                        ),
-                        child: Text(
-                          '$count',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _activeFilter = zone);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isActive 
+                        ? (isDark ? Colors.white : const Color(0xFF1A1A1A))
+                        : (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF3F3F5)), 
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isActive 
+                          ? Colors.transparent 
+                          : (isDark ? Colors.white12 : Colors.black12),
                     ),
-                ],
-              ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        zone, 
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                          color: isActive 
+                              ? (isDark ? Colors.black : Colors.white)
+                              : (isDark ? Colors.white70 : Colors.black87),
+                        )
+                      ),
+                      if (count > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isActive 
+                                ? (isDark ? Colors.black12 : Colors.white24)
+                                : warningOrange.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '$count',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: isActive 
+                                  ? (isDark ? Colors.black : Colors.white)
+                                  : Colors.white,
+                            )
+                          )
+                        )
+                      ]
+                    ]
+                  )
+                )
+              )
             );
           }).toList(),
         ),
-      ),
-        ],
       ),
     );
   }
