@@ -21,10 +21,10 @@ export async function GET(req: Request) {
     
     // Find all rosters with this batchId
     const rostersRef = db.collection('kermes_events').doc(kermesId).collection('rosters');
-    const q = rostersRef.where('batchId', '==', batchId);
+    let q = rostersRef.where('batchId', '==', batchId);
     if (userId) {
        // extra safety if u is provided
-       q.where('userId', '==', userId);
+       q = q.where('userId', '==', userId);
     }
     
     const snapshot = await q.get();

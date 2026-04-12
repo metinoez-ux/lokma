@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, addDoc, deleteDoc, orderBy, Timestamp, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import React, { useState, useEffect, useRef } from 'react';
+import { collection, query, where, getDocs, addDoc, deleteDoc, orderBy, Timestamp, doc, updateDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useTranslations } from 'next-intl';
 
@@ -53,17 +53,17 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   const [targetRoster, setTargetRoster] = useState<KermesRoster | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchRosters();
-  }, [kermesId]);
+  // Coverage Dashboard State
+  const [coverageOpen, setCoverageOpen] = useState(false);
+  const [coverageRole, setCoverageRole] = useState('Genel Sorumlu');
 
-  const fetchRosters = async () => {
+  useEffect(() => {
+    if (!kermesId) return;
     setLoading(true);
-    try {
-      const q = query(
-        collection(db, 'kermes_events', kermesId, 'rosters')
-      );
-      const snap = await getDocs(q);
+    
+    const q = query(collection(db, 'kermes_events', kermesId, 'rosters'));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as KermesRoster));
       
       // Çift sıralama komutu Firebase'de "Index" hatasına neden olduğu için sıralamayı UI tarafında yapıyoruz:
@@ -73,15 +73,21 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       });
       
       setRosters(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (err) => {
+      console.error('Error fetching rosters realtime: ', err);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [kermesId]);
+
+  const isCreatingRef = React.useRef(false);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCreatingRef.current) return;
+    
     if (!form.userId || !form.role || !form.startDate || !form.endDate || !form.startTime || !form.endTime) {
       alert('Lütfen tüm alanları doldurun.');
       return;
@@ -98,6 +104,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       return;
     }
 
+    isCreatingRef.current = true;
     setIsCreating(true);
     try {
       const datesToAssign: string[] = [];
@@ -108,6 +115,9 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       }
 
       // 1. Çakışma Kontrolü (Overlap Check) - Hiçbir kayıt yapmadan önce tüm tarihleri kontrol et
+      const strictOverlaps: string[] = [];
+      const softOverlaps: string[] = [];
+
       for (const d of datesToAssign) {
         const overlaps = rosters.filter(r => 
           r.userId === form.userId && 
@@ -119,30 +129,35 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           const identicalRoleOverlap = overlaps.find(r => r.role === form.role);
           
           if (identicalRoleOverlap) {
-            // Hard block error: Exact same role overlaps!
-            alert(`Çakışma Hatası: Bu personel ${d} tarihinde saat ${identicalRoleOverlap.startTime}-${identicalRoleOverlap.endTime} aralığında zaten "${identicalRoleOverlap.role}" görevine atanmış durumda.`);
-            setIsCreating(false);
-            return;
+            strictOverlaps.push(`${d} (${identicalRoleOverlap.startTime}-${identicalRoleOverlap.endTime})`);
           } else {
-            // Soft warning confirm: Overlaps exist but for different roles
-            const overlappingRolesText = overlaps.map(r => `"${r.role}" (${r.startTime}-${r.endTime})`).join(', ');
-            const confirmProceed = window.confirm(
-              `Dikkat: Bu personelin ${d} tarihinde aynı saat aralığıyla çakışan başka görevleri bulunuyor:\n\n${overlappingRolesText}\n\nYine de aynı saate "${form.role}" görevini atamak istiyor musunuz?`
-            );
-            
-            if (!confirmProceed) {
-              setIsCreating(false);
-              return;
-            }
+            const rolesStr = overlaps.map(r => `"${r.role}"`).join(', ');
+            softOverlaps.push(`${d}: ${rolesStr}`);
           }
         }
       }
 
+      if (strictOverlaps.length > 0) {
+        alert(`Çakışma Hatası: Seçili personelin aşağıdaki tarihlerde zaten "${form.role}" görevi bulunuyor:\n\n${strictOverlaps.join('\n')}\n\nLütfen aynı saate aynı görevi tekrar eklemeyin.`);
+        return;
+      }
+
+      if (softOverlaps.length > 0) {
+        const confirmProceed = window.confirm(
+          `Dikkat: Bu personelin seçilen tarihlerde aynı saat aralığıyla çakışan BAŞKA görevleri bulunuyor:\n\n${softOverlaps.join('\n')}\n\nYine de "${form.role}" görevini atamak istiyor musunuz?`
+        );
+        if (!confirmProceed) {
+          return;
+        }
+      }
+
       // 2. Veritabanına Yazma
-      const newRosters: KermesRoster[] = [];
+      const batchId = crypto.randomUUID();
       const isMultipleDays = datesToAssign.length > 1;
       const msgRange = isMultipleDays ? `${form.startDate} - ${form.endDate}` : form.startDate;
-      const batchId = crypto.randomUUID();
+
+      // Toplu yazım işlemi için Firestore WriteBatch kullanıyoruz, tekil insert yerine çok daha güvenli
+      const batch = writeBatch(db);
 
       for (let i = 0; i < datesToAssign.length; i++) {
         const d = datesToAssign[i];
@@ -167,19 +182,22 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
            payload.notificationBodyOverride = `${msgRange} tarihleri aralığında saat ${form.startTime} - ${form.endTime} arasında ${form.role} olarak görevlendirildiniz.`;
         }
 
-        const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'rosters'), payload);
-        newRosters.push({ id: docRef.id, ...payload } as KermesRoster);
+        const docRef = doc(collection(db, 'kermes_events', kermesId, 'rosters'));
+        batch.set(docRef, payload);
       }
       
-      // Optimistic update so it immediately appears in the list!
-      setRosters(prev => [...prev, ...newRosters]);
+      await batch.commit();
 
+      // UI real-time dinleyici (onSnapshot) ile anlık otomatik güncelleneceği için:
+      // Optimistic update kısmını siliyoruz, böylece UI'da hayalet (tekarlanmış) listeleme (double render) hatası olmuyor.
+      
       setForm(prev => ({ ...prev, userId: '', role: '' })); // Keep dates to easily assign next person
       setIsFullKermes(false);
     } catch (err) {
       console.error(err);
       alert('Kaydedilirken hata oluştu.');
     } finally {
+      isCreatingRef.current = false;
       setIsCreating(false);
     }
   };
@@ -283,6 +301,86 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     'İçecek Standı',
     'Gözleme'
   ];
+
+  // Helper function to format minutes to HH:MM
+  const minsToTime = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to parse HH:MM to minutes
+  const timeToMins = (timeStr: string) => {
+    const [h, m] = timeStr.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+
+  // Calculate Coverage Gaps
+  const calculateGaps = () => {
+    if (!kermesStart || !kermesEnd || !coverageRole) return [];
+    
+    const sParts = kermesStart.split('-');
+    const eParts = kermesEnd.split('-');
+    if (sParts.length !== 3 || eParts.length !== 3) return [];
+
+    const sDate = new Date(parseInt(sParts[0]), parseInt(sParts[1]) - 1, parseInt(sParts[2]), 12, 0, 0);
+    const eDate = new Date(parseInt(eParts[0]), parseInt(eParts[1]) - 1, parseInt(eParts[2]), 12, 0, 0);
+    
+    // We assume 08:00 to 20:00 as required coverage hours daily
+    const reqStart = 8 * 60; // 480
+    const reqEnd = 20 * 60;  // 1200
+
+    const results: { date: string, dateObj: Date, gaps: string[], empty: boolean }[] = [];
+    
+    const current = new Date(sDate);
+    while (current <= eDate) {
+      const dStr = current.toISOString().split('T')[0];
+      
+      // Get valid rosters for this role on this day (ignore rejected ones)
+      const dayRosters = rosters.filter(r => r.date === dStr && r.role === coverageRole && r.status !== 'rejected');
+      
+      if (dayRosters.length === 0) {
+         results.push({ date: dStr, dateObj: new Date(current), gaps: ['08:00 - 20:00 (Tüm Gün Boş)'], empty: true });
+      } else {
+         const intervals = dayRosters.map(r => [timeToMins(r.startTime), timeToMins(r.endTime)]);
+         intervals.sort((a,b) => a[0] - b[0]);
+         
+         const merged: number[][] = [];
+         for (const iv of intervals) {
+           if (merged.length === 0) merged.push(iv);
+           else {
+             const last = merged[merged.length - 1];
+             if (iv[0] <= last[1]) last[1] = Math.max(last[1], iv[1]);
+             else merged.push(iv);
+           }
+         }
+
+         let gapStart = reqStart;
+         const dailyGaps: string[] = [];
+         
+         for (const iv of merged) {
+           if (iv[0] > gapStart) {
+             const gS = Math.min(gapStart, reqEnd);
+             const gE = Math.min(iv[0], reqEnd);
+             if (gS < gE) dailyGaps.push(`${minsToTime(gS)} - ${minsToTime(gE)}`);
+           }
+           gapStart = Math.max(gapStart, iv[1]);
+         }
+         if (gapStart < reqEnd) {
+            dailyGaps.push(`${minsToTime(gapStart)} - ${minsToTime(reqEnd)}`);
+         }
+
+         if (dailyGaps.length > 0) {
+            results.push({ date: dStr, dateObj: new Date(current), gaps: dailyGaps, empty: false });
+         }
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return results;
+  };
+
+  const gapAnalysis = coverageOpen ? calculateGaps() : [];
 
   const getRoleColor = (role: string) => {
     switch ((role || '').toLowerCase()) {
@@ -432,6 +530,83 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Coverage Dashboard Accordion */}
+      <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+        <button 
+          onClick={() => setCoverageOpen(!coverageOpen)}
+          className="w-full bg-slate-900/40 hover:bg-slate-800/60 p-4 flex items-center justify-between transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center">
+               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-foreground text-base">Görev Kapsama & Boşluk Analizi</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">Seçilen görevde hangi tarih ve saat aralıklarında personel atanmadığını tespit edin (08:00 - 20:00 standardına göre).</p>
+            </div>
+          </div>
+          <div className="text-muted-foreground">
+            {coverageOpen ? (
+               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+            ) : (
+               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            )}
+          </div>
+        </button>
+
+        {coverageOpen && (
+          <div className="p-5 border-t border-border bg-background/50">
+             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+                <label className="text-sm font-semibold text-foreground min-w-max">Hangi Görevi Analiz Edelim?</label>
+                <select 
+                  value={coverageRole} 
+                  onChange={e => setCoverageRole(e.target.value)}
+                  className="w-full sm:w-auto min-w-[200px] bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-orange-500"
+                >
+                  {defaultRoles.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+             </div>
+
+             <div className="space-y-3">
+               {gapAnalysis.length === 0 ? (
+                 <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-3">
+                   <div className="bg-emerald-500/20 text-emerald-500 p-2 rounded-full">
+                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                   </div>
+                   <div>
+                     <p className="text-emerald-500 font-bold">Mükemmel!</p>
+                     <p className="text-sm text-emerald-600/80 mt-0.5">"{coverageRole}" görevi için 08:00 ile 20:00 arasında tüm kermes günleri boyunca hiçbir açık saat bulunmuyor.</p>
+                   </div>
+                 </div>
+               ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                   {gapAnalysis.map((gapInfo, i) => (
+                      <div key={i} className={`rounded-xl border p-4 ${gapInfo.empty ? 'bg-red-500/10 border-red-500/30' : 'bg-orange-500/10 border-orange-500/30'}`}>
+                         <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs font-bold uppercase tracking-wider bg-black/20 px-2 py-1 rounded text-foreground/80 shadow-sm">
+                              {gapInfo.dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', weekday: 'short' })}
+                            </span>
+                            {gapInfo.empty && <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">KRİTİK AÇIK</span>}
+                         </div>
+                         <div className="space-y-1.5">
+                           {gapInfo.gaps.map((gapText, j) => (
+                             <div key={j} className={`flex items-center gap-2 text-sm font-semibold ${gapInfo.empty ? 'text-red-400' : 'text-orange-400'}`}>
+                               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                               {gapText}
+                             </div>
+                           ))}
+                         </div>
+                      </div>
+                   ))}
+                 </div>
+               )}
+             </div>
+          </div>
+        )}
       </div>
 
       <div>
