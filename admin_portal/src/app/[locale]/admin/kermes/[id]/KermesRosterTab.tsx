@@ -191,14 +191,49 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Vardiyayı silmek istediğinize emin misiniz?')) return;
+  const handleDeleteClick = (roster: KermesRoster) => {
+    setTargetRoster(roster);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmSingleDelete = async () => {
+    if (!targetRoster) return;
+    setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, 'kermes_events', kermesId, 'rosters', id));
-      setRosters(prev => prev.filter(r => r.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert('Hata oluştu.');
+      await deleteDoc(doc(db, 'kermes_events', kermesId, 'rosters', targetRoster.id));
+      setRosters(prev => prev.filter(r => r.id !== targetRoster.id));
+      setDeleteModalOpen(false);
+      setTargetRoster(null);
+    } catch (e) {
+      console.error(e);
+      alert('Silinemedi');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    if (!targetRoster) return;
+    setIsDeleting(true);
+    try {
+      const userRosters = rosters.filter(r => r.userId === targetRoster.userId);
+      const batch = writeBatch(db);
+      
+      userRosters.forEach(r => {
+         const ref = doc(db, 'kermes_events', kermesId, 'rosters', r.id);
+         batch.delete(ref);
+      });
+      
+      await batch.commit();
+      
+      setRosters(prev => prev.filter(r => r.userId !== targetRoster.userId));
+      setDeleteModalOpen(false);
+      setTargetRoster(null);
+    } catch (e) {
+      console.error(e);
+      alert('Toplu silme başarısız!');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -479,7 +514,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                                   
                                   {/* Delete Action */}
                                   <button 
-                                    onClick={() => handleDelete(roster.id)}
+                                    onClick={() => handleDeleteClick(roster)}
                                     className="opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded-md transition-all p-1.5 absolute right-2 top-1/2 -translate-y-1/2"
                                     title="Vardiyayı Sil"
                                   >
