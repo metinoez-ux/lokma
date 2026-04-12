@@ -256,7 +256,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                             child: const Icon(Icons.assignment_ind_rounded, size: 36, color: Colors.blue),
                           ),
                           const SizedBox(height: 16),
-                          const Text('Yeni Vardiya Ataması', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                          Text('Yeni Vardiya Ataması', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800)),
                           const SizedBox(height: 8),
                           Text(body, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87, height: 1.4)),
                           const SizedBox(height: 24),
@@ -325,7 +325,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                         rosterResponse = 'rejected';
                                       });
                                     },
-                                    child: const Text('Üstlenemiyorum', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    child: Text('Üstlenemiyorum', style: TextStyle(fontWeight: FontWeight.bold)),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -346,7 +346,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                         rosterResponse = 'accepted';
                                       });
                                     },
-                                    child: const Text('Görevi Kabul Et', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    child: Text('Görevi Kabul Et', style: TextStyle(fontWeight: FontWeight.bold)),
                                   ),
                                 ),
                               ],

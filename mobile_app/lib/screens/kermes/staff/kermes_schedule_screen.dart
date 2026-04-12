@@ -118,7 +118,7 @@ class _KermesScheduleScreenState extends State<KermesScheduleScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Mesai ve Görev Planım', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(widget.kermesTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal, opacity: 0.8)),
+            Text(widget.kermesTitle, style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Colors.white.withOpacity(0.8))),
           ],
         ),
         backgroundColor: Colors.transparent,

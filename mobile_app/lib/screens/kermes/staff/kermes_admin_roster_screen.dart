@@ -521,7 +521,7 @@ class _KermesAdminRosterScreenState extends State<KermesAdminRosterScreen> {
                                   final staffName = _userNames[roster.userId] ?? 'Bilinmiyor';
                                   
                                   return InkWell(
-                                    onLongPress: () => _showDeleteOptions(roster),
+                                    onLongPress: () => _deleteRoster(roster.id),
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                       child: Row(
@@ -581,7 +581,7 @@ class _KermesAdminRosterScreenState extends State<KermesAdminRosterScreen> {
                                           IconButton(
                                             icon: const Icon(Icons.delete_outline, size: 20),
                                             color: Colors.red.withOpacity(0.7),
-                                            onPressed: () => _showDeleteOptions(roster),
+                                            onPressed: () => _deleteRoster(roster.id),
                                           ),
                                         ],
                                       ),
