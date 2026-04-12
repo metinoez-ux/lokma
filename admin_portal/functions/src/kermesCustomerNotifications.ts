@@ -2,8 +2,6 @@ import * as admin from "firebase-admin";
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { getPushTranslations, getUserLanguage } from "./utils/translation";
 
-const db = admin.firestore();
-
 export const onKermesOrderCreatedNotif = onDocumentCreated(
   {
     document: "kermes_orders/{orderId}",
@@ -12,6 +10,8 @@ export const onKermesOrderCreatedNotif = onDocumentCreated(
   async (event) => {
     const orderData = event.data?.data();
     if (!orderData) return;
+
+    const db = admin.firestore();
 
     const orderId = event.params.orderId;
     const orderNumber = orderData.orderNumber as string;
@@ -170,6 +170,8 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
     const after = event.data?.after.data();
 
     if (!before || !after) return;
+
+    const db = admin.firestore();
 
     // Sadece isPaid değiştiğinde
     const wasPaid = before.isPaid === true;

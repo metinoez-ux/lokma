@@ -84,7 +84,7 @@ class ShiftDialogs {
                             _buildRoleToggle(
                               context: ctx,
                               icon: Icons.table_restaurant,
-                              title: 'Masa Servisi',
+                              title: 'Garson',
                               subtitle: masaEnabled ? 'Masalardan gelen siparişleri alın' : 'Masalara bakmıyorum',
                               color: Colors.teal,
                               isEnabled: masaEnabled,

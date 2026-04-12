@@ -3,8 +3,6 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import { Resend } from "resend";
 
-const db = admin.firestore();
-const messaging = admin.messaging();
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
 /**
@@ -19,6 +17,9 @@ export const onKermesRosterCreated = onDocumentCreated(
     async (event) => {
         const roster = event.data?.data();
         if (!roster) return;
+
+        const db = admin.firestore();
+        const messaging = admin.messaging();
 
         const userId = roster.userId;
         const role = roster.role || "Görevli";
@@ -38,9 +39,21 @@ export const onKermesRosterCreated = onDocumentCreated(
             }
             const userData = userDoc.data()!;
             
+            // Extract robust user details
+            const userName = userData.name || userData.profile?.name || userData.profile?.firstName || userData.displayName || 'Değerli Personelimiz';
+            const rawGender = (userData.gender || userData.profile?.gender || '').toLowerCase();
+            let bolumStr = "Genel Görev Alanı";
+            if (rawGender === 'female' || rawGender === 'kadin' || rawGender === 'kadın') bolumStr = "Hanımlar Bölümü";
+            else if (rawGender === 'male' || rawGender === 'erkek') bolumStr = "Erkekler Bölümü";
+
             // 2. Fetch Kermes Event Data for context
             const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
-            const kermesName = kermesDoc.exists ? (kermesDoc.data()?.name || "Kermes") : "Kermes";
+            const kData = kermesDoc.exists ? kermesDoc.data() : {};
+            const kermesName = kData?.kermesName || kData?.name || kData?.city || "Kermes";
+            
+            // Format dates (dd.mm.yyyy preferred if available, but raw is fine)
+            const kStart = kData?.startDate || kData?.kermesStart || "Belirtilmedi";
+            const kEnd = kData?.endDate || kData?.kermesEnd || "Belirtilmedi";
 
             // Format Title & Body
             const title = `📅 Yeni Vardiya Ataması: ${kermesName}`;
@@ -51,7 +64,7 @@ export const onKermesRosterCreated = onDocumentCreated(
             const dateStrClean = dateStr.replace(/-/g, '');
             const startClean = startStr.replace(':', '') + '00';
             const endClean = endStr.replace(':', '') + '00';
-            const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Kermes+Vardiyasi+-+${encodeURIComponent(role)}&dates=${dateStrClean}T${startClean}/${dateStrClean}T${endClean}&details=${encodeURIComponent(kermesName)}`;
+            const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Kermes+Vardiyasi+-+${encodeURIComponent(role)}&dates=${dateStrClean}T${startClean}/${dateStrClean}T${endClean}&details=${encodeURIComponent(kermesName + ' - ' + bolumStr)}`;
 
             // 3. Add to Inbox (users/{uid}/notifications)
             await db.collection("users").doc(userId).collection("notifications").add({
@@ -117,13 +130,15 @@ export const onKermesRosterCreated = onDocumentCreated(
                             <h2 style="margin: 0; color: #ffffff;">📅 Yeni Vardiya Ataması</h2>
                         </div>
                         <div style="padding: 20px;">
-                            <p style="font-size: 16px; color: #e0e0e0;">Merhaba ${userData.name || 'Personel'},</p>
-                            <p style="font-size: 16px; color: #e0e0e0;"><strong>${kermesName}</strong> etkinliğinde yeni bir görev / mesai saatine atandınız:</p>
+                            <p style="font-size: 16px; color: #e0e0e0;">Merhaba ${userName},</p>
+                            <p style="font-size: 16px; color: #e0e0e0;"><strong>${kermesName}</strong> etkinliğinde yeni bir görev / mesai saatine atandınız.</p>
+                            <p style="font-size: 14px; color: #aaaaaa; margin-top: -5px;">(Kermes Genel Süresi: ${kStart} - ${kEnd})</p>
                             
                             <div style="background: #2a2a2a; border-left: 4px solid #1565C0; padding: 15px; margin: 20px 0; border-radius: 4px;">
                                 <p style="margin: 5px 0; color: #ffffff;"><strong>Tarih:</strong> ${dateStr}</p>
                                 <p style="margin: 5px 0; color: #ffffff;"><strong>Saat:</strong> ${startStr} - ${endStr}</p>
-                                <p style="margin: 5px 0; color: #ffffff;"><strong>Görev:</strong> ${role}</p>
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Görev Alanı / Bölüm:</strong> ${bolumStr}</p>
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Görev / Rol:</strong> ${role}</p>
                             </div>
                             
                             <div style="text-align: center; margin-top: 30px;">

@@ -36,18 +36,34 @@ export async function POST(req: Request) {
     const userDoc = await db.collection('users').doc(userId).get();
     if (userDoc.exists) {
       const data = userDoc.data();
-      const fcmToken = data?.customerFcmToken || data?.fcmToken;
+      const tokens: string[] = [];
+      if (data?.customerFcmToken) tokens.push(data.customerFcmToken);
+      if (data?.fcmToken) tokens.push(data.fcmToken);
+      if (data?.fcmTokens && Array.isArray(data.fcmTokens)) {
+        data.fcmTokens.forEach((t: string) => {
+          if (typeof t === 'string' && t && !tokens.includes(t)) tokens.push(t);
+        });
+      }
       
-      if (fcmToken) {
+      if (tokens.length > 0) {
         const messaging = getFirebaseMessaging();
         if (messaging) {
           try {
-            await messaging.send({
-              token: fcmToken,
-              notification: { title, body },
-              data: { type }
-            });
-            console.log('Push notification sent to', userId);
+            const message = {
+                notification: { title, body },
+                data: { type },
+                tokens: tokens,
+                apns: {
+                    payload: {
+                        aps: {
+                            sound: "default",
+                            "content-available": 1,
+                        },
+                    },
+                },
+            };
+            await messaging.sendEachForMulticast(message);
+            console.log('Push notification sent to', userId, 'tokens:', tokens.length);
           } catch (e) {
             console.error('Error sending push notification:', e);
           }

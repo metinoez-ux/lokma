@@ -107,15 +107,32 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
       // 1. Çakışma Kontrolü (Overlap Check) - Hiçbir kayıt yapmadan önce tüm tarihleri kontrol et
       for (const d of datesToAssign) {
-        const overlap = rosters.find(r => 
+        const overlaps = rosters.filter(r => 
           r.userId === form.userId && 
           r.date === d && 
           (r.startTime < form.endTime && form.startTime < r.endTime)
         );
-        if (overlap) {
-          alert(`Çakışma Hatası: Bu personel ${d} tarihinde saat ${overlap.startTime}-${overlap.endTime} aralığında zaten "${overlap.role}" görevine atanmış durumda. Lütfen farklı bir saat veya personel seçin.`);
-          setIsCreating(false);
-          return;
+
+        if (overlaps.length > 0) {
+          const identicalRoleOverlap = overlaps.find(r => r.role === form.role);
+          
+          if (identicalRoleOverlap) {
+            // Hard block error: Exact same role overlaps!
+            alert(`Çakışma Hatası: Bu personel ${d} tarihinde saat ${identicalRoleOverlap.startTime}-${identicalRoleOverlap.endTime} aralığında zaten "${identicalRoleOverlap.role}" görevine atanmış durumda.`);
+            setIsCreating(false);
+            return;
+          } else {
+            // Soft warning confirm: Overlaps exist but for different roles
+            const overlappingRolesText = overlaps.map(r => `"${r.role}" (${r.startTime}-${r.endTime})`).join(', ');
+            const confirmProceed = window.confirm(
+              `Dikkat: Bu personelin ${d} tarihinde aynı saat aralığıyla çakışan başka görevleri bulunuyor:\n\n${overlappingRolesText}\n\nYine de aynı saate "${form.role}" görevini atamak istiyor musunuz?`
+            );
+            
+            if (!confirmProceed) {
+              setIsCreating(false);
+              return;
+            }
+          }
         }
       }
 
@@ -515,7 +532,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                                   {/* Delete Action */}
                                   <button 
                                     onClick={() => handleDeleteClick(roster)}
-                                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded-md transition-all p-1.5 absolute right-2 top-1/2 -translate-y-1/2"
+                                    className="text-red-500 hover:bg-red-500/10 rounded-md transition-all p-1.5 absolute right-2 top-1/2 -translate-y-1/2"
                                     title="Vardiyayı Sil"
                                   >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

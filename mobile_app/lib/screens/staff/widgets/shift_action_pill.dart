@@ -202,7 +202,7 @@ class _ShiftActionPillState extends ConsumerState<ShiftActionPill> {
     final elapsedStr = _formatDuration(_shiftElapsed);
 
     final tasks = <Map<String, dynamic>>[];
-    if (tables.isNotEmpty) tasks.add({'id': 'masa', 'name': 'Masa Servisi', 'elapsedText': elapsedStr});
+    if (tables.isNotEmpty) tasks.add({'id': 'masa', 'name': 'Garson', 'elapsedText': elapsedStr});
     if (isDriver) tasks.add({'id': 'kurye', 'name': 'Kurye Görevi', 'elapsedText': elapsedStr});
     if (isDiger) tasks.add({'id': 'diger', 'name': 'Diğer Görevler', 'elapsedText': elapsedStr});
     for (var zone in prepZones) {

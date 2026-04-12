@@ -278,7 +278,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     final elapsedStr = _formatDuration(_shiftElapsedNotifier.value);
 
     final tasks = <Map<String, dynamic>>[];
-    if (tables.isNotEmpty) tasks.add({'id': 'masa', 'name': 'Masa Servisi', 'elapsedText': elapsedStr});
+    if (tables.isNotEmpty) tasks.add({'id': 'masa', 'name': 'Garson', 'elapsedText': elapsedStr});
     if (isDriver) tasks.add({'id': 'kurye', 'name': 'Kurye Gorevi', 'elapsedText': elapsedStr});
     if (isDiger) tasks.add({'id': 'diger', 'name': 'Diger Gorevler', 'elapsedText': elapsedStr});
     for (var zone in prepZones) {
@@ -577,7 +577,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       case 'Tezgah': return 'Tezgah';
       case 'POS': return 'Kermes POS';
       case 'Kurye': return 'Kurye';
-      case 'Masalar': return 'Masa Servisi';
+      case 'Garson': return 'Garson (Masa Servisi)';
       case 'Rezervasyon': return 'Rezervasyonlar';
       case 'Park': return 'Park Yonetimi';
       case 'Mesai': return 'Mesai';
@@ -1356,7 +1356,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             context.push(query);
           },
         ) : _buildShiftLockedPlaceholder(isDark), 
-        'icon': Icons.table_restaurant, 'label': 'Masalar', 'color': Colors.pink
+        'icon': Icons.table_restaurant, 'label': 'Garson', 'color': Colors.pink
       });
     }
 
