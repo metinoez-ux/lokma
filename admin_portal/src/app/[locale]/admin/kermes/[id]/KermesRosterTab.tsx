@@ -15,6 +15,8 @@ export interface KermesRoster {
   endTime: string; // HH:MM
   createdAt?: any;
   createdBy?: string;
+  batchId?: string;
+  status?: 'pending' | 'accepted' | 'rejected';
 }
 
 interface KermesRosterTabProps {
@@ -140,6 +142,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       const newRosters: KermesRoster[] = [];
       const isMultipleDays = datesToAssign.length > 1;
       const msgRange = isMultipleDays ? `${form.startDate} - ${form.endDate}` : form.startDate;
+      const batchId = crypto.randomUUID();
 
       for (let i = 0; i < datesToAssign.length; i++) {
         const d = datesToAssign[i];
@@ -155,6 +158,8 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           createdAt: Timestamp.now(),
           createdBy: adminUid,
           skipNotification: !isFirst,
+          batchId,
+          status: 'pending',
         };
 
         if (isFirst && isMultipleDays) {
@@ -490,8 +495,26 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                                   </div>
                                   
                                   {/* Info */}
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-foreground text-sm truncate">{staffName}</p>
+                                  <div className="flex-1 min-w-0 pr-6">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <p className="font-bold text-foreground text-sm truncate">{staffName}</p>
+                                      {/* Status Badge */}
+                                      {roster.status === 'accepted' && (
+                                        <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded ml-2">
+                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> Kabul
+                                        </span>
+                                      )}
+                                      {roster.status === 'rejected' && (
+                                        <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded ml-2">
+                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg> Red
+                                        </span>
+                                      )}
+                                      {(!roster.status || roster.status === 'pending') && (
+                                        <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded ml-2">
+                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Bekleyen
+                                        </span>
+                                      )}
+                                    </div>
                                     <div className={`flex items-center gap-1.5 mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${bgColor}/20 ${textColor} w-max border ${borderColor}/30`}>
                                       <svg className="w-3.5 h-3.5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

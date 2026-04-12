@@ -82,6 +82,7 @@ export const onKermesRosterCreated = onDocumentCreated(
                 date: dateStr,
                 startTime: startStr,
                 endTime: endStr,
+                batchId: roster.batchId || null,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 read: false,
                 deepLinkUrl: "roster_dashboard" // Instruct app to route to their staff dashboard
@@ -106,7 +107,8 @@ export const onKermesRosterCreated = onDocumentCreated(
                         role,
                         date: dateStr,
                         startTime: startStr,
-                        endTime: endStr
+                        endTime: endStr,
+                        batchId: roster.batchId || ''
                     },
                     apns: {
                         payload: {
@@ -148,7 +150,15 @@ export const onKermesRosterCreated = onDocumentCreated(
                             </div>
                             
                             <div style="text-align: center; margin-top: 30px;">
-                                <a href="${googleCalUrl}" style="background-color: #2E7D32; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+                                <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px;">
+                                    <a href="https://lokma.shop/api/kermes/roster-action?batchId=${roster.batchId}&action=accept&u=${userId}&k=${kermesId}" style="background-color: #10B981; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; flex: 1;">
+                                        Görevi Kabul Ediyorum
+                                    </a>
+                                    <a href="https://lokma.shop/api/kermes/roster-action?batchId=${roster.batchId}&action=reject&u=${userId}&k=${kermesId}" style="background-color: #EF4444; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; flex: 1;">
+                                        Üstlenemiyorum
+                                    </a>
+                                </div>
+                                <a href="${googleCalUrl}" style="background-color: #2E7D32; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 14px;">
                                     Google Takvime Ekle
                                 </a>
                             </div>
@@ -178,6 +188,105 @@ export const onKermesRosterCreated = onDocumentCreated(
 
         } catch (error) {
             console.error("[Roster Notify] Top level error:", error);
+        }
+    }
+);
+
+/**
+ * Triggered when a Kermes roster entry is updated.
+ * Used primarily to alert the Kermes Admin when a staff member rejects a shift.
+ */
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+
+export const onKermesRosterUpdated = onDocumentUpdated(
+    "kermes_events/{kermesId}/rosters/{rosterId}",
+    async (event) => {
+        const before = event.data?.before.data();
+        const after = event.data?.after.data();
+        if (!before || !after) return;
+
+        // Note: The UI updates status to 'rejected' for the whole batch
+        if (before.status !== 'rejected' && after.status === 'rejected') {
+            const db = admin.firestore();
+            const kermesId = event.params.kermesId;
+            const userId = after.userId;
+            const role = after.role || "Görevli";
+
+            try {
+                const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
+                if (!kermesDoc.exists) return;
+                const kData = kermesDoc.data()!;
+                const adminUid = kData.createdBy || kData.assignedManager;
+
+                if (!adminUid) return;
+
+                // Also fetch user to get their name
+                let userName = "Bir personel";
+                const userDoc = await db.collection("users").doc(userId).get();
+                if (userDoc.exists) {
+                    const uD = userDoc.data()!;
+                    userName = uD.name || uD.profile?.name || uD.displayName || userName;
+                }
+
+                const title = `⚠️ Vardiya Reddedildi: ${kData.kermesName || "Kermes"}`;
+                const body = `${userName}, ${after.date} tarihindeki ${after.startTime}-${after.endTime} ${role} görevini üstlenemeyeceğini bildirdi.`;
+
+                // Add to admin's inbox
+                await db.collection("users").doc(adminUid).collection("notifications").add({
+                    title,
+                    body,
+                    type: "roster_rejection",
+                    kermesId,
+                    userId,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                });
+                
+                console.log(`[Roster Updated] Rejection alert sent to admin ${adminUid}`);
+
+                // Also send a transactional email to the Admin if they have an email registered
+                const adminDoc = await db.collection("users").doc(adminUid).get();
+                if (adminDoc.exists) {
+                    const adminData = adminDoc.data()!;
+                    if (adminData.email) {
+                        const resend = new Resend(resendApiKey.value());
+                        const emailHtml = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a1a1a; color: #ffffff; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #D32F2F; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0; color: #ffffff;">⚠️ Vardiya Ataması Reddedildi</h2>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <p style="font-size: 16px; color: #e0e0e0;">Merhaba,</p>
+                                    <p style="font-size: 16px; color: #e0e0e0;"><strong>${kData.kermesName || "Kermes"}</strong> etkinliği için oluşturduğunuz bir vardiya ataması personel tarafından <strong>reddedildi</strong>.</p>
+                                    
+                                    <div style="background: #2a2a2a; border-left: 4px solid #D32F2F; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                        <p style="margin: 5px 0; color: #ffffff;"><strong>Personel:</strong> ${userName}</p>
+                                        <p style="margin: 5px 0; color: #ffffff;"><strong>Görev:</strong> ${role}</p>
+                                        <p style="margin: 5px 0; color: #ffffff;"><strong>Tarih:</strong> ${after.date}</p>
+                                        <p style="margin: 5px 0; color: #ffffff;"><strong>Saat:</strong> ${after.startTime} - ${after.endTime}</p>
+                                    </div>
+                                    
+                                    <p style="margin-top: 30px; font-size: 14px; color: #aaaaaa;">Lütfen bu görevi idame ettirebilmek için MIRA / LOKMA platformu üzerinden <strong>yeni bir personel</strong> görevlendiriniz.</p>
+                                </div>
+                            </div>
+                        `;
+
+                        try {
+                            await resend.emails.send({
+                                from: "LOKMA Marketplace <noreply@lokma.shop>",
+                                to: adminData.email,
+                                subject: `⚠️ Vardiya İptali: Personel Görevi Reddetti - ${userName}`,
+                                html: emailHtml,
+                            });
+                            console.log(`[Roster Updated] Rejection email sent to admin at ${adminData.email}`);
+                        } catch (emailErr) {
+                            console.error("[Roster Updated] Email error while notifying admin:", emailErr);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("[Roster Updated] Error processing rejection", err);
+            }
         }
     }
 );
