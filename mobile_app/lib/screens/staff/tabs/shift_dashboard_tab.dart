@@ -428,12 +428,13 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   Future<List<Map<String, dynamic>>> _fetchColleagues(String roleOrZone, String kermesId) async {
     final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
     String? currentUserGender;
+    
     if (currentUserUid != null) {
       try {
         final currentUserDoc = await FirebaseFirestore.instance.collection('users').doc(currentUserUid).get();
         if (currentUserDoc.exists) {
            String? g = currentUserDoc.data()?['gender'] as String?;
-           if (g != null) {
+           if (g != null && g.isNotEmpty) {
              g = g.toLowerCase();
              if (g == 'kadin' || g == 'kadın' || g == 'female') currentUserGender = 'female';
              else if (g == 'erkek' || g == 'male') currentUserGender = 'male';
@@ -442,8 +443,26 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
       } catch (e) {}
     }
 
+    // Direct and definitive gender inference for current user via Admin document
+    if (currentUserGender == null && currentUserUid != null) {
+      try {
+        final adminDoc = await FirebaseFirestore.instance.collection('admins').doc(currentUserUid).get();
+        if (adminDoc.exists) {
+           final d = adminDoc.data()!;
+           final sections = List<String>.from(d['kermesAllowedSections'] ?? []);
+           final prepZones = List<String>.from(d['kermesPrepZones'] ?? []);
+           for (var s in [...sections, ...prepZones]) {
+              if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
+                 currentUserGender = 'female'; break;
+              } else if (s.contains('Erkek')) {
+                 currentUserGender = 'male'; break;
+              }
+           }
+        }
+      } catch(e) {}
+    }
+
     List<String> uids = [];
-    
     final docSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kermesId).get();
     if (docSnap.exists) {
       final data = docSnap.data()!;
@@ -472,7 +491,6 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     }
     
     // We keep ourself in the list based on user request ('(Ben)')
-    // uids.removeWhere((uid) => uid == currentUserUid);
     
     if (uids.isEmpty) return [];
 
@@ -480,6 +498,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     
     Map<String, String> statusMap = {};
+    Map<String, String> adminInferredGenders = {};
     for (var uid in uids) {
        statusMap[uid] = 'none';
     }
@@ -492,6 +511,15 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           final d = doc.data();
           if (d['shiftBusinessId'] == kermesId && d['isOnShift'] == true) {
              statusMap[doc.id] = (d['shiftStatus'] == 'paused') ? 'paused' : 'active';
+          }
+          final sections = List<String>.from(d['kermesAllowedSections'] ?? []);
+          final prepZones = List<String>.from(d['kermesPrepZones'] ?? []);
+          for (var s in [...sections, ...prepZones]) {
+             if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
+                 adminInferredGenders[doc.id] = 'female'; break; 
+             } else if (s.contains('Erkek')) {
+                 adminInferredGenders[doc.id] = 'male'; break;
+             }
           }
         }
       } catch (e) {}
@@ -535,8 +563,16 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
            if (normalizedUserGender == 'kadin' || normalizedUserGender == 'kadın') normalizedUserGender = 'female';
            if (normalizedUserGender == 'erkek') normalizedUserGender = 'male';
 
-           if (requiredGender != null && normalizedUserGender.isNotEmpty && normalizedUserGender != requiredGender) {
-             continue; // Skip opposite gender safely and robustly
+           // Fallback to inferred gender explicitly based on Admin doc permissions
+           if (normalizedUserGender.isEmpty && adminInferredGenders.containsKey(doc.id)) {
+               normalizedUserGender = adminInferredGenders[doc.id]!;
+           }
+
+           if (requiredGender != null) {
+              // STRICT GENDER POLICY
+              if (normalizedUserGender != requiredGender) {
+                  continue; 
+              }
            }
 
            result.add({
@@ -762,6 +798,24 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   }
 
   Widget _buildClickableChip(String label, String targetKey, String? businessId, bool isDark) {
+    MaterialColor colorBase = Colors.pink;
+    final l = label.toLowerCase();
+    if (l.contains('sürücü') || l.contains('surucu')) {
+      colorBase = Colors.blue;
+    } else if (l.contains('garson')) {
+      colorBase = Colors.teal;
+    } else if (l.contains('temiz') || l.contains('çöp')) {
+      colorBase = Colors.cyan;
+    } else if (l.contains('park') || l.contains('trafik')) {
+      colorBase = Colors.indigo;
+    } else if (l.contains('kermes görevlisi')) {
+      colorBase = Colors.purple;
+    } else if (l.contains('grill') || l.contains('kumpir') || l.contains('lahmacun') || l.contains('künefe') || l.contains('ocak')) {
+      colorBase = Colors.deepOrange;
+    } else {
+      colorBase = Colors.orange; // Default fallback for other prep zones
+    }
+
     return InkWell(
       onTap: () {
          if (businessId != null) {
@@ -772,8 +826,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isDark ? Colors.pink.withOpacity(0.15) : Colors.pink.shade50,
-          border: Border.all(color: Colors.pink.withOpacity(0.3)),
+          color: isDark ? colorBase.withOpacity(0.15) : colorBase.shade50,
+          border: Border.all(color: colorBase.withOpacity(0.3)),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -785,13 +839,13 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                  style: TextStyle(
                    fontSize: 13,
                    fontWeight: FontWeight.bold,
-                   color: isDark ? Colors.pink.shade200 : Colors.pink.shade700,
+                   color: isDark ? colorBase.shade200 : colorBase.shade700,
                  ),
                  overflow: TextOverflow.ellipsis,
                ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.touch_app, size: 14, color: isDark ? Colors.pink.shade200 : Colors.pink.shade700),
+            Icon(Icons.touch_app, size: 14, color: isDark ? colorBase.shade200 : colorBase.shade700),
           ],
         ),
       ),
