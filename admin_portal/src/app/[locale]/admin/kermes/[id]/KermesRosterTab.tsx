@@ -382,6 +382,31 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
   const gapAnalysis = coverageOpen ? calculateGaps() : [];
 
+  const handleGapClick = (dateStr: string, gapText: string) => {
+    const match = gapText.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+    if (match) {
+       setForm(prev => ({
+         ...prev,
+         role: coverageRole,
+         startDate: dateStr,
+         endDate: dateStr,
+         startTime: match[1],
+         endTime: match[2],
+         userId: '' // Reset user selection to enforce picking
+       }));
+       setIsFullKermes(false);
+       
+       const formEl = document.getElementById('new-roster-form');
+       if (formEl) {
+         formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+         formEl.classList.add('ring-2', 'ring-orange-500', 'ring-offset-2', 'ring-offset-background');
+         setTimeout(() => {
+           formEl.classList.remove('ring-2', 'ring-orange-500', 'ring-offset-2', 'ring-offset-background');
+         }, 1500);
+       }
+    }
+  };
+
   const getRoleColor = (role: string) => {
     switch ((role || '').toLowerCase()) {
       case 'genel sorumlu': return 'bg-purple-500/10 text-purple-400 border-purple-500/20 ring-purple-500/30';
@@ -416,7 +441,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
         </p>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+      <div id="new-roster-form" className="bg-card border border-border rounded-xl p-5 shadow-sm transition-all duration-500">
         <h4 className="font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h4>
         <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
           <div className="space-y-1">
@@ -592,12 +617,21 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                             </span>
                             {gapInfo.empty && <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">KRİTİK AÇIK</span>}
                          </div>
-                         <div className="space-y-1.5">
+                         <div className="space-y-1.5 mt-2">
                            {gapInfo.gaps.map((gapText, j) => (
-                             <div key={j} className={`flex items-center gap-2 text-sm font-semibold ${gapInfo.empty ? 'text-red-400' : 'text-orange-400'}`}>
-                               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                               {gapText}
-                             </div>
+                             <button 
+                               key={j} 
+                               onClick={() => handleGapClick(gapInfo.date, gapText)}
+                               className={`group w-full flex items-center justify-between p-2 rounded-lg transition-colors border border-transparent ${gapInfo.empty ? 'hover:bg-red-500/20 hover:border-red-500/30' : 'hover:bg-orange-500/20 hover:border-orange-500/30'}`}
+                             >
+                               <div className={`flex items-center gap-2 text-sm font-semibold ${gapInfo.empty ? 'text-red-400' : 'text-orange-400'}`}>
+                                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                 {gapText}
+                               </div>
+                               <span className={`text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${gapInfo.empty ? 'text-red-300' : 'text-orange-300'}`}>
+                                 Atama Yap <span>&rarr;</span>
+                               </span>
+                             </button>
                            ))}
                          </div>
                       </div>
