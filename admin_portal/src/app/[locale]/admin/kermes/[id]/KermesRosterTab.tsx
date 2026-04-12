@@ -326,55 +326,70 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     const sDate = new Date(parseInt(sParts[0]), parseInt(sParts[1]) - 1, parseInt(sParts[2]), 12, 0, 0);
     const eDate = new Date(parseInt(eParts[0]), parseInt(eParts[1]) - 1, parseInt(eParts[2]), 12, 0, 0);
     
-    // We assume 08:00 to 20:00 as required coverage hours daily
     const reqStart = 8 * 60; // 480
     const reqEnd = 20 * 60;  // 1200
 
-    const results: { date: string, dateObj: Date, gaps: string[], empty: boolean }[] = [];
+    const results: { date: string, dateObj: Date, gaps: string[], empty: boolean, role: string }[] = [];
     
-    const current = new Date(sDate);
-    while (current <= eDate) {
-      const dStr = current.toISOString().split('T')[0];
-      
-      // Get valid rosters for this role on this day (ignore rejected ones)
-      const dayRosters = rosters.filter(r => r.date === dStr && r.role === coverageRole && r.status !== 'rejected');
-      
-      if (dayRosters.length === 0) {
-         results.push({ date: dStr, dateObj: new Date(current), gaps: ['08:00 - 20:00 (Tüm Gün Boş)'], empty: true });
-      } else {
-         const intervals = dayRosters.map(r => [timeToMins(r.startTime), timeToMins(r.endTime)]);
-         intervals.sort((a,b) => a[0] - b[0]);
-         
-         const merged: number[][] = [];
-         for (const iv of intervals) {
-           if (merged.length === 0) merged.push(iv);
-           else {
-             const last = merged[merged.length - 1];
-             if (iv[0] <= last[1]) last[1] = Math.max(last[1], iv[1]);
-             else merged.push(iv);
+    const computeForRole = (roleToCheck: string) => {
+      const current = new Date(sDate);
+      while (current <= eDate) {
+        const dStr = current.toISOString().split('T')[0];
+        const dayRosters = rosters.filter(r => r.date === dStr && r.role === roleToCheck && r.status !== 'rejected');
+        
+        if (dayRosters.length === 0) {
+           results.push({ date: dStr, dateObj: new Date(current), gaps: ['08:00 - 20:00 (Tüm Gün Boş)'], empty: true, role: roleToCheck });
+        } else {
+           const intervals = dayRosters.map(r => [timeToMins(r.startTime), timeToMins(r.endTime)]);
+           intervals.sort((a,b) => a[0] - b[0]);
+           
+           const merged: number[][] = [];
+           for (const iv of intervals) {
+             if (merged.length === 0) merged.push(iv);
+             else {
+               const last = merged[merged.length - 1];
+               if (iv[0] <= last[1]) last[1] = Math.max(last[1], iv[1]);
+               else merged.push(iv);
+             }
            }
-         }
 
-         let gapStart = reqStart;
-         const dailyGaps: string[] = [];
-         
-         for (const iv of merged) {
-           if (iv[0] > gapStart) {
-             const gS = Math.min(gapStart, reqEnd);
-             const gE = Math.min(iv[0], reqEnd);
-             if (gS < gE) dailyGaps.push(`${minsToTime(gS)} - ${minsToTime(gE)}`);
+           let gapStart = reqStart;
+           const dailyGaps: string[] = [];
+           
+           for (const iv of merged) {
+             if (iv[0] > gapStart) {
+               const gS = Math.min(gapStart, reqEnd);
+               const gE = Math.min(iv[0], reqEnd);
+               if (gS < gE) dailyGaps.push(`${minsToTime(gS)} - ${minsToTime(gE)}`);
+             }
+             gapStart = Math.max(gapStart, iv[1]);
            }
-           gapStart = Math.max(gapStart, iv[1]);
-         }
-         if (gapStart < reqEnd) {
-            dailyGaps.push(`${minsToTime(gapStart)} - ${minsToTime(reqEnd)}`);
-         }
+           if (gapStart < reqEnd) {
+              dailyGaps.push(`${minsToTime(gapStart)} - ${minsToTime(reqEnd)}`);
+           }
 
-         if (dailyGaps.length > 0) {
-            results.push({ date: dStr, dateObj: new Date(current), gaps: dailyGaps, empty: false });
-         }
+           // Eğer "TÜMÜ" seçiliyse sadec boşluk olanları göster (kalabalık yapmasın), spesifik role ise mükemmel günleri de göster
+           if (dailyGaps.length > 0) {
+              results.push({ date: dStr, dateObj: new Date(current), gaps: dailyGaps, empty: false, role: roleToCheck });
+           } else if (coverageRole !== 'ALL') {
+              // Perfect coverage will not have gaps, but we don't push it unless we want to show 'Perfect', 
+              // which my UI currently handles outside the array length check. Wait, my UI checks gapAnalysis.length === 0.
+              // So we don't push perfects.
+           }
+        }
+        current.setDate(current.getDate() + 1);
       }
-      current.setDate(current.getDate() + 1);
+    };
+
+    if (coverageRole === 'ALL') {
+       defaultRoles.forEach(r => computeForRole(r));
+       // Sort results by Date then Role
+       results.sort((a, b) => {
+         if (a.date !== b.date) return a.date.localeCompare(b.date);
+         return a.role.localeCompare(b.role);
+       });
+    } else {
+       computeForRole(coverageRole);
     }
     
     return results;
@@ -382,12 +397,12 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
   const gapAnalysis = coverageOpen ? calculateGaps() : [];
 
-  const handleGapClick = (dateStr: string, gapText: string) => {
+  const handleGapClick = (dateStr: string, gapText: string, targetRole: string) => {
     const match = gapText.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
     if (match) {
        setForm(prev => ({
          ...prev,
-         role: coverageRole,
+         role: targetRole,
          startDate: dateStr,
          endDate: dateStr,
          startTime: match[1],
@@ -588,8 +603,10 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                 <select 
                   value={coverageRole} 
                   onChange={e => setCoverageRole(e.target.value)}
-                  className="w-full sm:w-auto min-w-[200px] bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-orange-500"
+                  className="w-full sm:w-auto min-w-[200px] bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-orange-500 font-medium"
                 >
+                  <option value="ALL" className="font-bold">⚡ TÜM GÖREVLERİN AÇIKLARI ⚡</option>
+                  <option disabled>──────────────</option>
                   {defaultRoles.map(r => (
                     <option key={r} value={r}>{r}</option>
                   ))}
@@ -604,7 +621,11 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                    </div>
                    <div>
                      <p className="text-emerald-500 font-bold">Mükemmel!</p>
-                     <p className="text-sm text-emerald-600/80 mt-0.5">"{coverageRole}" görevi için 08:00 ile 20:00 arasında tüm kermes günleri boyunca hiçbir açık saat bulunmuyor.</p>
+                     <p className="text-sm text-emerald-600/80 mt-0.5">
+                       {coverageRole === 'ALL' 
+                         ? '08:00 ile 20:00 arasında tüm kermes günleri boyunca HİÇBİR GÖREVDE açık saat bulunmuyor.' 
+                         : `"${coverageRole}" görevi için 08:00 ile 20:00 arasında tüm kermes günleri boyunca hiçbir açık saat bulunmuyor.`}
+                     </p>
                    </div>
                  </div>
                ) : (
@@ -617,11 +638,16 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                             </span>
                             {gapInfo.empty && <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">KRİTİK AÇIK</span>}
                          </div>
+                         {coverageRole === 'ALL' && (
+                           <div className="mb-2 w-max text-[11px] font-bold px-2 py-0.5 bg-background border border-border rounded shadow-sm text-foreground/90">
+                              {gapInfo.role}
+                           </div>
+                         )}
                          <div className="space-y-1.5 mt-2">
                            {gapInfo.gaps.map((gapText, j) => (
                              <button 
                                key={j} 
-                               onClick={() => handleGapClick(gapInfo.date, gapText)}
+                               onClick={() => handleGapClick(gapInfo.date, gapText, gapInfo.role)}
                                className={`group w-full flex items-center justify-between p-2 rounded-lg transition-colors border border-transparent ${gapInfo.empty ? 'hover:bg-red-500/20 hover:border-red-500/30' : 'hover:bg-orange-500/20 hover:border-orange-500/30'}`}
                              >
                                <div className={`flex items-center gap-2 text-sm font-semibold ${gapInfo.empty ? 'text-red-400' : 'text-orange-400'}`}>
