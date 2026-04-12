@@ -28,6 +28,7 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
     with TickerProviderStateMixin {
   String _activeFilter = 'Tümü';
   Set<String> _previousOrderIds = {};
+  List<KermesOrder> _currentDisplayOrders = []; // Eklenen degisken
   late final TabController _tabController;
 
   static const Color lokmaPink = Color(0xFFEA184A);
@@ -72,13 +73,21 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
         zone: _activeFilter == 'T\u00fcm\u00fc' ? null : _activeFilter,
       );
 
-      // Otomatik tab gecisi: bu sipariste baska islenecek item kaldi mi?
+      // Otomatik tab gecisi: Tum aktif siparislerde ayni statude baska islenecek item kaldi mi?
       if (mounted) {
-        // Mevcut sipariste ayni statuslu baska item var mi kontrol et
-        final sameStatusItems = order.items.where((i) => i.itemStatus == item.itemStatus).toList();
-        // Bu item dahil sadece 1 tane kaldiysa (yani az once son item'i toggle ettik)
-        // ve siparisin tum itemlari artik bir sonraki status'a geciyorsa
-        if (sameStatusItems.length <= 1) {
+        int totalItemsWithStatus = 0;
+        for (final o in _currentDisplayOrders) {
+          for (final i in o.items) {
+            if (i.itemStatus == item.itemStatus) {
+              if (_activeFilter == 'T\u00fcm\u00fc' || i.prepZones.contains(_activeFilter)) {
+                totalItemsWithStatus++;
+              }
+            }
+          }
+        }
+        
+        // Bu item dahil sadece 1 tane kaldiysa (yani az once tab'daki EN SON item'i toggle ettik)
+        if (totalItemsWithStatus <= 1) {
           _autoSwitchTabIfEmpty();
         }
       }
@@ -224,6 +233,9 @@ class _KermesUnifiedKdsScreenState extends ConsumerState<KermesUnifiedKdsScreen>
                     HapticFeedback.heavyImpact();
                   }
                   _previousOrderIds = currentIds;
+                  
+                  // Guncel olarak ekranda gorunen snapshot'i kaydet (swipe logic icin)
+                  _currentDisplayOrders = displayOrders;
 
                   // Bucket orders
                   final pendingOrders = displayOrders.where((o) => o.status == KermesOrderStatus.pending).toList();
