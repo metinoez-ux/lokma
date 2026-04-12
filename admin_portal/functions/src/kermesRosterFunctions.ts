@@ -49,15 +49,21 @@ export const onKermesRosterCreated = onDocumentCreated(
             // 2. Fetch Kermes Event Data for context
             const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
             const kData = kermesDoc.exists ? kermesDoc.data() : {};
-            const kermesName = kData?.kermesName || kData?.name || kData?.city || "Kermes";
-            
-            // Format dates (dd.mm.yyyy preferred if available, but raw is fine)
-            const kStart = kData?.startDate || kData?.kermesStart || "Belirtilmedi";
-            const kEnd = kData?.endDate || kData?.kermesEnd || "Belirtilmedi";
+        const kermesName = kData?.kermesName || kData?.name || kData?.city || "Kermes";
+        
+        if (roster.skipNotification === true) {
+            console.log(`[Roster Notify] Skipping notification for roster ${event.params.rosterId} (part of batch)`);
+            return;
+        }
 
-            // Format Title & Body
-            const title = `📅 Yeni Vardiya Ataması: ${kermesName}`;
-            const body = `${dateStr} tarihinde saat ${startStr} - ${endStr} arasında ${role} olarak görevlendirildiniz.`;
+        // Format dates (dd.mm.yyyy preferred if available, but raw is fine)
+        const kStart = kData?.startDate || kData?.kermesStart || "Belirtilmedi";
+        const kEnd = kData?.endDate || kData?.kermesEnd || "Belirtilmedi";
+
+        // Format Title & Body with potential overrides from UI
+        const title = roster.notificationTitleOverride || `📅 Yeni Vardiya Ataması: ${kermesName}`;
+        const displayedDate = roster.notificationDateSpan || dateStr;
+        const body = roster.notificationBodyOverride || `${displayedDate} tarihinde saat ${startStr} - ${endStr} arasında ${role} olarak görevlendirildiniz.`;
 
             // Prepare date links for calendar (Format: YYYYMMDDTHHMMSSZ)
             // Note: Simplistic UTC mapping. For absolute accuracy a timezone library would be used, but standard YYYYMMDD string works for most templates.
@@ -135,7 +141,7 @@ export const onKermesRosterCreated = onDocumentCreated(
                             <p style="font-size: 14px; color: #aaaaaa; margin-top: -5px;">(Kermes Genel Süresi: ${kStart} - ${kEnd})</p>
                             
                             <div style="background: #2a2a2a; border-left: 4px solid #1565C0; padding: 15px; margin: 20px 0; border-radius: 4px;">
-                                <p style="margin: 5px 0; color: #ffffff;"><strong>Tarih:</strong> ${dateStr}</p>
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Tarih:</strong> ${displayedDate}</p>
                                 <p style="margin: 5px 0; color: #ffffff;"><strong>Saat:</strong> ${startStr} - ${endStr}</p>
                                 <p style="margin: 5px 0; color: #ffffff;"><strong>Görev Alanı / Bölüm:</strong> ${bolumStr}</p>
                                 <p style="margin: 5px 0; color: #ffffff;"><strong>Görev / Rol:</strong> ${role}</p>

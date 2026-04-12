@@ -138,8 +138,14 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
       // 2. Veritabanına Yazma
       const newRosters: KermesRoster[] = [];
-      for (const d of datesToAssign) {
-        const payload = {
+      const isMultipleDays = datesToAssign.length > 1;
+      const msgRange = isMultipleDays ? `${form.startDate} - ${form.endDate}` : form.startDate;
+
+      for (let i = 0; i < datesToAssign.length; i++) {
+        const d = datesToAssign[i];
+        const isFirst = i === 0;
+
+        const payload: any = {
           kermesId,
           userId: form.userId,
           role: form.role,
@@ -147,56 +153,21 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           startTime: form.startTime,
           endTime: form.endTime,
           createdAt: Timestamp.now(),
-          createdBy: adminUid
+          createdBy: adminUid,
+          skipNotification: !isFirst,
         };
+
+        if (isFirst && isMultipleDays) {
+           payload.notificationDateSpan = msgRange;
+           payload.notificationBodyOverride = `${msgRange} tarihleri aralığında saat ${form.startTime} - ${form.endTime} arasında ${form.role} olarak görevlendirildiniz.`;
+        }
+
         const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'rosters'), payload);
         newRosters.push({ id: docRef.id, ...payload } as KermesRoster);
       }
       
       // Optimistic update so it immediately appears in the list!
       setRosters(prev => [...prev, ...newRosters]);
-      
-      // Notify the user via Push and Email (Directly from form data and fresh DB fetch to prevent missed notifications)
-      const isMultipleDays = datesToAssign.length > 1;
-      const msgRange = isMultipleDays ? `${form.startDate} - ${form.endDate}` : form.startDate;
-      const bodyMsg = `Kermes: ${msgRange} tarihlerinde, saat ${form.startTime}-${form.endTime} aralığında "${form.role}" görevi hesabınıza atanmıştır.`;
-      
-      // 1. Her zaman Push gönder (Backend userId\'den token buluyor)
-      fetch('/api/admin/notify-staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: form.userId,
-          title: `Kermeste Yeni Vardiya: ${form.role}`,
-          body: bodyMsg,
-          type: 'kermes_assignment'
-        })
-      }).catch(e => console.error('Push error:', e));
-
-      // 2. Email için veritabanından en güncel datayı alıp gönder:
-      try {
-        const userDocRef = doc(db, 'users', form.userId);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const uD = userDocSnap.data();
-          const pEmail = uD.email || uD.profile?.email;
-          const pName = uD.name || uD.profile?.name || uD.displayName || 'Değerli Personelimiz';
-          
-          if (pEmail) {
-            fetch('/api/email/send', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                to: pEmail,
-                subject: 'Yeni Kermes Görevi / LOKMA Yönetim',
-                html: `<div style="font-family:sans-serif;padding:24px;background:#f9fafb;"><h2 style="color:#1e40af;">Yeni Vardiya Bilgilendirmesi</h2><p>Merhaba ${pName},</p><p>Size detayları aşağıda belirtilen yeni bir görev atanmıştır:</p><ul style="font-size:16px;"><li><strong>Rol:</strong> ${form.role}</li><li><strong>Tarih:</strong> ${msgRange}</li><li><strong>Saat:</strong> ${form.startTime} - ${form.endTime}</li></ul><br/><p>İyi çalışmalar dileriz.</p></div>`
-              })
-            }).catch(e => console.error('Email call err:', e));
-          }
-        }
-      } catch (errDb) {
-        console.error('Notifier info fetch error:', errDb);
-      }
 
       setForm(prev => ({ ...prev, userId: '', role: '' })); // Keep dates to easily assign next person
       setIsFullKermes(false);
