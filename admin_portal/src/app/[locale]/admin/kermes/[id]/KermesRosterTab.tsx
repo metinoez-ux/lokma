@@ -317,7 +317,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
   // Calculate Coverage Gaps
   const calculateGaps = () => {
-    if (!kermesStart || !kermesEnd || !coverageRole) return [];
+    if (!kermesStart || !kermesEnd) return [];
     
     const sParts = kermesStart.split('-');
     const eParts = kermesEnd.split('-');
@@ -331,7 +331,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
     const results: { date: string, dateObj: Date, gaps: string[], empty: boolean, role: string }[] = [];
     
-    const computeForRole = (roleToCheck: string) => {
+    defaultRoles.forEach(roleToCheck => {
       const current = new Date(sDate);
       while (current <= eDate) {
         const dStr = current.toISOString().split('T')[0];
@@ -368,34 +368,25 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               dailyGaps.push(`${minsToTime(gapStart)} - ${minsToTime(reqEnd)}`);
            }
 
-           // Eğer "TÜMÜ" seçiliyse sadec boşluk olanları göster (kalabalık yapmasın), spesifik role ise mükemmel günleri de göster
            if (dailyGaps.length > 0) {
               results.push({ date: dStr, dateObj: new Date(current), gaps: dailyGaps, empty: false, role: roleToCheck });
-           } else if (coverageRole !== 'ALL') {
-              // Perfect coverage will not have gaps, but we don't push it unless we want to show 'Perfect', 
-              // which my UI currently handles outside the array length check. Wait, my UI checks gapAnalysis.length === 0.
-              // So we don't push perfects.
            }
         }
         current.setDate(current.getDate() + 1);
       }
-    };
+    });
 
-    if (coverageRole === 'ALL') {
-       defaultRoles.forEach(r => computeForRole(r));
-       // Sort results by Date then Role
-       results.sort((a, b) => {
-         if (a.date !== b.date) return a.date.localeCompare(b.date);
-         return a.role.localeCompare(b.role);
-       });
-    } else {
-       computeForRole(coverageRole);
-    }
+    results.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.role.localeCompare(b.role);
+    });
     
     return results;
   };
 
-  const gapAnalysis = coverageOpen ? calculateGaps() : [];
+  const allGaps = coverageOpen ? calculateGaps() : [];
+  const gapAnalysis = coverageRole === 'ALL' ? allGaps : allGaps.filter(g => g.role === coverageRole);
+  const getGapCount = (role: string) => allGaps.filter(g => g.role === role).length;
 
   const handleGapClick = (dateStr: string, gapText: string, targetRole: string) => {
     const match = gapText.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
@@ -598,19 +589,48 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
         {coverageOpen && (
           <div className="p-5 border-t border-border bg-background/50">
-             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-                <label className="text-sm font-semibold text-foreground min-w-max">Hangi Görevi Analiz Edelim?</label>
-                <select 
-                  value={coverageRole} 
-                  onChange={e => setCoverageRole(e.target.value)}
-                  className="w-full sm:w-auto min-w-[200px] bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-orange-500 font-medium"
-                >
-                  <option value="ALL" className="font-bold">⚡ TÜM GÖREVLERİN AÇIKLARI ⚡</option>
-                  <option disabled>──────────────</option>
-                  {defaultRoles.map(r => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
+             <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setCoverageRole('ALL')}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      coverageRole === 'ALL' 
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20 ring-2 ring-blue-500/50' 
+                        : 'bg-card border border-border text-foreground hover:bg-black/10'
+                    }`}
+                  >
+                    TÜMÜ 
+                    <span className={`${coverageRole === 'ALL' ? 'bg-white text-blue-600' : 'bg-blue-500/10 text-blue-500'} px-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-extrabold`}>
+                      {allGaps.length}
+                    </span>
+                  </button>
+                  <div className="w-[1px] h-6 bg-border mx-1 self-center"></div>
+                  {defaultRoles.map(r => {
+                    const count = getGapCount(r);
+                    return (
+                      <button
+                        key={r}
+                        onClick={() => setCoverageRole(r)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          coverageRole === r 
+                            ? 'bg-orange-500 text-white shadow-md shadow-orange-900/20 ring-2 ring-orange-500/50' 
+                            : 'bg-card border border-border text-foreground hover:bg-black/10'
+                        }`}
+                      >
+                        {r}
+                        {count > 0 ? (
+                          <span className={`${coverageRole === r ? 'bg-white text-orange-600' : 'bg-red-500 text-white shadow-sm'} px-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold`}>
+                            {count}
+                          </span>
+                        ) : (
+                          <span className={`${coverageRole === r ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-600'} px-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold`}>
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
              </div>
 
              <div className="space-y-3">
