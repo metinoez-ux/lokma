@@ -1907,36 +1907,22 @@ Widget _buildHeroSection(BuildContext context) {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (hasIcon)
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.25),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              padding: const EdgeInsets.all(3),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
+                            ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
                                 child: CachedNetworkImage(
                                   imageUrl: badge.iconUrl,
-                                  height: 48, // Detay sayfasinda biraz daha buyuk
-                                  width: 48,
+                                  height: 52, // Detay sayfasinda daha net ve buyuk
+                                  width: 52,
                                   fit: BoxFit.contain,
                                   placeholder: (context, url) => Container(
                                     color: Colors.transparent,
-                                    height: 48,
-                                    width: 48,
+                                    height: 52,
+                                    width: 52,
                                   ),
                                   errorWidget: (context, url, error) =>
                                       Icon(Icons.verified, color: textColor, size: 24),
                                 ),
-                              ),
-                            )
+                              )
                           else ...[
                             Icon(Icons.verified, color: textColor, size: 15),
                             const SizedBox(width: 6),
