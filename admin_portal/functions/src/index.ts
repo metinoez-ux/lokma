@@ -3709,3 +3709,4 @@ export { kermesWaiterTimeoutCheck, onKermesOrderReady } from "./kermesWaiterFunc
 export { onKermesOrderPaidStock, onKermesOrderCancelledStock } from "./kermesStockFunctions";
 export { onKermesOrderCreatedNotif, onKermesOrderPaidNotif } from "./kermesCustomerNotifications";
 export { onKermesRosterCreated } from "./kermesRosterFunctions";
+export * from "./kermesRosterFunctions";

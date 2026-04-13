@@ -37,7 +37,6 @@ exports.onKermesOrderPaidNotif = exports.onKermesOrderCreatedNotif = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
 const translation_1 = require("./utils/translation");
-const db = admin.firestore();
 exports.onKermesOrderCreatedNotif = (0, firestore_1.onDocumentCreated)({
     document: "kermes_orders/{orderId}",
     region: "europe-west1",
@@ -45,6 +44,7 @@ exports.onKermesOrderCreatedNotif = (0, firestore_1.onDocumentCreated)({
     const orderData = event.data?.data();
     if (!orderData)
         return;
+    const db = admin.firestore();
     const orderId = event.params.orderId;
     const orderNumber = orderData.orderNumber;
     const totalAmount = orderData.totalAmount || 0;
@@ -193,6 +193,7 @@ exports.onKermesOrderPaidNotif = (0, firestore_1.onDocumentUpdated)({
     const after = event.data?.after.data();
     if (!before || !after)
         return;
+    const db = admin.firestore();
     // Sadece isPaid değiştiğinde
     const wasPaid = before.isPaid === true;
     const isPaidNow = after.isPaid === true;

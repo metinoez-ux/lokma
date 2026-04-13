@@ -2092,7 +2092,14 @@ Widget _buildHeroSection(BuildContext context) {
               ),
               child: Row(
                 children: [
-                  if (f.icon.isNotEmpty) ...[
+                   if (f.iconUrl != null && f.iconUrl!.isNotEmpty) ...[
+                     CachedNetworkImage(
+                       imageUrl: f.iconUrl!,
+                       width: 14,
+                       height: 14,
+                     ),
+                     const SizedBox(width: 8),
+                   ] else if (f.icon.isNotEmpty) ...[
                     Text(f.icon, style: const TextStyle(fontSize: 14)),
                     const SizedBox(width: 8),
                   ],

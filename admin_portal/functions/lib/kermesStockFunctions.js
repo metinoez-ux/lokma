@@ -36,7 +36,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.onKermesOrderCancelledStock = exports.onKermesOrderPaidStock = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
-const db = admin.firestore();
 /**
  * Kermes Siparis ODEME YAPILINCA (isPaid: false -> true):
  * 1. Her urun icin stok azalt (currentStock -= quantity)
@@ -52,6 +51,7 @@ exports.onKermesOrderPaidStock = (0, firestore_1.onDocumentUpdated)({
     const after = event.data?.after.data();
     if (!before || !after)
         return;
+    const db = admin.firestore();
     // --- ODEME TRIGGER: isPaid false -> true ---
     const wasPaid = before.isPaid === true;
     const isPaid = after.isPaid === true;
@@ -181,6 +181,7 @@ exports.onKermesOrderCancelledStock = (0, firestore_1.onDocumentUpdated)({
         return;
     if (before.status === "cancelled")
         return;
+    const db = admin.firestore();
     const orderId = event.params.orderId;
     const kermesId = after.kermesId;
     const items = after.items;

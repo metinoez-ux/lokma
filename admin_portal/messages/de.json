@@ -8466,5 +8466,22 @@
   "DIN A6 \\u00b7 105\\u00d7148 mm": "DIN A6 \\u00b7 105\\u00d7148 mm",
   "LOKMA": "LOKMA",
   "App Store": "App Store",
-  "Google Play": "Google Play"
+  "Google Play": "Google Play",
+  "KermesFeatures": {
+    "family_area": "Familienbereich",
+    "outdoor": "Außenbereich",
+    "indoor": "Innenbereich",
+    "kids_area": "Kinderbereich",
+    "card_payment": "Kartenzahlung",
+    "vegetarian": "Vegetarisch",
+    "accessible": "Barrierefrei",
+    "halal": "Halal",
+    "wifi": "WLAN",
+    "live_music": "Live Musik",
+    "prayer_room": "Gebetsraum",
+    "parking": "Parkplatz",
+    "first_aid": "Erste Hilfe",
+    "security": "Sicherheit",
+    "atm": "Geldautomat"
+  }
 }

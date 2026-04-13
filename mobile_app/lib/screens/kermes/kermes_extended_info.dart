@@ -1029,6 +1029,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
       if (isActive) {
         displayFeatures.add(_buildDynamicFeatureChip(
           emoji: feature.icon,
+          iconUrl: feature.iconUrl,
           label: feature.label,
           color: feature.colorValue,
         ));
@@ -1069,6 +1070,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
 
   Widget _buildDynamicFeatureChip({
     required String emoji,
+    String? iconUrl,
     required String label,
     required Color color,
   }) {
@@ -1082,8 +1084,18 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 6),
+          if (iconUrl != null && iconUrl.isNotEmpty) ...[
+            Image.network(
+              iconUrl,
+              width: 14,
+              height: 14,
+              errorBuilder: (_, __, ___) => Text(emoji, style: const TextStyle(fontSize: 12)),
+            ),
+            const SizedBox(width: 6),
+          ] else if (emoji.isNotEmpty) ...[
+            Text(emoji, style: const TextStyle(fontSize: 12)),
+            const SizedBox(width: 6),
+          ],
           Text(
             label.toUpperCase(),
             style: TextStyle(

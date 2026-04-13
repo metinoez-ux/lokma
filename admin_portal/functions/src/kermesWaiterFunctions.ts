@@ -2,6 +2,8 @@ import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 
+const db = admin.firestore();
+
 /**
  * Kermes Garson Atama Timeout (3 Dakika)
  *

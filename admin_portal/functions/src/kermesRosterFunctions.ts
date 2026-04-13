@@ -56,9 +56,19 @@ export const onKermesRosterCreated = onDocumentCreated(
             return;
         }
 
-        // Format dates (dd.mm.yyyy preferred if available, but raw is fine)
-        const kStart = kData?.startDate || kData?.kermesStart || "Belirtilmedi";
-        const kEnd = kData?.endDate || kData?.kermesEnd || "Belirtilmedi";
+        // Format dates safely (Firestore Timestamp -> String)
+        const safelyFormatDate = (val: any) => {
+             if (!val) return null;
+             if (typeof val?.toDate === 'function') {
+                 // Format as DD.MM.YYYY
+                 const d = val.toDate();
+                 return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+             }
+             if (typeof val === 'string') return val;
+             return null;
+        };
+        const kStart = safelyFormatDate(kData?.startDate) || safelyFormatDate(kData?.kermesStart) || "Belirtilmedi";
+        const kEnd = safelyFormatDate(kData?.endDate) || safelyFormatDate(kData?.kermesEnd) || "Belirtilmedi";
 
         // Format Title & Body with potential overrides from UI
         const title = roster.notificationTitleOverride || `📅 Yeni Vardiya Ataması: ${kermesName}`;
@@ -205,8 +215,8 @@ export const onKermesRosterUpdated = onDocumentUpdated(
         const after = event.data?.after.data();
         if (!before || !after) return;
 
-        // Note: The UI updates status to 'rejected' for the whole batch
-        if (before.status !== 'rejected' && after.status === 'rejected') {
+        // Trigger on status change to either 'accepted' or 'rejected'
+        if (before.status !== after.status && (after.status === 'rejected' || after.status === 'accepted')) {
             const db = admin.firestore();
             const kermesId = event.params.kermesId;
             const userId = after.userId;
@@ -228,14 +238,22 @@ export const onKermesRosterUpdated = onDocumentUpdated(
                     userName = uD.name || uD.profile?.name || uD.displayName || userName;
                 }
 
-                const title = `⚠️ Vardiya Reddedildi: ${kData.kermesName || "Kermes"}`;
-                const body = `${userName}, ${after.date} tarihindeki ${after.startTime}-${after.endTime} ${role} görevini üstlenemeyeceğini bildirdi.`;
+                const isRejected = after.status === 'rejected';
+                const isAccepted = after.status === 'accepted';
+
+                const title = isRejected 
+                  ? `⚠️ Vardiya Reddedildi: ${kData.kermesName || "Kermes"}`
+                  : `✅ Vardiya Kabul Edildi: ${kData.kermesName || "Kermes"}`;
+                
+                const body = isRejected
+                  ? `${userName}, ${after.date} tarihindeki ${after.startTime}-${after.endTime} ${role} görevini üstlenemeyeceğini bildirdi.`
+                  : `${userName}, ${after.date} tarihindeki ${after.startTime}-${after.endTime} ${role} görevini kabul etti.`;
 
                 // Add to admin's inbox
                 await db.collection("users").doc(adminUid).collection("notifications").add({
                     title,
                     body,
-                    type: "roster_rejection",
+                    type: isRejected ? "roster_rejection" : "roster_acceptance",
                     kermesId,
                     userId,
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -250,35 +268,46 @@ export const onKermesRosterUpdated = onDocumentUpdated(
                     const adminData = adminDoc.data()!;
                     if (adminData.email) {
                         const resend = new Resend(resendApiKey.value());
+                        const headerColor = isRejected ? "#D32F2F" : "#10B981";
+                        const headerText = isRejected ? "⚠️ Vardiya Ataması Reddedildi" : "✅ Vardiya Kabul Edildi";
+                        const actionText = isRejected ? "<strong>reddedildi</strong>" : "<strong>kabul edildi</strong>";
+                        const instructionText = isRejected 
+                            ? "Lütfen bu görevi idame ettirebilmek için MIRA / LOKMA platformu üzerinden <strong>yeni bir personel</strong> görevlendiriniz."
+                            : "Personel başarıyla atanmıştır, ek bir işleme gerek yoktur.";
+                            
                         const emailHtml = `
                             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a1a1a; color: #ffffff; border-radius: 8px; overflow: hidden;">
-                                <div style="background: #D32F2F; padding: 20px; text-align: center;">
-                                    <h2 style="margin: 0; color: #ffffff;">⚠️ Vardiya Ataması Reddedildi</h2>
+                                <div style="background: ${headerColor}; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0; color: #ffffff;">${headerText}</h2>
                                 </div>
                                 <div style="padding: 20px;">
                                     <p style="font-size: 16px; color: #e0e0e0;">Merhaba,</p>
-                                    <p style="font-size: 16px; color: #e0e0e0;"><strong>${kData.kermesName || "Kermes"}</strong> etkinliği için oluşturduğunuz bir vardiya ataması personel tarafından <strong>reddedildi</strong>.</p>
+                                    <p style="font-size: 16px; color: #e0e0e0;"><strong>${kData.kermesName || "Kermes"}</strong> etkinliği için oluşturduğunuz bir vardiya ataması personel tarafından ${actionText}.</p>
                                     
-                                    <div style="background: #2a2a2a; border-left: 4px solid #D32F2F; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                    <div style="background: #2a2a2a; border-left: 4px solid ${headerColor}; padding: 15px; margin: 20px 0; border-radius: 4px;">
                                         <p style="margin: 5px 0; color: #ffffff;"><strong>Personel:</strong> ${userName}</p>
                                         <p style="margin: 5px 0; color: #ffffff;"><strong>Görev:</strong> ${role}</p>
                                         <p style="margin: 5px 0; color: #ffffff;"><strong>Tarih:</strong> ${after.date}</p>
                                         <p style="margin: 5px 0; color: #ffffff;"><strong>Saat:</strong> ${after.startTime} - ${after.endTime}</p>
                                     </div>
                                     
-                                    <p style="margin-top: 30px; font-size: 14px; color: #aaaaaa;">Lütfen bu görevi idame ettirebilmek için MIRA / LOKMA platformu üzerinden <strong>yeni bir personel</strong> görevlendiriniz.</p>
+                                    <p style="margin-top: 30px; font-size: 14px; color: #aaaaaa;">${instructionText}</p>
                                 </div>
                             </div>
                         `;
 
                         try {
+                            const emailSubject = isRejected 
+                                ? `⚠️ Vardiya İptali: Personel Görevi Reddetti - ${userName}`
+                                : `✅ Vardiya Onayı: Personel Görevi Kabul Etti - ${userName}`;
+                                
                             await resend.emails.send({
                                 from: "LOKMA Marketplace <noreply@lokma.shop>",
                                 to: adminData.email,
-                                subject: `⚠️ Vardiya İptali: Personel Görevi Reddetti - ${userName}`,
+                                subject: emailSubject,
                                 html: emailHtml,
                             });
-                            console.log(`[Roster Updated] Rejection email sent to admin at ${adminData.email}`);
+                            console.log(`[Roster Updated] Status update email sent to admin at ${adminData.email}`);
                         } catch (emailErr) {
                             console.error("[Roster Updated] Email error while notifying admin:", emailErr);
                         }
@@ -287,6 +316,144 @@ export const onKermesRosterUpdated = onDocumentUpdated(
             } catch (err) {
                 console.error("[Roster Updated] Error processing rejection", err);
             }
+        }
+    }
+);
+
+import { onDocumentDeleted } from "firebase-functions/v2/firestore";
+
+/**
+ * Triggered when a Kermes roster entry is DELETED by the admin.
+ * Sends Push Notification, Inbox item, and an Email alerting the user of the cancellation.
+ */
+export const onKermesRosterDeleted = onDocumentDeleted(
+    {
+        document: "kermes_events/{kermesId}/rosters/{rosterId}",
+        secrets: [resendApiKey]
+    },
+    async (event) => {
+        const deletedRoster = event.data?.previous.data();
+        if (!deletedRoster) return;
+        
+        // Skip deletion alerts for subsequent days in a multi-day batch (only alert once)
+        if (deletedRoster.skipNotification === true) {
+            console.log(`[Roster Deleted] Skipping notification for batch ${deletedRoster.batchId}`);
+            return;
+        }
+
+        const db = admin.firestore();
+        const messaging = admin.messaging();
+
+        const userId = deletedRoster.userId;
+        const role = deletedRoster.role || "Görevli";
+        const dateStr = deletedRoster.date; 
+        const startStr = deletedRoster.startTime;
+        const endStr = deletedRoster.endTime;
+        const kermesId = event.params.kermesId;
+
+        if (!userId) return;
+
+        try {
+            const userDoc = await db.collection("users").doc(userId).get();
+            if (!userDoc.exists) return;
+            const userData = userDoc.data()!;
+            const userName = userData.name || userData.profile?.name || userData.displayName || "Değerli Personelimiz";
+
+            const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
+            const kData = kermesDoc.exists ? kermesDoc.data() : {};
+            const kermesName = kData?.kermesName || kData?.name || "Kermes";
+
+            const title = `❌ Vardiya İptali: ${kermesName}`;
+            const displayedDate = deletedRoster.notificationDateSpan || dateStr;
+            const body = `${kermesName} etkinlik yöneticisi ${displayedDate} (${startStr} - ${endStr}) tarihindeki '${role}' vardiyanızı iptal etti.`;
+
+            // 1. Inbox
+            await db.collection("users").doc(userId).collection("notifications").add({
+                title,
+                body,
+                type: "roster_deleted",
+                kermesId,
+                role,
+                date: dateStr,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                read: false,
+                deepLinkUrl: "roster_dashboard"
+            });
+            console.log(`[Roster Deleted] Inbox stored for ${userId}`);
+
+            // 2. Push Notification
+            const fcmTokens: string[] = [];
+            if (userData.fcmToken) fcmTokens.push(userData.fcmToken);
+            if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
+                userData.fcmTokens.forEach((t: string) => {
+                    if (t && !fcmTokens.includes(t)) fcmTokens.push(t);
+                });
+            }
+
+            if (fcmTokens.length > 0) {
+                const message = {
+                    notification: { title, body },
+                    data: { type: "roster_deleted", kermesId },
+                    apns: { payload: { aps: { sound: "default", "content-available": 1 } } },
+                    tokens: fcmTokens,
+                };
+                try {
+                    await messaging.sendEachForMulticast(message);
+                    console.log(`[Roster Deleted] FCM sent to ${fcmTokens.length} devices`);
+                } catch (pushErr) {
+                    console.error("[Roster Deleted] FCM err:", pushErr);
+                }
+            }
+
+            // 3. Email Notification via Resend
+            if (userData.email) {
+                const resend = new Resend(resendApiKey.value());
+                const emailHtml = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a1a1a; color: #ffffff; border-radius: 8px; overflow: hidden;">
+                        <div style="background: #EF4444; padding: 20px; text-align: center;">
+                            <h2 style="margin: 0; color: #ffffff;">❌ Vardiya İptal Edildi</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <p style="font-size: 16px; color: #e0e0e0;">Merhaba ${userName},</p>
+                            <p style="font-size: 16px; color: #e0e0e0;"><strong>${kermesName}</strong> etkinlik yöneticisi tarafınıza atanan görev kaydını silmiştir.</p>
+                            
+                            <div style="background: #2a2a2a; border-left: 4px solid #EF4444; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Tarih:</strong> ${displayedDate}</p>
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Saat:</strong> ${startStr} - ${endStr}</p>
+                                <p style="margin: 5px 0; color: #ffffff;"><strong>Görev Alanı / Rol:</strong> ${role}</p>
+                            </div>
+                            
+                            <p style="margin-top: 20px; font-size: 14px; color: #aaaaaa; line-height: 1.5;">
+                                Bu vardiya tablonuzdan kaldırılmıştır ve o saatlerde görev yapmanız beklenmemektedir.<br>
+                                Herhangi bir karışıklık olduğunu düşünüyorsanız, lütfen kermes yetkilisinden teyit ediniz.
+                            </p>
+                            
+                            <div style="text-align: center; margin-top: 30px;">
+                                <p style="font-size: 12px; color: #888888;">
+                                    LOKMA Marketplace Staff Management
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                try {
+                    await resend.emails.send({
+                        from: "LOKMA Marketplace <noreply@lokma.shop>",
+                        to: userData.email,
+                        subject: `❌ Vardiya İptali: ${kermesName}`,
+                        html: emailHtml,
+                    });
+                    console.log(`[Roster Deleted] Email sent to ${userData.email}`);
+                } catch (emailErr) {
+                    console.error("[Roster Deleted] Email error:", emailErr);
+                }
+            } else {
+                console.log(`[Roster Deleted] User ${userId} has no email address`);
+            }
+
+        } catch (error) {
+            console.error("[Roster Deleted] Top level error:", error);
         }
     }
 );

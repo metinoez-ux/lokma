@@ -32,6 +32,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -3396,4 +3399,5 @@ Object.defineProperty(exports, "onKermesOrderCreatedNotif", { enumerable: true, 
 Object.defineProperty(exports, "onKermesOrderPaidNotif", { enumerable: true, get: function () { return kermesCustomerNotifications_1.onKermesOrderPaidNotif; } });
 var kermesRosterFunctions_1 = require("./kermesRosterFunctions");
 Object.defineProperty(exports, "onKermesRosterCreated", { enumerable: true, get: function () { return kermesRosterFunctions_1.onKermesRosterCreated; } });
+__exportStar(require("./kermesRosterFunctions"), exports);
 //# sourceMappingURL=index.js.map

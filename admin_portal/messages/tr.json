@@ -8491,5 +8491,22 @@
   "DIN A6 \\u00b7 105\\u00d7148 mm": "DIN A6 \\u00b7 105\\u00d7148 mm",
   "LOKMA": "LOKMA",
   "App Store": "App Store",
-  "Google Play": "Google Play"
+  "Google Play": "Google Play",
+  "KermesFeatures": {
+    "family_area": "Aile Bölümü",
+    "outdoor": "Açık Alan",
+    "indoor": "Kapalı Alan",
+    "kids_area": "Çocuk Alanı",
+    "card_payment": "Kart ile Ödeme",
+    "vegetarian": "Vejetaryen",
+    "accessible": "Engelli Erişimi",
+    "halal": "Helal Gıda",
+    "wifi": "WiFi",
+    "live_music": "Canlı Müzik",
+    "prayer_room": "Mescit",
+    "parking": "Otopark",
+    "first_aid": "İlk Yardım",
+    "security": "Güvenlik",
+    "atm": "ATM"
+  }
 }

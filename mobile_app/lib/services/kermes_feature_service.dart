@@ -6,6 +6,8 @@ class KermesFeature {
   final String id;
   final String label;
   final String icon;
+  final String? iconUrl;
+  final String? storagePath;
   final String color;
   final bool isActive;
   final int sortOrder;
@@ -14,6 +16,8 @@ class KermesFeature {
     required this.id,
     required this.label,
     required this.icon,
+    this.iconUrl,
+    this.storagePath,
     required this.color,
     this.isActive = true,
     this.sortOrder = 0,
@@ -24,6 +28,8 @@ class KermesFeature {
       id: json['id'] ?? '',
       label: json['label'] ?? '',
       icon: json['icon'] ?? '📌',
+      iconUrl: json['iconUrl'] as String?,
+      storagePath: json['storagePath'] as String?,
       color: json['color'] ?? '#9333ea',
       isActive: json['isActive'] ?? true,
       sortOrder: json['sortOrder'] ?? 0,

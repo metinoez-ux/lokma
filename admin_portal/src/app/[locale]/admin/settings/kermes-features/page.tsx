@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useTranslations } from 'next-intl';
 
@@ -12,6 +13,8 @@ interface KermesFeature {
  id: string;
  label: string;
  icon: string;
+ iconUrl?: string;
+ storagePath?: string;
  color: string;
  isActive: boolean;
 }
@@ -39,15 +42,17 @@ const ICON_OPTIONS = ['👨‍👩‍👧‍👦', '🅿️', '♿', '🧒', '�
 const COLOR_OPTIONS = ['#E91E63', '#2196F3', '#9C27B0', '#4CAF50', '#8BC34A', '#FF5722', '#607D8B', '#795548', '#009688', '#FF9800', '#3F51B5', '#00BCD4', '#F44336', '#455A64', '#673AB7', '#CDDC39'];
 
 export default function KermesFeaturesPage() {
- 
  const t = useTranslations('AdminSettingsKermesfeatures');
-const { admin, loading: authLoading } = useAdmin();
+ const tFeatures = useTranslations('KermesFeatures');
+ const { admin, loading: authLoading } = useAdmin();
  const router = useRouter();
  const [features, setFeatures] = useState<KermesFeature[]>([]);
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
- const [newFeature, setNewFeature] = useState({ label: '', icon: '🎪', color: '#E91E63' });
+ const [uploadingIcon, setUploadingIcon] = useState(false);
+ const [newFeature, setNewFeature] = useState<{label: string; icon: string; color: string; iconUrl?: string; storagePath?: string}>({ label: '', icon: '🎪', color: '#E91E63' });
  const [editingId, setEditingId] = useState<string | null>(null);
+ const fileInputRef = useRef<HTMLInputElement>(null);
 
  useEffect(() => {
  if (!authLoading && (!admin || admin.role !== 'super_admin')) {
@@ -65,7 +70,6 @@ const { admin, loading: authLoading } = useAdmin();
  if (docSnap.exists()) {
  setFeatures(docSnap.data().features || []);
  } else {
- // İlk kez - varsayılan özellikleri kaydet
  await setDoc(docRef, { features: DEFAULT_FEATURES });
  setFeatures(DEFAULT_FEATURES);
  }
@@ -103,9 +107,15 @@ const { admin, loading: authLoading } = useAdmin();
  isActive: true,
  };
 
+ if (newFeature.iconUrl && newFeature.storagePath) {
+ feature.iconUrl = newFeature.iconUrl;
+ feature.storagePath = newFeature.storagePath;
+ }
+
  const updated = [...features, feature];
  await saveFeatures(updated);
  setNewFeature({ label: '', icon: '🎪', color: '#E91E63' });
+ if (fileInputRef.current) fileInputRef.current.value = '';
  };
 
  const toggleFeature = async (id: string) => {
@@ -123,6 +133,17 @@ const { admin, loading: authLoading } = useAdmin();
 
  const handleDeleteFeatureConfirm = async () => {
  if (!confirmDeleteFeatureId) return;
+ 
+ const featureToDelete = features.find(f => f.id === confirmDeleteFeatureId);
+ if (featureToDelete && featureToDelete.storagePath) {
+   try {
+     const storageRef = ref(storage, featureToDelete.storagePath);
+     await deleteObject(storageRef);
+   } catch (error) {
+     console.error('Failed to delete image from storage:', error);
+   }
+ }
+
  const updated = features.filter(f => f.id !== confirmDeleteFeatureId);
  await saveFeatures(updated);
  setConfirmDeleteFeatureId(null);
@@ -136,7 +157,6 @@ const { admin, loading: authLoading } = useAdmin();
  setEditingId(null);
  };
 
- // Özellik sırasını değiştirme (yukarı/aşağı)
  const moveFeature = async (index: number, direction: 'up' | 'down') => {
  const newIndex = direction === 'up' ? index - 1 : index + 1;
  if (newIndex < 0 || newIndex >= features.length) return;
@@ -145,6 +165,62 @@ const { admin, loading: authLoading } = useAdmin();
  const [moved] = updated.splice(index, 1);
  updated.splice(newIndex, 0, moved);
  await saveFeatures(updated);
+ };
+
+ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, featureId?: string) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Dosya 2MB'den büyük olamaz.");
+    return;
+  }
+
+  setUploadingIcon(true);
+  try {
+    const extension = file.name.split('.').pop() || 'png';
+    const _id = featureId || `new_${Date.now()}`;
+    const cleanId = _id.replace(/[^a-zA-Z0-9_-]/g, '');
+    const storagePath = `kermes-features/${cleanId}_${Date.now()}.${extension}`;
+    const storageRef = ref(storage, storagePath);
+
+    await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(storageRef);
+
+    if (featureId) {
+      await updateFeature(featureId, { 
+        iconUrl: downloadUrl, 
+        storagePath: storagePath 
+      });
+    } else {
+      setNewFeature(prev => ({
+        ...prev,
+        iconUrl: downloadUrl,
+        storagePath: storagePath
+      }));
+    }
+  } catch (error) {
+    console.error('Image upload failed:', error);
+    alert('Görsel yüklenirken bir hata oluştu');
+  } finally {
+    setUploadingIcon(false);
+  }
+ };
+
+ const removeNewFeatureImage = () => {
+    setNewFeature(prev => {
+        const { iconUrl, storagePath, ...rest } = prev;
+        return rest;
+    });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+ };
+
+ const getLocalizedLabel = (f: KermesFeature) => {
+   try {
+     return tFeatures(f.id) || f.label;
+   } catch {
+     return f.label;
+   }
  };
 
  if (authLoading || loading) {
@@ -162,7 +238,6 @@ const { admin, loading: authLoading } = useAdmin();
  return (
  <div className="min-h-screen bg-background p-6">
  <div className="max-w-4xl mx-auto">
- {/* Header */}
  <div className="flex items-center justify-between mb-8">
  <div>
  <h1 className="text-2xl font-bold text-foreground">{t('kermes_ozellikleri')}</h1>
@@ -176,10 +251,9 @@ const { admin, loading: authLoading } = useAdmin();
  </button>
  </div>
 
- {/* Yeni Özellik Ekle */}
  <div className="bg-card rounded-xl p-6 mb-6">
  <h2 className="text-lg font-semibold text-foreground mb-4">{t('yeni_ozellik_ekle')}</h2>
- <div className="flex flex-wrap gap-4 items-end">
+ <div className="flex flex-wrap gap-4 items-start">
  <div className="flex-1 min-w-[200px]">
  <label className="block text-sm text-muted-foreground mb-1">{t('ozellik_adi')}</label>
  <input
@@ -191,16 +265,37 @@ const { admin, loading: authLoading } = useAdmin();
  />
  </div>
  <div>
- <label className="block text-sm text-muted-foreground mb-1">İkon</label>
- <select
- value={newFeature.icon}
- onChange={(e) => setNewFeature({ ...newFeature, icon: e.target.value })}
- className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-2xl focus:border-red-500 focus:outline-none"
- >
- {ICON_OPTIONS.map(icon => (
- <option key={icon} value={icon}>{icon}</option>
- ))}
- </select>
+ <label className="block text-sm text-muted-foreground mb-1">İkon veya Emoji</label>
+ <div className="flex gap-2 items-center">
+    {newFeature.iconUrl ? (
+      <div className="relative group w-12 h-10 bg-gray-800 rounded flex items-center justify-center pt-1 border border-gray-600">
+         <img src={newFeature.iconUrl} alt="İkon" className="w-6 h-6 object-contain" />
+         <button onClick={removeNewFeatureImage} className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-[10px] text-white">x</button>
+      </div>
+    ) : (
+      <select
+        value={newFeature.icon}
+        onChange={(e) => setNewFeature({ ...newFeature, icon: e.target.value })}
+        className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-2xl focus:border-red-500 focus:outline-none h-10"
+      >
+        {ICON_OPTIONS.map(icon => (
+        <option key={icon} value={icon}>{icon}</option>
+        ))}
+      </select>
+    )}
+    
+    <label className="cursor-pointer px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg border border-gray-500 transition-colors flex items-center gap-2 h-10">
+        <span className="text-sm font-medium">{uploadingIcon ? '...' : '+ Özel İkon'}</span>
+        <input 
+          type="file" 
+          ref={fileInputRef}
+          accept="image/*" 
+          onChange={(e) => handleImageUpload(e)} 
+          className="hidden" 
+          disabled={uploadingIcon}
+        />
+    </label>
+ </div>
  </div>
  <div>
  <label className="block text-sm text-muted-foreground mb-1">Renk</label>
@@ -211,19 +306,20 @@ const { admin, loading: authLoading } = useAdmin();
  className="w-12 h-10 rounded-lg cursor-pointer border border-gray-600"
  />
  </div>
- <button
- onClick={addFeature}
- disabled={!newFeature.label.trim() || saving}
- className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
- >
- {saving ? '...' : t('ekle')}
- </button>
+ <div className="pt-6">
+    <button
+    onClick={addFeature}
+    disabled={!newFeature.label.trim() || saving || uploadingIcon}
+    className="px-6 py-2 h-10 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
+    >
+    {saving ? '...' : t('ekle')}
+    </button>
+ </div>
  </div>
  </div>
 
- {/* Mevcut Özellikler */}
  <div className="bg-card rounded-xl p-6">
- <h2 className="text-lg font-semibold text-foreground mb-4">{t('mevcut_ozellikler')}{features.length})</h2>
+ <h2 className="text-lg font-semibold text-foreground mb-4">{t('mevcut_ozellikler')} ({features.length})</h2>
 
  <div className="space-y-3">
  {features.map((feature, index) => (
@@ -235,7 +331,6 @@ const { admin, loading: authLoading } = useAdmin();
  }`}
  >
  <div className="flex items-center gap-4">
- {/* Sıralama Butonları */}
  <div className="flex flex-col gap-1">
  <button
  onClick={() => moveFeature(index, 'up')}
@@ -255,10 +350,8 @@ const { admin, loading: authLoading } = useAdmin();
  </button>
  </div>
 
- {/* Sıra Numarası */}
  <span className="text-xs text-muted-foreground/80 font-mono w-6">{index + 1}</span>
 
- {/* Toggle */}
  <button
  onClick={() => toggleFeature(feature.id)}
  className={`w-12 h-6 rounded-full transition-colors relative ${feature.isActive ? 'bg-green-500' : 'bg-gray-600'
@@ -268,15 +361,13 @@ const { admin, loading: authLoading } = useAdmin();
  }`} />
  </button>
 
- {/* İkon ve Renk */}
  <div
- className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+ className="w-10 h-10 rounded-lg flex items-center justify-center text-xl overflow-hidden"
  style={{ backgroundColor: feature.color + '20' }}
  >
- {feature.icon}
+ {feature.iconUrl ? <img src={feature.iconUrl} alt={feature.label} className="w-6 h-6 object-contain" /> : feature.icon}
  </div>
 
- {/* Etiket */}
  {editingId === feature.id ? (
  <input
  type="text"
@@ -293,45 +384,59 @@ const { admin, loading: authLoading } = useAdmin();
  autoFocus
  />
  ) : (
- <span className="text-foreground font-medium">{feature.label}</span>
+ <span className="text-foreground font-medium">{getLocalizedLabel(feature)}</span>
  )}
 
  <span className="text-xs text-muted-foreground/80 font-mono">{feature.id}</span>
  </div>
 
  <div className="flex items-center gap-2">
- {/* Renk Düzenle */}
  <input
  type="color"
  value={feature.color}
  onChange={(e) => updateFeature(feature.id, { color: e.target.value })}
- className="w-8 h-8 rounded cursor-pointer border border-gray-600"
+ className="w-8 h-8 rounded cursor-pointer border border-gray-600 mt-1"
  />
 
- {/* İkon Değiştir */}
- <select
- value={feature.icon}
- onChange={(e) => updateFeature(feature.id, { icon: e.target.value })}
- className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xl focus:outline-none"
- >
- {ICON_OPTIONS.map(icon => (
- <option key={icon} value={icon}>{icon}</option>
- ))}
- </select>
+ {!feature.iconUrl && (
+     <select
+     value={feature.icon}
+     onChange={(e) => updateFeature(feature.id, { icon: e.target.value })}
+     className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xl focus:outline-none h-8"
+     >
+     {ICON_OPTIONS.map(icon => (
+     <option key={icon} value={icon}>{icon}</option>
+     ))}
+     </select>
+ )}
 
- {/* Düzenle */}
+  <label className="cursor-pointer px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 transition-colors flex items-center justify-center h-8" title="Özel İkon Yükle">
+     <span className="text-xs">{uploadingIcon ? '...' : '🖼️'}</span>
+     <input 
+      type="file" 
+      accept="image/*" 
+      onChange={(e) => handleImageUpload(e, feature.id)} 
+      className="hidden" 
+      disabled={uploadingIcon}
+     />
+  </label>
+  {feature.iconUrl && (
+      <button onClick={() => updateFeature(feature.id, { iconUrl: undefined, storagePath: undefined })} className="px-2 py-1 h-8 bg-red-900/50 hover:bg-red-800 rounded border border-red-800 text-xs text-red-200 transition-colors" title="İkonu Sil">
+        x
+      </button>
+  )}
+
  <button
  onClick={() => setEditingId(editingId === feature.id ? null : feature.id)}
- className="p-2 text-muted-foreground hover:text-white transition-colors"
+ className="p-2 text-muted-foreground hover:text-white transition-colors h-8 flex items-center"
  title={t('duzenle')}
  >
  ✏️
  </button>
 
- {/* Sil */}
  <button
  onClick={() => deleteFeature(feature.id)}
- className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+ className="p-2 text-muted-foreground hover:text-red-500 transition-colors h-8 flex items-center"
  title={t('sil')}
  >
  🗑️
@@ -348,7 +453,6 @@ const { admin, loading: authLoading } = useAdmin();
  )}
  </div>
 
- {/* Bilgi */}
  <div className="mt-6 p-4 bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-lg">
  <p className="text-blue-300 text-sm">
  💡 <strong>İpucu:</strong> {t('bu_ozellikler_tum_kermeslerde_kullanilac')}
@@ -356,7 +460,6 @@ const { admin, loading: authLoading } = useAdmin();
  </div>
  </div>
 
- {/* Delete Confirmation Modal */}
  <ConfirmModal
  isOpen={!!confirmDeleteFeatureId}
  onClose={() => setConfirmDeleteFeatureId(null)}

@@ -26,6 +26,8 @@ interface KermesFeature {
  label: string;
  labelKey?: string;
  icon?: string;
+ iconUrl?: string;
+ storagePath?: string;
  color: string;
  isActive: boolean;
 }
@@ -278,6 +280,7 @@ interface MasterProduct {
 export default function KermesDetailPage() {
 
  const t = useTranslations('AdminKermesDetail');
+ const tFeatures = useTranslations('KermesFeatures');
  const locale = useLocale();
  const params = useParams();
  const router = useRouter();
@@ -285,6 +288,14 @@ export default function KermesDetailPage() {
  const isSuperAdmin = admin?.adminType === 'super';
  const kermesId = params.id as string;
  // Kermes Admin: bu kermes icin admin yetkisi olan kullanici
+
+ const getLocalizedFeatureLabel = (f: KermesFeature) => {
+   try {
+     return (tFeatures as any).has(f.id) ? tFeatures(f.id) : (f.labelKey ? t(f.labelKey) : f.label);
+   } catch {
+     return f.labelKey ? t(f.labelKey) : f.label;
+   }
+ };
  const adminUid = (admin as any)?.firebaseUid || admin?.id || '';
  const [isKermesAdminOfThis, setIsKermesAdminOfThis] = useState(false);
  const canManageStaff = isSuperAdmin || isKermesAdminOfThis;
@@ -2367,8 +2378,8 @@ export default function KermesDetailPage() {
  className={`px-3 py-1 rounded-full text-xs font-semibold transition inline-flex items-center gap-1.5 ${editFeatures.includes(f.id) ? 'text-white' : 'bg-gray-700 text-muted-foreground'}`}
  style={editFeatures.includes(f.id) ? { backgroundColor: f.color } : {}}
  >
- {f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>)}
- {f.labelKey ? t(f.labelKey) : f.label}
+ {f.iconUrl ? <img src={f.iconUrl} alt={f.label} className="w-4 h-4 object-contain rounded-sm inline-block" /> : (f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>))}
+ {getLocalizedFeatureLabel(f)}
  </button>
  {isSuperAdmin && (
  <>
@@ -2918,8 +2929,8 @@ export default function KermesDetailPage() {
  <button type="button" onClick={() => toggleFeature(f.id)}
  className={`px-3 py-1 rounded-full text-xs font-semibold transition inline-flex items-center gap-1.5 ${editFeatures.includes(f.id) ? 'text-white' : 'bg-gray-700 text-muted-foreground'}`}
  style={editFeatures.includes(f.id) ? { backgroundColor: f.color } : {}}>
- {f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>)}
- {f.labelKey ? t(f.labelKey) : f.label}
+ {f.iconUrl ? <img src={f.iconUrl} alt={f.label} className="w-4 h-4 object-contain rounded-sm inline-block" /> : (f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>))}
+ {getLocalizedFeatureLabel(f)}
  </button>
  {isSuperAdmin && (
  <>
