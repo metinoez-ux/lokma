@@ -294,9 +294,11 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     'Genel Sorumlu',
     'Garson',
     'Sürücü / Nakliye',
-    'Ocakbaşı - Kumpir',
     'Güvenlik',
     'Temizlik',
+    'Park Görevlisi',
+    'Çocuk Bakıcısı',
+    'Ocakbaşı - Kumpir',
     'Tatlı Standı',
     'İçecek Standı',
     'Gözleme'
@@ -421,6 +423,8 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       case 'ocakbaşı - kumpir': return 'bg-orange-500/10 text-orange-400 border-orange-500/20 ring-orange-500/30';
       case 'güvenlik': return 'bg-slate-500/10 text-slate-400 border-slate-500/20 ring-slate-500/30';
       case 'temizlik': return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20 ring-cyan-500/30';
+      case 'park görevlisi': return 'bg-lime-500/10 text-lime-400 border-lime-500/20 ring-lime-500/30';
+      case 'çocuk bakıcısı': return 'bg-rose-500/10 text-rose-400 border-rose-500/20 ring-rose-500/30';
       case 'tatlı standı': return 'bg-pink-500/10 text-pink-400 border-pink-500/20 ring-pink-500/30';
       case 'içecek standı': return 'bg-blue-500/10 text-blue-400 border-blue-500/20 ring-blue-500/30';
       case 'gözleme': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 ring-yellow-500/30';
@@ -478,15 +482,22 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           </div>
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Görev / Rol</label>
-             <select 
+            <select 
               value={form.role} 
               onChange={e => setForm({...form, role: e.target.value})}
               className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Seçiniz</option>
-              {defaultRoles.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
+              <optgroup label="Saha & Lojistik Görevleri">
+                {defaultRoles.filter(r => !['Ocakbaşı - Kumpir', 'Gözleme', 'Tatlı Standı', 'İçecek Standı'].includes(r)).map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Stand & Mutfak Bölümleri">
+                {defaultRoles.filter(r => ['Ocakbaşı - Kumpir', 'Gözleme', 'Tatlı Standı', 'İçecek Standı'].includes(r)).map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </optgroup>
             </select>
           </div>
           <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-1">
