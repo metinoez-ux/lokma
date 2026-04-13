@@ -524,13 +524,12 @@ class _KermesCardState extends State<KermesCard> {
                                             borderRadius: BorderRadius.circular(8),
                                             child: CachedNetworkImage(
                                               imageUrl: badge.iconUrl,
-                                              height: 48,
-                                              width: 48,
-                                              fit: BoxFit.cover,
+                                              height: 38,
+                                              fit: BoxFit.contain,
                                               placeholder: (context, url) => Container(
                                                 color: Colors.transparent,
-                                                height: 48,
-                                                width: 48,
+                                                height: 38,
+                                                width: 38,
                                               ),
                                               errorWidget: (context, url, error) =>
                                                   Icon(Icons.verified, color: textColor, size: 20),
