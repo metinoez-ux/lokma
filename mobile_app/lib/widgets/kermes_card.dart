@@ -377,19 +377,21 @@ class _KermesCardState extends State<KermesCard> {
                                   badge.colorHex.replaceFirst('#', '0xFF')));
                               final textColor = Color(int.parse(
                                   badge.textColorHex.replaceFirst('#', '0xFF')));
+                              final bool hasIcon = badge.iconUrl.isNotEmpty;
+
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 6),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: hasIcon ? 4 : 12, vertical: hasIcon ? 4 : 6),
                                   decoration: BoxDecoration(
-                                    color: bgColor,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
+                                    color: hasIcon ? Colors.transparent : bgColor,
+                                    borderRadius: BorderRadius.circular(50), // Hap seklinde
+                                    border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
+                                    boxShadow: hasIcon ? null : [
                                       BoxShadow(
-                                        color: Colors.black
-                                            .withOpacity(0.25),
-                                        blurRadius: 6,
+                                        color: Colors.black.withOpacity(0.25),
+                                        blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
@@ -397,24 +399,40 @@ class _KermesCardState extends State<KermesCard> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: CachedNetworkImage(
-                                          imageUrl: badge.iconUrl,
-                                          height: 18,
-                                          width: 18,
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => Container(
-                                            color: Colors.transparent,
-                                            height: 18,
-                                            width: 18,
+                                      if (hasIcon)
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
                                           ),
-                                          errorWidget: (context, url, error) =>
-                                              Icon(Icons.verified, color: textColor, size: 15),
-                                        ),
-                                      ),
-                                      if (badge.label.isNotEmpty) ...[
-                                        const SizedBox(width: 6),
+                                          padding: const EdgeInsets.all(2), // Beyaz cerceve efekti
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(20),
+                                            child: CachedNetworkImage(
+                                              imageUrl: badge.iconUrl,
+                                              height: 32, // Logo boyutu
+                                              width: 32,
+                                              fit: BoxFit.contain,
+                                              placeholder: (context, url) => Container(
+                                                color: Colors.transparent,
+                                                height: 32,
+                                                width: 32,
+                                              ),
+                                              errorWidget: (context, url, error) =>
+                                                  Icon(Icons.verified, color: textColor, size: 20),
+                                            ),
+                                          ),
+                                        )
+                                      else if (badge.label.isNotEmpty) ...[
+                                        Icon(Icons.verified, color: textColor, size: 14),
+                                        const SizedBox(width: 4),
                                         Text(
                                           badge.label,
                                           style: TextStyle(

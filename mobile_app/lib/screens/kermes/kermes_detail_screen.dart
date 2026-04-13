@@ -1880,6 +1880,8 @@ Widget _buildHeroSection(BuildContext context) {
                   final bgColor = Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
                   final textColor = Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF')));
 
+                  final hasIcon = badge.iconUrl.isNotEmpty;
+
                   return GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
@@ -1887,11 +1889,13 @@ Widget _buildHeroSection(BuildContext context) {
                     },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.fromLTRB(14, 6, 10, 6),
+                      padding: EdgeInsets.symmetric(
+                                      horizontal: hasIcon ? 4 : 14, vertical: hasIcon ? 4 : 6),
                       decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        color: hasIcon ? Colors.transparent : bgColor,
+                        borderRadius: BorderRadius.circular(50),
+                        border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
+                        boxShadow: hasIcon ? null : [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.3),
                             blurRadius: 4,
@@ -1902,43 +1906,56 @@ Widget _buildHeroSection(BuildContext context) {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (badge.iconUrl.isNotEmpty) ...[
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: CachedNetworkImage(
-                                imageUrl: badge.iconUrl,
-                                height: 16,
-                                width: 16,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  color: Colors.transparent,
-                                  height: 16,
-                                  width: 16,
-                                ),
-                                errorWidget: (context, url, error) =>
-                                    Icon(Icons.verified, color: textColor, size: 15),
+                          if (hasIcon)
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.25),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                          ] else ...[
+                              padding: const EdgeInsets.all(3),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: CachedNetworkImage(
+                                  imageUrl: badge.iconUrl,
+                                  height: 48, // Detay sayfasinda biraz daha buyuk
+                                  width: 48,
+                                  fit: BoxFit.contain,
+                                  placeholder: (context, url) => Container(
+                                    color: Colors.transparent,
+                                    height: 48,
+                                    width: 48,
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      Icon(Icons.verified, color: textColor, size: 24),
+                                ),
+                              ),
+                            )
+                          else ...[
                             Icon(Icons.verified, color: textColor, size: 15),
                             const SizedBox(width: 6),
-                          ],
-                          Text(
-                            badge.label.toUpperCase(),
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.8,
+                            Text(
+                              badge.label.toUpperCase(),
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.8,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.chevron_right,
-                            color: textColor.withOpacity(0.8),
-                            size: 16,
-                          ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.chevron_right,
+                              color: textColor.withOpacity(0.8),
+                              size: 16,
+                            ),
+                          ],
                         ],
                       ),
                     ),
