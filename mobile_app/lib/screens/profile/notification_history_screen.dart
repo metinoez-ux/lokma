@@ -446,7 +446,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                             child: const Icon(Icons.assignment_ind_rounded, size: 36, color: Colors.blue),
                           ),
                           const SizedBox(height: 16),
-                          Text(data['kermesName'] ?? 'Yeni Vardiya Ataması', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800, textAlign: TextAlign.center)),
+                          Text(data['kermesName'] ?? 'Yeni Vardiya Ataması', textAlign: TextAlign.center, style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800)),
                           const SizedBox(height: 8),
                           Text('Yeni bir göreve / mesai saatine atandınız.', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87, height: 1.4)),
                           const SizedBox(height: 24),
