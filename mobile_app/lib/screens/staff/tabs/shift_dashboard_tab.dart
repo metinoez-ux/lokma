@@ -1798,10 +1798,10 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                     child: Row(
                       children: [
-                        const Icon(Icons.receipt_long, color: Colors.orange, size: 24),
+                        const Icon(Icons.history_edu, color: Colors.orange, size: 24),
                         const SizedBox(width: 10),
                         Text(
-                          'Nakit Siparis Gecmisi',
+                          'Tahsilat Geçmişi',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -1821,10 +1821,9 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
-                          .collection('kermes_orders')
-                          .where('kermesId', isEqualTo: businessId)
-                          .where('createdByStaffId', isEqualTo: user.uid)
-                          .where('paymentMethod', isEqualTo: 'cash')
+                          .collection('kermes_cash_handovers')
+                          .where('businessId', isEqualTo: businessId)
+                          .where('staffId', isEqualTo: user.uid)
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
@@ -1848,10 +1847,10 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.receipt_long, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                Icon(Icons.account_balance_wallet, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'Henuz nakit siparis yok',
+                                  'Henüz tahsilat teslimatı yok',
                                   style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 16),
                                 ),
                               ],
@@ -1875,7 +1874,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (ctx, index) {
                             final data = sortedDocs[index].data() as Map<String, dynamic>;
-                            return _buildCashOrderCard(data, isDark);
+                            return _buildCashHandoverCard(data, isDark);
                           },
                         );
                       },
@@ -1890,18 +1889,12 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     );
   }
 
-  Widget _buildCashOrderCard(Map<String, dynamic> data, bool isDark) {
-    final orderNumber = data['orderNumber'] as String? ?? '---';
-    final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
-    final cashReceived = (data['cashReceived'] as num?)?.toDouble();
-    final changeGiven = (data['changeGiven'] as num?)?.toDouble();
-    final customerName = data['customerName'] as String? ?? '';
+  Widget _buildCashHandoverCard(Map<String, dynamic> data, bool isDark) {
     final status = data['status'] as String? ?? 'pending';
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
-    final items = data['items'] as List<dynamic>? ?? [];
-    final deliveryType = data['deliveryType'] as String? ?? 'gelAl';
-    final tableNumber = data['tableNumber'] as String?;
-    final settled = data['settledToRegister'] as bool? ?? false;
+    final completedAt = (data['completedAt'] as Timestamp?)?.toDate();
+    final amount = (data['actualAmount'] as num?)?.toDouble() ?? (data['declaredAmount'] as num?)?.toDouble() ?? 0.0;
+    final adminName = data['adminName'] as String? ?? 'Bilinmiyor';
 
     final dateStr = createdAt != null
         ? DateFormat('dd.MM.yyyy HH:mm', 'tr').format(createdAt)
@@ -1909,37 +1902,29 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
 
     Color statusColor;
     String statusText;
+    IconData statusIcon;
     switch (status) {
-      case 'delivered':
+      case 'completed':
         statusColor = Colors.green;
         statusText = 'Teslim Edildi';
+        statusIcon = Icons.check_circle_outline;
         break;
       case 'cancelled':
         statusColor = Colors.red;
-        statusText = 'Iptal';
+        statusText = 'İptal';
+        statusIcon = Icons.cancel_outlined;
         break;
-      case 'preparing':
+      default: // pending
         statusColor = Colors.orange;
-        statusText = 'Hazirlaniyor';
-        break;
-      case 'ready':
-        statusColor = Colors.blue;
-        statusText = 'Hazir';
-        break;
-      default:
-        statusColor = Colors.grey;
-        statusText = 'Beklemede';
+        statusText = 'Bekliyor';
+        statusIcon = Icons.pending_actions;
     }
 
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: settled
-              ? Colors.green.withOpacity(0.3)
-              : Colors.orange.withOpacity(0.3),
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1953,37 +1938,16 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             ),
             child: Row(
               children: [
-                Text(
-                  '#$orderNumber',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
+                Icon(statusIcon, color: statusColor, size: 20),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
                   ),
                 ),
-                if (settled) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text('Kasaya Aktarildi', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
-                  ),
-                ],
                 const Spacer(),
                 Text(
                   dateStr,
@@ -1992,106 +1956,41 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               ],
             ),
           ),
-          // Items
+          // Content
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Musteri & teslimat
-                if (customerName.isNotEmpty && customerName != 'POS Siparis')
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      children: [
-                        Icon(Icons.person_outline, size: 14, color: isDark ? Colors.white38 : Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          customerName,
-                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
-                        ),
-                        const SizedBox(width: 12),
-                        Icon(
-                          deliveryType == 'masada' ? Icons.table_restaurant : Icons.storefront,
-                          size: 14,
-                          color: isDark ? Colors.white38 : Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          deliveryType == 'masada'
-                              ? 'Masa ${tableNumber ?? ''}'
-                              : deliveryType == 'kurye'
-                                  ? 'Kurye'
-                                  : 'Tezgahtan',
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
-                        ),
-                      ],
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Teslim Alan:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    Text(
+                      status == 'completed' ? adminName : 'Onay Bekliyor...',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
                     ),
-                  ),
-                // Siparis kalemleri
-                ...items.take(5).map((item) {
-                  final m = item as Map<String, dynamic>;
-                  final qty = m['quantity'] ?? 1;
-                  final name = m['name'] ?? '';
-                  final price = (m['price'] as num?)?.toDouble() ?? 0.0;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 22,
-                          height: 22,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.white10 : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text('$qty', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            name,
-                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black87),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          '${price.toStringAsFixed(2)} EUR',
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
-                        ),
-                      ],
+                    if (status == 'completed' && completedAt != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        DateFormat('HH:mm:ss').format(completedAt),
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      )
+                    ]
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text('Tutar', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${amount.toStringAsFixed(2)} EUR',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.orange),
                     ),
-                  );
-                }),
-                if (items.length > 5)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '+${items.length - 5} daha...',
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.grey),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          // Finance summary
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.04) : Colors.orange.withOpacity(0.04),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.withOpacity(0.15)),
-            ),
-            child: Column(
-              children: [
-                _financeRow('Siparis Tutari', '${totalAmount.toStringAsFixed(2)} EUR', isDark, bold: true),
-                if (cashReceived != null)
-                  _financeRow('Alinan Nakit', '${cashReceived.toStringAsFixed(2)} EUR', isDark, color: Colors.green),
-                if (changeGiven != null && changeGiven > 0)
-                  _financeRow('Para Ustu', '${changeGiven.toStringAsFixed(2)} EUR', isDark, color: Colors.orange),
+                  ],
+                ),
               ],
             ),
           ),

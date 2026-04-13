@@ -26,6 +26,7 @@ import 'tabs/staff_pos_wrapper_tab.dart';
 import 'tabs/parking_management_tab.dart';
 import '../profile/widgets/workplace_selector_sheet.dart';
 import '../../widgets/kermes/handover_confirmation_dialog.dart';
+import '../kermes/staff/kermes_admin_vault_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -1413,6 +1414,14 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       allDestinations.add({
         'widget': ParkingManagementTab(kermesId: capabilities.businessId!, kermesName: capabilities.businessName), 
         'icon': Icons.local_parking, 'label': 'Park', 'color': Colors.purple
+      });
+    }
+
+    // 8. Kasa Yonetimi
+    if (capabilities.hasKermesAdminRole && capabilities.businessId != null) {
+      allDestinations.add({
+        'widget': const KermesAdminVaultScreen(),
+        'icon': Icons.account_balance_wallet, 'label': 'Kasa', 'color': Colors.deepOrange
       });
     }
 

@@ -55,21 +55,35 @@ class _HandoverConfirmationDialogState extends ConsumerState<HandoverConfirmatio
 
       final handoverRef = db.collection('kermes_cash_handovers').doc(widget.handoverDocId);
       
+      final isAdminToVault = widget.handoverData['isAdminToVault'] == true;
+
       batch.update(handoverRef, {
         'status': 'completed',
         'actualAmount': actualAmount,
         'adminId': user.uid,
-        'adminName': capabilities.staffName ?? 'Kermes Admin',
+        'adminName': capabilities.staffName ?? (isAdminToVault ? 'Ana Kasa' : 'Kermes Admin'),
         'completedAt': FieldValue.serverTimestamp(),
       });
 
-      final orderIds = List<String>.from(widget.handoverData['orderIds'] ?? []);
-      for (final orderId in orderIds) {
-        final orderRef = db.collection('kermes_orders').doc(orderId);
-        batch.update(orderRef, {
-          'settledToRegister': true,
-          'handoverId': widget.handoverDocId,
-        });
+      if (isAdminToVault) {
+        // This is a Vault Handover. The source isn't orders, it's previous handovers.
+        final sourceIds = List<String>.from(widget.handoverData['sourceHandoverIds'] ?? []);
+        for (final sourceId in sourceIds) {
+          final sourceRef = db.collection('kermes_cash_handovers').doc(sourceId);
+          batch.update(sourceRef, {
+            'vaultHandoverId': widget.handoverDocId, // Mark as safely transferred to vault
+          });
+        }
+      } else {
+        // Normal Staff -> Admin Handover. The source is individual orders.
+        final orderIds = List<String>.from(widget.handoverData['orderIds'] ?? []);
+        for (final orderId in orderIds) {
+          final orderRef = db.collection('kermes_orders').doc(orderId);
+          batch.update(orderRef, {
+            'settledToRegister': true,
+            'handoverId': widget.handoverDocId,
+          });
+        }
       }
 
       await batch.commit();
@@ -78,7 +92,10 @@ class _HandoverConfirmationDialogState extends ConsumerState<HandoverConfirmatio
         setState(() => _isLoading = false);
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tahsilat başarıyla teslim alındı ve onaylandı!'), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(isAdminToVault ? 'Ana Kasaya devir başarıyla onaylandı!' : 'Tahsilat başarıyla teslim alındı ve onaylandı!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
