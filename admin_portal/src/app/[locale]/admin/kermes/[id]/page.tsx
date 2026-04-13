@@ -4170,6 +4170,7 @@ export default function KermesDetailPage() {
         <h4 className="text-foreground font-semibold">{section.name}</h4>
         <span className="text-xs text-muted-foreground ml-1">({prepZones.length} istasyon)</span>
       </div>
+      {isSuperAdmin && (
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button type="button" title="Bölüm ismini düzenle (Rename)" onClick={() => {
           const newName = prompt('Yeni bölüm ismi:', section.name);
@@ -4185,6 +4186,11 @@ export default function KermesDetailPage() {
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
         </button>
         <button type="button" title="Bölümü Sil" onClick={() => {
+          // Kadin Bolumu ve Erkek Bolumu cannot be deleted! (Only super admin sees this button, but still prevent deleting default main sections)
+          if (['Kadin Bölümü', 'Erkek Bölümü'].includes(section.name)) {
+            showToast('Ana sistem bölümleri ("Kadin Bölümü", "Erkek Bölümü") silinemez!', 'error');
+            return;
+          }
           if (prepZones.length > 0) {
             showToast('Önce bu bölüm içindeki istasyonları (PrepZone) silmelisiniz!', 'error');
             return;
@@ -4199,6 +4205,7 @@ export default function KermesDetailPage() {
            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
         </button>
       </div>
+      )}
     </div>
 
     {prepZones.length === 0 ? (
