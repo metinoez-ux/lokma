@@ -573,14 +573,6 @@ class _KermesCardState extends State<KermesCard> {
                                 widget.event.hasTakeaway)
                               _buildModalityPill(Icons.phone_iphone,
                                   'kermes.order_via_app'.tr()),
-                            if (!widget.event.isMenuOnly &&
-                                widget.event.hasDelivery)
-                              _buildModalityPill(
-                                Icons.delivery_dining,
-                                widget.event.deliveryFee > 0
-                                    ? '${'delivery_modes.delivery'.tr()} (${widget.event.deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()})'
-                                    : '${'delivery_modes.delivery'.tr()} (${'kermes.free_delivery'.tr()})',
-                              ),
                           ],
                         ),
                       ),
@@ -1016,8 +1008,8 @@ class _KermesCardState extends State<KermesCard> {
                   tooltip,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 11, 
-                    fontWeight: FontWeight.w600,
+                    fontSize: 10, 
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
