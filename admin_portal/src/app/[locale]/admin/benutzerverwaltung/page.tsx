@@ -327,6 +327,61 @@ export default function BenutzerverwaltungPage() {
 
 
  // Handlers
+ const handleFixKermesSync = async () => {
+  if (!confirm('Senkronize olmayan "Hayalet (Orphaned)" Kermes personel atamalarını global veritabanından şimdi temizlemek istediğinize emin misiniz?')) return;
+  
+  try {
+   let fixedCount = 0;
+   setLoading(true);
+   const kQ = query(collection(db, 'kermes_events'));
+   const kSnap = await getDocs(kQ);
+   const kMap = new Map();
+   kSnap.forEach(d => {
+    const data = d.data();
+    kMap.set(d.id, {
+     staff: data.assignedStaff || [],
+     drivers: data.assignedDrivers || [],
+     waiters: data.assignedWaiters || [],
+     admins: data.kermesAdmins || []
+    });
+   });
+
+   for (const u of users) {
+    if (!u.kermesAssignments || u.kermesAssignments.length === 0) continue;
+    let changed = false;
+    
+    const newKAssignments = u.kermesAssignments.filter((ka: any) => {
+     const kId = ka.kermesId || ka;
+     if (!kMap.has(kId)) return false;
+     const kData = kMap.get(kId);
+     const inKermes = kData.staff.includes(u.id) || 
+              kData.drivers.includes(u.id) || 
+              kData.waiters.includes(u.id) || 
+              kData.admins.includes(u.id);
+     if (!inKermes) {
+       changed = true;
+       return false;
+     }
+     return true;
+    });
+
+    if (changed) {
+      await updateDoc(doc(db, 'admins', u.id), { kermesAssignments: newKAssignments }).catch(()=>{});
+      await updateDoc(doc(db, 'users', u.id), { kermesAssignments: newKAssignments }).catch(()=>{});
+      fixedCount++;
+    }
+   }
+   
+   alert(`🎉 Tamirat tamamlandı! Toplam ${fixedCount} kullanıcının üzerindeki eski/hayalet Kermes görevi başarıyla silindi ve eşitlendi.`);
+   fetchData();
+  } catch (e) {
+   console.error(e);
+   alert('Onarım sırasında bir hata oluştu: ' + e);
+  } finally {
+   setLoading(false);
+  }
+ };
+
  const handleEditUser = async (user: UnifiedUser) => {
  // Prepare local stats
  const namePart = user.displayName || '';
@@ -783,6 +838,17 @@ const getKermesBadgeInfo = (role: string) => {
  </p>
  </div>
 
+ <div className="flex gap-2 relative">
+  {isSuperAdmin && (
+  <button 
+  onClick={handleFixKermesSync}
+  className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
+  title="Senkronize olmayan Kermes personellerini onar"
+  >
+  <span className="material-symbols-outlined text-sm">handyman</span>
+  <span className="hidden sm:inline">Hayaletleri Temizle</span>
+  </button>
+  )}
  <div className="relative">
  <button 
  onClick={() => setShowAddMenu(!showAddMenu)}
@@ -805,6 +871,7 @@ const getKermesBadgeInfo = (role: string) => {
  </div>
  )}
  </div>
+</div>
  </div>
 
  {/* Filters & Search Bar */}
