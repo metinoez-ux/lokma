@@ -50,16 +50,70 @@ class _KermesCardState extends State<KermesCard> {
   }
 
   Future<void> _loadBadges() async {
-    if (widget.event.activeBadgeIds.isEmpty) return;
+    if (widget.event.activeBadgeIds.isEmpty) {
+      if (mounted && _activeBadges.isNotEmpty) {
+        setState(() => _activeBadges = []);
+      }
+      return;
+    }
 
     final allBadges = await KermesBadgeService.instance.loadBadges();
     if (mounted) {
       setState(() {
-        _activeBadges = widget.event.activeBadgeIds
+        List<KermesBadge> initialBadges = widget.event.activeBadgeIds
             .where((id) => allBadges.containsKey(id))
             .map((id) => allBadges[id]!)
             .toList();
+
+        // 🟢 Location-based Brand Swapping (TUNA vs Akdeniz Toros)
+        bool isTurkey = false;
+        if (widget.currentPosition != null) {
+           final lat = widget.currentPosition!.latitude;
+           final lng = widget.currentPosition!.longitude;
+           // Bounding box for Turkey
+           if (lat >= 35.8 && lat <= 42.1 && lng >= 25.6 && lng <= 44.8) {
+               isTurkey = true;
+           }
+        }
+
+        List<KermesBadge> finalBadges = [];
+        for (var badge in initialBadges) {
+            String bName = badge.label.toLowerCase();
+            if (bName.contains('tuna') || bName.contains('toros')) {
+                if (isTurkey) {
+                    // Try to find Toros instead
+                    final torosBadge = allBadges.values.where((b) => b.label.toLowerCase().contains('toros')).firstOrNull;
+                    if (torosBadge != null) {
+                      if (!finalBadges.any((b) => b.id == torosBadge.id)) finalBadges.add(torosBadge);
+                    } else {
+                      if (!finalBadges.any((b) => b.id == badge.id)) finalBadges.add(badge);
+                    }
+                } else {
+                    // Try to find Tuna instead
+                    final tunaBadge = allBadges.values.where((b) => b.label.toLowerCase().contains('tuna')).firstOrNull;
+                    if (tunaBadge != null) {
+                      if (!finalBadges.any((b) => b.id == tunaBadge.id)) finalBadges.add(tunaBadge);
+                    } else {
+                      if (!finalBadges.any((b) => b.id == badge.id)) finalBadges.add(badge);
+                    }
+                }
+            } else {
+                if (!finalBadges.any((b) => b.id == badge.id)) {
+                   finalBadges.add(badge);
+                }
+            }
+        }
+
+        _activeBadges = finalBadges;
       });
+    }
+  }
+
+  @override
+  void didUpdateWidget(KermesCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentPosition != widget.currentPosition || oldWidget.event.activeBadgeIds != widget.event.activeBadgeIds) {
+      _loadBadges();
     }
   }
 

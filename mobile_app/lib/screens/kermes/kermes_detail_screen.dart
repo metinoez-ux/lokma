@@ -53,15 +53,17 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   Map<String, KermesBadge> _activeBadges = {};
 
   // Realtime event document listener
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _eventSubscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _eventSubscription;
   KermesEvent? _liveEvent;
   KermesEvent get _currentEvent => _liveEvent ?? widget.event;
 
   // Realtime products listener
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _productsSubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _productsSubscription;
   List<KermesMenuItem>? _liveMenu;
 
-String _selectedCategory = '';
+  String _selectedCategory = '';
 
   // Scroll spy controller and keys
   final ScrollController _scrollController = ScrollController();
@@ -75,7 +77,7 @@ String _selectedCategory = '';
   // Sliding pill indicator state
   double _pillLeft = 0;
   double _pillWidth = 60;
-    bool _isFavorite = false;
+  bool _isFavorite = false;
   bool _pillInitialized = false;
   final GlobalKey _chipRowKey = GlobalKey();
 
@@ -127,7 +129,7 @@ String _selectedCategory = '';
     _listenToProducts();
     _listenToEventDocument();
     _scrollController.addListener(_onMenuScroll);
-    
+
     final modes = _availableModes;
     if (modes.isNotEmpty) {
       _deliveryModeIndex = modes.first.absoluteIndex;
@@ -146,7 +148,7 @@ String _selectedCategory = '';
     super.dispose();
   }
 
-Future<void> _loadBadges() async {
+  Future<void> _loadBadges() async {
     final badges = await KermesBadgeService.instance.loadBadges();
     if (mounted) {
       setState(() => _activeBadges = badges);
@@ -164,18 +166,24 @@ Future<void> _loadBadges() async {
     try {
       // Tahmin ve anlık hava durumunu paralel cek
       final results = await Future.wait([
-        WeatherService.getForecast(lat: _currentEvent.latitude, lon: _currentEvent.longitude),
-        WeatherService.getCurrentWeather(lat: _currentEvent.latitude, lon: _currentEvent.longitude),
+        WeatherService.getForecast(
+            lat: _currentEvent.latitude, lon: _currentEvent.longitude),
+        WeatherService.getCurrentWeather(
+            lat: _currentEvent.latitude, lon: _currentEvent.longitude),
       ]);
       final forecast = results[0] as WeatherForecast?;
       CurrentWeather? current = results[1] as CurrentWeather?;
 
       // Fallback: API limit asildiysa, forecast'ten anlik hava durumunu turet
-      if (current == null && forecast != null && forecast.hourlyForecasts.isNotEmpty) {
+      if (current == null &&
+          forecast != null &&
+          forecast.hourlyForecasts.isNotEmpty) {
         final now = DateTime.now();
         final nearest = forecast.hourlyForecasts.reduce((a, b) =>
-          (a.dateTime.difference(now).abs() < b.dateTime.difference(now).abs()) ? a : b
-        );
+            (a.dateTime.difference(now).abs() <
+                    b.dateTime.difference(now).abs())
+                ? a
+                : b);
         current = CurrentWeather(
           temperature: nearest.temperature,
           feelsLike: nearest.feelsLike,
@@ -232,7 +240,7 @@ Future<void> _loadBadges() async {
     return days[date.weekday - 1];
   }
 
-void _onMenuScroll() {
+  void _onMenuScroll() {
     if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
 
     if (_scrollController.hasClients && _scrollController.offset < 10) {
@@ -411,12 +419,12 @@ void _onMenuScroll() {
         .listen((docSnap) {
       if (!mounted || !docSnap.exists) return;
       final data = docSnap.data()!;
-      
+
       // Parse address
       String fullAddress = widget.event.address;
       String city = widget.event.city;
       String postalCode = widget.event.postalCode;
-      
+
       if (data['address'] is Map) {
         final addressData = data['address'] as Map;
         fullAddress = addressData['fullAddress']?.toString() ?? '';
@@ -431,7 +439,7 @@ void _onMenuScroll() {
         city = data['city']?.toString() ?? widget.event.city;
       }
       postalCode = data['postalCode']?.toString() ?? widget.event.postalCode;
-      
+
       // Parse parking
       final parkingList = <KermesParkingInfo>[];
       if (data['parkingLocations'] is List) {
@@ -442,21 +450,26 @@ void _onMenuScroll() {
               city: p['city']?.toString() ?? '',
               postalCode: p['postalCode']?.toString() ?? '',
               country: p['country']?.toString() ?? '',
-              images: (p['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-              note: (p['note']?.toString().isNotEmpty == true) ? p['note'].toString() : null,
+              images: (p['images'] as List<dynamic>?)
+                      ?.map((e) => e.toString())
+                      .toList() ??
+                  [],
+              note: (p['note']?.toString().isNotEmpty == true)
+                  ? p['note'].toString()
+                  : null,
               latitude: (p['lat'] as num?)?.toDouble(),
               longitude: (p['lng'] as num?)?.toDouble(),
             ));
           }
         }
       }
-      
+
       // Parse coordinates
       double lat = widget.event.latitude;
       double lng = widget.event.longitude;
       if (data['latitude'] is num) lat = (data['latitude'] as num).toDouble();
       if (data['longitude'] is num) lng = (data['longitude'] as num).toDouble();
-      
+
       final e = widget.event;
       final prev = _liveEvent;
       if (fullAddress != (prev?.address ?? e.address) ||
@@ -472,7 +485,9 @@ void _onMenuScroll() {
             postalCode: postalCode,
             country: data['country']?.toString() ?? e.country,
             state: data['state']?.toString() ?? e.state,
-            title: data['name']?.toString() ?? data['title']?.toString() ?? e.title,
+            title: data['name']?.toString() ??
+                data['title']?.toString() ??
+                e.title,
             address: fullAddress,
             phoneNumber: e.phoneNumber,
             startDate: e.startDate,
@@ -512,11 +527,19 @@ void _onMenuScroll() {
             contactName: data['contactName']?.toString() ?? e.contactName,
             contactPhone: data['contactPhone']?.toString() ?? e.contactPhone,
             headerImage: data['headerImage']?.toString() ?? e.headerImage,
-            generalParkingNote: data['generalParkingNote']?.toString() ?? e.generalParkingNote,
-            activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>?)?.map((x) => x.toString()).toList() ?? e.activeBadgeIds,
+            generalParkingNote:
+                data['generalParkingNote']?.toString() ?? e.generalParkingNote,
+            activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>?)
+                    ?.map((x) => x.toString())
+                    .toList() ??
+                e.activeBadgeIds,
             acceptsDonations: data['acceptsDonations'] == true,
-            selectedDonationFundId: data['selectedDonationFundId']?.toString() ?? e.selectedDonationFundId,
-            selectedDonationFundName: data['selectedDonationFundName']?.toString() ?? e.selectedDonationFundName,
+            selectedDonationFundId:
+                data['selectedDonationFundId']?.toString() ??
+                    e.selectedDonationFundId,
+            selectedDonationFundName:
+                data['selectedDonationFundName']?.toString() ??
+                    e.selectedDonationFundName,
             isSilaYolu: data['isSilaYolu'] == true,
             sectionDefs: e.sectionDefs,
           );
@@ -626,12 +649,12 @@ void _onMenuScroll() {
 
   void _addToCart(KermesMenuItem item) {
     HapticFeedback.lightImpact();
-    
+
     if (_currentEvent.isMenuOnly) {
-       _showMenuOnlyDialog();
-       return;
+      _showMenuOnlyDialog();
+      return;
     }
-    
+
     // Multi-step: show customization sheet if item has option groups
     if (item.isComboMenu) {
       showModalBottomSheet(
@@ -647,7 +670,7 @@ void _onMenuScroll() {
       );
       return;
     }
-    
+
     final cartNotifier = ref.read(kermesCartProvider.notifier);
     final added =
         cartNotifier.addToCart(item, _currentEvent.id, _currentEvent.city);
@@ -658,7 +681,6 @@ void _onMenuScroll() {
     HapticFeedback.lightImpact();
     ref.read(kermesCartProvider.notifier).removeFromCart(item.name);
   }
-
 
   void _showMenuOnlyDialog() {
     final phone = _currentEvent.contactPhone ?? '';
@@ -692,16 +714,14 @@ void _onMenuScroll() {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-                'Bu Kermes henüz dijital online sipariş alma imkanı sunmuyor.',
+            Text('Bu Kermes henüz dijital online sipariş alma imkanı sunmuyor.',
                 style: TextStyle(
                     color: Theme.of(dialogContext).brightness == Brightness.dark
                         ? Colors.white70
                         : Colors.black87,
                     fontSize: 15)),
             const SizedBox(height: 12),
-            Text(
-                'Sorularınız için Kermes Yetkilisine danışabilirsiniz:',
+            Text('Sorularınız için Kermes Yetkilisine danışabilirsiniz:',
                 style: TextStyle(
                     color: Theme.of(dialogContext).brightness == Brightness.dark
                         ? Colors.white54
@@ -718,18 +738,26 @@ void _onMenuScroll() {
               ),
               child: Row(
                 children: [
-                   Icon(Icons.person, size: 20, color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white70 : Colors.black54),
-                   const SizedBox(width: 8),
-                   Expanded(
-                     child: Text(
-                       '$name\n$phone',
-                       style: TextStyle(
-                         fontWeight: FontWeight.w600,
-                         color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white : Colors.black87,
-                         fontSize: 14,
-                       ),
-                     ),
-                   )
+                  Icon(Icons.person,
+                      size: 20,
+                      color:
+                          Theme.of(dialogContext).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '$name\n$phone',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(dialogContext).brightness ==
+                                Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
+                        fontSize: 14,
+                      ),
+                    ),
+                  )
                 ],
               ),
             )
@@ -839,7 +867,7 @@ void _onMenuScroll() {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        
+
         return Container(
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -872,10 +900,13 @@ void _onMenuScroll() {
                     imageUrl: badge.iconUrl,
                     height: 80,
                     fit: BoxFit.contain,
-                    placeholder: (context, url) =>
-                        const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
-                    errorWidget: (context, url, error) =>
-                        const SizedBox(height: 80, child: Icon(Icons.verified, size: 60, color: Colors.grey)),
+                    placeholder: (context, url) => const SizedBox(
+                        height: 80,
+                        child: Center(child: CircularProgressIndicator())),
+                    errorWidget: (context, url, error) => const SizedBox(
+                        height: 80,
+                        child:
+                            Icon(Icons.verified, size: 60, color: Colors.grey)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -917,7 +948,8 @@ void _onMenuScroll() {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF'))),
+                    backgroundColor: Color(
+                        int.parse(badge.colorHex.replaceFirst('#', '0xFF'))),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -928,7 +960,8 @@ void _onMenuScroll() {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF'))),
+                      color: Color(int.parse(
+                          badge.textColorHex.replaceFirst('#', '0xFF'))),
                     ),
                   ),
                 ),
@@ -943,7 +976,8 @@ void _onMenuScroll() {
   void _shareKermes() {
     HapticFeedback.lightImpact();
     final event = _currentEvent;
-    final text = '${event.title}\n${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}\n${event.address}, ${event.postalCode} ${event.city}';
+    final text =
+        '${event.title}\n${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}\n${event.address}, ${event.postalCode} ${event.city}';
     Share.share(text, subject: event.title);
   }
 
@@ -1018,7 +1052,8 @@ void _onMenuScroll() {
             final searchResults = _eventMenu
                 .where((p) =>
                     _normalizeForSearch(p.name).contains(query) ||
-                    (_normalizeForSearch(p.description ?? '').contains(query)) ||
+                    (_normalizeForSearch(p.description ?? '')
+                        .contains(query)) ||
                     _normalizeForSearch(p.category ?? '').contains(query))
                 .toList();
 
@@ -1051,18 +1086,29 @@ void _onMenuScroll() {
                               color: cardColor,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: isDark ? Colors.grey[700]! : Colors.grey[300]!, width: 1.5),
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : Colors.grey[300]!,
+                                  width: 1.5),
                             ),
                             child: TextField(
                               autofocus: true,
                               cursorColor: lokmaPink,
-                              style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500),
                               decoration: InputDecoration(
                                 hintText: 'marketplace.search_in_menu'.tr(),
-                                hintStyle:
-                                    TextStyle(color: hintColor, fontSize: 15, fontWeight: FontWeight.w500),
+                                hintStyle: TextStyle(
+                                    color: hintColor,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500),
                                 prefixIcon: Icon(Icons.search,
-                                    color: isDark ? Colors.grey[300] : Colors.grey[600], size: 22),
+                                    color: isDark
+                                        ? Colors.grey[300]
+                                        : Colors.grey[600],
+                                    size: 22),
                                 border: InputBorder.none,
                                 contentPadding:
                                     const EdgeInsets.symmetric(vertical: 14),
@@ -1110,8 +1156,7 @@ void _onMenuScroll() {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.search,
-                                  size: 60,
-                                  color: hintColor?.withOpacity(0.5)),
+                                  size: 60, color: hintColor?.withOpacity(0.5)),
                               const SizedBox(height: 16),
                               Text('marketplace.search_for_products'.tr(),
                                   style: TextStyle(
@@ -1132,7 +1177,8 @@ void _onMenuScroll() {
                                     itemCount: searchResults.length,
                                     itemBuilder: (context, index) {
                                       final item = searchResults[index];
-                                      final cartQuantity = _getCartQuantity(item);
+                                      final cartQuantity =
+                                          _getCartQuantity(item);
                                       return _buildMenuItem(item, cartQuantity,
                                           isDark: isDark);
                                     },
@@ -1175,8 +1221,11 @@ void _onMenuScroll() {
               children: [
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 36, height: 4,
-                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: handleColor,
+                      borderRadius: BorderRadius.circular(2)),
                 ),
                 Positioned(
                   right: 12,
@@ -1190,7 +1239,11 @@ void _onMenuScroll() {
             // Title
             Padding(
               padding: const EdgeInsets.only(left: 20, bottom: 12),
-              child: Text(tr('marketplace.categories'), style: TextStyle(color: textPrimary, fontSize: 22, fontWeight: FontWeight.w600)),
+              child: Text(tr('marketplace.categories'),
+                  style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600)),
             ),
             // Category list
             Expanded(
@@ -1200,20 +1253,24 @@ void _onMenuScroll() {
                 itemBuilder: (context, index) {
                   final catName = _categories[index];
                   final isSelected = _selectedCategory == catName;
-                  
+
                   // Get product names for this category
                   String productPreview = '';
                   final allProducts = _eventMenu;
                   if (catName == 'marketplace.category_all'.tr()) {
-                    productPreview = allProducts.take(4).map((p) => p.name).join(', ');
+                    productPreview =
+                        allProducts.take(4).map((p) => p.name).join(', ');
                   } else {
-                    final catProducts = allProducts.where((p) => _getCategoryForItem(p) == catName).toList();
-                    productPreview = catProducts.take(4).map((p) => p.name).join(', ');
+                    final catProducts = allProducts
+                        .where((p) => _getCategoryForItem(p) == catName)
+                        .toList();
+                    productPreview =
+                        catProducts.take(4).map((p) => p.name).join(', ');
                   }
                   if (productPreview.length > 60) {
                     productPreview = '${productPreview.substring(0, 57)}...';
                   }
-                  
+
                   return InkWell(
                     onTap: () {
                       Navigator.pop(context);
@@ -1231,7 +1288,9 @@ void _onMenuScroll() {
                                   catName,
                                   style: TextStyle(
                                     color: textPrimary,
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
                                     fontSize: 17,
                                   ),
                                 ),
@@ -1239,7 +1298,8 @@ void _onMenuScroll() {
                                   const SizedBox(height: 4),
                                   Text(
                                     productPreview,
-                                    style: TextStyle(color: textSecondary, fontSize: 13),
+                                    style: TextStyle(
+                                        color: textSecondary, fontSize: 13),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1265,8 +1325,8 @@ void _onMenuScroll() {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-if (_selectedCategory.isEmpty) {
+
+    if (_selectedCategory.isEmpty) {
       _selectedCategory = 'marketplace.category_all'.tr();
     }
     for (final category in _categoriesWithoutAll) {
@@ -1296,485 +1356,600 @@ if (_selectedCategory.isEmpty) {
     final validTabIndex = selectedTabIndex >= 0 ? selectedTabIndex : 0;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF2B2929) : const Color(0xFFF9F9F9),
+      backgroundColor:
+          isDark ? const Color(0xFF2B2929) : const Color(0xFFF9F9F9),
       body: Stack(
         children: [
           CustomScrollView(
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
-          // SliverAppBar for search and navigation
-          SliverAppBar(
-            pinned: true,
-            floating: true,
-            snap: true,
-            expandedHeight: 0,
-            toolbarHeight: 56,
-            backgroundColor: scaffoldBg,
-            surfaceTintColor: Colors.transparent,
-            automaticallyImplyLeading: false,
-            title: GestureDetector(
-              onTap: () => _showMenuSearchOverlay(),
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 12),
-                    Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'Menude ara...',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: _menuSearchQuery.isNotEmpty ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              // SliverAppBar for search and navigation
+              SliverAppBar(
+                pinned: true,
+                floating: true,
+                snap: true,
+                expandedHeight: 0,
+                toolbarHeight: 56,
+                backgroundColor: scaffoldBg,
+                surfaceTintColor: Colors.transparent,
+                automaticallyImplyLeading: false,
+                title: GestureDetector(
+                  onTap: () => _showMenuSearchOverlay(),
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF2A2A2A)
+                          : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    const SizedBox(width: 12),
-                  ],
-                ),
-              ),
-            ),
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 36, height: 36,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.arrow_back_ios_new, color: isDark ? Colors.white : Colors.black87, size: 18),
-                ),
-              ),
-            ),
-            actions: [
-              GestureDetector(
-                onTap: () => _shareKermes(),
-                child: Icon(Icons.share_outlined, color: isDark ? Colors.white : Colors.black87, size: 22),
-              ),
-              const SizedBox(width: 16),
-            ],
-          ),
-          // Hero Section (Card format)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: _buildHeroSection(context),
-              ),
-            ),
-          ),
-          if (_globalFeatures.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: _buildFeaturesRow(),
-              ),
-            ),
-
-          // Menu ve Siparis Card
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: GestureDetector(
-                onTap: () {
-                  // Scroll to first category
-                  if (_categoriesWithoutAll.isNotEmpty) {
-                    _selectCategory(_categoriesWithoutAll.first);
-                  }
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Stack(
-                      fit: StackFit.expand,
+                    child: Row(
                       children: [
-                        // Background image
-                        _currentEvent.menu.isNotEmpty && _currentEvent.menu.first.allImages.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: _currentEvent.menu.first.allImages.first,
-                              fit: BoxFit.cover,
-                            )
-                          : Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [const Color(0xFF2D1B00), const Color(0xFF1A0E00)],
-                                ),
-                              ),
+                        const SizedBox(width: 12),
+                        Icon(Icons.search,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _menuSearchQuery.isNotEmpty
+                                ? _menuSearchQuery
+                                : 'Menude ara...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: _menuSearchQuery.isNotEmpty
+                                  ? (isDark ? Colors.white : Colors.black87)
+                                  : (isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600]),
                             ),
-                        // Gradient overlay
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomLeft,
-                              end: Alignment.topRight,
-                              colors: [
-                                Colors.black.withOpacity(0.85),
-                                Colors.black.withOpacity(0.3),
-                                Colors.transparent,
-                              ],
-                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        // Populer badge
-                        Positioned(
-                          top: 16,
-                          right: 16,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: primaryRuby.withOpacity(0.9),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.star, color: Colors.white, size: 12),
-                                SizedBox(width: 4),
-                                Text('POPULER', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Bottom content
-                        Positioned(
-                          bottom: 20,
-                          left: 20,
-                          right: 20,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(width: 6, height: 6, decoration: BoxDecoration(color: primaryRuby, shape: BoxShape.circle)),
-                                        const SizedBox(width: 8),
-                                        Text('LEZZET SOLENI', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text('Menu ve Siparis', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, height: 1.1)),
-                                    const SizedBox(height: 4),
-                                    Text('Kebaplar, tatlilar ve sokak lezzetlerini kesfet.', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: primaryRuby,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                              ),
-                            ],
-                          ),
-                        ),
+                        const SizedBox(width: 12),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
-
-          // Info Cards (before menu)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLocationCard(),
-                  const SizedBox(height: 20),
-                  _buildWeatherSection(),
-                  const SizedBox(height: 20),
-                  _buildAdminAndContactCard(),
-                  const SizedBox(height: 24),
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : Colors.black.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.arrow_back_ios_new,
+                          color: isDark ? Colors.white : Colors.black87,
+                          size: 18),
+                    ),
+                  ),
+                ),
+                actions: [
+                  GestureDetector(
+                    onTap: () => _shareKermes(),
+                    child: Icon(Icons.share_outlined,
+                        color: isDark ? Colors.white : Colors.black87,
+                        size: 22),
+                  ),
+                  const SizedBox(width: 16),
                 ],
               ),
-            ),
-          ),
+              // Hero Section (Card format)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: _buildHeroSection(context),
+                  ),
+                ),
+              ),
+              if (_globalFeatures.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    child: _buildFeaturesRow(),
+                  ),
+                ),
 
-          // 3. Category Chip Tabs
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _KermesCategoryHeaderDelegate(
-              child: Container(
-                color: scaffoldBg,
-                height: 52,
-                child: Column(
-                  children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SingleChildScrollView(
-                              controller: _chipScrollController,
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.only(
-                                  left: 16, right: 4, top: 4, bottom: 8),
-                              child: Stack(
-                                alignment: Alignment.centerLeft,
-                                children: [
-                                  // 1. Sliding pill indicator
-                                  if (_pillInitialized)
-                                    AnimatedPositioned(
-                                      duration: const Duration(milliseconds: 400),
-                                      curve: Curves.easeOutBack,
-                                      left: _pillLeft,
-                                      top: 0,
-                                      bottom: 0,
-                                      child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 400),
-                                        curve: Curves.easeOutBack,
-                                        width: _pillWidth,
-                                        decoration: BoxDecoration(
-                                          color: isDark
-                                              ? Colors.white
-                                              : const Color(0xFF3E3E3F),
-                                          borderRadius: BorderRadius.circular(50),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: (isDark
-                                                      ? Colors.white
-                                                      : Colors.black)
-                                                  .withOpacity(0.12),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
+              // Menu ve Siparis Card
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      // Scroll to first category
+                      if (_categoriesWithoutAll.isNotEmpty) {
+                        _selectCategory(_categoriesWithoutAll.first);
+                      }
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Background image
+                            _currentEvent.menu.isNotEmpty &&
+                                    _currentEvent
+                                        .menu.first.allImages.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: _currentEvent
+                                        .menu.first.allImages.first,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          const Color(0xFF2D1B00),
+                                          const Color(0xFF1A0E00)
+                                        ],
                                       ),
                                     ),
-                                  // 2. Chip texts row
-                                  Row(
-                                    key: _chipRowKey,
-                                    children: _categories.map((category) {
-                                      _tabKeys.putIfAbsent(category, () => GlobalKey());
-                                      final isSelected = category == _selectedCategory;
-
-                                      return Padding(
-                                        padding: const EdgeInsets.only(right: 6),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            HapticFeedback.selectionClick();
-                                            _selectCategory(category);
-                                          },
-                                          child: Container(
-                                            key: _tabKeys[category],
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 7),
-                                            decoration: BoxDecoration(
-                                              color: Colors.transparent,
-                                              borderRadius: BorderRadius.circular(50),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                AnimatedDefaultTextStyle(
-                                                  duration: const Duration(milliseconds: 300),
-                                                  curve: Curves.easeOutCubic,
-                                                  style: TextStyle(
-                                                    color: isSelected
-                                                        ? (isDark ? Colors.black : Colors.white)
-                                                        : (isDark ? Colors.white70 : Colors.black54),
-                                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                                    fontSize: 14,
-                                                  ),
-                                                  child: Text(category),
-                                                ),
-                                                // Cart count badge
-                                                Builder(builder: (context) {
-                                                  final kermesCart = ref.watch(kermesCartProvider);
-                                                  final catCartCount = category == 'Alle'
-                                                      ? kermesCart.totalItems
-                                                      : kermesCart.items
-                                                          .where((ci) => ci.menuItem.category == category)
-                                                          .fold<int>(0, (sum, ci) => sum + ci.quantity);
-                                                  if (catCartCount <= 0) return const SizedBox.shrink();
-                                                  return Padding(
-                                                    padding: const EdgeInsets.only(left: 6),
-                                                    child: AnimatedContainer(
-                                                      duration: const Duration(milliseconds: 300),
-                                                      curve: Curves.easeOutBack,
-                                                      width: 20,
-                                                      height: 20,
-                                                      decoration: BoxDecoration(
-                                                        color: isSelected
-                                                            ? (isDark ? Colors.black87 : Colors.white)
-                                                            : Colors.red,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      alignment: Alignment.center,
-                                                      child: Text(
-                                                        '$catCartCount',
-                                                        style: TextStyle(
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w600,
-                                                          color: isSelected
-                                                              ? (isDark ? Colors.white : Colors.black87)
-                                                              : Colors.white,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                }),
-                                              ],
-                                            ),
-                                          ),
+                                  ),
+                            // Gradient overlay
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomLeft,
+                                  end: Alignment.topRight,
+                                  colors: [
+                                    Colors.black.withOpacity(0.85),
+                                    Colors.black.withOpacity(0.3),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Populer badge
+                            Positioned(
+                              top: 16,
+                              right: 16,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: primaryRuby.withOpacity(0.9),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(Icons.star,
+                                        color: Colors.white, size: 12),
+                                    SizedBox(width: 4),
+                                    Text('POPULER',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Bottom content
+                            Positioned(
+                              bottom: 20,
+                              left: 20,
+                              right: 20,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                                width: 6,
+                                                height: 6,
+                                                decoration: BoxDecoration(
+                                                    color: primaryRuby,
+                                                    shape: BoxShape.circle)),
+                                            const SizedBox(width: 8),
+                                            Text('LEZZET SOLENI',
+                                                style: TextStyle(
+                                                    color: Colors.white
+                                                        .withOpacity(0.7),
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    letterSpacing: 2)),
+                                          ],
                                         ),
-                                      );
-                                    }).toList(),
+                                        const SizedBox(height: 6),
+                                        const Text('Menu ve Siparis',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 26,
+                                                fontWeight: FontWeight.bold,
+                                                height: 1.1)),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                            'Kebaplar, tatlilar ve sokak lezzetlerini kesfet.',
+                                            style: TextStyle(
+                                                color: Colors.white
+                                                    .withOpacity(0.6),
+                                                fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: primaryRuby,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.arrow_forward,
+                                        color: Colors.white, size: 20),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          // ≡ More icon (Lieferando-style, no border)
-                          GestureDetector(
-                            onTap: _showCategorySelector,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 12, left: 2),
-                              child: Icon(
-                                Icons.format_list_bulleted,
-                                color: isDark ? Colors.white70 : Colors.black54,
-                                size: 22,
-                              ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    Divider(height: 1, thickness: 0.5, color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[300]),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // 4. Products List
-          if (_groupedMenu.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.restaurant_menu,
-                        size: 64,
-                        color: isDark ? Colors.grey[700] : Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Menüde ürün bulunmuyor',
-                      style: TextStyle(color: textSecondary, fontSize: 16),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final category = _categoriesWithoutAll[index];
-                  if (!grouped.containsKey(category))
-                    return const SizedBox.shrink();
-                  final categoryItems = grouped[category]!;
-                  if (categoryItems.isEmpty) return const SizedBox.shrink();
 
-                  return Container(
-                    key: menuKeys[category],
+              // Info Cards (before menu)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLocationCard(),
+                      const SizedBox(height: 20),
+                      _buildWeatherSection(),
+                      const SizedBox(height: 20),
+                      _buildAdminAndContactCard(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 3. Category Chip Tabs
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _KermesCategoryHeaderDelegate(
+                  child: Container(
+                    color: scaffoldBg,
+                    height: 52,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Category Header (business_detail_screen pattern)
-                        Container(
-                          width: double.infinity,
-                          color: isDark
-                              ? const Color(0xFF2C2C2C).withOpacity(0.6)
-                              : const Color(0xFFF2EEE9),
-                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  category,
-                                  style: TextStyle(
-                                    color: isDark ? lokmaPink : Colors.black87,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.5,
-                                  ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SingleChildScrollView(
+                                controller: _chipScrollController,
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.only(
+                                    left: 16, right: 4, top: 4, bottom: 8),
+                                child: Stack(
+                                  alignment: Alignment.centerLeft,
+                                  children: [
+                                    // 1. Sliding pill indicator
+                                    if (_pillInitialized)
+                                      AnimatedPositioned(
+                                        duration:
+                                            const Duration(milliseconds: 400),
+                                        curve: Curves.easeOutBack,
+                                        left: _pillLeft,
+                                        top: 0,
+                                        bottom: 0,
+                                        child: AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 400),
+                                          curve: Curves.easeOutBack,
+                                          width: _pillWidth,
+                                          decoration: BoxDecoration(
+                                            color: isDark
+                                                ? Colors.white
+                                                : const Color(0xFF3E3E3F),
+                                            borderRadius:
+                                                BorderRadius.circular(50),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: (isDark
+                                                        ? Colors.white
+                                                        : Colors.black)
+                                                    .withOpacity(0.12),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    // 2. Chip texts row
+                                    Row(
+                                      key: _chipRowKey,
+                                      children: _categories.map((category) {
+                                        _tabKeys.putIfAbsent(
+                                            category, () => GlobalKey());
+                                        final isSelected =
+                                            category == _selectedCategory;
+
+                                        return Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 6),
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              HapticFeedback.selectionClick();
+                                              _selectCategory(category);
+                                            },
+                                            child: Container(
+                                              key: _tabKeys[category],
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 7),
+                                              decoration: BoxDecoration(
+                                                color: Colors.transparent,
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  AnimatedDefaultTextStyle(
+                                                    duration: const Duration(
+                                                        milliseconds: 300),
+                                                    curve: Curves.easeOutCubic,
+                                                    style: TextStyle(
+                                                      color: isSelected
+                                                          ? (isDark
+                                                              ? Colors.black
+                                                              : Colors.white)
+                                                          : (isDark
+                                                              ? Colors.white70
+                                                              : Colors.black54),
+                                                      fontWeight: isSelected
+                                                          ? FontWeight.w700
+                                                          : FontWeight.w500,
+                                                      fontSize: 14,
+                                                    ),
+                                                    child: Text(category),
+                                                  ),
+                                                  // Cart count badge
+                                                  Builder(builder: (context) {
+                                                    final kermesCart =
+                                                        ref.watch(
+                                                            kermesCartProvider);
+                                                    final catCartCount = category ==
+                                                            'Alle'
+                                                        ? kermesCart.totalItems
+                                                        : kermesCart.items
+                                                            .where((ci) =>
+                                                                ci.menuItem
+                                                                    .category ==
+                                                                category)
+                                                            .fold<int>(
+                                                                0,
+                                                                (sum, ci) =>
+                                                                    sum +
+                                                                    ci.quantity);
+                                                    if (catCartCount <= 0)
+                                                      return const SizedBox
+                                                          .shrink();
+                                                    return Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              left: 6),
+                                                      child: AnimatedContainer(
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    300),
+                                                        curve:
+                                                            Curves.easeOutBack,
+                                                        width: 20,
+                                                        height: 20,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: isSelected
+                                                              ? (isDark
+                                                                  ? Colors
+                                                                      .black87
+                                                                  : Colors
+                                                                      .white)
+                                                              : Colors.red,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          '$catCartCount',
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: isSelected
+                                                                ? (isDark
+                                                                    ? Colors
+                                                                        .white
+                                                                    : Colors
+                                                                        .black87)
+                                                                : Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Builder(builder: (context) {
-                                final catCartCount = grouped[category]!
-                                    .fold<int>(
-                                        0,
-                                        (sum, item) =>
-                                            sum + _getCartQuantity(item));
-                                if (catCartCount <= 0)
-                                  return const SizedBox.shrink();
-                                return Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    '$catCartCount',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color:
-                                          isDark ? Colors.black : Colors.white,
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
+                            ),
+                            // ≡ More icon (Lieferando-style, no border)
+                            GestureDetector(
+                              onTap: _showCategorySelector,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.only(right: 12, left: 2),
+                                child: Icon(
+                                  Icons.format_list_bulleted,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54,
+                                  size: 22,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        // Items
-                        ...categoryItems.map((item) {
-                          final cartQuantity = _getCartQuantity(item);
-                          return _buildMenuItem(item, cartQuantity,
-                              isDark: isDark);
-                        }),
-                        // Extra bottom padding for last item
-                        if (index == _categoriesWithoutAll.length - 1)
-                          const SizedBox(height: 120)
-                        else
-                          const SizedBox(height: 16),
+                        Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.1)
+                                : Colors.grey[300]),
                       ],
                     ),
-                  );
-                },
-                childCount: _categoriesWithoutAll.length,
+                  ),
+                ),
               ),
-            ),
-            ],  // slivers end
-          ),  // CustomScrollView end
-        ],  // Stack children end
-      ),  // Stack end
+
+              // 4. Products List
+              if (_groupedMenu.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.restaurant_menu,
+                            size: 64,
+                            color:
+                                isDark ? Colors.grey[700] : Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Menüde ürün bulunmuyor',
+                          style: TextStyle(color: textSecondary, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final category = _categoriesWithoutAll[index];
+                      if (!grouped.containsKey(category))
+                        return const SizedBox.shrink();
+                      final categoryItems = grouped[category]!;
+                      if (categoryItems.isEmpty) return const SizedBox.shrink();
+
+                      return Container(
+                        key: menuKeys[category],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Category Header (business_detail_screen pattern)
+                            Container(
+                              width: double.infinity,
+                              color: isDark
+                                  ? const Color(0xFF2C2C2C).withOpacity(0.6)
+                                  : const Color(0xFFF2EEE9),
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      category,
+                                      style: TextStyle(
+                                        color:
+                                            isDark ? lokmaPink : Colors.black87,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                  ),
+                                  Builder(builder: (context) {
+                                    final catCartCount = grouped[category]!
+                                        .fold<int>(
+                                            0,
+                                            (sum, item) =>
+                                                sum + _getCartQuantity(item));
+                                    if (catCartCount <= 0)
+                                      return const SizedBox.shrink();
+                                    return Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '$catCartCount',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark
+                                              ? Colors.black
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                            // Items
+                            ...categoryItems.map((item) {
+                              final cartQuantity = _getCartQuantity(item);
+                              return _buildMenuItem(item, cartQuantity,
+                                  isDark: isDark);
+                            }),
+                            // Extra bottom padding for last item
+                            if (index == _categoriesWithoutAll.length - 1)
+                              const SizedBox(height: 120)
+                            else
+                              const SizedBox(height: 16),
+                          ],
+                        ),
+                      );
+                    },
+                    childCount: _categoriesWithoutAll.length,
+                  ),
+                ),
+            ], // slivers end
+          ), // CustomScrollView end
+        ], // Stack children end
+      ), // Stack end
       bottomNavigationBar: (_totalItems > 0 && !_currentEvent.isMenuOnly)
           ? _buildCartBar()
           : null,
@@ -1782,26 +1957,54 @@ if (_selectedCategory.isEmpty) {
   }
 
   String _getCountryFlag(String country) {
-    final lower = country.toLowerCase()
+    final lower = country
+        .toLowerCase()
         .replaceAll('\u0131', 'i') // ı -> i
         .replaceAll('\u00fc', 'u') // ue -> u
         .replaceAll('\u00f6', 'o') // oe -> o
         .replaceAll('\u015f', 's') // s-cedilla -> s
         .replaceAll('\u00e7', 'c') // c-cedilla -> c
         .replaceAll('\u011f', 'g'); // g-breve -> g
-    if (lower.contains('avusturya') || lower.contains('austria') || lower.contains('osterreich') || lower == 'at') return '\u{1F1E6}\u{1F1F9}';
-    if (lower.contains('sirbistan') || lower.contains('serbia') || lower.contains('serbien') || lower == 'rs') return '\u{1F1F7}\u{1F1F8}';
-    if (lower.contains('bulgaristan') || lower.contains('bulgaria') || lower.contains('bulgarien') || lower == 'bg') return '\u{1F1E7}\u{1F1EC}';
-    if (lower.contains('turkiye') || lower.contains('turkey') || lower.contains('turkei') || lower == 'tr') return '\u{1F1F9}\u{1F1F7}';
-    if (lower.contains('hollanda') || lower.contains('netherlands') || lower.contains('niederlande') || lower == 'nl') return '\u{1F1F3}\u{1F1F1}';
-    if (lower.contains('fransa') || lower.contains('france') || lower.contains('frankreich') || lower == 'fr') return '\u{1F1EB}\u{1F1F7}';
-    if (lower.contains('belcika') || lower.contains('belgium') || lower.contains('belgien') || lower == 'be') return '\u{1F1E7}\u{1F1EA}';
-    if (lower.contains('isvicre') || lower.contains('switzerland') || lower.contains('schweiz') || lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
-    if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
+    if (lower.contains('avusturya') ||
+        lower.contains('austria') ||
+        lower.contains('osterreich') ||
+        lower == 'at') return '\u{1F1E6}\u{1F1F9}';
+    if (lower.contains('sirbistan') ||
+        lower.contains('serbia') ||
+        lower.contains('serbien') ||
+        lower == 'rs') return '\u{1F1F7}\u{1F1F8}';
+    if (lower.contains('bulgaristan') ||
+        lower.contains('bulgaria') ||
+        lower.contains('bulgarien') ||
+        lower == 'bg') return '\u{1F1E7}\u{1F1EC}';
+    if (lower.contains('turkiye') ||
+        lower.contains('turkey') ||
+        lower.contains('turkei') ||
+        lower == 'tr') return '\u{1F1F9}\u{1F1F7}';
+    if (lower.contains('hollanda') ||
+        lower.contains('netherlands') ||
+        lower.contains('niederlande') ||
+        lower == 'nl') return '\u{1F1F3}\u{1F1F1}';
+    if (lower.contains('fransa') ||
+        lower.contains('france') ||
+        lower.contains('frankreich') ||
+        lower == 'fr') return '\u{1F1EB}\u{1F1F7}';
+    if (lower.contains('belcika') ||
+        lower.contains('belgium') ||
+        lower.contains('belgien') ||
+        lower == 'be') return '\u{1F1E7}\u{1F1EA}';
+    if (lower.contains('isvicre') ||
+        lower.contains('switzerland') ||
+        lower.contains('schweiz') ||
+        lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
+    if (lower.contains('macaristan') ||
+        lower.contains('hungary') ||
+        lower.contains('ungarn') ||
+        lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
     return '\u{1F1E9}\u{1F1EA}'; // Varsayilan Almanya
   }
 
-Widget _buildHeroSection(BuildContext context) {
+  Widget _buildHeroSection(BuildContext context) {
     return Container(
       height: 440,
       width: double.infinity,
@@ -1812,7 +2015,8 @@ Widget _buildHeroSection(BuildContext context) {
         fit: StackFit.expand,
         children: [
           // Background Image
-          _currentEvent.headerImage != null && _currentEvent.headerImage!.isNotEmpty
+          _currentEvent.headerImage != null &&
+                  _currentEvent.headerImage!.isNotEmpty
               ? CachedNetworkImage(
                   imageUrl: _currentEvent.headerImage!,
                   fit: BoxFit.cover,
@@ -1844,18 +2048,20 @@ Widget _buildHeroSection(BuildContext context) {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildGlassButton(Icons.arrow_back, () => Navigator.pop(context)),
+                _buildGlassButton(
+                    Icons.arrow_back, () => Navigator.pop(context)),
                 Row(
                   children: [
                     _buildGlassButton(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border, 
+                      _isFavorite ? Icons.favorite : Icons.favorite_border,
                       () {
                         HapticFeedback.lightImpact();
                         setState(() {
                           _isFavorite = !_isFavorite;
                         });
                       },
-                      color: _isFavorite ? const Color(0xFFE50055) : Colors.white,
+                      color:
+                          _isFavorite ? const Color(0xFFE50055) : Colors.white,
                     ),
                     const SizedBox(width: 12),
                     _buildGlassButton(Icons.share, () => _shareKermes()),
@@ -1872,45 +2078,85 @@ Widget _buildHeroSection(BuildContext context) {
               left: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: _currentEvent.activeBadgeIds.map((badgeId) {
-                  final badge = _activeBadges![badgeId];
-                  if (badge == null || !badge.isActive) return const SizedBox.shrink();
+                children: () {
+                  bool isTurkey = false;
+                  if (widget.currentPosition != null) {
+                    final lat = widget.currentPosition!.latitude;
+                    final lng = widget.currentPosition!.longitude;
+                    if (lat >= 35.8 &&
+                        lat <= 42.1 &&
+                        lng >= 25.6 &&
+                        lng <= 44.8) isTurkey = true;
+                  }
 
-                  final bgColor = Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
-                  final textColor = Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF')));
+                  final uniqueBadges = <String, KermesBadge>{};
+                  for (final badgeId in _currentEvent.activeBadgeIds) {
+                    KermesBadge? badge = _activeBadges![badgeId];
+                    if (badge == null || !badge.isActive) continue;
 
-                  final hasIcon = badge.iconUrl.isNotEmpty;
+                    String bName = badge.label.toLowerCase();
+                    if (bName.contains('tuna') || bName.contains('toros')) {
+                      if (isTurkey) {
+                        final torosBadge = _activeBadges!.values
+                            .where(
+                                (b) => b.label.toLowerCase().contains('toros'))
+                            .firstOrNull;
+                        if (torosBadge != null) badge = torosBadge;
+                      } else {
+                        final tunaBadge = _activeBadges!.values
+                            .where(
+                                (b) => b.label.toLowerCase().contains('tuna'))
+                            .firstOrNull;
+                        if (tunaBadge != null) badge = tunaBadge;
+                      }
+                    }
+                    uniqueBadges[badge!.id] = badge;
+                  }
 
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      _showBadgeDetailsBottomSheet(badge);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: EdgeInsets.symmetric(
-                                      horizontal: hasIcon ? 4 : 14, vertical: hasIcon ? 4 : 6),
-                      decoration: BoxDecoration(
-                        color: hasIcon ? Colors.transparent : bgColor,
-                        borderRadius: BorderRadius.circular(50),
-                        border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
-                        boxShadow: hasIcon ? null : [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (hasIcon)
-                            ClipRRect(
+                  return uniqueBadges.values.map((badge) {
+                    final bgColor = Color(
+                        int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
+                    final textColor = Color(int.parse(
+                        badge.textColorHex.replaceFirst('#', '0xFF')));
+
+                    final hasIcon = badge.iconUrl.isNotEmpty;
+
+                    return GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        _showBadgeDetailsBottomSheet(badge);
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: hasIcon ? 4 : 14,
+                            vertical: hasIcon ? 4 : 6),
+                        decoration: BoxDecoration(
+                          color: hasIcon ? Colors.transparent : bgColor,
+                          borderRadius: BorderRadius.circular(50),
+                          border: hasIcon
+                              ? null
+                              : Border.all(color: Colors.white24, width: 0.5),
+                          boxShadow: hasIcon
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (hasIcon)
+                              ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
                                 child: CachedNetworkImage(
                                   imageUrl: badge.iconUrl,
-                                  height: 52, // Detay sayfasinda daha net ve buyuk
+                                  height:
+                                      52, // Detay sayfasinda daha net ve buyuk
                                   width: 52,
                                   fit: BoxFit.contain,
                                   placeholder: (context, url) => Container(
@@ -1918,34 +2164,37 @@ Widget _buildHeroSection(BuildContext context) {
                                     height: 52,
                                     width: 52,
                                   ),
-                                  errorWidget: (context, url, error) =>
-                                      Icon(Icons.verified, color: textColor, size: 24),
+                                  errorWidget: (context, url, error) => Icon(
+                                      Icons.verified,
+                                      color: textColor,
+                                      size: 24),
                                 ),
                               )
-                          else ...[
-                            Icon(Icons.verified, color: textColor, size: 15),
-                            const SizedBox(width: 6),
-                            Text(
-                              badge.label.toUpperCase(),
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.8,
+                            else ...[
+                              Icon(Icons.verified, color: textColor, size: 15),
+                              const SizedBox(width: 6),
+                              Text(
+                                badge.label.toUpperCase(),
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.8,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.info_outline,
-                              color: textColor.withOpacity(0.8),
-                              size: 16,
-                            ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.info_outline,
+                                color: textColor.withOpacity(0.8),
+                                size: 16,
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList();
+                }(),
               ),
             ),
 
@@ -1961,7 +2210,8 @@ Widget _buildHeroSection(BuildContext context) {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: primaryRuby.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(20),
@@ -2099,7 +2349,9 @@ Widget _buildHeroSection(BuildContext context) {
                                 color: Colors.white.withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.calendar_today, color: Colors.white.withOpacity(0.9), size: 18),
+                              child: Icon(Icons.calendar_today,
+                                  color: Colors.white.withOpacity(0.9),
+                                  size: 18),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -2186,7 +2438,9 @@ Widget _buildHeroSection(BuildContext context) {
                                 color: Colors.white.withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.schedule, color: Colors.white.withOpacity(0.9), size: 18),
+                              child: Icon(Icons.schedule,
+                                  color: Colors.white.withOpacity(0.9),
+                                  size: 18),
                             ),
                           ],
                         ),
@@ -2202,7 +2456,8 @@ Widget _buildHeroSection(BuildContext context) {
     );
   }
 
-  Widget _buildGlassButton(IconData icon, VoidCallback onTap, {Color color = Colors.white}) {
+  Widget _buildGlassButton(IconData icon, VoidCallback onTap,
+      {Color color = Colors.white}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -2228,7 +2483,9 @@ Widget _buildHeroSection(BuildContext context) {
   Widget _buildFeaturesRow() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white.withOpacity(0.9) : Colors.black87;
-    final bg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final bg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -2246,14 +2503,14 @@ Widget _buildHeroSection(BuildContext context) {
               ),
               child: Row(
                 children: [
-                   if (f.iconUrl != null && f.iconUrl!.isNotEmpty) ...[
-                     CachedNetworkImage(
-                       imageUrl: f.iconUrl!,
-                       width: 14,
-                       height: 14,
-                     ),
-                     const SizedBox(width: 8),
-                   ] else if (f.icon.isNotEmpty) ...[
+                  if (f.iconUrl != null && f.iconUrl!.isNotEmpty) ...[
+                    CachedNetworkImage(
+                      imageUrl: f.iconUrl!,
+                      width: 14,
+                      height: 14,
+                    ),
+                    const SizedBox(width: 8),
+                  ] else if (f.icon.isNotEmpty) ...[
                     Text(f.icon, style: const TextStyle(fontSize: 14)),
                     const SizedBox(width: 8),
                   ],
@@ -2279,15 +2536,25 @@ Widget _buildHeroSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
-    final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final subtleTextColor =
+        isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final dividerBg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2307,7 +2574,8 @@ Widget _buildHeroSection(BuildContext context) {
                         shape: BoxShape.circle,
                         border: Border.all(color: dividerBg),
                       ),
-                      child: Icon(Icons.location_on, color: textColor, size: 20),
+                      child:
+                          Icon(Icons.location_on, color: textColor, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -2343,7 +2611,8 @@ Widget _buildHeroSection(BuildContext context) {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: dividerBg,
                       border: Border.all(color: dividerBg),
@@ -2381,7 +2650,8 @@ Widget _buildHeroSection(BuildContext context) {
           Text(
             [
               if (_currentEvent.address.isNotEmpty) _currentEvent.address,
-              if (_currentEvent.postalCode.isNotEmpty || _currentEvent.city.isNotEmpty)
+              if (_currentEvent.postalCode.isNotEmpty ||
+                  _currentEvent.city.isNotEmpty)
                 '${_currentEvent.postalCode} ${_currentEvent.city}'.trim(),
               if (_currentEvent.state?.isNotEmpty == true) _currentEvent.state!,
               if (_currentEvent.country.isNotEmpty) _currentEvent.country,
@@ -2433,7 +2703,8 @@ Widget _buildHeroSection(BuildContext context) {
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
-                        builder: (_) => KermesParkingScreen(event: _currentEvent),
+                        builder: (_) =>
+                            KermesParkingScreen(event: _currentEvent),
                       );
                     },
                     child: Container(
@@ -2445,7 +2716,8 @@ Widget _buildHeroSection(BuildContext context) {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.local_parking, color: const Color(0xFF2196F3), size: 16),
+                          Icon(Icons.local_parking,
+                              color: const Color(0xFF2196F3), size: 16),
                           const SizedBox(width: 6),
                           Text(
                             'Park Bilgisi',
@@ -2472,8 +2744,11 @@ Widget _buildHeroSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
-    final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final subtleTextColor =
+        isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final dividerBg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return GestureDetector(
       onTap: () {
@@ -2490,7 +2765,14 @@ Widget _buildHeroSection(BuildContext context) {
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4))
+                ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -2499,11 +2781,13 @@ Widget _buildHeroSection(BuildContext context) {
               child: Opacity(
                 opacity: 0.5,
                 child: CachedNetworkImage(
-                  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCghDSwUkHQ0hd_B-McJJ4fZPGP8zjK929y42shgv2J-MhJ392FInWVjplw_iuK_8Us9DBl_U8KTvA_Ta8idIJiKv_mnOJBrLM_A9DJmJYQA5p0PG-nI6sW97x-t_mZlqnsqwl9JFl73dwWa--SMG6BWh3zFYa31muxxpjbsG95nxmIWM6pz_B_90aqy3LThEiqT5dvrKWS3KmdN9GFxNmQo0oEx3uX6n4BA_0EGwpo6KT0wuFf9qJ6XjOUlIn9_HK_uE8PQkwHbrae',
+                  imageUrl:
+                      'https://lh3.googleusercontent.com/aida-public/AB6AXuCghDSwUkHQ0hd_B-McJJ4fZPGP8zjK929y42shgv2J-MhJ392FInWVjplw_iuK_8Us9DBl_U8KTvA_Ta8idIJiKv_mnOJBrLM_A9DJmJYQA5p0PG-nI6sW97x-t_mZlqnsqwl9JFl73dwWa--SMG6BWh3zFYa31muxxpjbsG95nxmIWM6pz_B_90aqy3LThEiqT5dvrKWS3KmdN9GFxNmQo0oEx3uX6n4BA_0EGwpo6KT0wuFf9qJ6XjOUlIn9_HK_uE8PQkwHbrae',
                   fit: BoxFit.cover,
                   color: isDark ? Colors.grey : Colors.grey.shade400,
                   colorBlendMode: BlendMode.saturation,
-                  errorWidget: (context, url, error) => Container(color: cardBg),
+                  errorWidget: (context, url, error) =>
+                      Container(color: cardBg),
                 ),
               ),
             ),
@@ -2518,59 +2802,60 @@ Widget _buildHeroSection(BuildContext context) {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     mainAxisAlignment: MainAxisAlignment.center,
-                     children: [
-                       Row(
-                         children: [
-                           const Text(
-                             'OTOPARK DURUMU',
-                             style: TextStyle(
-                               color: Color(0xFF4ADE80),
-                               fontSize: 10,
-                               fontWeight: FontWeight.bold,
-                               letterSpacing: 1,
-                             ),
-                           ),
-                           const SizedBox(width: 8),
-                           Container(
-                             width: 6,
-                             height: 6,
-                             decoration: const BoxDecoration(
-                               color: Color(0xFF4ADE80),
-                               shape: BoxShape.circle,
-                             ),
-                           ),
-                         ],
-                       ),
-                       const SizedBox(height: 4),
-                       Text(
-                         'Park Bilgisi',
-                         style: TextStyle(
-                           color: textColor,
-                           fontSize: 18,
-                           fontWeight: FontWeight.bold,
-                           letterSpacing: -0.5,
-                         ),
-                       ),
-                       const SizedBox(height: 4),
-                       Row(
-                         children: [
-                           Text(
-                             'Boş Yer: ',
-                             style: TextStyle(color: subtleTextColor, fontSize: 12),
-                           ),
-                           Text(
-                             '150+',
-                             style: TextStyle(
-                               color: textColor,
-                               fontSize: 12,
-                               fontWeight: FontWeight.bold,
-                             ),
-                           ),
-                         ],
-                       ),
-                     ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'OTOPARK DURUMU',
+                            style: TextStyle(
+                              color: Color(0xFF4ADE80),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF4ADE80),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Park Bilgisi',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            'Boş Yer: ',
+                            style:
+                                TextStyle(color: subtleTextColor, fontSize: 12),
+                          ),
+                          Text(
+                            '150+',
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   Container(
                     width: 48,
@@ -2580,7 +2865,8 @@ Widget _buildHeroSection(BuildContext context) {
                       shape: BoxShape.circle,
                       border: Border.all(color: dividerBg),
                     ),
-                    child: Icon(Icons.local_parking, color: textColor.withOpacity(0.8), size: 24),
+                    child: Icon(Icons.local_parking,
+                        color: textColor.withOpacity(0.8), size: 24),
                   ),
                 ],
               ),
@@ -2592,7 +2878,20 @@ Widget _buildHeroSection(BuildContext context) {
   }
 
   String _formatDateShort(DateTime date) {
-    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+    const months = [
+      'Oca',
+      'Şub',
+      'Mar',
+      'Nis',
+      'May',
+      'Haz',
+      'Tem',
+      'Ağu',
+      'Eyl',
+      'Eki',
+      'Kas',
+      'Ara'
+    ];
     return '${date.day} ${months[date.month - 1]}';
   }
 
@@ -2602,12 +2901,18 @@ Widget _buildHeroSection(BuildContext context) {
     Color iconColor;
     switch (iconCode.substring(0, 2)) {
       case '01': // clear sky
-        icon = iconCode.endsWith('n') ? Icons.nightlight_round : Icons.wb_sunny_rounded;
-        iconColor = color ?? (iconCode.endsWith('n') ? Colors.blueGrey : Colors.amber);
+        icon = iconCode.endsWith('n')
+            ? Icons.nightlight_round
+            : Icons.wb_sunny_rounded;
+        iconColor =
+            color ?? (iconCode.endsWith('n') ? Colors.blueGrey : Colors.amber);
         break;
       case '02': // few clouds
-        icon = iconCode.endsWith('n') ? Icons.nights_stay_rounded : Icons.cloud_queue_rounded;
-        iconColor = color ?? (iconCode.endsWith('n') ? Colors.blueGrey : Colors.amber.shade700);
+        icon = iconCode.endsWith('n')
+            ? Icons.nights_stay_rounded
+            : Icons.cloud_queue_rounded;
+        iconColor = color ??
+            (iconCode.endsWith('n') ? Colors.blueGrey : Colors.amber.shade700);
         break;
       case '03': // scattered clouds
         icon = Icons.cloud_rounded;
@@ -2644,19 +2949,29 @@ Widget _buildHeroSection(BuildContext context) {
     return Icon(icon, size: size, color: iconColor);
   }
 
-    Widget _buildAdminAndContactCard() {
+  Widget _buildAdminAndContactCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
-    final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final subtleTextColor =
+        isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final dividerBg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2715,7 +3030,9 @@ Widget _buildHeroSection(BuildContext context) {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.black.withOpacity(0.03),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -2727,7 +3044,8 @@ Widget _buildHeroSection(BuildContext context) {
                       color: Colors.green.withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.phone, color: Colors.green, size: 20),
+                    child:
+                        const Icon(Icons.phone, color: Colors.green, size: 20),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -2767,8 +3085,11 @@ Widget _buildHeroSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
-    final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final subtleTextColor =
+        isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final dividerBg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
     final accentBlue = const Color(0xFF2563EB);
 
     if (_isLoadingWeather) {
@@ -2783,16 +3104,21 @@ Widget _buildHeroSection(BuildContext context) {
             Row(
               children: [
                 Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(color: dividerBg, shape: BoxShape.circle),
-                  child: const Icon(Icons.wb_sunny, color: Colors.amber, size: 20),
+                  width: 40,
+                  height: 40,
+                  decoration:
+                      BoxDecoration(color: dividerBg, shape: BoxShape.circle),
+                  child:
+                      const Icon(Icons.wb_sunny, color: Colors.amber, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text('Hava durumu yukleniyor...', style: TextStyle(color: subtleTextColor, fontSize: 13)),
+                Text('Hava durumu yukleniyor...',
+                    style: TextStyle(color: subtleTextColor, fontSize: 13)),
               ],
             ),
             const SizedBox(height: 16),
-            LinearProgressIndicator(color: accentBlue, backgroundColor: dividerBg),
+            LinearProgressIndicator(
+                color: accentBlue, backgroundColor: dividerBg),
           ],
         ),
       );
@@ -2804,7 +3130,7 @@ Widget _buildHeroSection(BuildContext context) {
 
     // Etkinlik gunleri icin filtrelenecek
     final dailySummaries = _weatherForecast?.getDailySummaries() ?? [];
-    
+
     // Sadece etkinlik gunlerine denk gelen tahminleri filtrele
     final eventDailySummaries = dailySummaries.where((day) {
       final dayDate = DateTime(day.date.year, day.date.month, day.date.day);
@@ -2815,8 +3141,9 @@ Widget _buildHeroSection(BuildContext context) {
 
     // Bugunun saatlik tahminleri (etkinlik suresi icindeyse)
     final todayHourly = _weatherForecast?.getHourlyForDay(now) ?? [];
-    final isEventDay = !now.isBefore(DateTime(start.year, start.month, start.day)) && 
-                       !now.isAfter(DateTime(end.year, end.month, end.day));
+    final isEventDay =
+        !now.isBefore(DateTime(start.year, start.month, start.day)) &&
+            !now.isAfter(DateTime(end.year, end.month, end.day));
 
     // Hava durumu bulunabilir mi?
     final hasForecast = eventDailySummaries.isNotEmpty;
@@ -2824,7 +3151,9 @@ Widget _buildHeroSection(BuildContext context) {
     // Kermesin kacinci gunu
     int _getEventDayNumber(DateTime date) {
       return DateTime(date.year, date.month, date.day)
-          .difference(DateTime(start.year, start.month, start.day)).inDays + 1;
+              .difference(DateTime(start.year, start.month, start.day))
+              .inDays +
+          1;
     }
 
     return Container(
@@ -2832,7 +3161,14 @@ Widget _buildHeroSection(BuildContext context) {
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2843,12 +3179,14 @@ Widget _buildHeroSection(BuildContext context) {
               // Anlık hava durumu varsa: büyük derece ortada, ikon sağ üstte
               if (_currentWeather != null)
                 SizedBox(
-                  width: 58, height: 58,
+                  width: 58,
+                  height: 58,
                   child: Stack(
                     children: [
                       // Arka plan daire
                       Container(
-                        width: 58, height: 58,
+                        width: 58,
+                        height: 58,
                         decoration: BoxDecoration(
                           color: dividerBg,
                           shape: BoxShape.circle,
@@ -2866,15 +3204,19 @@ Widget _buildHeroSection(BuildContext context) {
                       ),
                       // Sağ üst köşede hava ikonu
                       Positioned(
-                        top: 0, right: 0,
+                        top: 0,
+                        right: 0,
                         child: Container(
-                          width: 22, height: 22,
+                          width: 22,
+                          height: 22,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                            color:
+                                isDark ? const Color(0xFF2A2A2A) : Colors.white,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: _weatherIcon(_currentWeather!.icon, size: 14),
+                            child:
+                                _weatherIcon(_currentWeather!.icon, size: 14),
                           ),
                         ),
                       ),
@@ -2883,12 +3225,15 @@ Widget _buildHeroSection(BuildContext context) {
                 )
               else
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: [Colors.amber, Colors.orange]),
+                    gradient:
+                        LinearGradient(colors: [Colors.amber, Colors.orange]),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 20),
+                  child: const Icon(Icons.wb_sunny_rounded,
+                      color: Colors.white, size: 20),
                 ),
               const SizedBox(width: 12),
               Expanded(
@@ -2931,19 +3276,24 @@ Widget _buildHeroSection(BuildContext context) {
               ),
               child: Column(
                 children: [
-                  Icon(Icons.cloud_off_outlined, color: subtleTextColor, size: 40),
+                  Icon(Icons.cloud_off_outlined,
+                      color: subtleTextColor, size: 40),
                   const SizedBox(height: 12),
                   Text(
                     'Hava durumu henuz mevcut degil',
-                    style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: textColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     now.isBefore(start)
-                      ? 'Etkinlik yaklaştıkca hava durumu burada görünecek. Tahminler genellikle 5 gün öncesinden itibaren mevcut olur.'
-                      : 'Kermes alani icin hava durumu verisi alinamadi.',
+                        ? 'Etkinlik yaklaştıkca hava durumu burada görünecek. Tahminler genellikle 5 gün öncesinden itibaren mevcut olur.'
+                        : 'Kermes alani icin hava durumu verisi alinamadi.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: subtleTextColor, fontSize: 12, height: 1.5),
+                    style: TextStyle(
+                        color: subtleTextColor, fontSize: 12, height: 1.5),
                   ),
                 ],
               ),
@@ -2957,18 +3307,26 @@ Widget _buildHeroSection(BuildContext context) {
               children: [
                 Text(
                   'BUGÜN',
-                  style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+                  style: TextStyle(
+                      color: subtleTextColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'Kermesin ${_getEventDayNumber(now)}. Günü',
-                    style: const TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                        color: Colors.green,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
@@ -2986,21 +3344,28 @@ Widget _buildHeroSection(BuildContext context) {
                   final isNow = h.dateTime.hour == now.hour;
                   return Container(
                     width: 64,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                     decoration: BoxDecoration(
                       color: isNow ? accentBlue.withOpacity(0.15) : dividerBg,
                       borderRadius: BorderRadius.circular(14),
-                      border: isNow ? Border.all(color: accentBlue.withOpacity(0.4), width: 1.5) : null,
+                      border: isNow
+                          ? Border.all(
+                              color: accentBlue.withOpacity(0.4), width: 1.5)
+                          : null,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          isNow ? 'Simdi' : '${h.dateTime.hour.toString().padLeft(2, '0')}:00',
+                          isNow
+                              ? 'Simdi'
+                              : '${h.dateTime.hour.toString().padLeft(2, '0')}:00',
                           style: TextStyle(
                             color: isNow ? accentBlue : subtleTextColor,
                             fontSize: 11,
-                            fontWeight: isNow ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight:
+                                isNow ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                         _weatherIcon(h.icon, size: 28),
@@ -3025,20 +3390,28 @@ Widget _buildHeroSection(BuildContext context) {
             const SizedBox(height: 20),
             Text(
               'ETKİNLİK GÜNLERİ',
-              style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+              style: TextStyle(
+                  color: subtleTextColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2),
             ),
             const SizedBox(height: 12),
             ...eventDailySummaries.map((day) {
               final dayNum = _getEventDayNumber(day.date);
-              final isToday = day.date.year == now.year && day.date.month == now.month && day.date.day == now.day;
-              
+              final isToday = day.date.year == now.year &&
+                  day.date.month == now.month &&
+                  day.date.day == now.day;
+
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: isToday ? accentBlue.withOpacity(0.08) : dividerBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: isToday ? Border.all(color: accentBlue.withOpacity(0.3)) : null,
+                  border: isToday
+                      ? Border.all(color: accentBlue.withOpacity(0.3))
+                      : null,
                 ),
                 child: Column(
                   children: [
@@ -3054,12 +3427,18 @@ Widget _buildHeroSection(BuildContext context) {
                                 children: [
                                   Text(
                                     '${day.date.day} ${_formatDateShort(day.date).split(' ').last}',
-                                    style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w700),
+                                    style: TextStyle(
+                                        color: textColor,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     _getTurkishDayName(day.date),
-                                    style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                        color: subtleTextColor,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
@@ -3067,15 +3446,22 @@ Widget _buildHeroSection(BuildContext context) {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 1),
                                     decoration: BoxDecoration(
-                                      color: isToday ? Colors.green.withOpacity(0.15) : Colors.orange.withOpacity(0.12),
+                                      color: isToday
+                                          ? Colors.green.withOpacity(0.15)
+                                          : Colors.orange.withOpacity(0.12),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      isToday ? 'Bugün - ${dayNum}. Gün' : '${dayNum}. Gün',
+                                      isToday
+                                          ? 'Bugün - ${dayNum}. Gün'
+                                          : '${dayNum}. Gün',
                                       style: TextStyle(
-                                        color: isToday ? Colors.green : Colors.orange,
+                                        color: isToday
+                                            ? Colors.green
+                                            : Colors.orange,
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -3084,7 +3470,10 @@ Widget _buildHeroSection(BuildContext context) {
                                   const SizedBox(width: 8),
                                   Text(
                                     day.description,
-                                    style: TextStyle(color: subtleTextColor, fontSize: 12, fontWeight: FontWeight.w500),
+                                    style: TextStyle(
+                                        color: subtleTextColor,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
@@ -3103,11 +3492,17 @@ Widget _buildHeroSection(BuildContext context) {
                               children: [
                                 Text(
                                   '${day.maxTemperature.round()}°',
-                                  style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w800),
+                                  style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800),
                                 ),
                                 Text(
                                   '${day.minTemperature.round()}°',
-                                  style: TextStyle(color: subtleTextColor, fontSize: 13, fontWeight: FontWeight.w500),
+                                  style: TextStyle(
+                                      color: subtleTextColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -3118,9 +3513,12 @@ Widget _buildHeroSection(BuildContext context) {
                     const SizedBox(height: 8),
                     // Detay satiri: Ruzgar + Yagis
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
+                        color: isDark
+                            ? Colors.white.withOpacity(0.03)
+                            : Colors.black.withOpacity(0.03),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -3133,7 +3531,10 @@ Widget _buildHeroSection(BuildContext context) {
                               const SizedBox(width: 4),
                               Text(
                                 '${day.avgWindSpeed.round()} km/h',
-                                style: TextStyle(color: subtleTextColor, fontSize: 12, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                    color: subtleTextColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -3143,14 +3544,18 @@ Widget _buildHeroSection(BuildContext context) {
                             children: [
                               Icon(
                                 Icons.water_drop,
-                                color: day.maxRainProbability > 50 ? Colors.blue : subtleTextColor,
+                                color: day.maxRainProbability > 50
+                                    ? Colors.blue
+                                    : subtleTextColor,
                                 size: 14,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${day.maxRainProbability.round()}%',
                                 style: TextStyle(
-                                  color: day.maxRainProbability > 50 ? Colors.blue : subtleTextColor,
+                                  color: day.maxRainProbability > 50
+                                      ? Colors.blue
+                                      : subtleTextColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -3174,8 +3579,11 @@ Widget _buildHeroSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
-    final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final subtleTextColor =
+        isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final dividerBg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -3183,7 +3591,14 @@ Widget _buildHeroSection(BuildContext context) {
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3211,13 +3626,13 @@ Widget _buildHeroSection(BuildContext context) {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                          _currentEvent.contactName ?? 'Kermes Yetkilisi',
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      _currentEvent.contactName ?? 'Kermes Yetkilisi',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Sorulariniz icin iletisime gecebilirsiniz.',
@@ -3241,8 +3656,11 @@ Widget _buildHeroSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
-    final dividerBg = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final subtleTextColor =
+        isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final dividerBg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -3250,7 +3668,14 @@ Widget _buildHeroSection(BuildContext context) {
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3316,7 +3741,8 @@ Widget _buildHeroSection(BuildContext context) {
                       color: Color(0x1A22C55E),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.phone, color: Color(0xFF4ADE80), size: 20),
+                    child: const Icon(Icons.phone,
+                        color: Color(0xFF4ADE80), size: 20),
                   ),
                   const SizedBox(width: 16),
                   Column(
@@ -3331,9 +3757,9 @@ Widget _buildHeroSection(BuildContext context) {
                         ),
                       ),
                       const SizedBox(height: 2),
-                       Text(
+                      Text(
                         '+49 163 123 4567',
-                         style: TextStyle(
+                        style: TextStyle(
                           color: textColor,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -3349,7 +3775,6 @@ Widget _buildHeroSection(BuildContext context) {
       ),
     );
   }
-
 
   Widget _buildCartBar() {
     final cartTotal = _totalPrice;
@@ -3499,8 +3924,7 @@ Widget _buildHeroSection(BuildContext context) {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black
-                          .withOpacity(size == 36 ? 0.1 : 0.05),
+                      color: Colors.black.withOpacity(size == 36 ? 0.1 : 0.05),
                       blurRadius: size == 36 ? 6 : 4,
                       offset: const Offset(0, 2),
                     ),
@@ -3585,14 +4009,20 @@ Widget _buildHeroSection(BuildContext context) {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.tune_rounded, size: 13, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                              Icon(Icons.tune_rounded,
+                                  size: 13,
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600]),
                               const SizedBox(width: 4),
                               Text(
                                 'Secenekli',
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w500,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                                 ),
                               ),
                             ],
@@ -3607,7 +4037,9 @@ Widget _buildHeroSection(BuildContext context) {
                             child: Text(
                               item.description!,
                               style: TextStyle(
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                                 height: 1.3,
