@@ -28,9 +28,11 @@ interface KermesRosterTabProps {
   kermesEnd: string; // YYYY-MM-DD
   isSuperAdmin?: boolean;
   adminGender?: string;
+  kermesSections?: any[];
+  customRoles?: any[];
 }
 
-export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceStaff, adminUid, kermesStart, kermesEnd, isSuperAdmin, adminGender }: KermesRosterTabProps) {
+export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceStaff, adminUid, kermesStart, kermesEnd, isSuperAdmin, adminGender, kermesSections = [], customRoles = [] }: KermesRosterTabProps) {
   const t = useTranslations('Kermes');
   
   const [rosters, setRosters] = useState<KermesRoster[]>([]);
@@ -289,21 +291,32 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     return acc;
   }, {} as Record<string, KermesRoster[]>);
 
-  // Default Roles to offer
-  const defaultRoles = [
-    'Genel Sorumlu',
-    'Garson',
-    'Sürücü / Nakliye',
-    'Güvenlik',
-    'Temizlik',
-    'Park Görevlisi',
-    'Çocuk Bakıcısı',
-    'VIP Görevlisi',
-    'Ocakbaşı - Kumpir',
-    'Tatlı Standı',
-    'İçecek Standı',
-    'Gözleme'
-  ];
+  // Default Roles based on Kermes configuration
+  const dynamicFoodRoles = React.useMemo(() => {
+    if (!kermesSections || kermesSections.length === 0) {
+      return ['Ocakbaşı - Kumpir', 'Tatlı Standı', 'İçecek Standı', 'Gözleme'];
+    }
+    const roles: string[] = [];
+    kermesSections.forEach(sec => {
+      if (sec.prepZones) {
+        sec.prepZones.forEach((pz: string) => {
+          if (!roles.includes(pz)) roles.push(pz);
+        });
+      }
+    });
+    return roles.length > 0 ? roles : ['Ocakbaşı - Kumpir', 'Tatlı Standı', 'İçecek Standı', 'Gözleme'];
+  }, [kermesSections]);
+
+  const dynamicSahaRoles = React.useMemo(() => {
+    if (!customRoles || customRoles.length === 0) {
+       return ['Genel Sorumlu', 'Garson', 'Sürücü / Nakliye', 'Güvenlik', 'Temizlik', 'Park Görevlisi', 'Çocuk Bakıcısı', 'VIP Görevlisi'];
+    }
+    const base = ['Genel Sorumlu', 'Garson', 'Sürücü / Nakliye'];
+    const crNames = customRoles.map(cr => cr.name);
+    return [...base, ...crNames.filter(n => !base.includes(n))];
+  }, [customRoles]);
+
+  const defaultRoles = [...dynamicSahaRoles, ...dynamicFoodRoles];
 
   // Helper function to format minutes to HH:MM
   const minsToTime = (mins: number) => {
@@ -491,12 +504,12 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
             >
               <option value="">Seçiniz</option>
               <optgroup label="Saha & Lojistik Görevleri">
-                {defaultRoles.filter(r => !['Ocakbaşı - Kumpir', 'Gözleme', 'Tatlı Standı', 'İçecek Standı'].includes(r)).map(r => (
+                {dynamicSahaRoles.map(r => (
                   <option key={r} value={r}>{r}</option>
                 ))}
               </optgroup>
               <optgroup label="Stand & Mutfak Bölümleri">
-                {defaultRoles.filter(r => ['Ocakbaşı - Kumpir', 'Gözleme', 'Tatlı Standı', 'İçecek Standı'].includes(r)).map(r => (
+                {dynamicFoodRoles.map(r => (
                   <option key={r} value={r}>{r}</option>
                 ))}
               </optgroup>

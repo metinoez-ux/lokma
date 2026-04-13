@@ -6386,6 +6386,8 @@ export default function KermesDetailPage() {
     kermesEnd={editForm.endDate}
     isSuperAdmin={isSuperAdmin}
     adminGender={admin?.gender || admin?.profile?.gender || 'unknown'}
+    kermesSections={editForm.tableSectionsV2 || []}
+    customRoles={[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])]}
   />
  )}
 
