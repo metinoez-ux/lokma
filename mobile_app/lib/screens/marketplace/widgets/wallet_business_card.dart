@@ -72,23 +72,35 @@ class WalletBusinessCard extends ConsumerWidget {
           });
         }
       }
+
+      // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
+      if (activeBadges.isEmpty) {
+        if (data['sellsTunaProducts'] == true || data['brand'] == 'tuna' || isTunaPartner) {
+          try {
+            final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('tuna'));
+            activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
+          } catch (e) {
+            activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
+          }
+        }
+        if (data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros') {
+          try {
+            final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('toros'));
+            activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
+          } catch (e) {
+            activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': '', 'isLegacyToros': true});
+          }
+        }
+      }
     });
 
-    // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
-    if (activeBadges.isEmpty) {
-      if (data['sellsTunaProducts'] == true || data['brand'] == 'tuna') {
-        activeBadges.add({
-          'name': 'TUNA',
-          'iconUrl': '', // Handled by legacy block
-          'isLegacyTuna': true,
-        });
+    // In case whenData hasn't executed synchronously (loading state)
+    if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
+      if (data['sellsTunaProducts'] == true || data['brand'] == 'tuna' || isTunaPartner) {
+        activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
       }
       if (data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros') {
-        activeBadges.add({
-          'name': 'Akdeniz Toros',
-          'iconUrl': '',
-          'isLegacyToros': true,
-        });
+        activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': '', 'isLegacyToros': true});
       }
     }
 
@@ -756,12 +768,12 @@ class WalletBusinessCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(8),
                                   child: CachedNetworkImage(
                                     imageUrl: badge['iconUrl'],
-                                    height: 28, // a bit bigger if it's the only thing
+                                    height: 38, // Match kermes card size
                                     fit: BoxFit.contain,
                                     placeholder: (context, url) => Container(
                                       color: Colors.transparent,
-                                      height: 28,
-                                      width: 28,
+                                      height: 38,
+                                      width: 38,
                                     ),
                                     errorWidget: (context, url, error) =>
                                         Icon(Icons.verified, color: textColor, size: 14),
