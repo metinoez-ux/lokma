@@ -41,6 +41,30 @@ export default function PlatformBrandsPage() {
 
   const [migrating, setMigrating] = useState(false);
 
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const openNewForm = () => {
+    setIsEditMode(false);
+    setEditingId(null);
+    setNewBadge({ name: '', description: '', colorHex: '#EEEEEE', textColorHex: '#000000', isActive: true, file: null });
+    setShowUploadModal(true);
+  };
+
+  const openEditForm = (badge: PlatformBrand) => {
+    setIsEditMode(true);
+    setEditingId(badge.id);
+    setNewBadge({ 
+      name: badge.name, 
+      description: badge.description || '', 
+      colorHex: badge.colorHex || '#EEEEEE', 
+      textColorHex: badge.textColorHex || '#000000', 
+      isActive: badge.isActive, 
+      file: null 
+    });
+    setShowUploadModal(true);
+  };
+
   const loadBadges = async () => {
     setLoading(true);
     try {
@@ -68,35 +92,58 @@ export default function PlatformBrandsPage() {
     }
   };
 
-  const handleUpload = async () => {
-    if (!newBadge.file || !newBadge.name || !admin) return;
+  const handleSave = async () => {
+    if (!newBadge.name || !admin) return;
+    if (!isEditMode && !newBadge.file) return;
 
     setUploading(true);
     try {
-      const fileName = `platform-brands/${Date.now()}_${newBadge.file.name}`;
-      const storageRef = ref(storage, fileName);
-      await uploadBytes(storageRef, newBadge.file, { cacheControl: 'public, max-age=31536000' });
-      const downloadUrl = await getDownloadURL(storageRef);
+      let downloadUrl = '';
+      let storagePath = '';
+      
+      // Resim degisti ise yukle
+      if (newBadge.file) {
+        const fileName = `platform-brands/${Date.now()}_${newBadge.file.name}`;
+        const storageRef = ref(storage, fileName);
+        await uploadBytes(storageRef, newBadge.file, { cacheControl: 'public, max-age=31536000' });
+        downloadUrl = await getDownloadURL(storageRef);
+        storagePath = fileName;
+      }
 
-      await addDoc(collection(db, 'platform_brands'), {
-        name: newBadge.name,
-        label: newBadge.name, // compatibility
-        description: newBadge.description,
-        iconUrl: downloadUrl,
-        storagePath: fileName,
-        colorHex: newBadge.colorHex,
-        textColorHex: newBadge.textColorHex,
-        isActive: newBadge.isActive,
-        createdAt: serverTimestamp(),
-        createdBy: admin.id,
-      });
+      if (isEditMode && editingId) {
+        const updateData: any = {
+          name: newBadge.name,
+          label: newBadge.name,
+          description: newBadge.description,
+          colorHex: newBadge.colorHex,
+          textColorHex: newBadge.textColorHex,
+        };
+        if (downloadUrl) {
+          updateData.iconUrl = downloadUrl;
+          updateData.storagePath = storagePath;
+        }
+        await updateDoc(doc(db, 'platform_brands', editingId), updateData);
+      } else {
+        await addDoc(collection(db, 'platform_brands'), {
+          name: newBadge.name,
+          label: newBadge.name, // compatibility
+          description: newBadge.description,
+          iconUrl: downloadUrl,
+          storagePath: storagePath,
+          colorHex: newBadge.colorHex,
+          textColorHex: newBadge.textColorHex,
+          isActive: newBadge.isActive,
+          createdAt: serverTimestamp(),
+          createdBy: admin.id,
+        });
+      }
 
       setNewBadge({ name: '', description: '', colorHex: '#EEEEEE', textColorHex: '#000000', isActive: true, file: null });
       setShowUploadModal(false);
       loadBadges();
     } catch (error) {
-      console.error('Error uploading brand/badge:', error);
-      alert('Yüklenirken hata oluştu.');
+      console.error('Error saving brand/badge:', error);
+      alert('Kaydedilirken hata oluştu.');
     } finally {
       setUploading(false);
     }
@@ -192,7 +239,7 @@ export default function PlatformBrandsPage() {
               </button>
             )}
             <button
-              onClick={() => setShowUploadModal(true)}
+              onClick={openNewForm}
               className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
             >
               <span>➕</span>
@@ -207,12 +254,12 @@ export default function PlatformBrandsPage() {
           <div className="bg-card rounded-xl p-12 text-center border border-border">
             <div className="text-6xl mb-4">🌍</div>
             <h2 className="text-xl font-bold text-foreground mb-2">Henüz marka veya sertifika eklenmemiş</h2>
-            <button onClick={() => setShowUploadModal(true)} className="mt-4 px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg">İlk Markayı Ekle</button>
+            <button onClick={openNewForm} className="mt-4 px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg">İlk Markayı Ekle</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {badges.map((badge) => (
-              <div key={badge.id} className="bg-card rounded-xl overflow-hidden border border-border hover:border-pink-500 transition group p-4 flex flex-col">
+              <div key={badge.id} className="bg-card rounded-xl overflow-hidden border border-border hover:border-pink-500 transition group p-4 flex flex-col relative">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="relative w-16 h-16 bg-background rounded-lg border border-border overflow-hidden shrink-0 p-1 flex items-center justify-center" style={{ backgroundColor: badge.colorHex || '#EEEEEE' }}>
                     <Image src={badge.iconUrl} alt={badge.name} width={50} height={50} className="object-contain max-h-full max-w-full" unoptimized />
@@ -229,6 +276,9 @@ export default function PlatformBrandsPage() {
                   <button onClick={() => toggleBadgeStatus(badge)} className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${badge.isActive ? 'bg-gray-700 text-white' : 'bg-green-600 text-white'}`}>
                     {badge.isActive ? 'Gizle' : 'Göster'}
                   </button>
+                  <button onClick={() => openEditForm(badge)} className="px-3 py-2 bg-blue-600/20 text-blue-500 hover:bg-blue-600 hover:text-white rounded-lg text-sm font-medium flex items-center gap-1">
+                    ✏️ Edit
+                  </button>
                   <button onClick={() => setConfirmDeleteBadge(badge)} className="px-3 py-2 bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white rounded-lg text-sm">
                     🗑️
                   </button>
@@ -239,24 +289,29 @@ export default function PlatformBrandsPage() {
         )}
       </div>
 
-      {/* Upload Modal */}
+      {/* Upload/Edit Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-2xl w-full max-w-lg p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-foreground">Yeni Sistem Markası / Sertifika</h2>
+              <h2 className="text-xl font-bold text-foreground">{isEditMode ? 'Markayı Düzenle' : 'Yeni Sistem Markası / Sertifika'}</h2>
               <button onClick={() => setShowUploadModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
             </div>
 
             <div className="mb-4">
-              <label className="block text-foreground text-sm font-medium mb-2">Marka İkonu (Şeffaf PNG önerilir)</label>
+              <label className="block text-foreground text-sm font-medium mb-2">Marka İkonu (Şeffaf yüksek çözünürlüklü PNG önerilir)</label>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-              <button onClick={() => fileInputRef.current?.click()} className="w-full h-32 border-2 border-dashed border-gray-600 rounded-xl hover:border-pink-500 transition flex flex-col items-center justify-center gap-2">
+              <button onClick={() => fileInputRef.current?.click()} className={`w-full h-32 border-2 border-dashed border-gray-600 rounded-xl hover:border-pink-500 transition flex flex-col items-center justify-center gap-2 ${isEditMode && !newBadge.file ? 'bg-gray-800' : ''}`}>
                 {newBadge.file ? (
                   <div className="text-center">
                     <span className="text-pink-400 text-3xl">✅</span>
                     <p className="text-foreground mt-1">{newBadge.file.name}</p>
                   </div>
+                ) : isEditMode ? (
+                  <>
+                    <span className="text-3xl">🖼️</span>
+                    <span className="text-muted-foreground text-sm">Mevcut görseli değiştirmek için tıklayın</span>
+                  </>
                 ) : (
                   <>
                     <span className="text-4xl">🌍</span>
@@ -272,31 +327,32 @@ export default function PlatformBrandsPage() {
             </div>
             
             <div className="mb-4">
-              <label className="block text-foreground text-sm font-medium mb-2">Kısa Açıklama (İsteğe Bağlı)</label>
-              <textarea value={newBadge.description} onChange={(e) => setNewBadge(prev => ({ ...prev, description: e.target.value }))} placeholder="Bu markanın/sertifikanın anlamı..." className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white resize-none" rows={3}></textarea>
+              <label className="block text-foreground text-sm font-medium mb-1">Açıklama / Alt Bilgi (Bottom Sheet / Popup Bilgisi)</label>
+              <p className="text-muted-foreground text-[11px] mb-2">Uygulamada karta tıklandığında gösterilecek ek detay.</p>
+              <textarea value={newBadge.description} onChange={(e) => setNewBadge(prev => ({ ...prev, description: e.target.value }))} placeholder="Bu markanın detayları..." className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white resize-none" rows={3}></textarea>
             </div>
 
             <div className="mb-6 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-foreground text-sm font-medium mb-2">Zemin Rengi (#HEX)</label>
                 <div className="flex items-center gap-3">
-                  <input type="color" value={newBadge.colorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, colorHex: e.target.value }))} className="w-10 h-10 rounded cursor-pointer border-0" />
-                  <input type="text" value={newBadge.colorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, colorHex: e.target.value }))} className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono" />
+                  <input type="color" value={newBadge.colorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, colorHex: e.target.value }))} className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent" />
+                  <input type="text" value={newBadge.colorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, colorHex: e.target.value }))} className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono uppercase" />
                 </div>
               </div>
               <div>
                 <label className="block text-foreground text-sm font-medium mb-2">Yazı Rengi</label>
                 <div className="flex items-center gap-3">
-                  <input type="color" value={newBadge.textColorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, textColorHex: e.target.value }))} className="w-10 h-10 rounded cursor-pointer border-0" />
-                  <input type="text" value={newBadge.textColorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, textColorHex: e.target.value }))} className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono" />
+                  <input type="color" value={newBadge.textColorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, textColorHex: e.target.value }))} className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent" />
+                  <input type="text" value={newBadge.textColorHex} onChange={(e) => setNewBadge(prev => ({ ...prev, textColorHex: e.target.value }))} className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono uppercase" />
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3">
               <button onClick={() => setShowUploadModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg">İptal</button>
-              <button onClick={handleUpload} disabled={uploading || !newBadge.file || !newBadge.name} className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg disabled:opacity-50">
-                {uploading ? 'Yükleniyor...' : 'Sisteme Ekle'}
+              <button onClick={handleSave} disabled={uploading || !newBadge.name || (!isEditMode && !newBadge.file)} className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg disabled:opacity-50 font-medium shadow">
+                {uploading ? 'Kaydediliyor...' : (isEditMode ? 'Değişiklikleri Kaydet' : 'Sisteme Ekle')}
               </button>
             </div>
           </div>
