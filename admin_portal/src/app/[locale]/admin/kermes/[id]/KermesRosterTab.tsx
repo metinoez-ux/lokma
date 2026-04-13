@@ -298,6 +298,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     'Temizlik',
     'Park Görevlisi',
     'Çocuk Bakıcısı',
+    'VIP Görevlisi',
     'Ocakbaşı - Kumpir',
     'Tatlı Standı',
     'İçecek Standı',
@@ -425,6 +426,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       case 'temizlik': return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20 ring-cyan-500/30';
       case 'park görevlisi': return 'bg-lime-500/10 text-lime-400 border-lime-500/20 ring-lime-500/30';
       case 'çocuk bakıcısı': return 'bg-rose-500/10 text-rose-400 border-rose-500/20 ring-rose-500/30';
+      case 'vip görevlisi': return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20 ring-fuchsia-500/30';
       case 'tatlı standı': return 'bg-pink-500/10 text-pink-400 border-pink-500/20 ring-pink-500/30';
       case 'içecek standı': return 'bg-blue-500/10 text-blue-400 border-blue-500/20 ring-blue-500/30';
       case 'gözleme': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 ring-yellow-500/30';
