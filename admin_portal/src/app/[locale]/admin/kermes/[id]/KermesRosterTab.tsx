@@ -330,8 +330,26 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     const isFemaleStaff = staffGender === 'female' || staffGender === 'kadin';
     
     const lowerRole = r.toLowerCase();
-    const isMaleRole = lowerRole.includes('(e)') || lowerRole.includes('(erkek)') || lowerRole.includes('erkekler');
-    const isFemaleRole = lowerRole.includes('(k)') || lowerRole.includes('(kadin)') || lowerRole.includes('(kadın)') || lowerRole.includes('kadınlar') || lowerRole.includes('kadinlar');
+    
+    // Erkek personeller için olan bölümler ve açık etiketler
+    const isMaleRole = lowerRole.includes('(e)') || 
+                       lowerRole.includes('(erkek)') || 
+                       lowerRole.includes('erkekler') || 
+                       lowerRole.includes('ocakbaşı') || 
+                       lowerRole.includes('kumpir') || 
+                       lowerRole.includes('park görevlisi') || 
+                       lowerRole.includes('güvenlik') || 
+                       lowerRole.includes('sürücü');
+                       
+    // Kadın personeller için olan bölümler ve açık etiketler
+    const isFemaleRole = lowerRole.includes('(k)') || 
+                         lowerRole.includes('(kadin)') || 
+                         lowerRole.includes('(kadın)') || 
+                         lowerRole.includes('kadınlar') || 
+                         lowerRole.includes('kadinlar') || 
+                         lowerRole.includes('gözleme') || 
+                         lowerRole.includes('tatlı') || 
+                         lowerRole.includes('çocuk bakıcısı');
 
     if (isMaleRole && isFemaleStaff) return true;
     if (isFemaleRole && isMaleStaff) return true;
