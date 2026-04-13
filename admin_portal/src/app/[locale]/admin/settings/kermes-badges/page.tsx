@@ -37,13 +37,6 @@ export default function KermesBadgesPage() {
  });
  const fileInputRef = useRef<HTMLInputElement>(null);
 
- // Assignment State
- const [showAssignModal, setShowAssignModal] = useState(false);
- const [selectedBadge, setSelectedBadge] = useState<KermesBadge | null>(null);
- const [kermeses, setKermeses] = useState<any[]>([]);
- const [selectedKermesIds, setSelectedKermesIds] = useState<Set<string>>(new Set());
- const [assigning, setAssigning] = useState(false);
-
  const loadBadges = async () => {
  setLoading(true);
  try {
@@ -134,73 +127,6 @@ export default function KermesBadgesPage() {
  setConfirmDeleteBadge(null);
  };
 
- // Mass Assignment Logic
- const openAssignModal = async (badge: KermesBadge) => {
- setSelectedBadge(badge);
- setAssigning(true);
- try {
- // Load all kermes events to manage assignment
- const kQuery = query(collection(db, 'kermes_events'), orderBy('createdAt', 'desc'));
- const snapshot = await getDocs(kQuery);
- const loadedK = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
- 
- setKermeses(loadedK);
- 
- // Pre-select kermeses that already have this badge
- const initialSelected = new Set<string>();
- for (const k of loadedK) {
- if (k.activeBadgeIds && Array.isArray(k.activeBadgeIds) && k.activeBadgeIds.includes(badge.id)) {
- initialSelected.add(k.id);
- }
- }
- setSelectedKermesIds(initialSelected);
- setShowAssignModal(true);
- } catch (error) {
- console.error('Error loading kermeses for assignment:', error);
- } finally {
- setAssigning(false);
- }
- };
-
- const handleAssignSave = async () => {
- if (!selectedBadge) return;
- setAssigning(true);
- try {
- const batch = writeBatch(db);
- 
- // For each kermes, check if it was checked or unchecked
- kermeses.forEach((kermes) => {
- const isSelected = selectedKermesIds.has(kermes.id);
- const currentBadges = Array.isArray(kermes.activeBadgeIds) ? [...kermes.activeBadgeIds] : [];
- const hasBadge = currentBadges.includes(selectedBadge.id);
- 
- if (isSelected && !hasBadge) {
- currentBadges.push(selectedBadge.id);
- batch.update(doc(db, 'kermes_events', kermes.id), { activeBadgeIds: currentBadges });
- } else if (!isSelected && hasBadge) {
- const newBadges = currentBadges.filter(id => id !== selectedBadge.id);
- batch.update(doc(db, 'kermes_events', kermes.id), { activeBadgeIds: newBadges });
- }
- });
-
- await batch.commit();
- setShowAssignModal(false);
- alert('Başarıyla atandı!');
- } catch (error) {
- console.error('Error assigning badges:', error);
- alert('Sertifika ataması sırasında hata oluştu.');
- } finally {
- setAssigning(false);
- }
- };
-
- const toggleKermesSelection = (kermesId: string) => {
- const next = new Set(selectedKermesIds);
- if (next.has(kermesId)) next.delete(kermesId);
- else next.add(kermesId);
- setSelectedKermesIds(next);
- };
-
  if (adminLoading || loading) {
  return (
  <div className="min-h-screen bg-background flex items-center justify-center">
@@ -262,10 +188,7 @@ export default function KermesBadgesPage() {
  </div>
  <p className="text-muted-foreground text-sm mb-6 flex-1">{badge.description || 'Açıklama yok'}</p>
  <div className="flex gap-2 mt-auto">
- <button onClick={() => openAssignModal(badge)} disabled={assigning} className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-500 font-medium">
- 👥 Kermeslere Ata
- </button>
- <button onClick={() => toggleBadgeStatus(badge)} className={`px-3 py-2 rounded-lg text-sm font-medium ${badge.isActive ? 'bg-gray-700 text-white' : 'bg-green-600 text-white'}`}>
+ <button onClick={() => toggleBadgeStatus(badge)} className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${badge.isActive ? 'bg-gray-700 text-white' : 'bg-green-600 text-white'}`}>
  {badge.isActive ? 'Gizle' : 'Göster'}
  </button>
  <button onClick={() => setConfirmDeleteBadge(badge)} className="px-3 py-2 bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white rounded-lg text-sm">
@@ -336,46 +259,6 @@ export default function KermesBadgesPage() {
  <button onClick={() => setShowUploadModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg">İptal</button>
  <button onClick={handleUpload} disabled={uploading || !newBadge.file || !newBadge.name} className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg disabled:opacity-50">
  {uploading ? 'Yükleniyor...' : 'Rozeti Oluştur'}
- </button>
- </div>
- </div>
- </div>
- )}
-
- {/* Mass Assign Modal */}
- {showAssignModal && selectedBadge && (
- <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
- <div className="bg-card rounded-2xl w-full max-w-2xl p-6 max-h-[90vh] flex flex-col">
- <div className="flex items-center justify-between mb-2">
- <h2 className="text-xl font-bold text-foreground">Kermes Seçimi</h2>
- <button onClick={() => setShowAssignModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
- </div>
- <p className="text-muted-foreground text-sm mb-6">
- <strong className="text-white">{selectedBadge.name}</strong> rozetini hangi kermeslere tanımlamak istiyorsunuz?
- </p>
-
- <div className="flex-1 overflow-y-auto pr-2 space-y-2 mb-6 border border-border rounded-lg p-2 bg-background">
- {kermeses.map(k => (
- <label key={k.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800/50 cursor-pointer border border-transparent hover:border-gray-700">
- <input 
- type="checkbox" 
- className="w-5 h-5 rounded border-gray-600 text-pink-500 focus:ring-pink-500 bg-gray-700"
- checked={selectedKermesIds.has(k.id)}
- onChange={() => toggleKermesSelection(k.id)}
- />
- <div className="flex flex-col">
- <span className="text-white font-medium">{k.title}</span>
- <span className="text-xs text-muted-foreground">{k.city} {k.organizationName ? `· ${k.organizationName}` : ''}</span>
- </div>
- </label>
- ))}
- {kermeses.length === 0 && <p className="text-center p-4 text-muted-foreground">Henüz kermes bulunmuyor.</p>}
- </div>
-
- <div className="flex gap-3 mt-auto">
- <button onClick={() => setShowAssignModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg">İptal</button>
- <button onClick={handleAssignSave} disabled={assigning} className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium shadow-lg disabled:opacity-50">
- {assigning ? 'Kaydediliyor...' : `Atamayı Kaydet (${selectedKermesIds.size} Kermes)`}
  </button>
  </div>
  </div>
