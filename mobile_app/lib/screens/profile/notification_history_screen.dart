@@ -259,12 +259,18 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     final kermesId = data['kermesId'] as String? ?? '';
     final kermesTitle = title.replaceAll(' - Acil Arac Anonsu', '').trim();
     final isParking = type == 'kermes_parking';
+    final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
+
+    // Roster Action specific variables
+    bool isActionProcessing = false;
+    String? rosterResponse = data['response'] as String?; // 'accepted' | 'rejected'
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
         constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.85),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
@@ -279,23 +285,24 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   // 1) Message text - prominent, on top
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: isParking
-                          ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
-                          : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: isParking ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!)),
+                  if (!isRoster)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isParking
+                            ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
+                            : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: isParking ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!)),
+                      ),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Icon(Icons.warning_amber_rounded, size: 18, color: isParking ? (isDark ? Colors.red[300] : Colors.red[700]) : (isDark ? Colors.orange[300] : Colors.orange[700])),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(body, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.4, color: Theme.of(ctx).colorScheme.onSurface))),
+                      ]),
                     ),
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Icon(Icons.warning_amber_rounded, size: 18, color: isParking ? (isDark ? Colors.red[300] : Colors.red[700]) : (isDark ? Colors.orange[300] : Colors.orange[700])),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(body, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.4, color: Theme.of(ctx).colorScheme.onSurface))),
-                    ]),
-                  ),
-                  const SizedBox(height: 10),
+                  if (!isRoster) const SizedBox(height: 10),
 
                   // 2) Vehicle info - German license plate style
                   if (isParking && vehiclePlate.isNotEmpty) ...[
@@ -417,14 +424,187 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         );
                       },
                     ),
+
+                  // 5) Roster Shift Action (Interactive)
+                  if (isRoster) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        boxShadow: isDark ? [] : [
+                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
+                            child: const Icon(Icons.assignment_ind_rounded, size: 36, color: Colors.blue),
+                          ),
+                          const SizedBox(height: 16),
+                          Text('Yeni Vardiya Ataması', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 8),
+                          Text(body, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87, height: 1.4)),
+                          const SizedBox(height: 24),
+                          
+                          // Details Box
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isDark ? Colors.white10 : Colors.black12)
+                            ),
+                            child: Column(
+                              children: [
+                                _rosterDetailRow('Tarih:', data['dateSpan'] ?? data['date'] ?? '-', isDark),
+                                const SizedBox(height: 10),
+                                _rosterDetailRow('Saat:', '${data['startTime'] ?? '-'} / ${data['endTime'] ?? '-'}', isDark),
+                                const SizedBox(height: 10),
+                                _rosterDetailRow('Görev:', data['role'] ?? '-', isDark),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 30),
+                          
+                          if (rosterResponse != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(rosterResponse == 'accepted' ? Icons.check_circle : Icons.cancel, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    rosterResponse == 'accepted' ? 'Görevi Kabul Ettiniz' : 'Görevi Reddettiniz',
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
+                                  )
+                                ],
+                              ),
+                            )
+                          ] else if (isActionProcessing) ...[
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 10),
+                            const Text('İşleniyor...', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ] else ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: Colors.red.withOpacity(0.1),
+                                      foregroundColor: Colors.red,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                    onPressed: () async {
+                                      setSheetState(() => isActionProcessing = true);
+                                      await _submitRosterAction(data, 'rejected');
+                                      setSheetState(() {
+                                        isActionProcessing = false;
+                                        rosterResponse = 'rejected';
+                                      });
+                                    },
+                                    child: const Text('Üstlenemiyorum', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      elevation: 0,
+                                    ),
+                                    onPressed: () async {
+                                      setSheetState(() => isActionProcessing = true);
+                                      await _submitRosterAction(data, 'accepted');
+                                      setSheetState(() {
+                                        isActionProcessing = false;
+                                        rosterResponse = 'accepted';
+                                      });
+                                    },
+                                    child: const Text('Görevi Kabul Et', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ]
+                      )
+                    )
+                  ],
+
                   const SizedBox(height: 16),
                 ]),
               ),
             ),
           ],
         ),
-      ),
+      )),
     );
+  }
+
+  Widget _rosterDetailRow(String label, String value, bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontWeight: FontWeight.w600)),
+        Text(value, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w800)),
+      ],
+    );
+  }
+
+  Future<void> _submitRosterAction(Map<String, dynamic> data, String action) async {
+    try {
+      final batchId = data['batchId'] as String?;
+      final kermesId = data['kermesId'] as String?;
+      final notifId = data['_docId'] as String? ?? data['id'] as String?;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+
+      if (kermesId != null && batchId != null && batchId.isNotEmpty) {
+        // Update rosters in kermes
+        final rostersSnap = await FirebaseFirestore.instance
+            .collection('kermes_events')
+            .doc(kermesId)
+            .collection('rosters')
+            .where('batchId', isEqualTo: batchId)
+            .get();
+
+        if (rostersSnap.docs.isNotEmpty) {
+          final batch = FirebaseFirestore.instance.batch();
+          for (var doc in rostersSnap.docs) {
+            batch.update(doc.reference, {'status': action});
+          }
+          await batch.commit();
+        }
+      }
+
+      if (uid != null && notifId != null) {
+        // Update local notification state
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('notifications')
+            .doc(notifId)
+            .update({'response': action});
+      }
+    } catch (e) {
+      debugPrint('Roster action update error: $e');
+    }
   }
 
   bool _isActiveOrder(_OrderGroup group) {
@@ -1232,7 +1412,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
                           final type = data['type'] as String?;
-                          if (type == 'kermes_flash_sale' || type == 'kermes_parking') {
+                          if (type == 'kermes_flash_sale' || type == 'kermes_parking' || type == 'kermes_assignment' || type == 'roster_shift') {
                             _showNotificationDetailSheet(context, data);
                           }
                         },
@@ -3837,31 +4017,52 @@ class _GenericNotificationCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Builder(
-                  builder: (context) {
-                    final type = data['type'] as String?;
-                    final isFlashSale = type == 'kermes_flash_sale';
-                    final tag = data['tag'] as String?;
-                    final isCampaign = tag == 'kampanya' || isFlashSale;
-                    return Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isCampaign
-                            ? (isDark ? const Color(0xFF880E4F).withOpacity(0.3) : const Color(0xFFFCE4EC))
-                            : (isDark ? Colors.grey[800] : Colors.grey[100]),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isCampaign ? Icons.local_mall_rounded : Icons.notifications_active_rounded,
-                        color: isCampaign
-                            ? (isDark ? const Color(0xFFE91E63) : const Color(0xFFC2185B))
-                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                        size: 20,
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 14),
+                  Builder(
+                    builder: (context) {
+                      final type = data['type'] as String?;
+                      final isFlashSale = type == 'kermes_flash_sale';
+                      final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
+                      final isParking = type == 'kermes_parking';
+                      final tag = data['tag'] as String?;
+                      final isCampaign = tag == 'kampanya' || isFlashSale;
+                      
+                      Color bgColor;
+                      Color iconColor;
+                      IconData iconData;
+
+                      if (isCampaign) {
+                        bgColor = isDark ? const Color(0xFF880E4F).withOpacity(0.3) : const Color(0xFFFCE4EC);
+                        iconColor = isDark ? const Color(0xFFE91E63) : const Color(0xFFC2185B);
+                        iconData = Icons.local_mall_rounded;
+                      } else if (isRoster) {
+                        bgColor = isDark ? Colors.blue[900]!.withOpacity(0.3) : Colors.blue[50]!;
+                        iconColor = isDark ? Colors.blue[300]! : Colors.blue[700]!;
+                        iconData = Icons.assignment_ind_rounded;
+                      } else if (isParking) {
+                        bgColor = isDark ? Colors.orange[900]!.withOpacity(0.3) : Colors.orange[50]!;
+                        iconColor = isDark ? Colors.orange[300]! : Colors.orange[700]!;
+                        iconData = Icons.local_parking_rounded;
+                      } else {
+                        bgColor = isDark ? Colors.grey[800]! : Colors.grey[100]!;
+                        iconColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+                        iconData = Icons.notifications_active_rounded;
+                      }
+
+                      return Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          iconData,
+                          color: iconColor,
+                          size: 20,
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

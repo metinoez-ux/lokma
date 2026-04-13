@@ -100,7 +100,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     final vehicleColor = data['vehicleColor'] as String? ?? '';
     final vehicleBrand = data['vehicleBrand'] as String? ?? '';
     final isParking = type == 'kermes_parking';
-    final isRoster = type == 'roster_shift';
+    final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
 
     // Roster Action specific variables
     bool isActionProcessing = false;
@@ -505,7 +505,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final iconColor = _colorForType(type, isRead);
               final iconData = _iconForType(type);
 
-              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'roster_shift';
+              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'roster_shift' || type == 'kermes_assignment';
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,

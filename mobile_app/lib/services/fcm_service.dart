@@ -304,6 +304,11 @@ class FCMService {
         emoji = '💬';
         accentColor = const Color(0xFF9C27B0);
         break;
+      case 'kermes_assignment':
+      case 'roster_shift':
+        emoji = '🛠️';
+        accentColor = const Color(0xFF1976D2);
+        break;
       case 'kermes_flash_sale':
         emoji = '🌟';
         accentColor = const Color(0xFFE91E63);
@@ -334,6 +339,8 @@ class FCMService {
               if (kermesId != null && kermesId.isNotEmpty) {
                 _navigateTo('/kermesler/$kermesId');
               }
+            } else if (type == 'kermes_assignment' || type == 'parking_emergency' || type == 'roster_shift') {
+              _navigateTo('/staff-hub');
             } else {
               _navigateToOrders(orderId: orderId);
             }
