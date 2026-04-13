@@ -1016,8 +1016,8 @@ class _KermesCardState extends State<KermesCard> {
                   tooltip,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 12, 
-                    fontWeight: FontWeight.w800,
+                    fontSize: 11, 
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
