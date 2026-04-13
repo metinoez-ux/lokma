@@ -81,6 +81,112 @@ class _KermesCardState extends State<KermesCard> {
     }
   }
 
+  void _showBadgeDetailsBottomSheet(KermesBadge badge) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 24,
+            top: 12,
+            left: 24,
+            right: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Bottom sheet handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                margin: const EdgeInsets.only(bottom: 24),
+              ),
+              if (badge.iconUrl.isNotEmpty) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: CachedNetworkImage(
+                    imageUrl: badge.iconUrl,
+                    height: 80,
+                    fit: BoxFit.contain,
+                    placeholder: (context, url) =>
+                        const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+                    errorWidget: (context, url, error) =>
+                        const SizedBox(height: 80, child: Icon(Icons.verified, size: 60, color: Colors.grey)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+              Text(
+                badge.label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (badge.description.isNotEmpty)
+                Text(
+                  badge.description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                )
+              else
+                Text(
+                  'Bu kermes ${badge.label} onaylı ürünler ve sertifikalı tedarikçiler ile çalışmaktadır.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFB335B),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Tamam',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   String? _getImagePath() {
     if (widget.event.headerImage != null &&
         widget.event.headerImage!.isNotEmpty) {
@@ -379,71 +485,83 @@ class _KermesCardState extends State<KermesCard> {
                                   badge.textColorHex.replaceFirst('#', '0xFF')));
                               final bool hasIcon = badge.iconUrl.isNotEmpty;
 
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: hasIcon ? 4 : 12, vertical: hasIcon ? 4 : 6),
-                                  decoration: BoxDecoration(
-                                    color: hasIcon ? Colors.transparent : bgColor,
-                                    borderRadius: BorderRadius.circular(50), // Hap seklinde
-                                    border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
-                                    boxShadow: hasIcon ? null : [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.25),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (hasIcon)
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.2),
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          padding: const EdgeInsets.all(2), // Beyaz cerceve efekti
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(20),
-                                            child: CachedNetworkImage(
-                                              imageUrl: badge.iconUrl,
-                                              height: 32, // Logo boyutu
-                                              width: 32,
-                                              fit: BoxFit.contain,
-                                              placeholder: (context, url) => Container(
-                                                color: Colors.transparent,
-                                                height: 32,
-                                                width: 32,
-                                              ),
-                                              errorWidget: (context, url, error) =>
-                                                  Icon(Icons.verified, color: textColor, size: 20),
-                                            ),
-                                          ),
-                                        )
-                                      else if (badge.label.isNotEmpty) ...[
-                                        Icon(Icons.verified, color: textColor, size: 14),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          badge.label,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: textColor,
-                                            letterSpacing: 0.5,
-                                          ),
+                              return GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  _showBadgeDetailsBottomSheet(badge);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: hasIcon ? 4 : 12, vertical: hasIcon ? 4 : 6),
+                                    decoration: BoxDecoration(
+                                      color: hasIcon ? Colors.transparent : bgColor,
+                                      borderRadius: BorderRadius.circular(50), // Hap seklinde
+                                      border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
+                                      boxShadow: hasIcon ? null : [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.25),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
                                         ),
                                       ],
-                                    ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (hasIcon)
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.2),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            padding: const EdgeInsets.all(2), // Beyaz cerceve efekti
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(20),
+                                              child: CachedNetworkImage(
+                                                imageUrl: badge.iconUrl,
+                                                height: 32, // Logo boyutu
+                                                width: 32,
+                                                fit: BoxFit.contain,
+                                                placeholder: (context, url) => Container(
+                                                  color: Colors.transparent,
+                                                  height: 32,
+                                                  width: 32,
+                                                ),
+                                                errorWidget: (context, url, error) =>
+                                                    Icon(Icons.verified, color: textColor, size: 20),
+                                              ),
+                                            ),
+                                          )
+                                        else if (badge.label.isNotEmpty) ...[
+                                          Icon(Icons.verified, color: textColor, size: 14),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            badge.label,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: textColor,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Icon(
+                                            Icons.info_outline,
+                                            color: textColor.withOpacity(0.8),
+                                            size: 14,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               );

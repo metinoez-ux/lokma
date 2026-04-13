@@ -863,7 +863,7 @@ void _onMenuScroll() {
                   color: isDark ? Colors.grey[700] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(2),
                 ),
-                margin: const EdgeInsets.bottom(24),
+                margin: const EdgeInsets.only(bottom: 24),
               ),
               if (badge.iconUrl.isNotEmpty) ...[
                 ClipRRect(
@@ -1951,7 +1951,7 @@ Widget _buildHeroSection(BuildContext context) {
                             ),
                             const SizedBox(width: 8),
                             Icon(
-                              Icons.chevron_right,
+                              Icons.info_outline,
                               color: textColor.withOpacity(0.8),
                               size: 16,
                             ),
