@@ -156,7 +156,16 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       // 2. Veritabanına Yazma
       const batchId = crypto.randomUUID();
       const isMultipleDays = datesToAssign.length > 1;
-      const msgRange = isMultipleDays ? `${form.startDate} - ${form.endDate}` : form.startDate;
+      
+      const formatEU = (str: string) => {
+        const parts = str.split('-');
+        if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+        return str;
+      };
+      
+      const euStart = formatEU(form.startDate);
+      const euEnd = formatEU(form.endDate);
+      const msgRange = isMultipleDays ? `${euStart} - ${euEnd}` : euStart;
 
       // Toplu yazım işlemi için Firestore WriteBatch kullanıyoruz, tekil insert yerine çok daha güvenli
       const batch = writeBatch(db);
@@ -179,9 +188,11 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           status: 'pending',
         };
 
-        if (isFirst && isMultipleDays) {
+        if (isFirst) {
            payload.notificationDateSpan = msgRange;
-           payload.notificationBodyOverride = `${msgRange} tarihleri aralığında saat ${form.startTime} - ${form.endTime} arasında ${form.role} olarak görevlendirildiniz.`;
+           payload.notificationBodyOverride = isMultipleDays 
+             ? `${msgRange} tarihleri aralığında saat ${form.startTime} - ${form.endTime} arasında ${form.role} olarak görevlendirildiniz.`
+             : `${msgRange} tarihinde saat ${form.startTime} - ${form.endTime} arasında ${form.role} olarak görevlendirildiniz.`;
         }
 
         const docRef = doc(collection(db, 'kermes_events', kermesId, 'rosters'));

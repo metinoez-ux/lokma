@@ -97,7 +97,14 @@ export const onKermesRosterCreated = onDocumentCreated(
 
         // Format Title & Body with potential overrides from UI
         const title = roster.notificationTitleOverride || `📅 Yeni Vardiya Ataması: ${kermesName}`;
-        const displayedDate = roster.notificationDateSpan || dateStr;
+        
+        const formatEU = (str: string) => {
+            const parts = str.split("-");
+            if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+            return str;
+        };
+        
+        const displayedDate = roster.notificationDateSpan || formatEU(dateStr);
         const body = roster.notificationBodyOverride || `${displayedDate} tarihinde saat ${startStr} - ${endStr} arasında ${role} olarak görevlendirildiniz.`;
 
             // Prepare date links for calendar (Format: YYYYMMDDTHHMMSSZ)
