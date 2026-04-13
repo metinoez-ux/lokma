@@ -328,7 +328,7 @@ export default function BenutzerverwaltungPage() {
 
  // Handlers
  const handleFixKermesSync = async () => {
-  if (!confirm('Senkronize olmayan "Hayalet (Orphaned)" Kermes personel atamalarını global veritabanından şimdi temizlemek istediğinize emin misiniz?')) return;
+  if (!confirm('Senkronize olmayan \'Hayalet (Orphaned)\' Kermes personel atamalarını global veritabanından şimdi temizlemek istediğinize emin misiniz?')) return;
   
   try {
    let fixedCount = 0;
@@ -339,6 +339,7 @@ export default function BenutzerverwaltungPage() {
    kSnap.forEach(d => {
     const data = d.data();
     kMap.set(d.id, {
+     id: d.id,
      staff: data.assignedStaff || [],
      drivers: data.assignedDrivers || [],
      waiters: data.assignedWaiters || [],
@@ -347,28 +348,70 @@ export default function BenutzerverwaltungPage() {
    });
 
    for (const u of users) {
-    if (!u.kermesAssignments || u.kermesAssignments.length === 0) continue;
     let changed = false;
+    let newKAssignments = [...(u.kermesAssignments || [])];
+    let newAssignments = [...(u.assignments || [])];
+    let newKermesId = u.kermesId;
     
-    const newKAssignments = u.kermesAssignments.filter((ka: any) => {
-     const kId = ka.kermesId || ka;
-     if (!kMap.has(kId)) return false;
-     const kData = kMap.get(kId);
-     const inKermes = kData.staff.includes(u.id) || 
-              kData.drivers.includes(u.id) || 
-              kData.waiters.includes(u.id) || 
-              kData.admins.includes(u.id);
-     if (!inKermes) {
-       changed = true;
-       return false;
-     }
-     return true;
-    });
+    // Check old kermesId 
+    if (newKermesId && newKermesId !== 'NONE') {
+      const kData = kMap.get(newKermesId);
+      if (!kData || (!kData.staff.includes(u.id) && !kData.drivers.includes(u.id) && !kData.waiters.includes(u.id) && !kData.admins.includes(u.id))) {
+        newKermesId = 'NONE';
+        changed = true;
+      }
+    }
+
+    // Check kermesAssignments array
+    if (newKAssignments.length > 0) {
+      const filteredKAssignments = newKAssignments.filter((ka: any) => {
+       const kId = ka.kermesId || ka;
+       if (!kMap.has(kId)) return false;
+       const kData = kMap.get(kId);
+       const inKermes = kData.staff.includes(u.id) || 
+                kData.drivers.includes(u.id) || 
+                kData.waiters.includes(u.id) || 
+                kData.admins.includes(u.id);
+       if (!inKermes) return false;
+       return true;
+      });
+      if (filteredKAssignments.length !== newKAssignments.length) {
+        newKAssignments = filteredKAssignments;
+        changed = true;
+      }
+    }
+    
+    // Check modern assignments array
+    if (newAssignments.length > 0) {
+      const filteredAssignments = newAssignments.filter((a: any) => {
+        if (a.entityType !== 'kermes') return true;
+        const kId = a.id;
+        if (!kMap.has(kId)) return false;
+        const kData = kMap.get(kId);
+        const inKermes = kData.staff.includes(u.id) || 
+                 kData.drivers.includes(u.id) || 
+                 kData.waiters.includes(u.id) || 
+                 kData.admins.includes(u.id);
+        if (!inKermes) return false;
+        return true;
+      });
+      if (filteredAssignments.length !== newAssignments.length) {
+        newAssignments = filteredAssignments;
+        changed = true;
+      }
+    }
 
     if (changed) {
-      await updateDoc(doc(db, 'admins', u.id), { kermesAssignments: newKAssignments }).catch(()=>{});
-      await updateDoc(doc(db, 'users', u.id), { kermesAssignments: newKAssignments }).catch(()=>{});
-      fixedCount++;
+      if (u.source === 'admins' || u.source === 'users' || !u.source) {
+        const updateData: any = {};
+        if (newKermesId !== u.kermesId) updateData.kermesId = newKermesId;
+        if (JSON.stringify(newKAssignments) !== JSON.stringify(u.kermesAssignments)) updateData.kermesAssignments = newKAssignments;
+        if (JSON.stringify(newAssignments) !== JSON.stringify(u.assignments)) updateData.assignments = newAssignments;
+        
+        await updateDoc(doc(db, 'admins', u.id), updateData).catch(()=>{});
+        await updateDoc(doc(db, 'users', u.id), updateData).catch(()=>{});
+        fixedCount++;
+      }
     }
    }
    
