@@ -3729,8 +3729,8 @@ export default function KermesDetailPage() {
  {(staff.displayName || staff.firstName || staff.name || staff.email || 'P').substring(0, 2).toUpperCase()}
  </div>
  )}
- <div>
- <span className="text-sm font-medium text-foreground">{staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name || staff.email}</span>
+ <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+ <span className="text-sm font-medium text-foreground w-full md:w-auto mr-1 truncate">{staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name || staff.email}</span>
  {assignedStaff.includes(staff.id) && (
  <span className="ml-2 text-xs text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">Personel</span>
  )}
@@ -3772,7 +3772,7 @@ export default function KermesDetailPage() {
  )}
  </div>
  </div>
- <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 md:w-auto">
+ <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 md:w-auto flex-shrink-0">
  <button 
  type="button" 
  onClick={() => {
