@@ -918,20 +918,39 @@ const getKermesBadgeInfo = (role: string) => {
  </span>
  )}
         {(() => {
-          const kermesRoles = new Set<string>();
-          if (user.kermesId && user.kermesId !== 'NONE') kermesRoles.add('staff');
-          if (user.kermesAssignments && user.kermesAssignments.length > 0) kermesRoles.add('staff');
-          if (user.assignments) {
-            user.assignments.filter((a: any) => a.entityType === 'kermes').forEach((a: any) => kermesRoles.add(a.role));
+          const kermesRolesAndNames = new Map<string, Set<string>>();
+          
+          if (user.kermesId && user.kermesId !== 'NONE') {
+            const kName = kermesEvents.find(k => k.id === user.kermesId)?.name || 'Kermes';
+            if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
+            kermesRolesAndNames.get('staff')!.add(kName);
           }
           
-          if (kermesRoles.size === 0) return null;
+          if (user.kermesAssignments && user.kermesAssignments.length > 0) {
+            if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
+            user.kermesAssignments.forEach((ka: any) => {
+              const kName = ka.kermesTitle || ka.name || kermesEvents.find(k => k.id === (ka.kermesId || ka))?.name || 'Kermes';
+              kermesRolesAndNames.get('staff')!.add(kName);
+            });
+          }
+          
+          if (user.assignments) {
+            user.assignments.filter((a: any) => a.entityType === 'kermes').forEach((a: any) => {
+              if (!kermesRolesAndNames.has(a.role)) kermesRolesAndNames.set(a.role, new Set());
+              const kName = a.entityName || kermesEvents.find(k => k.id === a.id)?.name || 'Kermes';
+              kermesRolesAndNames.get(a.role)!.add(kName);
+            });
+          }
+          
+          if (kermesRolesAndNames.size === 0) return null;
 
-          return Array.from(kermesRoles).map((role, idx) => {
+          return Array.from(kermesRolesAndNames.entries()).map(([role, namesSet], idx) => {
             const roleInfo = getKermesBadgeInfo(role);
+            const kermesNamesText = Array.from(namesSet).join(', ');
             return (
-             <span key={`kermes-${role}-${idx}`} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${roleInfo.bg} border border-current/20`}>
-              🎪 {roleInfo.label}
+             <span key={`kermes-${role}-${idx}`} className={`inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded-full text-[10px] sm:text-xs font-semibold ${roleInfo.bg} border border-[current]/20 max-w-full`} title={`${roleInfo.label} - ${kermesNamesText}`}>
+              <span className="shrink-0">🎪 {roleInfo.label}</span>
+              <span className="truncate opacity-80 max-w-[140px] font-normal leading-tight hidden sm:inline-block">({kermesNamesText})</span>
              </span>
             );
           });
