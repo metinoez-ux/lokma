@@ -19,7 +19,7 @@ import '../providers/staff_hub_provider.dart';
 import '../../kermes/staff/kermes_schedule_screen.dart';
 import '../../kermes/staff/kermes_admin_roster_screen.dart';
 import '../../kermes/staff/kermes_admin_staff_assignment_screen.dart';
-
+import '../../kermes/staff/kermes_admin_vault_screen.dart';
 
 class ShiftDashboardTab extends ConsumerStatefulWidget {
   const ShiftDashboardTab({super.key});
@@ -1034,8 +1034,32 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               ],
             ),
             const SizedBox(height: 10),
+            if (capabilities.hasKermesAdminRole) ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? Colors.deepOrange.shade900 : Colors.deepOrange.shade100,
+                    foregroundColor: isDark ? Colors.deepOrange.shade100 : Colors.deepOrange.shade900,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.account_balance_wallet, size: 18),
+                  label: const Text('Kasa Yönetimi (Vault)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const KermesAdminVaultScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
           ],
-
 
         ],
       ),
