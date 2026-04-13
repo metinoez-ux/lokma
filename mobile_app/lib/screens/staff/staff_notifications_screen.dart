@@ -285,9 +285,21 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                           (() {
                             bool canRevise = false;
                             if (data['createdAt'] != null) {
-                              final createdAtTs = data['createdAt'] as Timestamp;
-                              final diff = DateTime.now().difference(createdAtTs.toDate());
-                              if (diff.inMinutes <= 30) {
+                              DateTime? dt;
+                              if (data['createdAt'] is Timestamp) {
+                                dt = (data['createdAt'] as Timestamp).toDate();
+                              } else if (data['createdAt'] is String) {
+                                dt = DateTime.tryParse(data['createdAt'] as String);
+                              } else if (data['createdAt'] is int) {
+                                dt = DateTime.fromMillisecondsSinceEpoch(data['createdAt'] as int);
+                              }
+                              
+                              if (dt != null) {
+                                final diff = DateTime.now().difference(dt);
+                                if (diff.inMinutes <= 30) {
+                                  canRevise = true;
+                                }
+                              } else {
                                 canRevise = true;
                               }
                             } else {
