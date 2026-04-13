@@ -403,7 +403,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             try {
               final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
               final name = brand.name.toString().toLowerCase();
-              if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+              if (name.contains('tuna') || name.contains('toros')) {
                 hasDynamicBrand = true;
                 break;
               }
@@ -601,7 +601,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 try {
                   final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
                   final name = brand.name.toString().toLowerCase();
-                  if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                  if (name.contains('tuna') || name.contains('toros')) {
                     hasDynamicBrandA = true;
                     break;
                   }
@@ -629,7 +629,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 try {
                   final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
                   final name = brand.name.toString().toLowerCase();
-                  if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                  if (name.contains('tuna') || name.contains('toros')) {
                     hasDynamicBrandB = true;
                     break;
                   }
@@ -1610,7 +1610,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               try {
                 final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
                 final name = brand.name.toString().toLowerCase();
-                if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                if (name.contains('tuna') || name.contains('toros')) {
                   hasDynamicBrand = true;
                   break;
                 }
