@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
+import 'package:lokma_app/providers/platform_brands_provider.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:lokma_app/widgets/open_partners_map_sheet.dart';
 import 'package:lokma_app/widgets/sponsored_banner_card.dart';
@@ -802,9 +803,29 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       final businessType = _extractBusinessType(data);
       final isActive = data['isActive'] as bool? ?? true;
       // TUNA Partner check - use correct field names
+      bool hasDynamicBrand = false;
+      final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+      if (activeBrandIds.isNotEmpty) {
+        final platformBrandsAsync = ref.read(platformBrandsProvider);
+        if (platformBrandsAsync.value != null) {
+          for (final brandId in activeBrandIds) {
+            try {
+              final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+              final name = brand.name.toString().toLowerCase();
+              if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                hasDynamicBrand = true;
+                break;
+              }
+            } catch (e) {
+              // firstWhere throws if not found, ignore
+            }
+          }
+        }
+      }
+
       final brandLabel = data['brandLabel'] as String?;
       final isTunaPartner = (data['isTunaPartner'] as bool? ?? false) || 
-                            (brandLabel == 'tuna');
+                            (brandLabel?.toLowerCase() == 'tuna') || hasDynamicBrand;
       
       // Skip inactive
       if (!isActive) return false;
@@ -948,11 +969,47 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           return ratingB.compareTo(ratingA);
           
         case 'tuna': // Tuna Sıralaması (Premium Tuna marks first)
+          bool hasDynamicBrandA = false;
+          final activeBrandIdsA = List<String>.from(dataA['activeBrandIds'] ?? []);
+          if (activeBrandIdsA.isNotEmpty) {
+            final platformBrandsAsync = ref.read(platformBrandsProvider);
+            if (platformBrandsAsync.value != null) {
+              for (final brandId in activeBrandIdsA) {
+                try {
+                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+                  final name = brand.name.toString().toLowerCase();
+                  if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                    hasDynamicBrandA = true;
+                    break;
+                  }
+                } catch (e) { }
+              }
+            }
+          }
+
           final brandLabelA = dataA['brandLabel'] as String?;
-          final isTunaA = (dataA['isTunaPartner'] as bool? ?? false) || (brandLabelA == 'tuna');
-          
+          final isTunaA = (dataA['isTunaPartner'] as bool? ?? false) || (brandLabelA?.toLowerCase() == 'tuna') || hasDynamicBrandA;
+
+          bool hasDynamicBrandB = false;
+          final activeBrandIdsB = List<String>.from(dataB['activeBrandIds'] ?? []);
+          if (activeBrandIdsB.isNotEmpty) {
+            final platformBrandsAsync = ref.read(platformBrandsProvider);
+            if (platformBrandsAsync.value != null) {
+              for (final brandId in activeBrandIdsB) {
+                try {
+                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+                  final name = brand.name.toString().toLowerCase();
+                  if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                    hasDynamicBrandB = true;
+                    break;
+                  }
+                } catch (e) { }
+              }
+            }
+          }
+
           final brandLabelB = dataB['brandLabel'] as String?;
-          final isTunaB = (dataB['isTunaPartner'] as bool? ?? false) || (brandLabelB == 'tuna');
+          final isTunaB = (dataB['isTunaPartner'] as bool? ?? false) || (brandLabelB?.toLowerCase() == 'tuna') || hasDynamicBrandB;
           
           if (isTunaA && !isTunaB) return -1;
           if (!isTunaA && isTunaB) return 1;
@@ -1020,9 +1077,27 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       if (!_hasMarketSector(data)) continue;
       
       if (_onlyTuna) {
+        bool hasDynamicBrand = false;
+        final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+        if (activeBrandIds.isNotEmpty) {
+          final platformBrandsAsync = ref.read(platformBrandsProvider);
+          if (platformBrandsAsync.value != null) {
+            for (final brandId in activeBrandIds) {
+              try {
+                final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+                final name = brand.name.toString().toLowerCase();
+                if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                  hasDynamicBrand = true;
+                  break;
+                }
+              } catch (e) { }
+            }
+          }
+        }
+
         final brandLabel = data['brandLabel'] as String?;
         final isTunaPartner = (data['isTunaPartner'] as bool? ?? false) || 
-                              (brandLabel == 'tuna');
+                              (brandLabel?.toLowerCase() == 'tuna') || hasDynamicBrand;
         if (!isTunaPartner) continue;
       }
       

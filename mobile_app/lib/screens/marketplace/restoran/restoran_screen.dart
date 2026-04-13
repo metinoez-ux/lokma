@@ -21,6 +21,7 @@ import 'package:lokma_app/services/table_group_service.dart';
 import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/providers/bottom_nav_provider.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
+import 'package:lokma_app/providers/platform_brands_provider.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:lokma_app/widgets/open_partners_map_sheet.dart';
 import '../../../utils/currency_utils.dart';
@@ -393,7 +394,26 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       final data = doc.data() as Map<String, dynamic>;
       final businessType = _extractBusinessType(data);
       final isActive = data['isActive'] as bool? ?? true;
-      // TUNA Partner check - check multiple possible field names
+      bool hasDynamicBrand = false;
+      final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+      if (activeBrandIds.isNotEmpty) {
+        final platformBrandsAsync = ref.read(platformBrandsProvider);
+        if (platformBrandsAsync.value != null) {
+          for (final brandId in activeBrandIds) {
+            try {
+              final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+              final name = brand.name.toString().toLowerCase();
+              if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                hasDynamicBrand = true;
+                break;
+              }
+            } catch (e) {
+              // firstWhere throws if not found
+            }
+          }
+        }
+      }
+
       final brandLabel = data['brandLabel'] as String?;
       final brand = data['brand']
           as String?; // Some records use 'brand' instead of 'brandLabel'
@@ -403,7 +423,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       final isTunaPartner = (data['isTunaPartner'] as bool? ?? false) ||
           (brandLabel?.toLowerCase() == 'tuna') ||
           (brand?.toLowerCase() == 'tuna') ||
-          hasTunaTag;
+          hasTunaTag ||
+          hasDynamicBrand;
 
       // Skip inactive
       if (!isActive) return false;
@@ -571,6 +592,24 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           return ratingB.compareTo(ratingA);
 
         case 'tuna': // Tuna Sıralaması (Premium Tuna marks first)
+          bool hasDynamicBrandA = false;
+          final activeBrandIdsA = List<String>.from(dataA['activeBrandIds'] ?? []);
+          if (activeBrandIdsA.isNotEmpty) {
+            final platformBrandsAsync = ref.read(platformBrandsProvider);
+            if (platformBrandsAsync.value != null) {
+              for (final brandId in activeBrandIdsA) {
+                try {
+                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+                  final name = brand.name.toString().toLowerCase();
+                  if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                    hasDynamicBrandA = true;
+                    break;
+                  }
+                } catch (e) { }
+              }
+            }
+          }
+
           final brandLabelA = dataA['brandLabel'] as String?;
           final brandA = dataA['brand'] as String?;
           final tagsA = dataA['tags'] as List<dynamic>?;
@@ -579,7 +618,25 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final isTunaA = (dataA['isTunaPartner'] as bool? ?? false) ||
               (brandLabelA?.toLowerCase() == 'tuna') ||
               (brandA?.toLowerCase() == 'tuna') ||
-              hasTunaTagA;
+              hasTunaTagA || hasDynamicBrandA;
+
+          bool hasDynamicBrandB = false;
+          final activeBrandIdsB = List<String>.from(dataB['activeBrandIds'] ?? []);
+          if (activeBrandIdsB.isNotEmpty) {
+            final platformBrandsAsync = ref.read(platformBrandsProvider);
+            if (platformBrandsAsync.value != null) {
+              for (final brandId in activeBrandIdsB) {
+                try {
+                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+                  final name = brand.name.toString().toLowerCase();
+                  if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                    hasDynamicBrandB = true;
+                    break;
+                  }
+                } catch (e) { }
+              }
+            }
+          }
 
           final brandLabelB = dataB['brandLabel'] as String?;
           final brandB = dataB['brand'] as String?;
@@ -589,7 +646,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final isTunaB = (dataB['isTunaPartner'] as bool? ?? false) ||
               (brandLabelB?.toLowerCase() == 'tuna') ||
               (brandB?.toLowerCase() == 'tuna') ||
-              hasTunaTagB;
+              hasTunaTagB || hasDynamicBrandB;
 
           if (isTunaA && !isTunaB) return -1;
           if (!isTunaA && isTunaB) return 1;
@@ -1544,6 +1601,24 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
       // Apply TUNA filter
       if (_onlyTuna) {
+        bool hasDynamicBrand = false;
+        final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+        if (activeBrandIds.isNotEmpty) {
+          final platformBrandsAsync = ref.read(platformBrandsProvider);
+          if (platformBrandsAsync.value != null) {
+            for (final brandId in activeBrandIds) {
+              try {
+                final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+                final name = brand.name.toString().toLowerCase();
+                if (name.contains('tuna') || name.contains('toros') || name.contains('helal')) {
+                  hasDynamicBrand = true;
+                  break;
+                }
+              } catch (e) { }
+            }
+          }
+        }
+
         final brandLabel = data['brandLabel'] as String?;
         final brand = data['brand'] as String?;
         final tags = data['tags'] as List<dynamic>?;
@@ -1552,7 +1627,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         final isTunaPartner = (data['isTunaPartner'] as bool? ?? false) ||
             (brandLabel?.toLowerCase() == 'tuna') ||
             (brand?.toLowerCase() == 'tuna') ||
-            hasTunaTag;
+            hasTunaTag || hasDynamicBrand;
         if (!isTunaPartner) continue;
       }
 
