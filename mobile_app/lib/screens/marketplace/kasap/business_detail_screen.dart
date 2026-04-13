@@ -23,6 +23,7 @@ import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/data/product_catalog_data.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/table_group_provider.dart';
+import 'package:lokma_app/providers/platform_brands_provider.dart';
 import 'cart_screen.dart';
 import 'product_customization_sheet.dart';
 import 'reservation_booking_screen.dart';
@@ -2468,6 +2469,39 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         hasTunaTag;
     final showBrandBadge = isTunaPartner || (brand?.toString().toLowerCase() == 'akdeniz_toros');
     
+    // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)
+    final platformBrandsAsync = ref.watch(platformBrandsProvider);
+    final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
+    final List<Map<String, dynamic>> activeBadges = [];
+    platformBrandsAsync.whenData((brands) {
+      for (final brand in brands) {
+        if (activeBrandIds.contains(brand.id)) {
+          activeBadges.add({
+            'name': brand.name,
+            'iconUrl': brand.iconUrl,
+          });
+        }
+      }
+    });
+
+    // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
+    if (activeBadges.isEmpty) {
+      if (isTunaPartner) {
+        activeBadges.add({
+          'name': 'TUNA',
+          'iconUrl': '', // Handled by legacy block
+          'isLegacyTuna': true,
+        });
+      }
+      if (brand?.toString().toLowerCase() == 'akdeniz_toros') {
+        activeBadges.add({
+          'name': 'Akdeniz Toros',
+          'iconUrl': '',
+          'isLegacyToros': true,
+        });
+      }
+    }
+    
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
     if (brand?.toString().toLowerCase() == 'tuna') {
@@ -2726,47 +2760,86 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                               ),
                             ),
-                          // Brand Badge (Top Left - standardized pill matching list view)
-                          if (showBrandBadge)
+                          // Brand Badges (Top Left - standardized pill matching list view)
+                          if (activeBadges.isNotEmpty)
                             Positioned(
                               top: 12,
                               left: 12,
-                              child: GestureDetector(
-                                onTap: isTunaPartner ? _showTunaBrandInfo : null,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFA01E22),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.verified, color: Colors.white, size: 14),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        isTunaPartner ? 'TUNA' : _getBrandLabel(brand).toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 1.2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: activeBadges.map((badge) {
+                                  final isLegacyTuna = badge['isLegacyTuna'] == true;
+                                  final isLegacyToros = badge['isLegacyToros'] == true;
+                                  final Color badgeColor = isLegacyTuna 
+                                    ? const Color(0xFFA01E22) 
+                                    : (isLegacyToros ? const Color(0xFF1B5E20) : Theme.of(context).colorScheme.surface);
+                                  final Color textColor = (isLegacyTuna || isLegacyToros) 
+                                    ? Colors.white 
+                                    : Theme.of(context).colorScheme.onSurface;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        HapticFeedback.lightImpact();
+                                        if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) {
+                                          _showTunaBrandInfo();
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: badgeColor,
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.3),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (isLegacyTuna || isLegacyToros)
+                                              Icon(Icons.verified, color: textColor, size: 14)
+                                            else if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: CachedNetworkImage(
+                                                  imageUrl: badge['iconUrl'],
+                                                  height: 18,
+                                                  fit: BoxFit.contain,
+                                                  placeholder: (context, url) => Container(
+                                                    color: Colors.transparent,
+                                                    height: 18,
+                                                    width: 18,
+                                                  ),
+                                                  errorWidget: (context, url, error) =>
+                                                      Icon(Icons.verified, color: textColor, size: 14),
+                                                ),
+                                              ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              badge['name'],
+                                              style: TextStyle(
+                                                color: textColor,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 1.2,
+                                              ),
+                                            ),
+                                            if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) ...[
+                                              const SizedBox(width: 4),
+                                              Icon(Icons.info_outline, color: textColor, size: 15),
+                                            ],
+                                          ],
                                         ),
                                       ),
-                                      if (isTunaPartner) ...[
-                                        const SizedBox(width: 4),
-                                        const Icon(Icons.info_outline, color: Colors.white, size: 15),
-                                      ],
-                                    ],
-                                  ),
-                                ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             ),
                           // Favorite Heart (Top Right - overlay on image)

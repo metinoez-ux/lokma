@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../providers/butcher_favorites_provider.dart';
 import '../../../utils/currency_utils.dart';
 import '../../../models/table_group_session_model.dart';
+import '../../../providers/platform_brands_provider.dart';
 import '../../../widgets/group_order_setup_sheet.dart';
 import '../../../widgets/marketplace_group_share_sheet.dart';
 
@@ -57,6 +58,40 @@ class WalletBusinessCard extends ConsumerWidget {
     const Color lokmaPink = Color(0xFFF04A41);
     const Color tunaGreen = Color(0xFF2E7D32);
     final isFavorite = ref.watch(butcherFavoritesProvider).contains(id);
+    
+    // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)
+    final platformBrandsAsync = ref.watch(platformBrandsProvider);
+    final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+    final List<Map<String, dynamic>> activeBadges = [];
+    platformBrandsAsync.whenData((brands) {
+      for (final brand in brands) {
+        if (activeBrandIds.contains(brand.id)) {
+          activeBadges.add({
+            'name': brand.name,
+            'iconUrl': brand.iconUrl,
+          });
+        }
+      }
+    });
+
+    // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
+    if (activeBadges.isEmpty) {
+      if (data['sellsTunaProducts'] == true || data['brand'] == 'tuna') {
+        activeBadges.add({
+          'name': 'TUNA',
+          'iconUrl': '', // Handled by legacy block
+          'isLegacyTuna': true,
+        });
+      }
+      if (data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros') {
+        activeBadges.add({
+          'name': 'Akdeniz Toros',
+          'iconUrl': '',
+          'isLegacyToros': true,
+        });
+      }
+    }
+
     final String distanceText = distance < 1
         ? '${(distance * 1000).toInt()} m'
         : '${distance.toStringAsFixed(1).replaceAll('.', ',')} km';
@@ -676,49 +711,83 @@ class WalletBusinessCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (isTunaPartner)
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        _showTunaBrandInfo(context);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFA01E22), // TUNA dark red
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.verified, color: Colors.white, size: 14),
-                            SizedBox(width: 4),
-                            Text(
-                              'TUNA',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.2,
+                  ...activeBadges.map((badge) {
+                    final isLegacyTuna = badge['isLegacyTuna'] == true;
+                    final isLegacyToros = badge['isLegacyToros'] == true;
+                    final Color badgeColor = isLegacyTuna 
+                      ? const Color(0xFFA01E22) 
+                      : (isLegacyToros ? const Color(0xFF1B5E20) : Theme.of(context).colorScheme.surface);
+                    final Color textColor = (isLegacyTuna || isLegacyToros) 
+                      ? Colors.white 
+                      : Theme.of(context).colorScheme.onSurface;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) {
+                            _showTunaBrandInfo(context);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: badgeColor,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
-                            SizedBox(width: 4),
-                            Icon(Icons.info_outline, color: Colors.white, size: 15),
-                          ],
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isLegacyTuna || isLegacyToros)
+                                Icon(Icons.verified, color: textColor, size: 14)
+                              else if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: CachedNetworkImage(
+                                    imageUrl: badge['iconUrl'],
+                                    height: 18,
+                                    fit: BoxFit.contain,
+                                    placeholder: (context, url) => Container(
+                                      color: Colors.transparent,
+                                      height: 18,
+                                      width: 18,
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        Icon(Icons.verified, color: textColor, size: 14),
+                                  ),
+                                ),
+                              const SizedBox(width: 4),
+                              Text(
+                                badge['name'],
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) ...[
+                                const SizedBox(width: 4),
+                                Icon(Icons.info_outline, color: textColor, size: 15),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+                    );
+                  }).toList(),
                   // Add future top-left badges here (e.g., Sponsored, Verified) with SizedBox(height: 6)
                 ],
               ),
