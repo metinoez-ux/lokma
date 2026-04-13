@@ -256,9 +256,9 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                             child: const Icon(Icons.assignment_ind_rounded, size: 36, color: Colors.blue),
                           ),
                           const SizedBox(height: 16),
-                          Text('Yeni Vardiya Ataması', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800)),
+                          Text(data['kermesName'] ?? 'Yeni Vardiya Ataması', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800, textAlign: TextAlign.center)),
                           const SizedBox(height: 8),
-                          Text(body, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87, height: 1.4)),
+                          Text('Yeni bir göreve / mesai saatine atandınız.', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87, height: 1.4)),
                           const SizedBox(height: 24),
                           
                           // Details Box
@@ -271,11 +271,30 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                             ),
                             child: Column(
                               children: [
-                                _rosterDetailRow('Tarih:', data['dateSpan'] ?? data['date'] ?? '-', isDark),
+                                (() {
+                                  String dStr = data['dateSpan'] ?? data['date'] ?? '-';
+                                  if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dStr)) {
+                                    final parts = dStr.split('-');
+                                    dStr = '${parts[2]}.${parts[1]}.${parts[0]}';
+                                  }
+                                  return _rosterDetailRow('Tarih:', dStr, isDark);
+                                })(),
                                 const SizedBox(height: 10),
-                                _rosterDetailRow('Saat:', '${data['startTime'] ?? '-'} / ${data['endTime'] ?? '-'}', isDark),
+                                _rosterDetailRow('Saat:', '${data['startTime'] ?? '-'} - ${data['endTime'] ?? '-'}', isDark),
                                 const SizedBox(height: 10),
+                                if (data['zone'] != null && data['zone'].toString().isNotEmpty) ...[
+                                  _rosterDetailRow('Bölüm:', data['zone'], isDark),
+                                  const SizedBox(height: 10),
+                                ],
                                 _rosterDetailRow('Görev:', data['role'] ?? '-', isDark),
+                                if (data['address'] != null && data['address'].toString().isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  _rosterDetailRow('Adres:', data['address'], isDark),
+                                ],
+                                if (data['adminName'] != null && data['adminName'].toString().isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  _rosterDetailRow('Yetkili:', '${data['adminName']} ${data['adminPhone'] != null ? '(${data['adminPhone']})' : ''}', isDark),
+                                ],
                               ],
                             ),
                           ),
@@ -325,24 +344,30 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                 ]
                               );
                             } else if (rosterResponse != null && !canRevise) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                decoration: BoxDecoration(
-                                  color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(rosterResponse == 'accepted' ? Icons.check_circle : Icons.cancel, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      rosterResponse == 'accepted' ? 'Görevi Kabul Ettiniz' : 'Görevi Reddettiniz',
-                                      style: TextStyle(fontWeight: FontWeight.bold, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
-                                    )
-                                  ],
-                                ),
+                              return Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                    decoration: BoxDecoration(
+                                      color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(rosterResponse == 'accepted' ? Icons.check_circle : Icons.cancel, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          rosterResponse == 'accepted' ? 'Görevi Kabul Ettiniz' : 'Görevi Reddettiniz',
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text('Revize süresi (30dk) sona ermiştir.', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
+                                ],
                               );
                             } else {
                               return Row(
