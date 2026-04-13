@@ -620,9 +620,9 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
       openingTime: data['openingTime'] ?? '08:00',
       closingTime: data['closingTime'] ?? '22:00',
       flyers: data['imageUrl'] != null ? [data['imageUrl']] : [],
-      hasTakeaway: features.contains('takeaway'),
-      hasDelivery: features.contains('delivery'),
-      hasDineIn: features.contains('dine_in') || features.contains('masa'),
+      hasTakeaway: data['hasTakeaway'] ?? true, // Eski etkinlikler için varsayılan true
+      hasDelivery: data['hasDelivery'] ?? features.contains('delivery'),
+      hasDineIn: data['hasDineIn'] ?? (features.contains('dine_in') || features.contains('masa')),
       isMenuOnly: data['isMenuOnly'] ?? false,
       hasKidsActivities: features.contains('kids') || features.contains('kids_area'),
       activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),

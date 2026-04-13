@@ -791,7 +791,7 @@ function NewKermesContent() {
  onChange={(e) => setHasDineIn(e.target.checked)}
  className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500"
  />
- <span className="text-foreground">Masa İmkanı (Dine-in)</span>
+ <span className="text-foreground">Masa Servisi İmkanı (Dine-in)</span>
  </label>
  <label className="flex items-center gap-3 cursor-pointer">
  <input

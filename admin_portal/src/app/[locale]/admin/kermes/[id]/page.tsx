@@ -2712,10 +2712,16 @@ export default function KermesDetailPage() {
  <>
  <div className="pl-6 space-y-3 border-l-2 border-gray-700 ml-2 mt-4">
  <label className="flex items-center gap-3 cursor-pointer">
+ <input type="checkbox" checked={editForm.hasTakeaway !== false} // Varsayılan açık
+ onChange={(e) => setEditForm({ ...editForm, hasTakeaway: e.target.checked })}
+ className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
+ <span className="text-foreground">Gel-Al İmkanı (Takeaway)</span>
+ </label>
+ <label className="flex items-center gap-3 cursor-pointer">
  <input type="checkbox" checked={editForm.hasDineIn}
  onChange={(e) => setEditForm({ ...editForm, hasDineIn: e.target.checked })}
  className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
- <span className="text-foreground">Masa İmkanı (Dine-in)</span>
+ <span className="text-foreground">Masa Servisi İmkanı (Dine-in)</span>
  </label>
  <label className="flex items-center gap-3 cursor-pointer">
  <input type="checkbox" checked={editForm.hasDelivery}
