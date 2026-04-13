@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class KermesBadge {
   final String id;
   final String label;
+  final String description;
   final String iconUrl;
   final String colorHex;
   final String textColorHex;
@@ -12,6 +13,7 @@ class KermesBadge {
   KermesBadge({
     required this.id,
     required this.label,
+    required this.description,
     required this.iconUrl,
     required this.colorHex,
     required this.textColorHex,
@@ -23,6 +25,7 @@ class KermesBadge {
     return KermesBadge(
       id: doc.id,
       label: data['name'] ?? data['label'] ?? '',
+      description: data['description'] ?? '',
       iconUrl: data['iconUrl'] ?? '',
       colorHex: data['colorHex'] ?? '#EA184A',
       textColorHex: data['textColorHex'] ?? '#FFFFFF',

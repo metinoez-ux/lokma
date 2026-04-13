@@ -832,6 +832,114 @@ void _onMenuScroll() {
     return ref.read(kermesCartProvider.notifier).getQuantity(item.name);
   }
 
+  void _showBadgeDetailsBottomSheet(KermesBadge badge) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 24,
+            top: 12,
+            left: 24,
+            right: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Bottom sheet handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                margin: const EdgeInsets.bottom(24),
+              ),
+              if (badge.iconUrl.isNotEmpty) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: CachedNetworkImage(
+                    imageUrl: badge.iconUrl,
+                    height: 80,
+                    fit: BoxFit.contain,
+                    placeholder: (context, url) =>
+                        const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+                    errorWidget: (context, url, error) =>
+                        const SizedBox(height: 80, child: Icon(Icons.verified, size: 60, color: Colors.grey)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+              Text(
+                badge.label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (badge.description.isNotEmpty)
+                Text(
+                  badge.description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                )
+              else
+                Text(
+                  'Bu kermes ${badge.label} onaylı ürünler ve sertifikalı tedarikçiler ile çalışmaktadır.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF'))),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'Anladım',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF'))),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _shareKermes() {
     HapticFeedback.lightImpact();
     final event = _currentEvent;
@@ -1758,40 +1866,84 @@ Widget _buildHeroSection(BuildContext context) {
             ),
           ),
 
-          // TUNA Sponsor Badge
-          if (_currentEvent.sponsor == KermesSponsor.tuna)
+          // Dynamic Sponsor / Certificate Badges
+          if (_currentEvent.activeBadgeIds.isNotEmpty && _activeBadges != null)
             Positioned(
               top: 56,
               left: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA01E22),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.verified, color: Colors.white, size: 15),
-                    const SizedBox(width: 5),
-                    const Text(
-                      'TUNA',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _currentEvent.activeBadgeIds.map((badgeId) {
+                  final badge = _activeBadges![badgeId];
+                  if (badge == null || !badge.isActive) return const SizedBox.shrink();
+
+                  final bgColor = Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
+                  final textColor = Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF')));
+
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _showBadgeDetailsBottomSheet(badge);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.fromLTRB(14, 6, 10, 6),
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (badge.iconUrl.isNotEmpty) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: CachedNetworkImage(
+                                imageUrl: badge.iconUrl,
+                                height: 16,
+                                width: 16,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: Colors.transparent,
+                                  height: 16,
+                                  width: 16,
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.verified, color: textColor, size: 15),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ] else ...[
+                            Icon(Icons.verified, color: textColor, size: 15),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            badge.label.toUpperCase(),
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.chevron_right,
+                            color: textColor.withOpacity(0.8),
+                            size: 16,
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                }).toList(),
               ),
             ),
 
