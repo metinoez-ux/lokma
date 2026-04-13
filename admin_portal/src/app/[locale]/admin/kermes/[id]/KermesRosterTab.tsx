@@ -329,6 +329,18 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     const isMaleStaff = staffGender === 'male' || staffGender === 'erkek';
     const isFemaleStaff = staffGender === 'female' || staffGender === 'kadin';
     
+    // 1. Önce Admin'in Sistemden (Mutfak Sekmesi) Açıkça Yaptığı Cinsiyet Atamasını Kontrol Et
+    const mappedSection = kermesSections?.find(sec => sec.prepZones?.includes(r));
+    if (mappedSection && mappedSection.genderRestriction) {
+      if (mappedSection.genderRestriction === 'female' && isMaleStaff) return true;
+      if (mappedSection.genderRestriction === 'male' && isFemaleStaff) return true;
+      // Eğer bir section'a aitse ve kısıtlama kontrolünden geçtiyse string-bazlı (geleneksel) fallback'e DÜŞMEMESİ gerekir.
+      if (['female', 'male', 'all'].includes(mappedSection.genderRestriction)) {
+         return false;
+      }
+    }
+    
+    // 2. Fallback: Personel Bölümü vb. atanmamışsa veya Sistem İçi Geleneksel/Manuel rollerse isminden çıkarım yap
     const lowerRole = r.toLowerCase();
     
     // Erkek personeller için olan bölümler ve açık etiketler
@@ -355,7 +367,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     if (isFemaleRole && isMaleStaff) return true;
     
     return false;
-  }, [form.userId, workspaceStaff]);
+  }, [form.userId, workspaceStaff, kermesSections]);
 
   // Helper function to format minutes to HH:MM
   const minsToTime = (mins: number) => {
