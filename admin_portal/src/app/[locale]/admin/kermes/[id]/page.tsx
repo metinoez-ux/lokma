@@ -2380,7 +2380,6 @@ export default function KermesDetailPage() {
  {f.iconUrl ? <img src={f.iconUrl} alt={f.label} className="w-4 h-4 object-contain rounded-sm inline-block" /> : (f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>))}
  {getLocalizedFeatureLabel(f)}
  </button>
- )}
  </span>
  ))}
  </div>
