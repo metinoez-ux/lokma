@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -1630,6 +1631,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           .snapshots(),
       builder: (context, snapshot) {
         double unsettledCash = 0.0;
+        List<String> orderIds = [];
         if (snapshot.hasData) {
           for (final doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
@@ -1639,15 +1641,16 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             if (!settledToRegister) {
               final amount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
               unsettledCash += amount;
+              orderIds.add(doc.id);
             }
           }
         }
-        return _buildFinanceCardContent(isDark, unsettledCash);
+        return _buildFinanceCardContent(isDark, unsettledCash, orderIds);
       },
     );
   }
 
-  Widget _buildFinanceCardContent(bool isDark, double unsettledCash) {
+  Widget _buildFinanceCardContent(bool isDark, double unsettledCash, List<String> orderIds) {
     return Container(
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.only(bottom: 20),
@@ -1719,7 +1722,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 child: SizedBox(
                   height: 44,
                   child: ElevatedButton.icon(
-                    onPressed: unsettledCash > 0 ? () {} : null,
+                    onPressed: unsettledCash > 0 ? () => _showHandoverQRDialog(context, unsettledCash, orderIds) : null,
                     icon: const Icon(Icons.account_balance_wallet, size: 16),
                     label: const Text('Kasaya Teslim Et', style: TextStyle(fontSize: 12)),
                     style: ElevatedButton.styleFrom(
@@ -2113,6 +2116,171 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showHandoverQRDialog(BuildContext context, double declaredAmount, List<String> orderIds) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final capabilities = ref.read(staffCapabilitiesProvider);
+    if (user == null || capabilities.businessId == null) return;
+
+    setState(() => _shiftLoading = true);
+    DocumentReference? handoverDocRef;
+    try {
+      final data = {
+        'staffId': user.uid,
+        'staffName': capabilities.staffName ?? 'Personel',
+        'businessId': capabilities.businessId,
+        'declaredAmount': declaredAmount,
+        'actualAmount': declaredAmount,
+        'status': 'pending', // pending, completed, cancelled
+        'orderIds': orderIds,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+      
+      handoverDocRef = await FirebaseFirestore.instance.collection('kermes_cash_handovers').add(data);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
+      }
+      setState(() => _shiftLoading = false);
+      return;
+    }
+    setState(() => _shiftLoading = false);
+
+    if (!mounted || handoverDocRef == null) return;
+    
+    // We listen to the doc inside the dialog via StreamBuilder
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: StreamBuilder<DocumentSnapshot>(
+            stream: handoverDocRef!.snapshots(),
+            builder: (ctx2, snapshot) {
+              if (snapshot.hasData && snapshot.data!.exists) {
+                final data = snapshot.data!.data() as Map<String, dynamic>;
+                if (data['status'] == 'completed') {
+                  // Admin approved it! Close dialog and show success.
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (Navigator.canPop(ctx2)) {
+                      Navigator.pop(ctx2);
+                    }
+                    _showHandoverSuccess(data['adminName'] ?? 'Admin', data['completedAt'] as Timestamp?, data['actualAmount']);
+                  });
+                  return const SizedBox();
+                } else if (data['status'] == 'cancelled') {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (Navigator.canPop(ctx2)) Navigator.pop(ctx2);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tahsilat işlemi iptal edildi.')));
+                  });
+                  return const SizedBox();
+                }
+              }
+
+              return Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Tahsilat QR Kodu', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Lütfen bu kodu Kermes Yöneticisine okutun.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: QrImageView(
+                        data: 'kermes://handover/${handoverDocRef!.id}',
+                        version: QrVersions.auto,
+                        size: 200.0,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      '${declaredAmount.toStringAsFixed(2)} EUR',
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.orange),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () {
+                          handoverDocRef!.update({'status': 'cancelled'});
+                        },
+                        child: const Text('İptal Et', style: TextStyle(color: Colors.red)),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _showHandoverSuccess(String adminName, Timestamp? completedAt, dynamic actualAmount) {
+    if (!mounted) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    String timeStr = '';
+    if (completedAt != null) {
+      timeStr = DateFormat('dd.MM.yyyy HH:mm:ss').format(completedAt.toDate());
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80, height: 80,
+                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 50),
+              ),
+              const SizedBox(height: 20),
+              Text('Teslim Edildi!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+              const SizedBox(height: 12),
+              Text(
+                'Tahsilatınız başarıyla gerçekleştirildi.\n\nTeslim Alan: $adminName\nZaman: $timeStr\nTutar: ${actualAmount != null ? (actualAmount as num).toStringAsFixed(2) : '-'} EUR',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: isDark ? Colors.white70 : Colors.black54, height: 1.5),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Harika', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -25,6 +25,7 @@ import '../kermes/kermes_tezgah_screen.dart';
 import 'tabs/staff_pos_wrapper_tab.dart';
 import 'tabs/parking_management_tab.dart';
 import '../profile/widgets/workplace_selector_sheet.dart';
+import '../../widgets/kermes/handover_confirmation_dialog.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -553,10 +554,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   void _openQrScanner(String? businessId) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => const QRScannerScreen(
-        prompt: 'Siparis / Fatura QR Oku',
+        prompt: 'QR Kodunu Okutun',
       ),
     )).then((scannedText) {
       if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
+        if (scannedText.startsWith('kermes://handover/')) {
+          _handleHandoverQR(scannedText);
+          return;
+        }
+
         final query = Uri(path: '/kermesler', queryParameters: {
           'scannedOrder': scannedText,
           'businessId': businessId,
@@ -564,6 +570,40 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         context.push(query);
       }
     });
+  }
+
+  void _handleHandoverQR(String qrCode) async {
+    final capabilities = ref.read(staffCapabilitiesProvider);
+    if (!capabilities.hasKermesAdminRole) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sadece Kermes Yöneticileri tahsilat teslim alabilir.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final docId = qrCode.replaceAll('kermes://handover/', '');
+    try {
+      final doc = await FirebaseFirestore.instance.collection('kermes_cash_handovers').doc(docId).get();
+      if (!doc.exists) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tahsilat belgesi bulunamadı.')));
+        return;
+      }
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['status'] != 'pending') {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bu tahsilat fişi zaten onaylanmış veya iptal edilmiş.')));
+        return;
+      }
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => HandoverConfirmationDialog(handoverDocId: docId, handoverData: data),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
+    }
   }
 
   /// Aktif tab'in basligini getir (BottomNavItem label'indan)
