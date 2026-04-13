@@ -287,6 +287,49 @@ export const onKermesRosterUpdated = onDocumentUpdated(
                 
                 console.log(`[Roster Updated] Rejection alert sent to admin ${adminUid}`);
 
+                // Strip capability array if this was the last active shift for this role
+                if (isRejected) {
+                    const activeRosters = await db.collection("kermes_events").doc(kermesId).collection("rosters")
+                        .where("userId", "==", userId)
+                        .where("role", "==", role)
+                        .where("status", "in", ["pending", "accepted"])
+                        .get();
+
+                    if (activeRosters.empty) {
+                        const updateObj: Record<string, any> = {};
+                        if (role === "Sürücü" || role.toLowerCase() === "driver") {
+                            updateObj.assignedDrivers = admin.firestore.FieldValue.arrayRemove(userId);
+                        } else if (role === "Garson" || role.toLowerCase() === "waiter") {
+                            updateObj.assignedWaiters = admin.firestore.FieldValue.arrayRemove(userId);
+                        } else {
+                            const customRoles = kData.customRoles || [];
+                            const matchedCustom = customRoles.find((c: any) => c.name === role || c.id === role);
+                            if (matchedCustom) {
+                                updateObj[`customRoleAssignments.${matchedCustom.id}`] = admin.firestore.FieldValue.arrayRemove(userId);
+                            }
+                            if (role === "Park Görevlisi" || role.includes("Park")) {
+                                updateObj[`customRoleAssignments.role_park`] = admin.firestore.FieldValue.arrayRemove(userId);
+                                updateObj[`customRoleAssignments.role_park_system`] = admin.firestore.FieldValue.arrayRemove(userId);
+                            }
+                            if (role === "Temizlik Görevlisi" || role.includes("Temizlik")) {
+                                updateObj[`customRoleAssignments.role_temizlik`] = admin.firestore.FieldValue.arrayRemove(userId);
+                                updateObj[`customRoleAssignments.role_temizlik_system`] = admin.firestore.FieldValue.arrayRemove(userId);
+                            }
+                            const pz = kData.prepZoneAssignments || {};
+                            for (const key of Object.keys(pz)) {
+                                if (key === role) {
+                                   updateObj[`prepZoneAssignments.${key}`] = admin.firestore.FieldValue.arrayRemove(userId);
+                                }
+                            }
+                        }
+                        
+                        if (Object.keys(updateObj).length > 0) {
+                            await kermesDoc.ref.update(updateObj);
+                            console.log(`[Roster Updated] Revoked capability arrays for user ${userId} on role ${role}`);
+                        }
+                    }
+                }
+
                 // Also send a transactional email to the Admin if they have an email registered
                 const adminDoc = await db.collection("users").doc(adminUid).get();
                 if (adminDoc.exists) {

@@ -79,7 +79,7 @@ exports.onKermesRosterCreated = (0, firestore_1.onDocumentCreated)({
         // 2. Fetch Kermes Event Data for context
         const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
         const kData = kermesDoc.exists ? kermesDoc.data() : {};
-        const kermesName = kData?.kermesName || kData?.name || kData?.city || "Kermes";
+        const kermesName = kData?.title || kData?.kermesName || kData?.name || kData?.city || "Kermes";
         if (roster.skipNotification === true) {
             console.log(`[Roster Notify] Skipping notification for roster ${event.params.rosterId} (part of batch)`);
             return;
@@ -88,13 +88,32 @@ exports.onKermesRosterCreated = (0, firestore_1.onDocumentCreated)({
         const safelyFormatDate = (val) => {
             if (!val)
                 return null;
+            // Gecersiz string ise
+            if (val === '[object Object]')
+                return null;
+            // Eger Firestore Timestamp ise
             if (typeof val?.toDate === 'function') {
-                // Format as DD.MM.YYYY
                 const d = val.toDate();
                 return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
             }
-            if (typeof val === 'string')
+            // Eger string ise
+            if (typeof val === 'string') {
                 return val;
+            }
+            // Eger _seconds iceren objeyse (Firebase SDK fallback)
+            if (val._seconds) {
+                const d = new Date(val._seconds * 1000);
+                return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+            }
+            // Eger Date objesiyse
+            if (val instanceof Date) {
+                return `${val.getDate().toString().padStart(2, '0')}.${(val.getMonth() + 1).toString().padStart(2, '0')}.${val.getFullYear()}`;
+            }
+            // Eger saniyeler iceren bir Firebase map'i ise
+            if (val.seconds) {
+                const d = new Date(val.seconds * 1000);
+                return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+            }
             return null;
         };
         const kStart = safelyFormatDate(kData?.startDate) || safelyFormatDate(kData?.kermesStart) || "Belirtilmedi";
@@ -341,7 +360,7 @@ exports.onKermesRosterDeleted = (0, firestore_3.onDocumentDeleted)({
     document: "kermes_events/{kermesId}/rosters/{rosterId}",
     secrets: [resendApiKey]
 }, async (event) => {
-    const deletedRoster = event.data?.previous.data();
+    const deletedRoster = event.data?.data();
     if (!deletedRoster)
         return;
     // Skip deletion alerts for subsequent days in a multi-day batch (only alert once)

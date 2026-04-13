@@ -493,18 +493,27 @@ class _KermesCardState extends State<KermesCard> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 6),
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: hasIcon ? 4 : 12, vertical: hasIcon ? 4 : 6),
+                                    padding: hasIcon
+                                        ? EdgeInsets.zero
+                                        : const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: hasIcon ? Colors.transparent : bgColor,
-                                      borderRadius: BorderRadius.circular(50), // Hap seklinde
+                                      color: hasIcon ? Theme.of(context).colorScheme.surface : bgColor,
+                                      borderRadius: hasIcon ? BorderRadius.circular(8) : BorderRadius.circular(50),
                                       border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
-                                      boxShadow: hasIcon ? null : [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.25),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
+                                      boxShadow: [
+                                        if (hasIcon)
+                                          BoxShadow(
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          )
+                                        else
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.25),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
                                       ],
                                     ),
                                     child: Row(
@@ -512,16 +521,16 @@ class _KermesCardState extends State<KermesCard> {
                                       children: [
                                         if (hasIcon)
                                           ClipRRect(
-                                            borderRadius: BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(8),
                                             child: CachedNetworkImage(
                                               imageUrl: badge.iconUrl,
-                                              height: 36, // Sadece logo
-                                              width: 36,
-                                              fit: BoxFit.contain,
+                                              height: 48,
+                                              width: 48,
+                                              fit: BoxFit.cover,
                                               placeholder: (context, url) => Container(
                                                 color: Colors.transparent,
-                                                height: 36,
-                                                width: 36,
+                                                height: 48,
+                                                width: 48,
                                               ),
                                               errorWidget: (context, url, error) =>
                                                   Icon(Icons.verified, color: textColor, size: 20),

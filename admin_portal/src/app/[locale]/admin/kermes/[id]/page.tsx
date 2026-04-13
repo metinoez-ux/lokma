@@ -3712,12 +3712,12 @@ export default function KermesDetailPage() {
  {/* Atanmis Personel Listesi */}
  <div className="space-y-2">
  {assignedStaffDetails.map(staff => (
- <div key={staff.id} className={`flex items-center justify-between px-4 py-3 rounded-lg border ${
+ <div key={staff.id} className={`flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 rounded-lg border ${
  staff.gender === 'female'
  ? 'bg-pink-50 dark:bg-pink-950/20 border-pink-200 dark:border-pink-800'
  : 'bg-cyan-50 dark:bg-cyan-950/20 border-cyan-200 dark:border-cyan-800'
  }`}>
- <div className="flex items-center gap-3">
+ <div className="flex items-center gap-3 flex-1 min-w-0">
  {staff.photoURL || staff.profileImageUrl ? (
  <img src={staff.photoURL || staff.profileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
  ) : (
@@ -3772,7 +3772,7 @@ export default function KermesDetailPage() {
  )}
  </div>
  </div>
- <div className="flex items-center gap-2">
+ <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 md:w-auto">
  <button 
  type="button" 
  onClick={() => {

@@ -203,10 +203,12 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
               final rAssign = dataMap['customRoleAssignments'] as Map<String, dynamic>? ?? {};
               
               final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
-              earlyHasParkRole = parkList.contains(user.uid);
+              final parkList2 = List<String>.from(rAssign['role_park'] ?? []);
+              earlyHasParkRole = parkList.contains(user.uid) || parkList2.contains(user.uid);
               
               final posList = List<String>.from(rAssign['role_pos_system'] ?? []);
-              earlyHasPosRole = posList.contains(user.uid);
+              final posList2 = List<String>.from(rAssign['role_pos'] ?? []);
+              earlyHasPosRole = posList.contains(user.uid) || posList2.contains(user.uid);
 
               final allRoles = List<Map<String, dynamic>>.from(
                 (dataMap['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],
@@ -391,11 +393,13 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             
             // Check park
             final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
-            hasParkRole = parkList.contains(user.uid); 
+            final parkList2 = List<String>.from(rAssign['role_park'] ?? []);
+            hasParkRole = parkList.contains(user.uid) || parkList2.contains(user.uid); 
             
             // POS Role: Granted to Business Admins and explicitly assigned POS users
             final posList = List<String>.from(rAssign['role_pos_system'] ?? []);
-            hasPosRole = posList.contains(user.uid) || kermesIsAdmin;
+            final posList2 = List<String>.from(rAssign['role_pos'] ?? []);
+            hasPosRole = posList.contains(user.uid) || posList2.contains(user.uid) || kermesIsAdmin;
 
             final allRoles = List<Map<String, dynamic>>.from(
               (dataMap['customRoles'] as List<dynamic>?)?.map((e) => Map<String, dynamic>.from(e as Map)) ?? [],

@@ -284,26 +284,36 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                           
                           (() {
                             bool canRevise = false;
-                            if (data['createdAt'] != null) {
-                              DateTime? dt;
-                              if (data['createdAt'] is Timestamp) {
-                                dt = (data['createdAt'] as Timestamp).toDate();
-                              } else if (data['createdAt'] is String) {
-                                dt = DateTime.tryParse(data['createdAt'] as String);
-                              } else if (data['createdAt'] is int) {
-                                dt = DateTime.fromMillisecondsSinceEpoch(data['createdAt'] as int);
-                              }
-                              
-                              if (dt != null) {
-                                final diff = DateTime.now().difference(dt);
-                                if (diff.inMinutes <= 30) {
-                                  canRevise = true;
-                                }
-                              } else {
-                                canRevise = true;
-                              }
+                            
+                            if (rosterResponse == null) {
+                               canRevise = true;
                             } else {
-                              canRevise = true; // Fallback
+                               if (data['respondedAt'] != null) {
+                                  DateTime? dt;
+                                  if (data['respondedAt'] is Timestamp) {
+                                    dt = (data['respondedAt'] as Timestamp).toDate();
+                                  } else if (data['respondedAt'] is int) {
+                                    dt = DateTime.fromMillisecondsSinceEpoch(data['respondedAt'] as int);
+                                  }
+                                  if (dt != null && DateTime.now().difference(dt).inMinutes <= 30) {
+                                    canRevise = true;
+                                  }
+                               } else {
+                                  // Fallback to createdAt for legacy records without respondedAt, but give 30m buffer
+                                  if (data['createdAt'] != null) {
+                                    DateTime? dt;
+                                    if (data['createdAt'] is Timestamp) {
+                                      dt = (data['createdAt'] as Timestamp).toDate();
+                                    } else if (data['createdAt'] is String) {
+                                      dt = DateTime.tryParse(data['createdAt'] as String);
+                                    } else if (data['createdAt'] is int) {
+                                      dt = DateTime.fromMillisecondsSinceEpoch(data['createdAt'] as int);
+                                    }
+                                    if (dt != null && DateTime.now().difference(dt).inMinutes <= 30) {
+                                      canRevise = true;
+                                    }
+                                  }
+                               }
                             }
                             
                             if (isActionProcessing) {
@@ -433,7 +443,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
         if (rostersSnap.docs.isNotEmpty) {
           final batch = FirebaseFirestore.instance.batch();
           for (var doc in rostersSnap.docs) {
-            batch.update(doc.reference, {'status': action});
+            batch.update(doc.reference, {'status': action, 'updatedAt': FieldValue.serverTimestamp()});
           }
           await batch.commit();
         }
@@ -446,7 +456,11 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
             .doc(uid)
             .collection('notifications')
             .doc(notifId)
-            .update({'response': action});
+            .update({'response': action, 'respondedAt': FieldValue.serverTimestamp()});
+            
+        // Mutate local data map so UI sees it immediately
+        data['response'] = action;
+        data['respondedAt'] = Timestamp.now();
       }
     } catch (e) {
       debugPrint('Roster action update error: $e');
