@@ -505,6 +505,8 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
     // Acilis saati kontrolu sonraya birakildi - siparis gonderme asamasinda yapilacak
     // Kullanici checkout akisini (teslimat tipi, bilgi, odeme) gezebilir
 
+    bool isDialogDismissed = false;
+
     // Show loading indicator
     if (mounted) {
       showDialog(
@@ -522,6 +524,7 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
 
       if (!mounted) return;
       Navigator.of(context).pop(); // dismiss loading
+      isDialogDismissed = true;
 
       if (!doc.exists || doc.data() == null) {
         if (mounted) {
@@ -546,8 +549,10 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
     } catch (e) {
       debugPrint('Checkout error: $e');
       if (!mounted) return;
-      // Try to dismiss loading dialog if still open
-      try { Navigator.of(context).pop(); } catch (_) {}
+      // Sadece loading kapali degilse kapat
+      if (!isDialogDismissed) {
+        try { Navigator.of(context).pop(); } catch (_) {}
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Hata: $e')),
@@ -559,17 +564,21 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
   /// Parse KermesEvent from Firestore document data
   KermesEvent _parseKermesEvent(String docId, Map<String, dynamic> data) {
     DateTime startDate;
-    if (data['startDate'] != null) {
-      startDate = (data['startDate'] as Timestamp).toDate();
-    } else if (data['date'] != null) {
-      startDate = (data['date'] as Timestamp).toDate();
+    final dynamic sVal = data['startDate'] ?? data['date'];
+    if (sVal is Timestamp) {
+      startDate = sVal.toDate();
+    } else if (sVal is String) {
+      startDate = DateTime.tryParse(sVal) ?? DateTime.now();
     } else {
       startDate = DateTime.now();
     }
 
     DateTime endDate;
-    if (data['endDate'] != null) {
-      endDate = (data['endDate'] as Timestamp).toDate();
+    final dynamic eVal = data['endDate'];
+    if (eVal is Timestamp) {
+      endDate = eVal.toDate();
+    } else if (eVal is String) {
+      endDate = DateTime.tryParse(eVal) ?? startDate.add(const Duration(days: 1));
     } else {
       endDate = startDate.add(const Duration(days: 1));
     }
