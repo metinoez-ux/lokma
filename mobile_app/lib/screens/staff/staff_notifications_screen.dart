@@ -282,76 +282,101 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                           
                           const SizedBox(height: 30),
                           
-                          if (rosterResponse != null) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                              decoration: BoxDecoration(
-                                color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3)),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                          (() {
+                            bool canRevise = false;
+                            if (data['createdAt'] != null) {
+                              final createdAtTs = data['createdAt'] as Timestamp;
+                              final diff = DateTime.now().difference(createdAtTs.toDate());
+                              if (diff.inMinutes <= 30) {
+                                canRevise = true;
+                              }
+                            } else {
+                              canRevise = true; // Fallback
+                            }
+                            
+                            if (isActionProcessing) {
+                              return Column(
                                 children: [
-                                  Icon(rosterResponse == 'accepted' ? Icons.check_circle : Icons.cancel, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    rosterResponse == 'accepted' ? 'Görevi Kabul Ettiniz' : 'Görevi Reddettiniz',
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
-                                  )
+                                  const CircularProgressIndicator(),
+                                  const SizedBox(height: 10),
+                                  const Text('İşleniyor...', style: TextStyle(fontWeight: FontWeight.w600)),
+                                ]
+                              );
+                            } else if (rosterResponse != null && !canRevise) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: rosterResponse == 'accepted' ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(rosterResponse == 'accepted' ? Icons.check_circle : Icons.cancel, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      rosterResponse == 'accepted' ? 'Görevi Kabul Ettiniz' : 'Görevi Reddettiniz',
+                                      style: TextStyle(fontWeight: FontWeight.bold, color: rosterResponse == 'accepted' ? Colors.green : Colors.red),
+                                    )
+                                  ],
+                                ),
+                              );
+                            } else {
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      style: TextButton.styleFrom(
+                                        backgroundColor: rosterResponse == 'rejected' ? Colors.red.withOpacity(0.2) : Colors.red.withOpacity(0.05),
+                                        foregroundColor: Colors.red,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          side: rosterResponse == 'rejected' ? const BorderSide(color: Colors.red, width: 2) : BorderSide.none,
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        if (rosterResponse == 'rejected') return;
+                                        setSheetState(() => isActionProcessing = true);
+                                        await _submitRosterAction(data, 'rejected');
+                                        setSheetState(() {
+                                          isActionProcessing = false;
+                                          rosterResponse = 'rejected';
+                                        });
+                                      },
+                                      child: Text(rosterResponse == 'rejected' ? 'Reddettiniz' : 'Üstlenemiyorum', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: rosterResponse == 'accepted' ? Colors.green.shade700 : Colors.green,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          side: rosterResponse == 'accepted' ? const BorderSide(color: Colors.white, width: 2) : BorderSide.none,
+                                        ),
+                                        elevation: rosterResponse == 'accepted' ? 4 : 0,
+                                      ),
+                                      onPressed: () async {
+                                        if (rosterResponse == 'accepted') return;
+                                        setSheetState(() => isActionProcessing = true);
+                                        await _submitRosterAction(data, 'accepted');
+                                        setSheetState(() {
+                                          isActionProcessing = false;
+                                          rosterResponse = 'accepted';
+                                        });
+                                      },
+                                      child: Text(rosterResponse == 'accepted' ? 'Kabul Ettiniz' : 'Görevi Kabul Et', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
                                 ],
-                              ),
-                            )
-                          ] else if (isActionProcessing) ...[
-                            const CircularProgressIndicator(),
-                            const SizedBox(height: 10),
-                            const Text('İşleniyor...', style: TextStyle(fontWeight: FontWeight.w600)),
-                          ] else ...[
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextButton(
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: Colors.red.withOpacity(0.1),
-                                      foregroundColor: Colors.red,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    ),
-                                    onPressed: () async {
-                                      setSheetState(() => isActionProcessing = true);
-                                      await _submitRosterAction(data, 'rejected');
-                                      setSheetState(() {
-                                        isActionProcessing = false;
-                                        rosterResponse = 'rejected';
-                                      });
-                                    },
-                                    child: Text('Üstlenemiyorum', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                      elevation: 0,
-                                    ),
-                                    onPressed: () async {
-                                      setSheetState(() => isActionProcessing = true);
-                                      await _submitRosterAction(data, 'accepted');
-                                      setSheetState(() {
-                                        isActionProcessing = false;
-                                        rosterResponse = 'accepted';
-                                      });
-                                    },
-                                    child: Text('Görevi Kabul Et', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                              );
+                            }
+                          })(),
                         ]
                       )
                     )

@@ -34,12 +34,24 @@ export async function GET(req: Request) {
       return processHtmlResponse('Vardiya kaydı bulunamadı. Silinmiş veya süresi geçmiş olabilir.', false);
     }
 
+    // Check for 30 minutes edit limit if it's already answered
+    const firstDoc = snapshot.docs[0].data();
+    if (firstDoc.status && firstDoc.status !== 'pending') {
+      const createdAtDate = firstDoc.createdAt?.toDate();
+      if (createdAtDate) {
+        const diffMs = Date.now() - createdAtDate.getTime();
+        if (diffMs > 30 * 60 * 1000) {
+          return processHtmlResponse('Karar değiştirme süresi (bildirimden sonra 30 dakika) dolmuştur. Kararınızı değiştirmek için LOKMA yöneticileriyle iletişime geçiniz.', false);
+        }
+      }
+    }
+
     const newStatus = action === 'accept' ? 'accepted' : 'rejected';
     
     // Update all matching
     const batch = db.batch();
     snapshot.docs.forEach(doc => {
-      batch.update(doc.ref, { status: newStatus });
+      batch.update(doc.ref, { status: newStatus, updatedAt: new Date() });
     });
     
     await batch.commit();
