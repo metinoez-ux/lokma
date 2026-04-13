@@ -791,10 +791,18 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         const systemRoleNames = <String, String>{
           'role_park_system': 'Park Gorevlisi',
           'role_temizlik_system': 'Temizlik Gorevlisi',
+          'role_park': 'Park Görevlisi',
+          'role_temizlik': 'Temizlik Görevlisi',
+          'role_cocuk': 'Çocuk Görevlisi',
+          'role_vip': 'Özel Misafir (VIP)',
         };
         const systemRoleIcons = <String, String>{
           'role_park_system': '🅿️',
           'role_temizlik_system': '🧹',
+          'role_park': '🅿️',
+          'role_temizlik': '🧹',
+          'role_cocuk': '👶',
+          'role_vip': '⭐',
         };
 
         // customRoles dizisindeki rolleri isle
@@ -920,14 +928,32 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             const SizedBox(height: 15),
           ],
           if (ocakbasiMap.isNotEmpty) ...[
-            _buildCustomRow('Ocakbaşı:', ocakbasiMap.entries.map((e) => _buildClickableChip(e.key, e.value, capabilities.businessId, isDark)).toList(), isDark),
+            Padding(
+               padding: const EdgeInsets.symmetric(vertical: 8),
+               child: Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
+            ),
+            Text('Ocakbaşı Görevleri', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8, runSpacing: 8,
+              children: ocakbasiMap.entries.map((e) => _buildClickableChip(e.key, e.value, capabilities.businessId, isDark)).toList()
+            ),
             const SizedBox(height: 15),
           ],
           if (gorevler.isNotEmpty || dynamicRoles.isNotEmpty) ...[
-            _buildCustomRow(roleTitleLabel, [
+            Padding(
+               padding: const EdgeInsets.symmetric(vertical: 8),
+               child: Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
+            ),
+            Text('Diğer Görevler', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8, runSpacing: 8,
+              children: [
                 ...gorevler.map((g) => _buildClickableChip(g, g, capabilities.businessId, isDark)),
                 ...dynamicRoles.map((g) => _buildClickableChip(g['name'] as String, g['name'] as String, capabilities.businessId, isDark)),
-            ], isDark),
+              ],
+            ),
             const SizedBox(height: 15),
           ],
           
