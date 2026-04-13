@@ -1070,6 +1070,51 @@ export default function KermesDetailPage() {
  setIsSavingPerson(false);
  }
  };
+  const handleRemovePersonFromKermes = async (personId: string) => {
+    if (!confirm('Bu personeli KERMESTEN çıkarmak istediğinize emin misiniz?')) return;
+    
+    try {
+      const newStaff = assignedStaff.filter(id => id !== personId);
+      const newDrivers = assignedDrivers.filter(id => id !== personId);
+      const newWaiters = assignedWaiters.filter(id => id !== personId);
+      const newKAdmins = kermesAdmins.filter(id => id !== personId);
+      
+      setAssignedStaff(newStaff);
+      setAssignedDrivers(newDrivers);
+      setAssignedWaiters(newWaiters);
+      setKermesAdmins(newKAdmins);
+      
+      const newCustomRoles = { ...customRoleAssignments };
+      Object.keys(newCustomRoles).forEach(roleId => {
+        newCustomRoles[roleId] = newCustomRoles[roleId].filter(id => id !== personId);
+      });
+      setCustomRoleAssignments(newCustomRoles);
+
+      await saveTeamToDb(newStaff, newDrivers, newWaiters, newKAdmins, newCustomRoles);
+
+      // Deep sync user registry
+      const staffRef = doc(db, 'admins', personId);
+      const staffSnap = await getDoc(staffRef);
+      if (staffSnap.exists()) {
+        const curAssignments = staffSnap.data()?.kermesAssignments || [];
+        await updateDoc(staffRef, { kermesAssignments: curAssignments.filter((k: any) => k.kermesId !== kermes?.id) });
+      }
+      
+      const userRef = doc(db, 'users', personId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const curAssignments = userSnap.data()?.kermesAssignments || [];
+        await updateDoc(userRef, { kermesAssignments: curAssignments.filter((k: any) => k.kermesId !== kermes?.id) });
+      }
+      
+      showToast('Personel başarıyla kermesten çıkarıldı', 'success');
+      setEditPersonData(null);
+    } catch (e) {
+      console.error('Görevden çıkarma hatası', e);
+      showToast('Personel çıkarılırken hata oluştu', 'error');
+    }
+  };
+
  const handleDeletePersonCompletely = async (personId: string) => {
   const answer = prompt('Bu personeli sistemden TAMAMEN silmek istediğinize emin misiniz?\nİşlemi onaylamak için büyük harflerle EVET yazın:');
   if (answer !== 'EVET') { showToast('Silme işlemi iptal edildi', 'info'); return; }
@@ -3846,33 +3891,7 @@ export default function KermesDetailPage() {
  >
  ✎
  </button>
- <button 
- type="button" 
- onClick={async () => {
- const newStaff = assignedStaff.filter(id => id !== staff.id);
- setAssignedStaff(newStaff);
- const newDrivers = assignedDrivers.filter(id => id !== staff.id);
- setAssignedDrivers(newDrivers);
- const newWaiters = assignedWaiters.filter(id => id !== staff.id);
- setAssignedWaiters(newWaiters);
- const newKAdmins = kermesAdmins.filter(id => id !== staff.id);
- setKermesAdmins(newKAdmins);
- saveTeamToDb(newStaff, newDrivers, newWaiters, newKAdmins);
-  // Y2: Orphaned kermesAssignments temizle
-  try {
-   const staffRef = doc(db, 'admins', staff.id);
-   const staffSnap = await getDoc(staffRef);
-   if (staffSnap.exists()) {
-   const curAssignments = staffSnap.data()?.kermesAssignments || [];
-   await updateDoc(staffRef, { kermesAssignments: curAssignments.filter((k: string) => k !== kermesId) });
-   }
-  } catch (e) { console.error('kermesAssignments cleanup error:', e); }
- }}
- className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center text-sm font-bold transition-colors"
- title="Personeli Karmesten Çıkar"
- >
- ×
- </button>
+ {/* Removing inline delete. Users must use the Edit popup. */}
  </div>
  </div>
  ))}
@@ -5890,6 +5909,12 @@ export default function KermesDetailPage() {
    </button>
    )}
 
+  <button
+  onClick={() => handleRemovePersonFromKermes(editPersonData.id)}
+  className="w-full py-2 mb-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition"
+  >
+  Bu Personeli Karmesten Çıkar
+  </button>
 
   <button
   onClick={() => handleDeletePersonCompletely(editPersonData.id)}
