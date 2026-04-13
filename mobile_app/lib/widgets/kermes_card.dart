@@ -498,17 +498,11 @@ class _KermesCardState extends State<KermesCard> {
                                         : const EdgeInsets.symmetric(
                                             horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: hasIcon ? Theme.of(context).colorScheme.surface : bgColor,
+                                      color: hasIcon ? Colors.transparent : bgColor,
                                       borderRadius: hasIcon ? BorderRadius.circular(8) : BorderRadius.circular(50),
                                       border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
                                       boxShadow: [
-                                        if (hasIcon)
-                                          BoxShadow(
-                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          )
-                                        else
+                                        if (!hasIcon)
                                           BoxShadow(
                                             color: Colors.black.withOpacity(0.25),
                                             blurRadius: 4,

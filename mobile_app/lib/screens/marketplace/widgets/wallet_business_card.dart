@@ -721,6 +721,8 @@ class WalletBusinessCard extends ConsumerWidget {
                       ? Colors.white 
                       : Theme.of(context).colorScheme.onSurface;
 
+                    final bool hasIcon = badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty;
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: GestureDetector(
@@ -731,56 +733,57 @@ class WalletBusinessCard extends ConsumerWidget {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
+                          padding: hasIcon
+                              ? EdgeInsets.zero
+                              : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: badgeColor,
-                            borderRadius: BorderRadius.circular(16),
+                            color: hasIcon ? Colors.transparent : badgeColor,
+                            borderRadius: hasIcon ? BorderRadius.circular(8) : BorderRadius.circular(16),
                             boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
+                              if (!hasIcon)
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
                             ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (isLegacyTuna || isLegacyToros)
-                                Icon(Icons.verified, color: textColor, size: 14)
-                              else if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
+                              if (hasIcon)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: CachedNetworkImage(
                                     imageUrl: badge['iconUrl'],
-                                    height: 18,
+                                    height: 28, // a bit bigger if it's the only thing
                                     fit: BoxFit.contain,
                                     placeholder: (context, url) => Container(
                                       color: Colors.transparent,
-                                      height: 18,
-                                      width: 18,
+                                      height: 28,
+                                      width: 28,
                                     ),
                                     errorWidget: (context, url, error) =>
                                         Icon(Icons.verified, color: textColor, size: 14),
                                   ),
-                                ),
-                              const SizedBox(width: 4),
-                              Text(
-                                badge['name'],
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) ...[
+                                )
+                              else ...[
+                                if (isLegacyTuna || isLegacyToros)
+                                  Icon(Icons.verified, color: textColor, size: 14),
                                 const SizedBox(width: 4),
-                                Icon(Icons.info_outline, color: textColor, size: 15),
+                                Text(
+                                  badge['name'],
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.info_outline, color: textColor, size: 15),
+                                ],
                               ],
                             ],
                           ),
