@@ -318,6 +318,27 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
   const defaultRoles = [...dynamicSahaRoles, ...dynamicFoodRoles];
 
+  // Helper for Gender Restrictions in Roles
+  const isRoleDisabled = React.useCallback((r: string) => {
+    if (!form.userId) return false;
+    
+    const selectedStaff = workspaceStaff.find(w => w.id === form.userId || w.userId === form.userId);
+    if (!selectedStaff) return false;
+    
+    const staffGender = selectedStaff?.gender || selectedStaff?.profile?.gender || '';
+    const isMaleStaff = staffGender === 'male' || staffGender === 'erkek';
+    const isFemaleStaff = staffGender === 'female' || staffGender === 'kadin';
+    
+    const lowerRole = r.toLowerCase();
+    const isMaleRole = lowerRole.includes('(e)') || lowerRole.includes('(erkek)') || lowerRole.includes('erkekler');
+    const isFemaleRole = lowerRole.includes('(k)') || lowerRole.includes('(kadin)') || lowerRole.includes('(kadın)') || lowerRole.includes('kadınlar') || lowerRole.includes('kadinlar');
+
+    if (isMaleRole && isFemaleStaff) return true;
+    if (isFemaleRole && isMaleStaff) return true;
+    
+    return false;
+  }, [form.userId, workspaceStaff]);
+
   // Helper function to format minutes to HH:MM
   const minsToTime = (mins: number) => {
     const h = Math.floor(mins / 60);
@@ -504,14 +525,24 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
             >
               <option value="">Seçiniz</option>
               <optgroup label="Saha & Lojistik Görevleri">
-                {dynamicSahaRoles.map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
+                {dynamicSahaRoles.map(r => {
+                  const disabled = isRoleDisabled(r);
+                  return (
+                    <option key={r} value={r} disabled={disabled} className={disabled ? 'text-gray-400 bg-gray-50 dark:bg-gray-800' : ''}>
+                      {r} {disabled ? '(Uyumsuz)' : ''}
+                    </option>
+                  );
+                })}
               </optgroup>
               <optgroup label="Stand & Mutfak Bölümleri">
-                {dynamicFoodRoles.map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
+                {dynamicFoodRoles.map(r => {
+                  const disabled = isRoleDisabled(r);
+                  return (
+                    <option key={r} value={r} disabled={disabled} className={disabled ? 'text-gray-400 bg-gray-50 dark:bg-gray-800' : ''}>
+                      {r} {disabled ? '(Uyumsuz)' : ''}
+                    </option>
+                  );
+                })}
               </optgroup>
             </select>
           </div>
