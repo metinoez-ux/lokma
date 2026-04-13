@@ -263,6 +263,7 @@ export async function POST(request: NextRequest) {
  organizationId: organizationId !== undefined ? organizationId : null,
  organizationName: organizationName !== undefined ? organizationName : null,
  photoURL: photoURL !== undefined ? photoURL : null,
+ gender: gender !== undefined ? gender : null,
  isActive: isActive !== false,
  updatedAt,
  updatedBy: updatedBy || 'system'
@@ -354,9 +355,10 @@ export async function POST(request: NextRequest) {
  driverUpdateData.lastName = lastName || null;
  driverUpdateData.businessId = butcherId || null;
  driverUpdateData.businessName = butcherName || null;
- driverUpdateData.butcherId = butcherId || null;
- driverUpdateData.butcherName = butcherName || null;
- driverUpdateData.roles = roles || ['driver'];
+  driverUpdateData.butcherId = butcherId || null;
+  driverUpdateData.butcherName = butcherName || null;
+  driverUpdateData.gender = gender !== undefined ? gender : null;
+  driverUpdateData.roles = roles || ['driver'];
  await adminRef.set(driverUpdateData);
  }
  } else {

@@ -1300,7 +1300,6 @@ if (_selectedCategory.isEmpty) {
       body: Stack(
         children: [
           CustomScrollView(
-            cacheExtent: 10000,
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
