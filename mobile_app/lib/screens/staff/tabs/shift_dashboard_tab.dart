@@ -932,7 +932,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                padding: const EdgeInsets.symmetric(vertical: 8),
                child: Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
             ),
-            Text('Ocakbaşı Görevleri', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+            Text('Ocakbaşı Görevleriniz', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8, runSpacing: 8,
@@ -945,7 +945,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                padding: const EdgeInsets.symmetric(vertical: 8),
                child: Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
             ),
-            Text('Diğer Görevler', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+            Text('Diğer Görevleriniz', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8, runSpacing: 8,
@@ -1035,23 +1035,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             const SizedBox(height: 10),
           ],
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-               const Icon(Icons.cloud, size: 20, color: Colors.blueGrey),
-               const SizedBox(width: 8),
-               Expanded(
-                 child: _weatherLoading 
-                   ? Text("Hava durumu yükleniyor...", style: TextStyle(color: isDark ? Colors.white70 : Colors.black54))
-                   : Text(
-                       _weatherInfo != null 
-                         ? '${_weatherInfo!['temperature']}°C (Rüzgar: ${_weatherInfo!['windspeed']} km/s)' 
-                         : 'Hava durumu alınamadı',
-                       style: TextStyle(fontSize: 15, color: isDark ? Colors.white : Colors.black87),
-                     ),
-               ),
-            ],
-          ),
+
         ],
       ),
     );
