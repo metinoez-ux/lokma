@@ -748,6 +748,9 @@ export default function AdminHeader() {
  <Link href="/admin/ameise" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
  {t('ameise')}
  </Link>
+ <Link href="/admin/settings/platform-brands" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-bold text-amber-500">
+ Markalar & Rozetler
+ </Link>
  </div>
  </div>
  </div>

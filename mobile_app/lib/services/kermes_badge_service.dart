@@ -45,7 +45,7 @@ class KermesBadgeService {
 
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('kermes_badges')
+          .collection('platform_brands')
           .where('isActive', isEqualTo: true)
           .get();
 

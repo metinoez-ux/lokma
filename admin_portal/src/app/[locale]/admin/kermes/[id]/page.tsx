@@ -839,7 +839,7 @@ export default function KermesDetailPage() {
  }
 
  // Rozetleri yükle
- const badgesQ = query(collection(db, 'kermes_badges'), where('isActive', '==', true));
+ const badgesQ = query(collection(db, 'platform_brands'), where('isActive', '==', true));
  const badgesSnap = await getDocs(badgesQ);
  const loadedBadges = badgesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
  loadedBadges.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));

@@ -226,7 +226,7 @@ const { admin, loading: adminLoading } = useAdmin();
  useEffect(() => {
  const loadBadges = async () => {
  try {
- const snapshot = await getDocs(query(collection(db, 'kermes_badges'), orderBy('createdAt', 'desc')));
+ const snapshot = await getDocs(query(collection(db, 'platform_brands'), orderBy('createdAt', 'desc')));
  setBadges(snapshot.docs.map(d => ({ 
  id: d.id, 
  name: d.data().name,
@@ -390,11 +390,11 @@ const { admin, loading: adminLoading } = useAdmin();
  {t('kermes_ozellikleri')}
  </Link>
  <Link
- href="/admin/settings/kermes-badges"
+ href="/admin/settings/platform-brands"
  className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
  >
  <span>🏅</span>
- Zertifikate & Badges
+ Markalar & Rozetler
  </Link>
  <Link
  href="/admin/settings/donation-funds"
