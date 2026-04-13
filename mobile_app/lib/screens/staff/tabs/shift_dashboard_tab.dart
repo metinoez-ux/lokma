@@ -757,7 +757,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   }
 
   Widget _buildAssignmentCard(StaffCapabilities capabilities, bool isDark) {
-    if (capabilities.businessId == null) {
+    if (capabilities.businessId == null || capabilities.businessId!.isEmpty) {
       return const SizedBox.shrink();
     }
     
@@ -1643,7 +1643,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     final businessId = capabilities.businessId;
 
     if (user == null || businessId == null) {
-      return _buildFinanceCardContent(isDark, 0.0);
+      return _buildFinanceCardContent(isDark, 0.0, []);
     }
 
     return StreamBuilder<QuerySnapshot>(

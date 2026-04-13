@@ -27,6 +27,7 @@ class StaffCapabilities {
   final bool hasPosRole;
   final String tezgahName;
   final bool hasParkRole; // Park Gorevlisi
+  bool get hasKermesAdminRole => isBusinessAdmin;
   final List<Map<String, String>> kermesCustomRoles; // Atanmis ozel gorevler [{id, name}]
 
   StaffCapabilities({
@@ -337,7 +338,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
 
       // Check plan for features
       bool hasShiftTracking = false;
-      bool isKermesDoc = businessId != null && businessId == bizId && await FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get().then((d) => d.exists);
+      bool isKermesDoc = businessId != null && businessId.isNotEmpty && businessId == bizId && await FirebaseFirestore.instance.collection('kermes_events').doc(businessId).get().then((d) => d.exists);
 
       if (businessId != null && !isKermesDoc) {
         final planDoc = await FirebaseFirestore.instance

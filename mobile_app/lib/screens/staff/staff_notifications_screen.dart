@@ -100,6 +100,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     final vehicleColor = data['vehicleColor'] as String? ?? '';
     final vehicleBrand = data['vehicleBrand'] as String? ?? '';
     final isParking = type == 'kermes_parking';
+    final isDeleted = type == 'roster_deleted';
+    final isParkingOrDeleted = isParking || isDeleted;
     final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
 
     // Roster Action specific variables
@@ -131,14 +133,14 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: isParking
+                        color: isParkingOrDeleted
                             ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
                             : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: isParking ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!)),
+                        border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!)),
                       ),
                       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Icon(Icons.warning_amber_rounded, size: 18, color: isParking ? (isDark ? Colors.red[300] : Colors.red[700]) : (isDark ? Colors.orange[300] : Colors.orange[700])),
+                        Icon(isDeleted ? Icons.cancel : Icons.warning_amber_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : (isDark ? Colors.orange[300] : Colors.orange[700])),
                         const SizedBox(width: 8),
                         Expanded(child: Text(body, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.4, color: Theme.of(ctx).colorScheme.onSurface))),
                       ]),
@@ -581,7 +583,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final iconColor = _colorForType(type, isRead);
               final iconData = _iconForType(type);
 
-              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'roster_shift' || type == 'kermes_assignment';
+              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'roster_shift' || type == 'kermes_assignment' || type == 'roster_deleted';
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
