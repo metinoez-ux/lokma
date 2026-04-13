@@ -381,13 +381,7 @@ const { admin, loading: adminLoading } = useAdmin();
  <span>🍽️</span>
  {t('kermes_menuleri')}
  </Link>
- <Link
- href="/admin/settings/kermes-categories"
- className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
- >
- <span>📂</span>
- {t('menu_kategorileri')}
- </Link>
+
  <Link
  href="/admin/settings/kermes-features"
  className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
