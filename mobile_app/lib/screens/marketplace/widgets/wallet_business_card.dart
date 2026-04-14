@@ -97,7 +97,7 @@ class WalletBusinessCard extends ConsumerWidget {
       // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
       if (activeBadges.isEmpty) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-        bool isMarket = getRawType(data) == 'market';
+        bool isMarket = checkIsMarket(data);
 
         if (data['sellsTunaProducts'] == true || isMarket) {
           showLegacyTuna = false; // Fundamental: Markets cannot have legacy premium Kasap badges
@@ -749,7 +749,7 @@ class WalletBusinessCard extends ConsumerWidget {
                               ),
                               Builder(
                                 builder: (context) {
-                                  bool isMarket = getRawType(data) == 'market';
+                                  bool isMarket = checkIsMarket(data);
                                   bool legacyTunaFlag = data['brand'] == 'tuna' || isTunaPartner;
                                   bool legacyTorosFlag = data['brand'] == 'akdeniz_toros';
                                   

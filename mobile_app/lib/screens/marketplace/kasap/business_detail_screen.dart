@@ -2876,7 +2876,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                           Builder(
                             builder: (context) {
-                              bool isMarket = getRawType(data) == 'market';
+                              bool isMarket = checkIsMarket(data);
                               bool legacyTunaFlag = isTunaPartner;
                               bool legacyTorosFlag = brand?.toString().toLowerCase() == 'akdeniz_toros';
 
