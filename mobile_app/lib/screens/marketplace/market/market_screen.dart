@@ -87,8 +87,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   Set<String> _marketSectorTypes = {};
   
   // Sorting option
-  String _sortOption = 'nearest'; // nearest, rating, tuna, az, za
-  
+  String _sortOption = 'nearest'; // nearest, rating  
   // Sponsored ads
   List<SponsoredAd> _sponsoredAds = [];
   
@@ -96,11 +95,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   bool _filterDiscounts = false;      // İndirimli ürünler
   bool _filterCash = false;           // Nakit ödeme kabul
   bool _filterFreeDelivery = false;   // Ücretsiz teslimat
-  bool _filterMealCards = false;      // Yemek kartı kabul
   bool _filterHighRating = false;     // 4+ yıldız
   bool _filterOpenNow = false;        // Şimdi açık
-  bool _filterVegetarian = false;     // Vejetaryen
-  bool _filterTunaProducts = false;   // 🔴 TUNA/Toros ürünleri satan işletmeler
+  bool _filterBrandButchers = false;  // 🔴 TUNA/Toros Kasapları
+  bool _filterBrandProducts = false;  // 🔴 TUNA/Toros Hazır Ürünleri
 
   @override
   void initState() {
@@ -290,7 +288,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       final typeCounts = <String, int>{};
       for (final doc in snapshot.docs) {
         final data = doc.data();
+        final companyName = data['companyName'] as String? ?? '';
         final businessType = _extractBusinessType(data);
+        debugPrint('DEBUG INITIAL: Found business: $companyName, type: $businessType');
         final isActive = data['isActive'] as bool? ?? true;
         
         // Skip NON-MARKET types
@@ -796,12 +796,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
   
-  // Filter businesses based on current filters
   List<DocumentSnapshot> get _filteredBusinesses {
     final filtered = _allBusinesses.where((doc) {
       final data = doc.data() as Map<String, dynamic>;
       final businessType = _extractBusinessType(data);
       final isActive = data['isActive'] as bool? ?? true;
+      
       // TUNA Partner check - use correct field names
       bool hasDynamicBrand = false;
       final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
@@ -839,10 +839,14 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       // Delivery mode filter
       if (_deliveryMode == 'teslimat') {
         final offersDelivery = data['offersDelivery'] as bool? ?? true;
-        if (!offersDelivery) return false;
+        if (!offersDelivery) {
+          return false;
+        }
       } else if (_deliveryMode == 'gelal') {
         final offersPickup = data['offersPickup'] as bool? ?? true;
-        if (!offersPickup) return false;
+        if (!offersPickup) {
+          return false;
+        }
       }
       
       // Category filter
@@ -920,34 +924,58 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         if (deliveryFee > 0) return false;
       }
       
-      // Yemek kartı filtresi
-      if (_filterMealCards) {
-        final acceptsMealCards = data['acceptsMealCards'] as bool? ?? false;
-        if (!acceptsMealCards) return false;
-      }
+
       
       // 4+ Yıldız filtresi
-      if (_filterHighRating) {
-        final rating = (data['rating'] as num?)?.toDouble() ?? 0.0;
-        if (rating < 4.0) return false;
-      }
+  if (_filterHighRating) {
+    final rating = (data['rating'] as num?)?.toDouble() ?? 0.0;
+    if (rating < 4.0) return false;
+  }
+  
+  // Şimdi Açık filtresi
+  if (_filterOpenNow) {
+    if (!_isBusinessOpenNow(data)) return false;
+  }
       
-      // Şimdi Açık filtresi
-      if (_filterOpenNow) {
-        if (!_isBusinessOpenNow(data)) return false;
+      final userLocation = ref.read(userLocationProvider).value;
+      final isTurkeyRegion = userLocation?.isTurkeyRegion == true;
+
+      // 🔴 Marka Rozetli İşletmeler (TUNA veya Toros Kasapları)
+      if (_filterBrandButchers) {
+        bool hasBrand = false;
+        final targetKeyword = isTurkeyRegion ? 'toros' : 'tuna';
+        final brandLabel = data['brand'] as String?;
+        if (brandLabel != null && brandLabel.contains(targetKeyword)) {
+            hasBrand = true;
+        } else {
+            final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+            if (activeBrandIds.isNotEmpty) {
+                final platformBrandsAsync = ref.read(platformBrandsProvider);
+                if (platformBrandsAsync.value != null) {
+                    for (final brandId in activeBrandIds) {
+                        try {
+                            final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
+                            if (brand.name.toString().toLowerCase().contains(targetKeyword)) {
+                                hasBrand = true;
+                                break;
+                            }
+                        } catch (_) {}
+                    }
+                }
+            }
+        }
+        if (!hasBrand) return false;
       }
-      
-      // Vejetaryen filtresi
-      if (_filterVegetarian) {
-        final offersVegetarian = data['offersVegetarian'] as bool? ?? false;
-        if (!offersVegetarian) return false;
-      }
-      
-      // 🔴 TUNA/Toros Ürünleri filtresi
-      if (_filterTunaProducts) {
-        final sellsTunaProducts = data['sellsTunaProducts'] as bool? ?? false;
-        final sellsTorosProducts = data['sellsTorosProducts'] as bool? ?? false;
-        if (!sellsTunaProducts && !sellsTorosProducts) return false;
+
+      // 🔴 Hazır Ürün Satanlar filtresi
+      if (_filterBrandProducts) {
+        if (isTurkeyRegion) {
+          final sellsTorosProducts = data['sellsTorosProducts'] as bool? ?? false;
+          if (!sellsTorosProducts) return false;
+        } else {
+          final sellsTunaProducts = data['sellsTunaProducts'] as bool? ?? false;
+          if (!sellsTunaProducts) return false;
+        }
       }
       
       return true;
@@ -966,63 +994,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           final ratingB = (dataB['rating'] as num?)?.toDouble() ?? 0.0;
           return ratingB.compareTo(ratingA);
           
-        case 'tuna': // Tuna Sıralaması (Premium Tuna marks first)
-          bool hasDynamicBrandA = false;
-          final activeBrandIdsA = List<String>.from(dataA['activeBrandIds'] ?? []);
-          if (activeBrandIdsA.isNotEmpty) {
-            final platformBrandsAsync = ref.read(platformBrandsProvider);
-            if (platformBrandsAsync.value != null) {
-              for (final brandId in activeBrandIdsA) {
-                try {
-                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-                  final name = brand.name.toString().toLowerCase();
-                  if (name.contains('tuna') || name.contains('toros')) {
-                    hasDynamicBrandA = true;
-                    break;
-                  }
-                } catch (e) { }
-              }
-            }
-          }
 
-          final brandLabelA = dataA['brandLabel'] as String?;
-          final isTunaA = (dataA['isTunaPartner'] as bool? ?? false) || (brandLabelA?.toLowerCase() == 'tuna') || hasDynamicBrandA;
-
-          bool hasDynamicBrandB = false;
-          final activeBrandIdsB = List<String>.from(dataB['activeBrandIds'] ?? []);
-          if (activeBrandIdsB.isNotEmpty) {
-            final platformBrandsAsync = ref.read(platformBrandsProvider);
-            if (platformBrandsAsync.value != null) {
-              for (final brandId in activeBrandIdsB) {
-                try {
-                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-                  final name = brand.name.toString().toLowerCase();
-                  if (name.contains('tuna') || name.contains('toros')) {
-                    hasDynamicBrandB = true;
-                    break;
-                  }
-                } catch (e) { }
-              }
-            }
-          }
-
-          final brandLabelB = dataB['brandLabel'] as String?;
-          final isTunaB = (dataB['isTunaPartner'] as bool? ?? false) || (brandLabelB?.toLowerCase() == 'tuna') || hasDynamicBrandB;
-          
-          if (isTunaA && !isTunaB) return -1;
-          if (!isTunaA && isTunaB) return 1;
-          return 0;
-          
-        case 'az': // A-Z Isim
-          final nameA = (dataA['businessName'] ?? dataA['companyName'] ?? '').toString().toLowerCase();
-          final nameB = (dataB['businessName'] ?? dataB['companyName'] ?? '').toString().toLowerCase();
-          return nameA.compareTo(nameB);
-          
-        case 'za': // Z-A Isim
-          final nameA = (dataA['businessName'] ?? dataA['companyName'] ?? '').toString().toLowerCase();
-          final nameB = (dataB['businessName'] ?? dataB['companyName'] ?? '').toString().toLowerCase();
-          return nameB.compareTo(nameA);
-          
         case 'nearest':
         default:
           // Distance sort
@@ -1077,6 +1049,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       if (_onlyTuna) {
         bool hasDynamicBrand = false;
         final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+        
         if (activeBrandIds.isNotEmpty) {
           final platformBrandsAsync = ref.read(platformBrandsProvider);
           if (platformBrandsAsync.value != null) {
@@ -1548,8 +1521,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Icon(
                       Icons.tune, 
                       color: (_filterDiscounts || _filterCash || _filterFreeDelivery || 
-                              _filterMealCards || _filterHighRating || _filterOpenNow || 
-                              _filterVegetarian || _filterTunaProducts) 
+                              _filterHighRating || _filterOpenNow || 
+                              _filterBrandButchers || _filterBrandProducts) 
                           ? lokmaPink 
                           : Theme.of(context).brightness == Brightness.dark ? lokmaPink : Colors.grey[700],
                       size: 20,
@@ -1997,6 +1970,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   }
 
   void _showFilterBottomSheet() {
+    final isTurkeyRegion = ref.read(userLocationProvider).value?.isTurkeyRegion == true;
+
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -2083,11 +2058,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               _filterDiscounts = false;
                               _filterCash = false;
                               _filterFreeDelivery = false;
-                              _filterMealCards = false;
                               _filterHighRating = false;
                               _filterOpenNow = false;
-                              _filterVegetarian = false;
-                              _filterTunaProducts = false;
+                              _filterBrandButchers = false;
+                              _filterBrandProducts = false;
                             });
                             setStateSheet(() {});
                           },
@@ -2219,7 +2193,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             child: Text(
                               tr('marketplace.sort_section'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2248,17 +2222,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               setStateSheet(() {});
                             },
                           ),
-                          _buildFilterListItem(
-                            title: 'TUNA',
-                            subtitle: tr('marketplace.filter_recommended'),
-                            isSelected: _sortOption == 'tuna',
-                            useRadio: true,
-                            isPremium: true,
-                            onTap: () {
-                              setState(() => _sortOption = 'tuna');
-                              setStateSheet(() {});
-                            },
-                          ),
+
                           
                           const SizedBox(height: 24),
 
@@ -2268,7 +2232,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             child: Text(
                               tr('marketplace.business_type_section'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2314,7 +2278,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             child: Text(
                               tr('marketplace.quick_filters_section'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2323,22 +2287,28 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                           
                           // 🔴 TUNA/Toros Ürünleri Filtresi (EN ÜSTTE)
-                          Builder(
-                            builder: (context) {
-                              final userLocation = ref.read(userLocationProvider).value;
-                              final isTurkeyRegion = userLocation?.isTurkeyRegion == true;
-                              return _buildFilterListItem(
-                                title: isTurkeyRegion ? 'Akdeniz Toros Ürünleri' : 'TUNA Ürünleri',
-                                subtitle: isTurkeyRegion 
-                                    ? '🟢 Akdeniz Toros markalı ürünler satan işletmeler'
-                                    : '🔴 TUNA markalı ürünler satan işletmeler',
-                                isSelected: _filterTunaProducts,
-                                onTap: () {
-                                  setState(() => _filterTunaProducts = !_filterTunaProducts);
-                                  setStateSheet(() {});
-                                },
-                                isPremium: true,
-                              );
+                          // 🔴 TUNA/Toros Ürünleri Filtresi
+                          _buildFilterListItem(
+                            title: isTurkeyRegion ? 'Akdeniz Toros Kasapları' : 'TUNA Kasapları',
+                            subtitle: isTurkeyRegion 
+                                ? '🟢 Sadece Akdeniz Toros sertifikalı kasaplar'
+                                : '🔴 Sadece TUNA sertifikalı kasaplar',
+                            isSelected: _filterBrandButchers,
+                            onTap: () {
+                              setState(() => _filterBrandButchers = !_filterBrandButchers);
+                              setStateSheet(() {});
+                            },
+                            isPremium: true,
+                          ),
+                          _buildFilterListItem(
+                            title: isTurkeyRegion ? 'Akdeniz Toros Ürünleri' : 'TUNA Ürünleri',
+                            subtitle: isTurkeyRegion 
+                                ? '🟢 Akdeniz Toros markalı hazır ürünler satan işletmeler'
+                                : '🔴 TUNA markalı hazır ürünler satan işletmeler',
+                            isSelected: _filterBrandProducts,
+                            onTap: () {
+                              setState(() => _filterBrandProducts = !_filterBrandProducts);
+                              setStateSheet(() {});
                             },
                           ),
                           
@@ -2370,15 +2340,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: tr('marketplace.filter_meal_cards_title'),
-                            subtitle: tr('marketplace.filter_meal_cards_subtitle'),
-                            isSelected: _filterMealCards,
-                            onTap: () {
-                              setState(() => _filterMealCards = !_filterMealCards);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
                             title: tr('marketplace.filter_high_rating_title'),
                             subtitle: tr('marketplace.filter_high_rating_subtitle'),
                             isSelected: _filterHighRating,
@@ -2393,15 +2354,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             isSelected: _filterOpenNow,
                             onTap: () {
                               setState(() => _filterOpenNow = !_filterOpenNow);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: tr('marketplace.filter_vegetarian_title'),
-                            subtitle: 'marketplace.filter_vegetarian'.tr(),
-                            isSelected: _filterVegetarian,
-                            onTap: () {
-                              setState(() => _filterVegetarian = !_filterVegetarian);
                               setStateSheet(() {});
                             },
                           ),

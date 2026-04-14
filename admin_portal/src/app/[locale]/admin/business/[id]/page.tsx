@@ -3959,6 +3959,18 @@ export default function BusinessDetailsPage() {
  <input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
  </div>
  </div>
+ <div className="mt-4">
+ <label className="text-muted-foreground text-sm">{t('ulke') || 'Ülke'}</label>
+ <select value={formData.country || 'DE'} onChange={(e) => setFormData({ ...formData, country: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50">
+ <option value="DE">Deutschland</option>
+ <option value="TR">Türkiye</option>
+ <option value="AT">Österreich</option>
+ <option value="CH">Schweiz</option>
+ <option value="NL">Niederlande</option>
+ <option value="FR">Frankreich</option>
+ <option value="BE">Belgien</option>
+ </select>
+ </div>
  </div>
  {/* İletişim */}
  <div className="space-y-4 pt-4 border-t border-border">
@@ -4127,7 +4139,7 @@ export default function BusinessDetailsPage() {
  {admin?.adminType === 'super' ? (
  <>
  <div className="bg-card/50 border border-border rounded-xl p-6">
- <h4 className="text-foreground font-medium mb-4">MIRA Platform Markaları & Rozetleri</h4>
+ <h4 className="text-foreground font-medium mb-4">LOKMA Platform Markaları & Rozetleri</h4>
  <p className="text-xs text-muted-foreground mb-4">Bu işletmenin listeleme sayfasında ve detaylarında görünmesini istediğiniz logoları seçin.</p>
  {platformBrands.length === 0 ? (
  <div className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500 rounded p-4">
@@ -4188,7 +4200,27 @@ export default function BusinessDetailsPage() {
  </p>
  </div>
  
- <div className="bg-card/50 border border-border rounded-xl p-6 opacity-60">
+ 
+  {/* Hazır Ürün Filtreleri */}
+  <div className="bg-card/50 border border-border rounded-xl p-6 mt-6">
+  <h4 className="text-foreground font-medium mb-2">🛍️ Hazır Paket Ürün Satışı (Mobil Filtreleme)</h4>
+  <p className="text-xs text-muted-foreground mb-4">
+  Marketler veya bu ürünleri paketli satan işletmeler için işaretleyin. Bu sayede kasap/restoran (sertifikalı TUNA kullananlar) dışında da aramalarda çıkacaktır.
+  </p>
+  <div className="flex flex-wrap gap-4">
+  <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTunaProducts ? 'bg-red-600/10 border-red-600/50' : 'bg-background border-border hover:bg-muted'}`}>
+  <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-600" />
+  <span className="font-medium text-foreground">🔴 TUNA Ürünleri Satıyor</span>
+  </label>
+  <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTorosProducts ? 'bg-green-600/10 border-green-600/50' : 'bg-background border-border hover:bg-muted'}`}>
+  <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-green-600" />
+  <span className="font-medium text-foreground">🟢 Akdeniz Toros Ürünleri Satıyor</span>
+  </label>
+  </div>
+  </div>
+
+  <div className="bg-card/50 border border-border rounded-xl p-6 opacity-60 mt-6">
+
  <h4 className="text-foreground font-medium mb-2 line-through">ESKİ KOD MİMARİSİ (SABİT LOGOLAR)</h4>
  <p className="text-xs text-muted-foreground mb-4">Geçiş süresince geriye uyumluluk (backward compatibility) için saklanmaktadır.</p>
  <div className="flex flex-col gap-4">
@@ -4200,19 +4232,7 @@ export default function BusinessDetailsPage() {
  <option value="akdeniz_toros">⚫ Akdeniz Toros</option>
  </select>
  </div>
- <div>
- <label className="text-muted-foreground text-sm block mb-2">{t('satilanUrunMarkalari')}</label>
- <div className="flex flex-wrap gap-3">
- <label className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer ${formData.sellsTunaProducts ? 'bg-red-600/30' : 'bg-muted'}`}>
- <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4" />
- <span className="text-sm">🔴 {t('tunaUrunleri')}</span>
- </label>
- <label className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer ${formData.sellsTorosProducts ? 'bg-green-600/30' : 'bg-muted'}`}>
- <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4" />
- <span className="text-sm">🟢 {t('akdenizTorosUrunleri')}</span>
- </label>
- </div>
- </div>
+ 
  </div>
  </div>
  </>

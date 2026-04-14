@@ -76,7 +76,7 @@ class WalletBusinessCard extends ConsumerWidget {
 
       // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
       if (activeBadges.isEmpty) {
-        if (data['sellsTunaProducts'] == true || data['brand'] == 'tuna' || isTunaPartner) {
+        if (data['brand'] == 'tuna' || isTunaPartner) {
           try {
             final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('tuna'));
             activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
@@ -97,7 +97,7 @@ class WalletBusinessCard extends ConsumerWidget {
 
     // In case whenData hasn't executed synchronously (loading state)
     if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
-      if (data['sellsTunaProducts'] == true || data['brand'] == 'tuna' || isTunaPartner) {
+      if (data['brand'] == 'tuna' || isTunaPartner) {
         activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
       }
       if (data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros') {
@@ -705,6 +705,24 @@ class WalletBusinessCard extends ConsumerWidget {
                                   }
                                 },
                               ),
+                              if (data['sellsTunaProducts'] == true && activeBadges.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFFEA184A)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'TUNA Hazır Paket Ürünleri',
+                                        style: GoogleFonts.inter(
+                                          color: const Color(0xFFEA184A),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ],
