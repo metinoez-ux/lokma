@@ -2486,14 +2486,24 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
     if (activeBadges.isEmpty) {
-      if (isTunaPartner) {
+      bool showLegacyTuna = isTunaPartner;
+      if (data?['sellsTunaProducts'] == true) {
+        showLegacyTuna = false; // Block it from getting the premium badge if it's explicitly marked as just a reseller.
+      }
+
+      if (showLegacyTuna) {
         activeBadges.add({
           'name': 'TUNA',
           'iconUrl': '', // Handled by legacy block
           'isLegacyTuna': true,
         });
       }
-      if (brand?.toString().toLowerCase() == 'akdeniz_toros') {
+      bool showLegacyToros = brand?.toString().toLowerCase() == 'akdeniz_toros';
+      if (data?['sellsTorosProducts'] == true) {
+        showLegacyToros = false;
+      }
+
+      if (showLegacyToros) {
         activeBadges.add({
           'name': 'Akdeniz Toros',
           'iconUrl': '',

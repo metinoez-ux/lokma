@@ -76,7 +76,12 @@ class WalletBusinessCard extends ConsumerWidget {
 
       // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
       if (activeBadges.isEmpty) {
-        if (data['brand'] == 'tuna' || isTunaPartner) {
+        bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
+        if (data['sellsTunaProducts'] == true) {
+          showLegacyTuna = false; // Override legacy partner flag for packaged products resellers
+        }
+
+        if (showLegacyTuna) {
           try {
             final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('tuna'));
             activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
@@ -84,7 +89,12 @@ class WalletBusinessCard extends ConsumerWidget {
             activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
           }
         }
-        if (data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros') {
+        bool showLegacyToros = data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros';
+        if (data['sellsTorosProducts'] == true) {
+          showLegacyToros = false;
+        }
+
+        if (showLegacyToros) {
           try {
             final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('toros'));
             activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
@@ -97,10 +107,20 @@ class WalletBusinessCard extends ConsumerWidget {
 
     // In case whenData hasn't executed synchronously (loading state)
     if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
-      if (data['brand'] == 'tuna' || isTunaPartner) {
+      bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
+      if (data['sellsTunaProducts'] == true) {
+        showLegacyTuna = false;
+      }
+
+      if (showLegacyTuna) {
         activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
       }
-      if (data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros') {
+      bool showLegacyToros = data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros';
+      if (data['sellsTorosProducts'] == true) {
+        showLegacyToros = false;
+      }
+
+      if (showLegacyToros) {
         activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': '', 'isLegacyToros': true});
       }
     }

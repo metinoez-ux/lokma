@@ -24,3 +24,5 @@ Try launching Xcode and selecting "Product > Run" to fix the problem:
 
 Installing and launching...                                       141,8s
 Error launching application on iPhone 17 Pro Metin.
+(eval):1: can't change option: zle
+(eval):1: can't change option: zle
