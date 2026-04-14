@@ -60,6 +60,14 @@ class WalletBusinessCard extends ConsumerWidget {
     const Color tunaGreen = Color(0xFF2E7D32);
     final isFavorite = ref.watch(butcherFavoritesProvider).contains(id);
     
+    // Helper for robust type extraction
+    String getRawType(Map<String, dynamic> d) {
+      if (d['type'] is String && d['type'].toString().isNotEmpty) return d['type'].toString().toLowerCase();
+      if (d['types'] is List && d['types'].isNotEmpty) return (d['types'].first as String? ?? '').toLowerCase();
+      if (d['businessType'] is String && d['businessType'].toString().isNotEmpty) return d['businessType'].toString().toLowerCase();
+      return '';
+    }
+    
     // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
@@ -77,7 +85,7 @@ class WalletBusinessCard extends ConsumerWidget {
       // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
       if (activeBadges.isEmpty) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-        bool isMarket = data['type']?.toString().toLowerCase() == 'market';
+        bool isMarket = getRawType(data) == 'market';
 
         if (data['sellsTunaProducts'] == true || isMarket) {
           showLegacyTuna = false; // Fundamental: Markets cannot have legacy premium Kasap badges
@@ -109,7 +117,7 @@ class WalletBusinessCard extends ConsumerWidget {
 
     // In case whenData hasn't executed synchronously (loading state)
     if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
-      bool isMarket = data['type']?.toString().toLowerCase() == 'market';
+      bool isMarket = getRawType(data) == 'market';
       bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
       if (data['sellsTunaProducts'] == true || isMarket) {
         showLegacyTuna = false;
@@ -730,7 +738,7 @@ class WalletBusinessCard extends ConsumerWidget {
                               ),
                               Builder(
                                 builder: (context) {
-                                  bool isMarket = data['type']?.toString().toLowerCase() == 'market';
+                                  bool isMarket = getRawType(data) == 'market';
                                   bool legacyTunaFlag = data['brand'] == 'tuna' || isTunaPartner;
                                   bool actuallySellsTuna = data['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
 

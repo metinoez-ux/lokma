@@ -2417,6 +2417,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Preparation - Safe Data Access
     final data = _butcherDoc!.data() as Map<String, dynamic>?;
     
+    // Helper for robust type extraction
+    String getRawType(Map<String, dynamic>? d) {
+      if (d == null) return '';
+      if (d['type'] is String && d['type'].toString().isNotEmpty) return d['type'].toString().toLowerCase();
+      if (d['types'] is List && d['types'].isNotEmpty) return (d['types'].first as String? ?? '').toLowerCase();
+      if (d['businessType'] is String && d['businessType'].toString().isNotEmpty) return d['businessType'].toString().toLowerCase();
+      return '';
+    }
+
     double parseSafelyDouble(dynamic val) {
       if (val == null) return 0.0;
       if (val is num) return val.toDouble();
@@ -2486,7 +2495,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
     if (activeBadges.isEmpty) {
-      bool isMarket = data?['type']?.toString().toLowerCase() == 'market';
+      bool isMarket = getRawType(data) == 'market';
       bool showLegacyTuna = isTunaPartner;
       
       if (data?['sellsTunaProducts'] == true || isMarket) {
@@ -2856,7 +2865,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                           Builder(
                             builder: (context) {
-                              bool isMarket = data?['type']?.toString().toLowerCase() == 'market';
+                              bool isMarket = getRawType(data) == 'market';
                               bool legacyTunaFlag = isTunaPartner;
                               bool actuallySellsTuna = data?['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
 
