@@ -2022,7 +2022,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         ),
                         textStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         debounceTime: 400,
-                        countries: const ['de'],
+                        countries: const ['de', 'tr', 'nl', 'fr', 'at'],
                         isLatLngRequired: false,
                         getPlaceDetailWithLatLng: (prediction) {
                           // Place seçildiğinde
@@ -2073,7 +2073,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                           );
                         },
                         seperatedBuilder: Divider(height: 1, color: Colors.grey),
-                        isCrossBtnShown: true,
+                        isCrossBtnShown: false,
                         containerHorizontalPadding: 0,
                       ),
                       

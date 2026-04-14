@@ -279,7 +279,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                     fontSize: 14,
                     fontWeight: FontWeight.w400),
                 debounceTime: 400,
-                countries: const ['de'],
+                isCrossBtnShown: false,
+                countries: const ['de', 'tr', 'nl', 'fr', 'at'],
                 isLatLngRequired: true,
                 getPlaceDetailWithLatLng: (prediction) {
                   final lat = double.tryParse(prediction.lat ?? '');

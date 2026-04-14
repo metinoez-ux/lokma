@@ -6603,7 +6603,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                             textStyle: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 15),
                             debounceTime: 400,
-                            countries: const ['de'],
+                            isCrossBtnShown: false,
+                            countries: const ['de', 'tr', 'nl', 'fr', 'at'],
                             isLatLngRequired: true,
                             getPlaceDetailWithLatLng: (prediction) async {
                               final lat = double.tryParse(prediction.lat ?? '');
