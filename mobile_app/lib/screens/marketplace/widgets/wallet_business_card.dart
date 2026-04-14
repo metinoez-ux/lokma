@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/brand_info_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -741,7 +742,7 @@ class WalletBusinessCard extends ConsumerWidget {
                         onTap: () {
                           HapticFeedback.lightImpact();
                           if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) {
-                            _showTunaBrandInfo(context);
+                            BrandInfoSheet.show(context);
                           }
                         },
                         child: Container(

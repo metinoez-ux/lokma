@@ -1,4 +1,5 @@
 import '../../utils/currency_utils.dart';
+import '../../widgets/brand_info_sheet.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
@@ -2124,7 +2125,11 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     return GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        _showBadgeDetailsBottomSheet(badge);
+                        if (badge.label.toLowerCase().contains('tuna')) {
+                          BrandInfoSheet.show(context);
+                        } else {
+                          _showBadgeDetailsBottomSheet(badge);
+                        }
                       },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 8),

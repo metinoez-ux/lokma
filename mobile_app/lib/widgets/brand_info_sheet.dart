@@ -1,0 +1,177 @@
+import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+class BrandInfoSheet extends StatelessWidget {
+  const BrandInfoSheet({super.key});
+
+  static void show(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const BrandInfoSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (_, controller) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // 1. Red Brand Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEA184A), // Deep Red
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                  ),
+                  Image.asset(
+                    'assets/images/tuna_logo_pill.png', 
+                    height: 50, 
+                    errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'marketplace.tuna_subtitle'.tr(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            
+             Expanded(
+              child: ListView(
+                controller: controller,
+                padding: const EdgeInsets.all(24),
+                children: [
+                   // Intro Text
+                   Text(
+                     '${'marketplace.tuna_description_1'.tr()}\n\n${'marketplace.tuna_description_2'.tr()}',
+                     style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+                   ),
+                   const SizedBox(height: 24),
+                   
+                   // Icons Row
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceAround,
+                     children: [
+                       _buildBrandIconElement(Icons.verified, 'marketplace.helal_kesim'.tr(), Colors.green),
+                       _buildBrandIconElement(Icons.bolt, 'marketplace.soksuz_kesim'.tr(), Colors.amber),
+                       _buildBrandIconElement(Icons.clean_hands, 'marketplace.kuru_yolum'.tr(), Colors.amber),
+                     ],
+                   ),
+                   const SizedBox(height: 32),
+                   
+                   // Standards List
+                   Text('marketplace.supply_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+                   const SizedBox(height: 16),
+                   _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
+                   _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
+                   _buildCheckItem('marketplace.soksuz_kesim'.tr(), 'marketplace.soksuz_kesim_desc'.tr()),
+                   _buildCheckItem('marketplace.kuru_yolum'.tr(), 'marketplace.kuru_yolum_desc'.tr()),
+
+                   const SizedBox(height: 24),
+                   
+                   // Kuru Yolum Info Box
+                   Container(
+                     padding: const EdgeInsets.all(16),
+                     decoration: BoxDecoration(
+                       color: const Color(0xFF2C1B1B), // Dark Reddish Tint
+                       borderRadius: BorderRadius.circular(12),
+                       border: Border.all(color: const Color(0xFF4A2A2A)),
+                     ),
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         Row(
+                           children: [
+                             Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
+                             const SizedBox(width: 8),
+                             Text('${'marketplace.kuru_yolum'.tr()}?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
+                           ],
+                         ),
+                         const SizedBox(height: 8),
+                         Text(
+                           'marketplace.kuru_yolum_full_desc'.tr(),
+                           style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                         ),
+                       ],
+                     ),
+                   ),
+                   
+                   const SizedBox(height: 24),
+                   Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+                   const SizedBox(height: 16),
+                   _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
+                   _buildCheckItem('marketplace.without_e621'.tr(), 'marketplace.no_msg'.tr()),
+                   _buildCheckItem('marketplace.without_mms'.tr(), 'marketplace.pure_meat'.tr()),
+                   _buildCheckItem('marketplace.gluten_free'.tr(), 'marketplace.no_wheat'.tr()),
+                   
+                   const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrandIconElement(IconData icon, String label, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+            border: Border.all(color: color.withOpacity(0.3), width: 2),
+          ),
+          child: Icon(icon, color: color, size: 28),
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
+  Widget _buildCheckItem(String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_circle, color: Colors.green, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600, fontSize: 15)),
+                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
