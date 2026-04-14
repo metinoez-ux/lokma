@@ -1,5 +1,4 @@
 import 'package:qr_flutter/qr_flutter.dart';
-import './../../staff/tabs/staff_handover_dialog.dart';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -173,64 +172,7 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
     }
   }
 
-  void _showHandoverOptions() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final orderIds = _cashOrders.map((doc) => doc.id).toList();
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Nasıl devretmek istersiniz?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-            const SizedBox(height: 24),
-            ListTile(
-              leading: const CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.qr_code_scanner, color: Colors.white)),
-              title: const Text('QR Kodu Okutarak', style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: const Text('Kasa görevlisinin cihazından taraması için'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _submitHandover();
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const CircleAvatar(backgroundColor: Colors.orangeAccent, child: Icon(Icons.person_search, color: Colors.white)),
-              title: const Text('Listeden Seçerek', style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: const Text('Doğrudan başka bir yetkiliye gönder'),
-              onTap: () {
-                Navigator.pop(ctx);
-                showDialog(
-                  context: context,
-                  builder: (_) => StaffTransferSelectionDialog(
-                    currentUserId: widget.staffId,
-                    businessId: widget.kermesId,
-                    declaredAmount: _pendingCash,
-                    orderIds: orderIds,
-                  ),
-                ).then((transferred) {
-                  if (transferred == true) {
-                    _fetchDrawerStatus();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Devir işlemi başarıyla tamamlandı.'), backgroundColor: Colors.green),
-                    );
-                  }
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showQRDialog(DocumentSnapshot handoverDoc) {
     if (!mounted) return;
@@ -390,11 +332,11 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
-                              onPressed: _showHandoverOptions,
-                              icon: const Icon(Icons.account_balance_wallet, color: Colors.white),
-                              label: const Text('Teslim Et', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              onPressed: _submitHandover,
+                              icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                              label: const Text('QR ile Teslim Et', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
+                                backgroundColor: Colors.teal.shade600,
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
