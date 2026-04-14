@@ -266,7 +266,6 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildAssignmentCard(capabilities, isDark),
-              _buildFinanceCard(isDark),
               _buildKermesAdminManagementCard(capabilities, isDark),
               _buildStatsCard(isDark),
               const SizedBox(height: 24),
@@ -979,90 +978,32 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
 
           // Vardiya Navigation Buttons
           if (capabilities.businessId != null) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? Colors.cyan.shade900 : Colors.cyan.shade100,
-                      foregroundColor: isDark ? Colors.cyan.shade100 : Colors.cyan.shade900,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: const Icon(Icons.calendar_month, size: 18),
-                    label: const Text('Vardiya Planım', style: TextStyle(fontWeight: FontWeight.bold)),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => KermesScheduleScreen(
-                            kermesId: capabilities.businessId!,
-                            kermesTitle: capabilities.businessName,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? Colors.cyan.shade900 : Colors.cyan.shade100,
+                  foregroundColor: isDark ? Colors.cyan.shade100 : Colors.cyan.shade900,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                if (capabilities.isBusinessAdmin) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isDark ? Colors.pink.shade900 : Colors.pink.shade100,
-                        foregroundColor: isDark ? Colors.pink.shade100 : Colors.pink.shade900,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                icon: const Icon(Icons.calendar_month, size: 18),
+                label: const Text('Vardiya Planım', style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => KermesScheduleScreen(
+                        kermesId: capabilities.businessId!,
+                        kermesTitle: capabilities.businessName,
                       ),
-                      icon: const Icon(Icons.manage_accounts, size: 18),
-                      label: const Text('Vardiya Yönetimi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => KermesAdminRosterScreen(
-                              kermesId: capabilities.businessId!,
-                              kermesTitle: capabilities.businessName,
-                              assignedStaffIds: [], // We made it self-fetching if empty
-                            ),
-                          ),
-                        );
-                      },
                     ),
-                  ),
-                ]
-              ],
-            ),
-            const SizedBox(height: 10),
-            if (capabilities.hasKermesAdminRole) ...[
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? Colors.deepOrange.shade900 : Colors.deepOrange.shade100,
-                    foregroundColor: isDark ? Colors.deepOrange.shade100 : Colors.deepOrange.shade900,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  icon: const Icon(Icons.account_balance_wallet, size: 18),
-                  label: const Text('Kasa Yönetimi (Vault)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const KermesAdminVaultScreen(),
-                      ),
-                    );
-                  },
-                ),
+                  );
+                },
               ),
-              const SizedBox(height: 10),
-            ],
+            ),
           ],
-
         ],
       ),
     );
