@@ -1427,6 +1427,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         try {
           final data = _butcherDoc?.data() as Map<String, dynamic>?;
           
+          bool isMarket = false;
+          if (data != null) {
+            final str = [
+              data['type'],
+              data['types'],
+              data['businessType'],
+              data['cuisineType'],
+              data['category'],
+              data['tags'],
+            ].join(' ').toLowerCase();
+            isMarket = str.contains('market') || str.contains('markt') || str.contains('bakkal') || str.contains('grocery');
+          }
+
           // Extract address
           final address = data?['address'];
           final street = address is Map ? (address['street'] ?? '') : '';
@@ -1519,7 +1532,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         const SizedBox(height: 6),
                         
                         // Brand Badge — pill style matching business card
-                        if (data?['brandLabelActive'] == true)
+                        if (!isMarket && data?['brandLabelActive'] == true)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: InkWell(
@@ -1558,7 +1571,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                           ),
                         
-                        if (data?['brandLabelActive'] != true)
+                        if (isMarket || data?['brandLabelActive'] != true)
                           const SizedBox(height: 10),
 
                         // ═══ MAP SECTION — "So findest du uns" ═══

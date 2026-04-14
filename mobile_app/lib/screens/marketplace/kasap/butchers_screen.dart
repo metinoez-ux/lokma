@@ -691,14 +691,30 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                 
                 final brand = data['brand'];
                 
+                // Helper for aggressive market check to isolate premium badges
+                bool isMarket = false;
+                final str = [
+                  data['type'],
+                  data['types'],
+                  data['businessType'],
+                  data['cuisineType'],
+                  data['category'],
+                  data['tags'],
+                ].join(' ').toLowerCase();
+                isMarket = str.contains('market') || str.contains('markt') || str.contains('bakkal') || str.contains('grocery');
+
+                String? finalBadgeText;
+                if (!isMarket && (data['brandLabelActive'] ?? false)) {
+                   if (brand?.toString().trim().toLowerCase() == 'tuna') finalBadgeText = 'TUNA';
+                   else if (brand?.toString().trim().toLowerCase() == 'akdeniz_toros') finalBadgeText = 'AKDENIZ';
+                }
+                
                 return {
                   'id': id,
                   'name': data['companyName'] ?? '',
                   'brand': _getBrandLabel(brand),
                   'location': city,
-                  'badgeText': (data['brandLabelActive'] ?? false) 
-                      ? (brand?.toString().trim().toLowerCase() == 'tuna' ? 'TUNA' : (brand?.toString().trim().toLowerCase() == 'akdeniz_toros' ? 'AKDENIZ' : null))
-                      : null,
+                  'badgeText': finalBadgeText,
                   'hours': data['openingHours'], // Pass raw data (Map or String)
                   'deliveryHours': data['deliveryHours'],
                   'pickupHours': data['pickupHours'],
