@@ -525,6 +525,59 @@ class SearchNotifier extends Notifier<SearchState> {
           ));
         }
       }
+
+      // === ADD KERMES EVENTS SEARCH IF APPLICABLE ===
+      if (state.activeSegment == SearchSegment.kermes || state.activeSegment == SearchSegment.market) {
+        try {
+          final kermesSnapshot = await _firestore.collection('kermes_events').where('isActive', isEqualTo: true).get();
+          for (final doc in kermesSnapshot.docs) {
+            final data = doc.data();
+            final title = _normalizeTurkish((data['title'] ?? data['name'] ?? '').toString().toLowerCase());
+            final location = _normalizeTurkish((data['city'] ?? data['state'] ?? data['location'] ?? '').toString().toLowerCase());
+
+            final queryWords = queryNormalized.split(RegExp(r'\s+')).where((w) => w.length >= 2).toList();
+            final searchableText = '$title $location kermes';
+
+            bool allWordsMatch = queryWords.isNotEmpty && queryWords.every((word) => searchableText.contains(word));
+
+            if (allWordsMatch) {
+              double? distanceKm;
+              bool passesDistanceFilter = true;
+
+              final vendorLat = data['lat'] as double?;
+              final vendorLng = data['lng'] as double?;
+              final stateField = (data['state'] ?? '').toString().toUpperCase();
+
+              if (state.isRegionSearch) {
+                passesDistanceFilter = stateField.contains('NRW') || stateField.contains('NORDRHEIN') || stateField.contains('NORTH RHINE');
+              } else if (!state.isCountrySearch && state.userLat != null && state.userLng != null && vendorLat != null && vendorLng != null) {
+                distanceKm = _calculateDistance(state.userLat!, state.userLng!, vendorLat, vendorLng);
+                passesDistanceFilter = distanceKm <= state.maxDistanceKm;
+              }
+
+              if (!passesDistanceFilter) continue;
+
+              final groupKey = '🎪 Kermesler';
+              resultsByCategory.putIfAbsent(groupKey, () => []);
+              resultsByCategory[groupKey]!.add(SearchResult(
+                id: doc.id,
+                title: data['title'] ?? data['name'] ?? 'Kermes',
+                subtitle: distanceKm != null
+                    ? '${data['city'] ?? ''} • ${distanceKm.toStringAsFixed(1)} km'
+                    : data['city'] ?? '',
+                imageUrl: data['imageUrl'] ?? data['image'],
+                type: SearchResultType.vendor, // Acts as vendor entry point
+                route: '/kermes/${doc.id}',
+                distance: distanceKm,
+                metadata: data,
+              ));
+            }
+          }
+        } catch (e) {
+          print('SearchProvider: Error searching kermes events directly: $e');
+        }
+      }
+
     } catch (e) {
       print('SearchProvider: Error searching vendors: $e');
     }

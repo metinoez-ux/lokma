@@ -1816,52 +1816,42 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 2),
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.only(left: 16, right: 8),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.grey[800] : const Color(0xFFF2EEE9),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[500], size: 22),
-            const SizedBox(width: 10),
-            // Search input
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) {
-                  setState(() => _searchQuery = value);
-                },
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Kermes ara: sehir, eyalet, menu...',
-                  hintStyle: TextStyle(
+      child: GestureDetector(
+        onTap: () {
+          // 🆕 Yemek/Market tarzı arama:
+          context.push('/search?segment=kermes');
+        },
+        child: Container(
+          height: 48,
+          padding: const EdgeInsets.only(left: 16, right: 8),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey[800] : const Color(0xFFF2EEE9),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[500], size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Kermes ara: sehir, eyalet, menu...',
+                  style: TextStyle(
                     color: isDark ? Colors.grey[300] : Colors.grey[600],
                     fontSize: 14.5,
                     fontWeight: FontWeight.w500,
                   ),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            // Filter Button
-            GestureDetector(
+              const SizedBox(width: 8),
+              // Filter Button within search
+              GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
                 _showFilterBottomSheet();
