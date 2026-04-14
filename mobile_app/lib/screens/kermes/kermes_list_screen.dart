@@ -880,7 +880,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               final normalizedLabel = b.label.toLowerCase();
                               final isTuna = normalizedLabel.contains('tuna');
                               final isToros = normalizedLabel.contains('toros');
-                              final isTurkeyRegion = Localizations.localeOf(context).languageCode == 'tr';
+                              final isTurkeyRegion = _userCountryCode == 'TR';
                               
                               // Region-based exclusion
                               if (isTurkeyRegion && isTuna) return false;
