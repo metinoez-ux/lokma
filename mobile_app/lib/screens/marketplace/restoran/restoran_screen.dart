@@ -904,8 +904,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 );
               },
               child: Container(
-                width: 56,
-                height: 56,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   color: lokmaPink,
                   shape: BoxShape.circle,
@@ -922,9 +922,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   children: [
                     Center(
                       child: SvgPicture.asset(
-                        'assets/images/icon_cart_new.svg',
-                        width: 24,
-                        height: 24,
+                        'assets/images/basket_1.svg',
+                        width: 28,
+                        height: 28,
                         colorFilter: const ColorFilter.mode(
                           Colors.white,
                           BlendMode.srcIn,
@@ -933,8 +933,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                     // Badge with item count
                     Positioned(
-                      top: -4,
-                      right: -4,
+                      top: 4,
+                      right: 4,
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         constraints: const BoxConstraints(minWidth: 22, minHeight: 22),

@@ -1261,7 +1261,15 @@ class _PulsingCartFabState extends State<_PulsingCartFab> with SingleTickerProvi
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    const Icon(Icons.shopping_basket, color: Colors.white, size: 22),
+                    SvgPicture.asset(
+                      'assets/images/basket_1.svg',
+                      width: 22,
+                      height: 22,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                    ),
                     Positioned(
                       top: -6,
                       right: -8,
