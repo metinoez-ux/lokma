@@ -740,28 +740,54 @@ class WalletBusinessCard extends ConsumerWidget {
                                 builder: (context) {
                                   bool isMarket = getRawType(data) == 'market';
                                   bool legacyTunaFlag = data['brand'] == 'tuna' || isTunaPartner;
+                                  bool legacyTorosFlag = data['brand'] == 'akdeniz_toros';
+                                  
                                   bool actuallySellsTuna = data['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
+                                  bool actuallySellsToros = data['sellsTorosProducts'] == true || (isMarket && legacyTorosFlag);
 
-                                  if (actuallySellsTuna && activeBadges.isEmpty) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 6),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFFEA184A)),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'TUNA Hazır Paket Ürünleri',
-                                            style: GoogleFonts.inter(
-                                              color: const Color(0xFFEA184A),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                  if (activeBadges.isNotEmpty) return const SizedBox.shrink();
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (actuallySellsTuna)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 6),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFFEA184A)),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'TUNA Hazır Paket Ürünleri',
+                                                style: GoogleFonts.inter(
+                                                  color: const Color(0xFFEA184A),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-                                  return const SizedBox.shrink();
+                                        ),
+                                      if (actuallySellsToros)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 6),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFF1B5E20)),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Akdeniz Toros Hazır Paket Ürünleri',
+                                                style: GoogleFonts.inter(
+                                                  color: const Color(0xFF1B5E20),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  );
                                 },
                               ),
                             ],
