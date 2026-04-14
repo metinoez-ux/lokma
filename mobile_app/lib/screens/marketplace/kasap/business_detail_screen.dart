@@ -2504,12 +2504,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
+      // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
       for (final brand in brands) {
         if (activeBrandIds.contains(brand.id)) {
-          // Fundamental: Markets cannot have premium Kasap badges (Tuna/Toros)
-          bool isPremiumBrand = brand.name.toLowerCase().contains('tuna') || brand.name.toLowerCase().contains('toros');
-          if (isMarket && isPremiumBrand) continue;
-
           activeBadges.add({
             'name': brand.name,
             'iconUrl': brand.iconUrl,
@@ -2518,26 +2515,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       }
     });
 
-    // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
-    if (activeBadges.isEmpty) {
+    // KURAL 3: Legacy fallback - SADECE activeBrandIds bos ise VE brandLabelActive true ise
+    if (activeBadges.isEmpty && data?['brandLabelActive'] == true) {
       bool showLegacyTuna = isTunaPartner;
-      
-      if (data?['sellsTunaProducts'] == true || isMarket) {
-        showLegacyTuna = false; // Fundamental: Markets cannot have legacy premium Kasap badges
-      }
-
       if (showLegacyTuna) {
         activeBadges.add({
           'name': 'TUNA',
-          'iconUrl': '', // Handled by legacy block
+          'iconUrl': '',
           'isLegacyTuna': true,
         });
       }
       bool showLegacyToros = brand?.toString().toLowerCase() == 'akdeniz_toros';
-      if (data?['sellsTorosProducts'] == true || isMarket) {
-        showLegacyToros = false;
-      }
-
       if (showLegacyToros) {
         activeBadges.add({
           'name': 'Akdeniz Toros',
@@ -2890,11 +2878,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           Builder(
                             builder: (context) {
                               bool isMarket = checkIsMarket(data);
-                              bool legacyTunaFlag = isTunaPartner && data?['brandLabelActive'] == true;
-                              bool legacyTorosFlag = (brand?.toString().toLowerCase() == 'akdeniz_toros') && data?['brandLabelActive'] == true;
-
-                              bool actuallySellsTuna = isMarket && legacyTunaFlag;
-                              bool actuallySellsToros = isMarket && legacyTorosFlag;
+                              // KURAL 2: Hazir Paket Yazi Ibaresi = sellsTunaProducts / sellsTorosProducts
+                              bool actuallySellsTuna = data?['sellsTunaProducts'] == true;
+                              bool actuallySellsToros = data?['sellsTorosProducts'] == true;
 
                               if (activeBadges.isNotEmpty) return const SizedBox.shrink();
 

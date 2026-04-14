@@ -81,12 +81,9 @@ class WalletBusinessCard extends ConsumerWidget {
     final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
+      // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
       for (final brand in brands) {
         if (activeBrandIds.contains(brand.id)) {
-          // Fundamental: Markets cannot have premium Kasap badges (Tuna/Toros)
-          bool isPremiumBrand = brand.name.toLowerCase().contains('tuna') || brand.name.toLowerCase().contains('toros');
-          if (isMarket && isPremiumBrand) continue;
-
           activeBadges.add({
             'name': brand.name,
             'iconUrl': brand.iconUrl,
@@ -94,15 +91,9 @@ class WalletBusinessCard extends ConsumerWidget {
         }
       }
 
-      // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
-      if (activeBadges.isEmpty) {
+      // KURAL 3: Legacy fallback - SADECE activeBrandIds bos ise VE brandLabelActive true ise
+      if (activeBadges.isEmpty && data['brandLabelActive'] == true) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-        bool isMarket = checkIsMarket(data);
-
-        if (data['sellsTunaProducts'] == true || isMarket) {
-          showLegacyTuna = false; // Fundamental: Markets cannot have legacy premium Kasap badges
-        }
-
         if (showLegacyTuna) {
           try {
             final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('tuna'));
@@ -111,11 +102,7 @@ class WalletBusinessCard extends ConsumerWidget {
             activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
           }
         }
-        bool showLegacyToros = data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros';
-        if (data['sellsTorosProducts'] == true || isMarket) {
-          showLegacyToros = false;
-        }
-
+        bool showLegacyToros = data['brand'] == 'akdeniz_toros';
         if (showLegacyToros) {
           try {
             final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('toros'));
@@ -129,21 +116,15 @@ class WalletBusinessCard extends ConsumerWidget {
 
     // In case whenData hasn't executed synchronously (loading state)
     if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
-      bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-      if (data['sellsTunaProducts'] == true || isMarket) {
-        showLegacyTuna = false;
-      }
-
-      if (showLegacyTuna) {
-        activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
-      }
-      bool showLegacyToros = data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros';
-      if (data['sellsTorosProducts'] == true || isMarket) {
-        showLegacyToros = false;
-      }
-
-      if (showLegacyToros) {
-        activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': '', 'isLegacyToros': true});
+      if (data['brandLabelActive'] == true) {
+        bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
+        if (showLegacyTuna) {
+          activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
+        }
+        bool showLegacyToros = data['brand'] == 'akdeniz_toros';
+        if (showLegacyToros) {
+          activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': '', 'isLegacyToros': true});
+        }
       }
     }
 
@@ -749,12 +730,9 @@ class WalletBusinessCard extends ConsumerWidget {
                               ),
                               Builder(
                                 builder: (context) {
-                                  bool isMarket = checkIsMarket(data);
-                                  bool legacyTunaFlag = (data['brand'] == 'tuna' || isTunaPartner) && data['brandLabelActive'] == true;
-                                  bool legacyTorosFlag = (data['brand'] == 'akdeniz_toros') && data['brandLabelActive'] == true;
-                                  
-                                  bool actuallySellsTuna = isMarket && legacyTunaFlag;
-                                  bool actuallySellsToros = isMarket && legacyTorosFlag;
+                                  // KURAL 2: Hazir Paket Yazi Ibaresi = sellsTunaProducts / sellsTorosProducts
+                                  bool actuallySellsTuna = data['sellsTunaProducts'] == true;
+                                  bool actuallySellsToros = data['sellsTorosProducts'] == true;
 
                                   if (activeBadges.isNotEmpty) return const SizedBox.shrink();
 
