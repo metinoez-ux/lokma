@@ -61,15 +61,22 @@ class WalletBusinessCard extends ConsumerWidget {
     final isFavorite = ref.watch(butcherFavoritesProvider).contains(id);
     
     // Helper for robust type extraction
-    String getRawType(Map<String, dynamic> d) {
-      if (d['type'] is String && d['type'].toString().isNotEmpty) return d['type'].toString().toLowerCase();
-      if (d['types'] is List && d['types'].isNotEmpty) return (d['types'].first as String? ?? '').toLowerCase();
-      if (d['businessType'] is String && d['businessType'].toString().isNotEmpty) return d['businessType'].toString().toLowerCase();
-      return '';
+    bool checkIsMarket(Map<String, dynamic> d) {
+      final str = [
+        d['type'],
+        d['types'],
+        d['businessType'],
+        d['cuisineType'],
+        d['category'],
+        d['tags'],
+      ].join(' ').toLowerCase();
+      
+      // If ANY of the classification fields contain "market", treat it as a market!
+      return str.contains('market');
     }
     
     // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)
-    final bool isMarket = getRawType(data) == 'market';
+    final bool isMarket = checkIsMarket(data);
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
