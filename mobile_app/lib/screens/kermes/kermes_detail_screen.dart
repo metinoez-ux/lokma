@@ -25,6 +25,7 @@ import 'package:lokma_app/services/weather_service.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 // Tailwind Colors mapped from HTML
 const Color primaryRuby = Color(0xFFD32F2F);
