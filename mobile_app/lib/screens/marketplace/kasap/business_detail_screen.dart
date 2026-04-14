@@ -2479,12 +2479,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final showBrandBadge = isTunaPartner || (brand?.toString().toLowerCase() == 'akdeniz_toros');
     
     // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)
+    final bool isMarket = getRawType(data) == 'market';
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
       for (final brand in brands) {
         if (activeBrandIds.contains(brand.id)) {
+          // Fundamental: Markets cannot have premium Kasap badges (Tuna/Toros)
+          bool isPremiumBrand = brand.name.toLowerCase().contains('tuna') || brand.name.toLowerCase().contains('toros');
+          if (isMarket && isPremiumBrand) continue;
+
           activeBadges.add({
             'name': brand.name,
             'iconUrl': brand.iconUrl,
@@ -2495,7 +2500,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
     if (activeBadges.isEmpty) {
-      bool isMarket = getRawType(data) == 'market';
       bool showLegacyTuna = isTunaPartner;
       
       if (data?['sellsTunaProducts'] == true || isMarket) {

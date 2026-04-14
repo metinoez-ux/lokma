@@ -69,12 +69,17 @@ class WalletBusinessCard extends ConsumerWidget {
     }
     
     // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)
+    final bool isMarket = getRawType(data) == 'market';
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
       for (final brand in brands) {
         if (activeBrandIds.contains(brand.id)) {
+          // Fundamental: Markets cannot have premium Kasap badges (Tuna/Toros)
+          bool isPremiumBrand = brand.name.toLowerCase().contains('tuna') || brand.name.toLowerCase().contains('toros');
+          if (isMarket && isPremiumBrand) continue;
+
           activeBadges.add({
             'name': brand.name,
             'iconUrl': brand.iconUrl,
@@ -117,7 +122,6 @@ class WalletBusinessCard extends ConsumerWidget {
 
     // In case whenData hasn't executed synchronously (loading state)
     if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
-      bool isMarket = getRawType(data) == 'market';
       bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
       if (data['sellsTunaProducts'] == true || isMarket) {
         showLegacyTuna = false;
