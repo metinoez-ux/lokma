@@ -597,7 +597,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                   } else if (isOrder) {
                     // Müşteri bildirimleri gibi, ordere doğrudan yönlendir:
                     final dataMap = notif['data'] as Map<String, dynamic>? ?? {};
-                    final oid = dataMap['orderId'] ?? dataMap['kermesOrderId'];
+                    final oid = notif['orderId'] ?? notif['kermesOrderId'] ?? dataMap['orderId'] ?? dataMap['kermesOrderId'];
                     if (oid != null && oid.toString().isNotEmpty) {
                       showDialog(
                         context: context,
@@ -608,9 +608,17 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                         final doc = await FirebaseFirestore.instance.collection('kermes_orders').doc(oid.toString()).get();
                         if (doc.exists && context.mounted) {
                           Navigator.pop(context); // loading kapat
+                          final kermesOrder = KermesOrder.fromDocument(doc);
                           showDialog(
                             context: context,
-                            builder: (_) => OrderQRDialog(order: KermesOrder.fromDocument(doc)),
+                            builder: (_) => OrderQRDialog(
+                              orderId: kermesOrder.id,
+                              orderNumber: kermesOrder.orderNumber,
+                              kermesId: kermesOrder.kermesId,
+                              kermesName: kermesOrder.kermesName,
+                              totalAmount: kermesOrder.totalAmount,
+                              isPaid: kermesOrder.isPaid,
+                            ),
                           );
                         } else if (context.mounted) {
                           Navigator.pop(context);
