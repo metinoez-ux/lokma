@@ -81,101 +81,158 @@ class BrandInfoSheet extends ConsumerWidget {
             ),
             
              Expanded(
-              child: ListView(
-                controller: controller,
-                padding: const EdgeInsets.all(24),
-                children: [
-                   // Intro Text
-                   Text(
-                     '${'marketplace.${prefix}_description_1'.tr()}\n\n${'marketplace.${prefix}_description_2'.tr()}',
-                     style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
-                   ),
-                   const SizedBox(height: 24),
-                   
-                   // Icons Row
-                   Row(
-                     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                     children: [
-                       _buildBrandIconElement(Icons.verified, 'marketplace.helal_kesim'.tr(), Colors.green),
-                       _buildBrandIconElement(Icons.bolt, 'marketplace.soksuz_kesim'.tr(), Colors.amber),
-                       _buildBrandIconElement(Icons.clean_hands, 'marketplace.kuru_yolum'.tr(), Colors.amber),
-                     ],
-                   ),
-                   const SizedBox(height: 32),
-                   
-                   // Standards List
-                   Text('marketplace.supply_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
-                   const SizedBox(height: 16),
-                   _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
-                   _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
-                   _buildCheckItem('marketplace.soksuz_kesim'.tr(), 'marketplace.soksuz_kesim_desc'.tr()),
-                   _buildCheckItem('marketplace.kuru_yolum'.tr(), 'marketplace.kuru_yolum_desc'.tr()),
+              child: isTurkeyRegion
+                  ? _buildTorosContent(controller, brandWebsite)
+                  : _buildTunaContent(controller, prefix, brandWebsite),
+             ),
+           ],
+         ),
+       ),
+     );
+   }
 
-                   const SizedBox(height: 24),
-                   
-                   // Kuru Yolum Info Box
-                   Container(
-                     padding: const EdgeInsets.all(16),
-                     decoration: BoxDecoration(
-                       color: const Color(0xFF2C1B1B), // Dark Reddish Tint
-                       borderRadius: BorderRadius.circular(12),
-                       border: Border.all(color: const Color(0xFF4A2A2A)),
-                     ),
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                         Row(
-                           children: [
-                             Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
-                             const SizedBox(width: 8),
-                             Text('${'marketplace.kuru_yolum'.tr()}?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
-                           ],
-                         ),
-                         const SizedBox(height: 8),
-                         Text(
-                           'marketplace.kuru_yolum_full_desc'.tr(),
-                           style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
-                         ),
-                       ],
-                     ),
-                   ),
-                   
-                   const SizedBox(height: 24),
-                   Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
-                   const SizedBox(height: 16),
-                   _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
-                   _buildCheckItem('marketplace.without_e621'.tr(), 'marketplace.no_msg'.tr()),
-                   _buildCheckItem('marketplace.without_mms'.tr(), 'marketplace.pure_meat'.tr()),
-                   _buildCheckItem('marketplace.gluten_free'.tr(), 'marketplace.no_wheat'.tr()),
-                   
-                   const SizedBox(height: 24),
-                   Center(
-                     child: TextButton.icon(
-                       onPressed: () async {
-                         final uri = Uri.parse(brandWebsite);
-                         if (await canLaunchUrl(uri)) {
-                           await launchUrl(uri, mode: LaunchMode.externalApplication);
-                         }
-                       },
-                       icon: const Icon(Icons.open_in_new, color: Colors.blueAccent, size: 16),
-                       label: Text(
-                         tr('marketplace.brand_more_info'),
-                         style: const TextStyle(
-                           color: Colors.blueAccent, 
-                           fontSize: 14,
-                           decoration: TextDecoration.underline,
-                           decorationColor: Colors.blueAccent,
-                         ),
-                       ),
-                     ),
-                   ),
-                   const SizedBox(height: 40),
-                ],
-              ),
-            ),
+  Widget _buildTorosContent(ScrollController controller, String brandWebsite) {
+    return ListView(
+      controller: controller,
+      padding: const EdgeInsets.all(24),
+      children: [
+        const Text(
+          "Akdeniz Toros, çiftlikten sofraya %100 helal ve sağlıklı gıda prensibiyle hareket eder.\n\nKırşehir ve Balıkesir yöresinde %100 yerli ve tamamen bitkisel yemle beslenen büyükbaş, ve üretimin her aşamasında denetim altındaki kanatlı etlerimizle; sofralarınıza her zaman sağlıklı ve güvenilir bir lezzet ulaştırıyoruz.",
+          style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildBrandIconElement(Icons.verified, 'Helal Kesim', Colors.green),
+            _buildBrandIconElement(Icons.eco, 'Yerli ve Doğal', Colors.amber),
+            _buildBrandIconElement(Icons.health_and_safety, 'Gıda Güvenliği', Colors.amber),
           ],
         ),
-      ),
+        const SizedBox(height: 32),
+        const Text('Neden Akdeniz Toros?', style: TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 16),
+        _buildCheckItem('Helal ve Sağlıklı', 'Besmele ile uzman kasaplar tarafından, İslami usullere tamamen uygun kesim güvencesi.'),
+        _buildCheckItem('Yerli ve Bitkisel Besi', 'Hayvanlarımız doğal yöre çiftliklerinde sadece %100 bitkisel yemlerle sağlığa uygun yetiştirilir.'),
+        _buildCheckItem('Sağlıklı Üretim Süreci', 'Üretimin her adımında gıda mühendisleri ve mikrobiyologlar tarafından çok sıkı güvenlik denetimi.'),
+        _buildCheckItem('Çocuk Gelişimi İçin Protein', 'Zengin vitamin ve minerale sahip, yüksek besin değerli ürünlerle çocuklarınız için güvenli tüketim.'),
+        const SizedBox(height: 24),
+        Center(
+          child: TextButton.icon(
+            onPressed: () async {
+              final uri = Uri.parse(brandWebsite);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            icon: const Icon(Icons.open_in_new, color: Colors.blueAccent, size: 16),
+            label: const Text(
+              'Akdeniz Toros Hakkında Daha Fazla Bilgi',
+              style: TextStyle(
+                color: Colors.blueAccent, 
+                fontSize: 14,
+                decoration: TextDecoration.underline,
+                decorationColor: Colors.blueAccent,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildTunaContent(ScrollController controller, String prefix, String brandWebsite) {
+    return ListView(
+      controller: controller,
+      padding: const EdgeInsets.all(24),
+      children: [
+        // Intro Text
+        Text(
+          '${'marketplace.${prefix}_description_1'.tr()}\n\n${'marketplace.${prefix}_description_2'.tr()}',
+          style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+        ),
+        const SizedBox(height: 24),
+        
+        // Icons Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildBrandIconElement(Icons.verified, 'marketplace.helal_kesim'.tr(), Colors.green),
+            _buildBrandIconElement(Icons.bolt, 'marketplace.soksuz_kesim'.tr(), Colors.amber),
+            _buildBrandIconElement(Icons.clean_hands, 'marketplace.kuru_yolum'.tr(), Colors.amber),
+          ],
+        ),
+        const SizedBox(height: 32),
+        
+        // Standards List
+        Text('marketplace.supply_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 16),
+        _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
+        _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
+        _buildCheckItem('marketplace.soksuz_kesim'.tr(), 'marketplace.soksuz_kesim_desc'.tr()),
+        _buildCheckItem('marketplace.kuru_yolum'.tr(), 'marketplace.kuru_yolum_desc'.tr()),
+
+        const SizedBox(height: 24),
+        
+        // Kuru Yolum Info Box
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2C1B1B), // Dark Reddish Tint
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF4A2A2A)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
+                  const SizedBox(width: 8),
+                  Text('${'marketplace.kuru_yolum'.tr()}?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'marketplace.kuru_yolum_full_desc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 24),
+        Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 16),
+        _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
+        _buildCheckItem('marketplace.without_e621'.tr(), 'marketplace.no_msg'.tr()),
+        _buildCheckItem('marketplace.without_mms'.tr(), 'marketplace.pure_meat'.tr()),
+        _buildCheckItem('marketplace.gluten_free'.tr(), 'marketplace.no_wheat'.tr()),
+        
+        const SizedBox(height: 24),
+        Center(
+          child: TextButton.icon(
+            onPressed: () async {
+              final uri = Uri.parse(brandWebsite);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            icon: const Icon(Icons.open_in_new, color: Colors.blueAccent, size: 16),
+            label: Text(
+              tr('marketplace.brand_more_info'),
+              style: const TextStyle(
+                color: Colors.blueAccent, 
+                fontSize: 14,
+                decoration: TextDecoration.underline,
+                decorationColor: Colors.blueAccent,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 40),
+      ],
     );
   }
 
