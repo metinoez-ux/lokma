@@ -71,8 +71,8 @@ class WalletBusinessCard extends ConsumerWidget {
         d['tags'],
       ].join(' ').toLowerCase();
       
-      // If ANY of the classification fields contain "market", treat it as a market!
-      return str.contains('market');
+      // If ANY of the classification fields contain "market", "markt" (German), or "bakkal", treat it as a market!
+      return str.contains('market') || str.contains('markt') || str.contains('bakkal') || str.contains('grocery');
     }
     
     // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)

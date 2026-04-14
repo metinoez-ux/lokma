@@ -2429,7 +2429,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         d['tags'],
       ].join(' ').toLowerCase();
       
-      return str.contains('market');
+      // If ANY of the classification fields contain "market", "markt" (German), or "bakkal", treat it as a market!
+      return str.contains('market') || str.contains('markt') || str.contains('bakkal') || str.contains('grocery');
     }
 
     double parseSafelyDouble(dynamic val) {
