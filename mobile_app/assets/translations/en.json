@@ -937,7 +937,22 @@
         "sort_nearest_distance": "Nearest Distance",
         "sort_by_distance": "Sort by distance",
         "dine_in_service": "Table Service",
-        "order_via_app": "Order via App"
+        "order_via_app": "Order via App",
+        "features": {
+            "family_area": "Family Area",
+            "outdoor": "Outdoor Area",
+            "indoor": "Indoor Area",
+            "kids_area": "Kids Area",
+            "card_payment": "Card Payment",
+            "vegetarian": "Vegetarian",
+            "accessible": "Accessible",
+            "halal": "Halal",
+            "wifi": "WiFi",
+            "live_music": "Live Music",
+            "prayer_room": "Prayer Room",
+            "parking": "Parking",
+            "free_entry": "Free Entry"
+        }
     },
     "marketplace": {
         "available_now": "Available Now",
@@ -1125,6 +1140,8 @@
         "filter_high_rating_subtitle": "Highly rated businesses",
         "filter_title": "Filter",
         "filter_tuna_description": "Show only TUNA certified businesses",
+        "filter_toros_description": "Show only Akdeniz Toros certified businesses",
+        "brand_more_info": "Click for more info",
         "sort_section": "Sort By",
         "sort_nearest": "Nearest",
         "sort_best_rating": "Best Rating",
@@ -1284,6 +1301,9 @@
         "tuna_subtitle": "Europe's most trusted halal meat brand",
         "tuna_description_1": "Our journey began in 1987 in a tiny shop on Eigelstein in Cologne. From the very beginning, all members of our family business were motivated by the conviction: 'Halal, hygienic and high-quality food should be sold wherever Muslims live.'",
         "tuna_description_2": "Today, more than a quarter of a century later, our small production and sales business has developed into a far-reaching success story.",
+        "toros_subtitle": "Turkey's Most Trusted Meat Brand",
+        "toros_description_1": "Halal, hygienic, and high-quality food with 100% beef assurance on your tables.",
+        "toros_description_2": "Experience the trust of healthy and delicious meat consumption with Akdeniz Toros quality.",
         "without_e621": "Without E621",
         "no_msg": "No MSG",
         "without_mms": "No MDM (Mechanically Deboned Meat)",

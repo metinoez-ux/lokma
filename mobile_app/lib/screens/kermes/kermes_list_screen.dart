@@ -19,6 +19,7 @@ import 'package:lokma_app/utils/time_utils.dart' as time_utils;
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lokma_app/services/kermes_feature_service.dart';
 
 /// Kermes Listesi - Yemek segmenti ile ayni UI yapisi
 /// Theme-aware, smart search, toggle switches, filter bottom sheet
@@ -62,16 +63,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   // Delivery mode: 'teslimat', 'gelal', 'masa'
   String _deliveryMode = 'gelal'; // Kermes default: Gel Al
 
-  // Quick filters
-  bool _filterKidsActivities = false;
-  bool _filterOutdoor = false;
-  bool _filterFamilyArea = false;
-  bool _filterCardPayment = false;
-  bool _filterFreeEntry = false;
-  bool _filterHelal = false;
-  bool _filterVegetarian = false;
-  bool _filterLiveMusic = false;
-  bool _filterParking = false;
+  // Default empty list for features
+  List<KermesFeature>? _activeFeatures;
+  Set<String> _selectedFeatureIds = {};
 
   Map<String, KermesBadge>? _activeBadges;
   Set<String> _selectedFilterBadgeIds = {};
@@ -118,6 +112,16 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     _loadFavorites();
     _loadKermesEvents();
     _loadBadges();
+    _loadFeatures();
+  }
+
+  Future<void> _loadFeatures() async {
+    final features = await KermesFeatureService.instance.loadFeatures();
+    if (mounted) {
+      setState(() {
+        _activeFeatures = features;
+      });
+    }
   }
 
   Future<void> _loadBadges() async {
@@ -659,16 +663,29 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     }
     // _scopeMode == 'country' -> no distance filter, show all in that country
 
-    // Quick filters
-    if (_filterKidsActivities) events = events.where((e) => e.hasKidsActivities).toList();
-    if (_filterOutdoor) events = events.where((e) => e.hasOutdoor).toList();
-    if (_filterFamilyArea) events = events.where((e) => e.hasFamilyArea).toList();
-    if (_filterCardPayment) events = events.where((e) => e.hasCreditCardPayment).toList();
-    if (_filterFreeEntry) events = events.where((e) => e.hasFreeEntry).toList();
-    if (_filterHelal) events = events.where((e) => e.hasHalal).toList();
-    if (_filterVegetarian) events = events.where((e) => e.hasVegetarian).toList();
-    if (_filterLiveMusic) events = events.where((e) => e.hasLiveMusic).toList();
-    if (_filterParking) events = events.where((e) => e.hasParking).toList();
+    // Quick features filter
+    if (_selectedFeatureIds.isNotEmpty) {
+      events = events.where((e) {
+        return _selectedFeatureIds.every((id) {
+          // Backward compatibility check for old boolean flags if the feature id matches known IDs:
+          if (id == 'kids_area' && e.hasKidsActivities) return true;
+          if (id == 'outdoor' && e.hasOutdoor) return true;
+          if (id == 'family_area' && e.hasFamilyArea) return true;
+          if (id == 'card_payment' && e.hasCreditCardPayment) return true;
+          if (id == 'free_entry' && e.hasFreeEntry) return true;
+          if (id == 'halal' && e.hasHalal) return true;
+          if (id == 'vegetarian' && e.hasVegetarian) return true;
+          if (id == 'live_music' && e.hasLiveMusic) return true;
+          if (id == 'parking' && e.hasParking) return true;
+          if (id == 'accessible' && e.hasAccessible) return true;
+          if (id == 'wifi' && e.hasWifi) return true;
+          if (id == 'prayer_room' && e.hasPrayerRoom) return true;
+
+          // New dynamic checks
+          return e.features.contains(id);
+        });
+      }).toList();
+    }
     
     // Apply Dynamic Badge Filters
     if (_selectedFilterBadgeIds.isNotEmpty) {
@@ -731,15 +748,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   // ============== ACTIVE FILTER COUNT ==============
   int get _activeFilterCount {
     int count = 0;
-    if (_filterKidsActivities) count++;
-    if (_filterOutdoor) count++;
-    if (_filterFamilyArea) count++;
-    if (_filterCardPayment) count++;
-    if (_filterFreeEntry) count++;
-    if (_filterHelal) count++;
-    if (_filterVegetarian) count++;
-    if (_filterLiveMusic) count++;
-    if (_filterParking) count++;
+    count += _selectedFeatureIds.length;
     count += _selectedFilterBadgeIds.length;
     if (_sortBy != 'date_asc') count++;
     return count;
@@ -826,15 +835,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             HapticFeedback.lightImpact();
                             setState(() {
                               _sortBy = 'date_asc';
-                              _filterKidsActivities = false;
-                              _filterOutdoor = false;
-                              _filterFamilyArea = false;
-                              _filterCardPayment = false;
-                              _filterFreeEntry = false;
-                              _filterHelal = false;
-                              _filterVegetarian = false;
-                              _filterLiveMusic = false;
-                              _filterParking = false;
+                              _selectedFeatureIds.clear();
                               _selectedFilterBadgeIds.clear();
                             });
                             setStateSheet(() {});
@@ -874,10 +875,30 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           
                           if (_activeBadges != null && _activeBadges!.isNotEmpty) ...[
                             _buildSectionHeader('Sertifika ve Kriterler'),
-                            ..._activeBadges!.values.where((b) => b.isActive).map((badge) {
+                            ..._activeBadges!.values.where((b) {
+                              if (!b.isActive) return false;
+                              final normalizedLabel = b.label.toLowerCase();
+                              final isTuna = normalizedLabel.contains('tuna');
+                              final isToros = normalizedLabel.contains('toros');
+                              final isTurkeyRegion = Localizations.localeOf(context).languageCode == 'tr';
+                              
+                              // Region-based exclusion
+                              if (isTurkeyRegion && isTuna) return false;
+                              if (!isTurkeyRegion && isToros) return false;
+                              
+                              return true;
+                            }).map((badge) {
                               final isSelected = _selectedFilterBadgeIds.contains(badge.id);
                               final bgColor = Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
                               final textColor = Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF')));
+                              
+                              final normalizedLabel = badge.label.toLowerCase();
+                              final isTuna = normalizedLabel.contains('tuna');
+                              final isToros = normalizedLabel.contains('toros');
+                              
+                              String? localLogoAsset;
+                              if (isTuna) localLogoAsset = 'assets/images/tuna_logo_pill.png';
+                              if (isToros) localLogoAsset = 'assets/images/akdeniz_toros_logo_pill.png';
                               
                               return GestureDetector(
                                 onTap: () {
@@ -896,9 +917,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                   child: Row(
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                        padding: localLogoAsset != null ? null : const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                                         decoration: BoxDecoration(
-                                          color: bgColor,
+                                          color: localLogoAsset != null ? Colors.transparent : bgColor,
                                           borderRadius: BorderRadius.circular(20),
                                           boxShadow: isSelected
                                               ? [
@@ -910,42 +931,65 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                                 ]
                                               : null,
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (badge.iconUrl.isNotEmpty) ...[
-                                              ClipRRect(
-                                                borderRadius: BorderRadius.circular(4),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: badge.iconUrl,
-                                                  height: 16,
-                                                  width: 16,
-                                                  fit: BoxFit.cover,
-                                                  placeholder: (context, url) => Container(
-                                                    color: Colors.transparent,
-                                                    height: 16,
-                                                    width: 16,
+                                        child: localLogoAsset != null
+                                            ? Image.asset(
+                                                localLogoAsset,
+                                                height: 34,
+                                                errorBuilder: (_,__,___) => Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: bgColor,
+                                                    borderRadius: BorderRadius.circular(20),
                                                   ),
-                                                  errorWidget: (context, url, error) =>
-                                                    Icon(Icons.verified, color: textColor, size: 15),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(Icons.verified, color: Colors.white, size: 16),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        isToros ? 'TOROS' : 'TUNA',
+                                                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 1.0),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
+                                              )
+                                            : Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (badge.iconUrl.isNotEmpty) ...[
+                                                    ClipRRect(
+                                                      borderRadius: BorderRadius.circular(4),
+                                                      child: CachedNetworkImage(
+                                                        imageUrl: badge.iconUrl,
+                                                        height: 16,
+                                                        width: 16,
+                                                        fit: BoxFit.cover,
+                                                        placeholder: (context, url) => Container(
+                                                          color: Colors.transparent,
+                                                          height: 16,
+                                                          width: 16,
+                                                        ),
+                                                        errorWidget: (context, url, error) =>
+                                                          Icon(Icons.verified, color: textColor, size: 15),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                  ] else ...[
+                                                    Icon(Icons.verified, color: textColor, size: 15),
+                                                    const SizedBox(width: 6),
+                                                  ],
+                                                  Text(
+                                                    badge.label.toUpperCase(),
+                                                    style: TextStyle(
+                                                      color: textColor,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w600,
+                                                      letterSpacing: 0.5,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 6),
-                                            ] else ...[
-                                              Icon(Icons.verified, color: textColor, size: 15),
-                                              const SizedBox(width: 6),
-                                            ],
-                                            Text(
-                                              badge.label.toUpperCase(),
-                                              style: TextStyle(
-                                                color: textColor,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
@@ -1029,89 +1073,34 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           const SizedBox(height: 24),
 
                           // Hizli Filtreler Section
-                          _buildSectionHeader('HIZLI FILTRELER'),
-
-                          _buildFilterListItem(
-                            title: 'Cocuk Aktiviteleri',
-                            subtitle: 'Cocuk alani olan kermesler',
-                            isSelected: _filterKidsActivities,
-                            onTap: () {
-                              setState(() => _filterKidsActivities = !_filterKidsActivities);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Acik Alan',
-                            subtitle: 'Dis mekan olan kermesler',
-                            isSelected: _filterOutdoor,
-                            onTap: () {
-                              setState(() => _filterOutdoor = !_filterOutdoor);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Aile Bolumu',
-                            subtitle: 'Aile alani olan kermesler',
-                            isSelected: _filterFamilyArea,
-                            onTap: () {
-                              setState(() => _filterFamilyArea = !_filterFamilyArea);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Kart ile Odeme',
-                            subtitle: 'Kredi karti kabul eden kermesler',
-                            isSelected: _filterCardPayment,
-                            onTap: () {
-                              setState(() => _filterCardPayment = !_filterCardPayment);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Ucretsiz Giris',
-                            subtitle: 'Giris ucreti olmayan kermesler',
-                            isSelected: _filterFreeEntry,
-                            onTap: () {
-                              setState(() => _filterFreeEntry = !_filterFreeEntry);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Helal',
-                            subtitle: 'Helal sertifikali kermesler',
-                            isSelected: _filterHelal,
-                            onTap: () {
-                              setState(() => _filterHelal = !_filterHelal);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Vejetaryen',
-                            subtitle: 'Vejetaryen secenekli kermesler',
-                            isSelected: _filterVegetarian,
-                            onTap: () {
-                              setState(() => _filterVegetarian = !_filterVegetarian);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Canli Muzik',
-                            subtitle: 'Canli muzik olan kermesler',
-                            isSelected: _filterLiveMusic,
-                            onTap: () {
-                              setState(() => _filterLiveMusic = !_filterLiveMusic);
-                              setStateSheet(() {});
-                            },
-                          ),
-                          _buildFilterListItem(
-                            title: 'Otopark',
-                            subtitle: 'Park alani olan kermesler',
-                            isSelected: _filterParking,
-                            onTap: () {
-                              setState(() => _filterParking = !_filterParking);
-                              setStateSheet(() {});
-                            },
-                          ),
+                          if (_activeFeatures != null && _activeFeatures!.isNotEmpty) ...[
+                            _buildSectionHeader('HIZLI FILTRELER'),
+                            ..._activeFeatures!.map((feature) {
+                              final isSelected = _selectedFeatureIds.contains(feature.id);
+                              
+                              final featureKey = 'kermes.features.${feature.id}';
+                              String localizedLabel = featureKey.tr();
+                              if (localizedLabel == featureKey) {
+                                localizedLabel = feature.label; // Fallback eger cevirisi yoksa (Admin tarafindan yeni eklendiyse)
+                              }
+                              
+                              return _buildFilterListItem(
+                                title: localizedLabel,
+                                subtitle: '',
+                                isSelected: isSelected,
+                                onTap: () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedFeatureIds.remove(feature.id);
+                                    } else {
+                                      _selectedFeatureIds.add(feature.id);
+                                    }
+                                  });
+                                  setStateSheet(() {});
+                                },
+                              );
+                            }),
+                          ],
 
                           const SizedBox(height: 100),
                         ],
@@ -1214,15 +1203,17 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          color: subtitleColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            color: subtitleColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

@@ -383,7 +383,7 @@ class GlassBottomBar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           SvgPicture.asset(
-            'assets/images/icon_cart_new.svg',
+            'assets/images/basket_1.svg',
             width: iconSize,
             height: iconSize,
             colorFilter: ColorFilter.mode(
@@ -416,7 +416,7 @@ class GlassBottomBar extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 9,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -428,8 +428,15 @@ class GlassBottomBar extends StatelessWidget {
       iconWidget = Image.asset('assets/icons/yemek_icon.png',
           width: iconSize, height: iconSize, color: color);
     } else if (item.isKermes) {
-      iconWidget = Image.asset('assets/icons/kermes_icon.png',
-          width: iconSize, height: iconSize, color: color);
+      iconWidget = SvgPicture.asset(
+        'assets/images/tent_1.svg',
+        width: iconSize + 2,
+        height: iconSize + 2,
+        colorFilter: ColorFilter.mode(
+          color,
+          BlendMode.srcIn,
+        ),
+      );
     } else if (item.path == '/market') {
       iconWidget = Image.asset('assets/icons/market_icon.png',
           width: iconSize, height: iconSize, color: color);
@@ -441,14 +448,21 @@ class GlassBottomBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        iconWidget,
+        // Ensure all icons occupy exactly the same vertical space for text alignment
+        SizedBox(
+          height: 28,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: iconWidget,
+          ),
+        ),
         const SizedBox(height: 4),
         Text(
           item.label,
           style: TextStyle(
             color: color,
             fontSize: 10,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
             letterSpacing: -0.2,
           ),
         ),

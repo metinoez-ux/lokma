@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BrandInfoSheet extends StatelessWidget {
   const BrandInfoSheet({super.key});
@@ -16,6 +17,15 @@ class BrandInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTurkeyRegion = Localizations.localeOf(context).languageCode == 'tr';
+    
+    final brandColor = isTurkeyRegion ? const Color(0xFF69B445) : const Color(0xFF9F1C20); 
+    final brandWebsite = isTurkeyRegion ? 'https://www.akdeniztoros.com.tr' : 'https://tunafood.com';
+    final logoAsset = isTurkeyRegion ? 'assets/images/akdeniz_toros_logo_pill.png' : 'assets/images/tuna_logo_pill.png';
+    final prefix = isTurkeyRegion ? 'toros' : 'tuna';
+    final brandFallback = isTurkeyRegion ? 'AKDENİZ TOROS' : 'TUNA';
+    final fallbackFontSize = isTurkeyRegion ? 32.0 : 55.0;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -27,13 +37,13 @@ class BrandInfoSheet extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // 1. Red Brand Header
+            // 1. Red/Green Brand Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-              decoration: const BoxDecoration(
-                color: Color(0xFFEA184A), // Deep Red
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: brandColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 children: [
@@ -43,13 +53,23 @@ class BrandInfoSheet extends StatelessWidget {
                     decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                   ),
                   Image.asset(
-                    'assets/images/tuna_logo_pill.png', 
-                    height: 50, 
-                    errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))
+                    logoAsset, 
+                    height: 85, 
+                    errorBuilder: (_,__,___) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: Text(
+                        brandFallback, 
+                        style: TextStyle(fontFamily: 'Cursive', fontSize: fallbackFontSize, color: brandColor, fontWeight: FontWeight.w800)
+                      )
+                    )
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'marketplace.tuna_subtitle'.tr(),
+                    'marketplace.${prefix}_subtitle'.tr(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
                   ),
@@ -64,7 +84,7 @@ class BrandInfoSheet extends StatelessWidget {
                 children: [
                    // Intro Text
                    Text(
-                     '${'marketplace.tuna_description_1'.tr()}\n\n${'marketplace.tuna_description_2'.tr()}',
+                     '${'marketplace.${prefix}_description_1'.tr()}\n\n${'marketplace.${prefix}_description_2'.tr()}',
                      style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
                    ),
                    const SizedBox(height: 24),
@@ -125,6 +145,27 @@ class BrandInfoSheet extends StatelessWidget {
                    _buildCheckItem('marketplace.without_mms'.tr(), 'marketplace.pure_meat'.tr()),
                    _buildCheckItem('marketplace.gluten_free'.tr(), 'marketplace.no_wheat'.tr()),
                    
+                   const SizedBox(height: 24),
+                   Center(
+                     child: TextButton.icon(
+                       onPressed: () async {
+                         final uri = Uri.parse(brandWebsite);
+                         if (await canLaunchUrl(uri)) {
+                           await launchUrl(uri, mode: LaunchMode.externalApplication);
+                         }
+                       },
+                       icon: const Icon(Icons.open_in_new, color: Colors.blueAccent, size: 16),
+                       label: Text(
+                         tr('marketplace.brand_more_info'),
+                         style: const TextStyle(
+                           color: Colors.blueAccent, 
+                           fontSize: 14,
+                           decoration: TextDecoration.underline,
+                           decorationColor: Colors.blueAccent,
+                         ),
+                       ),
+                     ),
+                   ),
                    const SizedBox(height: 40),
                 ],
               ),

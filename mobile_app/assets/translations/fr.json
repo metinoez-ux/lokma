@@ -935,7 +935,22 @@
         "sort_nearest_date": "Date la plus proche",
         "sort_by_date": "Trier par date",
         "sort_nearest_distance": "Distance la plus proche",
-        "sort_by_distance": "Trier par distance"
+        "sort_by_distance": "Trier par distance",
+        "features": {
+            "family_area": "Family Area",
+            "outdoor": "Outdoor Area",
+            "indoor": "Indoor Area",
+            "kids_area": "Kids Area",
+            "card_payment": "Card Payment",
+            "vegetarian": "Vegetarian",
+            "accessible": "Accessible",
+            "halal": "Halal",
+            "wifi": "WiFi",
+            "live_music": "Live Music",
+            "prayer_room": "Prayer Room",
+            "parking": "Parking",
+            "free_entry": "Free Entry"
+        }
     },
     "marketplace": {
         "available_now": "Disponible maintenant",
@@ -1123,6 +1138,7 @@
         "filter_high_rating_subtitle": "Commerces les mieux notés",
         "filter_title": "Filtrer",
         "filter_tuna_description": "Afficher uniquement les commerces certifiés TUNA",
+        "brand_more_info": "Click for more info",
         "sort_section": "Trier par",
         "sort_nearest": "Plus Proche",
         "sort_best_rating": "Meilleure Note",

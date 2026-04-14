@@ -2928,53 +2928,64 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         children: [
                           const SizedBox(height: 20),
 
-                          // 🐟 TUNA Sertifika Filtresi - Premium toggle
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              setState(() => _onlyTuna = !_onlyTuna);
-                              setStateSheet(() {});
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  // TUNA branded pill badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFA01E22),
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: _onlyTuna ? [
-                                        BoxShadow(
-                                          color: const Color(0xFFA01E22).withOpacity(0.4),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ] : null,
-                                    ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.verified, color: Colors.white, size: 16),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'TUNA',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 1.5,
+                          // 🐟 TUNA/Toros Sertifika Filtresi - Premium toggle
+                          Builder(builder: (context) {
+                            final isTurkeyRegion = Localizations.localeOf(context).languageCode == 'tr';
+                            final brandColor = isTurkeyRegion ? const Color(0xFF69B445) : const Color(0xFFA01E22);
+                            final prefix = isTurkeyRegion ? 'toros' : 'tuna';
+                            final logoAsset = isTurkeyRegion ? 'assets/images/akdeniz_toros_logo_pill.png' : 'assets/images/tuna_logo_pill.png';
+                            final fallbackText = isTurkeyRegion ? 'TOROS' : 'TUNA';
+
+                            return GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                setState(() => _onlyTuna = !_onlyTuna);
+                                setStateSheet(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    // TUNA/Toros branded pill badge
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: _onlyTuna ? [
+                                          BoxShadow(
+                                            color: brandColor.withOpacity(0.4),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ] : null,
+                                      ),
+                                      child: Image.asset(
+                                        logoAsset,
+                                        height: 34,
+                                        errorBuilder: (_,__,___) => Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: brandColor,
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.verified, color: Colors.white, size: 16),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                fallbackText,
+                                                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 1.0),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Descriptive text
-                                  Expanded(
-                                    child: Text(
-                                      tr('marketplace.filter_tuna_description'),
+                                    const SizedBox(width: 12),
+                                    // Descriptive text
+                                    Expanded(
+                                      child: Text(
+                                        tr('marketplace.filter_${prefix}_description'),
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                         fontSize: 13,
@@ -3001,7 +3012,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 ],
                               ),
                             ),
-                          ),
+                          ); }),
 
                           const SizedBox(height: 24),
 

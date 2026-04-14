@@ -204,6 +204,7 @@ export default function BusinessDetailsPage() {
  const dynamicSectorTypes = getActiveSectors();
  const [loading, setLoading] = useState(true); // Data loading state
  const [business, setBusiness] = useState<ButcherPartner | null>(null);
+ const [platformBrands, setPlatformBrands] = useState<any[]>([]);
  
  const {
  orders,
@@ -343,6 +344,7 @@ export default function BusinessDetailsPage() {
  companyName: "",
  customerId: "",
  brand: "" as "tuna" | "akdeniz_toros" | "independent" | "",
+ activeBrandIds: [] as string[],
  brandLabelActive: false,
  // 🔴 TUNA/Toros ürünleri satışı (Filtreleme için)
  sellsTunaProducts: false,
@@ -769,6 +771,7 @@ export default function BusinessDetailsPage() {
  companyName: d.companyName || "",
  customerId: d.customerId || "",
  brand: d.brand || "",
+ activeBrandIds: d.activeBrandIds || [],
  brandLabelActive: d.brandLabelActive !== false,
  // 🔴 TUNA/Toros ürünleri satışı
  sellsTunaProducts: d.sellsTunaProducts ?? false,
@@ -1779,6 +1782,16 @@ export default function BusinessDetailsPage() {
  }
  };
 
+ // 🆕 Load Platform Brands
+ const loadPlatformBrands = useCallback(async () => {
+ try {
+ const snap = await getDocs(query(collection(db, 'platform_brands'), where('isActive', '==', true)));
+ setPlatformBrands(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+ } catch (error) {
+ console.error("Error loading platform brands:", error);
+ }
+ }, []);
+
  useEffect(() => {
  if (admin) {
  loadBusiness();
@@ -1786,8 +1799,9 @@ export default function BusinessDetailsPage() {
  loadProducts(); // Load products when admin is ready
  loadSuppliers();
  loadSupplierOrders();
+ loadPlatformBrands();
  }
- }, [admin, loadBusiness, loadStaff, loadProducts, loadSuppliers, loadSupplierOrders]);
+ }, [admin, loadBusiness, loadStaff, loadProducts, loadSuppliers, loadSupplierOrders, loadPlatformBrands]);
 
  // 🔴 Real-time active shifts listener
  // Mobile writes shiftBusinessId (not businessId) — query both fields + merge
@@ -2159,6 +2173,7 @@ export default function BusinessDetailsPage() {
  companyName: formData.companyName || "",
  customerId: formData.customerId || "",
  brand: formData.brand || null,
+ activeBrandIds: formData.activeBrandIds || [],
  brandLabelActive: formData.brandLabelActive !== false,
  // 🔴 TUNA senkronizasyon: brand'den türet — mobile badge'i doğru syncler
  isTunaPartner: formData.brand === 'tuna',
@@ -4112,28 +4127,93 @@ export default function BusinessDetailsPage() {
  {admin?.adminType === 'super' ? (
  <>
  <div className="bg-card/50 border border-border rounded-xl p-6">
- <label className="text-muted-foreground text-sm"> LOKMA Label <span className="text-xs text-purple-800 dark:text-purple-400">(Super Admin)</span></label>
- <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50">
+ <h4 className="text-foreground font-medium mb-4">MIRA Platform Markaları & Rozetleri</h4>
+ <p className="text-xs text-muted-foreground mb-4">Bu işletmenin listeleme sayfasında ve detaylarında görünmesini istediğiniz logoları seçin.</p>
+ {platformBrands.length === 0 ? (
+ <div className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500 rounded p-4">
+ Henüz sistemde aktif marka / logo bulunmuyor. Lütfen önce MIRA Yönetim Merkezi üzerinden Platform Markaları ekleyin.
+ </div>
+ ) : (
+ <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+ {platformBrands.map(badge => {
+ const isSelected = formData.activeBrandIds?.includes(badge.id);
+ return (
+ <label 
+ key={badge.id}
+ className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+ isSelected 
+ ? 'bg-blue-600/10 border-blue-500 ring-1 ring-blue-500 shadow-sm' 
+ : 'bg-muted/50 border-border hover:bg-muted'
+ } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+ >
+ <input 
+ type="checkbox" 
+ checked={isSelected}
+ onChange={(e) => {
+ if (!isEditing) return;
+ const newIds = e.target.checked 
+ ? [...(formData.activeBrandIds || []), badge.id]
+ : (formData.activeBrandIds || []).filter(id => id !== badge.id);
+ 
+ // Optional: Auto-sync legacy fields if TUNA/Toros is selected
+ // Bu, mobile app full migrate edilene kadar arama ve filtrelemenin bozulmamasını sağlar
+ const hasTuna = badge.name.toLowerCase().includes('tuna') && e.target.checked;
+ const hasToros = badge.name.toLowerCase().includes('toros') && e.target.checked;
+ 
+ setFormData({ 
+ ...formData, 
+ activeBrandIds: newIds,
+ ...(hasTuna ? { sellsTunaProducts: true, brand: 'tuna', brandLabelActive: true } : {}),
+ ...(hasToros ? { sellsTorosProducts: true, brand: 'akdeniz_toros', brandLabelActive: true } : {})
+ });
+ }}
+ disabled={!isEditing}
+ className="w-4 h-4 accent-blue-600"
+ />
+ <div className="flex items-center gap-2 overflow-hidden">
+ {badge.iconUrl && (
+ <img src={badge.iconUrl} alt={badge.name} className="w-8 h-8 object-contain rounded-md bg-white p-0.5 shrink-0 border border-border" />
+ )}
+ <span className="font-medium text-sm truncate text-foreground" title={badge.name}>
+ {badge.name}
+ </span>
+ </div>
+ </label>
+ );
+ })}
+ </div>
+ )}
+ <p className="text-xs text-green-800 dark:text-green-400 mt-4 border-t border-border pt-4">
+ Seçilen markalar, mobil uygulamada işletme detaylarında ve kartında gösterilecektir.
+ </p>
+ </div>
+ 
+ <div className="bg-card/50 border border-border rounded-xl p-6 opacity-60">
+ <h4 className="text-foreground font-medium mb-2 line-through">ESKİ KOD MİMARİSİ (SABİT LOGOLAR)</h4>
+ <p className="text-xs text-muted-foreground mb-4">Geçiş süresince geriye uyumluluk (backward compatibility) için saklanmaktadır.</p>
+ <div className="flex flex-col gap-4">
+ <div>
+ <label className="text-muted-foreground text-sm"> Eski LOKMA Label</label>
+ <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg outline-none mt-1 disabled:opacity-50">
  <option value="">{t('secilmedi')}</option>
  <option value="tuna">🔴 TUNA</option>
  <option value="akdeniz_toros">⚫ Akdeniz Toros</option>
  </select>
- <p className="text-xs text-muted-foreground mt-1">{t('buAyarSadeceSuperAdminTarafindan')}</p>
  </div>
- <div className="bg-card/50 border border-border rounded-xl p-6">
- <label className="text-muted-foreground text-sm">{t('satilanUrunMarkalari')} <span className="text-xs text-blue-800 dark:text-blue-400">{t('filtrelemeIcin')}</span></label>
- <p className="text-xs text-muted-foreground mb-3 mt-1">{t('buIsletmeHangiMarkalarinUrunleriniSatiyor')}</p>
+ <div>
+ <label className="text-muted-foreground text-sm block mb-2">{t('satilanUrunMarkalari')}</label>
  <div className="flex flex-wrap gap-3">
- <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTunaProducts ? 'bg-red-600/30 border-2 border-red-500 text-red-300' : 'bg-muted border border-border text-muted-foreground hover:bg-muted border border-border text-foreground'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
- <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-red-500" />
- <span className="text-lg">🔴</span><span className="font-medium">{t('tunaUrunleri')}</span>
+ <label className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer ${formData.sellsTunaProducts ? 'bg-red-600/30' : 'bg-muted'}`}>
+ <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4" />
+ <span className="text-sm">🔴 {t('tunaUrunleri')}</span>
  </label>
- <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTorosProducts ? 'bg-green-600/30 border-2 border-green-500 text-green-300' : 'bg-muted border border-border text-muted-foreground hover:bg-muted border border-border text-foreground'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
- <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-green-500" />
- <span className="text-lg">🟢</span><span className="font-medium">{t('akdenizTorosUrunleri')}</span>
+ <label className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer ${formData.sellsTorosProducts ? 'bg-green-600/30' : 'bg-muted'}`}>
+ <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4" />
+ <span className="text-sm">🟢 {t('akdenizTorosUrunleri')}</span>
  </label>
  </div>
- {(formData.sellsTunaProducts || formData.sellsTorosProducts) && (<p className="text-xs text-green-800 dark:text-green-400 mt-2">{t('secilenMarkalarMobilUygulamadaFiltrelemeIcin')}</p>)}
+ </div>
+ </div>
  </div>
  </>
  ) : (

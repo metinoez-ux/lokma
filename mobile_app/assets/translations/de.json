@@ -938,7 +938,22 @@
         "sort_nearest_distance": "Kuerzeste Entfernung",
         "sort_by_distance": "Nach Entfernung sortieren",
         "dine_in_service": "Tischservice",
-        "order_via_app": "Per App bestellen"
+        "order_via_app": "Per App bestellen",
+        "features": {
+            "family_area": "Familienbereich",
+            "outdoor": "Außenbereich",
+            "indoor": "Innenbereich",
+            "kids_area": "Kinderbereich",
+            "card_payment": "Kartenzahlung",
+            "vegetarian": "Vegetarisch",
+            "accessible": "Barrierefrei",
+            "halal": "Halal",
+            "wifi": "WiFi",
+            "live_music": "Livemusik",
+            "prayer_room": "Gebetsraum",
+            "parking": "Parkplatz",
+            "free_entry": "Freier Eintritt"
+        }
     },
     "marketplace": {
         "available_now": "Jetzt möglich",
@@ -1111,6 +1126,7 @@
         "filter_high_rating_subtitle": "Hoch bewertete Geschäfte",
         "filter_title": "Filtern",
         "filter_tuna_description": "Nur TUNA-zertifizierte Geschäfte anzeigen",
+        "brand_more_info": "Klicken Sie für weitere Informationen",
         "sort_section": "Sortierung",
         "sort_nearest": "Nächstgelegen",
         "sort_best_rating": "Beste Bewertung",
@@ -1199,8 +1215,8 @@
         "helal_kesim_desc": "Islamkonforme Schlachtung",
         "elle_kesim": "Handschlachtung",
         "elle_kesim_desc": "Mit traditionellen Methoden",
-        "soksuz_kesim": "Betäubungsfreie Schlachtung",
-        "soksuz_kesim_desc": "Kein Elektroschock",
+        "soksuz_kesim": "Nach islamischen Vorschriften",
+        "soksuz_kesim_desc": "Traditionelle islamische Methode",
         "kuru_yolum": "Trockenrupf",
         "kuru_yolum_desc": "Hygienische Reinigung bei Geflügel",
         "kuru_yolum_full_desc": "Die Federn des islamkonform geschlachteten Huhns werden ohne Brühkessel, Chemikalien und heißes Wasser entfernt. Bei trockengerupften Hühnern finden sich keine Bakterien, Staub oder Verunreinigungen.",
