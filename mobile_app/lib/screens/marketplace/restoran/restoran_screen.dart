@@ -2930,7 +2930,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
                           // 🐟 TUNA/Toros Sertifika Filtresi - Premium toggle
                           Builder(builder: (context) {
-                            final isTurkeyRegion = Localizations.localeOf(context).languageCode == 'tr';
+                            final userLocation = ref.read(userLocationProvider).value;
+                            final isTurkeyRegion = userLocation?.countryCode?.toUpperCase() == 'TR';
                             final brandColor = isTurkeyRegion ? const Color(0xFF69B445) : const Color(0xFFA01E22);
                             final prefix = isTurkeyRegion ? 'toros' : 'tuna';
                             final logoAsset = isTurkeyRegion ? 'assets/images/akdeniz_toros_logo_pill.png' : 'assets/images/tuna_logo_pill.png';
