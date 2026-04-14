@@ -372,35 +372,160 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
                   else
                     ..._cashOrders.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
+                      final items = data['items'] as List<dynamic>? ?? [];
+                      final String orderType = data['type'] ?? 'Bilinmiyor';
+                      
+                      final String? tableSection = data['tableSection'];
+                      final String? tableNumber = data['tableNumber'];
+                      final String? assignedTezgah = data['assignedTezgah'];
+
+                      String sectionInfo = '';
+                      if (tableSection != null && tableSection.isNotEmpty) {
+                        sectionInfo = tableSection;
+                        if (tableNumber != null && tableNumber.isNotEmpty) {
+                          sectionInfo += ' - Masa $tableNumber';
+                        }
+                      } else if (assignedTezgah != null && assignedTezgah.isNotEmpty) {
+                        sectionInfo = 'Tezgah: $assignedTezgah';
+                      }
+                      
+                      // Fallback 1: Urunlerin icindeki prepZone (isimler: Erkekler Bölümü, Kadınlar vb.)
+                      if (sectionInfo.isEmpty && items.isNotEmpty) {
+                        try {
+                          final firstItem = items.first as Map<String, dynamic>;
+                          final itemPrepZones = firstItem['prepZone'] as List<dynamic>?;
+                          if (itemPrepZones != null && itemPrepZones.isNotEmpty) {
+                            sectionInfo = itemPrepZones.first.toString();
+                            if (tableNumber != null && tableNumber.isNotEmpty) {
+                              sectionInfo += ' - Masa $tableNumber';
+                            }
+                          }
+                        } catch(e) {}
+                      }
+
+                      // Fallback 2: Garson/Kasiyer ismi veya sadece Masa No
+                      if (sectionInfo.isEmpty) {
+                         final waiter = data['assignedWaiterName'] ?? data['createdByStaffName'];
+                         if (waiter != null && waiter.toString().isNotEmpty) {
+                            sectionInfo = 'Sorumlu: $waiter';
+                            if (tableNumber != null && tableNumber.isNotEmpty) {
+                              sectionInfo += ' - Masa $tableNumber';
+                            }
+                         } else if (tableNumber != null && tableNumber.isNotEmpty) {
+                            sectionInfo = 'Masa $tableNumber';
+                         }
+                      }
+                      
+                      String typeBadgeName = 'Tezgah';
+                      Color typeColor = Colors.grey;
+                      IconData typeIcon = Icons.storefront;
+                      
+                      if (orderType.toLowerCase() == 'gel-al' || orderType.toLowerCase() == 'pickup') {
+                        typeBadgeName = 'Gel-Al'; typeColor = Colors.orange; typeIcon = Icons.directions_walk;
+                      } else if (orderType.toLowerCase() == 'masa' || orderType.toLowerCase() == 'dine-in') {
+                        typeBadgeName = 'Masa'; typeColor = Colors.purple; typeIcon = Icons.restaurant;
+                      } else if (orderType.toLowerCase() == 'kurye' || orderType.toLowerCase() == 'delivery') {
+                        typeBadgeName = 'Kurye'; typeColor = Colors.blue; typeIcon = Icons.two_wheeler;
+                      }
+                      
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Theme(
+                          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            title: Row(
                               children: [
                                 Text(
                                   data['orderNumber'] != null ? 'Sipariş #${data['orderNumber']}' : 'Nakdi Sipariş', 
                                   style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate().toString().substring(11, 16) : '',
-                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: typeColor.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(typeIcon, size: 12, color: typeColor),
+                                      const SizedBox(width: 4),
+                                      Text(typeBadgeName, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: typeColor)),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                            Text(
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate().toString().substring(11, 16) : '',
+                                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                                  ),
+                                  if (sectionInfo.isNotEmpty) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        sectionInfo,
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            trailing: Text(
                               '€${(data['totalAmount'] as num?)?.toDouble().toStringAsFixed(2) ?? "0.00"}',
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade400),
                             ),
-                          ],
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.black26 : Colors.grey.shade50,
+                                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                                ),
+                                child: items.isEmpty 
+                                  ? const Text('Ürün detayı bulunmuyor.', style: TextStyle(color: Colors.grey))
+                                  : Column(
+                                      children: items.map((prod) {
+                                        final p = prod as Map<String, dynamic>;
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 8),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  '${p['quantity'] ?? 1}x ${p['name'] ?? p['title'] ?? 'Ürün'}',
+                                                  style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
+                                                ),
+                                              ),
+                                              Text(
+                                                '€${((p['totalPrice'] ?? p['price'] ?? 0) as num).toDouble().toStringAsFixed(2)}',
+                                                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                              )
+                            ],
+                          ),
                         ),
                       );
                     }).toList(),

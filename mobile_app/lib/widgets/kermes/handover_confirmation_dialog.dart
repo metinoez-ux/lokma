@@ -26,7 +26,7 @@ class _HandoverConfirmationDialogState extends ConsumerState<HandoverConfirmatio
   @override
   void initState() {
     super.initState();
-    final declared = (widget.handoverData['declaredAmount'] as num?)?.toDouble() ?? 0.0;
+    final declared = ((widget.handoverData['declaredAmount'] ?? widget.handoverData['amount']) as num?)?.toDouble() ?? 0.0;
     _amountController = TextEditingController(text: declared.toStringAsFixed(2));
   }
 
@@ -110,16 +110,17 @@ class _HandoverConfirmationDialogState extends ConsumerState<HandoverConfirmatio
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final staffName = widget.handoverData['staffName'] ?? 'Personel';
-    final declaredAmount = (widget.handoverData['declaredAmount'] as num?)?.toDouble() ?? 0.0;
+    final declaredAmount = ((widget.handoverData['declaredAmount'] ?? widget.handoverData['amount']) as num?)?.toDouble() ?? 0.0;
 
     return Dialog(
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Container(
               width: 64, height: 64,
               decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
@@ -199,6 +200,7 @@ class _HandoverConfirmationDialogState extends ConsumerState<HandoverConfirmatio
             ),
           ],
         ),
+      ),
       ),
     );
   }
