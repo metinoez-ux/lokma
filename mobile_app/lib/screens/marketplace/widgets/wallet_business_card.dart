@@ -77,8 +77,10 @@ class WalletBusinessCard extends ConsumerWidget {
       // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
       if (activeBadges.isEmpty) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-        if (data['sellsTunaProducts'] == true) {
-          showLegacyTuna = false; // Override legacy partner flag for packaged products resellers
+        bool isMarket = data['type']?.toString().toLowerCase() == 'market';
+
+        if (data['sellsTunaProducts'] == true || isMarket) {
+          showLegacyTuna = false; // Fundamental: Markets cannot have legacy premium Kasap badges
         }
 
         if (showLegacyTuna) {
@@ -90,7 +92,7 @@ class WalletBusinessCard extends ConsumerWidget {
           }
         }
         bool showLegacyToros = data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros';
-        if (data['sellsTorosProducts'] == true) {
+        if (data['sellsTorosProducts'] == true || isMarket) {
           showLegacyToros = false;
         }
 
@@ -107,8 +109,9 @@ class WalletBusinessCard extends ConsumerWidget {
 
     // In case whenData hasn't executed synchronously (loading state)
     if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
+      bool isMarket = data['type']?.toString().toLowerCase() == 'market';
       bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-      if (data['sellsTunaProducts'] == true) {
+      if (data['sellsTunaProducts'] == true || isMarket) {
         showLegacyTuna = false;
       }
 
@@ -116,7 +119,7 @@ class WalletBusinessCard extends ConsumerWidget {
         activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
       }
       bool showLegacyToros = data['sellsTorosProducts'] == true || data['brand'] == 'akdeniz_toros';
-      if (data['sellsTorosProducts'] == true) {
+      if (data['sellsTorosProducts'] == true || isMarket) {
         showLegacyToros = false;
       }
 
@@ -725,24 +728,34 @@ class WalletBusinessCard extends ConsumerWidget {
                                   }
                                 },
                               ),
-                              if (data['sellsTunaProducts'] == true && activeBadges.isEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFFEA184A)),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'TUNA Hazır Paket Ürünleri',
-                                        style: GoogleFonts.inter(
-                                          color: const Color(0xFFEA184A),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                              Builder(
+                                builder: (context) {
+                                  bool isMarket = data['type']?.toString().toLowerCase() == 'market';
+                                  bool legacyTunaFlag = data['brand'] == 'tuna' || isTunaPartner;
+                                  bool actuallySellsTuna = data['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
+
+                                  if (actuallySellsTuna && activeBadges.isEmpty) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFFEA184A)),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'TUNA Hazır Paket Ürünleri',
+                                            style: GoogleFonts.inter(
+                                              color: const Color(0xFFEA184A),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
                             ],
                           ),
                         ],

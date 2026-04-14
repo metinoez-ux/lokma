@@ -2486,9 +2486,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     // 🔴 Fallback for legacy TUNA / Akdeniz Toros fields
     if (activeBadges.isEmpty) {
+      bool isMarket = data?['type']?.toString().toLowerCase() == 'market';
       bool showLegacyTuna = isTunaPartner;
-      if (data?['sellsTunaProducts'] == true) {
-        showLegacyTuna = false; // Block it from getting the premium badge if it's explicitly marked as just a reseller.
+      
+      if (data?['sellsTunaProducts'] == true || isMarket) {
+        showLegacyTuna = false; // Fundamental: Markets cannot have legacy premium Kasap badges
       }
 
       if (showLegacyTuna) {
@@ -2499,7 +2501,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         });
       }
       bool showLegacyToros = brand?.toString().toLowerCase() == 'akdeniz_toros';
-      if (data?['sellsTorosProducts'] == true) {
+      if (data?['sellsTorosProducts'] == true || isMarket) {
         showLegacyToros = false;
       }
 
@@ -2852,41 +2854,51 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 }).toList(),
                               ),
                             ),
-                          if (data?['sellsTunaProducts'] == true && activeBadges.isEmpty)
-                            Positioned(
-                              top: 12,
-                              left: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEA184A).withValues(alpha: 0.9), // TUNA Pink/Red
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
+                          Builder(
+                            builder: (context) {
+                              bool isMarket = data?['type']?.toString().toLowerCase() == 'market';
+                              bool legacyTunaFlag = isTunaPartner;
+                              bool actuallySellsTuna = data?['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
+
+                              if (actuallySellsTuna && activeBadges.isEmpty) {
+                                return Positioned(
+                                  top: 12,
+                                  left: 12,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEA184A).withValues(alpha: 0.9), // TUNA Pink/Red
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.3),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
-                                    const SizedBox(width: 6),
-                                    const Text(
-                                      'TUNA Hazır Paket Ürünleri',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.5,
-                                      ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
+                                        const SizedBox(width: 6),
+                                        const Text(
+                                          'TUNA Hazır Paket Ürünleri',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
                           // Favorite Heart (Top Right - overlay on image)
                           Positioned(
                             right: 12,
