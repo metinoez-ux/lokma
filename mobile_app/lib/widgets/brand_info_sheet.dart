@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/user_location_provider.dart';
 
-class BrandInfoSheet extends StatelessWidget {
+class BrandInfoSheet extends ConsumerWidget {
   const BrandInfoSheet({super.key});
 
   static void show(BuildContext context) {
@@ -16,8 +18,9 @@ class BrandInfoSheet extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isTurkeyRegion = Localizations.localeOf(context).languageCode == 'tr';
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userLocation = ref.watch(userLocationProvider).value;
+    final isTurkeyRegion = userLocation?.countryCode?.toUpperCase() == 'TR';
     
     final brandColor = isTurkeyRegion ? const Color(0xFF69B445) : const Color(0xFF9F1C20); 
     final brandWebsite = isTurkeyRegion ? 'https://www.akdeniztoros.com.tr' : 'https://tunafood.com';
