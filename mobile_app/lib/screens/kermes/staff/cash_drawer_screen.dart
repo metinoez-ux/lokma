@@ -5,7 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class CashDrawerScreen extends StatefulWidget {
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "../../staff/providers/staff_hub_provider.dart";
+
+class CashDrawerScreen extends ConsumerStatefulWidget {
   final String kermesId;
   final String staffId;
   final bool isEmbedded;
@@ -18,10 +21,10 @@ class CashDrawerScreen extends StatefulWidget {
   });
 
   @override
-  State<CashDrawerScreen> createState() => _CashDrawerScreenState();
+  ConsumerState<CashDrawerScreen> createState() => _CashDrawerScreenState();
 }
 
-class _CashDrawerScreenState extends State<CashDrawerScreen> {
+class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
   bool _isLoading = true;
   double _pendingCash = 0.0;
   List<DocumentSnapshot> _cashOrders = [];
@@ -143,10 +146,13 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
     setState(() => _isLoading = true);
     DocumentReference? docRef;
     try {
+      final user = FirebaseAuth.instance.currentUser;
+      final capabilities = ref.read(staffCapabilitiesProvider);
       docRef = await FirebaseFirestore.instance.collection('kermes_cash_handovers').add({
+        'businessId': capabilities.businessId,
         'kermesId': widget.kermesId,
         'staffId': widget.staffId,
-        'staffName': 'Personel',
+        'staffName': capabilities.staffName ?? user?.displayName ?? 'Personel',
         'adminId': null,
         'actualAmount': _pendingCash,
         'amount': _pendingCash,

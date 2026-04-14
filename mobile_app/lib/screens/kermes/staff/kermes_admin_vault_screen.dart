@@ -8,7 +8,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../staff/providers/staff_hub_provider.dart';
 
 class KermesAdminVaultScreen extends ConsumerStatefulWidget {
-  const KermesAdminVaultScreen({super.key});
+  final bool isEmbedded;
+  const KermesAdminVaultScreen({super.key, this.isEmbedded = false});
 
   @override
   ConsumerState<KermesAdminVaultScreen> createState() => _KermesAdminVaultScreenState();
@@ -184,14 +185,14 @@ class _KermesAdminVaultScreenState extends ConsumerState<KermesAdminVaultScreen>
 
     if (user == null || businessId == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Kasa & Tahsilat Yönetimi')),
+        appBar: widget.isEmbedded ? null : AppBar(title: const Text('Kasa & Tahsilat Yönetimi')),
         body: const Center(child: Text('Kullanıcı veya işletme bilgisi eksik.')),
       );
     }
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-      appBar: AppBar(
+      appBar: widget.isEmbedded ? null : AppBar(
         title: const Text('Kasa Yönetimi'),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -199,7 +200,6 @@ class _KermesAdminVaultScreenState extends ConsumerState<KermesAdminVaultScreen>
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('kermes_cash_handovers')
-            .where('businessId', isEqualTo: businessId)
             // 1. Get handovers that were received by this admin:
             .where('adminId', isEqualTo: user.uid)
             .where('status', isEqualTo: 'completed')
@@ -280,10 +280,13 @@ class _KermesAdminVaultScreenState extends ConsumerState<KermesAdminVaultScreen>
                             onPressed: totalUnvaultedAmount > 0 
                                 ? () => _showVaultHandoverQR(totalUnvaultedAmount, unvaultedIds)
                                 : null,
-                            icon: const Icon(Icons.qr_code_scanner, color: Colors.blueAccent),
-                            label: const Text('Ana Kasaya Teslim Et', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                            icon: const Icon(Icons.qr_code_scanner),
+                            label: const Text('Ana Kasaya Teslim Et', style: TextStyle(fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
+                              foregroundColor: Colors.blueAccent,
+                              disabledBackgroundColor: Colors.white.withOpacity(0.3),
+                              disabledForegroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
