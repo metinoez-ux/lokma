@@ -2638,7 +2638,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         child: Container(
                           height: 44,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                            color: isDark ? const Color(0xFF424242) : const Color(0xFFF5F0E8),
                             borderRadius: BorderRadius.circular(22),
                           ),
                           child: Row(
@@ -5133,7 +5133,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
+                      color: isDark ? const Color(0xFF424242) : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Row(
