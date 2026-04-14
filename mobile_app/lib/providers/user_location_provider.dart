@@ -55,6 +55,45 @@ class UserLocation {
   );
 
   bool get isValid => latitude != 0 && longitude != 0 && hasPermission;
+
+  String _normalize(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll('i̇', 'i')
+        .replaceAll('ı', 'i')
+        .replaceAll('ğ', 'g')
+        .replaceAll('ü', 'u')
+        .replaceAll('ş', 's')
+        .replaceAll('ö', 'o')
+        .replaceAll('ç', 'c');
+  }
+
+  /// Robust country inference check for Turkey, since Google Places
+  /// autocomplete sometimes omits the countryCode for certain cities.
+  bool get isTurkeyRegion {
+    if (countryCode.toUpperCase() == 'TR') return true;
+    
+    final lowerCity = _normalize(city);
+    final lowerAddr = _normalize(address);
+    
+    if (lowerAddr.contains('turkiye') || lowerAddr.contains('turkey')) {
+      return true;
+    }
+    
+    final trProvinces = {
+      'adana','adiyaman','afyon','afyonkarahisar','agri','aksaray','amasya','ankara','antalya','ardahan',
+      'artvin','aydin','balikesir','bartin','batman','bayburt','bilecik','bingol','bitlis',
+      'bolu','burdur','bursa','canakkale','cankiri','corum','denizli','diyarbakir','duzce','edirne',
+      'elazig','erzincan','erzurum','eskisehir','gaziantep','giresun','gumushane','hakkari','hatay','igdir',
+      'isparta','istanbul','izmir','kahramanmaras','karabuk','karaman','kars','kastamonu','kayseri','kirikkale',
+      'kirklareli','kirsehir','kilis','kocaeli','konya','kutahya','malatya','manisa','mardin','mersin',
+      'mugla','mus','nevsehir','nigde','ordu','osmaniye','rize','sakarya','samsun','siirt',
+      'sinop','sivas','sanliurfa','sirnak','tekirdag','tokat','trabzon','tunceli','usak','van',
+      'yalova','yozgat','zonguldak', 'bigadi'
+    };
+    
+    return trProvinces.any((p) => lowerCity.contains(p) || lowerAddr.contains(p));
+  }
 }
 
 /// Location state notifier - fetches once, caches for entire app session

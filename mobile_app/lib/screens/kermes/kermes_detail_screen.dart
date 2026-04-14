@@ -2125,8 +2125,11 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     return GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        if (badge.label.toLowerCase().contains('tuna')) {
-                          BrandInfoSheet.show(context);
+                        final badgeLower = badge.label.toLowerCase();
+                        if (badgeLower.contains('tuna')) {
+                          BrandInfoSheet.show(context, forcedBrand: 'tuna');
+                        } else if (badgeLower.contains('toros')) {
+                          BrandInfoSheet.show(context, forcedBrand: 'toros');
                         } else {
                           _showBadgeDetailsBottomSheet(badge);
                         }
@@ -3812,8 +3815,15 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  const Icon(Icons.shopping_basket,
-                      color: Colors.white, size: 24),
+                  SvgPicture.asset(
+                    'assets/images/basket_1.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                   Positioned(
                     top: -6,
                     right: -8,

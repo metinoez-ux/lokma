@@ -742,7 +742,9 @@ class WalletBusinessCard extends ConsumerWidget {
                         onTap: () {
                           HapticFeedback.lightImpact();
                           if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) {
-                            BrandInfoSheet.show(context);
+                            BrandInfoSheet.show(context, forcedBrand: 'tuna');
+                          } else if (isLegacyToros || badge['name'].toString().toLowerCase().contains('toros')) {
+                            BrandInfoSheet.show(context, forcedBrand: 'toros');
                           }
                         },
                         child: Container(

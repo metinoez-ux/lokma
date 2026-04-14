@@ -889,14 +889,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               return false;
             }
           } else {
-            if (_maxDistance < 200 && distanceKm > _maxDistance) return false;
+            if (distanceKm > _maxDistance) return false;
           }
         } else {
           // No lat/lng
-          if (_deliveryMode == 'teslimat' || _maxDistance < 200) {
-            debugPrint('⚠️ ${data['companyName']}: No lat/lng found, HIDING');
-            return false;
-          }
+          debugPrint('⚠️ ${data['companyName']}: No lat/lng found, HIDING');
+          return false;
         }
       } else {
         debugPrint('⏭️ Distance filter skipped: userLat=$_userLat, maxDist=$_maxDistance');
@@ -1133,12 +1131,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
             if (distanceKm > deliveryRadius) continue;
           } else {
-            if (_maxDistance < 200 && distanceKm > _maxDistance) continue;
+            if (distanceKm > _maxDistance) continue; 
           }
         } else {
-          if (_deliveryMode == 'teslimat' || _maxDistance < 200) {
-            continue;
-          }
+          continue;
         }
       }
       
@@ -1698,7 +1694,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
 
     String distanceLabel;
     if (_currentStepIndex == _kmSteps.length - 1) {
-      distanceLabel = tr('marketplace.distance_all');
+      distanceLabel = '${_kmSteps.last.toInt()} km (Maks)';
     } else {
       distanceLabel = '${currentKm.toInt()} km';
     }
@@ -2131,7 +2127,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           // 🐟 TUNA/Toros Sertifika Filtresi - Premium toggle
                           Builder(builder: (context) {
                             final userLocation = ref.read(userLocationProvider).value;
-                            final isTurkeyRegion = userLocation?.countryCode?.toUpperCase() == 'TR';
+                            final isTurkeyRegion = userLocation?.isTurkeyRegion == true;
                             final brandColor = isTurkeyRegion ? const Color(0xFF69B445) : const Color(0xFFA01E22);
                             final prefix = isTurkeyRegion ? 'toros' : 'tuna';
                             final logoAsset = isTurkeyRegion ? 'assets/images/akdeniz_toros_logo_pill.png' : 'assets/images/tuna_logo_pill.png';
@@ -2330,7 +2326,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           Builder(
                             builder: (context) {
                               final userLocation = ref.read(userLocationProvider).value;
-                              final isTurkeyRegion = userLocation?.countryCode?.toUpperCase() == 'TR';
+                              final isTurkeyRegion = userLocation?.isTurkeyRegion == true;
                               return _buildFilterListItem(
                                 title: isTurkeyRegion ? 'Akdeniz Toros Ürünleri' : 'TUNA Ürünleri',
                                 subtitle: isTurkeyRegion 

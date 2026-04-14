@@ -544,8 +544,10 @@ class _KermesCardState extends State<KermesCard> {
                                 onTap: () {
                                   HapticFeedback.lightImpact();
                                   final labelLower = badge.label.toLowerCase();
-                                  if (labelLower.contains('tuna') || labelLower.contains('toros')) {
-                                    BrandInfoSheet.show(context);
+                                  if (labelLower.contains('tuna')) {
+                                    BrandInfoSheet.show(context, forcedBrand: 'tuna');
+                                  } else if (labelLower.contains('toros')) {
+                                    BrandInfoSheet.show(context, forcedBrand: 'toros');
                                   } else {
                                     _showBadgeDetailsBottomSheet(badge);
                                   }

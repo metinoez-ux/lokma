@@ -5,25 +5,35 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/user_location_provider.dart';
 
 class BrandInfoSheet extends ConsumerWidget {
-  const BrandInfoSheet({super.key});
+  final String? forcedBrand;
+  const BrandInfoSheet({super.key, this.forcedBrand});
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context, {String? forcedBrand}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const BrandInfoSheet(),
+      builder: (context) => BrandInfoSheet(forcedBrand: forcedBrand),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userLocation = ref.watch(userLocationProvider).value;
-    final isTurkeyRegion = userLocation?.countryCode?.toUpperCase() == 'TR';
+    
+    // Determine which brand to show based on forced override OR user's location
+    bool isTurkeyRegion = false;
+    if (forcedBrand == 'toros') {
+      isTurkeyRegion = true;
+    } else if (forcedBrand == 'tuna') {
+      isTurkeyRegion = false;
+    } else {
+      isTurkeyRegion = userLocation?.isTurkeyRegion == true;
+    }
     
     final brandColor = isTurkeyRegion ? const Color(0xFF69B445) : const Color(0xFF9F1C20); 
-    final brandWebsite = isTurkeyRegion ? 'https://www.akdeniztoros.com.tr' : 'https://tunafood.com';
+    final brandWebsite = isTurkeyRegion ? 'https://akdeniztoros.com.tr/blog/' : 'https://tunafood.com';
     final logoAsset = isTurkeyRegion ? 'assets/images/akdeniz_toros_logo_pill.png' : 'assets/images/tuna_logo_pill.png';
     final prefix = isTurkeyRegion ? 'toros' : 'tuna';
     final brandFallback = isTurkeyRegion ? 'AKDENİZ TOROS' : 'TUNA';

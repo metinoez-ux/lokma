@@ -120,6 +120,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
             address: map['address'] as String,
             street: map['street'] as String,
             city: map['city'] as String,
+            state: map['state'] as String? ?? '',
+            countryCode: map['countryCode'] as String? ?? '',
             hasPermission: true,
           );
         }).toList();
@@ -146,6 +148,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
         'address': l.address,
         'street': l.street,
         'city': l.city,
+        'state': l.state,
+        'countryCode': l.countryCode,
       });
     }).toList();
 
@@ -282,7 +286,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                 isCrossBtnShown: false,
                 countries: const ['de', 'tr', 'nl', 'fr', 'at'],
                 isLatLngRequired: true,
-                getPlaceDetailWithLatLng: (prediction) {
+                getPlaceDetailWithLatLng: (prediction) async {
                   final lat = double.tryParse(prediction.lat ?? '');
                   final lng = double.tryParse(prediction.lng ?? '');
                   if (lat != null && lng != null) {
@@ -297,12 +301,26 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                       city = desc;
                     }
 
+                    String countryCode = '';
+                    String state = '';
+                    try {
+                      final placemarks = await placemarkFromCoordinates(lat, lng).timeout(const Duration(seconds: 5));
+                      if (placemarks.isNotEmpty) {
+                        countryCode = placemarks.first.isoCountryCode ?? '';
+                        state = placemarks.first.administrativeArea ?? '';
+                      }
+                    } catch (e) {
+                      debugPrint('Reverse geocode error: $e');
+                    }
+
                     final newLoc = UserLocation(
                       latitude: lat,
                       longitude: lng,
                       address: desc,
                       street: street,
                       city: city,
+                      state: state,
+                      countryCode: countryCode,
                       hasPermission: true,
                     );
                     _onAddressSelected(newLoc);
@@ -462,6 +480,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                                     'address': l.address,
                                     'street': l.street,
                                     'city': l.city,
+                                    'state': l.state,
+                                    'countryCode': l.countryCode,
                                   });
                                 }).toList();
                                 await prefs.setStringList(
@@ -577,14 +597,36 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                onTap: () {
-                  // Use saved address - create a UserLocation from it
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  // SADECE SECILEN ADRESIN ULKESINI VE KORDINATLARINI BULMAK ICIN FORWARD GEOCODING
+                  String resolvedCountry = '';
+                  String resolvedState = '';
+                  double lat = 0;
+                  double lng = 0;
+                  try {
+                    final locations = await locationFromAddress(fullAddress).timeout(const Duration(seconds: 5));
+                    if (locations.isNotEmpty) {
+                      lat = locations.first.latitude;
+                      lng = locations.first.longitude;
+                      final placemarks = await placemarkFromCoordinates(lat, lng).timeout(const Duration(seconds: 5));
+                      if (placemarks.isNotEmpty) {
+                        resolvedCountry = placemarks.first.isoCountryCode ?? '';
+                        resolvedState = placemarks.first.administrativeArea ?? '';
+                      }
+                    }
+                  } catch (e) {
+                    debugPrint('Saved addr geocode error: $e');
+                  }
+
                   final loc = UserLocation(
-                    latitude: 0, // Saved addresses may not have coordinates
-                    longitude: 0,
+                    latitude: lat,
+                    longitude: lng,
                     address: fullAddress,
                     street: streetFull,
                     city: city,
+                    state: resolvedState,
+                    countryCode: resolvedCountry,
                     hasPermission: true,
                   );
                   _onAddressSelected(loc);

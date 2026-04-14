@@ -373,10 +373,42 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             final customFeatures = (data['customFeatures'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
 
             String country = 'Almanya';
-            if (data['address'] is Map && (data['address'] as Map)['country'] == 'DE') {
-              country = 'Almanya';
-            } else if (data['country'] != null) {
+            if (data['address'] is Map && (data['address'] as Map)['country'] != null) {
+              final cc = (data['address'] as Map)['country'].toString().toUpperCase();
+              if (cc == 'DE') country = 'Almanya';
+              else if (cc == 'TR') country = 'Türkiye';
+              else if (cc == 'BG') country = 'Bulgaristan';
+              else country = cc;
+            } else if (data['country'] != null && data['country'].toString().isNotEmpty) {
               country = data['country'].toString();
+              final cc = country.toUpperCase();
+              if (cc == 'TR') country = 'Türkiye';
+              else if (cc == 'DE') country = 'Almanya';
+              else if (cc == 'BG') country = 'Bulgaristan';
+            } else {
+               // Fallback guess from address or city since old docs might not have country field
+               final lowerAddr = data['address']?.toString().toLowerCase() ?? '';
+               final lowerCity = city.toLowerCase();
+               
+               final Set<String> trProvinces = {
+                 'adana','adiyaman','afyon','afyonkarahisar','agri','aksaray','amasya','ankara','antalya','ardahan',
+                 'artvin','aydin','balikesir','balıkesir','bartin','batman','bayburt','bilecik','bingol','bitlis',
+                 'bolu','burdur','bursa','canakkale','cankiri','corum','denizli','diyarbakir','duzce','edirne',
+                 'elazig','erzincan','erzurum','eskisehir','gaziantep','giresun','gumushane','hakkari','hatay','igdir',
+                 'isparta','istanbul','izmir','kahramanmaras','karabuk','karaman','kars','kastamonu','kayseri','kirikkale',
+                 'kirklareli','kirsehir','kilis','kocaeli','konya','kutahya','malatya','manisa','mardin','mersin',
+                 'mugla','mus','nevsehir','nigde','ordu','osmaniye','rize','sakarya','samsun','siirt',
+                 'sinop','sivas','sanliurfa','sirnak','tekirdag','tokat','trabzon','tunceli','usak','van',
+                 'yalova','yozgat','zonguldak', 'bigadi'
+               };
+               
+               bool isTrProvince = trProvinces.any((p) => lowerCity.contains(p) || lowerAddr.contains(p));
+               
+               if (lowerAddr.contains('türkiye') || lowerAddr.contains('turkey') || lowerAddr.contains('turkiye') || isTrProvince) {
+                 country = 'Türkiye';
+               } else if (lowerAddr.contains('bulgaristan') || lowerAddr.contains('bulgaria')) {
+                 country = 'Bulgaristan';
+               }
             }
 
             // Parse sponsor
@@ -635,6 +667,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     // Distance & scope filter
     final locationAsync = ref.read(userLocationProvider);
     final userState = locationAsync.value?.state ?? '';
+    final userCity = locationAsync.value?.city ?? '';
+    final isTurkey = locationAsync.value?.isTurkeyRegion == true;
 
     if (_scopeMode == 'nearby') {
       // Slider-based distance filter
@@ -650,12 +684,21 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         }).toList();
       }
     } else if (_scopeMode == 'state') {
-      // Eyalet filtresi
+      // Eyalet / Şehir filtresi
       if (userState.isNotEmpty) {
         final userStateLower = _normalizeTurkish(userState.toLowerCase());
         events = events.where((event) {
           if (event.state == null || event.state!.isEmpty) return true;
           return _statesMatch(userStateLower, _normalizeTurkish(event.state!.toLowerCase()));
+        }).toList();
+      }
+    } else if (_scopeMode == 'city') {
+      // Semt filtresi (Sadece Türkiye'de)
+      if (userCity.isNotEmpty) {
+        final userCityLower = _normalizeTurkish(userCity.toLowerCase());
+        events = events.where((event) {
+          if (event.city.isEmpty) return true;
+          return _normalizeTurkish(event.city.toLowerCase()).contains(userCityLower) || userCityLower.contains(_normalizeTurkish(event.city.toLowerCase()));
         }).toList();
       }
     } else if (_scopeMode == 'silaYolu') {
@@ -880,7 +923,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               final normalizedLabel = b.label.toLowerCase();
                               final isTuna = normalizedLabel.contains('tuna');
                               final isToros = normalizedLabel.contains('toros');
-                              final isTurkeyRegion = _userCountryCode == 'TR';
+                              final isTurkeyRegion = ref.read(userLocationProvider).value?.isTurkeyRegion == true;
                               
                               // Region-based exclusion
                               if (isTurkeyRegion && isTuna) return false;
@@ -2043,12 +2086,17 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildScopeOverlayItem('nearby', Icons.near_me, 'Yakin Cevre', 'Mesafe cubugu ile', isDark),
-                      _buildScopeOverlayItem('state', Icons.map_outlined, bundeslandShort.isNotEmpty ? '$bundeslandShort - Eyalet' : 'Eyalet', userState.isNotEmpty ? userState : 'Bulundugunuz eyalet', isDark),
-                      _buildScopeOverlayItem('country', Icons.public, _userCountryCode == 'TR' ? 'Turkiye' : _userCountryCode == 'DE' ? 'Almanya' : 'Ulke', 'Tum ulke genelinde', isDark),
-                      _buildScopeOverlayItem('silaYolu', Icons.route, 'Sila Yolu Kermesleri', 'Avrupa-Turkiye guzergahi', isDark),
+                      _buildScopeOverlayItem('nearby', Icons.near_me, 'Yakın Çevre', 'Mesafe çubuğu ile', isDark),
+                      if (locationAsync.value?.isTurkeyRegion == true) ...[
+                        _buildScopeOverlayItem('city', Icons.location_city, 'Semt', locationAsync.value?.city ?? 'Bulunduğunuz semt', isDark),
+                        _buildScopeOverlayItem('state', Icons.map_outlined, 'Şehir', userState.isNotEmpty ? userState : 'Bulunduğunuz şehir', isDark),
+                      ] else ...[
+                        _buildScopeOverlayItem('state', Icons.map_outlined, bundeslandShort.isNotEmpty ? '$bundeslandShort - Eyalet' : 'Eyalet', userState.isNotEmpty ? userState : 'Bulunduğunuz eyalet', isDark),
+                      ],
+                      _buildScopeOverlayItem('country', Icons.public, locationAsync.value?.isTurkeyRegion == true ? 'Türkiye' : _userCountryCode == 'DE' ? 'Almanya' : 'Ülke', 'Tüm ülke genelinde', isDark),
+                      _buildScopeOverlayItem('silaYolu', Icons.route, 'Sıla Yolu Kermesleri', 'Avrupa-Türkiye güzergahı', isDark),
                       Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
-                      _buildScopeOverlayItem('map', Icons.map, 'Harita Gorunumu', 'Kermesleri haritada goster', isDark),
+                      _buildScopeOverlayItem('map', Icons.map, 'Harita Görünümü', 'Kermesleri haritada göster', isDark),
                     ],
                   ),
                 ),
@@ -2079,6 +2127,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           _scopeMode = value;
           if (value == 'nearby') {
             _maxDistance = _kmSteps[_currentStepIndex];
+          } else if (value == 'city') {
+            _maxDistance = 50;
           } else if (value == 'state') {
             _maxDistance = 110;
           } else if (value == 'country') {
@@ -2130,16 +2180,24 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     String scopeLabel;
     IconData scopeIcon;
     switch (_scopeMode) {
+      case 'city':
+        scopeLabel = locationAsync.value?.city ?? 'Semt';
+        scopeIcon = Icons.location_city;
+        break;
       case 'state':
-        scopeLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
+        if (locationAsync.value?.isTurkeyRegion == true) {
+          scopeLabel = userState.isNotEmpty ? userState : 'Şehir';
+        } else {
+          scopeLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
+        }
         scopeIcon = Icons.map_outlined;
         break;
       case 'country':
-        scopeLabel = _userCountryCode == 'TR' ? 'TR' : _userCountryCode == 'DE' ? 'DE' : 'Ulke';
+        scopeLabel = locationAsync.value?.isTurkeyRegion == true ? 'Türkiye' : _userCountryCode == 'DE' ? 'DE' : 'Ülke';
         scopeIcon = Icons.public;
         break;
       case 'silaYolu':
-        scopeLabel = 'Sila';
+        scopeLabel = 'Sıla';
         scopeIcon = Icons.route;
         break;
       case 'map':
@@ -2148,7 +2206,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         break;
       default:
         scopeLabel = _currentStepIndex == _kmSteps.length - 1
-            ? 'Tumu'
+            ? 'Tümü'
             : '${_kmSteps[_currentStepIndex].toInt()} km';
         scopeIcon = Icons.near_me;
     }
