@@ -30,6 +30,8 @@ const { admin, loading: adminLoading } = useAdmin();
  const [timeStatusFilter, setTimeStatusFilter] = useState<'all' | 'past' | 'active' | 'future' | 'archived'>('all');
  const [selectedBadge, setSelectedBadge] = useState<string>('all');
  const [selectedModality, setSelectedModality] = useState<string>('all');
+ const [sortOrder, setSortOrder] = useState<'status' | 'newest'>('status');
+ const [countryFilter, setCountryFilter] = useState<string>('all');
  const router = useRouter();
 
  // Calculate kermes status based on dates
@@ -282,6 +284,12 @@ const { admin, loading: adminLoading } = useAdmin();
  if (selectedModality === 'dine_in' && (e.isMenuOnly || !e.hasDineIn)) return false;
  }
 
+ // Ülke Filtresi
+ if (countryFilter !== 'all') {
+ const e = event as any;
+ if (e.country !== countryFilter) return false;
+ }
+
  if (!searchQuery) return true;
 
  const query = normalizeForSearch(searchQuery);
@@ -294,6 +302,7 @@ const { admin, loading: adminLoading } = useAdmin();
  e.postalCode,
  e.address,
  e.location,
+ e.country,
  e.contactName,
  e.contactFirstName,
  e.contactLastName,
@@ -310,11 +319,19 @@ const { admin, loading: adminLoading } = useAdmin();
  field?.includes(searchQuery)
  );
  })
- // Sort: Active first, then Future, then Past
+ // Sort
  .sort((a, b) => {
+ if (sortOrder === 'newest') {
+ const aTime = (a as any).createdAt?.seconds || 0;
+ const bTime = (b as any).createdAt?.seconds || 0;
+ return bTime - aTime;
+ }
+ // Default Status-based Sort: Active first, then Future, then Past
  const order = { active: 0, future: 1, past: 2 };
  return order[getKermesTimeStatus(a)] - order[getKermesTimeStatus(b)];
  });
+
+ const uniqueCountries = Array.from(new Set(events.map((e: any) => e.country).filter(Boolean))).sort();
 
  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
 
@@ -448,6 +465,32 @@ const { admin, loading: adminLoading } = useAdmin();
  className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
  />
  </div>
+
+ {/* Sorting Filter */}
+ <select
+ title="Sıralama"
+ value={sortOrder}
+ onChange={(e) => setSortOrder(e.target.value as 'status' | 'newest')}
+ className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+ >
+ <option value="status">Tarihe Göre (Önce Aktif)</option>
+ <option value="newest">En Son Eklenenler</option>
+ </select>
+
+ {/* Country Filter */}
+ {uniqueCountries.length > 0 && (
+ <select
+ title="Ülke"
+ value={countryFilter}
+ onChange={(e) => setCountryFilter(e.target.value)}
+ className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+ >
+ <option value="all">Tüm Ülkeler</option>
+ {uniqueCountries.map((country: any) => (
+ <option key={country} value={country}>{country}</option>
+ ))}
+ </select>
+ )}
 
  {/* Modality Filter */}
  <select
