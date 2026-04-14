@@ -2125,8 +2125,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           const SizedBox(height: 20),
 
                           // 🐟 TUNA/Toros Sertifika Filtresi - Premium toggle
-                          Builder(builder: (context) {
-                            final userLocation = ref.read(userLocationProvider).value;
+                          Consumer(builder: (context, ref, child) {
+                            final userLocation = ref.watch(userLocationProvider).value;
                             final isTurkeyRegion = userLocation?.isTurkeyRegion == true;
                             final brandColor = isTurkeyRegion ? const Color(0xFF69B445) : const Color(0xFFA01E22);
                             final prefix = isTurkeyRegion ? 'toros' : 'tuna';

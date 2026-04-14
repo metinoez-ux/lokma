@@ -2206,7 +2206,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         break;
       default:
         scopeLabel = _currentStepIndex == _kmSteps.length - 1
-            ? 'Tümü'
+            ? '${_kmSteps[_currentStepIndex].toInt()} km (Maks)'
             : '${_kmSteps[_currentStepIndex].toInt()} km';
         scopeIcon = Icons.near_me;
     }
