@@ -753,8 +753,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                   bool legacyTunaFlag = (data['brand'] == 'tuna' || isTunaPartner) && data['brandLabelActive'] == true;
                                   bool legacyTorosFlag = (data['brand'] == 'akdeniz_toros') && data['brandLabelActive'] == true;
                                   
-                                  bool actuallySellsTuna = data['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
-                                  bool actuallySellsToros = data['sellsTorosProducts'] == true || (isMarket && legacyTorosFlag);
+                                  bool actuallySellsTuna = isMarket && legacyTunaFlag;
+                                  bool actuallySellsToros = isMarket && legacyTorosFlag;
 
                                   if (activeBadges.isNotEmpty) return const SizedBox.shrink();
 

@@ -2890,11 +2890,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           Builder(
                             builder: (context) {
                               bool isMarket = checkIsMarket(data);
-                              bool legacyTunaFlag = isTunaPartner;
-                              bool legacyTorosFlag = brand?.toString().toLowerCase() == 'akdeniz_toros';
+                              bool legacyTunaFlag = isTunaPartner && data?['brandLabelActive'] == true;
+                              bool legacyTorosFlag = (brand?.toString().toLowerCase() == 'akdeniz_toros') && data?['brandLabelActive'] == true;
 
-                              bool actuallySellsTuna = data?['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
-                              bool actuallySellsToros = data?['sellsTorosProducts'] == true || (isMarket && legacyTorosFlag);
+                              bool actuallySellsTuna = isMarket && legacyTunaFlag;
+                              bool actuallySellsToros = isMarket && legacyTorosFlag;
 
                               if (activeBadges.isNotEmpty) return const SizedBox.shrink();
 
