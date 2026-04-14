@@ -1896,7 +1896,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   // ============== DISTANCE SLIDER (Yemek stili) ==============
