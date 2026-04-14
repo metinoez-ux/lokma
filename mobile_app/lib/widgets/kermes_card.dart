@@ -12,6 +12,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/currency_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'brand_info_sheet.dart';
 
 class KermesCard extends StatefulWidget {
   final KermesEvent event;
@@ -542,7 +543,12 @@ class _KermesCardState extends State<KermesCard> {
                               return GestureDetector(
                                 onTap: () {
                                   HapticFeedback.lightImpact();
-                                  _showBadgeDetailsBottomSheet(badge);
+                                  final labelLower = badge.label.toLowerCase();
+                                  if (labelLower.contains('tuna') || labelLower.contains('toros')) {
+                                    BrandInfoSheet.show(context);
+                                  } else {
+                                    _showBadgeDetailsBottomSheet(badge);
+                                  }
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 6),
