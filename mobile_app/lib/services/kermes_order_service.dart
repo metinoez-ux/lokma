@@ -69,9 +69,20 @@ class KermesOrderService {
   }
 
   /// Ödeme durumunu güncelle
-  Future<void> markAsPaid(String orderId) async {
+  Future<void> markAsPaid(String orderId, {String? collectorId, double? cashReceived, double? changeGiven}) async {
     try {
-      await _ordersCollection.doc(orderId).update({'isPaid': true});
+      final updates = <String, dynamic>{'isPaid': true};
+      if (collectorId != null) {
+        updates['collectedByStaffId'] = collectorId;
+        updates['settledToRegister'] = false; // Add this to make sure it's explicitly tracked
+      }
+      if (cashReceived != null) {
+        updates['cashReceived'] = cashReceived;
+      }
+      if (changeGiven != null) {
+        updates['changeGiven'] = changeGiven;
+      }
+      await _ordersCollection.doc(orderId).update(updates);
     } catch (e) {
       throw Exception('Ödeme durumu güncellenemedi: $e');
     }

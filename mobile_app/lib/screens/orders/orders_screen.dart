@@ -19,7 +19,11 @@ import 'tip_bottom_sheet.dart';
 import '../../services/app_rating_service.dart';
 import '../../utils/currency_utils.dart';
 import '../../widgets/kermes/order_qr_dialog.dart';
-
+import 'package:rxdart/rxdart.dart';
+import 'unified_order_wrapper.dart';
+import '../../models/kermes_order_model.dart';
+import '../../services/kermes_order_service.dart';
+import 'kermes_order_card.dart';
 
 class OrdersScreen extends ConsumerStatefulWidget {
   final String? highlightOrderId;
@@ -115,9 +119,19 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     }
 
     final orderService = OrderService();
+    final kermesOrderService = KermesOrderService();
 
-    return StreamBuilder<List<LokmaOrder>>(
-      stream: orderService.getUserOrdersStream(userId),
+    return StreamBuilder<List<UnifiedOrder>>(
+      stream: Rx.combineLatest2(
+        orderService.getUserOrdersStream(userId),
+        kermesOrderService.getUserOrders(userId),
+        (List<LokmaOrder> lokmaOrders, List<KermesOrder> kermesOrders) {
+          final result = <UnifiedOrder>[];
+          result.addAll(lokmaOrders.map((o) => UnifiedOrder.fromLokma(o)));
+          result.addAll(kermesOrders.map((o) => UnifiedOrder.fromKermes(o)));
+          return result;
+        },
+      ),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -159,9 +173,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
         }
 
         // Sort: active orders first (by createdAt desc), then completed (by createdAt desc)
-        final activeOrders = allOrders.where((o) => _isActiveOrder(o.status)).toList()
+        final activeOrders = allOrders.where((o) => o.isActive).toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        final completedOrders = allOrders.where((o) => !_isActiveOrder(o.status)).toList()
+        final completedOrders = allOrders.where((o) => !o.isActive).toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
         return ListView(
@@ -170,11 +184,17 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             // Active orders — shown normally
             if (activeOrders.isNotEmpty) ...[
               for (final order in activeOrders)
-                _OrderCard(
-                  order: order,
-                  isDark: isDark,
-                  autoOpen: order.id == widget.highlightOrderId,
-                ),
+                order.lokma != null 
+                  ? _OrderCard(
+                      order: order.lokma!,
+                      isDark: isDark,
+                      autoOpen: order.lokma!.id == widget.highlightOrderId,
+                    )
+                  : KermesOrderCard(
+                      order: order.kermes!,
+                      isDark: isDark,
+                      autoOpen: order.kermes!.id == widget.highlightOrderId,
+                    ),
             ] else ...[
               // No active orders message
               Padding(
@@ -214,11 +234,17 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 ),
               ),
               for (final order in (_showAllPastOrders ? completedOrders : completedOrders.take(10)))
-                _OrderCard(
-                  order: order,
-                  isDark: isDark,
-                  autoOpen: false,
-                ),
+                order.lokma != null 
+                  ? _OrderCard(
+                      order: order.lokma!,
+                      isDark: isDark,
+                      autoOpen: false,
+                    )
+                  : KermesOrderCard(
+                      order: order.kermes!,
+                      isDark: isDark,
+                      autoOpen: false,
+                    ),
               if (!_showAllPastOrders && completedOrders.length > 10)
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 16),

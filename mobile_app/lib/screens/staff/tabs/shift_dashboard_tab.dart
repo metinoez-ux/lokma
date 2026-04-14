@@ -10,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -20,6 +21,7 @@ import '../../kermes/staff/kermes_schedule_screen.dart';
 import '../../kermes/staff/kermes_admin_roster_screen.dart';
 import '../../kermes/staff/kermes_admin_staff_assignment_screen.dart';
 import '../../kermes/staff/kermes_admin_vault_screen.dart';
+import 'staff_handover_dialog.dart';
 
 class ShiftDashboardTab extends ConsumerStatefulWidget {
   const ShiftDashboardTab({super.key});
@@ -1646,26 +1648,47 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
       return _buildFinanceCardContent(isDark, 0.0, []);
     }
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('kermes_orders')
-          .where('kermesId', isEqualTo: businessId)
-          .where('createdByStaffId', isEqualTo: user.uid)
-          .where('paymentMethod', isEqualTo: 'cash')
-          .snapshots(),
+    final createdStream = FirebaseFirestore.instance
+        .collection('kermes_orders')
+        .where('kermesId', isEqualTo: businessId)
+        .where('createdByStaffId', isEqualTo: user.uid)
+        .where('paymentMethod', isEqualTo: 'cash')
+        .snapshots();
+
+    final collectedStream = FirebaseFirestore.instance
+        .collection('kermes_orders')
+        .where('kermesId', isEqualTo: businessId)
+        .where('collectedByStaffId', isEqualTo: user.uid)
+        .where('paymentMethod', isEqualTo: 'cash')
+        .snapshots();
+
+    return StreamBuilder<List<QuerySnapshot>>(
+      stream: Rx.combineLatest2(
+        createdStream,
+        collectedStream,
+        (QuerySnapshot a, QuerySnapshot b) => [a, b],
+      ),
       builder: (context, snapshot) {
         double unsettledCash = 0.0;
         List<String> orderIds = [];
+        Set<String> processedOrderIds = {};
+
         if (snapshot.hasData) {
-          for (final doc in snapshot.data!.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final status = data['status'] as String? ?? '';
-            if (status == 'cancelled') continue;
-            final settledToRegister = data['settledToRegister'] as bool? ?? false;
-            if (!settledToRegister) {
-              final amount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
-              unsettledCash += amount;
-              orderIds.add(doc.id);
+          for (final querySnapshot in snapshot.data!) {
+            for (final doc in querySnapshot.docs) {
+              if (processedOrderIds.contains(doc.id)) continue;
+              processedOrderIds.add(doc.id);
+
+              final data = doc.data() as Map<String, dynamic>;
+              final status = data['status'] as String? ?? '';
+              if (status == 'cancelled') continue;
+              
+              final settledToRegister = data['settledToRegister'] as bool? ?? false;
+              if (!settledToRegister) {
+                final amount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+                unsettledCash += amount;
+                orderIds.add(doc.id);
+              }
             }
           }
         }
@@ -1746,9 +1769,57 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 child: SizedBox(
                   height: 44,
                   child: ElevatedButton.icon(
-                    onPressed: unsettledCash > 0 ? () => _showHandoverQRDialog(context, unsettledCash, orderIds) : null,
+                    onPressed: unsettledCash > 0 ? () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (ctx) => Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Nasıl devretmek istersiniz?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                              const SizedBox(height: 24),
+                              ListTile(
+                                leading: const CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.qr_code_scanner, color: Colors.white)),
+                                title: const Text('QR Kodu Okutarak', style: TextStyle(fontWeight: FontWeight.w600)),
+                                subtitle: const Text('Kasa görevlisinin cihazından taraması için'),
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  _showHandoverQRDialog(context, unsettledCash, orderIds);
+                                },
+                              ),
+                              const Divider(),
+                              ListTile(
+                                leading: const CircleAvatar(backgroundColor: Colors.orangeAccent, child: Icon(Icons.person_search, color: Colors.white)),
+                                title: const Text('Listeden Seçerek', style: TextStyle(fontWeight: FontWeight.w600)),
+                                subtitle: const Text('Doğrudan başka bir yetkiliye gönder'),
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  final capabilities = ref.read(staffCapabilitiesProvider);
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => StaffTransferSelectionDialog(
+                                      currentUserId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                      businessId: capabilities.businessId ?? '',
+                                      declaredAmount: unsettledCash,
+                                      orderIds: orderIds,
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      );
+                    } : null,
                     icon: const Icon(Icons.account_balance_wallet, size: 16),
-                    label: const Text('Kasaya Teslim Et', style: TextStyle(fontSize: 12)),
+                    label: const Text('Teslim Et', style: TextStyle(fontSize: 12)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,
                       foregroundColor: Colors.white,

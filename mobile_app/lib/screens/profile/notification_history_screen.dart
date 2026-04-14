@@ -17,6 +17,7 @@ import '../../utils/currency_utils.dart';
 import 'notification_trash_screen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../kermes/kermes_menu_wrapper.dart';
+import '../../widgets/kermes/order_qr_dialog.dart';
 
 class NotificationHistoryScreen extends ConsumerStatefulWidget {
   final String? openOrderId;
@@ -995,14 +996,28 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
               if (id.isNotEmpty) { bId = id; break; }
             }
 
-            // Detect order type from notification data
+            // Detect order type, kermes flag, and kermesId from notification data
             String oType = 'delivery';
+            bool isKrm = false;
+            String? krmId;
             for (final s in statuses) {
-              final dm = s['deliveryMethod'] as String? ?? s['orderType'] as String? ?? '';
-              if (dm.isNotEmpty) {
+              final type = s['type'] as String?;
+              if (type == 'kermes_order_created' || type == 'kermes_order_paid' || (s['kermesId'] != null && s['kermesId'].toString().isNotEmpty)) {
+                isKrm = true;
+                krmId = s['kermesId'] as String?;
+              }
+              final dm = s['deliveryType'] as String? ?? s['deliveryMethod'] as String? ?? s['orderType'] as String? ?? '';
+              // Handle Kermes 'gelAl' mapping to pickup
+              if (dm == 'gelAl') {
+                oType = 'pickup';
+                break;
+              } else if (dm.isNotEmpty) {
                 oType = dm;
                 break;
               }
+            }
+            if (isKrm && oType == 'delivery') {
+                oType = 'pickup'; // Fallback for kermes if not explicitly specified
             }
 
             // Extract itemCount from any status notification
@@ -1025,6 +1040,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
               orderType: oType,
               docIds: orderDocIds[entry.key] ?? [],
               itemCount: itemCnt,
+              isKermes: isKrm,
+              kermesId: krmId,
             ));
           }
 
@@ -2023,6 +2040,8 @@ class _OrderGroup {
   final List<String> docIds; // Firestore doc IDs for all notifications in this group
   final int itemCount;
   final String? favoriteName;
+  final bool isKermes;
+  final String? kermesId;
 
   _OrderGroup({
     required this.orderId,
@@ -2038,6 +2057,8 @@ class _OrderGroup {
     this.docIds = const [],
     this.itemCount = 0,
     this.favoriteName,
+    this.isKermes = false,
+    this.kermesId,
   });
 }
 
@@ -2892,12 +2913,29 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                     height: 40,
                     child: TextButton.icon(
                       onPressed: () {
-                          final pendingEntry = group.statuses.firstWhere(
-                            (s) => s['status'] == 'pending',
-                            orElse: () => group.statuses.first,
-                          );
-                          final pendingTs = pendingEntry['createdAt'] as Timestamp?;
-                          showOrderDetailGlobal(context, group.orderId, pendingTs?.toDate());
+                          if (group.isKermes) {
+                            showGeneralDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              barrierLabel: 'OrderQRDialog',
+                              transitionDuration: const Duration(milliseconds: 300),
+                              pageBuilder: (ctx, anim1, anim2) => OrderQRDialog(
+                                orderId: group.orderId,
+                                orderNumber: group.rawOrderNumber,
+                                kermesId: group.kermesId ?? '',
+                                kermesName: group.businessName,
+                                totalAmount: group.totalAmount ?? 0.0,
+                                isPaid: group.statuses.any((s) => s['type'] == 'kermes_order_paid' || s['status'] == 'accepted'),
+                              ),
+                            );
+                          } else {
+                            final pendingEntry = group.statuses.firstWhere(
+                              (s) => s['status'] == 'pending',
+                              orElse: () => group.statuses.first,
+                            );
+                            final pendingTs = pendingEntry['createdAt'] as Timestamp?;
+                            showOrderDetailGlobal(context, group.orderId, pendingTs?.toDate());
+                          }
                         },
                       icon: const Icon(Icons.receipt_long_rounded, size: 16),
                       label: Text(

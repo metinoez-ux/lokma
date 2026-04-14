@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/staff_notifications_provider.dart';
+import '../../models/kermes_order_model.dart';
+import '../../widgets/kermes/order_qr_dialog.dart';
 
 class StaffNotificationsScreen extends ConsumerStatefulWidget {
   const StaffNotificationsScreen({super.key});
@@ -584,13 +586,39 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final iconData = _iconForType(type);
 
               final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'roster_shift' || type == 'kermes_assignment' || type == 'roster_deleted';
+              final bool isOrder = type != null && type.contains('order');
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () {
+                onTap: () async {
                   _markRead(notif);
                   if (hasDetail) {
                     _showNotificationDetailSheet(context, notif);
+                  } else if (isOrder) {
+                    // Müşteri bildirimleri gibi, ordere doğrudan yönlendir:
+                    final dataMap = notif['data'] as Map<String, dynamic>? ?? {};
+                    final oid = dataMap['orderId'] ?? dataMap['kermesOrderId'];
+                    if (oid != null && oid.toString().isNotEmpty) {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                      );
+                      try {
+                        final doc = await FirebaseFirestore.instance.collection('kermes_orders').doc(oid.toString()).get();
+                        if (doc.exists && context.mounted) {
+                          Navigator.pop(context); // loading kapat
+                          showDialog(
+                            context: context,
+                            builder: (_) => OrderQRDialog(order: KermesOrder.fromDocument(doc)),
+                          );
+                        } else if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (context.mounted) Navigator.pop(context);
+                      }
+                    }
                   }
                 },
                 child: Container(
