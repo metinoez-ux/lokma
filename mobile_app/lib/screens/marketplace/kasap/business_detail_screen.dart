@@ -1532,7 +1532,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         const SizedBox(height: 6),
                         
                         // Brand Badge — pill style matching business card
-                        if (!isMarket && data?['brandLabelActive'] == true)
+                        // Yeni sistem varsa (activeBrandIds), legacy pill'i SADECE activeBrandIds dolu ise goster
+                        if (!(data?.containsKey('activeBrandIds') == true && (data?['activeBrandIds'] as List?)?.isEmpty == true) && data?['brandLabelActive'] == true)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: InkWell(
@@ -2502,6 +2503,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final bool isMarket = checkIsMarket(data);
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
+    final bool hasNewBrandSystem = data?.containsKey('activeBrandIds') ?? false;
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
@@ -2515,8 +2517,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       }
     });
 
-    // KURAL 3: Legacy fallback - SADECE activeBrandIds bos ise VE brandLabelActive true ise
-    if (activeBadges.isEmpty && data?['brandLabelActive'] == true) {
+    // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA (activeBrandIds alani tanimlanmamissa)
+    if (activeBadges.isEmpty && !hasNewBrandSystem && data?['brandLabelActive'] == true) {
       bool showLegacyTuna = isTunaPartner;
       if (showLegacyTuna) {
         activeBadges.add({

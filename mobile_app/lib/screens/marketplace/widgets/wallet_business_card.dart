@@ -79,6 +79,7 @@ class WalletBusinessCard extends ConsumerWidget {
     final bool isMarket = checkIsMarket(data);
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
+    final bool hasNewBrandSystem = data.containsKey('activeBrandIds');
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
@@ -91,8 +92,8 @@ class WalletBusinessCard extends ConsumerWidget {
         }
       }
 
-      // KURAL 3: Legacy fallback - SADECE activeBrandIds bos ise VE brandLabelActive true ise
-      if (activeBadges.isEmpty && data['brandLabelActive'] == true) {
+      // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA (activeBrandIds alani tanimlanmamissa)
+      if (activeBadges.isEmpty && !hasNewBrandSystem && data['brandLabelActive'] == true) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
         if (showLegacyTuna) {
           try {
@@ -115,7 +116,7 @@ class WalletBusinessCard extends ConsumerWidget {
     });
 
     // In case whenData hasn't executed synchronously (loading state)
-    if (activeBadges.isEmpty && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
+    if (activeBadges.isEmpty && !hasNewBrandSystem && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
       if (data['brandLabelActive'] == true) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
         if (showLegacyTuna) {
