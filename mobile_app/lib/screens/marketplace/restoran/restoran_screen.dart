@@ -1755,17 +1755,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       String? nextOpenText;
       
       OpeningHoursHelper? openingHelper;
+      final bool hasDeliveryHours = data['deliveryHours'] != null && (data['deliveryHours'] as List).isNotEmpty;
+      final bool hasPickupHours = data['pickupHours'] != null && (data['pickupHours'] as List).isNotEmpty;
+      final bool hasOpeningHours = data['openingHours'] != null && (data['openingHours'] as List).isNotEmpty;
+
       if (mode == 'teslimat') {
-        if (data['deliveryHours'] != null) openingHelper = OpeningHoursHelper(data['deliveryHours']);
-        else if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
-        else if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+        if (hasDeliveryHours) openingHelper = OpeningHoursHelper(data['deliveryHours']);
+        else if (hasPickupHours) openingHelper = OpeningHoursHelper(data['pickupHours']);
+        else if (hasOpeningHours) openingHelper = OpeningHoursHelper(data['openingHours']);
       } else if (mode == 'gelal') {
-        if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
-        else if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+        if (hasPickupHours) openingHelper = OpeningHoursHelper(data['pickupHours']);
+        else if (hasOpeningHours) openingHelper = OpeningHoursHelper(data['openingHours']);
       } else {
-        if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
-        else if (data['deliveryHours'] != null) openingHelper = OpeningHoursHelper(data['deliveryHours']);
-        else if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
+        if (hasOpeningHours) openingHelper = OpeningHoursHelper(data['openingHours']);
+        else if (hasDeliveryHours) openingHelper = OpeningHoursHelper(data['deliveryHours']);
+        else if (hasPickupHours) openingHelper = OpeningHoursHelper(data['pickupHours']);
       }
       
       if (openingHelper != null) {

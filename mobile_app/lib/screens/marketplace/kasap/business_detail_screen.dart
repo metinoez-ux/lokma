@@ -2463,9 +2463,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final brand = data?['brand'];
     // Tab-aware opening hours: use deliveryHours/pickupHours/openingHours based on active tab
     final OpeningHoursHelper openingHelper;
-    if (_deliveryModeIndex == 0 && data?['deliveryHours'] != null) {
+    final bool hasDeliveryHours = data?['deliveryHours'] != null && (data?['deliveryHours'] as List).isNotEmpty;
+    final bool hasPickupHours = data?['pickupHours'] != null && (data?['pickupHours'] as List).isNotEmpty;
+
+    if (_deliveryModeIndex == 0 && hasDeliveryHours) {
       openingHelper = OpeningHoursHelper(data?['deliveryHours']);
-    } else if (_deliveryModeIndex == 1 && data?['pickupHours'] != null) {
+    } else if (_deliveryModeIndex == 1 && hasPickupHours) {
       openingHelper = OpeningHoursHelper(data?['pickupHours']);
     } else {
       openingHelper = OpeningHoursHelper(data?['openingHours']);
