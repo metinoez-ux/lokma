@@ -3228,7 +3228,7 @@ void showChatBottomSheetGlobal(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Order type line above business name
-                            buildOrderTypeInlineGlobal(order, isDark),
+                            buildOrderTypeInlineGlobal(order!, isDark),
                             const SizedBox(height: 6),
                             Text(
                               order.butcherName,
@@ -3571,7 +3571,7 @@ void showChatBottomSheetGlobal(
                         child: ElevatedButton.icon(
                           onPressed: () {
                             Navigator.pop(sheetCtx); // close bottom sheet
-                            _reorderItems(ctx, order);
+                            _reorderItems(ctx, order!);
                           },
                           icon: const Icon(Icons.replay, size: 18),
                           label: Text(

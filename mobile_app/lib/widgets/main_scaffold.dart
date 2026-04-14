@@ -10,7 +10,10 @@ import '../providers/cart_provider.dart';
 import '../providers/kermes_cart_provider.dart';
 import '../providers/bottom_nav_provider.dart';
 import '../services/order_service.dart';
+import '../models/kermes_order_model.dart';
 import '../screens/orders/courier_tracking_screen.dart';
+import '../providers/unpaid_kermes_orders_provider.dart';
+import '../widgets/kermes/order_qr_dialog.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
@@ -167,6 +170,21 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
                 return _buildFloatingDeliveryButton(activeOrder);
               },
             ),
+          // Floating Unpaid QR Button for Kermes Cash Orders
+          if (FirebaseAuth.instance.currentUser != null)
+            Consumer(
+              builder: (context, ref, child) {
+                final unpaidOrdersState = ref.watch(unpaidKermesOrdersProvider);
+                return unpaidOrdersState.when(
+                  data: (orders) {
+                    if (orders.isEmpty) return const SizedBox.shrink();
+                    return _buildFloatingQRButton(orders.first);
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                );
+              },
+            ),
         ],
       ),
       bottomNavigationBar: (!isBottomNavVisible)
@@ -236,6 +254,74 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingQRButton(KermesOrder order) {
+    return Positioned(
+      left: 16, // Placed on the left to avoid overlapping with delivery tracking on the right
+      bottom: 110, // Above bottom nav bar
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          showOrderQRDialog(
+            context,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            kermesId: order.kermesId,
+            kermesName: order.kermesName,
+            totalAmount: order.totalAmount,
+            isPaid: order.isPaid,
+          );
+        },
+        child: AnimatedBuilder(
+          animation: _hopAnimation,
+          builder: (context, child) {
+            return Transform.translate(
+              // Pulsing/hopping effect to draw attention to unpaid condition
+              offset: Offset(0, _hopAnimation.value),
+              child: child,
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEA184A), // Lokma Crimson Red
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFEA184A).withOpacity(0.5),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'tr' == 'tr' ? 'Nakit Ödeme Kodu (QR)' : 'Payment Code (QR)',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.3,
                   ),
                 ),

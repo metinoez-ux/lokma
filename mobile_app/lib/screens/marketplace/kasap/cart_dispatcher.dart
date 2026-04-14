@@ -484,7 +484,7 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
                 ],
               ),
               child: Text(
-                isDisabled ? 'Kermes Bitmis' : 'Siparisi Onayla',
+                isDisabled ? 'Kermes Bitmis' : 'Siparise Devam Et',
                 style: TextStyle(
                   color: isDisabled ? Colors.grey[400] : Colors.white,
                   fontSize: 16,
@@ -512,6 +512,7 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
       showDialog(
         context: context,
         barrierDismissible: false,
+        useRootNavigator: true,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
     }
@@ -523,7 +524,7 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
           .get();
 
       if (!mounted) return;
-      Navigator.of(context).pop(); // dismiss loading
+      Navigator.of(context, rootNavigator: true).pop(); // dismiss loading dialog
       isDialogDismissed = true;
 
       if (!doc.exists || doc.data() == null) {
@@ -551,7 +552,7 @@ class _KermesCartViewState extends ConsumerState<_KermesCartView> {
       if (!mounted) return;
       // Sadece loading kapali degilse kapat
       if (!isDialogDismissed) {
-        try { Navigator.of(context).pop(); } catch (_) {}
+        try { Navigator.of(context, rootNavigator: true).pop(); } catch (_) {}
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

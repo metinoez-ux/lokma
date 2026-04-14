@@ -23,6 +23,8 @@ import 'helpers/shift_dialogs.dart';
 import '../kermes/kermes_unified_kds_screen.dart';
 import '../kermes/kermes_tezgah_screen.dart';
 import 'tabs/staff_pos_wrapper_tab.dart';
+import 'widgets/admin_payment_collection_sheet.dart';
+import '../../services/kermes_order_service.dart';
 import 'tabs/parking_management_tab.dart';
 import '../profile/widgets/workplace_selector_sheet.dart';
 import '../../widgets/kermes/handover_confirmation_dialog.dart';
@@ -564,13 +566,58 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           return;
         }
 
-        final query = Uri(path: '/kermesler', queryParameters: {
-          'scannedOrder': scannedText,
-          'businessId': businessId,
-        }).toString();
-        context.push(query);
+        // Handle customer order QR for payment collection
+        _handleCustomerOrderPaymentQR(scannedText);
       }
     });
+  }
+
+  void _handleCustomerOrderPaymentQR(String orderId) async {
+    final capabilities = ref.read(staffCapabilitiesProvider);
+    if (!capabilities.hasKermesAdminRole && !capabilities.hasPosRole) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tahsilat işlemi için yetkiniz bulunmuyor.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    try {
+      final order = await KermesOrderService().getOrder(orderId);
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        if (order != null) {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => AdminPaymentCollectionSheet(order: order),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sipariş bulunamadı.'), backgroundColor: Colors.orange),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sipariş sorgulanamadı: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   void _handleHandoverQR(String qrCode) async {

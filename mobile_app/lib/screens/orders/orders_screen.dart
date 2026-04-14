@@ -18,6 +18,7 @@ import '../../services/chat_service.dart';
 import 'tip_bottom_sheet.dart';
 import '../../services/app_rating_service.dart';
 import '../../utils/currency_utils.dart';
+import '../../widgets/kermes/order_qr_dialog.dart';
 
 
 class OrdersScreen extends ConsumerStatefulWidget {
@@ -770,6 +771,41 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 ),
               ),
               const Divider(height: 24),
+              // QR Code Button (if cash pending)
+              if (order.paymentMethod == 'cash')
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Kapat mevcut bottom sheet'i ve QR dialog'unu ac
+                        Navigator.pop(ctx);
+                        showOrderQRDialog(
+                          Navigator.of(context, rootNavigator: true).context,
+                          orderId: order.id,
+                          orderNumber: order.orderNumber ?? order.id.substring(0, 6).toUpperCase(),
+                          kermesId: order.butcherId,
+                          kermesName: order.butcherName,
+                          totalAmount: order.totalAmount,
+                          isPaid: order.paymentStatus == 'paid',
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEA184A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.qr_code_2_rounded, size: 20),
+                      label: Text(
+                        'tr' == 'tr' ? 'Nakit Ödeme Kodu (QR)' : 'Payment Code (QR)',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ),
               // Business name
               Row(
                 children: [
