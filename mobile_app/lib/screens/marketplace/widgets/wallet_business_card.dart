@@ -750,8 +750,8 @@ class WalletBusinessCard extends ConsumerWidget {
                               Builder(
                                 builder: (context) {
                                   bool isMarket = checkIsMarket(data);
-                                  bool legacyTunaFlag = data['brand'] == 'tuna' || isTunaPartner;
-                                  bool legacyTorosFlag = data['brand'] == 'akdeniz_toros';
+                                  bool legacyTunaFlag = (data['brand'] == 'tuna' || isTunaPartner) && data['brandLabelActive'] == true;
+                                  bool legacyTorosFlag = (data['brand'] == 'akdeniz_toros') && data['brandLabelActive'] == true;
                                   
                                   bool actuallySellsTuna = data['sellsTunaProducts'] == true || (isMarket && legacyTunaFlag);
                                   bool actuallySellsToros = data['sellsTorosProducts'] == true || (isMarket && legacyTorosFlag);
