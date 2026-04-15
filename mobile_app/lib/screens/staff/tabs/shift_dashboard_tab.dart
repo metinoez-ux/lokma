@@ -267,6 +267,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             children: [
               _buildAssignmentCard(capabilities, isDark),
               _buildKermesAdminManagementCard(capabilities, isDark),
+              _buildTvUrlCard(capabilities, isDark),
               _buildStatsCard(isDark),
               const SizedBox(height: 24),
             ],
@@ -1576,6 +1577,186 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTvUrlCard(StaffCapabilities capabilities, bool isDark) {
+    // Sadece kermes adminleri gorebilir
+    if (!capabilities.isBusinessAdmin || capabilities.businessId == null) {
+      return const SizedBox.shrink();
+    }
+
+    final kermesId = capabilities.businessId!;
+    const baseUrl = 'https://lokma.app/tr/kermes-tv';
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('kermes_events')
+          .doc(kermesId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const SizedBox.shrink();
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        final sectionsV2 = data['tableSectionsV2'] as Map<String, dynamic>? ?? {};
+
+        if (sectionsV2.isEmpty) return const SizedBox.shrink();
+
+        // Bolum URL listesi olustur
+        final List<Map<String, String>> tvUrls = [];
+        for (final entry in sectionsV2.entries) {
+          final sectionData = entry.value as Map<String, dynamic>? ?? {};
+          final label = sectionData['label'] as String? ?? entry.key
+              .replaceAll('_', ' ')
+              .split(' ')
+              .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+              .join(' ');
+          tvUrls.add({
+            'label': label,
+            'url': '$baseUrl/$kermesId?section=${entry.key}',
+          });
+        }
+
+        // Genel URL (tum bolumler)
+        final allUrl = '$baseUrl/$kermesId';
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.teal.withOpacity(0.3), width: 1.5),
+            boxShadow: [
+              if (!isDark) BoxShadow(color: Colors.teal.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.tv, color: Colors.teal, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'TV Teslimat Ekranlari',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Her tezgah bolumune bir TV koyun ve asagidaki URL\'leri acin.',
+                style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+              ),
+              const Divider(height: 24),
+
+              // Bolum bazli URL'ler
+              ...tvUrls.map((entry) => _buildTvUrlRow(
+                entry['label']!,
+                entry['url']!,
+                isDark,
+                icon: Icons.storefront,
+              )),
+
+              // Genel URL
+              _buildTvUrlRow(
+                'Tum Bolumler (Genel)',
+                allUrl,
+                isDark,
+                icon: Icons.dashboard,
+                isGeneral: true,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTvUrlRow(String label, String url, bool isDark, {IconData icon = Icons.tv, bool isGeneral = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isGeneral
+              ? Colors.teal.withOpacity(isDark ? 0.1 : 0.06)
+              : (isDark ? Colors.white.withOpacity(0.04) : Colors.grey.withOpacity(0.06)),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isGeneral
+                ? Colors.teal.withOpacity(0.3)
+                : (isDark ? Colors.white.withOpacity(0.08) : Colors.grey.withOpacity(0.15)),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: isGeneral ? Colors.teal : (isDark ? Colors.white54 : Colors.grey.shade600)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    url,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
+                      fontFamily: 'monospace',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: url));
+                HapticFeedback.lightImpact();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('$label URL kopyalandi'),
+                    backgroundColor: Colors.teal,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.teal.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.copy, size: 16, color: Colors.teal),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
