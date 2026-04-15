@@ -1601,24 +1601,47 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         }
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
-        final sectionsV2 = data['tableSectionsV2'] as Map<String, dynamic>? ?? {};
+        final rawSections = data['tableSectionsV2'];
 
-        if (sectionsV2.isEmpty) return const SizedBox.shrink();
-
-        // Bolum URL listesi olustur
+        // tableSectionsV2 hem List hem Map olarak saklanabiliyor
         final List<Map<String, String>> tvUrls = [];
-        for (final entry in sectionsV2.entries) {
-          final sectionData = entry.value as Map<String, dynamic>? ?? {};
-          final label = sectionData['label'] as String? ?? entry.key
-              .replaceAll('_', ' ')
-              .split(' ')
-              .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
-              .join(' ');
-          tvUrls.add({
-            'label': label,
-            'url': '$baseUrl/$kermesId?section=${entry.key}',
-          });
+
+        if (rawSections is List) {
+          // List formatinda: [{id: 'kadin_bolumu', label: 'Kadin Bolumu'}, ...]
+          for (final item in rawSections) {
+            if (item is Map) {
+              final sectionId = item['id']?.toString() ?? '';
+              final label = item['label']?.toString() ?? sectionId
+                  .replaceAll('_', ' ')
+                  .split(' ')
+                  .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+                  .join(' ');
+              if (sectionId.isNotEmpty) {
+                tvUrls.add({
+                  'label': label,
+                  'url': '$baseUrl/$kermesId?section=$sectionId',
+                });
+              }
+            }
+          }
+        } else if (rawSections is Map) {
+          // Map formatinda: {kadin_bolumu: {label: 'Kadin Bolumu'}, ...}
+          for (final entry in rawSections.entries) {
+            final sectionId = entry.key.toString();
+            final sectionData = entry.value is Map ? entry.value as Map<String, dynamic> : <String, dynamic>{};
+            final label = sectionData['label']?.toString() ?? sectionId
+                .replaceAll('_', ' ')
+                .split(' ')
+                .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+                .join(' ');
+            tvUrls.add({
+              'label': label,
+              'url': '$baseUrl/$kermesId?section=$sectionId',
+            });
+          }
         }
+
+        if (tvUrls.isEmpty) return const SizedBox.shrink();
 
         // Genel URL (tum bolumler)
         final allUrl = '$baseUrl/$kermesId';
