@@ -1641,7 +1641,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           }
         }
 
-        if (tvUrls.isEmpty) return const SizedBox.shrink();
+        // Sadece URL yoksa bile karti goster, en azindan 'Tum Bolumler (Genel)' linki gozukur.
 
         // Genel URL (tum bolumler)
         final allUrl = '$baseUrl/$kermesId';
