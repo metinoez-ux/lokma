@@ -483,7 +483,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         uids = List<String>.from(data['assignedStaff'] ?? []);
       } else {
         // PrepZone or fallback
-        final prepZoneAssignments = data['prepZoneAssignments'] as Map<String, dynamic>? ?? {};
+        final prepRaw = data['prepZoneAssignments'];
+        final prepZoneAssignments = prepRaw is Map ? Map<String, dynamic>.from(prepRaw) : <String, dynamic>{};
         String? targetKey;
         for (final k in prepZoneAssignments.keys) {
           final mappedKey = k.replaceAll('Kadın', 'Hanımlar').replaceAll('Kadin', 'Hanimlar');
@@ -774,7 +775,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         
         // Compute live roles and prep zones
         List<String> livePrepZones = [];
-        final pz = data['prepZoneAssignments'] as Map<String, dynamic>? ?? {};
+        final prepRaw = data['prepZoneAssignments'];
+        final pz = prepRaw is Map ? Map<String, dynamic>.from(prepRaw) : <String, dynamic>{};
         final uid = FirebaseAuth.instance.currentUser?.uid;
         for (final entry in pz.entries) {
            final arr = List<String>.from(entry.value ?? []);
@@ -788,7 +790,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         // Custom Roles - customRoles dizisi + direkt customRoleAssignments kontrolu
         // (customRoles dizisi kayit edilmemis olsa bile system roller goruntulensin)
         final customRolesData = data['customRoles'] as List<dynamic>? ?? [];
-        final customAssignments = data['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+        final customRaw = data['customRoleAssignments'];
+        final customAssignments = customRaw is Map ? Map<String, dynamic>.from(customRaw) : <String, dynamic>{};
 
         // Sistem rollerinin sabit isimleri (kayit edilmemis olsa bile taninan roller)
         const systemRoleNames = <String, String>{
