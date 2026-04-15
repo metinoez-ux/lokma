@@ -2067,6 +2067,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         'staffId': user.uid,
         'staffName': capabilities.staffName ?? 'Personel',
         'businessId': capabilities.businessId,
+        'amount': declaredAmount,
         'declaredAmount': declaredAmount,
         'actualAmount': declaredAmount,
         'status': 'pending', // pending, completed, cancelled

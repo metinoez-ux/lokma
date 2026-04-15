@@ -148,20 +148,20 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final capabilities = ref.read(staffCapabilitiesProvider);
+      final orderIdsSnapshot = _cashOrders.map((doc) => doc.id).toList();
       docRef = await FirebaseFirestore.instance.collection('kermes_cash_handovers').add({
         'businessId': capabilities.businessId,
         'kermesId': widget.kermesId,
         'staffId': widget.staffId,
         'staffName': capabilities.staffName ?? user?.displayName ?? 'Personel',
         'adminId': null,
-        'actualAmount': _pendingCash,
         'amount': _pendingCash,
+        'actualAmount': _pendingCash,
+        'declaredAmount': _pendingCash,
+        'orderIds': orderIdsSnapshot,
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
       });
-      
-      if (!mounted) return;
-      await _fetchDrawerStatus();
       
     } catch (e) {
       debugPrint("Error submitting handover: $e");
@@ -173,8 +173,12 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
 
-    if (docRef != null && mounted && _activeHandover != null) {
-      _showQRDialog(_activeHandover!);
+    // Use docRef directly — do NOT rely on _activeHandover being set yet
+    if (docRef != null && mounted) {
+      final docSnap = await docRef.get();
+      _showQRDialog(docSnap);
+      // Reload state in background
+      _fetchDrawerStatus();
     }
   }
 
@@ -217,7 +221,8 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
                 }
               }
 
-              final amount = handoverDoc['amount'] ?? 0;
+              final _handoverData = handoverDoc.data() as Map<String, dynamic>?;
+              final amount = (_handoverData?['amount'] ?? _handoverData?['actualAmount'] ?? _handoverData?['declaredAmount'] ?? 0) as num;
 
               return Padding(
                 padding: const EdgeInsets.all(24),
@@ -244,7 +249,7 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      '${amount} EUR',
+                      '${amount.toStringAsFixed(2)} EUR',
                       style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.teal),
                     ),
                     const SizedBox(height: 20),
@@ -326,7 +331,11 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
-                                      'QR Kodu Göster (€${_activeHandover!['amount']})',
+                                      () {
+                                        final d = _activeHandover!.data() as Map<String, dynamic>?;
+                                        final a = (d?['amount'] ?? d?['actualAmount'] ?? d?['declaredAmount'] ?? _pendingCash) as num;
+                                        return 'QR Kodu Göster (€${a.toStringAsFixed(2)})';
+                                      }(),
                                       style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
                                     ),
                                   ),
