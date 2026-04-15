@@ -77,8 +77,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         _selectedSectionId = section.id;
       }
     }
-    // Tek bolum varsa otomatik sec
-    if (_selectedSectionId == null && widget.event.sectionDefs.length == 1) {
+    // Eger hic secilmediyse Ilk bolumu otomatik sec ki TV ekranlarina mutlaka dussun
+    // Cunku tableSection null olursa Mutfak TV ekranlarinda siparis gorunmez!
+    if (_selectedSectionId == null && widget.event.sectionDefs.isNotEmpty) {
       _selectedSectionId = widget.event.sectionDefs.first.id;
     }
     
