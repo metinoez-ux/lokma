@@ -169,7 +169,8 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
              try {
                 final kDoc = await FirebaseFirestore.instance.collection('kermes_events').doc(roleService.businessId).get();
                 if (kDoc.exists) {
-                   final pz = kDoc.data()?['prepZoneAssignments'] as Map<String, dynamic>? ?? {};
+                   final pzRaw = kDoc.data()?['prepZoneAssignments'];
+                   final pz = pzRaw is Map ? Map<String, dynamic>.from(pzRaw) : <String, dynamic>{};
                    for (final entry in pz.entries) {
                       final arr = List<String>.from(entry.value ?? []);
                       if (arr.contains(user.uid)) {
@@ -201,7 +202,8 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
               final waiters = List<String>.from(dataMap['assignedWaiters'] ?? []);
               if (waiters.contains(user.uid)) earlyHasTables = true;
 
-              final rAssign = dataMap['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+              final rAssignRaw = dataMap['customRoleAssignments'];
+              final rAssign = rAssignRaw is Map ? Map<String, dynamic>.from(rAssignRaw) : <String, dynamic>{};
               
               final parkList = List<String>.from(rAssign['role_park_system'] ?? []);
               final parkList2 = List<String>.from(rAssign['role_park'] ?? []);
@@ -320,7 +322,8 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             hasTables = false;
             
             // Look for assigned prep zones
-            final prepZoneAssignments = kData['prepZoneAssignments'] as Map<String, dynamic>? ?? {};
+            final prepRaw = kData['prepZoneAssignments'];
+            final prepZoneAssignments = prepRaw is Map ? Map<String, dynamic>.from(prepRaw) : <String, dynamic>{};
             for (final entry in prepZoneAssignments.entries) {
               final assignedTo = List<String>.from(entry.value ?? []);
               if (assignedTo.contains(user.uid)) {
@@ -386,7 +389,8 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
             final waiters = List<String>.from(dataMap['assignedWaiters'] ?? []);
             if (waiters.contains(user.uid)) kermesHasTables = true;
 
-            final rAssign = dataMap['customRoleAssignments'] as Map<String, dynamic>? ?? {};
+            final rAssignRaw = dataMap['customRoleAssignments'];
+            final rAssign = rAssignRaw is Map ? Map<String, dynamic>.from(rAssignRaw) : <String, dynamic>{};
             
             // Check kermes true admin status overrides
             final kAdmins = List<String>.from(dataMap['kermesAdmins'] ?? []);
