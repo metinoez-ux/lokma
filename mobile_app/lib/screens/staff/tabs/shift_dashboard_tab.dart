@@ -1591,7 +1591,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     }
 
     final kermesId = capabilities.businessId!;
-    const baseUrl = 'https://lokma.app/tr/kermes-tv';
+    const baseUrl = 'https://lokma.shop/tr/kermes-tv';
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
@@ -1610,7 +1610,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         final List<Map<String, String>> tvUrls = [];
 
         if (rawSections is List) {
-          // List formatinda: [{id: 'kadin_bolumu', label: 'Kadin Bolumu'}, ...]
+          // List formatinda: [{id: 'kadin_bolumu', label: 'Kadin Bolumu'}, ...] veya dizgisal ['kadinlar', 'erkekler']
           for (final item in rawSections) {
             if (item is Map) {
               final sectionId = item['id']?.toString() ?? '';
@@ -1625,6 +1625,16 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                   'url': '$baseUrl/$kermesId?section=$sectionId',
                 });
               }
+            } else if (item is String && item.isNotEmpty) {
+              final label = item
+                  .replaceAll('_', ' ')
+                  .split(' ')
+                  .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+                  .join(' ');
+              tvUrls.add({
+                'label': label,
+                'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(item)}',
+              });
             }
           }
         } else if (rawSections is Map) {
@@ -1640,6 +1650,24 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             tvUrls.add({
               'label': label,
               'url': '$baseUrl/$kermesId?section=$sectionId',
+            });
+          }
+        }
+
+        if (tvUrls.isEmpty) {
+          final prepRaw = data['prepZoneAssignments'];
+          final pz = prepRaw is Map ? Map<String, dynamic>.from(prepRaw) : <String, dynamic>{};
+          for (final key in pz.keys) {
+            final label = key
+                .replaceAll('Kadin', 'Hanımlar')
+                .replaceAll('kadin', 'Hanımlar')
+                .replaceAll('_', ' ')
+                .split(' ')
+                .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+                .join(' ');
+            tvUrls.add({
+              'label': 'Tezgah: $label',
+              'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(key)}',
             });
           }
         }

@@ -23,7 +23,7 @@ import styles from './tv-display.module.css';
 //   /tr/kermes-tv/{kermesId}                    -> Tum siparisler
 //   /tr/kermes-tv/{kermesId}?section=kadin_bolumu -> Belirli bolum
 //
-// Production: https://lokma.app/tr/kermes-tv/{kermesId}?section=...
+// Production: https://lokma.shop/tr/kermes-tv/{kermesId}?section=...
 // ============================================================
 
 interface DisplayOrder {
