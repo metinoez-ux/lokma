@@ -472,6 +472,16 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
       if (data['latitude'] is num) lat = (data['latitude'] as num).toDouble();
       if (data['longitude'] is num) lng = (data['longitude'] as num).toDouble();
 
+      // Parse Dates from stream
+      DateTime parseDate(dynamic val, DateTime fallback) {
+        if (val == null) return fallback;
+        if (val is Timestamp) return val.toDate();
+        if (val is String) return DateTime.tryParse(val) ?? fallback;
+        return fallback;
+      }
+      final newStartDate = parseDate(data['startDate'], widget.event.startDate);
+      final newEndDate = parseDate(data['endDate'], widget.event.endDate);
+
       final e = widget.event;
       final prev = _liveEvent;
       if (fullAddress != (prev?.address ?? e.address) ||
@@ -479,6 +489,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
           postalCode != (prev?.postalCode ?? e.postalCode) ||
           lat != (prev?.latitude ?? e.latitude) ||
           lng != (prev?.longitude ?? e.longitude) ||
+          newStartDate != (prev?.startDate ?? e.startDate) ||
+          newEndDate != (prev?.endDate ?? e.endDate) ||
           parkingList.length != (prev?.parking ?? e.parking).length) {
         setState(() {
           _liveEvent = KermesEvent(
@@ -492,8 +504,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                 e.title,
             address: fullAddress,
             phoneNumber: e.phoneNumber,
-            startDate: e.startDate,
-            endDate: e.endDate,
+            startDate: newStartDate,
+            endDate: newEndDate,
             latitude: lat,
             longitude: lng,
             menu: e.menu,

@@ -215,8 +215,18 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   /// Kermes aktiflik durumu kontrolleri
   bool get _isKermesActive {
     final now = DateTime.now();
+    // Bitiş tarihi aslında seçilen son günün gece yarısıdır. 
+    // Yani 15 Nisan seçildiyse 15 Nisan 23:59:59'dur.
+    // Gece geç saate sarkan siparişler için +4 saat esneme payı veriyoruz (Ertesi gün 04:00'e kadar).
+    final endOfEventDay = DateTime(
+      widget.event.endDate.year,
+      widget.event.endDate.month,
+      widget.event.endDate.day,
+      23, 59, 59,
+    ).add(const Duration(hours: 4));
+    
     return now.isAfter(widget.event.startDate.subtract(const Duration(hours: 1))) && 
-           now.isBefore(widget.event.endDate.add(const Duration(hours: 2)));
+           now.isBefore(endOfEventDay);
   }
   
   bool get _isKermesFuture => DateTime.now().isBefore(widget.event.startDate);
