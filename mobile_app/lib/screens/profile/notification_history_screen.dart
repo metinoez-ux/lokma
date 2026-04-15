@@ -759,6 +759,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     'delivered': {'labelKey': 'notifications.delivered',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
     'served':    {'labelKey': 'notifications.served',          'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.restaurant_rounded},
     'completed': {'labelKey': 'notifications.completed',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.verified_rounded},
+    'paid':      {'labelKey': 'Sipariş Ödendi',                'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.check_circle_outline_rounded},
+    'kermes_order_paid': {'labelKey': 'Sipariş Ödendi',        'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.check_circle_outline_rounded},
     'rejected':  {'labelKey': 'notifications.rejected',        'icon': '', 'color': 0xFFEA184A, 'iconData': Icons.cancel_outlined},
     'cancelled': {'labelKey': 'notifications.cancelled',       'icon': '', 'color': 0xFFEA184A, 'iconData': Icons.block_rounded},
   };
@@ -967,7 +969,10 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
             // The latest status determines the card sort key
             final latestTime = statuses.last['createdAt'] as Timestamp?;
-            final rawNum = statuses.first['rawOrderNumber'] as String? ?? '';
+            final rawNum = statuses.first['rawOrderNumber'] as String? ?? 
+                           statuses.last['rawOrderNumber'] as String? ??
+                           statuses.first['orderNumber'] as String? ?? 
+                           statuses.last['orderNumber'] as String? ?? '';
             final bName = statuses.last['businessName'] as String? ??
                           statuses.first['businessName'] as String? ?? '';
 

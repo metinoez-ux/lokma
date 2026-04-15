@@ -32,18 +32,45 @@ class _StaffTransferSelectionDialogState extends State<StaffTransferSelectionDia
 
   Future<void> _fetchActiveStaff() async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance.collection('users')
-          .where('roles', arrayContainsAny: ['kermes_admin', 'super_admin', 'admin', 'staff']).limit(50).get();
-      final List<Map<String, dynamic>> validStaff = [];
+      final validStaff = <Map<String, dynamic>>[];
 
-      for (var doc in querySnapshot.docs) {
-        if (doc.id == widget.currentUserId) continue; // Skip self
+      // 1. Fetch Kermes Admins UIDs from kermes_events
+      final kermesDoc = await FirebaseFirestore.instance.collection('kermes_events').doc(widget.businessId).get();
+      if (!kermesDoc.exists) {
+        setState(() { _staffList = validStaff; _isLoading = false; });
+        return;
+      }
+      
+      final kermesAdmins = List<String>.from(kermesDoc.data()?['kermesAdmins'] ?? []);
+      if (kermesAdmins.isEmpty) {
+        setState(() { _staffList = validStaff; _isLoading = false; });
+        return;
+      }
 
-        final data = doc.data();
-        validStaff.add({
-          'id': doc.id,
-          'name': data['firstName'] ?? data['displayName'] ?? 'Personel',
-        });
+      // 2. Resolve Names via Admins / Users collections
+      for (var uid in kermesAdmins) {
+        if (uid == widget.currentUserId) continue; // Skip self
+
+        // First try admins collection
+        var adminDoc = await FirebaseFirestore.instance.collection('admins').doc(uid).get();
+        if (adminDoc.exists) {
+          final data = adminDoc.data()!;
+          validStaff.add({
+            'id': uid,
+            'name': data['staffName'] ?? data['name'] ?? data['displayName'] ?? 'Kermes Yetkilisi',
+          });
+          continue;
+        }
+
+        // Fallback to users collection
+        var userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+          final data = userDoc.data()!;
+          validStaff.add({
+            'id': uid,
+            'name': data['firstName'] ?? data['displayName'] ?? 'Kermes Yetkilisi',
+          });
+        }
       }
 
       setState(() {

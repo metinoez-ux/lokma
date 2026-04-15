@@ -29,6 +29,8 @@ import 'tabs/parking_management_tab.dart';
 import '../profile/widgets/workplace_selector_sheet.dart';
 import '../../widgets/kermes/handover_confirmation_dialog.dart';
 import '../kermes/staff/kermes_admin_vault_screen.dart';
+import '../kermes/staff/cash_drawer_screen.dart';
+import '../kermes/staff/combined_wallet_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -1464,11 +1466,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       });
     }
 
-    // 8. Kasa Yonetimi
-    if (capabilities.hasKermesAdminRole && capabilities.businessId != null) {
+    // 8. Cüzdan / Kasa (Combined)
+    if (capabilities.businessId != null) {
       allDestinations.add({
-        'widget': const KermesAdminVaultScreen(),
-        'icon': Icons.account_balance_wallet, 'label': 'Kasa', 'color': Colors.deepOrange
+        'widget': CombinedWalletScreen(
+          kermesId: capabilities.businessId!,
+          staffId: capabilities.userId,
+          isAdmin: capabilities.hasKermesAdminRole,
+        ),
+        'icon': Icons.account_balance_wallet, 'label': 'Cüzdanım', 'color': Colors.green
       });
     }
 
@@ -1587,9 +1593,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               IconButton(
                 icon: const Icon(Icons.notifications_rounded, color: Colors.white),
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const StaffNotificationsScreen(),
-                  ));
+                  context.push('/notification-history');
                 },
                 tooltip: 'Bildirimler',
               ),

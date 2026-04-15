@@ -1903,17 +1903,91 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                           return bTime.compareTo(aTime); // descending
                         });
 
-                        return ListView.separated(
-                          controller: scrollController,
-                          padding: const EdgeInsets.all(16),
-                          itemCount: sortedDocs.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (ctx, index) {
-                            final data = sortedDocs[index].data() as Map<String, dynamic>;
-                            return _buildCashHandoverCard(data, isDark);
-                          },
+                        // Ozet hesapla
+                        final completedDocs = sortedDocs.where((d) {
+                          final data = d.data() as Map<String, dynamic>;
+                          return data['status'] == 'completed';
+                        }).toList();
+                        final totalCompleted = completedDocs.length;
+                        final totalAmount = completedDocs.fold<double>(0.0, (sum, d) {
+                          final data = d.data() as Map<String, dynamic>;
+                          return sum + ((data['actualAmount'] ?? data['declaredAmount'] ?? data['amount'] ?? 0) as num).toDouble();
+                        });
+
+                        return Column(
+                          children: [
+                            // Ozet banner
+                            Container(
+                              margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: isDark
+                                      ? [const Color(0xFF2A2A2A), const Color(0xFF1E3A2A)]
+                                      : [Colors.orange.shade50, Colors.green.shade50],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Teslim sayisi
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Tamamlanan', style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.grey[600])),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '$totalCompleted teslim',
+                                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Dikey ayrac
+                                  Container(width: 1, height: 36, color: Colors.orange.withOpacity(0.3)),
+                                  const SizedBox(width: 16),
+                                  // Toplam tutar
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text('Toplam Teslim', style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.grey[600])),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${totalAmount.toStringAsFixed(2)} EUR',
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.orange),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Liste
+                            Expanded(
+                              child: ListView.separated(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(16),
+                                itemCount: sortedDocs.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                itemBuilder: (ctx, index) {
+                                  final data = sortedDocs[index].data() as Map<String, dynamic>;
+                                  return _buildCashHandoverCard(data, isDark);
+                                },
+                              ),
+                            ),
+                          ],
                         );
                       },
+
                     ),
                   ),
                 ],

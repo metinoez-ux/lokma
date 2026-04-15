@@ -1,7 +1,5 @@
-import 'package:lokma_app/models/order_model.dart';
-
-import '../../models/order_model.dart';
 import '../../models/kermes_order_model.dart';
+import '../../services/order_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UnifiedOrder {
@@ -17,8 +15,7 @@ class UnifiedOrder {
     if (lokma != null) {
       return lokma!.status != OrderStatus.delivered && 
              lokma!.status != OrderStatus.cancelled && 
-             lokma!.status != OrderStatus.served &&
-             lokma!.status != OrderStatus.rejected;
+             lokma!.status != OrderStatus.served;
     }
     if (kermes != null) {
       return kermes!.isPaid == false; // For kermes, active implies it's not fulfilled/paid fully, or just checking 'isPaid' is not sufficient. 

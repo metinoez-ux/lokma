@@ -7,6 +7,7 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lokma_app/services/stripe_payment_service.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
+import '../../models/kermes_order_model.dart';
 import '../../utils/currency_utils.dart';
 
 /// Sipariş QR Kod Fullscreen Dialog
@@ -41,14 +42,25 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
   bool _isCancelling = false;
   
   StreamSubscription<DocumentSnapshot>? _orderSubscription;
+  List<KermesOrderItem>? _items;
+  double? _liveTotalAmount;
+  DateTime? _createdAt;
 
   static const Color darkBg = Color(0xFF121212);
   static const Color cardBg = Color(0xFF1E1E1E);
   static const Color lokmaPink = Color(0xFFEA184A);
 
+  late String _currentOrderNumber;
+
   @override
   void initState() {
     super.initState();
+    _currentOrderNumber = widget.orderNumber.isNotEmpty 
+        ? widget.orderNumber 
+        : widget.orderId.length > 6 
+            ? widget.orderId.substring(widget.orderId.length - 6).toUpperCase() 
+            : widget.orderId;
+    
     _isPaid = widget.isPaid;
     _setMaxBrightness();
     
@@ -60,9 +72,15 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
         .listen((snapshot) {
       if (snapshot.exists && mounted) {
         final data = snapshot.data();
-        if (data != null && data['isPaid'] == true && !_isPaid) {
+        if (data != null) {
+          final orderRef = KermesOrder.fromMap(data as Map<String, dynamic>);
           setState(() {
-            _isPaid = true;
+            _items = orderRef.items;
+            _liveTotalAmount = orderRef.totalAmount;
+            _createdAt = orderRef.createdAt;
+            if (orderRef.isPaid == true && !_isPaid) {
+              _isPaid = true;
+            }
           });
         }
       }
@@ -101,14 +119,13 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
   }
 
   void _copyOrderId() {
-    Clipboard.setData(ClipboardData(text: widget.orderNumber));
-    HapticFeedback.lightImpact();
+    Clipboard.setData(ClipboardData(text: _currentOrderNumber));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(tr('orders.order_number_copied')),
-        backgroundColor: cardBg,
+        content: Text('Sipariş numarası kopyalandı: $_currentOrderNumber', style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[800],
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 1),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -704,7 +721,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                widget.orderNumber,
+                                _currentOrderNumber,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 22,
@@ -777,6 +794,60 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
 
                       const SizedBox(height: 8),
 
+                      // Sipariş Öğeleri
+                      if (_items != null && _items!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.receipt_long, color: Colors.grey, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Sipariş Detayı',
+                                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                  ),
+                                  const Spacer(),
+                                  if (_createdAt != null)
+                                    Text(
+                                      DateFormat('dd.MM.yyyy HH:mm').format(_createdAt!),
+                                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                    ),
+                                ],
+                              ),
+                              const Divider(color: Colors.white10, height: 24),
+                              ..._items!.map((item) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(color: lokmaPink.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                                          child: Text('${item.quantity}x', style: const TextStyle(color: lokmaPink, fontWeight: FontWeight.bold, fontSize: 14)),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(item.name, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
+                                        ),
+                                        Text('${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+                                      ],
+                                    ),
+                                  )).toList(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
                       // Toplam Tutar - kompakt
                       Text(
                         'Toplam',
@@ -787,7 +858,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${widget.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                        '${(_liveTotalAmount ?? widget.totalAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                         style: const TextStyle(
                           color: Colors.greenAccent,
                           fontSize: 24,

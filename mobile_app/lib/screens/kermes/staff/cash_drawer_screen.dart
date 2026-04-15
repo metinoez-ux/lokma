@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "../../staff/providers/staff_hub_provider.dart";
@@ -272,6 +273,242 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
     );
   }
 
+  void _showHandoverHistory() {
+    if (!mounted) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.history_edu, color: Colors.teal, size: 24),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Teslim Geçmişim',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: Icon(Icons.close, color: isDark ? Colors.white54 : Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('kermes_cash_handovers')
+                          .where('kermesId', isEqualTo: widget.kermesId)
+                          .where('staffId', isEqualTo: widget.staffId)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator(color: Colors.teal));
+                        }
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Hata: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+                        }
+                        final docs = snapshot.data?.docs ?? [];
+                        if (docs.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.account_balance_wallet_outlined, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                const SizedBox(height: 16),
+                                Text('Henüz teslim geçmişi yok', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 16)),
+                              ],
+                            ),
+                          );
+                        }
+
+                        // Sort by createdAt desc
+                        final sorted = List<QueryDocumentSnapshot>.from(docs)
+                          ..sort((a, b) {
+                            final at = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                            final bt = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                            if (at == null || bt == null) return 0;
+                            return bt.compareTo(at);
+                          });
+
+                        // Summary
+                        final completed = sorted.where((d) => (d.data() as Map<String, dynamic>)['status'] == 'completed').toList();
+                        final totalCount = completed.length;
+                        final totalAmount = completed.fold<double>(0.0, (sum, d) {
+                          final data = d.data() as Map<String, dynamic>;
+                          return sum + ((data['actualAmount'] ?? data['declaredAmount'] ?? data['amount'] ?? 0) as num).toDouble();
+                        });
+
+                        return Column(
+                          children: [
+                            // Ozet banner
+                            Container(
+                              margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: isDark
+                                      ? [const Color(0xFF1E2E2A), const Color(0xFF1E3A2A)]
+                                      : [Colors.teal.shade50, Colors.green.shade50],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.teal.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Tamamlanan', style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.grey[600])),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                            const SizedBox(width: 4),
+                                            Text('$totalCount teslim', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(width: 1, height: 36, color: Colors.teal.withOpacity(0.3)),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text('Toplam Teslim', style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.grey[600])),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${totalAmount.toStringAsFixed(2)} EUR',
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.teal),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Liste
+                            Expanded(
+                              child: ListView.separated(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(16),
+                                itemCount: sorted.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                itemBuilder: (ctx2, i) {
+                                  final data = sorted[i].data() as Map<String, dynamic>;
+                                  final status = data['status'] as String? ?? 'pending';
+                                  final amount = ((data['actualAmount'] ?? data['declaredAmount'] ?? data['amount'] ?? 0) as num).toDouble();
+                                  final adminName = data['adminName'] as String? ?? 'Bekliyor...';
+                                  final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+                                  final dateStr = createdAt != null ? DateFormat('dd.MM.yyyy HH:mm', 'tr').format(createdAt) : '---';
+
+                                  Color sc; String st; IconData si;
+                                  switch (status) {
+                                    case 'completed': sc = Colors.green; st = 'Teslim Edildi'; si = Icons.check_circle_outline; break;
+                                    case 'cancelled': sc = Colors.red; st = 'İptal'; si = Icons.cancel_outlined; break;
+                                    default: sc = Colors.orange; st = 'Bekliyor'; si = Icons.pending_actions;
+                                  }
+
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF252525) : Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: sc.withOpacity(0.3)),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                          decoration: BoxDecoration(
+                                            color: sc.withOpacity(0.07),
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(si, color: sc, size: 18),
+                                              const SizedBox(width: 8),
+                                              Text(st, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: sc)),
+                                              const Spacer(),
+                                              Text(dateStr, style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.grey)),
+                                            ],
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text('Teslim Alan', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                                  const SizedBox(height: 2),
+                                                  Text(status == 'completed' ? adminName : 'Onay Bekliyor...', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                                                ],
+                                              ),
+                                              Text('${amount.toStringAsFixed(2)} EUR', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.teal)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -280,6 +517,13 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
       appBar: widget.isEmbedded ? null : AppBar(
         title: const Text('Kasam / Tahsilat'),
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        actions: [
+          TextButton.icon(
+            onPressed: _showHandoverHistory,
+            icon: const Icon(Icons.history_edu, color: Colors.teal, size: 20),
+            label: const Text('Geçmiş', style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -364,13 +608,24 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
                   ),
                   
                   const SizedBox(height: 32),
-                  Text(
-                    'Bekleyen Nakit Satışlar',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Bekleyen Nakit Sat\u0131\u015flar',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _showHandoverHistory,
+                        icon: const Icon(Icons.history_edu, color: Colors.teal, size: 18),
+                        label: const Text('Ge\u00e7mi\u015f', style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   
