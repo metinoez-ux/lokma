@@ -127,9 +127,15 @@ export default function KermesDisplayPage({
         // Istasyon ekrani: herhangi bir item'in prepZone'u eslesirse (Manti/Kumpir mutfak ekrani)
         const items = (data.items as { prepZone?: string; name?: string; quantity?: number; price?: number; itemStatus?: string }[]) || [];
         const matchesPrepZone = items.some(
-          (item) =>
-            item.prepZone &&
-            item.prepZone.toLowerCase().includes(sectionNormalized)
+          (item) => {
+            if (!item.prepZone) return false;
+            if (Array.isArray(item.prepZone)) {
+              return item.prepZone.some((pz: string) => pz.toLowerCase().includes(sectionNormalized));
+            } else if (typeof item.prepZone === 'string') {
+              return item.prepZone.toLowerCase().includes(sectionNormalized);
+            }
+            return false;
+          }
         );
 
         if (!matchesSection && !matchesPrepZone) return;

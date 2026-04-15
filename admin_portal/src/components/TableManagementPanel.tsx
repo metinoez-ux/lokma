@@ -422,6 +422,23 @@ export default function TableManagementPanel({
     </span>
    </div>
    <div className="flex items-center gap-2 ml-auto">
+    {/* Mutfak KDS / Musteri TV ekran linkleri (Sadece Kermes ise) */}
+    {isKermes && (
+      <>
+        <a 
+          href={`/kermes-display/${businessId}/${encodeURIComponent(section)}`}
+          target="_blank"
+          className="px-2.5 py-1 text-xs bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-lg transition font-medium flex items-center gap-1"
+          title="Aşçı KDS Ekranı (Bu bölüm siparişleri)"
+        >🧑‍🍳 KDS</a>
+        <a 
+          href={`/kermes-tv/${businessId}?section=${encodeURIComponent(section)}`}
+          target="_blank"
+          className="px-2.5 py-1 text-xs bg-purple-600/80 hover:bg-purple-500 text-white rounded-lg transition font-medium flex items-center gap-1"
+          title="Müşteri TV Ekranı (Bu bölüm)"
+        >📺 TV</a>
+      </>
+    )}
     {/* Tek masa ekle */}
     <button
     onClick={() => addSingleTable(section)}

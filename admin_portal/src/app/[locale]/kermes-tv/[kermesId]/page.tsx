@@ -132,25 +132,41 @@ export default function KermesTvPage({
     const db = getDb();
     const ordersRef = collection(db, 'kermes_orders');
 
-    // Bolum filtresi varsa tableSection'a gore filtrele
-    const q = sectionFilter
-      ? query(
-          ordersRef,
-          where('kermesId', '==', kermesId),
-          where('tableSection', '==', sectionFilter),
-          where('status', 'in', ['pending', 'preparing', 'ready']),
-        )
-      : query(
-          ordersRef,
-          where('kermesId', '==', kermesId),
-          where('status', 'in', ['pending', 'preparing', 'ready']),
-        );
+    const q = query(
+      ordersRef,
+      where('kermesId', '==', kermesId),
+      where('status', 'in', ['pending', 'preparing', 'ready']),
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const allOrders: DisplayOrder[] = [];
 
       snapshot.docs.forEach((docSnap) => {
         const data = docSnap.data();
+
+        if (sectionFilter) {
+          const sectionNormalized = sectionFilter.replace(/_/g, ' ').toLocaleLowerCase('tr-TR');
+          const orderSection = (data.tableSection as string | undefined)?.toLocaleLowerCase('tr-TR');
+          const matchesSection = orderSection === sectionNormalized || orderSection === sectionFilter.toLocaleLowerCase('tr-TR');
+          
+          const items = (data.items as Array<any>) || [];
+          const matchesPrepZone = items.some(
+            (item) => {
+              if (!item.prepZone) return false;
+              if (Array.isArray(item.prepZone)) {
+                return item.prepZone.some((pz: string) => pz.toLocaleLowerCase('tr-TR').includes(sectionNormalized));
+              } else if (typeof item.prepZone === 'string') {
+                return item.prepZone.toLocaleLowerCase('tr-TR').includes(sectionNormalized);
+              }
+              return false;
+            }
+          );
+
+          if (!matchesSection && !matchesPrepZone) {
+            return;
+          }
+        }
+
         allOrders.push({
           id: docSnap.id,
           orderNumber: data.orderNumber || docSnap.id,
