@@ -168,7 +168,7 @@ interface VakitData {
   yatsi: Vakit[];
 }
 
-function getNextPrayerInfo(vakitler: VakitData[]) {
+function getPrayerInfo(vakitler: VakitData[]) {
   if (!vakitler || vakitler.length === 0) return null;
   const now = new Date();
   
@@ -190,16 +190,24 @@ function getNextPrayerInfo(vakitler: VakitData[]) {
   });
   
   allTargets.sort((a, b) => a.date.getTime() - b.date.getTime());
-  const nextPrayer = allTargets.find(t => t.date.getTime() > now.getTime());
   
-  return nextPrayer || null;
+  const nextIdx = allTargets.findIndex(t => t.date.getTime() > now.getTime());
+  if (nextIdx === -1) return null;
+  
+  const nextPrayer = allTargets[nextIdx];
+  const currentPrayer = nextIdx > 0 ? allTargets[nextIdx - 1] : null;
+  
+  return { current: currentPrayer, next: nextPrayer };
 }
 
 const PrayerTimeBanner = () => {
   const [vakitler, setVakitler] = useState<VakitData[] | null>(null);
+  
+  const [currentLabel, setCurrentLabel] = useState<string>('');
+  const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
+  const [nextLabel, setNextLabel] = useState<string>('');
+  const [nextTimeStr, setNextTimeStr] = useState<string>('');
   const [timeLeftStr, setTimeLeftStr] = useState<string>('');
-  const [nextPrayerLabel, setNextPrayerLabel] = useState<string>('');
-  const [nextPrayerTime, setNextPrayerTime] = useState<string>('');
 
   useEffect(() => {
     fetch('/api/prayer-times?districtId=297')
@@ -216,43 +224,70 @@ const PrayerTimeBanner = () => {
     if (!vakitler) return;
     
     const updateCountdown = () => {
-      const next = getNextPrayerInfo(vakitler);
-      if (next) {
-        setNextPrayerLabel(next.label);
-        setNextPrayerTime(next.date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+      const info = getPrayerInfo(vakitler);
+      if (info && info.next) {
+        setNextLabel(info.next.label);
+        setNextTimeStr(info.next.date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
         
-        let diffMs = next.date.getTime() - new Date().getTime();
+        if (info.current) {
+           setCurrentLabel(info.current.label);
+           setCurrentTimeStr(info.current.date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+        } else {
+           setCurrentLabel("Yatsı");
+           setCurrentTimeStr("--:--");
+        }
+
+        let diffMs = info.next.date.getTime() - new Date().getTime();
         if (diffMs < 0) diffMs = 0;
         
-        const totalMinutes = Math.floor(diffMs / 60000);
-        const hours = Math.floor(totalMinutes / 60);
-        const mins = totalMinutes % 60;
+        const totalSeconds = Math.floor(diffMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
         
         let str = '';
         if (hours > 0) str += `${hours} sa `;
-        str += `${mins} dk`;
+        if (hours > 0 || mins > 0) str += `${mins} dk `;
+        str += `${secs} sn`;
+        
         setTimeLeftStr(str);
       }
     };
     
     updateCountdown();
-    const interval = setInterval(updateCountdown, 10000); 
+    // Her saniye guncelle ki dinamik olsun
+    const interval = setInterval(updateCountdown, 1000); 
     return () => clearInterval(interval);
   }, [vakitler]);
 
-  if (!vakitler || !nextPrayerLabel) return null;
+  if (!vakitler || !nextLabel) return null;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '24px', padding: '8px 20px', gap: '16px' }}>
-      <span className="material-symbols-outlined" style={{ color: '#fbbf24', fontSize: '28px' }}>mosque</span>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-        <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Sonraki Vakit</span>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span style={{ fontSize: '22px', fontWeight: 800, color: '#f8fafc' }}>{nextPrayerLabel} <span style={{color:'#94a3b8', fontWeight: 500}}>{nextPrayerTime}</span></span>
+    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '24px', padding: '12px 24px', gap: '24px' }}>
+      <span className="material-symbols-outlined" style={{ color: '#fbbf24', fontSize: '32px' }}>mosque</span>
+      
+      {/* Vakitler (Sol Blok) - 2 Satir */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '160px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '18px', fontWeight: 600, color: '#f8fafc' }}>
+          <span style={{ width: '65px', textAlign: 'center' }}>{currentLabel}</span>
+          <span className="material-symbols-outlined" style={{ color: '#64748b', fontSize: '18px' }}>arrow_forward</span>
+          <span style={{ width: '65px', textAlign: 'center', color: '#fbbf24' }}>{nextLabel}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '16px', fontWeight: 500, color: '#94a3b8', marginTop: '2px' }}>
+          <span style={{ width: '65px', textAlign: 'center' }}>{currentTimeStr}</span>
+          <span style={{ width: '18px' }}></span>
+          <span style={{ width: '65px', textAlign: 'center' }}>{nextTimeStr}</span>
         </div>
       </div>
-      <div style={{ paddingLeft: '16px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-         <span style={{ fontSize: '15px', color: '#cbd5e1', fontWeight: 500 }}>Kalan: <strong style={{ color: '#fbbf24', fontSize: '20px', fontWeight: 800 }}>{timeLeftStr}</strong></span>
+
+      <div style={{ width: '1px', height: '40px', backgroundColor: 'rgba(255,255,255,0.1)' }}></div>
+      
+      {/* Geri Sayim (Sag Blok) - 2 Satir */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '140px' }}>
+         <span style={{ fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Kalan Süre</span>
+         <span style={{ color: '#fbbf24', fontSize: '20px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: '2px' }}>
+           {timeLeftStr}
+         </span>
       </div>
     </div>
   );
