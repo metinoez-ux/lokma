@@ -665,8 +665,8 @@ export default function KermesTvPage({
             left: '50%',
             top: '20px',
             bottom: '20px',
-            width: '2px',
-            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+            width: '1px',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
             transform: 'translateX(-50%)',
             pointerEvents: 'none'
           }} />
