@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -250,7 +251,9 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   void _showNotificationDetailSheet(BuildContext context, Map<String, dynamic> data) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final type = data['type'] as String?;
-    final title = data['title'] as String? ?? '';
+    String title = data['title'] as String? ?? '';
+    title = title.replaceAll('Malzeme Tamamlandı', 'Malzeme İsteği Tamamlandı').replaceAll('Malzeme Yola Çıktı', 'Malzeme İsteği Yola Çıktı');
+    title = title.replaceAll('🏃', '').replaceAll('✅', '').replaceAll('❌', '').trim();
     final body = data['body'] as String? ?? '';
     final imageUrl = data['imageUrl'] as String?;
     final vehiclePlate = data['vehiclePlate'] as String? ?? '';
@@ -270,6 +273,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     // Roster Action specific variables
     bool isActionProcessing = false;
     String? rosterResponse = data['response'] as String?; // 'accepted' | 'rejected'
+    String? supplyReplyText;
 
     showModalBottomSheet(
       context: context,
@@ -309,7 +313,12 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : isWarning ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : isSuccess ? (isDark ? Colors.green[800]!.withOpacity(0.3) : Colors.green[100]!) : isActionStatus ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!)),
                       ),
                       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : isSuccess ? Icons.check_circle_outline_rounded : isActionStatus ? Icons.directions_run_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : isSuccess ? (isDark ? Colors.green[300] : Colors.green[700]) : isActionStatus ? (isDark ? Colors.orange[300] : Colors.orange[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
+                        if (isSuccess)
+                          SvgPicture.asset('assets/icons/package_ok1.svg', width: 22, height: 22, colorFilter: ColorFilter.mode(isDark ? Colors.green[300]! : Colors.green[700]!, BlendMode.srcIn))
+                        else if (isActionStatus)
+                          SvgPicture.asset('assets/icons/man_run1.svg', width: 22, height: 22, colorFilter: ColorFilter.mode(isDark ? Colors.orange[300]! : Colors.orange[700]!, BlendMode.srcIn))
+                        else
+                          Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
                         const SizedBox(width: 8),
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,36 +340,61 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                          final rId = data['requestId'] as String?;
                          final kId = data['kermesId'] as String?;
                          if (rId == null || rId.isEmpty || kId == null || kId.isEmpty) return const SizedBox.shrink();
-                         return FutureBuilder<DocumentSnapshot>(
-                            future: FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get(),
+                         return FutureBuilder<Map<String, dynamic>?>(
+                            future: () async {
+                               final sSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get();
+                               if (!sSnap.exists) return null;
+                               final res = sSnap.data() as Map<String, dynamic>;
+                               final uId = res['requestedByUid'] as String?;
+                               if (uId != null) {
+                                  try {
+                                     final uSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('roster').doc(uId).get();
+                                     if (uSnap.exists) { res['rSection'] = uSnap.data()?['sectionId']; return res; }
+                                     final aSnap = await FirebaseFirestore.instance.collection('admins').doc(uId).get();
+                                     if (aSnap.exists) { res['rSection'] = aSnap.data()?['sectionId']; return res; }
+                                  } catch (_) {}
+                               }
+                               return res;
+                            }(),
                             builder: (ctx, snap) {
                                if (snap.connectionState == ConnectionState.waiting) return const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()));
-                               if (!snap.hasData || !snap.data!.exists) return const SizedBox.shrink();
+                               if (!snap.hasData || snap.data == null) return const SizedBox.shrink();
                                
-                               final reqData = snap.data!.data() as Map<String, dynamic>;
-                               final who = reqData['requestedByName'] ?? 'Siz';
-                               final zone = reqData['requestedZone'] ?? '-';
+                               final reqData = snap.data!;
+                               String who = reqData['requestedByName'] ?? 'Personel';
+                               final section = reqData['rSection'] as String?;
+                               if (section == 'women' || section == 'kadinlar') {
+                                   final parts = who.split(' ');
+                                   who = parts.map((p) => p.isNotEmpty ? '${p[0]}${'*' * (p.length > 5 ? 5 : p.length - 1)}' : '').join(' ');
+                               }
+                               String zone = reqData['requestedZone'] ?? '-';
+                               String sectionLabel = section == 'women' ? 'Kadınlar Bölümü' : (section == 'men' ? 'Erkekler Bölümü' : '');
+                               if (sectionLabel.isNotEmpty) zone = '$sectionLabel - $zone';
+                               
                                final currentStatus = reqData['status'] ?? 'pending';
                                final adminReply = reqData['adminReply'] as String?;
                                
                                String rTimeStr = '-';
+                               String uTimeStr = '-';
+                               int? diffMins;
                                if (reqData['createdAt'] != null) {
                                   final ts = reqData['createdAt'] as Timestamp;
                                   final dt = ts.toDate();
                                   rTimeStr = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-                               }
-                               String uTimeStr = '-';
-                               if (reqData['updatedAt'] != null) {
-                                  final ts = reqData['updatedAt'] as Timestamp;
-                                  final dt = ts.toDate();
-                                  uTimeStr = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                  
+                                  if (reqData['updatedAt'] != null) {
+                                     final uts = reqData['updatedAt'] as Timestamp;
+                                     final uDt = uts.toDate();
+                                     uTimeStr = '${uDt.day.toString().padLeft(2, '0')}.${uDt.month.toString().padLeft(2, '0')}.${uDt.year} ${uDt.hour.toString().padLeft(2, '0')}:${uDt.minute.toString().padLeft(2, '0')}';
+                                     diffMins = uDt.difference(dt).inMinutes;
+                                  }
                                }
 
                                Color stColor = Colors.orange;
                                String stText = 'Bekliyor';
                                if (currentStatus == 'on_the_way') { stColor = Colors.orange; stText = 'Yolda / Onaylandı'; }
-                               else if (currentStatus == 'completed') { stColor = Colors.green; stText = 'Tamamlandı'; }
-                               else if (currentStatus == 'rejected') { stColor = Colors.red; stText = 'Reddedildi'; }
+                               else if (currentStatus == 'completed') { stColor = Colors.green; stText = 'Tamamlandı'; if (diffMins != null) stText += '\n($diffMins dakika sürdü)'; }
+                               else if (currentStatus == 'rejected') { stColor = Colors.red; stText = 'Reddedildi'; if (diffMins != null) stText += '\n($diffMins dakika sürdü)'; }
                                
                                Widget buildRow(String label, String val, {Color? c}) {
                                   return Padding(
@@ -375,7 +409,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                   );
                                }
 
-                               return Container(
+                               Widget contentWidget = Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
                                     color: isDark ? const Color(0xFF28282A) : Colors.grey[50],
@@ -411,6 +445,65 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                      ]
                                   )
                                );
+
+                               if (type == 'supply_alarm' && currentStatus == 'pending') {
+                                  return Column(
+                                    children: [
+                                      contentWidget,
+                                      const SizedBox(height: 20),
+                                      if (isActionProcessing)
+                                        const Column(children: [CircularProgressIndicator(), SizedBox(height: 10), Text('İşleniyor...')])
+                                      else
+                                        Column(
+                                          children: [
+                                            TextField(
+                                              onChanged: (v) => supplyReplyText = v,
+                                              decoration: InputDecoration(
+                                                hintText: 'Özel not (opsiyonel)...',
+                                                isDense: true,
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: ElevatedButton.icon(
+                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                    icon: const Icon(Icons.check, size: 18),
+                                                    label: const Text('YOLA ÇIKAR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                    onPressed: () async {
+                                                      setSheetState(() => isActionProcessing = true);
+                                                      final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Tamam, getiriyorum.';
+                                                      await _submitSupplyReply(data, 'on_the_way', note);
+                                                      if (context.mounted) Navigator.pop(context);
+                                                    }
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: ElevatedButton.icon(
+                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                    icon: const Icon(Icons.close, size: 18),
+                                                    label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                    onPressed: () async {
+                                                      setSheetState(() => isActionProcessing = true);
+                                                      final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Reddedildi.';
+                                                      await _submitSupplyReply(data, 'rejected', note);
+                                                      if (context.mounted) Navigator.pop(context);
+                                                    }
+                                                  ),
+                                                ),
+                                              ]
+                                            ),
+                                          ]
+                                        )
+                                    ]
+                                  );
+                               }
+
+                               return contentWidget;
                             }
                          );
                      })(),
@@ -793,6 +886,32 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       }
     } catch (e) {
       debugPrint('Roster action update error: $e');
+    }
+  }
+
+  Future<void> _submitSupplyReply(Map<String, dynamic> data, String status, String replyMessage) async {
+    try {
+      final kermesId = data['kermesId'] as String?;
+      final requestId = data['requestId'] as String?;
+      final notifId = data['_docId'] as String? ?? data['id'] as String?;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      
+      if (kermesId != null && kermesId.trim().isNotEmpty && requestId != null && requestId.trim().isNotEmpty) {
+        await FirebaseFirestore.instance.collection('kermes_events').doc(kermesId).collection('supply_requests').doc(requestId).update({
+           'status': status,
+           'adminReply': replyMessage,
+           'adminReplyBy': uid,
+           'updatedAt': FieldValue.serverTimestamp()
+        });
+      }
+      if (uid != null && uid.trim().isNotEmpty && notifId != null && notifId.trim().isNotEmpty) {
+         await FirebaseFirestore.instance.collection('users').doc(uid).collection('notifications').doc(notifId).update({
+            'status': status
+         });
+         data['status'] = status;
+      }
+    } catch (e) {
+        debugPrint('Error updating supply status: $e');
     }
   }
 
