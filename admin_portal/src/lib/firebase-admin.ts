@@ -20,7 +20,20 @@ function initializeFirebaseAdmin() {
 
  try {
  if (serviceAccount) {
- const parsedServiceAccount = JSON.parse(serviceAccount);
+ let parsedServiceAccount;
+          try {
+            parsedServiceAccount = JSON.parse(serviceAccount);
+          } catch (e) {
+            // Attempt to fix dotenv literal newlines or escaped strings
+            const sanitized = serviceAccount.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+            try {
+                parsedServiceAccount = JSON.parse(sanitized);
+            } catch (err2) {
+                // Last resort for bad JSON parsing (literal newlines inside double quotes from dotenv)
+                const realNewlinesSanitized = serviceAccount.replace(/\n/g, '\\n');
+                parsedServiceAccount = JSON.parse(realNewlinesSanitized);
+            }
+          }
  adminApp = initializeApp({
  credential: cert(parsedServiceAccount),
  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -62,6 +75,10 @@ export function getFirebaseMessaging(): Messaging {
 export function getFirebaseAdmin(): { auth: Auth; db: Firestore; storage: Storage } {
  if (!db || !auth || !storage) {
  initializeFirebaseAdmin();
+ }
+ if (!db) {
+   // This will cause a clear error instead of a collection read crash down the line
+   throw new Error('Firebase Admin DB is NOT initialized! Please check SERVICE_ACCOUNT environment variable and JSON validity.');
  }
  return { auth, db, storage };
 }
