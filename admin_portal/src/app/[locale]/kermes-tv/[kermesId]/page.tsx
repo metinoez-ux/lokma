@@ -58,7 +58,16 @@ function formatGdprName(fullName: string): string {
   const lowerVal = val.toLowerCase();
   
   // Eger default isimler kullanilmassa hic isim gosterme ('P. S.' kargasasini onler)
-  if (lowerVal === 'pos' || lowerVal.includes('pos sat') || lowerVal.includes('misafir')) return '';
+  if (
+    lowerVal === 'pos' || 
+    lowerVal.includes('pos sat') || 
+    lowerVal.includes('misafir') ||
+    lowerVal.includes('p.s') ||
+    lowerVal.includes('p. s') ||
+    lowerVal === 'ps'
+  ) {
+    return '';
+  }
 
   const parts = val.split(/\s+/);
   
@@ -608,7 +617,7 @@ export default function KermesTvPage({
                       {order.deliveryType === 'masada' && (
                         <div className={styles.tableBadge}>
                           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>restaurant</span>
-                          <span>Masa {order.tableNumber}</span>
+                          <span>M{order.tableNumber}</span>
                         </div>
                       )}
                       {order.customerName && formatGdprName(order.customerName) && (
@@ -664,7 +673,7 @@ export default function KermesTvPage({
                       {order.deliveryType === 'masada' && (
                         <div className={styles.tableBadge}>
                           <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>restaurant</span>
-                          <span>Masa {order.tableNumber}</span>
+                          <span>M{order.tableNumber}</span>
                         </div>
                       )}
                       {order.customerName && formatGdprName(order.customerName) && (
