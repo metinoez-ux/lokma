@@ -267,8 +267,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             children: [
               _buildAssignmentCard(capabilities, isDark),
               _buildKermesAdminManagementCard(capabilities, isDark),
-              _buildTvUrlCard(capabilities, isDark),
               _buildStatsCard(isDark),
+              _buildTvUrlCard(capabilities, isDark),
               const SizedBox(height: 24),
             ],
           ),
@@ -1618,7 +1618,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               final sectionName = item['name'].toString();
               if (sectionName.isNotEmpty) {
                 tvUrls.add({
-                  'label': '$sectionName (Ana TV)',
+                  'label': '$sectionName (TV ODS)',
                   'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(sectionName)}',
                 });
               }
@@ -1629,7 +1629,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             final sectionName = item.toString();
             if (sectionName.isNotEmpty) {
               tvUrls.add({
-                'label': '$sectionName (Ana TV)',
+                'label': '$sectionName (TV ODS)',
                 'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(sectionName)}',
               });
             }
@@ -1655,7 +1655,6 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         final allUrl = '$baseUrl/$kermesId';
 
         return Container(
-          padding: const EdgeInsets.all(20),
           margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -1665,10 +1664,13 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               if (!isDark) BoxShadow(color: Colors.teal.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              childrenPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+              title: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
@@ -1680,37 +1682,43 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      'TV Teslimat Ekranlari',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TV ODS Ekranları',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Her tezgah bolumune bir TV koyun',
+                          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Her tezgah bolumune bir TV koyun ve asagidaki URL\'leri acin.',
-                style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
-              ),
-              const Divider(height: 24),
+              children: [
+                const SizedBox(height: 10),
+                // Bolum bazli URL'ler
+                ...tvUrls.map((entry) => _buildTvUrlRow(
+                  entry['label']!,
+                  entry['url']!,
+                  isDark,
+                  icon: Icons.storefront,
+                )),
 
-              // Bolum bazli URL'ler
-              ...tvUrls.map((entry) => _buildTvUrlRow(
-                entry['label']!,
-                entry['url']!,
-                isDark,
-                icon: Icons.storefront,
-              )),
-
-              // Genel URL
-              _buildTvUrlRow(
-                'Tum Bolumler (Genel)',
-                allUrl,
-                isDark,
-                icon: Icons.dashboard,
-                isGeneral: true,
-              ),
-            ],
+                // Genel URL
+                _buildTvUrlRow(
+                  'Tum Bolumler (Genel)',
+                  allUrl,
+                  isDark,
+                  icon: Icons.dashboard,
+                  isGeneral: true,
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -1,0 +1,10 @@
+--- mobile_app/lib/screens/profile/profile_screen.dart
++++ mobile_app/lib/screens/profile/profile_screen.dart
+@@ -25,2 +25,7 @@
+ import '../../providers/kermes_cart_provider.dart';
+ import '../../providers/cart_provider.dart';
++import '../staff/providers/staff_hub_provider.dart';
++import '../../widgets/qr_scanner_screen.dart';
++import '../../services/kermes_order_service.dart';
++import '../staff/widgets/admin_payment_collection_sheet.dart';
++import '../../widgets/kermes/handover_confirmation_dialog.dart';

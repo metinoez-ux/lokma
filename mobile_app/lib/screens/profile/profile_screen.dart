@@ -24,6 +24,11 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../../core/constants/build_info.dart';
 import '../../providers/kermes_cart_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../staff/providers/staff_hub_provider.dart';
+import '../../widgets/qr_scanner_screen.dart';
+import '../../services/kermes_order_service.dart';
+import '../staff/widgets/admin_payment_collection_sheet.dart';
+import '../../widgets/kermes/handover_confirmation_dialog.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -315,26 +320,60 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                           ],
                         ),
-                        // Notification bell icon
-                        GestureDetector(
-                          onTap: () =>
-                              context.push('/notification-history'),
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? const Color(0xFF2C2C2E)
-                                  : Colors.white.withOpacity(0.1),
-                              shape: BoxShape.circle,
+                        // QR & Notification bell icons
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // QR Scanner Icon for Staff
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final capabilities = ref.watch(staffCapabilitiesProvider);
+                                final showQr = capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole || capabilities.hasKermesAdminRole || capabilities.hasPosRole;
+                                if (!showQr) return const SizedBox.shrink();
+                                return GestureDetector(
+                                  onTap: () => _openProfileQrScanner(capabilities.businessId),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    margin: const EdgeInsets.only(right: 12),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? const Color(0xFF2C2C2E)
+                                          : Colors.white.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.qr_code_scanner,
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[700],
+                                      size: 22,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                            child: Icon(Icons.notifications_outlined,
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[700],
-                                size: 22),
-                          ),
+
+                            GestureDetector(
+                              onTap: () =>
+                                  context.push('/notification-history'),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? const Color(0xFF2C2C2E)
+                                      : Colors.white.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.notifications_outlined,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[700],
+                                    size: 22),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1570,6 +1609,105 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  // ========== QR SCANNER LOGIC ==========
+  void _openProfileQrScanner(String? businessId) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => const QRScannerScreen(
+        prompt: 'QR Kodunu Okutun',
+      ),
+    )).then((scannedText) {
+      if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
+        if (scannedText.startsWith('kermes://handover/')) {
+          _handleHandoverQR(scannedText);
+          return;
+        }
+        // Handle customer order QR for payment collection
+        _handleCustomerOrderPaymentQR(scannedText);
+      }
+    });
+  }
+
+  void _handleCustomerOrderPaymentQR(String orderId) async {
+    final capabilities = ref.read(staffCapabilitiesProvider);
+    if (!capabilities.hasKermesAdminRole && !capabilities.hasPosRole) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tahsilat işlemi için yetkiniz bulunmuyor.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    try {
+      final order = await KermesOrderService().getOrder(orderId);
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        if (order != null) {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => AdminPaymentCollectionSheet(order: order),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sipariş bulunamadı.'), backgroundColor: Colors.orange),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sipariş sorgulanamadı: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  void _handleHandoverQR(String qrCode) async {
+    final capabilities = ref.read(staffCapabilitiesProvider);
+    if (!capabilities.hasKermesAdminRole) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sadece Kermes Yöneticileri tahsilat teslim alabilir.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final docId = qrCode.replaceAll('kermes://handover/', '');
+    try {
+      final doc = await FirebaseFirestore.instance.collection('kermes_cash_handovers').doc(docId).get();
+      if (!doc.exists) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tahsilat belgesi bulunamadı.')));
+        return;
+      }
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['status'] != 'pending') {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bu tahsilat fişi zaten onaylanmış veya iptal edilmiş.')));
+        return;
+      }
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => HandoverConfirmationDialog(handoverDocId: docId, handoverData: data),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
+    }
+  }
 }
 
 class ProfileHeaderClipper extends CustomClipper<Path> {
@@ -1588,4 +1726,5 @@ class ProfileHeaderClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+
 }

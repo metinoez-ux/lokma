@@ -670,7 +670,7 @@ export default function KermesTvPage({
             </div>
           </div>
           
-          <div className={styles.headerCenter} style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', borderLeft: '1px solid rgba(255,255,255,0.1)'}}>
+          <div className={styles.headerCenter} style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '24px'}}>
              <PrayerTimeBanner />
           </div>
 

@@ -1,0 +1,5 @@
+mobile_app/
+.git/
+scripts/
+*.apk
+*.aab

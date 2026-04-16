@@ -1357,7 +1357,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     final unreadCount = unreadCountAsync.value ?? 0;
 
     final bool isOnShift = _shiftService.isOnShift;
-    final bool showQr = capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole;
+    final bool showQr = capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole || capabilities.hasKermesAdminRole || capabilities.hasPosRole;
 
     List<Map<String, dynamic>> allDestinations = [];
 
