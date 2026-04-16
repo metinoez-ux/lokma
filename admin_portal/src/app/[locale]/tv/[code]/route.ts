@@ -5,9 +5,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { code: string; locale: string } }
+  { params }: { params: Promise<{ code: string; locale: string }> | { code: string; locale: string } }
 ) {
-  const code = params.code?.toUpperCase();
+  // Deal with synchronous or asynchronous params gracefully
+  const resolvedParams = await params;
+  const code = resolvedParams.code?.toUpperCase();
 
   if (!code) {
     return new NextResponse('Kısa link kodu eksik (Missing code)', { status: 400 });

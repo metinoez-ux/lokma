@@ -1751,28 +1751,22 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    url,
+                    'TV ekranı icin otomatik baglanti',
                     style: TextStyle(
                       fontSize: 11,
                       color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-                      fontFamily: 'monospace',
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            const SizedBox(width: 8),
             // Kısa Link Butonu
             InkWell(
               onTap: () async {
                 try {
-                  // Haptic feedback
                   HapticFeedback.lightImpact();
                   
-                  // Show loading toast or indicator briefly
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Row(
@@ -1787,7 +1781,6 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                     ),
                   );
 
-                  // API call
                   final uri = Uri.parse('https://lokma.shop/api/shorten');
                   final response = await http.post(
                     uri,
@@ -1801,7 +1794,6 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                       final shortUrl = 'lokma.shop/tv/${data['code']}';
                       Clipboard.setData(ClipboardData(text: shortUrl));
                       
-                      // Show success alert
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         showDialog(
@@ -1880,35 +1872,18 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.blueAccent.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.link, size: 20, color: Colors.blueAccent),
-              ),
-            ),
-            const SizedBox(width: 8),
-            InkWell(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: url));
-                HapticFeedback.lightImpact();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('$label URL kopyalandi'),
-                    backgroundColor: Colors.teal,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.teal.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.link, size: 16, color: Colors.blueAccent),
+                    const SizedBox(width: 6),
+                    Text('Kısa Link Al', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                  ],
                 ),
-                child: const Icon(Icons.copy, size: 20, color: Colors.teal),
               ),
             ),
           ],
