@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
+import { usePathname } from 'next/navigation';
 
 // EU-conformant cookie consent translations
 const translations: Record<string, {
@@ -88,6 +89,10 @@ interface CookiePreferences {
 export default function CookieBanner() {
  const locale = useLocale();
  const t = translations[locale] || translations['de'];
+ const pathname = usePathname();
+
+ // DONT SHOW on TV screens OR API routes
+ const isTVScreen = pathname?.includes('/kermes-tv') || pathname?.includes('/tv/');
 
  const [isVisible, setIsVisible] = useState(false);
  const [showSettings, setShowSettings] = useState(false);
@@ -129,7 +134,7 @@ export default function CookieBanner() {
  savePreferences(preferences);
  };
 
- if (!isVisible) return null;
+ if (!isVisible || isTVScreen) return null;
 
  return (
  <>
