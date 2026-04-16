@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'cash_drawer_screen.dart';
 import 'kermes_admin_vault_screen.dart';
 
-class CombinedWalletScreen extends StatelessWidget {
+class CombinedWalletScreen extends StatefulWidget {
   final String kermesId;
   final String staffId;
   final bool isAdmin;
@@ -15,10 +16,35 @@ class CombinedWalletScreen extends StatelessWidget {
   });
 
   @override
+  State<CombinedWalletScreen> createState() => _CombinedWalletScreenState();
+}
+
+class _CombinedWalletScreenState extends State<CombinedWalletScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _preventScreenshotOn();
+  }
+
+  @override
+  void dispose() {
+    _preventScreenshotOff();
+    super.dispose();
+  }
+
+  void _preventScreenshotOn() async {
+    await ScreenProtector.preventScreenshotOn();
+  }
+
+  void _preventScreenshotOff() async {
+    await ScreenProtector.preventScreenshotOff();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!isAdmin) {
+    if (!widget.isAdmin) {
       // Normal personel sadece kendi cüzdanını görür.
-      return CashDrawerScreen(kermesId: kermesId, staffId: staffId, isEmbedded: false);
+      return CashDrawerScreen(kermesId: widget.kermesId, staffId: widget.staffId, isEmbedded: false);
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -43,7 +69,7 @@ class CombinedWalletScreen extends StatelessWidget {
         body: TabBarView(
           children: [
             // Kendi cüzdanı (appbar'ı gizlenmiş olarak yükleyeceğiz, o yüzden isEmbedded = true)
-            CashDrawerScreen(kermesId: kermesId, staffId: staffId, isEmbedded: true),
+            CashDrawerScreen(kermesId: widget.kermesId, staffId: widget.staffId, isEmbedded: true),
             // Admin kasası (appbar'ı gizli olmalı)
             const KermesAdminVaultScreen(isEmbedded: true),
           ],

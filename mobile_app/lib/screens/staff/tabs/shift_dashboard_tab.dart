@@ -1593,20 +1593,33 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     final kermesId = capabilities.businessId!;
     const baseUrl = 'https://lokma.shop/tr/kermes-tv';
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('kermes_events')
-          .doc(kermesId)
-          .snapshots(),
+    final eventStream = FirebaseFirestore.instance.collection('kermes_events').doc(kermesId).snapshots();
+    final hbStream = FirebaseFirestore.instance.collection('kermes_events').doc(kermesId).collection('tv_heartbeats').snapshots();
+
+    return StreamBuilder<List<dynamic>>(
+      stream: Rx.combineLatest2(
+        eventStream,
+        hbStream,
+        (DocumentSnapshot a, QuerySnapshot b) => [a, b],
+      ),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || !snapshot.data!.exists) {
-          return const SizedBox.shrink();
+        if (!snapshot.hasData) return const SizedBox.shrink();
+
+        final eventDoc = snapshot.data![0] as DocumentSnapshot;
+        if (!eventDoc.exists) return const SizedBox.shrink();
+
+        final heartbeatsInfo = snapshot.data![1] as QuerySnapshot;
+        final latestHeartbeats = <String, DateTime>{};
+        for (var doc in heartbeatsInfo.docs) {
+           final hbData = doc.data() as Map<String, dynamic>?;
+           if (hbData != null && hbData['lastHeartbeat'] != null) {
+              latestHeartbeats[doc.id] = (hbData['lastHeartbeat'] as Timestamp).toDate();
+           }
         }
 
-        final data = snapshot.data!.data() as Map<String, dynamic>;
+        final data = eventDoc.data() as Map<String, dynamic>;
         final rawSections = data['tableSectionsV2'];
 
-        // tableSectionsV2 hem List hem Map olarak saklanabiliyor, tableSections ise List<String>
         final List<Map<String, String>> tvUrls = [];
         final dynamic rawDeliveryZones = data['deliveryZones'];
         final dynamic legacySections = data['tableSections'];
@@ -1617,7 +1630,9 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             if (item is Map && item['name'] != null) {
               final sectionName = item['name'].toString();
               if (sectionName.isNotEmpty) {
+                final cId = 'section_${sectionName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}';
                 tvUrls.add({
+                  'channelId': cId,
                   'label': '$sectionName (TV ODS)',
                   'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(sectionName)}',
                 });
@@ -1628,7 +1643,9 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           for (final item in legacySections) {
             final sectionName = item.toString();
             if (sectionName.isNotEmpty) {
+              final cId = 'section_${sectionName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}';
               tvUrls.add({
+                'channelId': cId,
                 'label': '$sectionName (TV ODS)',
                 'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(sectionName)}',
               });
@@ -1644,6 +1661,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               final name = item['name']?.toString() ?? 'TV Ekranı';
               if (id.isNotEmpty) {
                 tvUrls.add({
+                  'channelId': 'delivery_$id',
                   'label': name,
                   'url': '$baseUrl/$kermesId?deliveryZone=$id',
                 });
@@ -1705,6 +1723,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 ...tvUrls.map((entry) => _buildTvUrlRow(
                   entry['label']!,
                   entry['url']!,
+                  entry['channelId'],
+                  latestHeartbeats,
                   isDark,
                   icon: Icons.storefront,
                 )),
@@ -1713,6 +1733,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                 _buildTvUrlRow(
                   'Tum Bolumler (Genel)',
                   allUrl,
+                  'general_all',
+                  latestHeartbeats,
                   isDark,
                   icon: Icons.dashboard,
                   isGeneral: true,
@@ -1725,7 +1747,50 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     );
   }
 
-  Widget _buildTvUrlRow(String label, String url, bool isDark, {IconData icon = Icons.tv, bool isGeneral = false}) {
+  Widget _buildDot(Color color, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(text, style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTvUrlRow(String label, String url, String? channelId, Map<String, DateTime> heartbeats, bool isDark, {IconData icon = Icons.tv, bool isGeneral = false}) {
+    
+    // Heartbeat logic
+    Widget statusDot = Container();
+    if (channelId != null) {
+      final hb = heartbeats[channelId];
+      if (hb == null) {
+         statusDot = _buildDot(Colors.grey.shade400, "Bekleniyor (Kapalı)");
+      } else {
+         final diff = DateTime.now().difference(hb).inMinutes;
+         if (diff < 3) {
+            statusDot = _buildDot(Colors.green, "Aktif");
+         } else {
+            statusDot = _buildDot(Colors.redAccent, "Bağlantı Koptu");
+         }
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
@@ -1749,13 +1814,22 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      statusDot,
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(

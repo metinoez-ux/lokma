@@ -6,9 +6,10 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
   doc,
   getDoc,
+  setDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { use } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -460,6 +461,45 @@ export default function KermesTvPage({
     audioRef.current.currentTime = 0;
     audioRef.current.play().catch(() => {});
   }, []);
+
+  // Heartbeat Effect
+  useEffect(() => {
+    if (!kermesId) return;
+
+    let channelId = 'general_all';
+    let fallbackName = 'Tüm Bölümler';
+    
+    if (deliveryZoneId) {
+       channelId = `delivery_${deliveryZoneId}`;
+       fallbackName = sectionLabel || 'Teslimat Ekranı';
+    } else if (legacySection) {
+       channelId = `section_${legacySection.replace(/[^a-zA-Z0-9]/g, '_')}`;
+       fallbackName = legacySection;
+    }
+
+    const sendHeartbeat = async () => {
+      try {
+        const db = getDb();
+        const heartbeatRef = doc(collection(db, 'kermes_events', kermesId, 'tv_heartbeats'), channelId);
+        await setDoc(heartbeatRef, {
+          id: channelId,
+          tvName: fallbackName,
+          lastHeartbeat: serverTimestamp(),
+          userAgent: window?.navigator?.userAgent || 'Unknown TV Browser'
+        }, { merge: true });
+      } catch (e) {
+        console.error('Heartbeat ping failed:', e);
+      }
+    };
+
+    // Ilk acilista gonder
+    sendHeartbeat();
+
+    // 60 saniyede bir tekrarla
+    const timer = setInterval(sendHeartbeat, 60 * 1000);
+    return () => clearInterval(timer);
+  }, [kermesId, deliveryZoneId, legacySection, sectionLabel]);
+
   // Firestore real-time listener
   useEffect(() => {
     const db = getDb();

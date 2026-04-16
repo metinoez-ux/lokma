@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:screen_protector/screen_protector.dart';
 import '../../providers/auth_provider.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
@@ -29,12 +30,22 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
+    _preventScreenshotOn();
   }
 
   @override
   void dispose() {
+    _preventScreenshotOff();
     _shimmerController.dispose();
     super.dispose();
+  }
+
+  void _preventScreenshotOn() async {
+    await ScreenProtector.preventScreenshotOn();
+  }
+
+  void _preventScreenshotOff() async {
+    await ScreenProtector.preventScreenshotOff();
   }
 
   @override
