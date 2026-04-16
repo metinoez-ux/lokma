@@ -681,7 +681,6 @@ export default function KermesTvPage({
                           {formatGdprName(order.customerName)}
                         </span>
                       )}
-                      <span className={styles.readyLabel} style={{ marginLeft: '12px' }}>{getDualLang('readyLabel', lang2)}</span>
                     </div>
                   </div>
                 ))
