@@ -309,7 +309,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                    final uId = res['requestedByUid'] as String?;
                                    if (uId != null) {
                                       try {
-                                         final rSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('rosters').where('userId', '==', uId).get();
+                                         final rSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('rosters').where('userId', isEqualTo: uId).get();
                                          if (rSnap.docs.isNotEmpty) {
                                              res['rSection'] = rSnap.docs.first.data()['role'];
                                          }

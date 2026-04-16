@@ -1,7 +1,7 @@
 name: lokma_app
 description: "LOKMA - Food & Beverage Super App"
 publish_to: 'none'
-version: 1.0.0+524
+version: 1.0.0+525
 
 environment:
   sdk: ^3.0.0
