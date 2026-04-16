@@ -42,10 +42,7 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
       setLoading(false);
     });
 
-      const pendingReqs = requests.filter(r => r.status !== 'completed');
-  const completedReqs = requests.filter(r => r.status === 'completed');
-
-  return () => unsubscribe();
+    return () => unsubscribe();
   }, [kermesId]);
 
   const handleUpdateStatus = async (reqId: string, status: string) => {
@@ -147,6 +144,9 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
        setCategories(updated);
      } catch (e) {}
   };
+
+  const pendingReqs = requests.filter(r => r.status !== 'completed');
+  const completedReqs = requests.filter(r => r.status === 'completed');
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
