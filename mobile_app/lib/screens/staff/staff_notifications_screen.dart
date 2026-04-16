@@ -268,7 +268,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                            (() {
                              final rId = data['requestId'] as String?;
                              final kId = data['kermesId'] as String?;
-                             if (rId == null || kId == null) {
+                             if (rId == null || kId == null || rId.trim().isEmpty || kId.trim().isEmpty) {
                                return const Text('Eksik talep verisi.', style: TextStyle(color: Colors.red));
                              }
                              
@@ -346,16 +346,27 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                          else
                                            Column(
                                              children: [
+                                                TextField(
+                                                  onChanged: (v) => supplyReplyText = v,
+                                                  decoration: InputDecoration(
+                                                    hintText: 'Özel not (opsiyonel)...',
+                                                    isDense: true,
+                                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 12),
                                                 Row(
                                                   children: [
                                                     Expanded(
                                                       child: ElevatedButton.icon(
                                                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                                        icon: const Icon(Icons.check),
-                                                        label: const Text('TAMAM', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                        icon: const Icon(Icons.check, size: 18),
+                                                        label: const Text('YOLA ÇIKAR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                                                         onPressed: () async {
                                                           setSheetState(() => isActionProcessing = true);
-                                                          await _submitSupplyReply(data, 'on_the_way', 'Tamam, getiriyorum.');
+                                                          final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Tamam, getiriyorum.';
+                                                          await _submitSupplyReply(data, 'on_the_way', note);
                                                           setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
                                                         }
                                                       ),
@@ -364,39 +375,18 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                                     Expanded(
                                                       child: ElevatedButton.icon(
                                                         style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                                        icon: const Icon(Icons.cancel),
+                                                        icon: const Icon(Icons.close, size: 18),
                                                         label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                                                         onPressed: () async {
                                                           setSheetState(() => isActionProcessing = true);
-                                                          await _submitSupplyReply(data, 'rejected', 'Reddedildi.');
+                                                          final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Reddedildi.';
+                                                          await _submitSupplyReply(data, 'rejected', note);
                                                           setSheetState(() { data['status'] = 'rejected'; isActionProcessing = false; });
                                                         }
                                                       ),
                                                     ),
                                                   ]
                                                 ),
-                                                const SizedBox(height: 16),
-                                                TextField(
-                                                  onChanged: (v) => supplyReplyText = v,
-                                                  decoration: InputDecoration(
-                                                    hintText: 'Özel cevap yaz...',
-                                                    isDense: true,
-                                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                SizedBox(
-                                                  width: double.infinity,
-                                                  child: OutlinedButton(
-                                                    onPressed: () async {
-                                                       if (supplyReplyText == null || supplyReplyText!.trim().isEmpty) return;
-                                                       setSheetState(() => isActionProcessing = true);
-                                                       await _submitSupplyReply(data, 'on_the_way', supplyReplyText!.trim());
-                                                       setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
-                                                    },
-                                                    child: const Text('Mesajı Gönder (Yola Çıktı)')
-                                                  )
-                                                )
                                              ]
                                            )
                                       ]
@@ -781,8 +771,9 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final iconColor = _colorForType(type, isRead);
               final iconData = _iconForType(type);
 
-              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'kermes_announcement' || type == 'roster_shift' || type == 'kermes_assignment' || type == 'roster_deleted' || type == 'supply_alarm' || type == 'supply_alarm_status';
               final bool isOrder = type != null && type.contains('order');
+              // Allow all non-order notifications to open the detail sheet so no message is ever "unclickable"
+              final bool hasDetail = !isOrder;
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
