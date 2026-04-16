@@ -256,8 +256,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                         children: [
                            Container(
                               padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), shape: BoxShape.circle),
-                              child: const Icon(Icons.campaign, size: 36, color: Colors.red),
+                              decoration: BoxDecoration(color: (type == 'supply_alarm_status' ? Colors.green : Colors.red).withOpacity(0.1), shape: BoxShape.circle),
+                              child: Icon(type == 'supply_alarm_status' ? Icons.check_circle_outline : Icons.campaign, size: 36, color: type == 'supply_alarm_status' ? Colors.green : Colors.red),
                            ),
                            const SizedBox(height: 16),
                            Text(data['itemName'] ?? 'Malzeme', textAlign: TextAlign.center, style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800)),
@@ -266,80 +266,143 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                            const SizedBox(height: 24),
                            
                            (() {
-                             if (type == 'supply_alarm_status') {
-                               return Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                                  child: const Text('Bu bir durum güncellemesidir.', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold))
-                               );
+                             final rId = data['requestId'] as String?;
+                             final kId = data['kermesId'] as String?;
+                             if (rId == null || kId == null) {
+                               return const Text('Eksik talep verisi.', style: TextStyle(color: Colors.red));
                              }
                              
-                             if (isActionProcessing) {
-                               return const Column(children: [CircularProgressIndicator(), SizedBox(height: 10), Text('İşleniyor...')]);
-                             }
-                             
-                             if (data['status'] != 'pending') {
-                               return Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                  decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                                  child: Text('Bu talebe zaten cevap verildi: ${data['status']}', style: const TextStyle(fontWeight: FontWeight.bold))
-                               );
-                             }
+                             return FutureBuilder<DocumentSnapshot>(
+                               future: FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get(),
+                               builder: (ctx, snap) {
+                                  if (snap.connectionState == ConnectionState.waiting) return const Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator());
+                                  if (!snap.hasData || !snap.data!.exists) {
+                                     if (type == 'supply_alarm_status') return const Text('Bu bir durum güncellemesidir.\n(Talep sistemden silinmiş olabilir)', textAlign: TextAlign.center);
+                                     return const Text('Talep detaylarına ulaşılamadı.', style: TextStyle(color: Colors.grey));
+                                  }
+                                  
+                                  final reqData = snap.data!.data() as Map<String, dynamic>;
+                                  final who = reqData['requestedByName'] ?? 'Personel';
+                                  final zone = reqData['requestedZone'] ?? '-';
+                                  final status = reqData['status'] ?? 'pending';
+                                  final urgency = reqData['urgency'] ?? 'normal';
+                                  final adminReply = reqData['adminReply'] as String?;
+                                  
+                                  String rTimeStr = '-';
+                                  if (reqData['createdAt'] != null) {
+                                     final ts = reqData['createdAt'] as Timestamp;
+                                     final dt = ts.toDate();
+                                     rTimeStr = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                  }
 
-                             return Column(
-                               children: [
-                                  Row(
+                                  Color statusColor = Colors.orange;
+                                  String statusText = 'Bekliyor';
+                                  if (status == 'on_the_way') { statusColor = Colors.blue; statusText = 'Yolda / Onaylandı'; }
+                                  else if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; }
+                                  else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; }
+                                  
+                                  Widget buildRow(String label, String val, {Color? c}) {
+                                     return Padding(
+                                       padding: const EdgeInsets.only(bottom: 10),
+                                       child: Row(
+                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                         crossAxisAlignment: CrossAxisAlignment.start,
+                                         children: [
+                                           Text(label, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontWeight: FontWeight.w600)),
+                                           const SizedBox(width: 8),
+                                           Expanded(child: Text(val, textAlign: TextAlign.right, style: TextStyle(color: c ?? (isDark ? Colors.white : Colors.black), fontWeight: FontWeight.w800))),
+                                         ],
+                                       ),
+                                     );
+                                  }
+                                  
+                                  return Column(
                                     children: [
-                                      Expanded(
-                                        child: ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                          icon: const Icon(Icons.check),
-                                          label: const Text('TAMAM', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                          onPressed: () async {
-                                            setSheetState(() => isActionProcessing = true);
-                                            await _submitSupplyReply(data, 'on_the_way', 'Tamam, getiriyorum.');
-                                            setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
-                                          }
+                                      Container(
+                                        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 6),
+                                        decoration: BoxDecoration(
+                                          color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: isDark ? Colors.white10 : Colors.black12)
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            buildRow('Durum:', statusText, c: statusColor),
+                                            buildRow('Tarih Saati:', rTimeStr),
+                                            buildRow('İsteyen:', who),
+                                            buildRow('Bölüm:', zone),
+                                            if (urgency == 'super_urgent')
+                                              buildRow('Aciliyet:', 'Süper Acil', c: Colors.red),
+                                            if (adminReply != null && adminReply.trim().isNotEmpty)
+                                              buildRow('Yetkili Notu:', adminReply, c: Colors.amber.shade700),
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                          icon: const Icon(Icons.cancel),
-                                          label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                          onPressed: () async {
-                                            setSheetState(() => isActionProcessing = true);
-                                            await _submitSupplyReply(data, 'rejected', 'Reddedildi.');
-                                            setSheetState(() { data['status'] = 'rejected'; isActionProcessing = false; });
-                                          }
-                                        ),
-                                      ),
+                                      
+                                      if (type == 'supply_alarm' && status == 'pending') ...[
+                                         const SizedBox(height: 20),
+                                         if (isActionProcessing)
+                                           const Column(children: [CircularProgressIndicator(), SizedBox(height: 10), Text('İşleniyor...')])
+                                         else
+                                           Column(
+                                             children: [
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: ElevatedButton.icon(
+                                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                        icon: const Icon(Icons.check),
+                                                        label: const Text('TAMAM', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                        onPressed: () async {
+                                                          setSheetState(() => isActionProcessing = true);
+                                                          await _submitSupplyReply(data, 'on_the_way', 'Tamam, getiriyorum.');
+                                                          setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
+                                                        }
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: ElevatedButton.icon(
+                                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                        icon: const Icon(Icons.cancel),
+                                                        label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                        onPressed: () async {
+                                                          setSheetState(() => isActionProcessing = true);
+                                                          await _submitSupplyReply(data, 'rejected', 'Reddedildi.');
+                                                          setSheetState(() { data['status'] = 'rejected'; isActionProcessing = false; });
+                                                        }
+                                                      ),
+                                                    ),
+                                                  ]
+                                                ),
+                                                const SizedBox(height: 16),
+                                                TextField(
+                                                  onChanged: (v) => supplyReplyText = v,
+                                                  decoration: InputDecoration(
+                                                    hintText: 'Özel cevap yaz...',
+                                                    isDense: true,
+                                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: OutlinedButton(
+                                                    onPressed: () async {
+                                                       if (supplyReplyText == null || supplyReplyText!.trim().isEmpty) return;
+                                                       setSheetState(() => isActionProcessing = true);
+                                                       await _submitSupplyReply(data, 'on_the_way', supplyReplyText!.trim());
+                                                       setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
+                                                    },
+                                                    child: const Text('Mesajı Gönder (Yola Çıktı)')
+                                                  )
+                                                )
+                                             ]
+                                           )
+                                      ]
                                     ]
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextField(
-                                    onChanged: (v) => supplyReplyText = v,
-                                    decoration: InputDecoration(
-                                      hintText: 'Özel cevap yaz...',
-                                      isDense: true,
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: OutlinedButton(
-                                      onPressed: () async {
-                                         if (supplyReplyText == null || supplyReplyText!.trim().isEmpty) return;
-                                         setSheetState(() => isActionProcessing = true);
-                                         await _submitSupplyReply(data, 'on_the_way', supplyReplyText!.trim());
-                                         setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
-                                      },
-                                      child: const Text('Mesajı Gönder (Yola Çıktı)')
-                                    )
-                                  )
-                               ]
+                                  );
+                               }
                              );
                            })()
                         ]
