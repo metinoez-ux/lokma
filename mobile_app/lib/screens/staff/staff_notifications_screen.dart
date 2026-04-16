@@ -611,7 +611,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
       final notifId = data['id'] as String?;
       final uid = FirebaseAuth.instance.currentUser?.uid;
       
-      if (kermesId != null && requestId != null) {
+      if (kermesId != null && kermesId.trim().isNotEmpty && requestId != null && requestId.trim().isNotEmpty) {
         await FirebaseFirestore.instance.collection('kermes_events').doc(kermesId).collection('supply_requests').doc(requestId).update({
            'status': status,
            'adminReply': replyMessage,
@@ -619,7 +619,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
            'updatedAt': FieldValue.serverTimestamp()
         });
       }
-      if (uid != null && notifId != null) {
+      if (uid != null && uid.trim().isNotEmpty && notifId != null && notifId.trim().isNotEmpty) {
          await FirebaseFirestore.instance.collection('users').doc(uid).collection('notifications').doc(notifId).update({
             'status': status
          });

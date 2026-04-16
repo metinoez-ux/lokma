@@ -162,8 +162,8 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
      } catch (e) {}
   };
 
-  const liveReqs = requests.filter(r => r.status === 'pending' || r.status === 'on_the_way');
-  const pastReqs = requests.filter(r => r.status === 'completed' || r.status === 'rejected');
+  const liveReqs = requests.filter(r => r.status === 'pending' || r.status === 'on_the_way' || r.status === 'super_urgent');
+  const pastReqs = requests.filter(r => r.status === 'completed' || r.status === 'rejected' || r.status === 'cancelled');
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
@@ -256,8 +256,8 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
                     <div key={r.id} className="p-4 xl:p-5 rounded-lg flex flex-col justify-between border bg-muted/20 border-muted opacity-70">
                        <div>
                           <div className="flex items-center space-x-2 flex-wrap gap-y-2">
-                             <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${r.status === 'completed' ? 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-                                {r.status === 'completed' ? 'Tamamlandı' : 'Reddedildi'}
+                             <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${r.status === 'completed' ? 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300' : r.status === 'cancelled' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                {r.status === 'completed' ? 'Tamamlandı' : r.status === 'cancelled' ? 'İptal Edildi' : 'Reddedildi'}
                              </span>
                              <span className="text-sm font-medium opacity-60">
                                 {new Date(r.createdAt?.toMillis()).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}

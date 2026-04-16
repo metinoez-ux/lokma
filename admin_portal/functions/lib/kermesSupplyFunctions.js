@@ -137,18 +137,27 @@ exports.onKermesSupplyStatusUpdated = (0, firestore_1.onDocumentUpdated)('kermes
             const batch = db.batch();
             for (const adminUid of kermesAdmins) {
                 const notifRef = db.collection("users").doc(adminUid).collection("notifications").doc(requestId);
-                batch.update(notifRef, {
-                    status: newStatus,
-                    body: newStatus === 'on_the_way' ? `${after.requestedByName} talebine YOLA ÇIKTI damgası vurdunuz.` : `${after.requestedByName} talebi TAMAMLANDI.`,
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
+                if (newStatus === 'cancelled') {
+                    // The requester cancelled the request, remove the alarm from all admins' inboxes immediately.
+                    batch.delete(notifRef);
+                }
+                else {
+                    batch.set(notifRef, {
+                        status: newStatus,
+                        body: newStatus === 'on_the_way' ? `${after.requestedByName} talebine YOLA ÇIKTI damgası vurdunuz.` : newStatus === 'rejected' ? `${after.requestedByName} talebi tarafınızca REDDEDİLDİ.` : `${after.requestedByName} talebi TAMAMLANDI.`,
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }); // using merge: true to avoid throw if doc magically disappeared
+                }
             }
             await batch.commit();
         }
         // If personnel who requested it exists
         if (!reqUid)
             return;
-        const title = newStatus === 'on_the_way' ? `✅ Malzeme Yola Çıktı!` : newStatus === 'rejected' ? `❌ Malzeme İsteği Reddedildi` : `✅ Malzeme Tamamlandı`;
+        // If the requester cancelled it themselves, no need to send them a push notification
+        if (newStatus === 'cancelled')
+            return;
+        const title = newStatus === 'on_the_way' ? `🏃 Malzeme Yola Çıktı!` : newStatus === 'rejected' ? `❌ Malzeme İsteği Reddedildi` : `✅ Malzeme İsteği Tamamlandı`;
         const adminReply = after.adminReply ? `\nCevap: "${after.adminReply}"` : '';
         const body = newStatus === 'on_the_way'
             ? `Kermes Yetkilisi, "${itemName}" talebinizi onayladı ve yola çıkardı!${adminReply}`
@@ -176,7 +185,7 @@ exports.onKermesSupplyStatusUpdated = (0, firestore_1.onDocumentUpdated)('kermes
                 await admin.messaging().sendEachForMulticast({
                     tokens,
                     notification: { title, body },
-                    data: { type: 'supply_alarm_status', status: newStatus, kermesId, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
+                    data: { type: 'supply_alarm_status', status: newStatus, kermesId, requestId, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
                     apns: { payload: { aps: { sound: 'default' } } }
                 });
                 console.log(`[kermesSupplyFunctions] Push sent to requester ${reqUid} for status ${newStatus}.`);

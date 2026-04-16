@@ -199,6 +199,18 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
           decoration: BoxDecoration(color: Colors.amber.shade200, borderRadius: BorderRadius.circular(8)),
           child: Text('supply_status_on_the_way'.tr(), style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
        );
+    } else if (status == 'cancelled') {
+       return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(8)),
+          child: Text('İptal Edildi', style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+       );
+    } else if (status == 'rejected') {
+       return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(color: Colors.red.shade200, borderRadius: BorderRadius.circular(8)),
+          child: Text('Reddedildi', style: TextStyle(color: Colors.red.shade900, fontSize: 12, fontWeight: FontWeight.bold)),
+       );
     }
     return Container(
        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -331,12 +343,12 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                    final docs = snapshot.data!.docs;
                    final pendingDocs = docs.where((doc) {
                       final d = doc.data() as Map<String, dynamic>;
-                      return d['status'] != 'completed';
+                      return d['status'] == 'pending' || d['status'] == 'on_the_way' || d['status'] == 'super_urgent';
                    }).toList();
                    
                    final completedDocs = docs.where((doc) {
                       final d = doc.data() as Map<String, dynamic>;
-                      return d['status'] == 'completed';
+                      return d['status'] == 'completed' || d['status'] == 'rejected' || d['status'] == 'cancelled';
                    }).toList();
                    
                    Widget buildCard(QueryDocumentSnapshot doc) {
@@ -357,7 +369,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                                   child: Icon(status == 'completed' ? Icons.check : (status == 'on_the_way' ? Icons.local_shipping : Icons.campaign), 
                                      color: status == 'completed' ? Colors.white : (status == 'on_the_way' ? Colors.white : Colors.red)),
                                ),
-                               title: Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, decoration: status == 'completed' ? TextDecoration.lineThrough : null)),
+                               title: Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, decoration: (status == 'completed' || status == 'cancelled' || status == 'rejected') ? TextDecoration.lineThrough : null)),
                                subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                  Text("${d['requestedByName']} • ${d['requestedZone']}", style: const TextStyle(fontSize: 12)),
                                  if (d['urgency'] == 'super_urgent')
@@ -370,7 +382,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                                      _buildStatusBadge(status),
                                      if (isMine && status == 'pending')
                                         InkWell(
-                                           onTap: () => doc.reference.delete(),
+                                           onTap: () => doc.reference.update({'status': 'cancelled'}),
                                            child: const Padding(
                                              padding: EdgeInsets.only(top: 4),
                                              child: Text('İptal Et', style: TextStyle(color: Colors.blue, fontSize: 11)),

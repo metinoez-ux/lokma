@@ -1511,7 +1511,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
                           final type = data['type'] as String?;
-                          if (type == 'kermes_flash_sale' || type == 'kermes_parking' || type == 'kermes_assignment' || type == 'roster_shift' || type == 'roster_deleted') {
+                          if (type == 'kermes_flash_sale' || type == 'kermes_parking' || type == 'kermes_assignment' || type == 'roster_shift' || type == 'roster_deleted' || type == 'supply_alarm' || type == 'supply_alarm_status') {
                             _showNotificationDetailSheet(context, data);
                           }
                         },
@@ -1631,7 +1631,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   Future<void> _removeFavoriteOrder(_OrderGroup group) async {
     final user = _auth.currentUser;
     if (user == null) return;
-    if (group.orderId.isEmpty) return;
+    if (group.orderId.trim().isEmpty) return;
     
     await FirebaseFirestore.instance
         .collection('users').doc(user.uid)
@@ -2807,7 +2807,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                             padding: const EdgeInsets.only(left: 42, top: 4, bottom: 8),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: (group.orderId.isEmpty)
+                              child: (group.orderId.trim().isEmpty)
                                 ? const SizedBox.shrink()
                                 : FutureBuilder<DocumentSnapshot>(
                                 future: FirebaseFirestore.instance.collection('orders').doc(group.orderId).get(),
@@ -4162,6 +4162,10 @@ class _GenericNotificationCard extends StatelessWidget {
                         bgColor = isDark ? Colors.orange[900]!.withOpacity(0.3) : Colors.orange[50]!;
                         iconColor = isDark ? Colors.orange[300]! : Colors.orange[700]!;
                         iconData = Icons.local_parking_rounded;
+                      } else if (type == 'supply_alarm' || type == 'supply_alarm_status') {
+                        bgColor = isDark ? Colors.teal[900]!.withOpacity(0.3) : Colors.teal[50]!;
+                        iconColor = isDark ? Colors.teal[300]! : Colors.teal[700]!;
+                        iconData = type == 'supply_alarm' ? Icons.campaign_rounded : Icons.check_circle_outline_rounded;
                       } else {
                         bgColor = isDark ? Colors.grey[800]! : Colors.grey[100]!;
                         iconColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
@@ -4264,7 +4268,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
   }
 
   Future<void> _loadUserInfo() async {
-    if (widget.userId.isEmpty || widget.orderId.isEmpty) return;
+    if (widget.userId.trim().isEmpty || widget.orderId.trim().isEmpty) return;
     try {
       final orderDoc = await FirebaseFirestore.instance
           .collection('meat_orders')

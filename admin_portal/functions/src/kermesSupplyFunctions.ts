@@ -111,19 +111,27 @@ export const onKermesSupplyStatusUpdated = onDocumentUpdated(
          const batch = db.batch();
          for (const adminUid of kermesAdmins) {
              const notifRef = db.collection("users").doc(adminUid).collection("notifications").doc(requestId);
-             batch.update(notifRef, {
-                 status: newStatus,
-                 body: newStatus === 'on_the_way' ? `${after.requestedByName} talebine YOLA ÇIKTI damgası vurdunuz.` : `${after.requestedByName} talebi TAMAMLANDI.`,
-                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
-             });
+             if (newStatus === 'cancelled') {
+                 // The requester cancelled the request, remove the alarm from all admins' inboxes immediately.
+                 batch.delete(notifRef);
+             } else {
+                 batch.set(notifRef, {
+                     status: newStatus,
+                     body: newStatus === 'on_the_way' ? `${after.requestedByName} talebine YOLA ÇIKTI damgası vurdunuz.` : newStatus === 'rejected' ? `${after.requestedByName} talebi tarafınızca REDDEDİLDİ.` : `${after.requestedByName} talebi TAMAMLANDI.`,
+                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                 }, { merge: true }); // using merge: true to avoid throw if doc magically disappeared
+             }
          }
          await batch.commit();
       }
 
       // If personnel who requested it exists
       if (!reqUid) return;
+      
+      // If the requester cancelled it themselves, no need to send them a push notification
+      if (newStatus === 'cancelled') return;
 
-      const title = newStatus === 'on_the_way' ? `✅ Malzeme Yola Çıktı!` : newStatus === 'rejected' ? `❌ Malzeme İsteği Reddedildi` : `✅ Malzeme Tamamlandı`;
+      const title = newStatus === 'on_the_way' ? `🏃 Malzeme Yola Çıktı!` : newStatus === 'rejected' ? `❌ Malzeme İsteği Reddedildi` : `✅ Malzeme İsteği Tamamlandı`;
       const adminReply = after.adminReply ? `\nCevap: "${after.adminReply}"` : '';
       const body = newStatus === 'on_the_way' 
              ? `Kermes Yetkilisi, "${itemName}" talebinizi onayladı ve yola çıkardı!${adminReply}` 
