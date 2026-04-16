@@ -28,6 +28,40 @@ export const onScheduledTvMonitor = onSchedule(
             for (const eventDoc of eventsSnap.docs) {
                 const kermesId = eventDoc.id;
                 const kermesData = eventDoc.data();
+                
+                // --- 1. Sadece Aktif Günlerde ve Saatlerde İncele ---
+                const now = new Date();
+                
+                if (kermesData.isActive === false) continue;
+                if (kermesData.isArchived === true) continue;
+                if (kermesData.endDate && kermesData.endDate.toDate() < now) continue;
+
+                if (kermesData.openingTime && kermesData.closingTime) {
+                    const formatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: 'Europe/Berlin', 
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                    const currentBerlnTime = formatter.format(now);
+                    
+                    const open = kermesData.openingTime;
+                    const close = kermesData.closingTime;
+                    let isWithinHours = false;
+
+                    if (open < close) {
+                        isWithinHours = (currentBerlnTime >= open && currentBerlnTime <= close);
+                    } else {
+                        // Geceyi bağlayan mesai örn: 18:00 - 03:00
+                        isWithinHours = (currentBerlnTime >= open || currentBerlnTime <= close);
+                    }
+
+                    if (!isWithinHours) {
+                        // Mesai dışı, boşuna alarm gönderme veya kalp atışı arama
+                        continue;
+                    }
+                }
+                
                 const kermesName = kermesData.name || kermesData.businessName || "Kermes";
 
                 const heartbeatsSnap = await eventDoc.ref.collection("tv_heartbeats").get();
