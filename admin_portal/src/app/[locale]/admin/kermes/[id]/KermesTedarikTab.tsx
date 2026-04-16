@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { collection, query, onSnapshot, updateDoc, doc, Timestamp, orderBy, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 
@@ -11,6 +12,7 @@ interface KermesTedarikTabProps {
 }
 
 export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: KermesTedarikTabProps) {
+  const t = useTranslations('kermes');
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

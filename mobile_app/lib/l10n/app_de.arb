@@ -1,6 +1,5 @@
 {
   "@@locale": "de",
-  
   "appName": "LOKMA",
   "search": "Suchen",
   "searchHint": "Essen, Restaurant oder Markt suchen...",
@@ -9,10 +8,8 @@
   "searching": "Suche...",
   "popularSearches": "Beliebte Suchen",
   "showMore": "Mehr anzeigen",
-  
   "maxDistance": "Maximale Entfernung",
   "kmUnit": "km",
-  
   "categoryButcher": "Metzger",
   "categoryMarket": "Markt",
   "categoryRestaurant": "Restaurant",
@@ -21,15 +18,12 @@
   "categoryPastry": "Konditorei",
   "categoryCoffee": "Kaffee",
   "categoryImbiss": "Imbiss",
-  
   "businesses": "Geschäfte",
   "products": "Produkte",
   "categories": "Kategorien",
-  
   "order": "Bestellen",
   "go": "Los",
   "orderAgain": "Erneut bestellen",
-  
   "profile": "Profil",
   "welcome": "Willkommen",
   "loginPrompt": "Melden Sie sich an, um Ihre Bestellungen zu verfolgen und exklusive Angebote zu erhalten.",
@@ -38,29 +32,37 @@
   "loginWithApple": "Mit Apple anmelden",
   "loginWithGoogle": "Mit Google anmelden",
   "logout": "Abmelden",
-  
   "myOrders": "Meine Bestellungen",
   "myFavorites": "Meine Favoriten",
   "myAddresses": "Meine Adressen",
   "paymentMethods": "Zahlungsmethoden",
   "notifications": "Benachrichtigungen",
   "help": "Hilfe",
-  
   "home": "Startseite",
   "orders": "Bestellungen",
-  
   "comingSoon": "Demnächst verfügbar",
-  
   "sendFlowers": "Blumen senden",
   "sameDay": "Lieferung am selben Tag",
   "recipientName": "Name des Empfängers",
   "recipientPhone": "Telefon des Empfängers",
   "cardMessage": "Kartennachricht",
-  
   "checkoutButton": "Bestellen und bezahlen",
   "checkoutTermsPrefix": "Durch Klicken auf Bestellen und bezahlen erklären Sie sich mit dem Inhalt des Warenkorbs, den von Ihnen eingegebenen Daten, unserer ",
   "privacyPolicy": "Datenschutzerklärung",
   "termsConjunction": " und unseren ",
   "termsOfUse": "Nutzungsbedingungen",
-  "checkoutTermsSuffix": " einverstanden."
+  "checkoutTermsSuffix": " einverstanden.",
+  "supply_alarm_title": "Malzeme Alarmı",
+  "supply_quick_request": "Hızlı Malzeme İste",
+  "supply_categories": "Mutfak/Tedarik Kategorileri",
+  "supply_custom_item_hint": "Özel Malzeme Yazın...",
+  "supply_request_btn": "Talep Et",
+  "supply_no_items": "Sisteme henüz hazır malzeme tanımlanmamış.",
+  "supply_live_list": "Canlı İhtiyaç Listesi",
+  "supply_status_on_the_way": "Yola Çıktı",
+  "supply_status_pending": "Acil Bekliyor",
+  "supply_status_completed": "Tamamlandı",
+  "supply_already_requested": "zaten az önce istendi!",
+  "supply_request_sent": "Talebiniz iletildi:",
+  "supply_btn_title": "Malzeme Belirt / Alarm Ver"
 }

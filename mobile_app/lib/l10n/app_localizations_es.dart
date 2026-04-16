@@ -166,4 +166,43 @@ class LEs extends L {
 
   @override
   String get checkoutTermsSuffix => '.';
+
+  @override
+  String get supply_alarm_title => 'Malzeme Alarmı';
+
+  @override
+  String get supply_quick_request => 'Hızlı Malzeme İste';
+
+  @override
+  String get supply_categories => 'Mutfak/Tedarik Kategorileri';
+
+  @override
+  String get supply_custom_item_hint => 'Özel Malzeme Yazın...';
+
+  @override
+  String get supply_request_btn => 'Talep Et';
+
+  @override
+  String get supply_no_items => 'Sisteme henüz hazır malzeme tanımlanmamış.';
+
+  @override
+  String get supply_live_list => 'Canlı İhtiyaç Listesi';
+
+  @override
+  String get supply_status_on_the_way => 'Yola Çıktı';
+
+  @override
+  String get supply_status_pending => 'Acil Bekliyor';
+
+  @override
+  String get supply_status_completed => 'Tamamlandı';
+
+  @override
+  String get supply_already_requested => 'zaten az önce istendi!';
+
+  @override
+  String get supply_request_sent => 'Talebiniz iletildi:';
+
+  @override
+  String get supply_btn_title => 'Malzeme Belirt / Alarm Ver';
 }

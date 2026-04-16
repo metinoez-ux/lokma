@@ -416,6 +416,84 @@ abstract class L {
   /// In tr, this message translates to:
   /// **' kabul etmiş olursunuz.'**
   String get checkoutTermsSuffix;
+
+  /// No description provided for @supply_alarm_title.
+  ///
+  /// In tr, this message translates to:
+  /// **'Malzeme Alarmı'**
+  String get supply_alarm_title;
+
+  /// No description provided for @supply_quick_request.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı Malzeme İste'**
+  String get supply_quick_request;
+
+  /// No description provided for @supply_categories.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mutfak/Tedarik Kategorileri'**
+  String get supply_categories;
+
+  /// No description provided for @supply_custom_item_hint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel Malzeme Yazın...'**
+  String get supply_custom_item_hint;
+
+  /// No description provided for @supply_request_btn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Talep Et'**
+  String get supply_request_btn;
+
+  /// No description provided for @supply_no_items.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sisteme henüz hazır malzeme tanımlanmamış.'**
+  String get supply_no_items;
+
+  /// No description provided for @supply_live_list.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı İhtiyaç Listesi'**
+  String get supply_live_list;
+
+  /// No description provided for @supply_status_on_the_way.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yola Çıktı'**
+  String get supply_status_on_the_way;
+
+  /// No description provided for @supply_status_pending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil Bekliyor'**
+  String get supply_status_pending;
+
+  /// No description provided for @supply_status_completed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlandı'**
+  String get supply_status_completed;
+
+  /// No description provided for @supply_already_requested.
+  ///
+  /// In tr, this message translates to:
+  /// **'zaten az önce istendi!'**
+  String get supply_already_requested;
+
+  /// No description provided for @supply_request_sent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Talebiniz iletildi:'**
+  String get supply_request_sent;
+
+  /// No description provided for @supply_btn_title.
+  ///
+  /// In tr, this message translates to:
+  /// **'Malzeme Belirt / Alarm Ver'**
+  String get supply_btn_title;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

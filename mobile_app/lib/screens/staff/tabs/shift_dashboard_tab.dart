@@ -1019,7 +1019,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                      );
                   },
                   icon: const Icon(Icons.campaign, size: 20),
-                  label: const Text('Malzeme Belirt / Alarm Ver', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  label: const Text(context.l10n.supply_btn_title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                )
             ),
           ],

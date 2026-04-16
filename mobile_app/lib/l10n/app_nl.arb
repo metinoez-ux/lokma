@@ -51,5 +51,18 @@
   "checkoutTermsSuffix": ".",
   "privacyPolicy": "Privacybeleid",
   "termsConjunction": " en onze ",
-  "termsOfUse": "Gebruiksvoorwaarden"
+  "termsOfUse": "Gebruiksvoorwaarden",
+  "supply_alarm_title": "Malzeme Alarmı",
+  "supply_quick_request": "Hızlı Malzeme İste",
+  "supply_categories": "Mutfak/Tedarik Kategorileri",
+  "supply_custom_item_hint": "Özel Malzeme Yazın...",
+  "supply_request_btn": "Talep Et",
+  "supply_no_items": "Sisteme henüz hazır malzeme tanımlanmamış.",
+  "supply_live_list": "Canlı İhtiyaç Listesi",
+  "supply_status_on_the_way": "Yola Çıktı",
+  "supply_status_pending": "Acil Bekliyor",
+  "supply_status_completed": "Tamamlandı",
+  "supply_already_requested": "zaten az önce istendi!",
+  "supply_request_sent": "Talebiniz iletildi:",
+  "supply_btn_title": "Malzeme Belirt / Alarm Ver"
 }
