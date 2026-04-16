@@ -69,7 +69,6 @@
   font-weight: 700;
   color: #e2e8f0;
   letter-spacing: 2px;
-  text-transform: uppercase;
   padding: 6px 24px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.06);
@@ -156,7 +155,6 @@
   font-size: 30px;
   font-weight: 800;
   letter-spacing: 4px;
-  text-transform: uppercase;
 }
 
 .panelTitlePreparing {
@@ -297,7 +295,6 @@
   font-weight: 700;
   color: #86efac;
   letter-spacing: 3px;
-  text-transform: uppercase;
   position: relative;
   z-index: 1;
 }

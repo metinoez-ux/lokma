@@ -86,37 +86,37 @@ function getWeatherIcon(code: number) {
 
 const I18N_DICT: any = {
   de: {
-    preparing: 'Wird zubereitet',
-    ready: 'Abholbereit',
+    preparing: 'WIRD ZUBEREITET',
+    ready: 'ABHOLBEREIT',
     emptyPreparing: 'Keine zubereitenden Bestellungen',
     emptyReady: 'Keine fertigen Bestellungen',
     activeOrder: 'Aktive Bestellung(en)',
     footerMessage: 'Wenn Ihre Nummer auf dem Bildschirm erscheint, können Sie diese an der Theke abholen',
-    readyLabel: 'Abholbereit',
+    readyLabel: 'ABHOLBEREIT',
     dayStr: (day: number) => `Tag ${day}`,
-    allSections: 'Alle Abteilungen'
+    allSections: 'ALLE ABTEILUNGEN'
   },
   nl: {
-    preparing: 'In bereiding',
-    ready: 'Klaar',
+    preparing: 'IN BEREIDING',
+    ready: 'KLAAR',
     emptyPreparing: 'Geen bestellingen',
     emptyReady: 'Geen bestellingen klaar',
     activeOrder: 'actieve bestelling(en)',
     footerMessage: 'Wanneer uw nummer op het scherm verschijnt, kunt u het ophalen aan de balie',
-    readyLabel: 'Klaar',
+    readyLabel: 'KLAAR',
     dayStr: (day: number) => `Dag ${day}`,
-    allSections: 'Alle Afdelingen'
+    allSections: 'ALLE AFDELINGEN'
   },
   tr: {
-    preparing: 'Hazırlanıyor',
-    ready: 'Hazır',
+    preparing: 'HAZIRLANIYOR',
+    ready: 'HAZIR',
     emptyPreparing: 'Hazırlanan sipariş yok',
     emptyReady: 'Hazır sipariş yok',
     activeOrder: 'aktif sipariş',
     footerMessage: 'Numaranız ekranda göründüğünde tezgahtan alabilirsiniz',
-    readyLabel: 'Teslim Alınabilir',
+    readyLabel: 'TESLİM ALINABİLİR',
     dayStr: (day: number) => `${day}. Gün`,
-    allSections: 'Tüm Bölümler'
+    allSections: 'TÜM BÖLÜMLER'
   }
 };
 
@@ -433,41 +433,62 @@ export default function KermesTvPage({
               <span className={styles.lokmaLogo}><strong style={{fontWeight: 900}}>LOKMA</strong> (ODS)</span>
             </div>
             
-            {/* Title & Weather Part (Both share same padding left due to border) */}
-            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(255, 255, 255, 0.1)', paddingLeft: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '22px', fontWeight: 500, color: '#64748b' }}>{kermesName}</span>
-                {dateRangeStr && <span style={{ fontSize: '18px', color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>{dateRangeStr}</span>}
-                {currentDay !== null && currentDay > 0 && (
-                  <span style={{ fontSize: '16px', fontWeight: 600, color: '#fbbf24', marginLeft: '4px' }}>
-                    • {getDualLang('dayStr', lang2, currentDay)}
+            {/* Title & Weather Part */}
+            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(255, 255, 255, 0.1)', paddingLeft: '16px', justifyContent: 'center' }}>
+              {/* Line 1: Kermes Name */}
+              <div style={{ fontSize: '18px', fontWeight: 500, color: '#e2e8f0', marginBottom: '6px' }}>
+                {kermesName}
+              </div>
+              
+              {/* Line 2: Date, Day, Weather Compact */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {dateRangeStr && (
+                  <span style={{ fontSize: '14px', color: '#94a3b8' }}>
+                    {dateRangeStr.replace('-', ' - ')}
                   </span>
                 )}
+
+                {currentDay !== null && currentDay > 0 && (
+                  <>
+                    <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#fbbf24'}}></div>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#fbbf24' }}>
+                      {getDualLang('dayStr', lang2, currentDay)}
+                    </span>
+                  </>
+                )}
+
+                {weather ? (
+                  <>
+                    <div style={{width: '2px', height: '14px', background: 'rgba(255,255,255,0.1)'}}></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', fontSize: '13px'}}>
+                       <span style={{display: 'flex', alignItems: 'center', gap: '2px', color: '#fff', fontWeight: 'bold'}}>
+                         <span className="material-symbols-outlined" style={{color: '#fbbf24', fontSize: '14px'}}>{getWeatherIcon(weather.code)}</span>
+                         {weather.temp}°C
+                       </span>
+                       <span style={{display: 'flex', alignItems: 'center', gap: '2px'}}>
+                         <span className="material-symbols-outlined" style={{fontSize: '14px'}}>air</span>
+                         {weather.wind} km/h
+                       </span>
+                       <span style={{display: 'flex', alignItems: 'center', gap: '2px', color: '#93c5fd'}}>
+                         <span className="material-symbols-outlined" style={{fontSize: '14px'}}>water_drop</span>
+                         %{weather.prob}
+                       </span>
+                    </div>
+                  </>
+                ) : null}
               </div>
-              {weather ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
-                   <div style={{display: 'flex', alignItems: 'center', gap: '4px', color: '#fff'}}>
-                      <span className="material-symbols-outlined" style={{color: '#fbbf24', fontSize: '20px'}}>{getWeatherIcon(weather.code)}</span>
-                      <span style={{fontSize: '16px', fontWeight: 'bold'}}>{weather.temp}°C</span>
-                   </div>
-                   <div style={{width: '1px', height: '14px', background: 'rgba(255,255,255,0.3)'}}></div>
-                   <div style={{display: 'flex', alignItems: 'center', gap: '4px', color: '#cbd5e1'}}>
-                      <span className="material-symbols-outlined" style={{fontSize: '18px'}}>air</span>
-                      <span style={{fontSize: '15px'}}>{weather.wind} km/h</span>
-                   </div>
-                   <div style={{width: '1px', height: '14px', background: 'rgba(255,255,255,0.3)'}}></div>
-                   <div style={{display: 'flex', alignItems: 'center', gap: '4px', color: '#93c5fd'}}>
-                      <span className="material-symbols-outlined" style={{fontSize: '18px'}}>water_drop</span>
-                      <span style={{fontSize: '15px'}}>%{weather.prob}</span>
-                   </div>
-                </div>
-              ) : null}
             </div>
           </div>
           
           <div className={styles.headerCenter} style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
             {displayTitle && (
-              <span className={styles.sectionBadge}>{displayTitle}</span>
+              <span className={styles.sectionBadge}>
+                {displayTitle.split(' / ').map((part, index, array) => (
+                  <span key={index} style={{ display: 'block' }}>
+                    {part.trim()}
+                  </span>
+                ))}
+              </span>
             )}
           </div>
 
