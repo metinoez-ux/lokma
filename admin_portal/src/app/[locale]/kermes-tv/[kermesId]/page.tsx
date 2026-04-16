@@ -153,6 +153,111 @@ function getDualLang(key: string, lang2: string | null, ...args: any[]) {
    return `${trStr} / ${secStr}`;
 }
 
+interface Vakit {
+  tarih: string;
+}
+
+interface VakitData {
+  tarih: string;
+  imsak: Vakit[];
+  sabah: Vakit[];
+  gunes: Vakit[];
+  ogle: Vakit[];
+  ikindi: Vakit[];
+  aksam: Vakit[];
+  yatsi: Vakit[];
+}
+
+function getNextPrayerInfo(vakitler: VakitData[]) {
+  if (!vakitler || vakitler.length === 0) return null;
+  const now = new Date();
+  
+  const order = ['imsak', 'sabah', 'gunes', 'ogle', 'ikindi', 'aksam', 'yatsi'];
+  const labels = ['İmsak', 'Sabah', 'Güneş', 'Öğle', 'İkindi', 'Akşam', 'Yatsı'];
+  
+  const allTargets: { label: string, date: Date }[] = [];
+  
+  vakitler.forEach((dayData) => {
+    order.forEach((key, index) => {
+       const vArr = (dayData as any)[key];
+       if (vArr && vArr.length > 0) {
+         allTargets.push({
+           label: labels[index],
+           date: new Date(vArr[0].tarih)
+         });
+       }
+    });
+  });
+  
+  allTargets.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const nextPrayer = allTargets.find(t => t.date.getTime() > now.getTime());
+  
+  return nextPrayer || null;
+}
+
+const PrayerTimeBanner = () => {
+  const [vakitler, setVakitler] = useState<VakitData[] | null>(null);
+  const [timeLeftStr, setTimeLeftStr] = useState<string>('');
+  const [nextPrayerLabel, setNextPrayerLabel] = useState<string>('');
+  const [nextPrayerTime, setNextPrayerTime] = useState<string>('');
+
+  useEffect(() => {
+    fetch('/api/prayer-times?districtId=297')
+      .then(res => res.json())
+      .then(data => {
+        if (data.vakitler) {
+          setVakitler(data.vakitler);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!vakitler) return;
+    
+    const updateCountdown = () => {
+      const next = getNextPrayerInfo(vakitler);
+      if (next) {
+        setNextPrayerLabel(next.label);
+        setNextPrayerTime(next.date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+        
+        let diffMs = next.date.getTime() - new Date().getTime();
+        if (diffMs < 0) diffMs = 0;
+        
+        const totalMinutes = Math.floor(diffMs / 60000);
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        
+        let str = '';
+        if (hours > 0) str += `${hours} sa `;
+        str += `${mins} dk`;
+        setTimeLeftStr(str);
+      }
+    };
+    
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 10000); 
+    return () => clearInterval(interval);
+  }, [vakitler]);
+
+  if (!vakitler || !nextPrayerLabel) return null;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '24px', padding: '8px 20px', gap: '16px' }}>
+      <span className="material-symbols-outlined" style={{ color: '#fbbf24', fontSize: '28px' }}>mosque</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Sonraki Vakit</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+          <span style={{ fontSize: '22px', fontWeight: 800, color: '#f8fafc' }}>{nextPrayerLabel} <span style={{color:'#94a3b8', fontWeight: 500}}>{nextPrayerTime}</span></span>
+        </div>
+      </div>
+      <div style={{ paddingLeft: '16px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+         <span style={{ fontSize: '15px', color: '#cbd5e1', fontWeight: 500 }}>Kalan: <strong style={{ color: '#fbbf24', fontSize: '20px', fontWeight: 800 }}>{timeLeftStr}</strong></span>
+      </div>
+    </div>
+  );
+};
+
 export default function KermesTvPage({
   params,
 }: {
@@ -566,21 +671,10 @@ export default function KermesTvPage({
           </div>
           
           <div className={styles.headerCenter} style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-            {displayTitle && (
-              <span className={styles.sectionBadge}>
-                {displayTitle.split(' / ').map((part, index, array) => (
-                  <span key={index} style={{ display: 'block' }}>
-                    {part.trim()}
-                  </span>
-                ))}
-              </span>
-            )}
+             <PrayerTimeBanner />
           </div>
 
           <div className={styles.headerRight}>
-            <span className={styles.orderCount}>
-              {totalActive} {getDualLang('activeOrder', lang2)}
-            </span>
             <span className={styles.clock}>
               {currentTime.toLocaleTimeString('tr-TR', {
                 hour: '2-digit',
