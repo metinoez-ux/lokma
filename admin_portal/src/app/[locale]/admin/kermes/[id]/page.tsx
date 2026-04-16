@@ -6279,7 +6279,6 @@ export default function KermesDetailPage() {
    </div>
  </div>
  </div>
- </div>
  )}
 
  {activeTab === "tedarik" && (

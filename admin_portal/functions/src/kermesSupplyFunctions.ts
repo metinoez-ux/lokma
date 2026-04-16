@@ -1,17 +1,20 @@
-import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 
-export const onKermesSupplyRequested = functions.firestore
-  .document('kermes_events/{kermesId}/supply_requests/{requestId}')
-  .onCreate(async (snap, context) => {
+export const onKermesSupplyRequested = onDocumentCreated(
+  'kermes_events/{kermesId}/supply_requests/{requestId}',
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
     const data = snap.data();
     if (!data) return;
 
-    const kermesId = context.params.kermesId;
+    const kermesId = event.params.kermesId;
     const itemName = data.itemName || 'Malzeme';
     const reqZone = data.requestedZone || 'Personel';
     const requestedByName = data.requestedByName || 'Biri';
-    const requestId = context.params.requestId;
+    const requestId = event.params.requestId;
 
     try {
       const db = admin.firestore();
@@ -59,7 +62,7 @@ export const onKermesSupplyRequested = functions.firestore
       });
 
       if (tokens.length > 0) {
-        const uniqueTokens = [...new Set(tokens)];
+        const uniqueTokens = Array.from(new Set(tokens));
         await admin.messaging().sendEachForMulticast({
           tokens: uniqueTokens,
           notification: { title, body },
@@ -73,18 +76,21 @@ export const onKermesSupplyRequested = functions.firestore
     }
   });
 
-export const onKermesSupplyStatusUpdated = functions.firestore
-  .document('kermes_events/{kermesId}/supply_requests/{requestId}')
-  .onUpdate(async (change, context) => {
-    const before = change.before.data();
-    const after = change.after.data();
+export const onKermesSupplyStatusUpdated = onDocumentUpdated(
+  'kermes_events/{kermesId}/supply_requests/{requestId}',
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const before = snap.before.data();
+    const after = snap.after.data();
     if (!before || !after) return;
     
     // Yalnızca status değişirse inbox & push tetikleyelim
     if (before.status === after.status) return;
 
-    const kermesId = context.params.kermesId;
-    const requestId = context.params.requestId;
+    const kermesId = event.params.kermesId;
+    const requestId = event.params.requestId;
     const itemName = after.itemName || 'Malzeme';
     const reqUid = after.requestedByUid; // Personel ID
     const newStatus = after.status;
@@ -105,7 +111,7 @@ export const onKermesSupplyStatusUpdated = functions.firestore
                  status: newStatus,
                  body: newStatus === 'on_the_way' ? `${after.requestedByName} talebine YOLA ÇIKTI damgası vurdunuz.` : `${after.requestedByName} talebi TAMAMLANDI.`,
                  updatedAt: new Date().toISOString()
-             }).catch(() => {}); // ignore if it doesn't exist
+             });
          }
          await batch.commit();
       }
@@ -152,4 +158,3 @@ export const onKermesSupplyStatusUpdated = functions.firestore
       console.error('Error onKermesSupplyStatusUpdated:', err);
     }
   });
-
