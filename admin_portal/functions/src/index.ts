@@ -3710,3 +3710,4 @@ export { onKermesOrderPaidStock, onKermesOrderCancelledStock } from "./kermesSto
 export { onKermesOrderCreatedNotif, onKermesOrderPaidNotif } from "./kermesCustomerNotifications";
 export { onKermesRosterCreated } from "./kermesRosterFunctions";
 export * from "./kermesRosterFunctions";
+export * from './kermesTvFunctions';
