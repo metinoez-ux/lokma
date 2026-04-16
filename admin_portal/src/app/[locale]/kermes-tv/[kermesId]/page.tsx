@@ -35,6 +35,7 @@ interface DisplayOrder {
   deliveryType?: string;
   tableNumber?: string | null;
   orderSource?: string;
+  minutesSinceUpdate: number;
 }
 
 function normalizeForSearch(text: string | null | undefined): string {
@@ -399,9 +400,9 @@ export default function KermesTvPage({
         const orderUpdatedAt = data.updatedAt?.toDate?.() || data.readyAt?.toDate?.() || data.createdAt?.toDate?.() || new Date();
         const minutesSinceUpdate = (new Date().getTime() - orderUpdatedAt.getTime()) / 60000;
 
-        // Auto-Hide Fallback (Kermes'te unutulup ekranda kalan hazir siparislerin tasmasini onler: 15 dakika siniri)
-        if (data.status === 'ready' && minutesSinceUpdate > 15) {
-          return; // Ekrana yansitma
+        // Ekrana 40 dakikaya kadar musaade ediyoruz
+        if (data.status === 'ready' && minutesSinceUpdate > 40) {
+          return; // Tamamen cikar
         }
 
         allOrders.push({
@@ -413,6 +414,7 @@ export default function KermesTvPage({
           deliveryType: data.deliveryType,
           tableNumber: data.tableNumber,
           orderSource: data.orderSource || 'app',
+          minutesSinceUpdate: minutesSinceUpdate,
         });
       });
 
@@ -452,9 +454,15 @@ export default function KermesTvPage({
     .filter((o) => o.status === 'preparing' || o.status === 'pending')
     .sort((a, b) => (parseInt(a.orderNumber) || 0) - (parseInt(b.orderNumber) || 0));
 
-  const readyOrders = orders
+  let readyOrders = orders
     .filter((o) => o.status === 'ready')
     .sort((a, b) => (parseInt(a.orderNumber) || 0) - (parseInt(b.orderNumber) || 0));
+
+  // Dinamik Gosterim: 40 dakikaya kadar olanlari Firebase'den aliyoruz.
+  // Eger yer varsa kalsin, 14'den fazla (ekrandan tasacak) kadar birikmisse 15 dakikadan eskileri temizle
+  if (readyOrders.length > 14) {
+     readyOrders = readyOrders.filter(o => o.minutesSinceUpdate <= 15);
+  }
 
   const totalActive = preparingOrders.length + readyOrders.length;
 
