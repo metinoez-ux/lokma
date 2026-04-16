@@ -735,9 +735,14 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
 
     return InkWell(
       onTap: canCall ? () async {
-        final Uri launchUri = Uri(scheme: 'tel', path: phone);
-        if (await canLaunchUrl(launchUri)) {
-          await launchUrl(launchUri);
+        final cleanPhone = phone.replaceAll(RegExp(r'\s+'), '');
+        final Uri launchUri = Uri(scheme: 'tel', path: cleanPhone);
+        try {
+          if (!await launchUrl(launchUri)) {
+             debugPrint("Could not launch $launchUri");
+          }
+        } catch (e) {
+          debugPrint("Exception launching phone dialer: $e");
         }
       } : null,
       borderRadius: BorderRadius.circular(20),
@@ -1022,7 +1027,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                         context,
                         MaterialPageRoute(builder: (_) => KermesSupplyScreen(
                            kermesId: capabilities.businessId!,
-                           currentUserZone: bolumText,
+                           userPrepZones: capabilities.kermesPrepZones,
                         )),
                      );
                   },

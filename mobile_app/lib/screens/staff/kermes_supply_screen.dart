@@ -5,12 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class KermesSupplyScreen extends StatefulWidget {
   final String kermesId;
-  final String currentUserZone;
+  final List<String> userPrepZones;
 
   const KermesSupplyScreen({
     Key? key,
     required this.kermesId,
-    required this.currentUserZone,
+    required this.userPrepZones,
   }) : super(key: key);
 
   @override
@@ -59,7 +59,13 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
         final cats = data['supplyCategories'] as List<dynamic>? ?? [];
         if (mounted) {
            setState(() {
-              _categories = cats.map((c) => Map<String, dynamic>.from(c)).toList();
+              _categories = cats.map((c) => Map<String, dynamic>.from(c)).where((c) {
+                 if (c['allowedZones'] != null && (c['allowedZones'] as List).isNotEmpty) {
+                    final allowed = List<String>.from(c['allowedZones']);
+                    return widget.userPrepZones.any((zone) => allowed.contains(zone));
+                 }
+                 return true;
+              }).toList();
               _isLoadingCats = false;
            });
         }
@@ -69,7 +75,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
     }
   }
 
-  Future<void> _submitRequest(String itemName, {String category = 'custom'}) async {
+  Future<void> _submitRequest(String itemName, String requestedZone, {String category = 'custom', String urgency = 'normal'}) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
     
@@ -93,10 +99,11 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
           .add({
              'requestedByUid': uid,
              'requestedByName': _currentUserName.isEmpty ? 'Personel' : _currentUserName,
-             'requestedZone': widget.currentUserZone,
+             'requestedZone': requestedZone,
              'category': category,
              'itemName': itemName,
              'status': 'pending',
+             'urgency': urgency,
              'createdAt': FieldValue.serverTimestamp(),
           });
       if (mounted) {
@@ -106,6 +113,77 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
          ));
       }
     } catch(e) {}
+  }
+
+  
+  Future<void> _askUrgencyAndSubmit(String itemName, {String category = 'custom'}) async {
+    String selectedZone = 'Genel Alan';
+    if (widget.userPrepZones.length == 1) {
+       selectedZone = widget.userPrepZones.first;
+    } else if (widget.userPrepZones.length > 1) {
+       final zoneResult = await showDialog<String>(
+          context: context,
+          builder: (ctx) {
+            final isDark = Theme.of(ctx).brightness == Brightness.dark;
+            return AlertDialog(
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+               backgroundColor: isDark ? const Color(0xFF222222) : Colors.white,
+               title: Text('Hangi İstasyon?', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+               content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: widget.userPrepZones.map((z) => Padding(
+                     padding: const EdgeInsets.only(bottom: 8),
+                     child: ListTile(
+                        title: Text(z, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        onTap: () => Navigator.pop(ctx, z),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        tileColor: isDark ? Colors.white10 : Colors.grey.shade100,
+                     ),
+                  )).toList(),
+               )
+            );
+          }
+       );
+       if (zoneResult == null) return; // User cancelled
+       selectedZone = zoneResult;
+    }
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        final dIsDark = Theme.of(ctx).brightness == Brightness.dark;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: dIsDark ? const Color(0xFF222222) : Colors.white,
+          title: Text('Aciliyet Durumu', style: TextStyle(color: dIsDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+               Text('$itemName siparişiniz için aciliyet belirleyin:', style: const TextStyle(fontSize: 15)),
+               const SizedBox(height: 20),
+               ElevatedButton.icon(
+                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+                 icon: const Icon(Icons.local_fire_department),
+                 label: const Text('Hemen Gelsin (Süper Acil)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                 onPressed: () => Navigator.pop(ctx, 'super_urgent'),
+               ),
+               const SizedBox(height: 12),
+               OutlinedButton.icon(
+                 style: OutlinedButton.styleFrom(foregroundColor: dIsDark ? Colors.white : Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
+                 icon: const Icon(Icons.hourglass_bottom),
+                 label: const Text('1-2 Saat İçinde Olur'),
+                 onPressed: () => Navigator.pop(ctx, 'normal'),
+               ),
+            ]
+          )
+        );
+      }
+    );
+
+    if (result != null) {
+      await _submitRequest(itemName, selectedZone, category: category, urgency: result);
+    }
   }
 
   Widget _buildStatusBadge(String status) {
@@ -162,16 +240,16 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                            Wrap(
                               spacing: 8, runSpacing: 8,
                               children: (cat['items'] as List<dynamic>? ?? []).map((item) => InkWell(
-                                 onTap: () => _submitRequest(item as String, category: cat['title']),
+                                 onTap: () => _askUrgencyAndSubmit(item as String, category: cat['title']),
                                  borderRadius: BorderRadius.circular(20),
                                  child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                     decoration: BoxDecoration(
-                                       color: isDark ? Colors.red.withOpacity(0.2) : Colors.red.shade50,
-                                       border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                       color: isDark ? const Color(0xFFE5E5E5) : Colors.white,
+                                       border: Border.all(color: Colors.red.shade700, width: 1.5),
                                        borderRadius: BorderRadius.circular(20)
                                     ),
-                                    child: Text(item, style: TextStyle(color: isDark ? Colors.red.shade200 : Colors.red.shade700, fontWeight: FontWeight.bold)),
+                                    child: Text(item, style: TextStyle(color: Colors.red.shade900, fontWeight: FontWeight.bold)),
                                  ),
                               )).toList(),
                            ),
@@ -201,7 +279,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white),
                          onPressed: () {
                             if (_customCtrl.text.trim().isNotEmpty) {
-                               _submitRequest(_customCtrl.text.trim());
+                               _askUrgencyAndSubmit(_customCtrl.text.trim());
                                _customCtrl.clear();
                             }
                          },
@@ -273,7 +351,11 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                                      color: status == 'completed' ? Colors.white : (status == 'on_the_way' ? Colors.white : Colors.red)),
                                ),
                                title: Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, decoration: status == 'completed' ? TextDecoration.lineThrough : null)),
-                               subtitle: Text('${d['requestedByName']} • ${d['requestedZone']}', style: const TextStyle(fontSize: 12)),
+                               subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                 Text("${d['requestedByName']} • ${d['requestedZone']}", style: const TextStyle(fontSize: 12)),
+                                 if (d['urgency'] == 'super_urgent')
+                                   Container(margin: const EdgeInsets.only(top: 4), padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.red)), child: const Text('🔥 SÜPER ACİL', style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)))
+                               ]),
                                trailing: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.end,

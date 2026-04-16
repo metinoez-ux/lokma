@@ -3400,4 +3400,6 @@ Object.defineProperty(exports, "onKermesOrderPaidNotif", { enumerable: true, get
 var kermesRosterFunctions_1 = require("./kermesRosterFunctions");
 Object.defineProperty(exports, "onKermesRosterCreated", { enumerable: true, get: function () { return kermesRosterFunctions_1.onKermesRosterCreated; } });
 __exportStar(require("./kermesRosterFunctions"), exports);
+__exportStar(require("./kermesTvFunctions"), exports);
+__exportStar(require("./kermesSupplyFunctions"), exports);
 //# sourceMappingURL=index.js.map
