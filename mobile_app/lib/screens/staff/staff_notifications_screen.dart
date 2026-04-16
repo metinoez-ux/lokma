@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/staff_notifications_provider.dart';
 import '../../models/kermes_order_model.dart';
@@ -95,10 +96,10 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
       case 'supply_alarm': 
       case 'supply_alarm_status': {
          final st = notif['status'] as String?;
-         if (st == 'on_the_way') return Colors.blue;
+         if (st == 'on_the_way') return Colors.orange;
          if (st == 'completed') return Colors.green;
          if (st == 'rejected') return Colors.red;
-         return Colors.red;
+         return Colors.teal;
       }
       case 'chat_message': return Colors.teal;
       default: return Colors.blue;
@@ -273,15 +274,18 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                            (() {
                               final st = data['status'] as String? ?? 'pending';
                               Color c = Colors.red;
-                              IconData ic = Icons.campaign;
-                              if (st == 'on_the_way') { c = Colors.blue; ic = Icons.directions_run_rounded; }
-                              else if (st == 'completed' || type == 'supply_alarm_status') { c = Colors.green; ic = Icons.check_circle_outline_rounded; }
+                              IconData? ic = Icons.campaign;
+                              String? svgAsset;
+                              if (st == 'on_the_way') { c = Colors.orange; svgAsset = 'assets/icons/man_run1.svg'; }
+                              else if (st == 'completed' || type == 'supply_alarm_status') { c = Colors.green; svgAsset = 'assets/icons/package_ok1.svg'; }
                               else if (st == 'rejected') { c = Colors.red; ic = Icons.cancel_rounded; }
                               
                               return Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(color: c.withOpacity(0.1), shape: BoxShape.circle),
-                                child: Icon(ic, size: 36, color: c),
+                                child: svgAsset != null
+                                    ? SvgPicture.asset(svgAsset, width: 36, height: 36, colorFilter: ColorFilter.mode(c, BlendMode.srcIn))
+                                    : Icon(ic, size: 36, color: c),
                               );
                            })(),
                            const SizedBox(height: 16),
@@ -297,34 +301,106 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                return const Text('Eksik talep verisi.', style: TextStyle(color: Colors.red));
                              }
                              
-                             return FutureBuilder<DocumentSnapshot>(
-                               future: FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get(),
-                               builder: (ctx, snap) {
+                             return FutureBuilder<Map<String, dynamic>?>(
+                                future: () async {
+                                   final sSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get();
+                                   if (!sSnap.exists) return null;
+                                   final res = sSnap.data() as Map<String, dynamic>;
+                                   final uId = res['requestedByUid'] as String?;
+                                   if (uId != null) {
+                                      try {
+                                         final rSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('rosters').where('userId', '==', uId).get();
+                                         if (rSnap.docs.isNotEmpty) {
+                                             res['rSection'] = rSnap.docs.first.data()['role'];
+                                         }
+                                         
+                                         final uDoc = await FirebaseFirestore.instance.collection('users').doc(uId).get();
+                                         if (uDoc.exists) {
+                                            final ud = uDoc.data()!;
+                                            final fullName = ud['fullName'] ?? ud['displayName'];
+                                            final fn = ud['firstName'];
+                                            final ln = ud['lastName'];
+                                            if (fn != null && fn.toString().trim().isNotEmpty) {
+                                                res['requestedByName'] = '${fn} ${ln ?? ''}'.trim();
+                                            } else if (fullName != null && fullName.toString().trim().isNotEmpty) {
+                                                res['requestedByName'] = fullName;
+                                            }
+                                            return res;
+                                         }
+                                         
+                                         final aSnap = await FirebaseFirestore.instance.collection('admins').doc(uId).get();
+                                         if (aSnap.exists) {
+                                             if (aSnap.data()?['name'] != null && aSnap.data()!['name'].toString().trim().isNotEmpty) {
+                                                 res['requestedByName'] = aSnap.data()!['name'];
+                                             }
+                                             if (res['rSection'] == null) {
+                                                res['rSection'] = aSnap.data()?['sectionId'];
+                                             }
+                                             return res;
+                                         }
+                                      } catch (_) {}
+                                   }
+                                   return res;
+                                }(),
+                                builder: (ctx, snap) {
                                   if (snap.connectionState == ConnectionState.waiting) return const Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator());
-                                  if (!snap.hasData || !snap.data!.exists) {
+                                  if (!snap.hasData || snap.data == null) {
                                      if (type == 'supply_alarm_status') return const Text('Bu bir durum güncellemesidir.\n(Talep sistemden silinmiş olabilir)', textAlign: TextAlign.center);
                                      return const Text('Talep detaylarına ulaşılamadı.', style: TextStyle(color: Colors.grey));
                                   }
                                   
-                                  final reqData = snap.data!.data() as Map<String, dynamic>;
-                                  final who = reqData['requestedByName'] ?? 'Personel';
-                                  final zone = reqData['requestedZone'] ?? '-';
+                                  final reqData = snap.data!;
+                                  String who = reqData['requestedByName'] ?? 'Personel';
+                                  if (who.trim().isEmpty || who.trim() == 'Personel ' || who.trim() == 'null') who = 'Personel';
+
+                                  final section = reqData['rSection'] as String?;
+                                  bool isWomen = section != null && (section.toLowerCase().contains('women') || section.toLowerCase().contains('kadin') || section.toLowerCase().contains('kadın'));
+                                  if (isWomen) {
+                                      final parts = who.split(' ');
+                                      who = parts.map((p) => p.isNotEmpty ? '${p[0]}${'*' * (p.length > 5 ? 5 : p.length - 1)}' : '').join(' ');
+                                  }
+                                  String zone = reqData['requestedZone'] ?? '-';
+                                  String sectionLabel = '';
+                                  if (section != null && section.isNotEmpty) {
+                                      final sl = section.toLowerCase();
+                                      if (sl.contains('women') || sl.contains('kadin') || sl.contains('kadın')) sectionLabel = 'Kadınlar Bölümü';
+                                      else if (sl.contains('men') || sl.contains('erkek')) sectionLabel = 'Erkekler Bölümü';
+                                      else if (sl.contains('ocakbasi') || sl.contains('ocakbaşı')) sectionLabel = 'Ocakbaşı';
+                                      else sectionLabel = section[0].toUpperCase() + section.substring(1).replaceAll('_', ' ');
+                                  }
+                                  if (sectionLabel.isNotEmpty) {
+                                      if (zone.toLowerCase() != sectionLabel.toLowerCase()) {
+                                          zone = '$sectionLabel - $zone';
+                                      } else {
+                                          zone = sectionLabel;
+                                      }
+                                  }
+                                  
                                   final status = reqData['status'] ?? 'pending';
                                   final urgency = reqData['urgency'] ?? 'normal';
                                   final adminReply = reqData['adminReply'] as String?;
                                   
                                   String rTimeStr = '-';
+                                  String uTimeStr = '-';
+                                  int? diffMins;
                                   if (reqData['createdAt'] != null) {
                                      final ts = reqData['createdAt'] as Timestamp;
                                      final dt = ts.toDate();
                                      rTimeStr = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                     
+                                     if (reqData['updatedAt'] != null) {
+                                        final uts = reqData['updatedAt'] as Timestamp;
+                                        final uDt = uts.toDate();
+                                        uTimeStr = '${uDt.day.toString().padLeft(2, '0')}.${uDt.month.toString().padLeft(2, '0')}.${uDt.year} ${uDt.hour.toString().padLeft(2, '0')}:${uDt.minute.toString().padLeft(2, '0')}';
+                                        diffMins = uDt.difference(dt).inMinutes;
+                                     }
                                   }
 
                                   Color statusColor = Colors.orange;
                                   String statusText = 'Bekliyor';
                                   if (status == 'on_the_way') { statusColor = Colors.blue; statusText = 'Yolda / Onaylandı'; }
-                                  else if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; }
-                                  else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; }
+                                  else if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; if (diffMins != null) statusText += '\n($diffMins dakika sürdü)'; }
+                                  else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; if (diffMins != null) statusText += '\n($diffMins dakika sürdü)'; }
                                   
                                   Widget buildRow(String label, String val, {Color? c}) {
                                      return Padding(
@@ -353,7 +429,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                         child: Column(
                                           children: [
                                             buildRow('Durum:', statusText, c: statusColor),
-                                            buildRow('Tarih Saati:', rTimeStr),
+                                            buildRow('İstek Zamanı:', rTimeStr),
+                                            buildRow('Cevap Zamanı:', uTimeStr),
                                             buildRow('İsteyen:', who),
                                             buildRow('Bölüm:', zone),
                                             if (urgency == 'super_urgent')
@@ -381,34 +458,31 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                                   ),
                                                 ),
                                                 const SizedBox(height: 12),
-                                                Row(
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                                   children: [
-                                                    Expanded(
-                                                      child: ElevatedButton.icon(
-                                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                                        icon: const Icon(Icons.check, size: 18),
-                                                        label: const Text('YOLA ÇIKAR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                                        onPressed: () async {
-                                                          setSheetState(() => isActionProcessing = true);
-                                                          final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Tamam, getiriyorum.';
-                                                          await _submitSupplyReply(data, 'on_the_way', note);
-                                                          setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
-                                                        }
-                                                      ),
+                                                    ElevatedButton.icon(
+                                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                      icon: const Icon(Icons.check, size: 18),
+                                                      label: const Text('YOLA ÇIKAR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                      onPressed: () async {
+                                                        setSheetState(() => isActionProcessing = true);
+                                                        final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Tamam, getiriyorum.';
+                                                        await _submitSupplyReply(data, 'on_the_way', note);
+                                                        setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
+                                                      }
                                                     ),
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      child: ElevatedButton.icon(
-                                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                                        icon: const Icon(Icons.close, size: 18),
-                                                        label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                                        onPressed: () async {
-                                                          setSheetState(() => isActionProcessing = true);
-                                                          final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Reddedildi.';
-                                                          await _submitSupplyReply(data, 'rejected', note);
-                                                          setSheetState(() { data['status'] = 'rejected'; isActionProcessing = false; });
-                                                        }
-                                                      ),
+                                                    const SizedBox(height: 12),
+                                                    ElevatedButton.icon(
+                                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                      icon: const Icon(Icons.close, size: 18),
+                                                      label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                      onPressed: () async {
+                                                        setSheetState(() => isActionProcessing = true);
+                                                        final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Reddedildi.';
+                                                        await _submitSupplyReply(data, 'rejected', note);
+                                                        setSheetState(() { data['status'] = 'rejected'; isActionProcessing = false; });
+                                                      }
                                                     ),
                                                   ]
                                                 ),
@@ -789,12 +863,27 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final notif = item as Map<String, dynamic>;
               final isRead = notif['read'] as bool? ?? true;
               final type = notif['type'] as String?;
-              final title = notif['title'] as String? ?? 'Bildirim';
-              final body = notif['body'] as String? ?? '';
+              String title = notif['title'] as String? ?? 'Bildirim';
+              String body = notif['body'] as String? ?? '';
+              
+              if (type == 'supply_alarm' || type == 'supply_alarm_status') {
+                 title = title.replaceAll('🏃‍♂️', '').replaceAll('🏃‍♀️', '').replaceAll('🏃', '').replaceAll('❌', '').replaceAll('✅', '').replaceAll('🚨', '').replaceAll('🔥', '').trim();
+                 if (title.startsWith('SÜPER ACİL:')) title = title.replaceFirst('SÜPER ACİL:', '').trim();
+                 if (title.startsWith('ACİL:')) title = title.replaceFirst('ACİL:', '').trim();
+                 body = body.replaceAll(RegExp(r'[\u{10000}-\u{10FFFF}]|[\u{2000}-\u{2BFF}]', unicode: true), '').trim();
+              }
+              
               final dateStr = _formatDate(notif['createdAt']);
               final imageUrl = notif['imageUrl'] as String?;
               final iconColor = _colorForType(notif, isRead);
               final iconData = _iconForType(notif);
+              
+              String? svgAsset;
+              if (type == 'supply_alarm_status') {
+                 final st = notif['status'] as String?;
+                 if (st == 'on_the_way') svgAsset = 'assets/icons/man_run1.svg';
+                 else if (st == 'completed') svgAsset = 'assets/icons/package_ok1.svg';
+              }
 
               final bool isOrder = type != null && type.contains('order');
               // Allow all non-order notifications to open the detail sheet so no message is ever "unclickable"
@@ -890,7 +979,9 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                 color: iconColor.withOpacity(isRead ? 0.08 : 0.15),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(iconData, color: iconColor, size: 22),
+                              child: svgAsset != null 
+                                  ? Center(child: SvgPicture.asset(svgAsset, width: 22, height: 22, colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn)))
+                                  : Icon(iconData, color: iconColor, size: 22),
                             ),
                             const SizedBox(width: 12),
                             // Metin

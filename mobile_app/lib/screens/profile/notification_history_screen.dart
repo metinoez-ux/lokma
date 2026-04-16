@@ -253,7 +253,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     final type = data['type'] as String?;
     String title = data['title'] as String? ?? '';
     title = title.replaceAll('Malzeme Tamamlandı', 'Malzeme İsteği Tamamlandı').replaceAll('Malzeme Yola Çıktı', 'Malzeme İsteği Yola Çıktı');
-    title = title.replaceAll('🏃', '').replaceAll('✅', '').replaceAll('❌', '').trim();
+    title = title.replaceAll('🏃‍♂️', '').replaceAll('🏃‍♀️', '').replaceAll('🏃', '').replaceAll('✅', '').replaceAll('❌', '').replaceAll('🚨', '').replaceAll('🔥', '').trim();
     final body = data['body'] as String? ?? '';
     final imageUrl = data['imageUrl'] as String?;
     final vehiclePlate = data['vehiclePlate'] as String? ?? '';
@@ -335,7 +335,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                     ),
                   if (!isRoster) const SizedBox(height: 10),
 
-                  if (type == 'supply_alarm_status') ...[
+                  if (type == 'supply_alarm_status' || type == 'supply_alarm') ...[
                      (() {
                          final rId = data['requestId'] as String?;
                          final kId = data['kermesId'] as String?;
@@ -348,10 +348,35 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                final uId = res['requestedByUid'] as String?;
                                if (uId != null) {
                                   try {
-                                     final uSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('roster').doc(uId).get();
-                                     if (uSnap.exists) { res['rSection'] = uSnap.data()?['sectionId']; return res; }
+                                     final rSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('rosters').where('userId', '==', uId).get();
+                                     if (rSnap.docs.isNotEmpty) {
+                                         res['rSection'] = rSnap.docs.first.data()['role'];
+                                     }
+                                     
+                                     final uDoc = await FirebaseFirestore.instance.collection('users').doc(uId).get();
+                                     if (uDoc.exists) {
+                                        final ud = uDoc.data()!;
+                                        final fullName = ud['fullName'] ?? ud['displayName'];
+                                        final fn = ud['firstName'];
+                                        final ln = ud['lastName'];
+                                        if (fn != null && fn.toString().trim().isNotEmpty) {
+                                            res['requestedByName'] = '${fn} ${ln ?? ''}'.trim();
+                                        } else if (fullName != null && fullName.toString().trim().isNotEmpty) {
+                                            res['requestedByName'] = fullName;
+                                        }
+                                        return res;
+                                     }
+                                     
                                      final aSnap = await FirebaseFirestore.instance.collection('admins').doc(uId).get();
-                                     if (aSnap.exists) { res['rSection'] = aSnap.data()?['sectionId']; return res; }
+                                     if (aSnap.exists) {
+                                         if (aSnap.data()?['name'] != null && aSnap.data()!['name'].toString().trim().isNotEmpty) {
+                                             res['requestedByName'] = aSnap.data()!['name'];
+                                         }
+                                         if (res['rSection'] == null) {
+                                            res['rSection'] = aSnap.data()?['sectionId'];
+                                         }
+                                         return res;
+                                     }
                                   } catch (_) {}
                                }
                                return res;
@@ -362,14 +387,30 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                
                                final reqData = snap.data!;
                                String who = reqData['requestedByName'] ?? 'Personel';
+                               if (who.trim().isEmpty || who.trim() == 'Personel ' || who.trim() == 'null') who = 'Personel';
+
                                final section = reqData['rSection'] as String?;
-                               if (section == 'women' || section == 'kadinlar') {
+                               bool isWomen = section != null && (section.toLowerCase().contains('women') || section.toLowerCase().contains('kadin') || section.toLowerCase().contains('kadın'));
+                               if (isWomen) {
                                    final parts = who.split(' ');
                                    who = parts.map((p) => p.isNotEmpty ? '${p[0]}${'*' * (p.length > 5 ? 5 : p.length - 1)}' : '').join(' ');
                                }
                                String zone = reqData['requestedZone'] ?? '-';
-                               String sectionLabel = section == 'women' ? 'Kadınlar Bölümü' : (section == 'men' ? 'Erkekler Bölümü' : '');
-                               if (sectionLabel.isNotEmpty) zone = '$sectionLabel - $zone';
+                               String sectionLabel = '';
+                               if (section != null && section.isNotEmpty) {
+                                   final sl = section.toLowerCase();
+                                   if (sl.contains('women') || sl.contains('kadin') || sl.contains('kadın')) sectionLabel = 'Kadınlar Bölümü';
+                                   else if (sl.contains('men') || sl.contains('erkek')) sectionLabel = 'Erkekler Bölümü';
+                                   else if (sl.contains('ocakbasi') || sl.contains('ocakbaşı')) sectionLabel = 'Ocakbaşı';
+                                   else sectionLabel = section[0].toUpperCase() + section.substring(1).replaceAll('_', ' ');
+                               }
+                               if (sectionLabel.isNotEmpty) {
+                                   if (zone.toLowerCase() != sectionLabel.toLowerCase()) {
+                                       zone = '$sectionLabel - $zone';
+                                   } else {
+                                       zone = sectionLabel;
+                                   }
+                               }
                                
                                final currentStatus = reqData['status'] ?? 'pending';
                                final adminReply = reqData['adminReply'] as String?;
@@ -466,34 +507,31 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                               ),
                                             ),
                                             const SizedBox(height: 12),
-                                            Row(
+                                            Column(
+                                              crossAxisAlignment: CrossAxisAlignment.stretch,
                                               children: [
-                                                Expanded(
-                                                  child: ElevatedButton.icon(
-                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                                    icon: const Icon(Icons.check, size: 18),
-                                                    label: const Text('YOLA ÇIKAR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                                    onPressed: () async {
-                                                      setSheetState(() => isActionProcessing = true);
-                                                      final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Tamam, getiriyorum.';
-                                                      await _submitSupplyReply(data, 'on_the_way', note);
-                                                      if (context.mounted) Navigator.pop(context);
-                                                    }
-                                                  ),
+                                                ElevatedButton.icon(
+                                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                  icon: const Icon(Icons.check, size: 18),
+                                                  label: const Text('YOLA ÇIKAR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                  onPressed: () async {
+                                                    setSheetState(() => isActionProcessing = true);
+                                                    final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Tamam, getiriyorum.';
+                                                    await _submitSupplyReply(data, 'on_the_way', note);
+                                                    setSheetState(() { data['status'] = 'on_the_way'; isActionProcessing = false; });
+                                                  }
                                                 ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: ElevatedButton.icon(
-                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-                                                    icon: const Icon(Icons.close, size: 18),
-                                                    label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                                    onPressed: () async {
-                                                      setSheetState(() => isActionProcessing = true);
-                                                      final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Reddedildi.';
-                                                      await _submitSupplyReply(data, 'rejected', note);
-                                                      if (context.mounted) Navigator.pop(context);
-                                                    }
-                                                  ),
+                                                const SizedBox(height: 12),
+                                                ElevatedButton.icon(
+                                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                                                  icon: const Icon(Icons.close, size: 18),
+                                                  label: const Text('REDDET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                  onPressed: () async {
+                                                    setSheetState(() => isActionProcessing = true);
+                                                    final note = (supplyReplyText != null && supplyReplyText!.trim().isNotEmpty) ? supplyReplyText!.trim() : 'Reddedildi.';
+                                                    await _submitSupplyReply(data, 'rejected', note);
+                                                    setSheetState(() { data['status'] = 'rejected'; isActionProcessing = false; });
+                                                  }
                                                 ),
                                               ]
                                             ),
@@ -4325,8 +4363,17 @@ class _GenericNotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['title'] as String? ?? 'notifications.notification'.tr();
-    final body = data['body'] as String? ?? '';
+    String title = data['title'] as String? ?? 'notifications.notification'.tr();
+    String body = data['body'] as String? ?? '';
+    final type = data['type'] as String? ?? '';
+    
+    if (type == 'supply_alarm' || type == 'supply_alarm_status') {
+       title = title.replaceAll('🏃‍♂️', '').replaceAll('🏃‍♀️', '').replaceAll('🏃', '').replaceAll('❌', '').replaceAll('✅', '').replaceAll('🚨', '').trim();
+       if (title.startsWith('SÜPER ACİL:')) title = title.replaceFirst('SÜPER ACİL:', '').trim();
+       if (title.startsWith('ACİL:')) title = title.replaceFirst('ACİL:', '').trim();
+       body = body.replaceAll('🏃‍♂️', '').replaceAll('🏃‍♀️', '').replaceAll('🏃', '').replaceAll('❌', '').replaceAll('✅', '').replaceAll('🚨', '').trim();
+    }
+    
     final createdAt = (data['createdAt'] is Timestamp ? data['createdAt'] /*cast*/ : null);
     final isRead = data['read'] as bool? ?? true;
     final imageUrl = data['imageUrl'] as String?;
@@ -4376,7 +4423,8 @@ class _GenericNotificationCard extends StatelessWidget {
                       
                       Color bgColor;
                       Color iconColor;
-                      IconData iconData;
+                      IconData? iconData;
+                      String? svgAsset;
 
                       if (isCampaign) {
                         bgColor = isDark ? const Color(0xFF880E4F).withOpacity(0.3) : const Color(0xFFFCE4EC);
@@ -4392,11 +4440,29 @@ class _GenericNotificationCard extends StatelessWidget {
                         iconData = Icons.local_parking_rounded;
                       } else if (type == 'supply_alarm' || type == 'supply_alarm_status') {
                         final st = data['status'] as String? ?? '';
-                        bgColor = isDark ? Colors.teal[900]!.withOpacity(0.3) : Colors.teal[50]!;
-                        iconColor = isDark ? Colors.teal[300]! : Colors.teal[700]!;
-                        iconData = type == 'supply_alarm' 
-                            ? Icons.campaign_rounded 
-                            : (st == 'on_the_way' ? Icons.directions_run_rounded : (st == 'rejected' ? Icons.cancel_rounded : Icons.check_circle_outline_rounded));
+                        if (type == 'supply_alarm') {
+                            bgColor = isDark ? Colors.teal[900]!.withOpacity(0.3) : Colors.teal[50]!;
+                            iconColor = isDark ? Colors.teal[300]! : Colors.teal[700]!;
+                            iconData = Icons.campaign_rounded;
+                        } else {
+                            if (st == 'rejected') {
+                                bgColor = isDark ? Colors.red[900]!.withOpacity(0.3) : Colors.red[50]!;
+                                iconColor = isDark ? Colors.red[300]! : Colors.red[700]!;
+                                iconData = Icons.cancel_rounded;
+                            } else if (st == 'on_the_way') {
+                                bgColor = isDark ? Colors.orange[900]!.withOpacity(0.3) : Colors.orange[50]!;
+                                iconColor = isDark ? Colors.orange[300]! : Colors.orange[700]!;
+                                svgAsset = 'assets/icons/man_run1.svg';
+                            } else if (st == 'completed') {
+                                bgColor = isDark ? Colors.green[900]!.withOpacity(0.3) : Colors.green[50]!;
+                                iconColor = isDark ? Colors.green[300]! : Colors.green[700]!;
+                                svgAsset = 'assets/icons/package_ok1.svg';
+                            } else {
+                                bgColor = isDark ? Colors.teal[900]!.withOpacity(0.3) : Colors.teal[50]!;
+                                iconColor = isDark ? Colors.teal[300]! : Colors.teal[700]!;
+                                iconData = Icons.info_outline_rounded;
+                            }
+                        }
                       } else {
                         bgColor = isDark ? Colors.grey[800]! : Colors.grey[100]!;
                         iconColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
@@ -4409,11 +4475,13 @@ class _GenericNotificationCard extends StatelessWidget {
                           color: bgColor,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          iconData,
-                          color: iconColor,
-                          size: 20,
-                        ),
+                        child: svgAsset != null
+                            ? SvgPicture.asset(svgAsset, width: 20, height: 20, colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn))
+                            : Icon(
+                                iconData,
+                                color: iconColor,
+                                size: 20,
+                              ),
                       );
                     },
                   ),
