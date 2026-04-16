@@ -316,6 +316,7 @@ export default function KermesTvPage({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [lang2, setLang2] = useState<string | null>(null);
   const [dateRangeStr, setDateRangeStr] = useState<string>('');
+  const [operatingHoursStr, setOperatingHoursStr] = useState<string>('');
   const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [newlyReady, setNewlyReady] = useState<Set<string>>(new Set());
   const previousReadyRef = useRef<Set<string>>(new Set());
@@ -336,6 +337,12 @@ export default function KermesTvPage({
         if (kermesDoc.exists()) {
           const data = kermesDoc.data();
           setKermesName(data.name || data.title || 'Kermes');
+          
+          if (data.openingTime && data.closingTime) {
+            setOperatingHoursStr(`${data.openingTime} - ${data.closingTime}`);
+          } else if (data.openingTime) {
+            setOperatingHoursStr(data.openingTime);
+          }
 
           // Dil belirleme
           const countryStr = (data.country || '').toLowerCase();
@@ -691,6 +698,16 @@ export default function KermesTvPage({
                   <span style={{ fontSize: '14px', color: '#94a3b8' }}>
                     {dateRangeStr.replace('-', ' - ')}
                   </span>
+                )}
+
+                {operatingHoursStr && (
+                  <>
+                    <div style={{width: '2px', height: '14px', background: 'rgba(255,255,255,0.1)'}}></div>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#cbd5e1' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
+                      {operatingHoursStr}
+                    </span>
+                  </>
                 )}
 
                 {currentDay !== null && currentDay > 0 && (
