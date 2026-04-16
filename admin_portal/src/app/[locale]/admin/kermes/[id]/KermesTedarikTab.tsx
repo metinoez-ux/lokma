@@ -16,6 +16,9 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Notes state for replies
+  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
+
   // Categories config
   const [categories, setCategories] = useState<any[]>(kermesData?.supplyCategories || []);
   const [newCatTitle, setNewCatTitle] = useState('');
@@ -45,13 +48,27 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
     return () => unsubscribe();
   }, [kermesId]);
 
-  const handleUpdateStatus = async (reqId: string, status: string) => {
+  const handleUpdateStatus = async (reqId: string, status: string, replyMessage?: string) => {
     try {
-      await updateDoc(doc(db, 'kermes_events', kermesId, 'supply_requests', reqId), {
+      const updateData: any = {
         status,
         assignedToUid: adminUid,
-        completedAt: status === 'completed' ? Timestamp.now() : null
-      });
+        updatedAt: Timestamp.now(),
+        adminReply: replyMessage || null,
+      };
+      if (status === 'completed' || status === 'rejected') {
+         updateData.completedAt = Timestamp.now();
+      }
+      await updateDoc(doc(db, 'kermes_events', kermesId, 'supply_requests', reqId), updateData);
+      
+      // Clear reply text if it exists
+      if (replyTexts[reqId]) {
+        setReplyTexts(prev => {
+          const newTexts = { ...prev };
+          delete newTexts[reqId];
+          return newTexts;
+        });
+      }
     } catch (error) {
       console.error("Error updating supply status", error);
     }
@@ -145,8 +162,8 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
      } catch (e) {}
   };
 
-  const pendingReqs = requests.filter(r => r.status !== 'completed');
-  const completedReqs = requests.filter(r => r.status === 'completed');
+  const liveReqs = requests.filter(r => r.status === 'pending' || r.status === 'on_the_way');
+  const pastReqs = requests.filter(r => r.status === 'completed' || r.status === 'rejected');
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
@@ -159,15 +176,15 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
 
          {loading ? (
              <p className="text-muted-foreground text-sm">Yükleniyor...</p>
-         ) : pendingReqs.length === 0 ? (
+         ) : liveReqs.length === 0 ? (
              <div className="text-center py-10 bg-muted/30 rounded-lg">
                 <span className="material-symbols-outlined text-4xl text-muted-foreground/50 mb-2">check_circle</span>
                 <p className="text-muted-foreground">Şu an hiçbir ihtiyaç anonsu yok.</p>
              </div>
          ) : (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
-                {pendingReqs.map((r) => (
-                  <div key={r.id} className={`p-4 xl:p-5 rounded-lg flex flex-col justify-between border ${r.status === 'completed' ? 'bg-muted/30 border-muted opacity-60' : r.status === 'on_the_way' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200' : r.urgency === 'super_urgent' ? 'bg-red-100 dark:bg-red-900/40 border-red-500 animate-pulse-soft' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200'}`}>
+                {liveReqs.map((r) => (
+                  <div key={r.id} className={`p-4 xl:p-5 rounded-lg flex flex-col justify-between border ${r.status === 'completed' ? 'bg-muted/30 border-muted opacity-60' : r.status === 'on_the_way' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200' : r.status === 'rejected' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 opacity-80' : r.urgency === 'super_urgent' ? 'bg-red-100 dark:bg-red-900/40 border-red-500 animate-pulse-soft' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200'}`}>
                      <div>
                         <div className="flex items-center space-x-2 flex-wrap gap-y-2">
                            {r.urgency === 'super_urgent' && r.status === 'pending' && (
@@ -175,8 +192,8 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
                                🔥 SÜPER ACİL
                              </span>
                            )}
-                           <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${r.status === 'completed' ? 'bg-gray-200 text-gray-700' : r.status === 'on_the_way' ? 'bg-amber-200 text-amber-800' : r.urgency === 'super_urgent' ? 'hidden' : 'bg-orange-500 text-white'}`}>
-                              {r.status === 'completed' ? 'Tamamlandı' : r.status === 'on_the_way' ? 'Yola Çıktı' : 'Bekliyor'}
+                           <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${r.status === 'completed' ? 'bg-gray-200 text-gray-700' : r.status === 'on_the_way' ? 'bg-amber-200 text-amber-800' : r.status === 'rejected' ? 'bg-red-200 text-red-800' : r.urgency === 'super_urgent' ? 'hidden' : 'bg-orange-500 text-white'}`}>
+                              {r.status === 'completed' ? 'Tamamlandı' : r.status === 'on_the_way' ? 'Yola Çıktı' : r.status === 'rejected' ? 'Reddedildi' : 'Bekliyor'}
                            </span>
                            <span className="text-sm font-medium opacity-60">
                               {new Date(r.createdAt?.toMillis()).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}
@@ -190,16 +207,33 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
                            {r.requestedZone}
                         </p>
                      </div>
-                     <div className="flex flex-col space-y-2 mt-2">
+                     <div className="flex flex-col mt-2">
                         {r.status === 'pending' && (
-                           <button onClick={() => handleUpdateStatus(r.id, 'on_the_way')} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center">
-                              <span className="material-symbols-outlined text-sm mr-1">local_shipping</span> Yola Çıkar
-                           </button>
+                           <>
+                             <input 
+                               type="text" 
+                               placeholder="Cevap notu (isteğe bağlı)..."
+                               className="bg-background border border-border rounded px-3 py-1.5 text-sm w-full mb-2"
+                               value={replyTexts[r.id] || ''}
+                               onChange={(e) => setReplyTexts(prev => ({...prev, [r.id]: e.target.value}))}
+                             />
+                             <div className="flex gap-2">
+                               <button onClick={() => handleUpdateStatus(r.id, 'on_the_way', replyTexts[r.id])} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white px-2 py-2 rounded-lg text-sm font-bold flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-sm mr-1">local_shipping</span> Yola Çıkar
+                               </button>
+                               <button onClick={() => handleUpdateStatus(r.id, 'rejected', replyTexts[r.id])} className="bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60 px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-center transition" title="Reddet">
+                                  <span className="material-symbols-outlined text-sm">close</span>
+                               </button>
+                             </div>
+                           </>
                         )}
                         {r.status === 'on_the_way' && (
-                           <button onClick={() => handleUpdateStatus(r.id, 'completed')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center">
-                              <span className="material-symbols-outlined text-sm mr-1">check</span> Teslim Edildi
-                           </button>
+                           <div className="flex flex-col">
+                             {r.adminReply && <p className="text-xs text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/30 px-2 py-1.5 rounded mb-2 italic">Notunuz: {r.adminReply}</p>}
+                             <button onClick={() => handleUpdateStatus(r.id, 'completed')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center">
+                                <span className="material-symbols-outlined text-sm mr-1">check</span> Teslim Edildi
+                             </button>
+                           </div>
                         )}
                      </div>
                   </div>
@@ -208,34 +242,35 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
          )}
 
          {/* TAMAMLANANLAR ALANI */}
-         {completedReqs.length > 0 && (
+         {pastReqs.length > 0 && (
             <details className="mt-8 bg-card rounded-xl border border-border group overflow-hidden">
                <summary className="p-4 bg-muted/20 cursor-pointer font-bold flex items-center justify-between list-none">
                   <div className="flex items-center">
-                     <span className="material-symbols-outlined text-emerald-500 mr-2">check_circle</span>
-                     Tamamlanan Teslimatlar ({completedReqs.length})
+                     <span className="material-symbols-outlined text-muted-foreground mr-2">history</span>
+                     Geçmiş Talepler ({pastReqs.length})
                   </div>
                   <span className="material-symbols-outlined text-muted-foreground group-open:rotate-180 transition-transform">expand_more</span>
                </summary>
                <div className="p-6 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 border-t border-border bg-card">
-                  {completedReqs.map((r) => (
+                  {pastReqs.map((r) => (
                     <div key={r.id} className="p-4 xl:p-5 rounded-lg flex flex-col justify-between border bg-muted/20 border-muted opacity-70">
                        <div>
                           <div className="flex items-center space-x-2 flex-wrap gap-y-2">
-                             <span className="px-2 py-1 text-[11px] font-bold rounded-md bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                Tamamlandı
+                             <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${r.status === 'completed' ? 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                {r.status === 'completed' ? 'Tamamlandı' : 'Reddedildi'}
                              </span>
                              <span className="text-sm font-medium opacity-60">
                                 {new Date(r.createdAt?.toMillis()).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}
                              </span>
                           </div>
-                          <h4 className="font-bold text-lg mt-2 line-through opacity-70">{r.itemName}</h4>
+                          <h4 className={`font-bold text-lg mt-2 ${r.status === 'completed' ? 'line-through opacity-70' : ''}`}>{r.itemName}</h4>
                           <p className="text-sm text-muted-foreground mt-1 mb-2">
                              <span className="material-symbols-outlined text-xs align-middle mr-1">person</span>
                              {r.requestedByName} <span className="mx-1">•</span>
                              <span className="material-symbols-outlined text-xs align-middle mr-1">location_on</span>
                              {r.requestedZone}
                           </p>
+                          {r.adminReply && <p className="text-xs text-muted-foreground bg-muted p-1.5 rounded italic">Cevabınız: {r.adminReply}</p>}
                        </div>
                     </div>
                   ))}
