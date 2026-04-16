@@ -186,7 +186,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
     }
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, {String? urgency}) {
     if (status == 'completed') {
        return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -203,7 +203,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
        return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(8)),
-          child: Text('İptal Edildi', style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+          child: const Text('İptal Edildi', style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
        );
     } else if (status == 'rejected') {
        return Container(
@@ -212,10 +212,20 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
           child: Text('Reddedildi', style: TextStyle(color: Colors.red.shade900, fontSize: 12, fontWeight: FontWeight.bold)),
        );
     }
+
+    // Pending
+    if (urgency == 'super_urgent') {
+      return Container(
+         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+         decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade300)),
+         child: const Text('⚠️ SÜPER ACİL', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+      );
+    }
+
     return Container(
        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-       decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(8)),
-       child: Text('supply_status_pending'.tr(), style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+       decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(8)),
+       child: const Text('Bekliyor', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -372,21 +382,28 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                                title: Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, decoration: (status == 'completed' || status == 'cancelled' || status == 'rejected') ? TextDecoration.lineThrough : null)),
                                subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                  Text("${d['requestedByName']} • ${d['requestedZone']}", style: const TextStyle(fontSize: 12)),
-                                 if (d['urgency'] == 'super_urgent')
-                                   Container(margin: const EdgeInsets.only(top: 4), padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.red)), child: const Text('🔥 SÜPER ACİL', style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)))
                                ]),
                                trailing: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                     _buildStatusBadge(status),
+                                     _buildStatusBadge(status, urgency: d['urgency']),
                                      if (isMine && status == 'pending')
-                                        InkWell(
-                                           onTap: () => doc.reference.update({'status': 'cancelled'}),
-                                           child: const Padding(
-                                             padding: EdgeInsets.only(top: 4),
-                                             child: Text('İptal Et', style: TextStyle(color: Colors.blue, fontSize: 11)),
-                                           )
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          child: InkWell(
+                                            onTap: () => doc.reference.update({'status': 'cancelled'}),
+                                            borderRadius: BorderRadius.circular(6),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                border: Border.all(color: Colors.red.shade300),
+                                                borderRadius: BorderRadius.circular(6),
+                                                color: Colors.red.shade50,
+                                              ),
+                                              child: const Text('İptal Et', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+                                            )
+                                          ),
                                         )
                                   ],
                                ),
