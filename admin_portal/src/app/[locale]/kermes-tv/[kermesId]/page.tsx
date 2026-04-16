@@ -32,6 +32,8 @@ interface DisplayOrder {
   status: string; // pending | preparing | ready
   customerName: string;
   createdAt: Date;
+  deliveryType?: string;
+  tableNumber?: string | null;
 }
 
 function normalizeForSearch(text: string | null | undefined): string {
@@ -50,7 +52,14 @@ function normalizeForSearch(text: string | null | undefined): string {
 
 function formatGdprName(fullName: string): string {
   if (!fullName || fullName.trim().length === 0) return '';
-  const parts = fullName.trim().split(/\s+/);
+  
+  const val = fullName.trim();
+  const lowerVal = val.toLowerCase();
+  
+  // Eger default isimler kullanilmassa hic isim gosterme ('P. S.' kargasasini onler)
+  if (lowerVal === 'pos' || lowerVal.includes('pos sat') || lowerVal.includes('misafir')) return '';
+
+  const parts = val.split(/\s+/);
   
   if (parts.length === 1) {
     const word = parts[0];
@@ -391,6 +400,8 @@ export default function KermesTvPage({
           status: data.status,
           customerName: data.customerName || '',
           createdAt: data.createdAt?.toDate?.() || new Date(),
+          deliveryType: data.deliveryType,
+          tableNumber: data.tableNumber,
         });
       });
 
@@ -567,15 +578,23 @@ export default function KermesTvPage({
                 </div>
               ) : (
                 preparingOrders.map((order) => (
-                  <div key={order.id} className={styles.preparingCard}>
+                  <div key={order.id} className={styles.preparingCard} style={{ position: 'relative' }}>
                     <span className={styles.preparingNumber}>
                       {formatOrderNo(order.orderNumber)}
                     </span>
-                    {order.customerName && (
-                      <span className={styles.customerInitials}>
-                        {formatGdprName(order.customerName)}
-                      </span>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      {order.deliveryType === 'masada' && (
+                        <div className={styles.tableBadge}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>restaurant</span>
+                          <span>Masa {order.tableNumber}</span>
+                        </div>
+                      )}
+                      {order.customerName && formatGdprName(order.customerName) && (
+                        <span className={styles.customerInitials}>
+                          {formatGdprName(order.customerName)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -611,16 +630,25 @@ export default function KermesTvPage({
                         ? styles.readyCardNew
                         : styles.readyCard
                     }
+                    style={{ position: 'relative' }}
                   >
                     <span className={styles.readyNumber}>
                       {formatOrderNo(order.orderNumber)}
                     </span>
-                    {order.customerName && (
-                      <span className={styles.readyCustomerInitials}>
-                        {formatGdprName(order.customerName)}
-                      </span>
-                    )}
-                    <span className={styles.readyLabel}>{getDualLang('readyLabel', lang2)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      {order.deliveryType === 'masada' && (
+                        <div className={styles.tableBadge}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>restaurant</span>
+                          <span>Masa {order.tableNumber}</span>
+                        </div>
+                      )}
+                      {order.customerName && formatGdprName(order.customerName) && (
+                        <span className={styles.readyCustomerInitials}>
+                          {formatGdprName(order.customerName)}
+                        </span>
+                      )}
+                      <span className={styles.readyLabel} style={{ marginLeft: '12px' }}>{getDualLang('readyLabel', lang2)}</span>
+                    </div>
                   </div>
                 ))
               )}
