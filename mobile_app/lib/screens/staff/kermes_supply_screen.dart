@@ -328,11 +328,18 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                       );
                    }
                    
-                   return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: snapshot.data!.docs.length,
-                      itemBuilder: (ctx, idx) {
-                         final doc = snapshot.data!.docs[idx];
+                   final docs = snapshot.data!.docs;
+                   final pendingDocs = docs.where((doc) {
+                      final d = doc.data() as Map<String, dynamic>;
+                      return d['status'] != 'completed';
+                   }).toList();
+                   
+                   final completedDocs = docs.where((doc) {
+                      final d = doc.data() as Map<String, dynamic>;
+                      return d['status'] == 'completed';
+                   }).toList();
+                   
+                   Widget buildCard(QueryDocumentSnapshot doc) {
                          final d = doc.data() as Map<String, dynamic>;
                          final isMine = d['requestedByUid'] == FirebaseAuth.instance.currentUser?.uid;
                          final status = d['status'] as String? ?? 'pending';
@@ -373,7 +380,22 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                                ),
                             ),
                          );
-                      },
+                   }
+
+                   return ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        ...pendingDocs.map((doc) => buildCard(doc)),
+                        if (completedDocs.isNotEmpty)
+                           Theme(
+                             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                             child: ExpansionTile(
+                               tilePadding: EdgeInsets.zero,
+                               title: Text('Tamamlananlar (${completedDocs.length})', style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                               children: completedDocs.map((doc) => Opacity(opacity: 0.6, child: buildCard(doc))).toList(),
+                             ),
+                           )
+                      ],
                    );
                 },
              ),

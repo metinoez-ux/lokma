@@ -42,7 +42,10 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
       setLoading(false);
     });
 
-    return () => unsubscribe();
+      const pendingReqs = requests.filter(r => r.status !== 'completed');
+  const completedReqs = requests.filter(r => r.status === 'completed');
+
+  return () => unsubscribe();
   }, [kermesId]);
 
   const handleUpdateStatus = async (reqId: string, status: string) => {
@@ -156,14 +159,14 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
 
          {loading ? (
              <p className="text-muted-foreground text-sm">Yükleniyor...</p>
-         ) : requests.length === 0 ? (
+         ) : pendingReqs.length === 0 ? (
              <div className="text-center py-10 bg-muted/30 rounded-lg">
                 <span className="material-symbols-outlined text-4xl text-muted-foreground/50 mb-2">check_circle</span>
                 <p className="text-muted-foreground">Şu an hiçbir ihtiyaç anonsu yok.</p>
              </div>
          ) : (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
-                {requests.map((r) => (
+                {pendingReqs.map((r) => (
                   <div key={r.id} className={`p-4 xl:p-5 rounded-lg flex flex-col justify-between border ${r.status === 'completed' ? 'bg-muted/30 border-muted opacity-60' : r.status === 'on_the_way' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200' : r.urgency === 'super_urgent' ? 'bg-red-100 dark:bg-red-900/40 border-red-500 animate-pulse-soft' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200'}`}>
                      <div>
                         <div className="flex items-center space-x-2 flex-wrap gap-y-2">
@@ -203,6 +206,43 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
                 ))}
              </div>
          )}
+
+         {/* TAMAMLANANLAR ALANI */}
+         {completedReqs.length > 0 && (
+            <details className="mt-8 bg-card rounded-xl border border-border group overflow-hidden">
+               <summary className="p-4 bg-muted/20 cursor-pointer font-bold flex items-center justify-between list-none">
+                  <div className="flex items-center">
+                     <span className="material-symbols-outlined text-emerald-500 mr-2">check_circle</span>
+                     Tamamlanan Teslimatlar ({completedReqs.length})
+                  </div>
+                  <span className="material-symbols-outlined text-muted-foreground group-open:rotate-180 transition-transform">expand_more</span>
+               </summary>
+               <div className="p-6 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 border-t border-border bg-card">
+                  {completedReqs.map((r) => (
+                    <div key={r.id} className="p-4 xl:p-5 rounded-lg flex flex-col justify-between border bg-muted/20 border-muted opacity-70">
+                       <div>
+                          <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+                             <span className="px-2 py-1 text-[11px] font-bold rounded-md bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                Tamamlandı
+                             </span>
+                             <span className="text-sm font-medium opacity-60">
+                                {new Date(r.createdAt?.toMillis()).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}
+                             </span>
+                          </div>
+                          <h4 className="font-bold text-lg mt-2 line-through opacity-70">{r.itemName}</h4>
+                          <p className="text-sm text-muted-foreground mt-1 mb-2">
+                             <span className="material-symbols-outlined text-xs align-middle mr-1">person</span>
+                             {r.requestedByName} <span className="mx-1">•</span>
+                             <span className="material-symbols-outlined text-xs align-middle mr-1">location_on</span>
+                             {r.requestedZone}
+                          </p>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+            </details>
+         )}
+
       </div>
 
       {/* KATEGORI VE MALZEME YONETIMI */}
