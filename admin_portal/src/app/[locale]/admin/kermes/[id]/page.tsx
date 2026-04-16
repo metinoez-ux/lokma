@@ -1859,7 +1859,7 @@ export default function KermesDetailPage() {
    try {
      const discountedItems = products.filter(p => p.discountPrice && p.discountPrice! > 0 && !p.isSoldOut && p.isAvailable);
      if (discountedItems.length === 0) {
-       toast.error(t('hata_olustu') || 'İndirimde ürün bulunmuyor.');
+       showToast(t('hata_olustu') || 'İndirimde ürün bulunmuyor.', 'error');
        return;
      }
      
@@ -1889,13 +1889,13 @@ export default function KermesDetailPage() {
      
      const data = await response.json();
      if (data.success) {
-       toast.success(`Bildirim başarıyla ${data.sentCount} kişiye gönderildi!`);
+       showToast(`Bildirim başarıyla ${data.sentCount} kişiye gönderildi!`, 'success');
        setShowFlashSaleModal(false);
      } else {
-       toast.error(data.error || t('hata_olustu'));
+       showToast(data.error || t('hata_olustu'), 'error');
      }
    } catch (error) {
-     toast.error(String(error));
+     showToast(String(error), 'error');
    } finally {
      setIsSendingFlashSale(false);
    }
@@ -1905,7 +1905,7 @@ export default function KermesDetailPage() {
   // ── Park Anons handler ──
   const handleSendParkingAnnouncement = async () => {
     if (!vehiclePlate.trim()) {
-      toast.error('Plaka bilgisi zorunlu.');
+      showToast('Plaka bilgisi zorunlu.', 'error');
       return;
     }
     setIsSendingParking(true);
@@ -1939,15 +1939,15 @@ export default function KermesDetailPage() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[PARKING-PUSH] Error response:', errorText);
-        toast.error(`API hatasi: ${response.status}`);
+        showToast(`API hatasi: ${response.status}`, 'error');
       } else {
         const data = await response.json();
         console.log('[PARKING-PUSH] Result:', data);
         if (data.success) {
           const cnt = data.sentCount || 0;
-          toast.success(`Acil arac anonsu ${cnt} kisiye gonderildi!`);
+          showToast(`Acil arac anonsu ${cnt} kisiye gonderildi!`, 'success');
         } else {
-          toast.error(data.error || 'Gonderilemedi');
+          showToast(data.error || 'Gonderilemedi', 'error');
         }
       }
       // Her durumda modali kapat ve formu sifirla
@@ -1955,7 +1955,7 @@ export default function KermesDetailPage() {
       setVehiclePlate(''); setVehicleColor(''); setVehicleBrand(''); setVehicleImageUrl('');
     } catch (error) {
       console.error('[PARKING-PUSH] Exception:', error);
-      toast.error(String(error));
+      showToast(String(error), 'error');
       setShowParkingModal(false);
     } finally {
       setIsSendingParking(false);
@@ -1965,7 +1965,7 @@ export default function KermesDetailPage() {
   // ── Manuel Bildirim handler ──
   const handleSendManualNotification = async () => {
     if (!manualTitle.trim() || !manualBody.trim()) {
-      toast.error('Baslik ve icerik bos birakilamaz.');
+      showToast('Baslik ve icerik bos birakilamaz.', 'error');
       return;
     }
     setIsSendingManual(true);
@@ -1986,15 +1986,15 @@ export default function KermesDetailPage() {
       });
       const data = await response.json();
       if (data.success) {
-        toast.success(`Bildirim gonderildi! (${data.sentCount} kisi)`);
+        showToast(`Bildirim gonderildi! (${data.sentCount} kisi)`, 'success');
         setShowManualModal(false);
         setManualTitle('');
         setManualBody('');
       } else {
-        toast.error(data.error || 'Gönderilemedi');
+        showToast(data.error || 'Gönderilemedi', 'error');
       }
     } catch (error) {
-      toast.error(String(error));
+      showToast(String(error), 'error');
     } finally {
       setIsSendingManual(false);
     }
