@@ -258,12 +258,14 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     final vehicleBrand = data['vehicleBrand'] as String? ?? '';
     final kermesId = data['kermesId'] as String? ?? '';
     final kermesTitle = title.replaceAll(' - Acil Arac Anonsu', '').trim();
+    final supplyStatus = data['status'] as String? ?? '';
     final isParking = type == 'kermes_parking';
-    final isDeleted = type == 'roster_deleted';
+    final isDeleted = type == 'roster_deleted' || (type == 'supply_alarm_status' && supplyStatus == 'rejected');
     final isParkingOrDeleted = isParking || isDeleted;
     final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
-    final isWarning = type == 'kermes_flash_sale' || type == 'supply_alarm' || type == 'kermes_parking';
-    final isSuccess = type == 'supply_alarm_status';
+    final isWarning = type == 'kermes_flash_sale' || type == 'supply_alarm';
+    final isSuccess = type == 'supply_alarm_status' && (supplyStatus == 'completed' || supplyStatus == ''); 
+    final isActionStatus = type == 'supply_alarm_status' && supplyStatus == 'on_the_way';
 
     // Roster Action specific variables
     bool isActionProcessing = false;
@@ -300,12 +302,14 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                 ? (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50])
                                 : isSuccess
                                     ? (isDark ? Colors.green[900]!.withOpacity(0.15) : Colors.green[50])
-                                    : (isDark ? Colors.blue[900]!.withOpacity(0.15) : Colors.blue[50]),
+                                    : isActionStatus
+                                       ? (isDark ? Colors.blue[900]!.withOpacity(0.15) : Colors.blue[50])
+                                       : (isDark ? Colors.blue[900]!.withOpacity(0.15) : Colors.blue[50]),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : isWarning ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : isSuccess ? (isDark ? Colors.green[800]!.withOpacity(0.3) : Colors.green[100]!) : (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!)),
+                        border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : isWarning ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : isSuccess ? (isDark ? Colors.green[800]!.withOpacity(0.3) : Colors.green[100]!) : isActionStatus ? (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!) : (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!)),
                       ),
                       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : isSuccess ? Icons.check_circle_outline_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : isSuccess ? (isDark ? Colors.green[300] : Colors.green[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
+                        Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : isSuccess ? Icons.check_circle_outline_rounded : isActionStatus ? Icons.directions_run_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : isSuccess ? (isDark ? Colors.green[300] : Colors.green[700]) : isActionStatus ? (isDark ? Colors.blue[300] : Colors.blue[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
                         const SizedBox(width: 8),
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4177,9 +4181,12 @@ class _GenericNotificationCard extends StatelessWidget {
                         iconColor = isDark ? Colors.orange[300]! : Colors.orange[700]!;
                         iconData = Icons.local_parking_rounded;
                       } else if (type == 'supply_alarm' || type == 'supply_alarm_status') {
+                        final st = data['status'] as String? ?? '';
                         bgColor = isDark ? Colors.teal[900]!.withOpacity(0.3) : Colors.teal[50]!;
                         iconColor = isDark ? Colors.teal[300]! : Colors.teal[700]!;
-                        iconData = type == 'supply_alarm' ? Icons.campaign_rounded : Icons.check_circle_outline_rounded;
+                        iconData = type == 'supply_alarm' 
+                            ? Icons.campaign_rounded 
+                            : (st == 'on_the_way' ? Icons.directions_run_rounded : (st == 'rejected' ? Icons.cancel_rounded : Icons.check_circle_outline_rounded));
                       } else {
                         bgColor = isDark ? Colors.grey[800]! : Colors.grey[100]!;
                         iconColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;

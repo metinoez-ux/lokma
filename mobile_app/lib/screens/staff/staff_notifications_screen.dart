@@ -62,7 +62,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     return 'Daha Once';
   }
 
-  IconData _iconForType(String? type) {
+  IconData _iconForType(Map<String, dynamic> notif) {
+    final type = notif['type'] as String?;
     switch (type) {
       case 'kermes_assignment': return Icons.assignment_ind;
       case 'parking_emergency':
@@ -70,20 +71,35 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
       case 'order_status':
       case 'kermes_order_created': return Icons.receipt_long;
       case 'new_delivery': return Icons.delivery_dining;
-      case 'supply_alarm': return Icons.campaign;
+      case 'supply_alarm': 
+      case 'supply_alarm_status': {
+         final st = notif['status'] as String?;
+         if (st == 'on_the_way') return Icons.directions_run_rounded;
+         if (st == 'completed') return Icons.check_circle_outline_rounded;
+         if (st == 'rejected') return Icons.cancel_rounded;
+         return Icons.campaign;
+      }
       case 'chat_message': return Icons.chat;
       default: return Icons.notifications;
     }
   }
 
-  Color _colorForType(String? type, bool isRead) {
+  Color _colorForType(Map<String, dynamic> notif, bool isRead) {
     if (isRead) return Colors.grey;
+    final type = notif['type'] as String?;
     switch (type) {
       case 'kermes_assignment': return Colors.purple;
       case 'parking_emergency':
       case 'kermes_parking': return Colors.orange;
       case 'new_delivery': return Colors.amber;
-      case 'supply_alarm': return Colors.red;
+      case 'supply_alarm': 
+      case 'supply_alarm_status': {
+         final st = notif['status'] as String?;
+         if (st == 'on_the_way') return Colors.blue;
+         if (st == 'completed') return Colors.green;
+         if (st == 'rejected') return Colors.red;
+         return Colors.red;
+      }
       case 'chat_message': return Colors.teal;
       default: return Colors.blue;
     }
@@ -254,11 +270,20 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                       ),
                       child: Column(
                         children: [
-                           Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(color: (type == 'supply_alarm_status' ? Colors.green : Colors.red).withOpacity(0.1), shape: BoxShape.circle),
-                              child: Icon(type == 'supply_alarm_status' ? Icons.check_circle_outline : Icons.campaign, size: 36, color: type == 'supply_alarm_status' ? Colors.green : Colors.red),
-                           ),
+                           (() {
+                              final st = data['status'] as String? ?? 'pending';
+                              Color c = Colors.red;
+                              IconData ic = Icons.campaign;
+                              if (st == 'on_the_way') { c = Colors.blue; ic = Icons.directions_run_rounded; }
+                              else if (st == 'completed' || type == 'supply_alarm_status') { c = Colors.green; ic = Icons.check_circle_outline_rounded; }
+                              else if (st == 'rejected') { c = Colors.red; ic = Icons.cancel_rounded; }
+                              
+                              return Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(color: c.withOpacity(0.1), shape: BoxShape.circle),
+                                child: Icon(ic, size: 36, color: c),
+                              );
+                           })(),
                            const SizedBox(height: 16),
                            Text(data['itemName'] ?? 'Malzeme', textAlign: TextAlign.center, style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800)),
                            const SizedBox(height: 8),
@@ -768,8 +793,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final body = notif['body'] as String? ?? '';
               final dateStr = _formatDate(notif['createdAt']);
               final imageUrl = notif['imageUrl'] as String?;
-              final iconColor = _colorForType(type, isRead);
-              final iconData = _iconForType(type);
+              final iconColor = _colorForType(notif, isRead);
+              final iconData = _iconForType(notif);
 
               final bool isOrder = type != null && type.contains('order');
               // Allow all non-order notifications to open the detail sheet so no message is ever "unclickable"

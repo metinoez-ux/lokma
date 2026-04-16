@@ -115,10 +115,11 @@ export const onKermesSupplyStatusUpdated = onDocumentUpdated(
                  // The requester cancelled the request, remove the alarm from all admins' inboxes immediately.
                  batch.delete(notifRef);
              } else {
-                 batch.set(notifRef, {
-                     status: newStatus,
-                     body: newStatus === 'on_the_way' ? `${after.requestedByName} talebine YOLA ÇIKTI damgası vurdunuz.` : newStatus === 'rejected' ? `${after.requestedByName} talebi tarafınızca REDDEDİLDİ.` : `${after.requestedByName} talebi TAMAMLANDI.`,
-                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                     batch.set(notifRef, {
+                         status: newStatus,
+                         title: newStatus === 'on_the_way' ? `🏃 Malzeme Yola Çıktı: ${itemName}` : newStatus === 'rejected' ? `❌ İptal Edildi: ${itemName}` : `✅ Tamamlandı: ${itemName}`,
+                         body: newStatus === 'on_the_way' ? `${after.requestedByName} talebine YOLA ÇIKTI damgası vurdunuz.` : newStatus === 'rejected' ? `${after.requestedByName} talebi tarafınızca REDDEDİLDİ.` : `${after.requestedByName} talebi TAMAMLANDI.`,
+                         updatedAt: admin.firestore.FieldValue.serverTimestamp()
                  }, { merge: true }); // using merge: true to avoid throw if doc magically disappeared
              }
          }
