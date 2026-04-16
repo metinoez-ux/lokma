@@ -94,7 +94,9 @@ const I18N_DICT: any = {
     footerMessage: 'Wenn Ihre Nummer auf dem Bildschirm erscheint, können Sie diese an der Theke abholen',
     readyLabel: 'ABHOLBEREIT',
     dayStr: (day: number) => `Tag ${day}`,
-    allSections: 'ALLE ABTEILUNGEN'
+    allSections: 'ALLE ABTEILUNGEN',
+    startDisplay: 'BILDSCHIRM STARTEN',
+    startHint: 'Bitte drücken Sie "OK" auf der Fernbedienung'
   },
   nl: {
     preparing: 'IN BEREIDING',
@@ -105,7 +107,9 @@ const I18N_DICT: any = {
     footerMessage: 'Wanneer uw nummer op het scherm verschijnt, kunt u het ophalen aan de balie',
     readyLabel: 'KLAAR',
     dayStr: (day: number) => `Dag ${day}`,
-    allSections: 'ALLE AFDELINGEN'
+    allSections: 'ALLE AFDELINGEN',
+    startDisplay: 'SCHERM STARTEN',
+    startHint: 'Druk op "OK" op de afstandsbediening'
   },
   tr: {
     preparing: 'HAZIRLANIYOR',
@@ -116,7 +120,9 @@ const I18N_DICT: any = {
     footerMessage: 'Numaranız ekranda göründüğünde tezgahtan alabilirsiniz',
     readyLabel: 'TESLİM ALINABİLİR',
     dayStr: (day: number) => `${day}. Gün`,
-    allSections: 'TÜM BÖLÜMLER'
+    allSections: 'TÜM BÖLÜMLER',
+    startDisplay: 'EKRANI BAŞLAT',
+    startHint: 'Lütfen kumandadan "OK" tuşuna basınız'
   }
 };
 
@@ -147,7 +153,8 @@ export default function KermesTvPage({
   const [dateRangeStr, setDateRangeStr] = useState<string>('');
   const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [newlyReady, setNewlyReady] = useState<Set<string>>(new Set());
-  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [showAutoplayOverlay, setShowAutoplayOverlay] = useState(true);
   const previousReadyRef = useRef<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -279,7 +286,7 @@ export default function KermesTvPage({
       }
     }
     fetchKermesMeta();
-  }, [kermesId, deliveryZoneId]);
+  }, [kermesId, deliveryZoneId, legacySection]);
 
   // Ses hazirla
   useEffect(() => {
@@ -287,14 +294,32 @@ export default function KermesTvPage({
     audioRef.current.volume = 0.7;
   }, []);
 
+  const handleStartAudio = async () => {
+    try {
+      if (audioRef.current) {
+         audioRef.current.play().then(() => {
+            audioRef.current?.pause();
+            if (audioRef.current) audioRef.current.currentTime = 0;
+            setAudioEnabled(true);
+            setShowAutoplayOverlay(false);
+         }).catch(err => {
+            console.error('Audio play failed', err);
+            setShowAutoplayOverlay(false);
+         });
+      } else {
+        setShowAutoplayOverlay(false);
+      }
+    } catch (e) {
+      setShowAutoplayOverlay(false);
+    }
+  };
+
   // Ses cal
   const playGong = useCallback(() => {
     if (!audioEnabled || !audioRef.current) return;
     audioRef.current.currentTime = 0;
     audioRef.current.play().catch(() => {});
   }, [audioEnabled]);
-
-  // Autoplay (TV'de tiklama yapilamayacagi icin ilk acilista ses izni her zaman 'true' olarak baslatildi)
 
   // Firestore real-time listener
   useEffect(() => {
@@ -423,7 +448,20 @@ export default function KermesTvPage({
       />
 
       <div className={styles.container}>
-        {/* Autoplay overlay kaldirildi (TV'de tiklama yapilamadigi icin otomatik basliyor) */}
+        {showAutoplayOverlay && (
+          <div className={styles.autoplayOverlay}>
+            <button 
+              className={styles.autoplayButton} 
+              onClick={handleStartAudio}
+              autoFocus
+            >
+              ▶ {getDualLang('startDisplay', lang2)}
+            </button>
+            <span className={styles.autoplayHint}>
+              {getDualLang('startHint', lang2)}
+            </span>
+          </div>
+        )}
 
         {/* Header */}
         <header className={styles.header}>
