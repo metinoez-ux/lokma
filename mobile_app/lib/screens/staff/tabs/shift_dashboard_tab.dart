@@ -857,6 +857,8 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
 
         final startDateTs = data['startDate'] as Timestamp?;
         final endDateTs = data['endDate'] as Timestamp?;
+        final opTime = data['openingTime']?.toString();
+        final clTime = data['closingTime']?.toString();
 
         return _renderAssignmentCardInner(
           capabilities.copyWith(
@@ -869,12 +871,14 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           kermesAdmins: kermesAdmins,
           startDate: startDateTs?.toDate(),
           endDate: endDateTs?.toDate(),
+          openingTime: opTime,
+          closingTime: clTime,
         );
       }
     );
   }
 
-  Widget _renderAssignmentCardInner(StaffCapabilities capabilities, bool isDark, {List<Map<String, dynamic>> dynamicRoles = const [], List<String> kermesAdmins = const [], DateTime? startDate, DateTime? endDate}) {
+  Widget _renderAssignmentCardInner(StaffCapabilities capabilities, bool isDark, {List<Map<String, dynamic>> dynamicRoles = const [], List<String> kermesAdmins = const [], DateTime? startDate, DateTime? endDate, String? openingTime, String? closingTime}) {
     List<String> gorevler = [];
     if (capabilities.isBusinessAdmin) gorevler.add("Kermes Admini");
     if (capabilities.isDriver) gorevler.add("Sürücü");
@@ -943,7 +947,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           _buildInfoRow('Aktif Etkinlik:', capabilities.businessName.isNotEmpty ? capabilities.businessName : 'Bekleniyor...', isDark),
           const SizedBox(height: 15),
           if (startDate != null && endDate != null) ...[
-            _buildInfoRow('Tarih:', '${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}', isDark),
+            if (openingTime != null && closingTime != null) _buildInfoRow('Tarih:', '${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}  |  $openingTime - $closingTime', isDark) else _buildInfoRow('Tarih:', '${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}', isDark),
             const SizedBox(height: 15),
           ],
           if (bolumText.isNotEmpty) ...[
