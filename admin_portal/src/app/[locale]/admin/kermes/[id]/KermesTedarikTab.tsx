@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { collection, query, onSnapshot, updateDoc, doc, Timestamp, orderBy, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
+import { db } from '@/lib/firebase';
 
 interface KermesTedarikTabProps {
   kermesId: string;

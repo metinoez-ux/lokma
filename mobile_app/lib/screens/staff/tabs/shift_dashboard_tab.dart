@@ -1019,7 +1019,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                      );
                   },
                   icon: const Icon(Icons.campaign, size: 20),
-                  label: const Text('supply_btn_title'.tr(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  label: Text('supply_btn_title'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                )
             ),
           ],

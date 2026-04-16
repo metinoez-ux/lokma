@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:lokma/utils/theme_utils.dart'; // assuming this exists, if not I'll just use context
 
 class KermesSupplyScreen extends StatefulWidget {
   final String kermesId;
@@ -231,7 +230,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                 stream: FirebaseFirestore.instance.collection('kermes_events')
                    .doc(widget.kermesId)
                    .collection('supply_requests')
-                   .orderBy('createdAt', 'desc')
+                   .orderBy('createdAt', descending: true)
                    .limit(30)
                    .snapshots(),
                 builder: (context, snapshot) {
