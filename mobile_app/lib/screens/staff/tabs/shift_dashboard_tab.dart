@@ -947,7 +947,11 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           _buildInfoRow('Aktif Etkinlik:', capabilities.businessName.isNotEmpty ? capabilities.businessName : 'Bekleniyor...', isDark),
           const SizedBox(height: 15),
           if (startDate != null && endDate != null) ...[
-            if (openingTime != null && closingTime != null) _buildInfoRow('Tarih:', '${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}  |  $openingTime - $closingTime', isDark) else _buildInfoRow('Tarih:', '${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}', isDark),
+            _buildInfoRow('Tarih:', '${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}', isDark),
+            const SizedBox(height: 15),
+            if (openingTime != null && closingTime != null) ...[
+              _buildInfoRow('Saatler:', '$openingTime - $closingTime', isDark),
+            ],
             const SizedBox(height: 15),
           ],
           if (bolumText.isNotEmpty) ...[

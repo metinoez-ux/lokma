@@ -1,3 +1,4 @@
+import 'package:screen_protector/screen_protector.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -1501,7 +1502,14 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             if (hasMore && index == allDestinations.length) { 
                _openMoreMenu(isDark, allDestinations, maxVisibleRoles + 1);
             } else {
-               setState(() => _selectedNavIndex = index);
+               setState(() {
+                  _selectedNavIndex = index;
+                  if (allDestinations[index]['label'] == 'Cüzdanım') {
+                    ScreenProtector.preventScreenshotOn();
+                  } else {
+                    ScreenProtector.preventScreenshotOff();
+                  }
+               });
             }
           },
           child: Column(

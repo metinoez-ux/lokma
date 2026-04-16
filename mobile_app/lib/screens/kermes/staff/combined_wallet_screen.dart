@@ -32,13 +32,9 @@ class _CombinedWalletScreenState extends State<CombinedWalletScreen> {
     super.dispose();
   }
 
-  void _preventScreenshotOn() async {
-    await ScreenProtector.preventScreenshotOn();
-  }
+  void _preventScreenshotOn() async { /* Handled centrally by staff_hub_screen */ }
 
-  void _preventScreenshotOff() async {
-    await ScreenProtector.preventScreenshotOff();
-  }
+  void _preventScreenshotOff() async { /* Handled centrally by staff_hub_screen */ }
 
   @override
   Widget build(BuildContext context) {
