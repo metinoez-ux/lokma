@@ -153,7 +153,7 @@ export const onKermesSupplyStatusUpdated = onDocumentUpdated(
              await admin.messaging().sendEachForMulticast({
                 tokens,
                 notification: { title, body },
-                data: { type: 'supply_alarm_status', status: newStatus, kermesId, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
+                data: { type: 'supply_alarm_status', status: newStatus, kermesId, requestId, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
                 apns: { payload: { aps: { sound: 'default' } } }
              });
              console.log(`[kermesSupplyFunctions] Push sent to requester ${reqUid} for status ${newStatus}.`);
