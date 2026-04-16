@@ -781,7 +781,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
               final iconColor = _colorForType(type, isRead);
               final iconData = _iconForType(type);
 
-              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'roster_shift' || type == 'kermes_assignment' || type == 'roster_deleted' || type == 'supply_alarm' || type == 'supply_alarm_status';
+              final bool hasDetail = type == 'kermes_parking' || type == 'kermes_flash_sale' || type == 'kermes_announcement' || type == 'roster_shift' || type == 'kermes_assignment' || type == 'roster_deleted' || type == 'supply_alarm' || type == 'supply_alarm_status';
               final bool isOrder = type != null && type.contains('order');
 
               return GestureDetector(
