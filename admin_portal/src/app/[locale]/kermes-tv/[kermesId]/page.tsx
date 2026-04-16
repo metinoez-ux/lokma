@@ -656,10 +656,22 @@ export default function KermesTvPage({
       <div className={styles.container}>
 
         {/* Header */}
-        <header className={styles.header} style={{ padding: 0 }}>
+        <header className={styles.header} style={{ padding: 0, position: 'relative' }}>
           
+          {/* Merkezi ince vertical line (50% konumunda, yukarıdan ve aşağıdan boşluklu) */}
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            top: '20px',
+            bottom: '20px',
+            width: '2px',
+            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+            transform: 'translateX(-50%)',
+            pointerEvents: 'none'
+          }} />
+
           {/* Sol %50 (HAZIRLANIYOR tarafı) */}
-          <div style={{ flex: '0 0 50%', maxWidth: '50%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: '20px 40px', borderRight: '2px solid rgba(245, 158, 11, 0.12)' }}>
+          <div style={{ flex: '0 0 50%', maxWidth: '50%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: '20px 40px' }}>
             {/* Logo Part */}
             <div style={{ marginRight: '20px', flexShrink: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
               <span className={styles.lokmaLogo}><strong style={{fontWeight: 900}}>LOKMA</strong> <span style={{fontSize: '0.7em'}}>(ODS)</span></span>
