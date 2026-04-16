@@ -248,7 +248,11 @@ const PrayerTimeBanner = () => {
         let str = '';
         if (hours > 0) str += `${hours} sa `;
         if (hours > 0 || mins > 0) str += `${mins} dk `;
-        str += `${secs} sn`;
+        // Sadece 1 dakikadan az (60 sn'den az) ve hic saat yokken saniyeyi goster
+        if (hours === 0 && mins === 0) {
+           str += `${secs} sn`;
+        }
+
         
         setTimeLeftStr(str);
       }
@@ -263,8 +267,7 @@ const PrayerTimeBanner = () => {
   if (!vakitler || !nextLabel) return null;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '24px', padding: '12px 24px', gap: '24px' }}>
-      <span className="material-symbols-outlined" style={{ color: '#fbbf24', fontSize: '32px' }}>mosque</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
       
       {/* Vakitler (Sol Blok) - 2 Satir */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '160px' }}>
@@ -667,7 +670,7 @@ export default function KermesTvPage({
             </div>
           </div>
           
-          <div className={styles.headerCenter} style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+          <div className={styles.headerCenter} style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', borderLeft: '1px solid rgba(255,255,255,0.1)'}}>
              <PrayerTimeBanner />
           </div>
 
