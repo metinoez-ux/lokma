@@ -162,6 +162,7 @@ interface KermesEvent {
  date?: any;
  startDate?: any;
  endDate?: any;
+ deliveryZones?: any[];
  openingTime?: string;
  closingTime?: string;
  organizerId?: string;
@@ -2110,12 +2111,12 @@ export default function KermesDetailPage() {
  </div>
  </div>
  <div className="flex items-center gap-2">
- <Link 
- href="/admin/orders" 
+ <button 
+ onClick={() => { setActiveTab('masalar'); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight/2, behavior: 'smooth' }), 100); }}
  className="px-4 py-2 mr-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg shadow-sm font-bold text-sm flex items-center gap-2 transform transition hover:scale-105"
  >
  🍳 Mutfak & Expo (KDS)
- </Link>
+ </button>
  {kermes.sponsor === 'tuna' && <span className="px-2 py-1 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">🐟 TUNA</span>}
  {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-amber-600/30 text-amber-800 dark:text-amber-400 rounded text-xs">🏔️ TOROS</span>}
  <button onClick={toggleActiveStatus}
@@ -2158,7 +2159,7 @@ export default function KermesDetailPage() {
  </button>
         <button onClick={() => setActiveTab('masalar')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
-          Masalar
+          Masalar ve Bölümler
         </button>
         <button onClick={() => setActiveTab('siparisler')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-white'}`}>

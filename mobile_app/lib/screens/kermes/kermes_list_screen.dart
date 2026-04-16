@@ -711,6 +711,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   data['selectedDonationFundName']?.toString(),
               isSilaYolu: data['isSilaYolu'] == true,
               sectionDefs: _parseSectionDefs(data['tableSectionsV2']),
+              deliveryZones: _parseDeliveryZones(data['deliveryZones']),
             );
 
             loadedEvents.add(event);
@@ -750,17 +751,42 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             .toList();
       }
       if (rawSections is Map) {
-        // tableSectionsV2 Map<sectionId, sectionData> formatinda olabilir
-        return rawSections.entries.map((entry) {
-          final data = entry.value is Map
-              ? Map<String, dynamic>.from(entry.value as Map)
-              : <String, dynamic>{};
-          data['id'] = entry.key.toString();
-          return KermesSectionDef.fromJson(data);
-        }).toList();
+         // tableSectionsV2 Map<sectionId, sectionData> formatinda olabilir
+         return rawSections.entries.map((entry) {
+           final data = entry.value is Map
+               ? Map<String, dynamic>.from(entry.value as Map)
+               : <String, dynamic>{};
+           data['id'] = entry.key.toString();
+           return KermesSectionDef.fromJson(data);
+         }).toList();
       }
     } catch (e) {
       debugPrint('Error parsing sectionDefs: $e');
+    }
+    return [];
+  }
+
+  // ============== DELIVERY ZONES PARSING ==============
+  List<KermesDeliveryZone> _parseDeliveryZones(dynamic rawZones) {
+    if (rawZones == null) return [];
+    try {
+      if (rawZones is List) {
+        return rawZones
+            .where((e) => e is Map)
+            .map((e) => KermesDeliveryZone.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+      if (rawZones is Map) {
+        return rawZones.entries.map((entry) {
+           final data = entry.value is Map
+               ? Map<String, dynamic>.from(entry.value as Map)
+               : <String, dynamic>{};
+           data['id'] = entry.key.toString();
+           return KermesDeliveryZone.fromJson(data);
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing deliveryZones: $e');
     }
     return [];
   }

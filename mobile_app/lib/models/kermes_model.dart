@@ -66,6 +66,38 @@ class KermesSectionDef {
   bool containsTable(String tableId) => tableIds.contains(tableId);
 }
 
+/// Kermes TV Teslimat Noktalari (Delivery Zones)
+/// Admin tarafindan ayarlanan ekran pencereleri
+class KermesDeliveryZone {
+  final String id;              // Benzersiz id "dz_1"
+  final String name;            // "Hanimlar Gozleme TV"
+  final String? sectionFilter;  // Sadece spesifik masalari goster (null = hepsi)
+  final List<String> prepZoneFilters; // Sadece spesifik mutfaklari goster (bos list = hepsi)
+
+  KermesDeliveryZone({
+    required this.id,
+    required this.name,
+    this.sectionFilter,
+    this.prepZoneFilters = const [],
+  });
+
+  factory KermesDeliveryZone.fromJson(Map<String, dynamic> json) {
+    return KermesDeliveryZone(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Isimsiz TV',
+      sectionFilter: json['sectionFilter']?.toString().isNotEmpty == true ? json['sectionFilter'].toString() : null,
+      prepZoneFilters: (json['prepZoneFilters'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'sectionFilter': sectionFilter,
+    'prepZoneFilters': prepZoneFilters,
+  };
+}
+
 class KermesEvent {
   final String id;
   final String city;
@@ -150,6 +182,9 @@ class KermesEvent {
   // Bolum tanimlari (Admin Portal'dan gelen - Kadin/Erkek/Aile bolumleri)
   final List<KermesSectionDef> sectionDefs;
 
+  // TV / Teslimat Noktalari
+  final List<KermesDeliveryZone> deliveryZones;
+
   // Legacy - keep for backwards compatibility
   @Deprecated('Use hasOutdoor instead')
   bool get hasShoppingStands => hasOutdoor;
@@ -233,6 +268,8 @@ class KermesEvent {
     this.isSilaYolu = false,
     // Bolum tanimlari
     this.sectionDefs = const [],
+    // Teslimat noktalari / TV'ler
+    this.deliveryZones = const [],
     // Pfand sistemi
     this.hasPfandSystem = false,
     this.pfandAmount = 0.25,

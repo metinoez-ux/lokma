@@ -31,6 +31,20 @@ interface OrderItem {
   claimedAt?: Date;
 }
 
+function normalizeForSearch(text: string | null | undefined): string {
+  if (!text) return '';
+  return text
+    .toLocaleLowerCase('tr-TR')
+    .replace(/_/g, ' ')
+    .replace(/[\s-]/g, '')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c');
+}
+
 interface KermesDisplayOrder {
   id: string;
   orderNumber: string;
@@ -118,21 +132,25 @@ export default function KermesDisplayPage({
 
       snapshot.docs.forEach((docSnap) => {
         const data = docSnap.data();
-        const orderSection = data.tableSection as string | undefined;
-        const sectionNormalized = sectionId.replace(/_/g, ' ').toLowerCase();
+        const filterNorm = normalizeForSearch(sectionId);
+        const orderSectionNorm = normalizeForSearch(data.tableSection as string | undefined);
 
         // Bolum ekrani: tableSection eslesirse (Erkek/Kadin pickup ekrani)
-        const matchesSection = orderSection === sectionId;
+        let matchesSection = false;
+        if (filterNorm && orderSectionNorm) {
+            matchesSection = orderSectionNorm === filterNorm || orderSectionNorm.includes(filterNorm) || filterNorm.includes(orderSectionNorm);
+        }
 
-        // Istasyon ekrani: herhangi bir item'in prepZone'u eslesirse (Manti/Kumpir mutfak ekrani)
-        const items = (data.items as { prepZone?: string; name?: string; quantity?: number; price?: number; itemStatus?: string }[]) || [];
+        // Istasyon ekrani: herhangi bir item'in prepZone/prepZones eslesirse
+        const items = (data.items as { prepZone?: string | string[]; prepZones?: string | string[]; name?: string; quantity?: number; price?: number; itemStatus?: string }[]) || [];
         const matchesPrepZone = items.some(
           (item) => {
-            if (!item.prepZone) return false;
-            if (Array.isArray(item.prepZone)) {
-              return item.prepZone.some((pz: string) => pz.toLowerCase().includes(sectionNormalized));
-            } else if (typeof item.prepZone === 'string') {
-              return item.prepZone.toLowerCase().includes(sectionNormalized);
+            const pz = item.prepZones || item.prepZone;
+            if (!pz) return false;
+            if (Array.isArray(pz)) {
+              return pz.some((z: string) => normalizeForSearch(z).includes(filterNorm));
+            } else if (typeof pz === 'string') {
+              return normalizeForSearch(pz as string).includes(filterNorm);
             }
             return false;
           }
@@ -150,7 +168,12 @@ export default function KermesDisplayPage({
           tableSection: data.tableSection,
           // Istasyon ekraninda sadece o istasyona ait itemleri goster
           items: (matchesPrepZone && !matchesSection
-            ? items.filter(item => item.prepZone && item.prepZone.toLowerCase().includes(sectionNormalized))
+            ? items.filter(item => {
+                const pz = item.prepZones || item.prepZone;
+                if (!pz) return false;
+                if (Array.isArray(pz)) return pz.some(z => normalizeForSearch(z).includes(normalizeForSearch(sectionId)));
+                return normalizeForSearch(pz as string).includes(normalizeForSearch(sectionId));
+              })
             : items
           ).map((item) => ({
             name: item.name || '',

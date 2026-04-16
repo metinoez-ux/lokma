@@ -847,8 +847,16 @@ export interface AdminAssignment {
  assignedAt?: string | Date;
 }
 
+export interface KermesDeliveryZone {
+  id: string; // e.g., 'dz_1'
+  name: string; // e.g., 'Hanımlar Genel Dağıtım'
+  sectionFilter?: string | null; // e.g., 'kadin_bolumu'
+  prepZoneFilters?: string[]; // e.g., ['Gözleme', 'Mantı']
+}
+
 // Kermes Types
 export interface KermesEvent {
+  deliveryZones?: KermesDeliveryZone[];
  id: string;
  title: string;
  description?: string;

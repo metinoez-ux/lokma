@@ -114,23 +114,21 @@
 .readyGrid {
   flex: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
+  flex-direction: column;
   gap: 16px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .readyCard {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
   border: 2px solid rgba(34, 197, 94, 0.4);
   border-radius: 20px;
-  padding: 24px 32px;
+  padding: 16px 24px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  min-width: 160px;
-  flex: 0 0 auto;
+  gap: 16px;
   animation: pulseGlow 3s ease-in-out infinite;
 }
 
@@ -140,7 +138,7 @@
 }
 
 .readyNumber {
-  font-size: 64px;
+  font-size: 36px;
   font-weight: 800;
   color: #22c55e;
   line-height: 1;

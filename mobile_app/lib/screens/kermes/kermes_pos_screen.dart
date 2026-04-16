@@ -76,6 +76,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.allowedSections.isNotEmpty) {
+      _selectedTableSection = widget.allowedSections.first;
+    }
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updatePillPosition('Tumu');
@@ -1402,6 +1405,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                   _isStantMode = true;
                   _deliveryType = DeliveryType.gelAl;
                   _tableController.clear();
+                  _selectedTableSection = null; // Stant modunda TV gosterilmez
                 }),
                 isDark: isDark,
               ),
@@ -1447,7 +1451,8 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
             ),
           ],
           // Masa bolum secimi (allowedSections varsa goster)
-          if (_deliveryType == DeliveryType.masada && widget.allowedSections.isNotEmpty) ...[
+          // Bolum Secimi (Tezgahtan veya Masada farketmez, yalnizca Stant haric hepsinde bir section secilmeli ki istasyon TV sine dussun)
+          if (!_isStantMode && widget.allowedSections.isNotEmpty) ...[
             const SizedBox(height: 8),
             SizedBox(
               height: 36,

@@ -1606,75 +1606,52 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         final data = snapshot.data!.data() as Map<String, dynamic>;
         final rawSections = data['tableSectionsV2'];
 
-        // tableSectionsV2 hem List hem Map olarak saklanabiliyor
+        // tableSectionsV2 hem List hem Map olarak saklanabiliyor, tableSections ise List<String>
         final List<Map<String, String>> tvUrls = [];
+        final dynamic rawDeliveryZones = data['deliveryZones'];
+        final dynamic legacySections = data['tableSections'];
 
-        if (rawSections is List) {
-          // List formatinda: [{id: 'kadin_bolumu', label: 'Kadin Bolumu'}, ...] veya dizgisal ['kadinlar', 'erkekler']
+        // 1. Master Bölümler (Kadınlar, Erkekler vb.)
+        if (rawSections is List && rawSections.isNotEmpty) {
           for (final item in rawSections) {
-            if (item is Map) {
-              final sectionId = item['id']?.toString() ?? '';
-              final label = item['label']?.toString() ?? sectionId
-                  .replaceAll('_', ' ')
-                  .split(' ')
-                  .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
-                  .join(' ');
-              if (sectionId.isNotEmpty) {
+            if (item is Map && item['name'] != null) {
+              final sectionName = item['name'].toString();
+              if (sectionName.isNotEmpty) {
                 tvUrls.add({
-                  'label': label,
-                  'url': '$baseUrl/$kermesId?section=$sectionId',
+                  'label': '$sectionName (Ana TV)',
+                  'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(sectionName)}',
                 });
               }
-            } else if (item is String && item.isNotEmpty) {
-              final label = item
-                  .replaceAll('_', ' ')
-                  .split(' ')
-                  .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
-                  .join(' ');
+            }
+          }
+        } else if (legacySections is List && legacySections.isNotEmpty) {
+          for (final item in legacySections) {
+            final sectionName = item.toString();
+            if (sectionName.isNotEmpty) {
               tvUrls.add({
-                'label': label,
-                'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(item)}',
+                'label': '$sectionName (Ana TV)',
+                'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(sectionName)}',
               });
             }
           }
-        } else if (rawSections is Map) {
-          // Map formatinda: {kadin_bolumu: {label: 'Kadin Bolumu'}, ...}
-          for (final entry in rawSections.entries) {
-            final sectionId = entry.key.toString();
-            final sectionData = entry.value is Map ? entry.value as Map<String, dynamic> : <String, dynamic>{};
-            final label = sectionData['label']?.toString() ?? sectionId
-                .replaceAll('_', ' ')
-                .split(' ')
-                .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
-                .join(' ');
-            tvUrls.add({
-              'label': label,
-              'url': '$baseUrl/$kermesId?section=$sectionId',
-            });
+        }
+
+        // 2. Teslimat Noktaları (Özel TV'ler)
+        if (rawDeliveryZones is List && rawDeliveryZones.isNotEmpty) {
+          for (final item in rawDeliveryZones) {
+            if (item is Map) {
+              final id = item['id']?.toString() ?? '';
+              final name = item['name']?.toString() ?? 'TV Ekranı';
+              if (id.isNotEmpty) {
+                tvUrls.add({
+                  'label': name,
+                  'url': '$baseUrl/$kermesId?deliveryZone=$id',
+                });
+              }
+            }
           }
         }
 
-        if (tvUrls.isEmpty) {
-          final prepRaw = data['prepZoneAssignments'];
-          final pz = prepRaw is Map ? Map<String, dynamic>.from(prepRaw) : <String, dynamic>{};
-          for (final key in pz.keys) {
-            final label = key
-                .replaceAll('Kadin', 'Hanımlar')
-                .replaceAll('kadin', 'Hanımlar')
-                .replaceAll('_', ' ')
-                .split(' ')
-                .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
-                .join(' ');
-            tvUrls.add({
-              'label': 'Tezgah: $label',
-              'url': '$baseUrl/$kermesId?section=${Uri.encodeComponent(key)}',
-            });
-          }
-        }
-
-        // Sadece URL yoksa bile karti goster, en azindan 'Tum Bolumler (Genel)' linki gozukur.
-
-        // Genel URL (tum bolumler)
         final allUrl = '$baseUrl/$kermesId';
 
         return Container(
@@ -1787,6 +1764,131 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               ),
             ),
             const SizedBox(width: 8),
+            const SizedBox(width: 8),
+            // Kısa Link Butonu
+            InkWell(
+              onTap: () async {
+                try {
+                  // Haptic feedback
+                  HapticFeedback.lightImpact();
+                  
+                  // Show loading toast or indicator briefly
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: const [
+                          SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                          SizedBox(width: 12),
+                          Text('Kısa link oluşturuluyor...'),
+                        ],
+                      ),
+                      backgroundColor: Colors.teal,
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+
+                  // API call
+                  final uri = Uri.parse('https://lokma.shop/api/shorten');
+                  final response = await http.post(
+                    uri,
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({'url': url}),
+                  );
+                  
+                  if (response.statusCode == 200) {
+                    final data = jsonDecode(response.body);
+                    if (data['code'] != null) {
+                      final shortUrl = 'lokma.shop/tv/${data['code']}';
+                      Clipboard.setData(ClipboardData(text: shortUrl));
+                      
+                      // Show success alert
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                            title: Row(
+                              children: [
+                                const Icon(Icons.link, color: Colors.teal),
+                                const SizedBox(width: 8),
+                                Text('Kısa Link Hazır', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                              ],
+                            ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bu TV ekranı için oluşturulan kısa adres panoya kopyalandı.',
+                                  style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                                ),
+                                const SizedBox(height: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.teal.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.teal.withOpacity(0.3)),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      shortUrl,
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Center(
+                                  child: Text(
+                                    'TV tarayıcısına sadece bunu yazmanız yeterlidir.',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Tamam', style: TextStyle(color: Colors.teal)),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    }
+                  } else {
+                    throw Exception('API Hatası');
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Kısa link oluşturulamadı (İnternet bağlantınızı kontrol edin)'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blueAccent.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.link, size: 20, color: Colors.blueAccent),
+              ),
+            ),
+            const SizedBox(width: 8),
             InkWell(
               onTap: () {
                 Clipboard.setData(ClipboardData(text: url));
@@ -1801,12 +1903,12 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.teal.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.copy, size: 16, color: Colors.teal),
+                child: const Icon(Icons.copy, size: 20, color: Colors.teal),
               ),
             ),
           ],
