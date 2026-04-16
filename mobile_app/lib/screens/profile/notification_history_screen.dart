@@ -330,7 +330,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                      (() {
                          final rId = data['requestId'] as String?;
                          final kId = data['kermesId'] as String?;
-                         if (rId == null || kId == null) return const SizedBox.shrink();
+                         if (rId == null || rId.isEmpty || kId == null || kId.isEmpty) return const SizedBox.shrink();
                          return FutureBuilder<DocumentSnapshot>(
                             future: FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get(),
                             builder: (ctx, snap) {

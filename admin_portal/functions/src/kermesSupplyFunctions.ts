@@ -132,7 +132,7 @@ export const onKermesSupplyStatusUpdated = onDocumentUpdated(
       // If the requester cancelled it themselves, no need to send them a push notification
       if (newStatus === 'cancelled') return;
 
-      const title = newStatus === 'on_the_way' ? `🏃 Malzeme Yola Çıktı!` : newStatus === 'rejected' ? `❌ Malzeme İsteği Reddedildi` : `✅ Malzeme İsteği Tamamlandı`;
+      const title = newStatus === 'on_the_way' ? `🏃 Malzeme İsteği Yola Çıktı!` : newStatus === 'rejected' ? `❌ Malzeme İsteği Reddedildi` : `✅ Malzeme İsteği Tamamlandı`;
       const adminReply = after.adminReply ? `\nCevap: "${after.adminReply}"` : '';
       const body = newStatus === 'on_the_way' 
              ? `Kermes Yetkilisi, "${itemName}" talebinizi onayladı ve yola çıkardı!${adminReply}` 
