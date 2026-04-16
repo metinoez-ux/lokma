@@ -619,14 +619,14 @@ export default function KermesTvPage({
         <header className={styles.header} style={{ padding: 0 }}>
           
           {/* Sol %50 (HAZIRLANIYOR tarafı) */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '20px 40px', borderRight: '2px solid rgba(245, 158, 11, 0.12)', minWidth: 0 }}>
+          <div style={{ flex: '0 0 50%', maxWidth: '50%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: '20px 40px', borderRight: '2px solid rgba(245, 158, 11, 0.12)' }}>
             {/* Logo Part */}
-            <div style={{ marginRight: '20px', flexShrink: 0 }}>
-              <span className={styles.lokmaLogo}><strong style={{fontWeight: 900}}>LOKMA</strong> (ODS)</span>
+            <div style={{ marginRight: '20px', flexShrink: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+              <span className={styles.lokmaLogo}><strong style={{fontWeight: 900}}>LOKMA</strong> <span style={{fontSize: '0.7em'}}>(ODS)</span></span>
             </div>
             
             {/* Title & Weather Part */}
-            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(255, 255, 255, 0.1)', paddingLeft: '16px', justifyContent: 'center', minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(255, 255, 255, 0.1)', paddingLeft: '16px', justifyContent: 'center', flex: 1, minWidth: 0, overflow: 'hidden' }}>
               {/* Line 1: Kermes Name - Truncate if long */}
               <div style={{ fontSize: '18px', fontWeight: 500, color: '#e2e8f0', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {kermesName}
@@ -673,8 +673,8 @@ export default function KermesTvPage({
           </div>
           
           {/* Sağ %50 (HAZIR tarafı) */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', minWidth: 0 }}>
-             <div className={styles.headerCenter} style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '16px' }}>
+          <div style={{ flex: '0 0 50%', maxWidth: '50%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px' }}>
+             <div className={styles.headerCenter} style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '16px', minWidth: 0, overflow: 'hidden' }}>
                 <PrayerTimeBanner />
              </div>
 
