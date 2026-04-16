@@ -695,7 +695,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
            crossAxisAlignment: CrossAxisAlignment.start,
            children: [
              _buildCustomRow(
-               'Kermes Yetkilileri:',
+               adminsList.length == 1 ? 'Yetkilisi:' : 'Yetkilileri:',
                adminsList.map((a) => _buildKermesAdminChip(a['name'] as String, a['phone'] as String, a['gender'] as String, userAreaGender, isDark)).toList(),
                isDark
              ),
@@ -933,6 +933,20 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             _buildInfoRow('Bölüm:', bolumText, isDark),
             const SizedBox(height: 15),
           ],
+          if (capabilities.businessId != null) ...[
+             Builder(builder: (context) {
+                String? currentUserGender;
+                final List<String> allUserSections = [...capabilities.kermesAllowedSections, ...capabilities.kermesPrepZones];
+                for (var s in allUserSections) {
+                  if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
+                      currentUserGender = 'female'; break; 
+                  } else if (s.contains('Erkek')) {
+                      currentUserGender = 'male'; break;
+                  }
+                }
+                return _buildKermesAdminsSection(capabilities.businessId!, currentUserGender, isDark, kermesAdmins);
+             }),
+          ],
           if (ocakbasiMap.isNotEmpty) ...[
             Padding(
                padding: const EdgeInsets.symmetric(vertical: 8),
@@ -963,20 +977,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             const SizedBox(height: 15),
           ],
           
-          if (capabilities.businessId != null) ...[
-             Builder(builder: (context) {
-                String? currentUserGender;
-                final List<String> allUserSections = [...capabilities.kermesAllowedSections, ...capabilities.kermesPrepZones];
-                for (var s in allUserSections) {
-                  if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
-                      currentUserGender = 'female'; break; 
-                  } else if (s.contains('Erkek')) {
-                      currentUserGender = 'male'; break;
-                  }
-                }
-                return _buildKermesAdminsSection(capabilities.businessId!, currentUserGender, isDark, kermesAdmins);
-             }),
-          ],
+          
 
           const SizedBox(height: 15),
 
