@@ -34,6 +34,7 @@ interface DisplayOrder {
   createdAt: Date;
   deliveryType?: string;
   tableNumber?: string | null;
+  orderSource?: string;
 }
 
 function normalizeForSearch(text: string | null | undefined): string {
@@ -402,6 +403,7 @@ export default function KermesTvPage({
           createdAt: data.createdAt?.toDate?.() || new Date(),
           deliveryType: data.deliveryType,
           tableNumber: data.tableNumber,
+          orderSource: data.orderSource || 'app',
         });
       });
 
@@ -449,6 +451,23 @@ export default function KermesTvPage({
 
   // Header'da gosterilecek bolum bilgisi
   const displayTitle = sectionLabel || getDualLang('allSections', lang2);
+
+  // Siparis Kaynagi Ikonu
+  const renderSourceIcon = (order: DisplayOrder, size: string = '24px') => {
+    // Masa siparisi ise (rozet olsa bile cok dezent bir sekilde numaraya yapisik da dursun)
+    if (order.deliveryType === 'masada') {
+      return <span className="material-symbols-outlined" style={{ fontSize: size, color: '#64748b', opacity: 0.6, marginLeft: '8px' }}>restaurant</span>;
+    }
+    // POS (Kasa / Garson Tablet)
+    if (order.orderSource?.startsWith('pos')) {
+      return <span className="material-symbols-outlined" style={{ fontSize: size, color: '#64748b', opacity: 0.6, marginLeft: '8px' }}>point_of_sale</span>;
+    }
+    // Musteri App
+    if (order.orderSource === 'app') {
+      return <span className="material-symbols-outlined" style={{ fontSize: size, color: '#64748b', opacity: 0.6, marginLeft: '8px' }}>smartphone</span>;
+    }
+    return null;
+  };
 
   return (
     <>
@@ -579,9 +598,12 @@ export default function KermesTvPage({
               ) : (
                 preparingOrders.map((order) => (
                   <div key={order.id} className={styles.preparingCard} style={{ position: 'relative' }}>
-                    <span className={styles.preparingNumber}>
-                      {formatOrderNo(order.orderNumber)}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span className={styles.preparingNumber}>
+                        {formatOrderNo(order.orderNumber)}
+                      </span>
+                      {renderSourceIcon(order, '28px')}
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       {order.deliveryType === 'masada' && (
                         <div className={styles.tableBadge}>
@@ -632,9 +654,12 @@ export default function KermesTvPage({
                     }
                     style={{ position: 'relative' }}
                   >
-                    <span className={styles.readyNumber}>
-                      {formatOrderNo(order.orderNumber)}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span className={styles.readyNumber}>
+                        {formatOrderNo(order.orderNumber)}
+                      </span>
+                      {renderSourceIcon(order, '36px')}
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       {order.deliveryType === 'masada' && (
                         <div className={styles.tableBadge}>
