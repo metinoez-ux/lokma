@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -82,7 +83,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
          .get();
          
     if (recent.docs.isNotEmpty) {
-       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('''$itemName ${context.l10n.supply_already_requested}''')));
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('''$itemName ${'supply_already_requested'.tr()}''')));
        return;
     }
 
@@ -101,7 +102,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
           });
       if (mounted) {
          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('''${context.l10n.supply_request_sent} $itemName'''),
+            content: Text('''${'supply_request_sent'.tr()} $itemName'''),
             backgroundColor: Colors.green,
          ));
       }
@@ -113,19 +114,19 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
        return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(8)),
-          child: Text(context.l10n.supply_status_completed, style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+          child: Text('supply_status_completed'.tr(), style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
        );
     } else if (status == 'on_the_way') {
        return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(color: Colors.amber.shade200, borderRadius: BorderRadius.circular(8)),
-          child: Text(context.l10n.supply_status_on_the_way, style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+          child: Text('supply_status_on_the_way'.tr(), style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
        );
     }
     return Container(
        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
        decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(8)),
-       child: Text(context.l10n.supply_status_pending, style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+       child: Text('supply_status_pending'.tr(), style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -136,7 +137,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(context.l10n.supply_alarm_title),
+        title: Text('supply_alarm_title'.tr()),
         backgroundColor: Colors.red.shade700,
         foregroundColor: Colors.white,
       ),
@@ -149,7 +150,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
              child: Column(
                crossAxisAlignment: CrossAxisAlignment.stretch,
                children: [
-                  Text(context.l10n.supply_quick_request, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('supply_quick_request'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   if (_isLoadingCats)
                      const Center(child: CircularProgressIndicator())
@@ -179,7 +180,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                         ],
                      ))
                   else
-                     Text(context.l10n.supply_no_items),
+                     Text('supply_no_items'.tr()),
                      
                   const Divider(),
                   Row(
