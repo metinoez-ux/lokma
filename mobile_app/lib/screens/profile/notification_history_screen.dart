@@ -303,13 +303,13 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                 : isSuccess
                                     ? (isDark ? Colors.green[900]!.withOpacity(0.15) : Colors.green[50])
                                     : isActionStatus
-                                       ? (isDark ? Colors.blue[900]!.withOpacity(0.15) : Colors.blue[50])
+                                       ? (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50])
                                        : (isDark ? Colors.blue[900]!.withOpacity(0.15) : Colors.blue[50]),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : isWarning ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : isSuccess ? (isDark ? Colors.green[800]!.withOpacity(0.3) : Colors.green[100]!) : isActionStatus ? (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!) : (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!)),
+                        border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : isWarning ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : isSuccess ? (isDark ? Colors.green[800]!.withOpacity(0.3) : Colors.green[100]!) : isActionStatus ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!)),
                       ),
                       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : isSuccess ? Icons.check_circle_outline_rounded : isActionStatus ? Icons.directions_run_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : isSuccess ? (isDark ? Colors.green[300] : Colors.green[700]) : isActionStatus ? (isDark ? Colors.blue[300] : Colors.blue[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
+                        Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : isSuccess ? Icons.check_circle_outline_rounded : isActionStatus ? Icons.directions_run_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : isSuccess ? (isDark ? Colors.green[300] : Colors.green[700]) : isActionStatus ? (isDark ? Colors.orange[300] : Colors.orange[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
                         const SizedBox(width: 8),
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,6 +325,97 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       ]),
                     ),
                   if (!isRoster) const SizedBox(height: 10),
+
+                  if (type == 'supply_alarm_status') ...[
+                     (() {
+                         final rId = data['requestId'] as String?;
+                         final kId = data['kermesId'] as String?;
+                         if (rId == null || kId == null) return const SizedBox.shrink();
+                         return FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get(),
+                            builder: (ctx, snap) {
+                               if (snap.connectionState == ConnectionState.waiting) return const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()));
+                               if (!snap.hasData || !snap.data!.exists) return const SizedBox.shrink();
+                               
+                               final reqData = snap.data!.data() as Map<String, dynamic>;
+                               final who = reqData['requestedByName'] ?? 'Siz';
+                               final zone = reqData['requestedZone'] ?? '-';
+                               final currentStatus = reqData['status'] ?? 'pending';
+                               final adminReply = reqData['adminReply'] as String?;
+                               
+                               String rTimeStr = '-';
+                               if (reqData['createdAt'] != null) {
+                                  final ts = reqData['createdAt'] as Timestamp;
+                                  final dt = ts.toDate();
+                                  rTimeStr = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                               }
+                               String uTimeStr = '-';
+                               if (reqData['updatedAt'] != null) {
+                                  final ts = reqData['updatedAt'] as Timestamp;
+                                  final dt = ts.toDate();
+                                  uTimeStr = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                               }
+
+                               Color stColor = Colors.orange;
+                               String stText = 'Bekliyor';
+                               if (currentStatus == 'on_the_way') { stColor = Colors.orange; stText = 'Yolda / Onaylandı'; }
+                               else if (currentStatus == 'completed') { stColor = Colors.green; stText = 'Tamamlandı'; }
+                               else if (currentStatus == 'rejected') { stColor = Colors.red; stText = 'Reddedildi'; }
+                               
+                               Widget buildRow(String label, String val, {Color? c}) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(label, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontWeight: FontWeight.w600)),
+                                        Expanded(child: Text(val, textAlign: TextAlign.right, style: TextStyle(color: c ?? (isDark ? Colors.white : Colors.black), fontWeight: FontWeight.w800))),
+                                      ],
+                                    ),
+                                  );
+                               }
+
+                               return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF28282A) : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                                  ),
+                                  child: Column(
+                                     crossAxisAlignment: CrossAxisAlignment.start,
+                                     children: [
+                                       if (adminReply != null && adminReply.isNotEmpty) ...[
+                                         Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(color: isDark ? Colors.blue[900]!.withOpacity(0.2) : Colors.blue[50], borderRadius: BorderRadius.circular(8)),
+                                            child: Column(
+                                               crossAxisAlignment: CrossAxisAlignment.start,
+                                               children: [
+                                                  Text('Yetkili Cevabı:', style: TextStyle(color: isDark ? Colors.blue[300] : Colors.blue[800], fontSize: 12, fontWeight: FontWeight.w700)),
+                                                  const SizedBox(height: 4),
+                                                  Text(adminReply, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
+                                               ]
+                                            ),
+                                         ),
+                                         const SizedBox(height: 16),
+                                       ],
+                                       buildRow('İsteyen Kişi', who),
+                                       buildRow('Bölüm / Stand', zone),
+                                       buildRow('İstek Zamanı', rTimeStr),
+                                       buildRow('Cevap Zamanı', uTimeStr),
+                                       const Divider(),
+                                       const SizedBox(height: 8),
+                                       buildRow('Güncel Durum', stText, c: stColor),
+                                     ]
+                                  )
+                               );
+                            }
+                         );
+                     })(),
+                     const SizedBox(height: 10),
+                  ],
 
                   // 2) Vehicle info - German license plate style
                   if (isParking && vehiclePlate.isNotEmpty) ...[
