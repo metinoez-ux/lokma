@@ -313,8 +313,6 @@ export default function KermesTvPage({
   const [dateRangeStr, setDateRangeStr] = useState<string>('');
   const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [newlyReady, setNewlyReady] = useState<Set<string>>(new Set());
-  const [audioEnabled, setAudioEnabled] = useState(false);
-  const [showAutoplayOverlay, setShowAutoplayOverlay] = useState(true);
   const previousReadyRef = useRef<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -453,34 +451,12 @@ export default function KermesTvPage({
     audioRef.current = new Audio('/sounds/gong.wav');
     audioRef.current.volume = 0.7;
   }, []);
-
-  const handleStartAudio = async () => {
-    try {
-      if (audioRef.current) {
-         audioRef.current.play().then(() => {
-            audioRef.current?.pause();
-            if (audioRef.current) audioRef.current.currentTime = 0;
-            setAudioEnabled(true);
-            setShowAutoplayOverlay(false);
-         }).catch(err => {
-            console.error('Audio play failed', err);
-            setShowAutoplayOverlay(false);
-         });
-      } else {
-        setShowAutoplayOverlay(false);
-      }
-    } catch (e) {
-      setShowAutoplayOverlay(false);
-    }
-  };
-
   // Ses cal
   const playGong = useCallback(() => {
-    if (!audioEnabled || !audioRef.current) return;
+    if (!audioRef.current) return;
     audioRef.current.currentTime = 0;
     audioRef.current.play().catch(() => {});
-  }, [audioEnabled]);
-
+  }, []);
   // Firestore real-time listener
   useEffect(() => {
     const db = getDb();
@@ -635,20 +611,6 @@ export default function KermesTvPage({
       />
 
       <div className={styles.container}>
-        {showAutoplayOverlay && (
-          <div className={styles.autoplayOverlay}>
-            <button 
-              className={styles.autoplayButton} 
-              onClick={handleStartAudio}
-              autoFocus
-            >
-              ▶ {getDualLang('startDisplay', lang2)}
-            </button>
-            <span className={styles.autoplayHint}>
-              {getDualLang('startHint', lang2)}
-            </span>
-          </div>
-        )}
 
         {/* Header */}
         <header className={styles.header}>
