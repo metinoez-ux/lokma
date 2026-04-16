@@ -18,6 +18,7 @@ import TableManagementPanel from '@/components/TableManagementPanel';
 import KermesTahsilatTab from './KermesTahsilatTab';
 import KermesSiparislerTab from './KermesSiparislerTab';
 import KermesRosterTab from './KermesRosterTab';
+import KermesTedarikTab from './KermesTedarikTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
 
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
@@ -306,7 +307,7 @@ export default function KermesDetailPage() {
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
- const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'vardiya' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat' | 'bildirimler'>('bilgi');
+ const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'vardiya' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat' | 'bildirimler' | 'tedarik'>('bilgi');
   const [bilgiSubTab, setBilgiSubTab] = useState<'genel' | 'marka' | 'ozellikler' | 'teslimat' | 'fiyat' | 'imkanlar'>('genel');
  // Mutfak: PrepZone -> Personel atamalari
  const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
@@ -2172,10 +2173,16 @@ export default function KermesDetailPage() {
           </button>
         )}
         {(isSuperAdmin || isKermesAdminOfThis) && (
-          <button onClick={() => setActiveTab('bildirimler')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
-            <span className="material-symbols-outlined text-base align-middle mr-1">notifications</span>Bildirimler
-          </button>
+          <>
+            <button onClick={() => setActiveTab('tedarik')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'tedarik' ? 'bg-rose-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+              <span className="material-symbols-outlined text-base align-middle mr-1">conveyor_belt</span>Tedarik
+            </button>
+            <button onClick={() => setActiveTab('bildirimler')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+              <span className="material-symbols-outlined text-base align-middle mr-1">notifications</span>Bildirimler
+            </button>
+          </>
         )}
       </div>
 
@@ -6272,6 +6279,15 @@ export default function KermesDetailPage() {
    </div>
  </div>
  </div>
+ </div>
+ )}
+
+ {activeTab === "tedarik" && (
+  <KermesTedarikTab 
+    kermesId={kermesId as string} 
+    adminUid={adminUid} 
+    kermesData={kermes} 
+  />
  )}
 
  {activeTab === "vardiya" && (

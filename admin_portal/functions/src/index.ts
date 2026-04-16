@@ -3711,3 +3711,4 @@ export { onKermesOrderCreatedNotif, onKermesOrderPaidNotif } from "./kermesCusto
 export { onKermesRosterCreated } from "./kermesRosterFunctions";
 export * from "./kermesRosterFunctions";
 export * from './kermesTvFunctions';
+export * from './kermesSupplyFunctions';

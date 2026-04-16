@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../kermes_supply_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:geolocator/geolocator.dart';
@@ -993,7 +994,35 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             const SizedBox(height: 15),
           ],
           
-          
+          if (capabilities.businessId != null) ...[
+            Padding(
+               padding: const EdgeInsets.symmetric(vertical: 8),
+               child: Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
+            ),
+            SizedBox(
+               width: double.infinity,
+               child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                     backgroundColor: Colors.red.shade700,
+                     foregroundColor: Colors.white,
+                     elevation: 0,
+                     padding: const EdgeInsets.symmetric(vertical: 14),
+                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                     Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => KermesSupplyScreen(
+                           kermesId: capabilities.businessId!,
+                           currentUserZone: bolumText,
+                        )),
+                     );
+                  },
+                  icon: const Icon(Icons.campaign, size: 20),
+                  label: const Text('Malzeme Belirt / Alarm Ver', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+               )
+            ),
+          ],
 
           const SizedBox(height: 15),
 
