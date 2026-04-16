@@ -262,6 +262,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     final isDeleted = type == 'roster_deleted';
     final isParkingOrDeleted = isParking || isDeleted;
     final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
+    final isWarning = type == 'kermes_flash_sale' || type == 'supply_alarm' || type == 'kermes_parking';
+    final isSuccess = type == 'supply_alarm_status';
 
     // Roster Action specific variables
     bool isActionProcessing = false;
@@ -294,14 +296,28 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       decoration: BoxDecoration(
                         color: isParkingOrDeleted
                             ? (isDark ? Colors.red[900]!.withOpacity(0.15) : Colors.red[50])
-                            : (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50]),
+                            : isWarning 
+                                ? (isDark ? Colors.orange[900]!.withOpacity(0.15) : Colors.orange[50])
+                                : isSuccess
+                                    ? (isDark ? Colors.green[900]!.withOpacity(0.15) : Colors.green[50])
+                                    : (isDark ? Colors.blue[900]!.withOpacity(0.15) : Colors.blue[50]),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!)),
+                        border: Border.all(color: isParkingOrDeleted ? (isDark ? Colors.red[800]!.withOpacity(0.3) : Colors.red[100]!) : isWarning ? (isDark ? Colors.orange[800]!.withOpacity(0.3) : Colors.orange[100]!) : isSuccess ? (isDark ? Colors.green[800]!.withOpacity(0.3) : Colors.green[100]!) : (isDark ? Colors.blue[800]!.withOpacity(0.3) : Colors.blue[100]!)),
                       ),
                       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Icon(isDeleted ? Icons.cancel : Icons.warning_amber_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : (isDark ? Colors.orange[300] : Colors.orange[700])),
+                        Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : isSuccess ? Icons.check_circle_outline_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : isSuccess ? (isDark ? Colors.green[300] : Colors.green[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(body, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.4, color: Theme.of(ctx).colorScheme.onSurface))),
+                        Expanded(child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (title.isNotEmpty) ...[
+                               Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Theme.of(ctx).colorScheme.onSurface)),
+                               const SizedBox(height: 4),
+                            ],
+                            Text(body, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.4, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.8))),
+                          ]
+                        )),
                       ]),
                     ),
                   if (!isRoster) const SizedBox(height: 10),
@@ -1510,10 +1526,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
-                          final type = data['type'] as String?;
-                          if (type == 'kermes_flash_sale' || type == 'kermes_parking' || type == 'kermes_assignment' || type == 'roster_shift' || type == 'roster_deleted' || type == 'supply_alarm' || type == 'supply_alarm_status') {
-                            _showNotificationDetailSheet(context, data);
-                          }
+                          // Always show the detail sheet for any generic message so the user can read long texts.
+                          _showNotificationDetailSheet(context, data);
                         },
                         onLongPress: () {
                           HapticFeedback.mediumImpact();
