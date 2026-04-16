@@ -456,14 +456,22 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
         final adminDoc = await FirebaseFirestore.instance.collection('admins').doc(currentUserUid).get();
         if (adminDoc.exists) {
            final d = adminDoc.data()!;
-           final sections = List<String>.from(d['kermesAllowedSections'] ?? []);
-           final prepZones = List<String>.from(d['kermesPrepZones'] ?? []);
-           for (var s in [...sections, ...prepZones]) {
-              if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
-                 currentUserGender = 'female'; break;
-              } else if (s.contains('Erkek')) {
-                 currentUserGender = 'male'; break;
-              }
+           String? g = d['gender'] as String?;
+           if (g != null && g.isNotEmpty) {
+               g = g.toLowerCase();
+               if (g == 'kadin' || g == 'kadın' || g == 'female') currentUserGender = 'female';
+               else if (g == 'erkek' || g == 'male') currentUserGender = 'male';
+           }
+           if (currentUserGender == null) {
+               final sections = List<String>.from(d['kermesAllowedSections'] ?? []);
+               final prepZones = List<String>.from(d['kermesPrepZones'] ?? []);
+               for (var s in [...sections, ...prepZones]) {
+                  if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
+                     currentUserGender = 'female'; break;
+                  } else if (s.contains('Erkek')) {
+                     currentUserGender = 'male'; break;
+                  }
+               }
            }
         }
       } catch(e) {}
@@ -524,14 +532,22 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           if (d['shiftBusinessId'] == kermesId && d['isOnShift'] == true) {
              statusMap[doc.id] = (d['shiftStatus'] == 'paused') ? 'paused' : 'active';
           }
-          final sections = List<String>.from(d['kermesAllowedSections'] ?? []);
-          final prepZones = List<String>.from(d['kermesPrepZones'] ?? []);
-          for (var s in [...sections, ...prepZones]) {
-             if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
-                 adminInferredGenders[doc.id] = 'female'; break; 
-             } else if (s.contains('Erkek')) {
-                 adminInferredGenders[doc.id] = 'male'; break;
-             }
+          String? g = d['gender'] as String?;
+          if (g != null && g.isNotEmpty) {
+             g = g.toLowerCase();
+             if (g == 'kadin' || g == 'kadın' || g == 'female') adminInferredGenders[doc.id] = 'female';
+             else if (g == 'erkek' || g == 'male') adminInferredGenders[doc.id] = 'male';
+          }
+          if (adminInferredGenders[doc.id] == null) {
+              final sections = List<String>.from(d['kermesAllowedSections'] ?? []);
+              final prepZones = List<String>.from(d['kermesPrepZones'] ?? []);
+              for (var s in [...sections, ...prepZones]) {
+                 if (s.contains('Kadın') || s.contains('Kadin') || s.contains('Hanımlar') || s.contains('Hanimlar')) {
+                     adminInferredGenders[doc.id] = 'female'; break; 
+                 } else if (s.contains('Erkek')) {
+                     adminInferredGenders[doc.id] = 'male'; break;
+                 }
+              }
           }
         }
       } catch (e) {}
