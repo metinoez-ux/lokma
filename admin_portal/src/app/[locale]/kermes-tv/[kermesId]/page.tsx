@@ -616,22 +616,24 @@ export default function KermesTvPage({
       <div className={styles.container}>
 
         {/* Header */}
-        <header className={styles.header}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+        <header className={styles.header} style={{ padding: 0 }}>
+          
+          {/* Sol %50 (HAZIRLANIYOR tarafı) */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '20px 40px', borderRight: '2px solid rgba(245, 158, 11, 0.12)', minWidth: 0 }}>
             {/* Logo Part */}
-            <div style={{ marginRight: '20px' }}>
+            <div style={{ marginRight: '20px', flexShrink: 0 }}>
               <span className={styles.lokmaLogo}><strong style={{fontWeight: 900}}>LOKMA</strong> (ODS)</span>
             </div>
             
             {/* Title & Weather Part */}
-            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(255, 255, 255, 0.1)', paddingLeft: '16px', justifyContent: 'center' }}>
-              {/* Line 1: Kermes Name */}
-              <div style={{ fontSize: '18px', fontWeight: 500, color: '#e2e8f0', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(255, 255, 255, 0.1)', paddingLeft: '16px', justifyContent: 'center', minWidth: 0, overflow: 'hidden' }}>
+              {/* Line 1: Kermes Name - Truncate if long */}
+              <div style={{ fontSize: '18px', fontWeight: 500, color: '#e2e8f0', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {kermesName}
               </div>
               
               {/* Line 2: Date, Day, Weather Compact */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexWrap: 'nowrap' }}>
                 {dateRangeStr && (
                   <span style={{ fontSize: '14px', color: '#94a3b8' }}>
                     {dateRangeStr.replace('-', ' - ')}
@@ -670,17 +672,20 @@ export default function KermesTvPage({
             </div>
           </div>
           
-          <div className={styles.headerCenter} style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '24px'}}>
-             <PrayerTimeBanner />
-          </div>
+          {/* Sağ %50 (HAZIR tarafı) */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', minWidth: 0 }}>
+             <div className={styles.headerCenter} style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '16px' }}>
+                <PrayerTimeBanner />
+             </div>
 
-          <div className={styles.headerRight}>
-            <span className={styles.clock}>
-              {currentTime.toLocaleTimeString('tr-TR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
+             <div className={styles.headerRight} style={{ flexShrink: 0 }}>
+               <span className={styles.clock}>
+                 {currentTime.toLocaleTimeString('tr-TR', {
+                   hour: '2-digit',
+                   minute: '2-digit',
+                 })}
+               </span>
+             </div>
           </div>
         </header>
 
