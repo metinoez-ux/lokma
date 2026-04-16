@@ -1,24 +1,13 @@
-const admin = require('firebase-admin');
-const serviceAccount = require('./admin_portal/functions/lokma-419114-firebase-adminsdk-h4sri-d67b2d5edb.json');
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-const db = admin.firestore();
-
-async function run() {
-  const users = await db.collection('users').get();
-  for (let u of users.docs) {
-     const notifs = await db.collection('users').doc(u.id).collection('notifications').get();
-     for (let n of notifs.docs) {
-        let type = n.data().type;
-        if (type === 'supply_alarm' || type === 'supply_alarm_status') {
-           let val = n.data().createdAt;
-           if (typeof val === 'string') {
-              console.log('Deleting bad notification:', n.id);
-              await n.ref.delete();
-           }
-        }
-     }
-  }
-  console.log('Done!');
-  process.exit(0);
+const fs = require('fs');
+const files = [
+  'admin_portal/src/app/[locale]/admin/kermes/[id]/page.tsx',
+  'admin_portal/src/app/api/notifications/kermes-manual-notification/route.ts',
+  'admin_portal/src/app/api/notifications/kermes-flash-sale/route.ts',
+  'admin_portal/src/app/api/notifications/kermes-parking-announcement/route.ts'
+];
+for (let file of files) {
+  let content = fs.readFileSync(file, 'utf8');
+  content = content.replace(/'kermesEvents'/g, "'kermes_events'");
+  fs.writeFileSync(file, content);
 }
-run();
+console.log('Fixed kermesEvents collection names!');

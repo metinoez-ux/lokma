@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Gecmis kaydi
-    await db.collection('kermesEvents').doc(kermesId).collection('notificationHistory').add({
+    await db.collection('kermes_events').doc(kermesId).collection('notificationHistory').add({
       type: 'flash_sale', title, body: messageBody, sentCount: successCount, sentAt: now,
     });
 

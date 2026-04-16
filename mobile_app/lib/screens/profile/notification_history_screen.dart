@@ -962,13 +962,13 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             final statuses = entry.value;
             // Sort statuses ascending by createdAt (oldest first → timeline order)
             statuses.sort((a, b) {
-              final aTime = (a['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
-              final bTime = (b['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+              final aTime = ((a['createdAt'] is Timestamp) ? a['createdAt'] /*cast*/ : null)?.millisecondsSinceEpoch ?? 0;
+              final bTime = ((b['createdAt'] is Timestamp) ? b['createdAt'] /*cast*/ : null)?.millisecondsSinceEpoch ?? 0;
               return aTime.compareTo(bTime);
             });
 
             // The latest status determines the card sort key
-            final latestTime = statuses.last['createdAt'] as Timestamp?;
+            final latestTime = (statuses.last['createdAt'] is Timestamp ? statuses.last['createdAt'] /*cast*/ : null);
             final rawNum = statuses.first['rawOrderNumber'] as String? ?? 
                            statuses.last['rawOrderNumber'] as String? ??
                            statuses.first['orderNumber'] as String? ?? 
@@ -1068,18 +1068,18 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
           for (final entry in reservationMap.entries) {
             final statuses = entry.value;
             statuses.sort((a, b) {
-              final aTime = (a['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
-              final bTime = (b['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+              final aTime = ((a['createdAt'] is Timestamp) ? a['createdAt'] /*cast*/ : null)?.millisecondsSinceEpoch ?? 0;
+              final bTime = ((b['createdAt'] is Timestamp) ? b['createdAt'] /*cast*/ : null)?.millisecondsSinceEpoch ?? 0;
               return aTime.compareTo(bTime);
             });
-            final latestTime = statuses.last['createdAt'] as Timestamp?;
+            final latestTime = (statuses.last['createdAt'] is Timestamp ? statuses.last['createdAt'] /*cast*/ : null);
             final bName = statuses.last['businessName'] as String? ??
                           statuses.first['businessName'] as String? ?? '';
             final bId = statuses.last['businessId'] as String? ?? '';
             final pSize = (statuses.last['partySize'] as num?)?.toInt() ??
                           (statuses.first['partySize'] as num?)?.toInt() ?? 0;
-            final resDate = statuses.last['reservationDate'] as Timestamp? ??
-                            statuses.first['reservationDate'] as Timestamp?;
+            final resDate = (statuses.last['reservationDate'] is Timestamp ? statuses.last['reservationDate'] /*cast*/ : null) ??
+                            (statuses.first['reservationDate'] is Timestamp ? statuses.first['reservationDate'] /*cast*/ : null);
 
             reservationGroups.add(_ReservationGroup(
               reservationId: entry.key,
@@ -1115,10 +1115,10 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             int aMs = 0, bMs = 0;
             if (a is _OrderGroup) aMs = a.latestTimestamp?.millisecondsSinceEpoch ?? 0;
             else if (a is _ReservationGroup) aMs = a.latestTimestamp?.millisecondsSinceEpoch ?? 0;
-            else if (a is Map<String, dynamic>) aMs = (a['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+            else if (a is Map<String, dynamic>) aMs = ((a['createdAt'] is Timestamp) ? a['createdAt'] /*cast*/ : null)?.millisecondsSinceEpoch ?? 0;
             if (b is _OrderGroup) bMs = b.latestTimestamp?.millisecondsSinceEpoch ?? 0;
             else if (b is _ReservationGroup) bMs = b.latestTimestamp?.millisecondsSinceEpoch ?? 0;
-            else if (b is Map<String, dynamic>) bMs = (b['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+            else if (b is Map<String, dynamic>) bMs = ((b['createdAt'] is Timestamp) ? b['createdAt'] /*cast*/ : null)?.millisecondsSinceEpoch ?? 0;
             return bMs.compareTo(aMs); // newest first
           });
           // Pin active orders and pending reservations to top
@@ -1194,7 +1194,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                 }
               }
             } else if (item is Map<String, dynamic>) {
-              final dt = (item['createdAt'] as Timestamp?)?.toDate();
+              final dt = ((item['createdAt'] is Timestamp) ? item['createdAt'] /*cast*/ : null)?.toDate();
               if (dt != null && currentTime.difference(dt).inHours < 8) {
                 isCurrent = true;
               }
@@ -2210,7 +2210,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
     final allStatusDateTimes = <String, DateTime>{};
     for (final s in effectiveStatuses) {
       final st = s['status'] as String? ?? '';
-      final createdAt = s['createdAt'] as Timestamp?;
+      final createdAt = (s['createdAt'] is Timestamp ? s['createdAt'] /*cast*/ : null);
       if (createdAt != null) {
         final dt = createdAt.toDate();
         allStatusDateTimes[st] = dt;
@@ -2938,7 +2938,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                               (s) => s['status'] == 'pending',
                               orElse: () => group.statuses.first,
                             );
-                            final pendingTs = pendingEntry['createdAt'] as Timestamp?;
+                            final pendingTs = (pendingEntry['createdAt'] is Timestamp ? pendingEntry['createdAt'] /*cast*/ : null);
                             showOrderDetailGlobal(context, group.orderId, pendingTs?.toDate());
                           }
                         },
@@ -4099,7 +4099,7 @@ class _GenericNotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = data['title'] as String? ?? 'notifications.notification'.tr();
     final body = data['body'] as String? ?? '';
-    final createdAt = data['createdAt'] as Timestamp?;
+    final createdAt = (data['createdAt'] is Timestamp ? data['createdAt'] /*cast*/ : null);
     final isRead = data['read'] as bool? ?? true;
     final imageUrl = data['imageUrl'] as String?;
 

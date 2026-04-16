@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     let staffUserIds = new Set<string>();
     if (targetGroups.staff) {
       try {
-        const staffSnap = await db.collection('kermesEvents').doc(kermesId).collection('staff').get();
+        const staffSnap = await db.collection('kermes_events').doc(kermesId).collection('staff').get();
         staffSnap.forEach((doc: any) => { const uid = doc.data().userId || doc.id; if (uid) staffUserIds.add(uid); });
       } catch (e) { console.warn('Staff read warning:', e); }
     }
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Gecmis kaydi
-    await db.collection('kermesEvents').doc(kermesId).collection('notificationHistory').add({
+    await db.collection('kermes_events').doc(kermesId).collection('notificationHistory').add({
       type: 'manual', title: fullTitle, body: notifBody, sentCount: successCount, sentAt: now,
     });
 

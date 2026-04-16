@@ -2005,7 +2005,7 @@ export default function KermesDetailPage() {
     try {
       const { getFirestore } = await import('firebase/firestore');
       const firestore = getFirestore();
-      const histRef = collection(firestore, 'kermesEvents', kermesId, 'notificationHistory');
+      const histRef = collection(firestore, 'kermes_events', kermesId, 'notificationHistory');
       const q = query(histRef, orderBy('sentAt', 'desc'), limit(50));
       const snap = await getDocs(q);
       setNotifHistory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
