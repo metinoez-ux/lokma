@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
 import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -910,7 +910,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
               if (badge.iconUrl.isNotEmpty) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: CachedNetworkImage(
+                  child: LokmaNetworkImage(
                     imageUrl: badge.iconUrl,
                     height: 80,
                     fit: BoxFit.contain,
@@ -1498,7 +1498,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                             _currentEvent.menu.isNotEmpty &&
                                     _currentEvent
                                         .menu.first.allImages.isNotEmpty
-                                ? CachedNetworkImage(
+                                ? LokmaNetworkImage(
                                     imageUrl: _currentEvent
                                         .menu.first.allImages.first,
                                     fit: BoxFit.cover,
@@ -2031,7 +2031,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
           // Background Image
           _currentEvent.headerImage != null &&
                   _currentEvent.headerImage!.isNotEmpty
-              ? CachedNetworkImage(
+              ? LokmaNetworkImage(
                   imageUrl: _currentEvent.headerImage!,
                   fit: BoxFit.cover,
                   color: Colors.black.withOpacity(0.1),
@@ -2174,7 +2174,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                             if (hasIcon)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
-                                child: CachedNetworkImage(
+                                child: LokmaNetworkImage(
                                   imageUrl: badge.iconUrl,
                                   height:
                                       52, // Detay sayfasinda daha net ve buyuk
@@ -2525,7 +2525,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
               child: Row(
                 children: [
                   if (f.iconUrl != null && f.iconUrl!.isNotEmpty) ...[
-                    CachedNetworkImage(
+                    LokmaNetworkImage(
                       imageUrl: f.iconUrl!,
                       width: 14,
                       height: 14,
@@ -2801,7 +2801,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
             Positioned.fill(
               child: Opacity(
                 opacity: 0.5,
-                child: CachedNetworkImage(
+                child: LokmaNetworkImage(
                   imageUrl:
                       'https://lh3.googleusercontent.com/aida-public/AB6AXuCghDSwUkHQ0hd_B-McJJ4fZPGP8zjK929y42shgv2J-MhJ392FInWVjplw_iuK_8Us9DBl_U8KTvA_Ta8idIJiKv_mnOJBrLM_A9DJmJYQA5p0PG-nI6sW97x-t_mZlqnsqwl9JFl73dwWa--SMG6BWh3zFYa31muxxpjbsG95nxmIWM6pz_B_90aqy3LThEiqT5dvrKWS3KmdN9GFxNmQo0oEx3uX6n4BA_0EGwpo6KT0wuFf9qJ6XjOUlIn9_HK_uE8PQkwHbrae',
                   fit: BoxFit.cover,
@@ -4132,7 +4132,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                 height: 100,
                                 color:
                                     isDark ? Colors.white10 : Colors.grey[100],
-                                child: CachedNetworkImage(
+                                child: LokmaNetworkImage(
                                   imageUrl: item.imageUrl!,
                                   fit: BoxFit.cover,
                                   errorWidget: (_, __, ___) => Icon(

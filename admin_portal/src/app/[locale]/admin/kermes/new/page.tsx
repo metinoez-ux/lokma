@@ -194,7 +194,7 @@ function NewKermesContent() {
  const loadedBadges = badgesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
  loadedBadges.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
  setAvailableBadges(loadedBadges);
- } catch (error) {
+ } catch (error: any) { console.error(error); alert("Kaydetme hatasi: " + (error?.message || "Bilinmeyen hata"));
  console.error('Özellikler veya rozetler yüklenemedi:', error);
  setEventFeatures(DEFAULT_FEATURES);
  }
@@ -228,7 +228,7 @@ function NewKermesContent() {
  contactPhone: org.phone || '',
  }));
  }
- } catch (error) {
+ } catch (error: any) { console.error(error); alert("Kaydetme hatasi: " + (error?.message || "Bilinmeyen hata"));
  console.error('Error loading organization:', error);
  } finally {
  setOrgLoading(false);
@@ -350,7 +350,10 @@ function NewKermesContent() {
  // Dinamik Sabit Görevler (Daima Varsayılan Olarak Atanır)
  customRoles: [
    { id: 'role_park_system', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
-   { id: 'role_temizlik_system', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' }
+   { id: 'role_temizlik_system', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
+   { id: 'role_cocuk_system', name: 'Çocuk Görevlisi', icon: '👶', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300' },
+   { id: 'role_vip_system', name: 'Özel Misafir (VIP)', icon: '⭐', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+   { id: 'role_tedarik_system', name: 'Malzeme Tedarikçisi', icon: '📦', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' }
  ],
  // Sistem bilgileri
  organizerId: auth.currentUser.uid,
@@ -367,7 +370,7 @@ function NewKermesContent() {
 
  await addDoc(collection(db, 'kermes_events'), kermesData);
  router.push('/admin/kermes');
- } catch (error) {
+ } catch (error: any) { console.error(error); alert("Kaydetme hatasi: " + (error?.message || "Bilinmeyen hata"));
  console.error('Error creating event:', error);
  setLoading(false);
  }

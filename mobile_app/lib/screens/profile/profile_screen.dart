@@ -25,6 +25,7 @@ import '../../core/constants/build_info.dart';
 import '../../providers/kermes_cart_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../staff/providers/staff_hub_provider.dart';
+import '../staff/providers/staff_notifications_provider.dart';
 import '../../widgets/qr_scanner_screen.dart';
 import '../../services/kermes_order_service.dart';
 import '../staff/widgets/admin_payment_collection_sheet.dart';
@@ -356,21 +357,56 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             GestureDetector(
                               onTap: () =>
                                   context.push('/notification-history'),
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? const Color(0xFF2C2C2E)
-                                      : Colors.white.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(Icons.notifications_outlined,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[700],
-                                    size: 22),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? const Color(0xFF2C2C2E)
+                                          : Colors.white.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.notifications_outlined,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[700],
+                                        size: 22),
+                                  ),
+                                  Consumer(
+                                    builder: (context, ref, _) {
+                                      final unreadCount = ref.watch(staffUnreadNotificationsCountProvider).value ?? 0;
+                                      if (unreadCount == 0) return const SizedBox.shrink();
+                                      return Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 16,
+                                            minHeight: 16,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              unreadCount > 9 ? '9+' : unreadCount.toString(),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ],

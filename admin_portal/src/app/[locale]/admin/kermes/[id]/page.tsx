@@ -20,7 +20,7 @@ import KermesSiparislerTab from './KermesSiparislerTab';
 import KermesRosterTab from './KermesRosterTab';
 import KermesTedarikTab from './KermesTedarikTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
-
+import { compressLokmaImage } from "@/lib/imageCompression";
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
 interface KermesFeature {
  id: string;
@@ -135,6 +135,28 @@ function PrepZoneSelector({ value, onChange, products, sectionDefs }: { value: s
     );
 }
 
+
+
+export interface GlobalSystemRole {
+  id: string; // e.g. role_staff, role_driver, role_waiter, extended_temizlik
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+  isCore?: boolean; // If true, it is essential to the system (like assignedDrivers) and cannot be deleted.
+}
+
+export const DEFAULT_GLOBAL_SYSTEM_ROLES: GlobalSystemRole[] = [
+  { id: 'role_staff', name: 'Genel Personel', icon: '👥', color: 'bg-slate-100 text-slate-800 dark:bg-slate-900/50 dark:text-slate-300', description: 'Temel giriş yetkisi ve kermes listesini görme', isCore: true },
+  { id: 'role_driver', name: 'Sürücü / Kurye', icon: '🚗', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300', description: 'Siparişleri teslim etme yetkisi', isCore: true },
+  { id: 'role_waiter', name: 'Garson', icon: '🍽️', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300', description: 'Masalara servis yapma yetkisi', isCore: true },
+  { id: 'role_admin', name: 'Kermes Admin', icon: '👑', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300', description: 'Kermesi yönetme tam yetkisi', isCore: true },
+  { id: 'role_temizlik_system', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300', description: 'Etkinlik alanı temizliği ve düzeni' },
+  { id: 'role_park_system', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300', description: 'Araç park yönlendirme ve düzeni' },
+  { id: 'role_cocuk_system', name: 'Çocuk Görevlisi', icon: '👶', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300', description: 'Çocuk oyun alanı gözetimi' },
+  { id: 'role_vip_system', name: 'Özel Misafir (VIP)', icon: '⭐', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', description: 'Protokol ve özel misafir ağırlama' },
+  { id: 'role_tedarik_system', name: 'Malzeme Tedarikçisi', icon: '📦', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300', description: 'Malzeme ve lojistik tedariği' }
+];
 
 export interface KermesCustomRole {
   id: string; // e.g. role_1234
@@ -263,12 +285,7 @@ interface KermesProduct {
   optionGroups?: any[];
 }
 
-export const EXTENDED_SYSTEM_ROLES: KermesCustomRole[] = [
-  { id: 'role_temizlik', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300' },
-  { id: 'role_park', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-  { id: 'role_cocuk', name: 'Çocuk Görevlisi', icon: '👶', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300' },
-  { id: 'role_vip', name: 'Özel Misafir (VIP)', icon: '⭐', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
-];
+
 
 interface MasterProduct {
  id: string;
@@ -388,6 +405,10 @@ export default function KermesDetailPage() {
  const [assignedDrivers, setAssignedDrivers] = useState<string[]>([]);
  const [assignedWaiters, setAssignedWaiters] = useState<string[]>([]);
  const [customRoleAssignments, setCustomRoleAssignments] = useState<Record<string, string[]>>({});
+
+  const [globalSystemRoles, setGlobalSystemRoles] = useState<GlobalSystemRole[]>([]);
+  const [editingGlobalRole, setEditingGlobalRole] = useState<GlobalSystemRole | null>(null);
+
  const [kermesAdmins, setKermesAdmins] = useState<string[]>([]); // Kermes Admin UIDs
  const [staffSearchQuery, setStaffSearchQuery] = useState('');
  const [driverSearchQuery, setDriverSearchQuery] = useState('');
@@ -605,6 +626,22 @@ export default function KermesDetailPage() {
       const data = { id: kermesDoc.id, ...kermesDoc.data() } as KermesEvent;
       setKermes(data);
 
+      // Load global system roles
+      const settingsSnap = await getDoc(doc(db, 'settings', 'kermes_roles'));
+      if (settingsSnap.exists()) {
+        const sr = settingsSnap.data().systemRoles;
+        if (sr && Array.isArray(sr)) {
+          setGlobalSystemRoles(sr);
+        } else {
+          setGlobalSystemRoles(DEFAULT_GLOBAL_SYSTEM_ROLES);
+        }
+      } else {
+        // If it doesn't exist, create it!
+        setGlobalSystemRoles(DEFAULT_GLOBAL_SYSTEM_ROLES);
+        await setDoc(doc(db, 'settings', 'kermes_roles'), { systemRoles: DEFAULT_GLOBAL_SYSTEM_ROLES });
+      }
+
+
       const startD = data.date?.toDate?.() || data.startDate?.toDate?.() || null;
  const endD = data.endDate?.toDate?.() || null;
  setEditForm({
@@ -664,16 +701,7 @@ export default function KermesDetailPage() {
  selectedDonationFundId: data.selectedDonationFundId || '',
  selectedDonationFundName: data.selectedDonationFundName || '',
  isSilaYolu: data.isSilaYolu || false,
- customRoles: (() => {
-  const roles = [...(data.customRoles || [])];
-  if (!roles.some((r: any) => r.name === 'Park Görevlisi')) {
-      roles.unshift({ id: 'role_park_system', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' });
-  }
-  if (!roles.some((r: any) => r.name === 'Temizlik Görevlisi')) {
-      roles.unshift({ id: 'role_temizlik_system', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' });
-  }
-  return roles;
- })(),
+ customRoles: (data.customRoles || []),
  });
  setEditFeatures(Array.isArray(data.features) ? data.features : []);
  setEditCustomFeatures(Array.isArray(data.customFeatures) ? data.customFeatures : []);
@@ -1309,7 +1337,11 @@ export default function KermesDetailPage() {
 
  const handleDeleteKermes = async () => {
  if (!kermes) return;
- if (!confirm('DİKKAT! Bu Kermes tamamen silinecek. İlgili tüm ürünleri ve verileri kaybolacaktır. Onaylıyor musunuz?')) return;
+ const confirmText = window.prompt("DİKKAT! Bu Kermes tamamen silinecektir. İlgili tüm ürünleri ve verileri kaybolacaktır.\nLütfen işlemi onaylamak için kutucuğa 'Kermes Sil' veya 'sil' yazın:");
+ if (!confirmText || (confirmText.trim().toLowerCase() !== 'kermes sil' && confirmText.trim().toLowerCase() !== 'sil')) {
+    alert("Silme işlemi iptal edildi.");
+    return;
+ }
  setSaving(true);
  try {
  await deleteDoc(doc(db, 'kermes_events', kermesId));
@@ -2114,18 +2146,26 @@ export default function KermesDetailPage() {
  <div className="flex items-center gap-2">
  <button 
  onClick={() => { setActiveTab('masalar'); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight/2, behavior: 'smooth' }), 100); }}
- className="px-4 py-2 mr-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg shadow-sm font-bold text-sm flex items-center gap-2 transform transition hover:scale-105"
+ className="h-10 px-4 mr-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg shadow-sm font-bold text-sm flex items-center justify-center gap-2 transform transition hover:scale-105 whitespace-nowrap"
  >
- 🍳 Mutfak & Expo (KDS)
+ Mutfak & Expo (KDS)
  </button>
- {kermes.sponsor === 'tuna' && <span className="px-2 py-1 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">🐟 TUNA</span>}
- {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-amber-600/30 text-amber-800 dark:text-amber-400 rounded text-xs">🏔️ TOROS</span>}
+ {kermes.sponsor === 'tuna' && (
+   <div className="h-10 px-4 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg text-sm font-bold flex items-center justify-center gap-2 border border-blue-600/30 whitespace-nowrap">
+     <img src="/tuna_logo_pill.png" alt="TUNA" className="h-5 drop-shadow-sm" /> TUNA
+   </div>
+ )}
+ {kermes.sponsor === 'akdeniz_toros' && (
+   <div className="h-10 px-4 bg-amber-600/20 text-amber-800 dark:text-amber-400 rounded-lg text-sm font-bold flex items-center justify-center gap-2 border border-amber-600/30 whitespace-nowrap">
+     <img src="/akdeniz_toros_logo_pill.png" alt="TOROS" className="h-5 drop-shadow-sm" /> TOROS
+   </div>
+ )}
  <button onClick={toggleActiveStatus}
- className={`px-3 py-1 rounded-lg text-sm font-medium ${kermes.isActive ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${kermes.isActive ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
  {kermes.isActive ? t('aktif') : t('kapali')}
  </button>
  {admin?.role === 'super_admin' && (
- <button onClick={handleDeleteKermes} disabled={saving} className="px-3 py-1 bg-red-800/80 hover:bg-red-700 text-white rounded-lg text-sm">
+ <button onClick={handleDeleteKermes} disabled={saving} className="h-10 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap">
  🗑️ Sil
  </button>
  )}
@@ -2133,58 +2173,58 @@ export default function KermesDetailPage() {
  </div>
 
  {/* Tabs */}
- <div className="flex gap-2 mb-6 bg-card p-1 rounded-xl w-fit">
+ <div className="flex gap-2 mb-6 bg-card p-1 rounded-xl w-full sm:w-fit overflow-x-auto custom-scrollbar">
  <button onClick={() => setActiveTab('bilgi')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 📋 Bilgiler
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Bilgiler
  </button>
  <button onClick={() => setActiveTab('menu')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- {t('menu')}{products.length})
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Menü ({products.length})
  </button>
  <button onClick={() => setActiveTab('personel')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 👥 Personel {assignedStaffDetails.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{assignedStaffDetails.length}</span>}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Personel
  </button>
  <button onClick={() => setActiveTab('vardiya')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'vardiya' ? 'bg-cyan-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 📅 Vardiya Planı
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'vardiya' ? 'bg-cyan-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Vardiya
  </button>
  <button onClick={() => setActiveTab('gorevler')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'gorevler' ? 'bg-purple-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- 🛠️ Görevler
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'gorevler' ? 'bg-purple-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Görevler
  </button>
  <button onClick={() => setActiveTab('mutfak')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- Mutfak {kermesSectionDefs.some(s => (s.prepZones || []).length > 0) && <span className="ml-1 px-1.5 py-0.5 bg-orange-500/30 text-orange-300 rounded-full text-xs">{kermesSectionDefs.reduce((acc, s) => acc + (s.prepZones || []).length, 0)}</span>}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Mutfak
  </button>
-        <button onClick={() => setActiveTab('masalar')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
-          Masalar ve Bölümler
-        </button>
-        <button onClick={() => setActiveTab('siparisler')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
-          Siparisler
-        </button>
-        {(isSuperAdmin || isKermesAdminOfThis) && (
-          <button onClick={() => setActiveTab('tahsilat')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
-            Tahsilat
-          </button>
-        )}
-        {(isSuperAdmin || isKermesAdminOfThis) && (
-          <>
-            <button onClick={() => setActiveTab('tedarik')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'tedarik' ? 'bg-rose-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
-              <span className="material-symbols-outlined text-base align-middle mr-1">conveyor_belt</span>Tedarik
-            </button>
-            <button onClick={() => setActiveTab('bildirimler')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
-              <span className="material-symbols-outlined text-base align-middle mr-1">notifications</span>Bildirimler
-            </button>
-          </>
-        )}
-      </div>
+ <button onClick={() => setActiveTab('masalar')}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Masalar
+ </button>
+ <button onClick={() => setActiveTab('siparisler')}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Siparişler
+ </button>
+ {(isSuperAdmin || isKermesAdminOfThis) && (
+ <button onClick={() => setActiveTab('tahsilat')}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Tahsilat
+ </button>
+ )}
+ {(isSuperAdmin || isKermesAdminOfThis) && (
+ <>
+ <button onClick={() => setActiveTab('tedarik')}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tedarik' ? 'bg-rose-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Tedarik
+ </button>
+ <button onClick={() => setActiveTab('bildirimler')}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ Bildirimler
+ </button>
+ </>
+ )}
+ </div>
 
  {/* Tab Content - Bilgi */}
  {activeTab === 'bilgi' && (
@@ -2478,7 +2518,7 @@ export default function KermesDetailPage() {
  {(kermes.hasPfandSystem || kermes.showKdv) && (
  <div className="pt-4 border-t border-border">
  <h4 className="text-muted-foreground/80 text-sm font-medium mb-2">🏢 Kurumsal Bilgiler</h4>
- <div className="grid grid-cols-2 gap-4 text-sm">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
  {kermes.hasPfandSystem && (
  <div className="bg-card p-2 rounded border border-gray-600">
  <span className="text-muted-foreground block text-xs">{t('deposit_system')}</span>
@@ -3103,7 +3143,7 @@ export default function KermesDetailPage() {
  }}
  className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow text-sm" />
  </div>
- <div className="grid grid-cols-2 gap-2">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
  <div>
  <label className="text-muted-foreground text-xs block mb-1">{t('postal_code')}</label>
  <input type="text" value={loc.postalCode || ''} placeholder="41836"
@@ -3171,7 +3211,8 @@ export default function KermesDetailPage() {
 
  console.log('📂 Storage path:', `kermes/${kermesId}/parking/${fileName}`);
 
- await uploadBytes(storageRef, file);
+ const compressedFile = await compressLokmaImage(file, false);
+ await uploadBytes(storageRef, compressedFile);
  console.log(t('upload_tamamlandi'));
 
  const downloadUrl = await getDownloadURL(storageRef);
@@ -3199,7 +3240,7 @@ export default function KermesDetailPage() {
  </div>
  ))}
  {/* Park Ekleme Seçenekleri */}
- <div className="grid grid-cols-3 gap-2">
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
  {/* Manuel Ekle */}
  <button onClick={() => setEditForm({ ...editForm, parkingLocations: [...editForm.parkingLocations, { street: '', city: '', postalCode: '', country: '', note: '', images: [] }] })}
  className="py-3 border-2 border-dashed border-gray-600 text-muted-foreground rounded-lg hover:border-blue-500 hover:text-blue-800 dark:text-blue-400 text-sm flex flex-col items-center gap-1">
@@ -3394,7 +3435,7 @@ export default function KermesDetailPage() {
   </div>
 
   {/* Rol Checkboxlari */}
-  <div className="mt-4 grid grid-cols-2 gap-2">
+  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
   {([
   { key: 'isStaff', label: 'Personel', color: 'cyan' },
   { key: 'isDriver', label: 'Surucu', color: 'amber' },
@@ -3444,7 +3485,7 @@ export default function KermesDetailPage() {
 
   {/* Rol Checkboxlari - yoksa da goster (yeni kayit icin) */}
   {!matchedUser && (
-  <div className="grid grid-cols-2 gap-2">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
   <label className="flex items-center gap-2 cursor-pointer select-none">
   <input type="checkbox" aria-label="Personel olarak ata" checked={newStaffRoles.isStaff} onChange={e => setNewStaffRoles(r => ({...r, isStaff: e.target.checked}))} className="w-4 h-4 accent-cyan-500 rounded" />
   <span className="text-xs text-foreground">Personel</span>
@@ -3611,7 +3652,7 @@ export default function KermesDetailPage() {
  <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded">Garson</span>
  )}
  {/* Custom & Extended System Roles Badges */}
- {[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])].filter(r => (customRoleAssignments[r.id] || []).includes(staff.id)).map(r => (
+ {(editForm.customRoles || []).filter(r => (customRoleAssignments[r.id] || []).includes(staff.id)).map(r => (
    <span key={r.id} className={`ml-1 flex-shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded ${r.color || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
      {r.name}
    </span>
@@ -3658,7 +3699,7 @@ export default function KermesDetailPage() {
  ? 'bg-emerald-500 text-white hover:bg-emerald-600'
  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600'
  }`}
- title={assignedWaiters.includes(staff.id) ? 'Garsonluktan Cikar' : 'Garson Olarak Ata'}
+ title={assignedWaiters.includes(staff.id) ? 'Garsonluktan Cikar' : `${(globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES).find((r: any) => r.id === 'role_waiter')?.name || 'Garson'} Olarak Ata`}
  >
  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
  <path d="M6 12C6 8.69 8.69 6 12 6C15.31 6 18 8.69 18 12"/>
@@ -3684,12 +3725,12 @@ export default function KermesDetailPage() {
  ? 'bg-amber-500 text-white hover:bg-amber-600'
  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600'
  }`}
- title={assignedDrivers.includes(staff.id) ? 'Suruculukten Cikar' : 'Surucu Olarak Ata'}
+ title={assignedDrivers.includes(staff.id) ? 'Suruculukten Cikar' : `${(globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES).find((r: any) => r.id === 'role_driver')?.name || 'Sürücü'} Olarak Ata`}
  >
  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
  </button>
   {/* Custom Roles Assignment */}
-  {[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])].map(r => {
+  {(editForm.customRoles || []).map(r => {
     const isAssigned = customRoleAssignments[r.id]?.includes(staff.id) || false;
     return (
       <button
@@ -3798,70 +3839,46 @@ export default function KermesDetailPage() {
      </div>
 
      <div className="space-y-4">
-      <h4 className="font-semibold text-sm border-b border-border pb-2">Sabit Sistem Görevleri (Kilitli)</h4>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">👥</span>
-        <div>
-         <div className="font-medium text-sm">Genel Personel</div>
-         <div className="text-xs text-muted-foreground">Temel giriş yetkisi ve kermes listesini görme</div>
-        </div>
-       </div>
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">🚗</span>
-        <div>
-         <div className="font-medium text-sm">Sürücü / Kurye</div>
-         <div className="text-xs text-muted-foreground">Siparişleri teslim etme yetkisi</div>
-        </div>
-       </div>
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">🍽️</span>
-        <div>
-         <div className="font-medium text-sm">Garson</div>
-         <div className="text-xs text-muted-foreground">Masalara servis yapma yetkisi</div>
-        </div>
-       </div>
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">👑</span>
-        <div>
-         <div className="font-medium text-sm">Kermes Admin</div>
-         <div className="text-xs text-muted-foreground">Kermesi yönetme tam yetkisi</div>
-        </div>
-       </div>
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">🧹</span>
-        <div>
-         <div className="font-medium text-sm">Temizlik Görevlisi</div>
-         <div className="text-xs text-muted-foreground">Etkinlik alanı temizliği ve düzeni</div>
-        </div>
-       </div>
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">🅿️</span>
-        <div>
-         <div className="font-medium text-sm">Park Görevlisi</div>
-         <div className="text-xs text-muted-foreground">Araç park yönlendirme ve düzeni</div>
-        </div>
-       </div>
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">👶</span>
-        <div>
-         <div className="font-medium text-sm">Çocuk Görevlisi</div>
-         <div className="text-xs text-muted-foreground">Çocuk oyun alanı gözetimi</div>
-        </div>
-       </div>
-       <div className="p-3 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-        <span className="text-xl">⭐</span>
-        <div>
-         <div className="font-medium text-sm">Özel Misafir (VIP)</div>
-         <div className="text-xs text-muted-foreground">Protokol ve özel misafir ağırlama</div>
-        </div>
-       </div>
+      <div className="flex items-center justify-between border-b border-border pb-2 mb-4">
+        <h4 className="font-semibold text-sm">Sabit Sistem Görevleri (Kilitli)</h4>
+        {isSuperAdmin && (
+          <button 
+            type="button"
+            onClick={() => setEditingGlobalRole({ id: 'extended_' + Math.random().toString(36).substr(2, 9), name: '', icon: '🌟', color: 'bg-indigo-100 text-indigo-800', description: '', isCore: false })}
+            className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg transition"
+          >
+            + Yeni Küresel Görev
+          </button>
+        )}
+      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+       {(globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES).map(role => (
+         <div key={role.id} className="p-3 bg-muted/30 border border-border rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-3">
+           <span className="text-xl">{role.icon}</span>
+           <div>
+            <div className="font-medium text-sm">{role.name}</div>
+            <div className="text-xs text-muted-foreground">{role.description}</div>
+           </div>
+          </div>
+          {isSuperAdmin && (
+            <button
+               type="button"
+               onClick={() => setEditingGlobalRole(role)}
+               className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+               title="Sistem Görevini Düzenle"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+            </button>
+          )}
+         </div>
+       ))}
       </div>
 
       <div className="mt-8">
        <div className="flex items-center justify-between border-b border-border pb-2 mb-4">
         <h4 className="font-semibold text-sm">Özel Görevler (Dinamik)</h4>
-        {isSuperAdmin && (
+        {canManageStaff && (
           <button 
             onClick={() => {
               setEditingCustomRole({
@@ -3878,15 +3895,18 @@ export default function KermesDetailPage() {
         )}
        </div>
        
-       {(editForm.customRoles || []).length === 0 ? (
+       {(() => {
+         const currentGlobal = globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES;
+         const filteredCustomRoles = (editForm.customRoles || []).filter(cr => !currentGlobal.some(gr => gr.name.trim().toLowerCase() === cr.name.trim().toLowerCase()));
+         return filteredCustomRoles.length === 0 ? (
          <div className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
            Henüz özel bir görev oluşturulmadı.
          </div>
        ) : (
          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                     {(editForm.customRoles || []).filter(r => !['role_temizlik_system', 'role_park_system'].includes(r.id)).map(r => {
-              const canEditRole = isSuperAdmin;
-              const canDeleteRole = isSuperAdmin;
+                     {filteredCustomRoles.map(r => {
+              const canEditRole = canManageStaff;
+              const canDeleteRole = canManageStaff;
               return (
              <div key={r.id} className="p-3 bg-background border border-border rounded-lg flex items-center justify-between">
                <div className="flex items-center gap-3">
@@ -3932,19 +3952,14 @@ export default function KermesDetailPage() {
              </div>
             ); })}
          </div>
-       )}
+       );
+       })()}
       </div>
       
-      {/* Kaydetme Hatırlatıcısı */}
-      <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs rounded-lg">
-        🚨 Yaptığınız görev değişikliklerinin geçerli olması için yukarıdaki <strong>"Kaydet"</strong> butonuna basmayı unutmayın.
       </div>
      </div>
     </div>
-   </div>
-   )}
-
-   {/* Tab Content - Mutfak (PrepZone Istasyon Yonetimi) */}
+   )}   {/* Tab Content - Mutfak (PrepZone Istasyon Yonetimi) */}
    {activeTab === 'mutfak' && (
    <div className="space-y-4">
    <div className="bg-card rounded-xl p-4 border border-orange-500/20">
@@ -4528,7 +4543,7 @@ export default function KermesDetailPage() {
 
  <div className="flex-1 overflow-y-auto p-4">
  {modalView === 'select' && (
- <div className="grid grid-cols-3 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <button onClick={() => setModalView('catalog')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
  <div className="text-3xl mb-2">🎪</div>
  <h3 className="text-foreground font-bold">{t('kermes_katalogu')}</h3>
@@ -4745,46 +4760,13 @@ export default function KermesDetailPage() {
  setIsUploadingProductImage(true);
  const file = e.target.files[0];
  
- // Resim boyutlandirma islemi
- const resizedBlob = await new Promise<Blob>((resolve, reject) => {
- const img = new Image();
- img.onload = () => {
- const canvas = document.createElement('canvas');
- const MAX_WIDTH = 800;
- const MAX_HEIGHT = 800;
- let width = img.width;
- let height = img.height;
-
- if (width > height) {
- if (width > MAX_WIDTH) {
- height = Math.round((height * MAX_WIDTH) / width);
- width = MAX_WIDTH;
- }
- } else {
- if (height > MAX_HEIGHT) {
- width = Math.round((width * MAX_HEIGHT) / height);
- height = MAX_HEIGHT;
- }
- }
-
- canvas.width = width;
- canvas.height = height;
- const ctx = canvas.getContext('2d');
- ctx?.drawImage(img, 0, 0, width, height);
-
- canvas.toBlob((blob) => {
- if (blob) resolve(blob);
- else reject(new Error('Canvas to Blob hatasi'));
- }, file.type, 0.85);
- };
- img.onerror = (err) => reject(err);
- img.src = URL.createObjectURL(file);
- });
-
+ // Standart Gorsel Optimizasyonu (WebP donusumu)
+ const compressedFile = await compressLokmaImage(file, false);
+ 
  const fileExt = file.name.split('.').pop() || 'jpg';
  const fileName = `product_${Date.now()}.${fileExt}`;
  const storageRef = ref(storage, `kermes/${kermesId}/products/${fileName}`);
- await uploadBytes(storageRef, resizedBlob);
+ await uploadBytes(storageRef, compressedFile);
  const url = await getDownloadURL(storageRef);
  setEditProduct({ ...editProduct, imageUrls: [url] });
  showToast('Görsel başarıyla yüklendi', 'success');
@@ -4843,7 +4825,7 @@ export default function KermesDetailPage() {
  </div>
 
  {/* Kategori ve Birim */}
- <div className="grid grid-cols-2 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
  <label className="text-muted-foreground text-xs block mb-1">{t('kategori')}</label>
  <select title="Kategori sec" value={editProduct.category} onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
@@ -5166,7 +5148,7 @@ export default function KermesDetailPage() {
  ) : (
  <div className="space-y-4">
  {/* Ozet */}
- <div className="grid grid-cols-3 gap-3">
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
  <div className="bg-green-900/30 rounded-xl p-3 text-center">
  <div className="text-2xl font-bold text-green-400">
  {salesHistoryData.reduce((sum: number, s: any) => sum + (s.quantity || 1), 0)}
@@ -5483,11 +5465,11 @@ export default function KermesDetailPage() {
   <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
   <div className="flex items-center gap-2">
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
-  <span className="text-sm font-medium text-foreground">Surucu Olarak Ata</span>
+  <span className="text-sm font-medium text-foreground">{`${(globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES).find(r => r.id === 'role_driver')?.name || 'Sürücü'} Olarak Ata`}</span>
   </div>
   <button
   type="button"
-  title="Surucu olarak ata/cikar"
+  title="{`${(globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES).find(r => r.id === 'role_driver')?.name || 'Sürücü'} olarak ata/cikar`}"
   onClick={() => {
   if (assignedDrivers.includes(editPersonData.id)) {
   const nd = assignedDrivers.filter((did: string) => did !== editPersonData.id);
@@ -5512,11 +5494,11 @@ export default function KermesDetailPage() {
    <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
    <div className="flex items-center gap-2">
    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400"><path d="M3 11h18M5 11V6a7 7 0 0 1 14 0v5"/><ellipse cx="12" cy="11" rx="10" ry="2"/><path d="M12 13v2"/><circle cx="12" cy="17" r="2"/></svg>
-   <span className="text-sm font-medium text-foreground">Garson Olarak Ata</span>
+   <span className="text-sm font-medium text-foreground">{`${(globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES).find(r => r.id === 'role_waiter')?.name || 'Garson'} Olarak Ata`}</span>
    </div>
    <button
    type="button"
-   title="Garson olarak ata/cikar"
+   title="{`${(globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES).find(r => r.id === 'role_waiter')?.name || 'Garson'} olarak ata/cikar`}"
    onClick={() => {
    if (assignedWaiters.includes(editPersonData.id)) {
    const nw = assignedWaiters.filter((wid: string) => wid !== editPersonData.id);
@@ -5621,6 +5603,247 @@ export default function KermesDetailPage() {
    </>
    )}
 
+
+
+   {/* Login Bilgilerini Tekrar Gonder veya Yeni Sifre Belirle */}
+   {(editPersonData.email || editPersonData.phone || editPersonData.phoneNumber) && (
+   <button
+   type="button"
+   onClick={async () => {
+   try {
+   const email = editPersonData.email;
+   if (email) {
+   // Kullanicinin sifresini sifirlayip yeni sifre ile email gonderme
+   showToast("Yeni şifre oluşturuluyor...", "success");
+   const resetRes = await fetch("/api/admin/reset-user-password", {
+   method: "POST",
+   headers: { "Content-Type": "application/json" },
+   body: JSON.stringify({ uid: editPersonData.id })
+   });
+   
+   if (!resetRes.ok) {
+     showToast("Şifre sıfırlama başarısız oldu", "error");
+     return;
+   }
+   
+   const { tempPassword } = await resetRes.json();
+   
+   const res = await fetch("/api/email/send", {
+   method: "POST",
+   headers: { "Content-Type": "application/json" },
+   body: JSON.stringify({
+   to: email,
+   subject: "LOKMA - Kermes Personel Login Bilgileri",
+   html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb"><h2 style="color:#1e40af;margin-top:0">Merhaba ${editPersonData.displayName || editPersonData.firstName || editPersonData.name || "Personel"}</h2><p>Kermes personel panelinize giris yapmak icin lutfen asagidaki bilgileri kullanin:</p><p><strong>Benutzername (Login):</strong> ${email}</p><p><strong>Passwort (Şifre):</strong> <span style="background-color:#ffe4e6;color:#e11d48;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:16px;">${tempPassword}</span></p><p><strong>Link:</strong> <a href="https://lokma.web.app/kermes-login">https://lokma.web.app/kermes-login</a></p><p>Eger sifrenizi degistirmek isterseniz, giris sayfasindan "Sifremi Unuttum" secenegini kullanabilirsiniz.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"><p style="color:#6b7280;font-size:12px">LOKMA Kermes Yonetim Sistemi</p></div>`
+   })
+   });
+   if (res.ok) {
+   showToast("Yeni şifreli login bilgileri email ile gonderildi", "success");
+   } else {
+   showToast("Email gonderilemedi", "error");
+   }
+   } else {
+   showToast("Bu kisinin email adresi yok. Telefon ile Firebase Auth uzerinden giris yapabilir.", "success");
+   }
+   } catch (err) {
+   console.error("Resend error:", err);
+   showToast("Bilgi gonderilemedi", "error");
+   }
+   }}
+   className="w-full py-2 mb-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600/20 border border-blue-900/30 rounded-lg text-sm font-medium transition"
+   >
+   Login Bilgilerini Tekrar Gönder (Yeni Şifre)
+   </button>
+   )}
+
+  <button
+  onClick={() => handleRemovePersonFromKermes(editPersonData.id)}
+  className="w-full py-2 mb-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition"
+  >
+  Bu Personeli Karmesten Çıkar
+  </button>
+
+  <button
+  onClick={() => handleDeletePersonCompletely(editPersonData.id)}
+  className="w-full py-2 bg-red-600/10 text-red-500 hover:bg-red-600/20 border border-red-900/30 rounded-lg text-sm font-medium transition"
+  >
+  Sistemden Tamamen Sil
+  </button>
+  </div>
+ </div>
+
+ <div className="flex gap-3 mt-8">
+ <button onClick={() => setEditPersonData(null)} className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">İptal</button>
+ <button onClick={handleSaveEditPerson} disabled={isSavingPerson || !editPersonData.gender} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium disabled:opacity-50 transition">
+ {isSavingPerson ? 'Kaydediliyor...' : 'Kaydet'}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+ {/* ── Tab Content: Bildirimler ── */}
+  
+  {/* Global System Role Editor Modal */}
+  {editingGlobalRole && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-card w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-border flex flex-col">
+        <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
+          <h3 className="font-bold text-foreground">Sistem Görevini Düzenle</h3>
+          <button onClick={() => setEditingGlobalRole(null)} className="text-muted-foreground hover:bg-muted p-1.5 rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        
+        <div className="p-5 space-y-4">
+          <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 p-3 rounded-lg text-xs leading-relaxed border border-amber-200 dark:border-amber-800/50">
+            <strong>Dikkat:</strong> Bu değişiklik <strong>tüm sistemdeki</strong> bütün kermesleri etkileyecektir. Sistem görevleri silinemez, sadece adları ve görünümleri değiştirilebilir.
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Görev Adı</label>
+            <input 
+              type="text" 
+              value={editingGlobalRole.name} 
+              onChange={e => setEditingGlobalRole(r => r ? {...r, name: e.target.value} : null)}
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-2">Görev İkonu</label>
+            <div className="flex items-center gap-4 border border-border p-3 rounded-lg bg-muted/10">
+              <div className="w-16 h-16 rounded-xl border border-dashed border-border bg-background flex flex-col items-center justify-center overflow-hidden flex-shrink-0">
+                {editingGlobalRole.icon.startsWith('http') ? (
+                  <img src={editingGlobalRole.icon} alt="icon" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl">{editingGlobalRole.icon}</span>
+                )}
+              </div>
+              <div className="flex-1">
+                <input 
+                  type="text" 
+                  value={editingGlobalRole.icon.startsWith('http') ? '' : editingGlobalRole.icon}
+                  onChange={e => setEditingGlobalRole(r => r ? {...r, icon: e.target.value} : null)}
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-blue-500 text-sm mb-2"
+                  placeholder="Emoji yazın (Örn: 🧹) VEYA resim yükleyin"
+                  disabled={editingGlobalRole.icon.startsWith('http')}
+                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="global-role-icon-upload"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        setIsUploadingRoleIcon(true);
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `role_${Date.now()}.${fileExt}`;
+                        const storageRef = ref(storage, `kermes_roles/${fileName}`);
+                        const compressedFile = await compressLokmaImage(file, true);
+                        await uploadBytes(storageRef, compressedFile);
+                        const url = await getDownloadURL(storageRef);
+                        setEditingGlobalRole(r => r ? {...r, icon: url} : null);
+                      } catch (error) {
+                        console.error('Upload failed', error);
+                        alert('Resim yüklenirken bir hata oluştu.');
+                      } finally {
+                        setIsUploadingRoleIcon(false);
+                      }
+                    }}
+                  />
+                  <label 
+                    htmlFor="global-role-icon-upload"
+                    className="flex w-full items-center justify-center gap-2 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 border border-blue-200 rounded-lg text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap"
+                  >
+                    {isUploadingRoleIcon ? (
+                      <span className="animate-pulse">Yükleniyor...</span>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        Yeni Resim Yükle
+                      </>
+                    )}
+                  </label>
+                </div>
+                {editingGlobalRole.icon.startsWith('http') && (
+                  <button 
+                    type="button"
+                    onClick={() => setEditingGlobalRole(r => r ? {...r, icon: '📋'} : null)}
+                    className="w-full mt-2 text-xs text-red-500 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                  >
+                    Resmi Kaldır (Emojiye Dön)
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-3">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Popüler İkonlar</label>
+              <div className="flex flex-wrap gap-2">
+                 {['👥', '🚗', '🍽️', '👑', '🧹', '🅿️', '👶', '⭐', '📦', '🛡️', '👨‍🍳'].map(i => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setEditingGlobalRole(r => r ? {...r, icon: i} : null)}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all ${editingGlobalRole.icon === i ? 'bg-purple-100 dark:bg-purple-900/30 ring-2 ring-purple-500' : 'bg-muted hover:bg-muted/80'}`}
+                  >
+                    {i}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+        </div>
+        
+        <div className="p-4 border-t border-border flex gap-3 bg-muted/10">
+          <button 
+            type="button" 
+            onClick={() => setEditingGlobalRole(null)} 
+            className="flex-1 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg font-medium transition-colors text-sm"
+          >
+            İptal
+          </button>
+          <button 
+            type="button" 
+            onClick={async () => {
+              if (editingGlobalRole) {
+                if (!editingGlobalRole.name.trim()) return showToast("Görev adı zorunludur", "error");
+                
+                let currentRoles = globalSystemRoles.length > 0 ? globalSystemRoles : DEFAULT_GLOBAL_SYSTEM_ROLES;
+                const exists = currentRoles.find(r => r.id === editingGlobalRole.id);
+                let newRoles;
+                if (exists) {
+                   newRoles = currentRoles.map(r => r.id === editingGlobalRole.id ? editingGlobalRole : r);
+                } else {
+                   newRoles = [...currentRoles, editingGlobalRole];
+                }
+                
+                setGlobalSystemRoles(newRoles);
+                
+                try {
+                  await setDoc(doc(db, 'settings', 'kermes_roles'), { systemRoles: newRoles }, { merge: true });
+                  showToast('Sistem görevi başarıyla küresel olarak güncellendi.', 'success');
+                  setEditingGlobalRole(null);
+                } catch (err) {
+                  console.error(err);
+                  showToast('Görev güncellenirken hata oluştu.', 'error');
+                }
+              }
+            }} 
+            className="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
+          >
+            Küresel Kaydet
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+
   {/* \u00d6zel G\u00f6rev D\u00fczenleme Modal\u0131 */}
   {editingCustomRole && (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -5681,7 +5904,8 @@ export default function KermesDetailPage() {
                         const fileExt = file.name.split('.').pop();
                         const fileName = `role_${Date.now()}.${fileExt}`;
                         const storageRef = ref(storage, `kermes_roles/${fileName}`);
-                        await uploadBytes(storageRef, file);
+                        const compressedFile = await compressLokmaImage(file, true);
+                        await uploadBytes(storageRef, compressedFile);
                         const url = await getDownloadURL(storageRef);
                         
                         setEditingCustomRole(r => r ? {...r, icon: url} : null);
@@ -5762,84 +5986,6 @@ export default function KermesDetailPage() {
     </div>
   )}
 
-
-   {/* Login Bilgilerini Tekrar Gonder veya Yeni Sifre Belirle */}
-   {(editPersonData.email || editPersonData.phone || editPersonData.phoneNumber) && (
-   <button
-   type="button"
-   onClick={async () => {
-   try {
-   const email = editPersonData.email;
-   if (email) {
-   // Kullanicinin sifresini sifirlayip yeni sifre ile email gonderme
-   showToast("Yeni şifre oluşturuluyor...", "success");
-   const resetRes = await fetch("/api/admin/reset-user-password", {
-   method: "POST",
-   headers: { "Content-Type": "application/json" },
-   body: JSON.stringify({ uid: editPersonData.id })
-   });
-   
-   if (!resetRes.ok) {
-     showToast("Şifre sıfırlama başarısız oldu", "error");
-     return;
-   }
-   
-   const { tempPassword } = await resetRes.json();
-   
-   const res = await fetch("/api/email/send", {
-   method: "POST",
-   headers: { "Content-Type": "application/json" },
-   body: JSON.stringify({
-   to: email,
-   subject: "LOKMA - Kermes Personel Login Bilgileri",
-   html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb"><h2 style="color:#1e40af;margin-top:0">Merhaba ${editPersonData.displayName || editPersonData.firstName || editPersonData.name || "Personel"}</h2><p>Kermes personel panelinize giris yapmak icin lutfen asagidaki bilgileri kullanin:</p><p><strong>Benutzername (Login):</strong> ${email}</p><p><strong>Passwort (Şifre):</strong> <span style="background-color:#ffe4e6;color:#e11d48;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:16px;">${tempPassword}</span></p><p><strong>Link:</strong> <a href="https://lokma.web.app/kermes-login">https://lokma.web.app/kermes-login</a></p><p>Eger sifrenizi degistirmek isterseniz, giris sayfasindan "Sifremi Unuttum" secenegini kullanabilirsiniz.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"><p style="color:#6b7280;font-size:12px">LOKMA Kermes Yonetim Sistemi</p></div>`
-   })
-   });
-   if (res.ok) {
-   showToast("Yeni şifreli login bilgileri email ile gonderildi", "success");
-   } else {
-   showToast("Email gonderilemedi", "error");
-   }
-   } else {
-   showToast("Bu kisinin email adresi yok. Telefon ile Firebase Auth uzerinden giris yapabilir.", "success");
-   }
-   } catch (err) {
-   console.error("Resend error:", err);
-   showToast("Bilgi gonderilemedi", "error");
-   }
-   }}
-   className="w-full py-2 mb-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600/20 border border-blue-900/30 rounded-lg text-sm font-medium transition"
-   >
-   Login Bilgilerini Tekrar Gönder (Yeni Şifre)
-   </button>
-   )}
-
-  <button
-  onClick={() => handleRemovePersonFromKermes(editPersonData.id)}
-  className="w-full py-2 mb-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition"
-  >
-  Bu Personeli Karmesten Çıkar
-  </button>
-
-  <button
-  onClick={() => handleDeletePersonCompletely(editPersonData.id)}
-  className="w-full py-2 bg-red-600/10 text-red-500 hover:bg-red-600/20 border border-red-900/30 rounded-lg text-sm font-medium transition"
-  >
-  Sistemden Tamamen Sil
-  </button>
-  </div>
- </div>
-
- <div className="flex gap-3 mt-8">
- <button onClick={() => setEditPersonData(null)} className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">İptal</button>
- <button onClick={handleSaveEditPerson} disabled={isSavingPerson || !editPersonData.gender} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium disabled:opacity-50 transition">
- {isSavingPerson ? 'Kaydediliyor...' : 'Kaydet'}
- </button>
- </div>
- </div>
- </div>
- )}
- {/* ── Tab Content: Bildirimler ── */}
  {activeTab === 'bildirimler' && (
  <div className="max-w-5xl mx-auto space-y-6">
    <div className="flex items-center gap-3 mb-2">
@@ -6178,7 +6324,8 @@ export default function KermesDetailPage() {
                  const { getStorage } = await import('firebase/storage');
                  const storage = getStorage();
                  const storageRef = ref(storage, `kermes/${kermesId}/parking/${Date.now()}_${file.name}`);
-                 await uploadBytes(storageRef, file);
+                 const compressedFile = await compressLokmaImage(file, false);
+                 await uploadBytes(storageRef, compressedFile);
                  const url = await getDownloadURL(storageRef);
                  setVehicleImageUrl(url);
                } catch (err) { console.error('Upload error:', err); }
@@ -6281,6 +6428,14 @@ export default function KermesDetailPage() {
  </div>
  )}
 
+ {activeTab === "tahsilat" && (
+  <KermesTahsilatTab
+    kermesId={kermesId as string}
+    kermesAdmins={kermesAdmins}
+    workspaceStaff={assignedStaffDetails}
+  />
+ )}
+
  {activeTab === "tedarik" && (
   <KermesTedarikTab 
     kermesId={kermesId as string} 
@@ -6300,7 +6455,7 @@ export default function KermesDetailPage() {
     isSuperAdmin={isSuperAdmin}
     adminGender={admin?.gender || admin?.profile?.gender || 'unknown'}
     kermesSections={editForm.tableSectionsV2 || []}
-    customRoles={[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])]}
+    customRoles={(editForm.customRoles || [])}
   />
  )}
 

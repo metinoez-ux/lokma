@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import '../../providers/kermes_cart_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 
 class KermesStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double expandedHeight;

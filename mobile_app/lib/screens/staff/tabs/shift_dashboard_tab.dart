@@ -1025,7 +1025,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                   onPressed: () {
                      Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => KermesSupplyScreen(
+                        MaterialPageRoute(builder: (_) => KermesSupplyScreen(userSection: bolumText, userRoles: gorevler, userName: capabilities.staffName, 
                            kermesId: capabilities.businessId!,
                            userPrepZones: capabilities.kermesPrepZones,
                         )),

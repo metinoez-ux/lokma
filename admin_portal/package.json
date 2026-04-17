@@ -21,6 +21,7 @@
     "@stripe/stripe-js": "^8.6.1",
     "@swc/helpers": "^0.5.19",
     "@types/qrcode": "^1.5.6",
+    "browser-image-compression": "^2.0.2",
     "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
     "firebase": "^12.7.0",

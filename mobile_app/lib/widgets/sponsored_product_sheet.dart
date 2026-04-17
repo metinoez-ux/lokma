@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -141,7 +141,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                         borderRadius: BorderRadius.circular(14),
                         child: AspectRatio(
                           aspectRatio: 2.0, // Daha buyuk gorsel
-                          child: CachedNetworkImage(
+                          child: LokmaNetworkImage(
                             imageUrl: widget.ad.bannerImageUrl,
                             fit: BoxFit.cover,
                             placeholder: (_, __) => Container(
@@ -179,7 +179,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(7),
-                                child: CachedNetworkImage(
+                                child: LokmaNetworkImage(
                                   imageUrl: widget.ad.advertiserLogo!,
                                   fit: BoxFit.cover,
                                 ),
@@ -393,7 +393,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                 child: market.businessLogoUrl != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(9),
-                        child: CachedNetworkImage(
+                        child: LokmaNetworkImage(
                           imageUrl: market.businessLogoUrl!,
                           fit: BoxFit.cover,
                         ),

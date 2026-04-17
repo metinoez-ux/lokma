@@ -290,9 +290,11 @@ class AppRouter {
           builder: (context, state) {
             final orderId = state.uri.queryParameters['orderId'];
             final openChat = state.uri.queryParameters['openChat'] == 'true';
+            final openNotificationId = state.uri.queryParameters['openNotificationId'];
             return NotificationHistoryScreen(
               openOrderId: orderId,
               openChat: openChat,
+              openNotificationId: openNotificationId,
             );
           },
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/sponsored_ad_service.dart';
@@ -100,7 +100,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    CachedNetworkImage(
+                    LokmaNetworkImage(
                       imageUrl: widget.ad.bannerImageUrl,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(
@@ -165,7 +165,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(5),
-                            child: CachedNetworkImage(
+                            child: LokmaNetworkImage(
                               imageUrl: widget.ad.advertiserLogo!,
                               fit: BoxFit.cover,
                             ),

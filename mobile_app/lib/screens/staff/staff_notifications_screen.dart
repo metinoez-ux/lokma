@@ -123,9 +123,8 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     final isParking = type == 'kermes_parking';
     final isDeleted = type == 'roster_deleted';
     final isParkingOrDeleted = isParking || isDeleted;
-    final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
-
-    // Roster Action specific variables
+    final isRoster = type == 'roster_shift';
+    final isWarning = type == 'kermes_flash_sale' || type == 'supply_alarm';
     bool isActionProcessing = false;
     String? supplyReplyText;
     final isSupplyAlarm = type == 'supply_alarm' || type == 'supply_alarm_status';

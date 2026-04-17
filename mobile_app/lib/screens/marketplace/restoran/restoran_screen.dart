@@ -12,7 +12,7 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../widgets/wallet_business_card.dart';
 import '../kasap/reservation_booking_screen.dart';

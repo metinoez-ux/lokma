@@ -6,11 +6,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 class KermesSupplyScreen extends StatefulWidget {
   final String kermesId;
   final List<String> userPrepZones;
+  final String userSection;
+  final List<String> userRoles;
+  final String userName;
 
   const KermesSupplyScreen({
     Key? key,
     required this.kermesId,
     required this.userPrepZones,
+    this.userSection = '',
+    this.userRoles = const [],
+    this.userName = '',
   }) : super(key: key);
 
   @override
@@ -22,6 +28,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
   List<Map<String, dynamic>> _categories = [];
   bool _isLoadingCats = true;
   String _currentUserName = '';
+  DateTime? _eventEndDate;
 
   @override
   void initState() {
@@ -56,6 +63,9 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
       final doc = await FirebaseFirestore.instance.collection('kermes_events').doc(widget.kermesId).get();
       if (doc.exists) {
         final data = doc.data()!;
+        if (data['endDate'] != null) {
+           _eventEndDate = (data['endDate'] as Timestamp).toDate();
+        }
         final cats = data['supplyCategories'] as List<dynamic>? ?? [];
         if (mounted) {
            setState(() {
@@ -93,13 +103,38 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
     }
 
     try {
+      String fullRequestedZone = requestedZone;
+      bool isWomen = widget.userSection.toLowerCase().contains('kadın') || 
+                     widget.userSection.toLowerCase().contains('kadin') || 
+                     widget.userSection.toLowerCase().contains('hanım') ||
+                     widget.userRoles.any((r) => r.toLowerCase().contains('hanim') || r.toLowerCase().contains('kadin'));
+                     
+      bool isMen = widget.userSection.toLowerCase().contains('erkek');
+
+      if (!fullRequestedZone.toLowerCase().contains('hanım') && !fullRequestedZone.toLowerCase().contains('erkek') && !fullRequestedZone.toLowerCase().contains('kadın')) {
+         if (isWomen) {
+            fullRequestedZone = 'Hanımlar Bölümü - $fullRequestedZone';
+         } else if (isMen) {
+            fullRequestedZone = 'Erkekler Bölümü - $fullRequestedZone';
+         } else if (widget.userSection.isNotEmpty && widget.userSection != 'Genel Alan') {
+            fullRequestedZone = '${widget.userSection} - $fullRequestedZone';
+         }
+      }
+      
+      String finalUserName = _currentUserName.isNotEmpty ? _currentUserName : (widget.userName.isNotEmpty ? widget.userName : 'Personel');
+      
+      if (isWomen && finalUserName != 'Personel') {
+          final parts = finalUserName.split(' ').where((p) => p.isNotEmpty).toList();
+          finalUserName = parts.map((p) => '${p[0].toUpperCase()}${'*' * (p.length > 3 ? 3 : p.length - 1)}').join(' ');
+      }
+
       await FirebaseFirestore.instance.collection('kermes_events')
           .doc(widget.kermesId)
           .collection('supply_requests')
           .add({
              'requestedByUid': uid,
-             'requestedByName': _currentUserName.isEmpty ? 'Personel' : _currentUserName,
-             'requestedZone': requestedZone,
+             'requestedByName': finalUserName,
+             'requestedZone': fullRequestedZone,
              'category': category,
              'itemName': itemName,
              'status': 'pending',
@@ -148,6 +183,15 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
        selectedZone = zoneResult;
     }
 
+    bool hasNextDay = false;
+    if (_eventEndDate != null) {
+       final now = DateTime.now();
+       final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+       if (_eventEndDate!.isAfter(endOfDay)) {
+          hasNextDay = true;
+       }
+    }
+
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) {
@@ -175,6 +219,15 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                  label: const Text('1-2 Saat İçinde Olur'),
                  onPressed: () => Navigator.pop(ctx, 'normal'),
                ),
+               if (hasNextDay) ...[
+                 const SizedBox(height: 12),
+                 OutlinedButton.icon(
+                   style: OutlinedButton.styleFrom(foregroundColor: Colors.blue, side: const BorderSide(color: Colors.blue), padding: const EdgeInsets.symmetric(vertical: 14)),
+                   icon: const Icon(Icons.calendar_today),
+                   label: const Text('Yarın İçin', style: TextStyle(fontWeight: FontWeight.bold)),
+                   onPressed: () => Navigator.pop(ctx, 'for_tomorrow'),
+                 ),
+               ]
             ]
           )
         );
@@ -184,6 +237,23 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
     if (result != null) {
       await _submitRequest(itemName, selectedZone, category: category, urgency: result);
     }
+  }
+
+  String _getDisplayZone(Map<String, dynamic> d) {
+      String displayZone = d['requestedZone'] ?? 'Genel Alan';
+      String reqName = d['requestedByName']?.toString() ?? '';
+      
+      bool alreadyHasGender = displayZone.toLowerCase().contains('hanım') || displayZone.toLowerCase().contains('kadın') || displayZone.toLowerCase().contains('erkek');
+      if (alreadyHasGender) return displayZone;
+
+      bool isWomen = reqName.contains('*') || widget.userSection.toLowerCase().contains('hanım') || widget.userSection.toLowerCase().contains('kadın');
+      
+      if (isWomen) {
+           return "Hanımlar Bölümü - $displayZone";
+      } else if (reqName != 'Personel') {
+           return "Erkekler Bölümü - $displayZone";
+      }
+      return displayZone;
   }
 
   Widget _buildStatusBadge(String status, {String? urgency}) {
@@ -215,10 +285,12 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
 
     // Pending
     if (urgency == 'super_urgent') {
+      return const Text('⚠️ SÜPER ACİL', style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold));
+    } else if (urgency == 'for_tomorrow') {
       return Container(
          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-         decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade300)),
-         child: const Text('⚠️ SÜPER ACİL', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+         decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+         child: const Text('Yarın İçin', style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
       );
     }
 
@@ -226,6 +298,170 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
        decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(8)),
        child: const Text('Bekliyor', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  void _showSupplyDetailSheet(BuildContext context, QueryDocumentSnapshot doc) {
+    final d = doc.data() as Map<String, dynamic>;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final status = d['status'] as String? ?? 'pending';
+    final urgency = d['urgency'] as String? ?? 'normal';
+    
+    // Format timestamp
+    String rTimeStr = '-';
+    String uTimeStr = '-';
+    int? diffMins;
+    if (d['createdAt'] != null) {
+       final ts = d['createdAt'] as Timestamp;
+       final dt = ts.toDate();
+       rTimeStr = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+       
+       if (d['updatedAt'] != null) {
+          final uts = d['updatedAt'] as Timestamp;
+          final uDt = uts.toDate();
+          uTimeStr = '${uDt.day.toString().padLeft(2, '0')}.${uDt.month.toString().padLeft(2, '0')}.${uDt.year} ${uDt.hour.toString().padLeft(2, '0')}:${uDt.minute.toString().padLeft(2, '0')}';
+          diffMins = uDt.difference(dt).inMinutes;
+       }
+    }
+
+    Color statusColor = Colors.orange;
+    String statusText = 'Bekliyor';
+    IconData statusIcon = Icons.access_time_filled;
+    if (status == 'on_the_way') { statusColor = Colors.amber; statusText = 'Yolda / Hazırlanıyor'; statusIcon = Icons.local_shipping; }
+    String _formatD(int m) {
+      if (m < 60) return '$m dakika';
+      if (m < 24 * 60) return '${m ~/ 60} saat${m % 60 == 0 ? '' : ' ${m % 60} dk'}';
+      return '${m ~/ (24 * 60)} gün${(m % (24 * 60)) ~/ 60 == 0 ? '' : ' ${(m % (24 * 60)) ~/ 60} saat'}';
+    }
+
+    if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; if (diffMins != null) statusText += '\n(${_formatD(diffMins)} sürdü)'; statusIcon = Icons.check_circle; }
+    else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; if (diffMins != null) statusText += '\n(${_formatD(diffMins)} sürdü)'; statusIcon = Icons.cancel; }
+    else if (status == 'cancelled') { statusColor = Colors.grey; statusText = 'İptal Edildi'; statusIcon = Icons.cancel; }
+    
+    if (urgency == 'super_urgent' && status == 'pending') {
+       statusColor = Colors.red;
+    }
+    
+    final isMine = d['requestedByUid'] == FirebaseAuth.instance.currentUser?.uid;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.only(top: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(ctx).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(10)))),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.blueAccent),
+                    const SizedBox(width: 10),
+                    Text('Talep Detayları', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface)),
+                    const Spacer(),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
+                  ]
+                ),
+              ),
+              const Divider(height: 30),
+              
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Item name
+                    Text(d['itemName'] ?? 'Malzeme', textAlign: TextAlign.center, style: const TextStyle(fontSize: 22.0, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 20),
+                    
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                      ),
+                      child: Column(
+                        children: [
+                           _buildDetailRow('Durum', Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                              Icon(statusIcon, color: statusColor, size: 18),
+                              const SizedBox(width: 6),
+                              Expanded(child: Text(statusText, style: TextStyle(color: statusColor, fontWeight: FontWeight.w800, fontSize: 15)))
+                           ]), isDark),
+                           const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1)),
+                           _buildDetailRow('Aciliyet', Text(urgency == 'super_urgent' ? '🔥 SÜPER ACİL' : (urgency == 'for_tomorrow' ? '📅 Yarın İçin' : 'Normal'), style: TextStyle(color: urgency == 'super_urgent' ? Colors.red : (urgency == 'for_tomorrow' ? Colors.blue : (isDark ? Colors.white70 : Colors.black87)), fontWeight: (urgency == 'super_urgent' || urgency == 'for_tomorrow') ? FontWeight.w800 : FontWeight.w500)), isDark),
+                           const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1)),
+                           _buildDetailRow('İsteyen', Text(d['requestedByName'] ?? '-', style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87)), isDark),
+                           const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1)),
+                           _buildDetailRow('Konum', Text(_getDisplayZone(d), style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87)), isDark),
+                           const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1)),
+                           _buildDetailRow('İstek Zamanı', Text(rTimeStr, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)), isDark),
+                           if (uTimeStr != '-' && uTimeStr != rTimeStr) ...[
+                              const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1)),
+                              _buildDetailRow('Cevap Zamanı', Text(uTimeStr, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)), isDark),
+                           ],
+                           if (d['adminReply'] != null && d['adminReply'].toString().isNotEmpty) ...[
+                              const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1)),
+                              _buildDetailRow('Admin Notu', Text(d['adminReply'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)), isDark),
+                           ],
+                        ]
+                      )
+                    ),
+                    const SizedBox(height: 20),
+                    if (isMine && status == 'pending')
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade50, foregroundColor: Colors.red, elevation: 0, 
+                                                           side: BorderSide(color: Colors.red.shade300), padding: const EdgeInsets.symmetric(vertical: 14)),
+                           icon: const Icon(Icons.cancel),
+                           label: const Text('Talebi İptal Et', style: TextStyle(fontWeight: FontWeight.bold)),
+                           onPressed: () {
+                              doc.reference.update({'status': 'cancelled', 'updatedAt': FieldValue.serverTimestamp()});
+                              Navigator.pop(ctx);
+                           },
+                        )
+                      )
+                    else if (status == 'on_the_way')
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14)),
+                           icon: const Icon(Icons.check_circle_outline),
+                           label: const Text('TESLİM EDİLDİ / TAMAMLANDI', style: TextStyle(fontWeight: FontWeight.bold)),
+                           onPressed: () {
+                              doc.reference.update({'status': 'completed', 'updatedAt': FieldValue.serverTimestamp()});
+                              Navigator.pop(ctx);
+                           },
+                        )
+                      ),
+                  ]
+                )
+              ),
+              const SizedBox(height: 30),
+            ]
+          )
+        )
+      )
+    );
+  }
+
+  Widget _buildDetailRow(String label, Widget child, bool isDark) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(width: 100, child: Text(label, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13, fontWeight: FontWeight.w600))),
+        Expanded(child: child),
+      ],
     );
   }
 
@@ -373,39 +609,44 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                                border: Border.all(color: status == 'on_the_way' ? Colors.amber : (status == 'completed' ? Colors.transparent : Colors.red.withOpacity(0.3))),
                                borderRadius: BorderRadius.circular(12),
                             ),
-                            child: ListTile(
-                               leading: CircleAvatar(
-                                  backgroundColor: status == 'completed' ? Colors.grey : (status == 'on_the_way' ? Colors.amber : Colors.red.shade100),
-                                  child: Icon(status == 'completed' ? Icons.check : (status == 'on_the_way' ? Icons.local_shipping : Icons.campaign), 
-                                     color: status == 'completed' ? Colors.white : (status == 'on_the_way' ? Colors.white : Colors.red)),
-                               ),
-                               title: Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, decoration: (status == 'completed' || status == 'cancelled' || status == 'rejected') ? TextDecoration.lineThrough : null)),
-                               subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                 Text("${d['requestedByName']} • ${d['requestedZone']}", style: const TextStyle(fontSize: 12)),
-                               ]),
-                               trailing: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                     _buildStatusBadge(status, urgency: d['urgency']),
-                                     if (isMine && status == 'pending')
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 8),
-                                          child: InkWell(
-                                            onTap: () => doc.reference.update({'status': 'cancelled'}),
-                                            borderRadius: BorderRadius.circular(6),
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                border: Border.all(color: Colors.red.shade300),
-                                                borderRadius: BorderRadius.circular(6),
-                                                color: Colors.red.shade50,
+                            child: Material(
+                               color: Colors.transparent,
+                               child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () => _showSupplyDetailSheet(context, doc),
+                                  child: Padding(
+                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                     child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                           CircleAvatar(
+                                              backgroundColor: status == 'completed' ? Colors.grey : (status == 'on_the_way' ? Colors.amber : Colors.red.shade100),
+                                              child: Icon(status == 'completed' ? Icons.check : (status == 'on_the_way' ? Icons.local_shipping : Icons.campaign), 
+                                                 color: status == 'completed' ? Colors.white : (status == 'on_the_way' ? Colors.white : Colors.red)),
+                                           ),
+                                           const SizedBox(width: 12),
+                                           Expanded(
+                                              child: Column(
+                                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                                 children: [
+                                                    Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, decoration: (status == 'completed' || status == 'cancelled' || status == 'rejected') ? TextDecoration.lineThrough : null)),
+                                                    const SizedBox(height: 2),
+                                                    Text("${d['requestedByName']} • ${_getDisplayZone(d)}", style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87)),
+                                                    if (isMine && status == 'pending') ...[
+                                                       const SizedBox(height: 8),
+                                                       InkWell(
+                                                         onTap: () => doc.reference.update({'status': 'cancelled', 'updatedAt': FieldValue.serverTimestamp()}),
+                                                         child: Text('İptal Et', style: TextStyle(color: Colors.red.shade400, fontWeight: FontWeight.bold, fontSize: 13, decoration: TextDecoration.underline)),
+                                                       )
+                                                    ]
+                                                 ],
                                               ),
-                                              child: const Text('İptal Et', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
-                                            )
-                                          ),
-                                        )
-                                  ],
+                                           ),
+                                           const SizedBox(width: 8),
+                                           _buildStatusBadge(status, urgency: d['urgency']),
+                                        ],
+                                     ),
+                                  ),
                                ),
                             ),
                          );

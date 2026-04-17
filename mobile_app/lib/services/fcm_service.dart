@@ -343,10 +343,13 @@ class FCMService {
               if (kermesId != null && kermesId.isNotEmpty) {
                 _navigateTo('/kermesler/$kermesId');
               }
-            } else if (type == 'kermes_assignment' || type == 'parking_emergency' || type == 'roster_shift' || type == 'roster_deleted') {
+            } else if (type == 'kermes_assignment' || type == 'roster_shift' || type == 'roster_deleted') {
               _navigateTo('/staff-hub');
-            } else {
+            } else if (orderId != null && orderId.isNotEmpty) {
               _navigateToOrders(orderId: orderId);
+            } else {
+              final nId = data['notificationId'];
+              _navigateTo('/notification-history${nId != null ? '?openNotificationId=$nId' : ''}');
             }
           },
         );
@@ -375,14 +378,16 @@ class FCMService {
       if (kermesId != null && kermesId.isNotEmpty) {
         _navigateTo('/kermesler/$kermesId');
       } else {
-        _navigateTo('/notification-history');
+        final nId = data['notificationId'];
+        _navigateTo('/notification-history${nId != null ? '?openNotificationId=$nId' : ''}');
       }
-    } else if (type == 'kermes_assignment' || type == 'parking_emergency') {
+    } else if (type == 'kermes_assignment') {
       _navigateTo('/staff-hub');
     } else if (orderId != null && orderId.isNotEmpty) {
       _navigateToOrders(orderId: orderId);
     } else {
-      _navigateTo('/notification-history');
+      final nId = data['notificationId'];
+      _navigateTo('/notification-history${nId != null ? '?openNotificationId=$nId' : ''}');
     }
   }
   

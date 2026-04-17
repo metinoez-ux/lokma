@@ -5,7 +5,7 @@ import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/utils/time_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -2770,7 +2770,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         children: [
                           // Business Image
                           (data?['imageUrl'] != null && (data!['imageUrl'] as String).isNotEmpty)
-                              ? CachedNetworkImage(
+                              ? LokmaNetworkImage(
                                   imageUrl: data['imageUrl'],
                                   fit: BoxFit.cover,
                                 )
@@ -2791,7 +2791,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: CachedNetworkImage(
+                                  child: LokmaNetworkImage(
                                     imageUrl: data['logoUrl'],
                                     fit: BoxFit.cover,
                                   ),
@@ -2845,7 +2845,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             else if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
                                               ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: CachedNetworkImage(
+                                                child: LokmaNetworkImage(
                                                   imageUrl: badge['iconUrl'],
                                                   height: 18,
                                                   fit: BoxFit.contain,
@@ -4614,7 +4614,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     fit: StackFit.expand,
                     children: [
                       hasImage
-                          ? CachedNetworkImage(
+                          ? LokmaNetworkImage(
                               imageUrl: product.imageUrl!,
                               fit: BoxFit.cover,
                               placeholder: (_, __) => Container(

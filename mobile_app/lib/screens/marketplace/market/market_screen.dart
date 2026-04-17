@@ -18,7 +18,7 @@ import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:lokma_app/widgets/open_partners_map_sheet.dart';
 import 'package:lokma_app/widgets/sponsored_banner_card.dart';
 import 'package:lokma_app/services/sponsored_ad_service.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import '../widgets/wallet_business_card.dart';
 import '../../../utils/currency_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';

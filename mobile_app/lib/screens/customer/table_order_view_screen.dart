@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import '../../services/table_session_service.dart';
 import '../../services/order_service.dart';
 import '../../models/butcher_product.dart';
@@ -832,7 +832,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               child: product.imageUrl != null && product.imageUrl!.isNotEmpty
                   ? (product.imageUrl!.startsWith('assets/')
                       ? Image.asset(product.imageUrl!, fit: BoxFit.cover)
-                      : CachedNetworkImage(
+                      : LokmaNetworkImage(
                           imageUrl: product.imageUrl!,
                           fit: BoxFit.cover,
                           placeholder: (_, __) => Container(color: Colors.grey[200]),

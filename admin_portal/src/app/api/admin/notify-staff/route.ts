@@ -13,19 +13,11 @@ export async function POST(req: Request) {
     const { db } = getFirebaseAdmin();
     const now = Timestamp.now();
     
-    // Personnel notifications (eski collection, geriye uyumluluk)
-    const personnelRef = db.collection('users').doc(userId).collection('personnel_notifications');
-    await personnelRef.add({
-      title,
-      body,
-      type,
-      createdAt: now,
-      read: false
-    });
+    // (Eski personnel_notifications yazım kaldırıldı, artık sadece notifications kullanılıyor)
 
     // Ana notifications collection (bildirim gecmisi ekraninda gorunsun)
     const notificationsRef = db.collection('users').doc(userId).collection('notifications');
-    await notificationsRef.add({
+    const docRef = await notificationsRef.add({
       title,
       body,
       type,
@@ -51,7 +43,7 @@ export async function POST(req: Request) {
           try {
             const message = {
                 notification: { title, body },
-                data: { type },
+                data: { type, notificationId: docRef.id },
                 tokens: tokens,
                 apns: {
                     payload: {

@@ -121,7 +121,7 @@ export default function KermesTahsilatTab({ kermesId, kermesAdmins, workspaceSta
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {workspaceStaff.filter(s => s.role === 'STAFF' || s.role === 'WAITER').length === 0 ? (
                 <div className="col-span-full py-8 text-center text-muted-foreground border border-dashed border-border rounded-xl">
-                  Henüz kasa işlemi yapacak personelatanmamış.
+                  Henüz kasa işlemi yapacak personel atanmamış.
                 </div>
               ) : (
                 workspaceStaff.filter(s => s.role === 'STAFF' || s.role === 'WAITER').map((staff) => {
@@ -188,7 +188,7 @@ export default function KermesTahsilatTab({ kermesId, kermesAdmins, workspaceSta
                 </div>
               ) : (
                 pendingHandovers.map(ho => (
-                  <div key={ho.id} className="bg-background border border-yellow-500/30 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div key={ho.id} className="bg-background border border-yellow-500/30 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 lg:gap-8">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-yellow-500/20 text-yellow-500 rounded-full flex items-center justify-center text-xl">💵</div>
                       <div>

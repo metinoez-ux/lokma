@@ -20,7 +20,7 @@ import '../../utils/currency_utils.dart';
 import '../orders/order_chat_screen.dart';
 import '../../services/chat_service.dart';
 import '../shared/tap_to_pay_sheet.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 
 class KermesActiveDeliveryScreen extends StatefulWidget {
   final String orderId;
@@ -1053,7 +1053,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                                         panEnabled: true,
                                         minScale: 0.5,
                                         maxScale: 4,
-                                        child: CachedNetworkImage(
+                                        child: LokmaNetworkImage(
                                           imageUrl: null!['photoUrl'],
                                           fit: BoxFit.contain,
                                           placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.amber)),
@@ -1085,7 +1085,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    CachedNetworkImage(
+                                    LokmaNetworkImage(
                                       imageUrl: null!['photoUrl'],
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.amber)),

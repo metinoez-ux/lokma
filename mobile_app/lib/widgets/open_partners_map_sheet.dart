@@ -7,7 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/utils/time_utils.dart' as time_utils;
 
@@ -903,7 +903,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
+                      child: LokmaNetworkImage(
                         imageUrl: b.logoUrl!,
                         fit: BoxFit.cover,
                         errorWidget: (_, __, ___) => Container(

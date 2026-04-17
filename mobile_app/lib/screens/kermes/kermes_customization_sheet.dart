@@ -6,7 +6,7 @@ import '../../../models/kermes_model.dart';
 import '../../../models/product_option.dart';
 import '../../../providers/kermes_cart_provider.dart';
 import '../../../utils/currency_utils.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 
 /// Multi-step customization bottom sheet for Kermes menu items.
 /// Shows option groups (radio/checkbox) with progressive reveal,
@@ -198,7 +198,7 @@ class _KermesCustomizationSheetState
                       child: SizedBox(
                         width: double.infinity,
                         height: 180,
-                        child: CachedNetworkImage(
+                        child: LokmaNetworkImage(
                           imageUrl: item.allImages.first,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => const SizedBox.shrink(),

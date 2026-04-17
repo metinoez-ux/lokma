@@ -5,7 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/product_favorites_provider.dart';
@@ -1052,7 +1052,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                   width: 60,
                   height: 60,
                   child: hasImage
-                      ? CachedNetworkImage(
+                      ? LokmaNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(

@@ -135,6 +135,7 @@ export const onKermesRosterCreated = onDocumentCreated(
                 read: false,
                 deepLinkUrl: "roster_dashboard" // Instruct app to route to their staff dashboard
             });
+            const notificationId = docRef.id;
             console.log(`[Roster Notify] Inbox stored for ${userId}`);
 
             // 4. Send Push Notification
@@ -156,7 +157,8 @@ export const onKermesRosterCreated = onDocumentCreated(
                         date: dateStr,
                         startTime: startStr,
                         endTime: endStr,
-                        batchId: roster.batchId || ''
+                        batchId: roster.batchId || '',
+                        notificationId
                     },
                     apns: {
                         payload: {

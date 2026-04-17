@@ -19,7 +19,7 @@ import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // LOKMA Kermes tema renkleri
@@ -783,7 +783,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         onPageChanged: (p) => setDialog(() => currentPage = p),
                         itemBuilder: (_, idx) => InteractiveViewer(
                           child: Center(
-                            child: CachedNetworkImage(
+                            child: LokmaNetworkImage(
                               imageUrl: images[idx],
                               fit: BoxFit.contain,
                               placeholder: (_, __) => const Center(child: CircularProgressIndicator(color: Colors.white)),
@@ -1562,7 +1562,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     onTap: () => _showPhotoFullscreen(info.allImages, imgIdx),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: CachedNetworkImage(
+                      child: LokmaNetworkImage(
                         imageUrl: imgUrl,
                         width: 76,
                         height: 76,
@@ -2884,7 +2884,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
           ),
           body: Center(
             child: InteractiveViewer(
-              child: CachedNetworkImage(
+              child: LokmaNetworkImage(
                 imageUrl: imageUrl, 
                 fit: BoxFit.contain,
                 errorWidget: (context, error, stackTrace) => const Icon(Icons.error, color: Colors.white, size: 48),

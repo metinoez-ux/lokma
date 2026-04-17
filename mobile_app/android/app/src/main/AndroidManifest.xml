@@ -10,12 +10,15 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep Link: QR Table Ordering -->
+            <!-- Deep Link: QR Table Ordering, Kermes Dine-in, and Group Join -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="lokma.web.app" android:pathPrefix="/dinein" />
+                <data android:scheme="https" android:host="lokma.web.app" />
+                <data android:pathPrefix="/dinein" />
+                <data android:pathPrefix="/kermes-dinein" />
+                <data android:pathPrefix="/group" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

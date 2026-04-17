@@ -1,8 +1,9 @@
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import '../../services/kermes_badge_service.dart';
@@ -172,7 +173,7 @@ class _KermesCardState extends State<KermesCard> {
               if (badge.iconUrl.isNotEmpty) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: CachedNetworkImage(
+                  child: LokmaNetworkImage(
                     imageUrl: badge.iconUrl,
                     height: 80,
                     fit: BoxFit.contain,
@@ -476,7 +477,7 @@ class _KermesCardState extends State<KermesCard> {
                         width: double.infinity,
                         child: imagePath != null
                             ? (isNetworkImage
-                                ? CachedNetworkImage(
+                                ? LokmaNetworkImage(
                                     imageUrl: imagePath,
                                     fit: BoxFit.cover,
                                     memCacheHeight: 600,
@@ -578,7 +579,7 @@ class _KermesCardState extends State<KermesCard> {
                                         if (hasIcon)
                                           ClipRRect(
                                             borderRadius: BorderRadius.circular(8),
-                                            child: CachedNetworkImage(
+                                            child: LokmaNetworkImage(
                                               imageUrl: badge.iconUrl,
                                               height: 38,
                                               fit: BoxFit.contain,
@@ -967,7 +968,7 @@ class _KermesCardState extends State<KermesCard> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
             child: hasImage && imageUrl != null && imageUrl.startsWith('http')
-                ? CachedNetworkImage(
+                ? LokmaNetworkImage(
                     imageUrl: imageUrl,
                     width: 130,
                     height: 85,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../widgets/brand_info_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -241,7 +241,7 @@ class WalletBusinessCard extends ConsumerWidget {
                           height: 230,
                           width: double.infinity,
                           child: imageUrl != null && imageUrl!.isNotEmpty
-                              ? CachedNetworkImage(
+                              ? LokmaNetworkImage(
                                   imageUrl: imageUrl!,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(
@@ -500,7 +500,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: CachedNetworkImage(
+                                  child: LokmaNetworkImage(
                                     imageUrl: logoUrl!,
                                     fit: BoxFit.cover,
                                     errorWidget: (_, __, ___) => const Center(
@@ -844,7 +844,7 @@ class WalletBusinessCard extends ConsumerWidget {
                               if (hasIcon)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: CachedNetworkImage(
+                                  child: LokmaNetworkImage(
                                     imageUrl: badge['iconUrl'],
                                     height: 38, // Match kermes card size
                                     fit: BoxFit.contain,

@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,6 +20,7 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokma_app/services/kermes_feature_service.dart';
+import 'package:shimmer/shimmer.dart';
 
 /// Kermes Listesi - Yemek segmenti ile ayni UI yapisi
 /// Theme-aware, smart search, toggle switches, filter bottom sheet
@@ -236,14 +237,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       QuerySnapshot<Map<String, dynamic>> snapshot) async {
     try {
       if (snapshot.docs.isNotEmpty) {
-        final List<KermesEvent> loadedEvents = [];
-
-        for (final doc in snapshot.docs) {
+        final List<KermesEvent?> eventFutures = await Future.wait(snapshot.docs.map((doc) async {
           try {
             final data = doc.data();
 
-            if (data['isActive'] != true) continue;
-            if (data['isArchived'] == true) continue;
+            if (data['isActive'] != true) return null;
+            if (data['isArchived'] == true) return null;
 
             DateTime startDate;
             DateTime endDate;
@@ -264,7 +263,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
             if (endDate
                 .isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
-              continue;
+              return null;
             }
 
             // Parse menu items
@@ -279,11 +278,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                     menuItems.add(
                         KermesMenuItem.fromJson(item as Map<String, dynamic>));
                   } catch (e) {
-                    debugPrint('Error parsing legacy menu item: $e');
+                    // Ignore
                   }
                 }
               } catch (e) {
-                debugPrint('Error parsing legacy menu array: $e');
+                // Ignore
               }
             }
 
@@ -299,7 +298,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 for (final productDoc in productsSnapshot.docs) {
                   final productData = productDoc.data();
                   try {
-                    // Override legacy menu array item if it exists, otherwise add it
                     final parsedProduct = KermesMenuItem.fromJson(productData);
                     final existingIndex = menuItems
                         .indexWhere((m) => m.name == parsedProduct.name);
@@ -309,12 +307,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       menuItems.add(parsedProduct);
                     }
                   } catch (e) {
-                    debugPrint('Error parsing product ${productDoc.id}: $e');
+                    // Ignore
                   }
                 }
               }
             } catch (e) {
-              debugPrint('Could not load products: $e');
+              // Ignore
             }
 
             // Parse parking info
@@ -430,95 +428,25 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 country = 'Almanya';
               else if (cc == 'BG') country = 'Bulgaristan';
             } else {
-              // Fallback guess from address or city since old docs might not have country field
               final lowerAddr = data['address']?.toString().toLowerCase() ?? '';
               final lowerCity = city.toLowerCase();
 
               final Set<String> trProvinces = {
-                'adana',
-                'adiyaman',
-                'afyon',
-                'afyonkarahisar',
-                'agri',
-                'aksaray',
-                'amasya',
-                'ankara',
-                'antalya',
-                'ardahan',
-                'artvin',
-                'aydin',
-                'balikesir',
-                'balıkesir',
-                'bartin',
-                'batman',
-                'bayburt',
-                'bilecik',
-                'bingol',
-                'bitlis',
-                'bolu',
-                'burdur',
-                'bursa',
-                'canakkale',
-                'cankiri',
-                'corum',
-                'denizli',
-                'diyarbakir',
-                'duzce',
-                'edirne',
-                'elazig',
-                'erzincan',
-                'erzurum',
-                'eskisehir',
-                'gaziantep',
-                'giresun',
-                'gumushane',
-                'hakkari',
-                'hatay',
-                'igdir',
-                'isparta',
-                'istanbul',
-                'izmir',
-                'kahramanmaras',
-                'karabuk',
-                'karaman',
-                'kars',
-                'kastamonu',
-                'kayseri',
-                'kirikkale',
-                'kirklareli',
-                'kirsehir',
-                'kilis',
-                'kocaeli',
-                'konya',
-                'kutahya',
-                'malatya',
-                'manisa',
-                'mardin',
-                'mersin',
-                'mugla',
-                'mus',
-                'nevsehir',
-                'nigde',
-                'ordu',
-                'osmaniye',
-                'rize',
-                'sakarya',
-                'samsun',
-                'siirt',
-                'sinop',
-                'sivas',
-                'sanliurfa',
-                'sirnak',
-                'tekirdag',
-                'tokat',
-                'trabzon',
-                'tunceli',
-                'usak',
-                'van',
-                'yalova',
-                'yozgat',
-                'zonguldak',
-                'bigadi'
+                'adana', 'adiyaman', 'afyon', 'afyonkarahisar', 'agri', 'aksaray',
+                'amasya', 'ankara', 'antalya', 'ardahan', 'artvin', 'aydin',
+                'balikesir', 'balıkesir', 'bartin', 'batman', 'bayburt', 'bilecik',
+                'bingol', 'bitlis', 'bolu', 'burdur', 'bursa', 'canakkale',
+                'cankiri', 'corum', 'denizli', 'diyarbakir', 'duzce', 'edirne',
+                'elazig', 'erzincan', 'erzurum', 'eskisehir', 'gaziantep',
+                'giresun', 'gumushane', 'hakkari', 'hatay', 'igdir', 'isparta',
+                'istanbul', 'izmir', 'kahramanmaras', 'karabuk', 'karaman',
+                'kars', 'kastamonu', 'kayseri', 'kirikkale', 'kirklareli',
+                'kirsehir', 'kilis', 'kocaeli', 'konya', 'kutahya', 'malatya',
+                'manisa', 'mardin', 'mersin', 'mugla', 'mus', 'nevsehir',
+                'nigde', 'ordu', 'osmaniye', 'rize', 'sakarya', 'samsun',
+                'siirt', 'sinop', 'sivas', 'sanliurfa', 'sirnak', 'tekirdag',
+                'tokat', 'trabzon', 'tunceli', 'usak', 'van', 'yalova',
+                'yozgat', 'zonguldak', 'bigadi'
               };
 
               bool isTrProvince = trProvinces
@@ -535,7 +463,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               }
             }
 
-            // Parse sponsor
             KermesSponsor sponsor = KermesSponsor.none;
             final sponsorStr = data['sponsor']?.toString().toUpperCase() ??
                 data['brandLabel']?.toString().toUpperCase();
@@ -546,11 +473,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               sponsor = KermesSponsor.akdenizToros;
             }
 
-            // Koordinat cozumleme: Coklu kaynaktan kontrol et
             double eventLat = 0.0;
             double eventLng = 0.0;
 
-            // 1. Dogrudan toplevel latitude/longitude veya lat/lng
             if (data['latitude'] != null)
               eventLat = (data['latitude'] as num).toDouble();
             else if (data['lat'] != null)
@@ -561,7 +486,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             else if (data['lng'] != null)
               eventLng = (data['lng'] as num).toDouble();
 
-            // 2. address map icindeki lat/lng
             if ((eventLat == 0.0 || eventLng == 0.0) &&
                 data['address'] is Map) {
               final addrMap = data['address'] as Map;
@@ -575,7 +499,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 eventLng = (addrMap['longitude'] as num).toDouble();
             }
 
-            // 3. location map icindeki lat/lng
             if ((eventLat == 0.0 || eventLng == 0.0) &&
                 data['location'] is Map) {
               final locMap = data['location'] as Map;
@@ -585,7 +508,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 eventLng = (locMap['lng'] as num).toDouble();
             }
 
-            // 4. GeoPoint turu
             if ((eventLat == 0.0 || eventLng == 0.0) &&
                 data['geoPoint'] is GeoPoint) {
               final gp = data['geoPoint'] as GeoPoint;
@@ -599,7 +521,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               eventLng = gp.longitude;
             }
 
-            // 5. postalCode veya sehir bazli geocoding (fallback)
             if ((eventLat == 0.0 && eventLng == 0.0) ||
                 (eventLat == 51.0 && eventLng == 6.0)) {
               if (fullAddress.isNotEmpty) {
@@ -608,17 +529,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   if (locations.isNotEmpty) {
                     eventLat = locations.first.latitude;
                     eventLng = locations.first.longitude;
-                    debugPrint(
-                        'Geocoded kermes "${data['name']}" address "$fullAddress" -> ($eventLat, $eventLng)');
-                    // Firestore'a da yazalim ki bir daha geocode etmeyelim
                     try {
                       doc.reference.update(
                           {'latitude': eventLat, 'longitude': eventLng});
                     } catch (_) {}
                   }
                 } catch (geoErr) {
-                  debugPrint('Geocoding failed for "$fullAddress": $geoErr');
-                  // Fallback: en azindan sehir isminden dene
                   if (city != 'Bilinmiyor') {
                     try {
                       final cityLocations =
@@ -626,8 +542,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       if (cityLocations.isNotEmpty) {
                         eventLat = cityLocations.first.latitude;
                         eventLng = cityLocations.first.longitude;
-                        debugPrint(
-                            'Geocoded kermes city "$city" -> ($eventLat, $eventLng)');
                         try {
                           doc.reference.update(
                               {'latitude': eventLat, 'longitude': eventLng});
@@ -648,8 +562,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               }
             }
 
-            debugPrint(
-                'Creating KermesEvent ${doc.id} with coords: ($eventLat, $eventLng)');
             final event = KermesEvent(
               id: doc.id,
               city: city,
@@ -692,9 +604,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   (data['minCartForFreeDelivery'] ?? 0).toDouble(),
               minOrderAmount: (data['minOrderAmount'] ?? 0).toDouble(),
               isMenuOnly: data['isMenuOnly'] == true,
-              hasTakeaway: true, // Kermesler için her zaman Gel-Al açıktır
-              hasDineIn:
-                  true, // Kermesler için her zaman Yerinde (Masa) açıktır
+              hasTakeaway: true,
+              hasDineIn: true,
               contactName: contactName,
               contactPhone: data['contactPhone']?.toString() ?? phoneNumber,
               headerImage: data['headerImage']?.toString(),
@@ -714,14 +625,13 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               deliveryZones: _parseDeliveryZones(data['deliveryZones']),
             );
 
-            loadedEvents.add(event);
-          } catch (docError, stackTrace) {
-            debugPrint('Error parsing kermes doc ${doc.id}: $docError');
-            debugPrint(
-                '   Stack: ${stackTrace.toString().split('\n').take(5).join('\n')}');
+            return event;
+          } catch (docError) {
+            return null;
           }
-        }
+        }));
 
+        final List<KermesEvent> loadedEvents = eventFutures.whereType<KermesEvent>().toList();
         loadedEvents.sort((a, b) => a.startDate.compareTo(b.startDate));
         _kermesEvents = loadedEvents;
       } else {
@@ -1258,7 +1168,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               4),
-                                                      child: CachedNetworkImage(
+                                                      child: LokmaNetworkImage(
                                                         imageUrl: badge.iconUrl,
                                                         height: 16,
                                                         width: 16,
@@ -1781,9 +1691,30 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
               // Event List
               _isLoading
-                  ? const SliverFillRemaining(
-                      child: Center(
-                          child: CircularProgressIndicator(color: lokmaPink)),
+                  ? SliverPadding(
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final isDark = Theme.of(context).brightness == Brightness.dark;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Shimmer.fromColors(
+                                baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                                highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+                                child: Container(
+                                  height: 220,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          childCount: 4,
+                        ),
+                      ),
                     )
                   : _filteredEvents.isEmpty
                       ? SliverFillRemaining(

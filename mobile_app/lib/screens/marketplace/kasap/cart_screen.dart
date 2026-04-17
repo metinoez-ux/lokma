@@ -11,7 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
@@ -3807,7 +3807,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               if (imageUrl != null && imageUrl.isNotEmpty)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: CachedNetworkImage(
+                  child: LokmaNetworkImage(
                     imageUrl: imageUrl,
                     width: 52,
                     height: 52,
@@ -4417,7 +4417,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           ClipRRect(
                             borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
                             child: imageUrl.isNotEmpty
-                                ? CachedNetworkImage(
+                                ? LokmaNetworkImage(
                                     imageUrl: imageUrl,
                                     width: 145,
                                     height: 100,

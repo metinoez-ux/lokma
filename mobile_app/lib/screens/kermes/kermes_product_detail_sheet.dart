@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import '../../providers/kermes_cart_provider.dart';
 import '../../providers/cart_provider.dart'; // Needed for CartWarningUtils
@@ -577,7 +577,7 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                       child: SizedBox(
                         width: double.infinity,
                         height: 180,
-                        child: CachedNetworkImage(
+                        child: LokmaNetworkImage(
                           imageUrl: item.imageUrl!,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(

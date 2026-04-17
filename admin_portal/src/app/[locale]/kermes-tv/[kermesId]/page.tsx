@@ -298,6 +298,24 @@ const PrayerTimeBanner = () => {
   );
 };
 
+const HeaderClock = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <span className={styles.clock}>
+      {currentTime.toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}
+    </span>
+  );
+};
+
 export default function KermesTvPage({
   params,
 }: {
@@ -313,7 +331,6 @@ export default function KermesTvPage({
   const [sectionLabel, setSectionLabel] = useState('');
   const [activeDeliveryZone, setActiveDeliveryZone] = useState<any>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [lang2, setLang2] = useState<string | null>(null);
   const [dateRangeStr, setDateRangeStr] = useState<string>('');
   const [operatingHoursStr, setOperatingHoursStr] = useState<string>('');
@@ -321,12 +338,6 @@ export default function KermesTvPage({
   const [newlyReady, setNewlyReady] = useState<Set<string>>(new Set());
   const previousReadyRef = useRef<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Saat guncelleme (her saniye)
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Kermes ve bolum bilgisi cek
   useEffect(() => {
@@ -749,12 +760,7 @@ export default function KermesTvPage({
              </div>
 
              <div className={styles.headerRight} style={{ flexShrink: 0 }}>
-               <span className={styles.clock}>
-                 {currentTime.toLocaleTimeString('tr-TR', {
-                   hour: '2-digit',
-                   minute: '2-digit',
-                 })}
-               </span>
+               <HeaderClock />
              </div>
           </div>
         </header>

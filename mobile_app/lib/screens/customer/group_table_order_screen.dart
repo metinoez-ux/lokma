@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import '../../models/table_group_session_model.dart';
 import '../../models/butcher_product.dart';
 import '../../providers/table_group_provider.dart';
@@ -1163,7 +1163,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     child: SizedBox(
                       width: 100,
                       height: 100,
-                      child: CachedNetworkImage(
+                      child: LokmaNetworkImage(
                         imageUrl: product.imageUrl!,
                         fit: BoxFit.cover,
                         placeholder: (_, __) => Container(
@@ -1428,7 +1428,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               width: 64,
               height: 64,
               child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                  ? CachedNetworkImage(
+                  ? LokmaNetworkImage(
                       imageUrl: item.imageUrl!,
                       fit: BoxFit.cover,
                       errorWidget: (_, __, ___) => _productPlaceholder(),

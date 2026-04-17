@@ -9,7 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ButchersScreen extends ConsumerStatefulWidget {
@@ -998,7 +998,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                         child: (butcher['imageUrl'] != null && (butcher['imageUrl'] as String).isNotEmpty)
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
-                                child: CachedNetworkImage(
+                                child: LokmaNetworkImage(
                                   imageUrl: butcher['imageUrl'],
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(

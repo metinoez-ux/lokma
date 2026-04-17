@@ -285,22 +285,22 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
          <h3 className="text-lg font-bold mb-1">Mevcut Malzeme Stoğu (Butonlar)</h3>
          <p className="text-sm text-muted-foreground mb-6">Personelin mobil uygulamasında bir tıklamayla isteyebileceği hazır malzeme butonları.</p>
 
-         <div className="flex gap-4 mb-6 max-w-xl">
+         <div className="flex flex-col sm:flex-row gap-4 mb-8 max-w-3xl">
             <input 
                type="text" 
-               placeholder="Yeni Kategori (Örn: Mutfak Eşyası)" 
-               className="flex-1 bg-background border border-border rounded-lg px-4 py-2 text-sm"
+               placeholder="Yeni Kategori Ekle (Örn: Lojistik, İçecek Standı, Temizlik...)" 
+               className="w-full bg-background border border-border rounded-xl px-5 py-3 text-sm focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
                value={newCatTitle}
                onChange={(e) => setNewCatTitle(e.target.value)}
                onKeyDown={(e) => { if(e.key === 'Enter') handleAddCategory(); }}
             />
-            <button onClick={handleAddCategory} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">
+            <button onClick={handleAddCategory} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl text-sm font-bold whitespace-nowrap shadow-sm transition-all focus:ring-2 focus:ring-blue-500/50">
                Kategori Ekle
             </button>
          </div>
 
          {categories.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                {categories.map((cat) => (
                   <div key={cat.id} className="bg-background rounded-lg border border-border p-4 shadow-sm">
                      <div className="flex items-center justify-between mb-4 border-b pb-2">
@@ -377,16 +377,16 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
                         ))}
                      </div>
 
-                     <div className="flex gap-2">
+                     <div className="flex flex-wrap gap-2 mt-4 max-w-xl">
                         <input 
                            type="text" 
-                           placeholder="Yeni Malzeme Ekle" 
-                           className="flex-1 bg-muted/30 border border-muted-foreground/20 focus:border-blue-500 rounded-lg px-3 py-2 text-sm"
+                           placeholder="Yeni Malzeme Ekle (Örn: Peçete, Bardak...)" 
+                           className="flex-1 min-w-[200px] w-full bg-muted/30 border border-muted-foreground/20 focus:border-blue-500 rounded-lg px-4 py-2.5 text-sm outline-none transition-all"
                            value={selectedCatId === cat.id ? newItemName : ''}
                            onChange={(e) => { setSelectedCatId(cat.id); setNewItemName(e.target.value); }}
                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddItem(cat.id); }}
                         />
-                        <button onClick={() => handleAddItem(cat.id)} className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg text-sm font-medium">
+                        <button onClick={() => handleAddItem(cat.id)} className="w-full xl:w-auto bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm">
                            Ekle
                         </button>
                      </div>

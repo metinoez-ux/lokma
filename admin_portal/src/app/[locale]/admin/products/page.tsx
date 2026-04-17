@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "@/lib/firebase";
+import { compressLokmaImage } from "@/lib/imageCompression";
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
 import { normalizeTurkish, getLocalizedText } from "@/lib/utils";
@@ -1142,7 +1143,8 @@ function GlobalProductsPageContent() {
  const uploadPromises = filesToUpload.map(async (file) => {
  const fileName = `products/${Date.now()}_${file.name}`;
  const storageRef = ref(storage, fileName);
- await uploadBytes(storageRef, file);
+ const compressedFile = await compressLokmaImage(file, false);
+ await uploadBytes(storageRef, compressedFile);
  return getDownloadURL(storageRef);
  });
 

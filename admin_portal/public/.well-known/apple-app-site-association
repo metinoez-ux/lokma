@@ -6,6 +6,7 @@
         "appID": "Y834B2NJY9.shop.lokma.app",
         "paths": [
           "/dinein/*",
+          "/kermes-dinein/*",
           "/group/*"
         ]
       }

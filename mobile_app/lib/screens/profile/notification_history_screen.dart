@@ -23,8 +23,9 @@ import '../../widgets/kermes/order_qr_dialog.dart';
 class NotificationHistoryScreen extends ConsumerStatefulWidget {
   final String? openOrderId;
   final bool openChat;
+  final String? openNotificationId;
   
-  const NotificationHistoryScreen({super.key, this.openOrderId, this.openChat = false});
+  const NotificationHistoryScreen({super.key, this.openOrderId, this.openChat = false, this.openNotificationId});
 
   @override
   ConsumerState<NotificationHistoryScreen> createState() => _NotificationHistoryScreenState();
@@ -74,6 +75,13 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
         }
       });
     }
+
+    if (widget.openNotificationId != null && widget.openNotificationId!.trim().isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _autoOpenNotification(widget.openNotificationId!);
+      });
+    }
   }
 
   Future<void> _autoOpenChat(String orderId) async {
@@ -88,6 +96,23 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       );
     } catch (e) {
       debugPrint('Error auto-opening chat: $e');
+    }
+  }
+
+  Future<void> _autoOpenNotification(String docId) async {
+    final user = _auth.currentUser;
+    if (user == null || docId.trim().isEmpty) return;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users').doc(user.uid)
+          .collection('notifications').doc(docId).get();
+      if (!doc.exists) return;
+      if (!mounted) return;
+      final data = doc.data() as Map<String, dynamic>;
+      data['_docId'] = doc.id;
+      _showNotificationDetailSheet(context, data);
+    } catch (e) {
+      debugPrint('Error auto-opening notification: $e');
     }
   }
 
@@ -265,7 +290,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     final isParking = type == 'kermes_parking';
     final isDeleted = type == 'roster_deleted' || (type == 'supply_alarm_status' && supplyStatus == 'rejected');
     final isParkingOrDeleted = isParking || isDeleted;
-    final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
+    final isRoster = type == 'roster_shift';
     final isWarning = type == 'kermes_flash_sale' || type == 'supply_alarm';
     final isSuccess = type == 'supply_alarm_status' && (supplyStatus == 'completed' || supplyStatus == ''); 
     final isActionStatus = type == 'supply_alarm_status' && supplyStatus == 'on_the_way';
@@ -346,7 +371,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                if (!sSnap.exists) return null;
                                final res = sSnap.data() as Map<String, dynamic>;
                                final uId = res['requestedByUid'] as String?;
-                               if (uId != null) {
+                               if (uId != null && uId.trim().isNotEmpty) {
                                   try {
                                      final rSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('rosters').where('userId', isEqualTo: uId).get();
                                      if (rSnap.docs.isNotEmpty) {
@@ -4416,7 +4441,7 @@ class _GenericNotificationCard extends StatelessWidget {
                     builder: (context) {
                       final type = data['type'] as String?;
                       final isFlashSale = type == 'kermes_flash_sale';
-                      final isRoster = type == 'kermes_assignment' || type == 'roster_shift';
+                      final isRoster = type == 'roster_shift';
                       final isParking = type == 'kermes_parking';
                       final tag = data['tag'] as String?;
                       final isCampaign = tag == 'kampanya' || isFlashSale;

@@ -1,0 +1,56 @@
+--- src/app/[locale]/admin/kermes/[id]/page.tsx
++++ src/app/[locale]/admin/kermes/[id]/page.tsx
+@@ -263,12 +263,5 @@
+   optionGroups?: any[];
+ }
+ 
+-export const EXTENDED_SYSTEM_ROLES: KermesCustomRole[] = [
+-  { id: 'role_temizlik', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300' },
+-  { id: 'role_park', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+-  { id: 'role_cocuk', name: 'Çocuk Görevlisi', icon: '👶', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300' },
+-  { id: 'role_vip', name: 'Özel Misafir (VIP)', icon: '⭐', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+-];
+-
+ interface MasterProduct {
+  id: string;
+@@ -402,10 +395,19 @@
+       customRoles: (() => {
+         const roles = [...(data.customRoles || [])];
+-        if (!roles.some((r: any) => r.name === 'Park Görevlisi')) {
+-            roles.unshift({ id: 'role_park_system', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' });
++        if (!roles.some((r: any) => r.icon === '🅿️')) {
++            roles.push({ id: 'role_park_system', name: 'Park Görevlisi', icon: '🅿️', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' });
+         }
+-        if (!roles.some((r: any) => r.name === 'Temizlik Görevlisi')) {
+-            roles.unshift({ id: 'role_temizlik_system', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' });
++        if (!roles.some((r: any) => r.icon === '🧹')) {
++            roles.push({ id: 'role_temizlik_system', name: 'Temizlik Görevlisi', icon: '🧹', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300' });
++        }
++        if (!roles.some((r: any) => r.icon === '👶')) {
++            roles.push({ id: 'role_cocuk_system', name: 'Çocuk Görevlisi', icon: '👶', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300' });
++        }
++        if (!roles.some((r: any) => r.icon === '⭐')) {
++            roles.push({ id: 'role_vip_system', name: 'Özel Misafir (VIP)', icon: '⭐', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' });
++        }
++        if (!roles.some((r: any) => r.icon === '📦')) {
++            roles.push({ id: 'role_tedarik_system', name: 'Malzeme Tedarikçisi', icon: '📦', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' });
+         }
+         return roles;
+@@ -3613,6 +3615,6 @@
+         )}
+         {/* Custom & Extended System Roles Badges */}
+-        {[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])].filter(r => (customRoleAssignments[r.id] || []).includes(staff.id)).map(r => (
++        {(editForm.customRoles || []).filter(r => (customRoleAssignments[r.id] || []).includes(staff.id)).map(r => (
+           <span key={r.id} className={`ml-1 flex-shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded ${r.color || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+             {r.name}
+           </span>
+@@ -3691,3 +3693,3 @@
+         {/* Custom Roles Assignment */}
+-        {[...EXTENDED_SYSTEM_ROLES, ...(editForm.customRoles || [])].map(r => {
++        {(editForm.customRoles || []).map(r => {
+           const isAssigned = customRoleAssignments[r.id]?.includes(staff.id) || false;
+@@ -3706,4 +3708,4 @@
+               }
+-              saveTeamToDb({...customRoleAssignments, [r.id]: newAssigns[r.id]});
++              saveTeamToDb(undefined, {...customRoleAssignments, [r.id]: newAssigns[r.id]});
+             }}

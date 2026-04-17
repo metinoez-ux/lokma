@@ -14,7 +14,10 @@ final staffUnreadNotificationsCountProvider = StreamProvider<int>((ref) {
       .collection('notifications')
       .where('read', isEqualTo: false)
       .snapshots()
-      .map((snapshot) => snapshot.docs.length);
+      .map((snapshot) => snapshot.docs.where((d) {
+          final data = d.data();
+          return data['trashedAt'] == null;
+      }).length);
 });
 
 // Tum bildirimler - notifications collection (gorev + siparis + her sey)
@@ -30,7 +33,10 @@ final staffNotificationsProvider = StreamProvider<List<Map<String, dynamic>>>((r
       .limit(100)
       .snapshots()
       .map((snapshot) {
-        return snapshot.docs.map((doc) {
+        return snapshot.docs.where((doc) {
+          final data = doc.data();
+          return data['trashedAt'] == null;
+        }).map((doc) {
           final data = Map<String, dynamic>.from(doc.data());
           data['id'] = doc.id;
           return data;
