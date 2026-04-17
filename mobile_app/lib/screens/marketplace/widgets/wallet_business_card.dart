@@ -857,9 +857,20 @@ class WalletBusinessCard extends ConsumerWidget {
                                         Icon(Icons.verified, color: textColor, size: 14),
                                   ),
                                 )
+                              else if (isLegacyTuna)
+                                Image.asset(
+                                  'assets/images/tuna_logo_pill.png',
+                                  height: 38,
+                                  fit: BoxFit.contain,
+                                )
+                              else if (isLegacyToros)
+                                Image.asset(
+                                  'assets/images/akdeniz_toros_logo_pill.png',
+                                  height: 38,
+                                  fit: BoxFit.contain,
+                                )
                               else ...[
-                                if (isLegacyTuna || isLegacyToros)
-                                  Icon(Icons.verified, color: textColor, size: 14),
+                                Icon(Icons.verified, color: textColor, size: 14),
                                 const SizedBox(width: 4),
                                 Text(
                                   badge['name'],
@@ -870,10 +881,6 @@ class WalletBusinessCard extends ConsumerWidget {
                                     letterSpacing: 0.5,
                                   ),
                                 ),
-                                if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) ...[
-                                  const SizedBox(width: 4),
-                                  Icon(Icons.info_outline, color: textColor, size: 15),
-                                ],
                               ],
                             ],
                           ),
@@ -959,7 +966,7 @@ class WalletBusinessCard extends ConsumerWidget {
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                     ),
-                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))),
+                    Image.asset('assets/images/tuna_logo_pill.png', height: 40, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))),
                     const SizedBox(height: 16),
                     Text(
                       'marketplace.tuna_subtitle'.tr(),

@@ -1280,7 +1280,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       margin: EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                     ),
-                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))),
+                    Image.asset('assets/images/tuna_logo_pill.png', height: 40, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))),
                     SizedBox(height: 16),
                     Text(
                       'marketplace.tuna_subtitle'.tr(),
