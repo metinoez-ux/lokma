@@ -21,7 +21,54 @@ const localeToBcp47: Record<string, string> = {
  de: 'de-DE', en: 'en-US', tr: 'tr-TR', es: 'es-ES', fr: 'fr-FR', it: 'it-IT', nl: 'nl-NL',
 };
 
+const HeaderClock = ({ currentLocale }: { currentLocale: string }) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
 
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const bcp47 = localeToBcp47[currentLocale] || 'de-DE';
+  return (
+    <>
+      <span className="text-sm font-light tabular-nums tracking-wider text-white">
+        {currentTime.toLocaleTimeString(bcp47, { hour: '2-digit', minute: '2-digit' })}
+      </span>
+      <span className="text-muted-foreground/80 text-xs">|</span>
+      <span className="text-xs text-muted-foreground">
+        {currentTime.toLocaleDateString(bcp47, { day: '2-digit', month: '2-digit', year: 'numeric' })}
+      </span>
+      <span className="text-muted-foreground/80 text-xs">|</span>
+      <span className="text-xs text-muted-foreground">
+        {currentTime.toLocaleDateString(bcp47, { weekday: 'short' })}
+      </span>
+    </>
+  );
+};
+
+const PendingWaitDisplay = ({ oldestPendingTime }: { oldestPendingTime: Date | null }) => {
+  const [pendingWaitStr, setPendingWaitStr] = useState('');
+
+  useEffect(() => {
+    if (!oldestPendingTime) { 
+      setPendingWaitStr(''); 
+      return; 
+    }
+    const update = () => {
+      const diff = Math.floor((Date.now() - oldestPendingTime.getTime()) / 1000);
+      if (diff < 60) setPendingWaitStr(`${diff}s`);
+      else if (diff < 3600) setPendingWaitStr(`${Math.floor(diff / 60)}m`);
+      else setPendingWaitStr(`${Math.floor(diff / 3600)}h${Math.floor((diff % 3600) / 60)}m`);
+    };
+    update();
+    const iv = setInterval(update, 1000);
+    return () => clearInterval(iv);
+  }, [oldestPendingTime]);
+
+  if (!pendingWaitStr) return null;
+  return <span className="text-yellow-500 text-[10px] font-mono">{pendingWaitStr}</span>;
+};
 
 interface PendingInvitation {
  id: string;
@@ -69,28 +116,6 @@ export default function AdminHeader() {
  const [expandedSection, setExpandedSection] = useState<string | null>(null);
  const [pendingOrderCount, setPendingOrderCount] = useState(0);
  const [oldestPendingTime, setOldestPendingTime] = useState<Date | null>(null);
- const [pendingWaitStr, setPendingWaitStr] = useState('');
-
- const [currentTime, setCurrentTime] = useState(new Date());
-
- useEffect(() => {
- const timer = setInterval(() => setCurrentTime(new Date()), 1000);
- return () => clearInterval(timer);
- }, []);
-
- // Pending orders wait time string updater
- useEffect(() => {
- if (!oldestPendingTime) { setPendingWaitStr(''); return; }
- const update = () => {
- const diff = Math.floor((Date.now() - oldestPendingTime.getTime()) / 1000);
- if (diff < 60) setPendingWaitStr(`${diff}s`);
- else if (diff < 3600) setPendingWaitStr(`${Math.floor(diff / 60)}m`);
- else setPendingWaitStr(`${Math.floor(diff / 3600)}h${Math.floor((diff % 3600) / 60)}m`);
- };
- update();
- const iv = setInterval(update, 1000);
- return () => clearInterval(iv);
- }, [oldestPendingTime]);
 
  // Real-time pending orders listener
  const businessId = useAdminBusinessId();
@@ -367,17 +392,7 @@ export default function AdminHeader() {
  )}
  </svg>
  </button>
- <span className="text-sm font-light tabular-nums tracking-wider text-white">
- {currentTime.toLocaleTimeString(localeToBcp47[currentLocale] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
- </span>
- <span className="text-muted-foreground/80 text-xs">|</span>
- <span className="text-xs text-muted-foreground">
- {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
- </span>
- <span className="text-muted-foreground/80 text-xs">|</span>
- <span className="text-xs text-muted-foreground">
- {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { weekday: 'short' })}
- </span>
+ <HeaderClock currentLocale={currentLocale} />
   {process.env.NEXT_PUBLIC_BUILD_TIME && (
     <>
       <span className="text-muted-foreground/80 text-xs">|</span>
@@ -508,17 +523,7 @@ export default function AdminHeader() {
  <div className="w-full px-6 py-2 flex items-center gap-4 relative">
  {/* CENTER: Clock + Version Stamp - always centered */}
  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none z-10">
- <span className="text-sm font-light tabular-nums tracking-wider text-white">
- {currentTime.toLocaleTimeString(localeToBcp47[currentLocale] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
- </span>
- <span className="text-muted-foreground/80 text-xs">|</span>
- <span className="text-xs text-muted-foreground">
- {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
- </span>
- <span className="text-muted-foreground/80 text-xs">|</span>
- <span className="text-xs text-muted-foreground">
- {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { weekday: 'short' })}
- </span>
+ <HeaderClock currentLocale={currentLocale} />
  {process.env.NEXT_PUBLIC_BUILD_TIME && (
  <>
  <span className="text-muted-foreground/80 text-xs">|</span>
@@ -1006,17 +1011,7 @@ export default function AdminHeader() {
 
  {/* Tablet-only status info */}
  <div className="min-[1921px]:hidden flex items-center gap-2 flex-1 justify-center">
- <span className="text-sm font-light tabular-nums tracking-wider text-white">
- {currentTime.toLocaleTimeString(localeToBcp47[currentLocale] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
- </span>
- <span className="text-muted-foreground/80 text-xs">|</span>
- <span className="text-xs text-muted-foreground">
- {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
- </span>
- <span className="text-muted-foreground/80 text-xs">|</span>
- <span className="text-xs text-muted-foreground">
- {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { weekday: 'short' })}
- </span>
+ <HeaderClock currentLocale={currentLocale} />
   {process.env.NEXT_PUBLIC_BUILD_TIME && (
     <>
       <span className="text-muted-foreground/80 text-xs">|</span>

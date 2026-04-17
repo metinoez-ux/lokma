@@ -24,7 +24,41 @@ const orderStatuses = ORDER_STATUSES;
 const orderTypes = ORDER_TYPES;
 
 
+// Isolated component to render pause countdown without re-rendering the whole page
+const PauseTimerDisplay = ({ pauseUntil, onExpire }: { pauseUntil: Date | null, onExpire: () => void }) => {
+  const [countdown, setCountdown] = useState('');
 
+  useEffect(() => {
+    if (!pauseUntil) {
+      setCountdown('');
+      return;
+    }
+
+    const fmt = (target: Date | null): string => {
+      if (!target) return '';
+      const diff = target.getTime() - Date.now();
+      if (diff <= 0) return '';
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    };
+
+    const tick = () => {
+      if (pauseUntil && pauseUntil.getTime() <= Date.now()) {
+        onExpire();
+        return;
+      }
+      setCountdown(fmt(pauseUntil));
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [pauseUntil, onExpire]);
+
+  if (!countdown) return null;
+  return <span className="ml-1 bg-card px-2 py-0.5 rounded-full text-xs font-mono">{countdown}</span>;
+};
 
 export default function OrdersPage() {
  const t = useTranslations('AdminPortal.Orders');
@@ -199,8 +233,6 @@ export default function OrdersPage() {
  const [pickupPaused, setPickupPaused] = useState(false);
  const [deliveryPauseUntil, setDeliveryPauseUntil] = useState<Date | null>(null);
  const [pickupPauseUntil, setPickupPauseUntil] = useState<Date | null>(null);
- const [deliveryCountdown, setDeliveryCountdown] = useState('');
- const [pickupCountdown, setPickupCountdown] = useState('');
  const [showDeliveryTimerMenu, setShowDeliveryTimerMenu] = useState(false);
  const [showPickupTimerMenu, setShowPickupTimerMenu] = useState(false);
  const deliveryTimerRef = useRef<HTMLDivElement>(null);
@@ -291,36 +323,6 @@ export default function OrdersPage() {
  });
  return () => unsub();
  }, [businessFilter]);
-
- // ─── Pause System: Countdown Timer ───
- useEffect(() => {
- const fmt = (target: Date | null): string => {
- if (!target) return '';
- const diff = target.getTime() - Date.now();
- if (diff <= 0) return '';
- const m = Math.floor(diff / 60000);
- const s = Math.floor((diff % 60000) / 1000);
- return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
- };
-
- const tick = () => {
- const dc = fmt(deliveryPauseUntil);
- const pc = fmt(pickupPauseUntil);
- setDeliveryCountdown(dc);
- setPickupCountdown(pc);
- // Auto-resume when timer expires
- if (deliveryPaused && deliveryPauseUntil && deliveryPauseUntil.getTime() <= Date.now()) {
- handleResumePause('delivery');
- }
- if (pickupPaused && pickupPauseUntil && pickupPauseUntil.getTime() <= Date.now()) {
- handleResumePause('pickup');
- }
- };
-
- tick();
- const interval = setInterval(tick, 1000);
- return () => clearInterval(interval);
- }, [deliveryPauseUntil, pickupPauseUntil, deliveryPaused, pickupPaused]);
 
  // ─── Pause System: Click Outside Handlers ───
  useEffect(() => {
@@ -1546,10 +1548,8 @@ return (
  }`}
  >
  <span>{t(deliveryPaused ? 'status_paused' : 'type_delivery')}</span>
- {deliveryPaused && deliveryCountdown && (
- <span className="ml-1 bg-card px-2 py-0.5 rounded-full text-xs font-mono">
- {deliveryCountdown}
- </span>
+ {deliveryPaused && (
+   <PauseTimerDisplay pauseUntil={deliveryPauseUntil} onExpire={() => handleResumePause('delivery')} />
  )}
  </button>
  {/* Timer Selection Dropdown */}
@@ -1581,10 +1581,8 @@ return (
  }`}
  >
  <span>{t(pickupPaused ? 'status_paused' : 'pickup_label')}</span>
- {pickupPaused && pickupCountdown && (
- <span className="ml-1 bg-card px-2 py-0.5 rounded-full text-xs font-mono">
- {pickupCountdown}
- </span>
+ {pickupPaused && (
+   <PauseTimerDisplay pauseUntil={pickupPauseUntil} onExpire={() => handleResumePause('pickup')} />
  )}
  </button>
  {/* Timer Selection Dropdown */}
