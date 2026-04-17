@@ -43,6 +43,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   String _sortBy = 'distance_asc';
   double _maxDistance = 50; // default: 50km
   Set<String> _favoriteKermesIds = {};
+  List<KermesEvent> _cachedFilteredEvents = [];
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -136,6 +137,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     if (mounted) {
       setState(() {
         _activeFeatures = features;
+        _updateFilteredEvents();
       });
     }
   }
@@ -145,6 +147,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     if (mounted) {
       setState(() {
         _activeBadges = badges;
+        _updateFilteredEvents();
       });
     }
   }
@@ -193,6 +196,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         speedAccuracy: 0,
       );
       _userCountryCode = location.countryCode.toUpperCase();
+      _updateFilteredEvents();
     }
   }
 
@@ -201,6 +205,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     if (mounted) {
       setState(() {
         _favoriteKermesIds = favorites.toSet();
+        _updateFilteredEvents();
       });
     }
   }
@@ -645,7 +650,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     }
 
     if (mounted) {
-      setState(() => _isLoading = false);
+      setState(() { 
+        _isLoading = false;
+        _updateFilteredEvents();
+      });
     }
   }
 
@@ -702,7 +710,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   }
 
   // ============== SMART SEARCH + FILTERING ==============
-  List<KermesEvent> get _filteredEvents {
+  void _updateFilteredEvents() {
     var events = List<KermesEvent>.from(_kermesEvents);
 
     // Favorites filter
@@ -711,9 +719,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           .where((event) => _favoriteKermesIds.contains(event.id))
           .toList();
     }
-
-    // Delivery mode filter kaldirildi - tum kermesler gosterilir
-    // (Toggle switch UI'den cikarildi)
 
     // Smart search with normalization
     if (_searchQuery.isNotEmpty) {
@@ -869,7 +874,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       return 0;
     });
 
-    return events;
+    _cachedFilteredEvents = events;
   }
 
   double _getDistance(KermesEvent event) {
@@ -1001,6 +1006,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               _sortBy = 'date_asc';
                               _selectedFeatureIds.clear();
                               _selectedFilterBadgeIds.clear();
+                              _updateFilteredEvents();
                             });
                             setStateSheet(() {});
                           },
@@ -1090,6 +1096,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                     } else {
                                       _selectedFilterBadgeIds.add(badge.id);
                                     }
+                                    _updateFilteredEvents();
                                   });
                                   setStateSheet(() {});
                                 },
@@ -1267,7 +1274,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             isSelected: _sortBy == 'date_asc',
                             useRadio: true,
                             onTap: () {
-                              setState(() => _sortBy = 'date_asc');
+                              setState(() {
+                                _sortBy = 'date_asc';
+                                _updateFilteredEvents();
+                              });
                               setStateSheet(() {});
                             },
                           ),
@@ -1277,7 +1287,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             isSelected: _sortBy == 'distance_asc',
                             useRadio: true,
                             onTap: () {
-                              setState(() => _sortBy = 'distance_asc');
+                              setState(() {
+                                _sortBy = 'distance_asc';
+                                _updateFilteredEvents();
+                              });
                               setStateSheet(() {});
                             },
                           ),
@@ -1288,7 +1301,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             useRadio: true,
                             onTap: () {
                               _loadFavorites();
-                              setState(() => _sortBy = 'favorites');
+                              setState(() {
+                                _sortBy = 'favorites';
+                                _updateFilteredEvents();
+                              });
                               setStateSheet(() {});
                             },
                           ),
@@ -1322,6 +1338,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                     } else {
                                       _selectedFeatureIds.add(feature.id);
                                     }
+                                    _updateFilteredEvents();
                                   });
                                   setStateSheet(() {});
                                 },
@@ -1631,6 +1648,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               } else if (_sortBy == 'distance_desc') {
                                 _sortBy = 'distance_asc';
                               }
+                              _updateFilteredEvents();
                               // favorites icin tersine cevirme yok
                             });
                           },
@@ -2233,37 +2251,52 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           activeTickMarkColor: Colors.transparent,
                           inactiveTickMarkColor: Colors.transparent,
                         ),
-                        child: Slider(
-                          value: _currentStepIndex.toDouble(),
-                          min: 0,
-                          max: (_kmSteps.length - 1).toDouble(),
-                          divisions: _kmSteps.length - 1,
-                          onChanged: isNearby
-                              ? (value) {
-                                  final newIndex = value.round();
-                                  final isAtMax =
-                                      newIndex == _kmSteps.length - 1;
-                                  if (newIndex != _currentStepIndex) {
-                                    HapticFeedback.selectionClick();
-                                    setState(() {
-                                      _currentStepIndex = newIndex;
-                                      _maxDistance = _kmSteps[newIndex];
-                                    });
-                                    // Slider en saga gelince dropdown'i ac
-                                    if (isAtMax && !_menuOpenedBySlider) {
-                                      _menuOpenedBySlider = true;
-                                      Future.microtask(() {
-                                        _showScopeOverlay();
-                                      });
-                                    } else if (!isAtMax &&
-                                        _menuOpenedBySlider) {
-                                      // Sola cekilince menüyü kapat
-                                      _menuOpenedBySlider = false;
-                                      _dismissScopeOverlay();
+                        child: StatefulBuilder(
+                          builder: (context, setSliderState) {
+                            return Slider(
+                              value: _currentStepIndex.toDouble(),
+                              min: 0,
+                              max: (_kmSteps.length - 1).toDouble(),
+                              divisions: _kmSteps.length - 1,
+                              onChanged: isNearby
+                                  ? (value) {
+                                      final newIndex = value.round();
+                                      if (newIndex != _currentStepIndex) {
+                                        HapticFeedback.selectionClick();
+                                        setSliderState(() {
+                                          _currentStepIndex = newIndex;
+                                        });
+                                      }
                                     }
-                                  }
-                                }
-                              : null,
+                                  : null,
+                              onChangeEnd: isNearby
+                                  ? (value) {
+                                      final newIndex = value.round();
+                                      final isAtMax =
+                                          newIndex == _kmSteps.length - 1;
+                                      
+                                      setState(() {
+                                        _currentStepIndex = newIndex;
+                                        _maxDistance = _kmSteps[newIndex];
+                                        _updateFilteredEvents();
+                                      });
+                                      
+                                      // Slider en saga gelince dropdown'i ac
+                                      if (isAtMax && !_menuOpenedBySlider) {
+                                        _menuOpenedBySlider = true;
+                                        Future.microtask(() {
+                                          _showScopeOverlay();
+                                        });
+                                      } else if (!isAtMax &&
+                                          _menuOpenedBySlider) {
+                                        // Sola cekilince menüyü kapat
+                                        _menuOpenedBySlider = false;
+                                        _dismissScopeOverlay();
+                                      }
+                                    }
+                                  : null,
+                            );
+                          }
                         ),
                       ),
                     ),
@@ -2418,12 +2451,16 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         _dismissScopeOverlay();
         HapticFeedback.lightImpact();
         if (value == 'map') {
-          setState(() => _scopeMode = 'map');
+          setState(() {
+            _scopeMode = 'map';
+            _updateFilteredEvents();
+          });
           _showKermesMapSheet();
           return;
         }
         setState(() {
           _scopeMode = value;
+          _updateFilteredEvents();
           if (value == 'nearby') {
             _maxDistance = _kmSteps[_currentStepIndex];
           } else if (value == 'city') {
@@ -2597,7 +2634,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     ).then((_) {
       // Harita kapaninca scope'u nearby'a dondur
       if (mounted && _scopeMode == 'map') {
-        setState(() => _scopeMode = 'country');
+        setState(() {
+          _scopeMode = 'country';
+          _updateFilteredEvents();
+        });
       }
     });
   }
