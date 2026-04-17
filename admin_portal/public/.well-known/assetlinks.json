@@ -7,7 +7,8 @@
             "namespace": "android_app",
             "package_name": "com.lokma.app",
             "sha256_cert_fingerprints": [
-                "BF:54:64:84:1F:9C:8D:1D:46:2A:75:37:F1:9A:C6:9D:3E:8C:41:46:73:73:68:CC:FC:B1:B0:70:82:B2:76:C3"
+                "BF:54:64:84:1F:9C:8D:1D:46:2A:75:37:F1:9A:C6:9D:3E:8C:41:46:73:73:68:CC:FC:B1:B0:70:82:B2:76:C3",
+                "36:D8:71:82:2B:39:09:5A:02:00:79:A6:73:B7:5D:7D:CA:36:37:4D:CC:1C:10:47:7E:DF:B4:6E:B4:47:79:AB"
             ]
         }
     }
