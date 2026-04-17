@@ -5,8 +5,10 @@
         ],
         "target": {
             "namespace": "android_app",
-            "package_name": "com.lokma.lokma_app",
-            "sha256_cert_fingerprints": []
+            "package_name": "com.lokma.app",
+            "sha256_cert_fingerprints": [
+                "BF:54:64:84:1F:9C:8D:1D:46:2A:75:37:F1:9A:C6:9D:3E:8C:41:46:73:73:68:CC:FC:B1:B0:70:82:B2:76:C3"
+            ]
         }
     }
 ]
