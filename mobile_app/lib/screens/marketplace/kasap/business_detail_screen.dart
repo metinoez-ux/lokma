@@ -2520,13 +2520,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       }
     });
 
-    // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA (activeBrandIds alani tanimlanmamissa)
+    // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA veya baglanti beklerken
     if (activeBadges.isEmpty && !hasNewBrandSystem && data?['brandLabelActive'] == true) {
       bool showLegacyTuna = isTunaPartner;
       if (showLegacyTuna) {
         activeBadges.add({
           'name': 'TUNA',
-          'iconUrl': '',
+          'iconUrl': 'assets/images/tuna_logo_pill.png',
           'isLegacyTuna': true,
         });
       }
@@ -2534,9 +2534,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       if (showLegacyToros) {
         activeBadges.add({
           'name': 'Akdeniz Toros',
-          'iconUrl': '',
+          'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png',
           'isLegacyToros': true,
         });
+      }
+    }
+    
+    // Yükleme sirasinda (ayni anda yeni sistem girilmisse ama henuz fetch edilmediyse)
+    if (activeBadges.isEmpty && data?['brandLabelActive'] == true && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
+      bool showLegacyTuna = isTunaPartner;
+      if (showLegacyTuna) {
+        activeBadges.add({'name': 'TUNA', 'iconUrl': 'assets/images/tuna_logo_pill.png', 'isLegacyTuna': true});
+      }
+      bool showLegacyToros = brand?.toString().toLowerCase() == 'akdeniz_toros';
+      if (showLegacyToros) {
+        activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png', 'isLegacyToros': true});
       }
     }
     
@@ -2845,18 +2857,24 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             else if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
                                               ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: LokmaNetworkImage(
-                                                  imageUrl: badge['iconUrl'],
-                                                  height: 18,
-                                                  fit: BoxFit.contain,
-                                                  placeholder: (context, url) => Container(
-                                                    color: Colors.transparent,
-                                                    height: 18,
-                                                    width: 18,
-                                                  ),
-                                                  errorWidget: (context, url, error) =>
-                                                      Icon(Icons.verified, color: textColor, size: 14),
-                                                ),
+                                                child: badge['iconUrl'].toString().startsWith('http')
+                                                    ? LokmaNetworkImage(
+                                                        imageUrl: badge['iconUrl'],
+                                                        height: 22,
+                                                        fit: BoxFit.contain,
+                                                        placeholder: (context, url) => Container(
+                                                          color: Colors.transparent,
+                                                          height: 22,
+                                                          width: 22,
+                                                        ),
+                                                        errorWidget: (context, url, error) =>
+                                                            Icon(Icons.verified, color: textColor, size: 14),
+                                                      )
+                                                    : Image.asset(
+                                                        badge['iconUrl'],
+                                                        height: 22,
+                                                        fit: BoxFit.contain,
+                                                      ),
                                               ),
                                             const SizedBox(width: 4),
                                             Text(

@@ -79,7 +79,7 @@ class WalletBusinessCard extends ConsumerWidget {
     final bool isMarket = checkIsMarket(data);
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
-    final bool hasNewBrandSystem = data.containsKey('activeBrandIds');
+    final bool hasNewBrandSystem = data.containsKey('activeBrandIds') && (data['activeBrandIds'] as List).isNotEmpty;
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
@@ -92,7 +92,7 @@ class WalletBusinessCard extends ConsumerWidget {
         }
       }
 
-      // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA (activeBrandIds alani tanimlanmamissa)
+      // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA (activeBrandIds bos ise)
       if (activeBadges.isEmpty && !hasNewBrandSystem && data['brandLabelActive'] == true) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
         if (showLegacyTuna) {
@@ -100,7 +100,7 @@ class WalletBusinessCard extends ConsumerWidget {
             final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('tuna'));
             activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
           } catch (e) {
-            activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
+            activeBadges.add({'name': 'TUNA', 'iconUrl': 'assets/images/tuna_logo_pill.png', 'isLegacyTuna': true});
           }
         }
         bool showLegacyToros = data['brand'] == 'akdeniz_toros';
@@ -109,7 +109,7 @@ class WalletBusinessCard extends ConsumerWidget {
             final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('toros'));
             activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
           } catch (e) {
-            activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': '', 'isLegacyToros': true});
+            activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png', 'isLegacyToros': true});
           }
         }
       }
@@ -120,11 +120,11 @@ class WalletBusinessCard extends ConsumerWidget {
       if (data['brandLabelActive'] == true) {
         bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
         if (showLegacyTuna) {
-          activeBadges.add({'name': 'TUNA', 'iconUrl': '', 'isLegacyTuna': true});
+          activeBadges.add({'name': 'TUNA', 'iconUrl': 'assets/images/tuna_logo_pill.png', 'isLegacyTuna': true});
         }
         bool showLegacyToros = data['brand'] == 'akdeniz_toros';
         if (showLegacyToros) {
-          activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': '', 'isLegacyToros': true});
+          activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png', 'isLegacyToros': true});
         }
       }
     }
@@ -844,30 +844,34 @@ class WalletBusinessCard extends ConsumerWidget {
                               if (hasIcon)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: LokmaNetworkImage(
-                                    imageUrl: badge['iconUrl'],
-                                    height: 38, // Match kermes card size
-                                    fit: BoxFit.contain,
-                                    placeholder: (context, url) => Container(
-                                      color: Colors.transparent,
-                                      height: 38,
-                                      width: 38,
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        Icon(Icons.verified, color: textColor, size: 14),
-                                  ),
+                                  child: badge['iconUrl'].toString().startsWith('assets/')
+                                      ? Image.asset(
+                                          badge['iconUrl'],
+                                          height: 38,
+                                          fit: BoxFit.contain,
+                                        )
+                                      : LokmaNetworkImage(
+                                          imageUrl: badge['iconUrl'],
+                                          height: 38,
+                                          fit: BoxFit.contain,
+                                          placeholder: (context, url) => Container(
+                                            color: Colors.transparent,
+                                            height: 38,
+                                            width: 38,
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              Icon(Icons.verified, color: textColor, size: 14),
+                                        ),
                                 )
                               else if (isLegacyTuna)
-                                Image.asset(
-                                  'assets/images/tuna_logo_pill.png',
-                                  height: 38,
-                                  fit: BoxFit.contain,
+                                Text(
+                                  'TUNA',
+                                  style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
                                 )
                               else if (isLegacyToros)
-                                Image.asset(
-                                  'assets/images/akdeniz_toros_logo_pill.png',
-                                  height: 38,
-                                  fit: BoxFit.contain,
+                                Text(
+                                  'TOROS',
+                                  style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
                                 )
                               else ...[
                                 Icon(Icons.verified, color: textColor, size: 14),

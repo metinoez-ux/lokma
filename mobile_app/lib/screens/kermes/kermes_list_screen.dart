@@ -291,13 +291,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               }
             }
 
-            // 2. Fetch from 'products' subcollection
+            // 2. Fetch from 'products' subcollection (SADECE CACHE'DEN OKU)
+            // Bu islem listeyi 3 saniye dondurdugu icin sadece onbellek (cache) uzerinden alinir.
             try {
               final productsSnapshot = await FirebaseFirestore.instance
                   .collection('kermes_events')
                   .doc(doc.id)
                   .collection('products')
-                  .get();
+                  .get(const GetOptions(source: Source.cache));
 
               if (productsSnapshot.docs.isNotEmpty) {
                 for (final productDoc in productsSnapshot.docs) {
@@ -934,7 +935,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateSheet) {
-            final totalResults = _filteredEvents.length;
+            final totalResults = _cachedFilteredEvents.length;
 
             return Container(
               constraints: BoxConstraints(
@@ -1614,7 +1615,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               ),
 
               // Event Count + Sort Shortcuts
-              if (!_isLoading && _filteredEvents.isNotEmpty)
+              if (!_isLoading && _cachedFilteredEvents.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
@@ -1622,7 +1623,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       children: [
                         Text(
                           'kermes.events_found_count'
-                              .tr(args: [_filteredEvents.length.toString()]),
+                              .tr(args: [_cachedFilteredEvents.length.toString()]),
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
@@ -1734,7 +1735,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         ),
                       ),
                     )
-                  : _filteredEvents.isEmpty
+                  : _cachedFilteredEvents.isEmpty
                       ? SliverFillRemaining(
                           child: Center(
                             child: Column(
@@ -1781,14 +1782,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                final event = _filteredEvents[index];
+                                final event = _cachedFilteredEvents[index];
                                 return KermesCard(
                                   event: event,
                                   currentPosition: _currentPosition,
                                   onFavoriteChanged: _loadFavorites,
                                 );
                               },
-                              childCount: _filteredEvents.length,
+                              childCount: _cachedFilteredEvents.length,
                             ),
                           ),
                         ),
@@ -2627,7 +2628,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _KermesMapSheet(
-        events: _filteredEvents,
+        events: _cachedFilteredEvents,
         userLat: _currentPosition?.latitude,
         userLng: _currentPosition?.longitude,
       ),

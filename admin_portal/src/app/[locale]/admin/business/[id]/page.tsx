@@ -4173,10 +4173,10 @@ export default function BusinessDetailsPage() {
  const hasToros = badge.name.toLowerCase().includes('toros') && e.target.checked;
  
  setFormData({ 
- ...formData, 
- activeBrandIds: newIds,
- ...(hasTuna ? { sellsTunaProducts: true, brand: 'tuna', brandLabelActive: true } : {}),
- ...(hasToros ? { sellsTorosProducts: true, brand: 'akdeniz_toros', brandLabelActive: true } : {})
+  ...formData, 
+  activeBrandIds: newIds,
+  ...(hasTuna ? { brand: 'tuna', brandLabelActive: true } : {}),
+  ...(hasToros ? { brand: 'akdeniz_toros', brandLabelActive: true } : {})
  });
  }}
  disabled={!isEditing}

@@ -18,6 +18,80 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
   @override
   void initState() {
     super.initState();
+  }
+
+  Future<String> _fetchSupplyBody(Map<String, dynamic> data, String fallbackBody) async {
+    try {
+      final kId = data['kermesId'] as String?;
+      final rId = data['requestId'] as String?;
+      if (kId == null || rId == null) return fallbackBody;
+
+      final sSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get(const GetOptions(source: Source.cache));
+      if (!sSnap.exists) {
+        final serverSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get();
+        if (!serverSnap.exists) return fallbackBody;
+        return _formatDoc(serverSnap.data() as Map<String, dynamic>, kId, fallbackBody);
+      }
+      return _formatDoc(sSnap.data() as Map<String, dynamic>, kId, fallbackBody);
+    } catch (_) {
+      return fallbackBody;
+    }
+  }
+
+  Future<String> _formatDoc(Map<String, dynamic> reqData, String kId, String fallbackBody) async {
+    try {
+      final reqUid = reqData['requestedByUid'] as String?;
+      if (reqUid == null) return fallbackBody;
+
+      final rSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('rosters').where('userId', isEqualTo: reqUid).get();
+      String role = 'Personel';
+      if (rSnap.docs.isNotEmpty) {
+          role = rSnap.docs.first.data()['sectionId'] ?? rSnap.docs.first.data()['role'] ?? 'Personel';
+      }
+
+      String who = reqData['requestedByName'] ?? 'Personel';
+      if (who.trim().isEmpty || who.trim() == 'Personel ' || who.trim() == 'null') who = 'Personel';
+
+      bool isWomen = role.toLowerCase().contains('women') || role.toLowerCase().contains('kadin') || role.toLowerCase().contains('kadın');
+      if (isWomen) {
+          final parts = who.split(' ');
+          who = parts.map((p) => p.isNotEmpty ? '${p[0]}${'*' * (p.length > 5 ? 5 : p.length - 1)}' : '').join(' ');
+      }
+
+      String zone = reqData['requestedZone'] ?? '-';
+      String sectionLabel = '';
+      if (role.isNotEmpty) {
+          final sl = role.toLowerCase();
+          if (sl.contains('women') || sl.contains('kadin') || sl.contains('kadın')) sectionLabel = 'Kadınlar Bölümü';
+          else if (sl.contains('men') || sl.contains('erkek')) sectionLabel = 'Erkekler Bölümü';
+          else if (sl.contains('ocakbasi') || sl.contains('ocakbaşı')) sectionLabel = 'Ocakbaşı';
+          else sectionLabel = role[0].toUpperCase() + role.substring(1).replaceAll('_', ' ');
+      }
+      if (sectionLabel.isNotEmpty) {
+          if (zone.toLowerCase() != sectionLabel.toLowerCase()) {
+              zone = '$sectionLabel - $zone';
+          } else {
+              zone = sectionLabel;
+          }
+      }
+
+      final itemName = reqData['itemName'] ?? '';
+      
+      final type = data['type'] as String? ?? '';
+      if (type == 'supply_alarm_status') {
+         final status = reqData['status'] as String?;
+         if (status == 'completed') return '"$itemName" talebi tamam olarak işaretlendi.';
+         if (status == 'rejected') return '"$itemName" talebi reddedildi.';
+         if (status == 'cancelled') return '"$itemName" talebi iptal edildi.';
+         return fallbackBody;
+      }
+
+      return '$who ($zone) 1x $itemName istiyor.';
+    } catch (_) {
+      return fallbackBody;
+    }
+  }
+
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) markAllStaffNotificationsAsRead();
     });
@@ -310,7 +384,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                       try {
                                          final rSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('rosters').where('userId', isEqualTo: uId).get();
                                          if (rSnap.docs.isNotEmpty) {
-                                             res['rSection'] = rSnap.docs.first.data()['role'];
+                                             res['rSection'] = rSnap.docs.first.data()['sectionId'] ?? rSnap.docs.first.data()['role'];
                                          }
                                          
                                          final uDoc = await FirebaseFirestore.instance.collection('users').doc(uId).get();
@@ -395,11 +469,27 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                      }
                                   }
 
+                                  String durationText = '';
+                                  if (diffMins != null) {
+                                     if (diffMins < 60) {
+                                        durationText = '$diffMins dakika';
+                                     } else {
+                                        final d = diffMins ~/ (24 * 60);
+                                        final h = (diffMins % (24 * 60)) ~/ 60;
+                                        final m = diffMins % 60;
+                                        final parts = <String>[];
+                                        if (d > 0) parts.add('$d gün');
+                                        if (h > 0) parts.add('$h saat');
+                                        if (m > 0 || parts.isEmpty) parts.add('$m dakika');
+                                        durationText = parts.join(' ');
+                                     }
+                                  }
+
                                   Color statusColor = Colors.orange;
                                   String statusText = 'Bekliyor';
                                   if (status == 'on_the_way') { statusColor = Colors.blue; statusText = 'Yolda / Onaylandı'; }
-                                  else if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; if (diffMins != null) statusText += '\n($diffMins dakika sürdü)'; }
-                                  else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; if (diffMins != null) statusText += '\n($diffMins dakika sürdü)'; }
+                                  else if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; if (diffMins != null) statusText += '\n($durationText sürdü)'; }
+                                  else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; if (diffMins != null) statusText += '\n($durationText sürdü)'; }
                                   
                                   Widget buildRow(String label, String val, {Color? c}) {
                                      return Padding(
@@ -999,15 +1089,32 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                   ),
                                   if (body.isNotEmpty) ...[
                                     const SizedBox(height: 5),
-                                    Text(
-                                      body,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark ? Colors.white70 : Colors.black.withOpacity(0.65),
-                                        height: 1.4,
+                                    if (type == 'supply_alarm' || type == 'supply_alarm_status')
+                                      FutureBuilder<String>(
+                                        future: _fetchSupplyBody(data, body),
+                                        initialData: body,
+                                        builder: (context, snapshot) {
+                                          return Text(
+                                            snapshot.data ?? body,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: isDark ? Colors.white70 : Colors.black.withOpacity(0.65),
+                                              height: 1.4,
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    else
+                                      Text(
+                                        body,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark ? Colors.white70 : Colors.black.withOpacity(0.65),
+                                          height: 1.4,
+                                        ),
                                       ),
-                                    ),
                                   ],
                                   if (dateStr.isNotEmpty) ...[
                                     const SizedBox(height: 7),

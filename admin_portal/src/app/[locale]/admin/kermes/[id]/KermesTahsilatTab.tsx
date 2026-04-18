@@ -76,7 +76,7 @@ export default function KermesTahsilatTab({ kermesId, kermesAdmins, workspaceSta
   const pendingHandovers = handovers.filter(h => h.status === 'PENDING');
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-5xl mx-auto">
       {/* HEADER */}
       <div className="bg-card rounded-xl p-4 border border-emerald-500/20">
         <div className="flex items-center gap-3 mb-1">

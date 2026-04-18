@@ -166,7 +166,7 @@ export default function KermesTedarikTab({ kermesId, adminUid, kermesData }: Ker
   const pastReqs = requests.filter(r => r.status === 'completed' || r.status === 'rejected' || r.status === 'cancelled');
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto">
       {/* AKTIF İHTİYAÇLAR ALANI */}
       <div className="bg-card rounded-xl p-6 border border-border">
          <h3 className="text-lg font-bold flex items-center mb-4">

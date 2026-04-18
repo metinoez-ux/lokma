@@ -114,7 +114,19 @@ class _KermesCardState extends State<KermesCard> {
   @override
   void didUpdateWidget(KermesCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentPosition != widget.currentPosition || oldWidget.event.activeBadgeIds != widget.event.activeBadgeIds) {
+    
+    // Prevent infinite setState loop:
+    // 1. Lists in Dart are not equal even if contents are same, so we join to string.
+    // 2. Position's timestamp changes constantly, so only reload if lat/lng meaningfully changed.
+    final oldLat = oldWidget.currentPosition?.latitude?.toStringAsFixed(3) ?? '';
+    final oldLng = oldWidget.currentPosition?.longitude?.toStringAsFixed(3) ?? '';
+    final newLat = widget.currentPosition?.latitude?.toStringAsFixed(3) ?? '';
+    final newLng = widget.currentPosition?.longitude?.toStringAsFixed(3) ?? '';
+    
+    final locationChanged = (oldLat != newLat) || (oldLng != newLng);
+    final badgesChanged = oldWidget.event.activeBadgeIds.join(',') != widget.event.activeBadgeIds.join(',');
+
+    if (locationChanged || badgesChanged) {
       _loadBadges();
     }
   }

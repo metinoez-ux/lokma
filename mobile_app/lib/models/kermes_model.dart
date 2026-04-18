@@ -367,12 +367,19 @@ class KermesMenuItem {
 
   // Helper factory if you ever create these from JSON
   factory KermesMenuItem.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic val, [double def = 0.0]) {
+      if (val == null) return def;
+      if (val is num) return val.toDouble();
+      if (val is String) return double.tryParse(val.replaceAll(',', '.')) ?? def;
+      return def;
+    }
+
     return KermesMenuItem(
-      name: _extractString(json['name']) ?? '',
+      name: _extractString(json['name']) ?? _extractString(json['title']) ?? '',
       nameData: json['name'],
       secondaryName: _extractString(json['secondaryName'], isNullable: true),
-      price: (json['price'] ?? 0.0).toDouble(),
-      discountPrice: json['discountPrice'] != null ? (json['discountPrice'] as num).toDouble() : null,
+      price: parseDouble(json['price']),
+      discountPrice: json['discountPrice'] != null ? parseDouble(json['discountPrice']) : null,
       description: _extractString(json['description'], isNullable: true),
       descriptionData: json['description'],
       detailedDescription: _extractString(json['detailedDescription'], isNullable: true),
@@ -388,9 +395,9 @@ class KermesMenuItem {
       optionGroups: _parseOptionGroups(json['optionGroups']),
       prepZones: _parseStringList(json['prepZones'] ?? json['prepZone']),
       stockEnabled: json['stockEnabled'] ?? false,
-      initialStock: json['initialStock'] != null ? (json['initialStock'] as num).toInt() : null,
-      currentStock: json['currentStock'] != null ? (json['currentStock'] as num).toInt() : null,
-      lowStockThreshold: (json['lowStockThreshold'] as num?)?.toInt() ?? 5,
+      initialStock: json['initialStock'] != null ? int.tryParse(json['initialStock'].toString()) : null,
+      currentStock: json['currentStock'] != null ? int.tryParse(json['currentStock'].toString()) : null,
+      lowStockThreshold: json['lowStockThreshold'] != null ? (int.tryParse(json['lowStockThreshold'].toString()) ?? 5) : 5,
     );
   }
 
