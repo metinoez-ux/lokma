@@ -4148,11 +4148,7 @@ export default function BusinessDetailsPage() {
  ) : (
  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
  {platformBrands.map(badge => {
- const isTunaBadge = badge.name?.toLowerCase().includes('tuna');
- const isTorosBadge = badge.name?.toLowerCase().includes('toros');
- const isSelected = formData.activeBrandIds?.includes(badge.id) || 
-                    (isTunaBadge && (formData.brand === 'tuna' || formData.isTunaPartner)) ||
-                    (isTorosBadge && formData.brand === 'akdeniz_toros');
+ const isSelected = formData.activeBrandIds?.includes(badge.id);
  return (
  <label 
  key={badge.id}

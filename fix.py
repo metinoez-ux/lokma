@@ -1,37 +1,43 @@
-import re
-
-with open('admin_portal/src/app/[locale]/admin/kermes/[id]/page.tsx') as f:
+with open('/Users/metinoz/Developer/LOKMA_MASTER/admin_portal/src/app/[locale]/admin/business/[id]/page.tsx', 'r') as f:
     text = f.read()
 
-text = re.sub(
-    r'setCategories\(\[\.\.\.DEFAULT_CATEGORIES, \.\.\.data\.customCategories\.filter\(c => !\DEFAULT_CATEGORIES\.includes\(c\)\)\]\);',
-    r'const localizedCustomCats = data.customCategories.map((c: any) => typeof c === "object" ? getLocalizedText(c, locale) : String(c));\n        setCategories(prev => {\n          const merged = [...prev];\n          localizedCustomCats.forEach((c: string) => {\n            if (!merged.includes(c)) merged.push(c);\n          });\n          return merged;\n        });',
-    text
-)
+target = """  setFormData({ 
+   ...formData, 
+   activeBrandIds: newIds
+  });
 
-text = re.sub(
-    r'\}, \[kermesId, router\]\);',
-    r'}, [kermesId, router, locale]);',
-    text
-)
+  if (businessId && businessId !== 'new') {
+     try {
+        await updateDoc(doc(db, "businesses", businessId), {
+            activeBrandIds: newIds
+        });
+        showToast(e.target.checked ? "Rozet eklendi (Anlık Yansıtıldı)" : "Rozet kaldırıldı (Anlık Yansıtıldı)", "success");
+     } catch (error) {}
+  }"""
 
-text = re.sub(
-    r'const firebaseCats = snapshot\.docs\.map\(d => d\.data\(\)\.name as string\);',
-    r'const firebaseCats = snapshot.docs.map(d => {\n        const name = d.data().name;\n        return typeof name === "object" ? getLocalizedText(name, locale) : String(name || "");\n      });',
-    text
-)
+replacement = """  setFormData({ 
+   ...formData, 
+   activeBrandIds: newIds,
+   brand: '',
+   isTunaPartner: false,
+   brandLabelActive: false,
+   brandLabel: null
+  });
 
-text = re.sub(
-    r'setCategories\(allCats\);',
-    r'setCategories(prev => {\n        const cats = [...prev];\n        allCats.forEach(c => { if (!cats.includes(c)) cats.push(c); });\n        return cats;\n      });',
-    text
-)
+  if (businessId && businessId !== 'new') {
+     try {
+        await updateDoc(doc(db, "businesses", businessId), {
+            activeBrandIds: newIds,
+            brand: null,
+            isTunaPartner: false,
+            brandLabelActive: false,
+            brandLabel: null
+        });
+        showToast(e.target.checked ? "Rozet eklendi (Eski ayarlar sıfırlandı)" : "Rozet kaldırıldı (Eski ayarlar sıfırlandı)", "success");
+     } catch (error) {}
+  }"""
 
-text = re.sub(
-    r'console\.error\(\'Error loading categories:\', error\);\n {7}\}\n  \}, \[\]\);',
-    r'console.error(\'Error loading categories:\', error);\n      }\n  }, [locale]);',
-    text
-)
+with open('/Users/metinoz/Developer/LOKMA_MASTER/admin_portal/src/app/[locale]/admin/business/[id]/page.tsx', 'w') as f:
+    f.write(text.replace(target, replacement))
 
-with open('admin_portal/src/app/[locale]/admin/kermes/[id]/page.tsx', 'w') as f:
-    f.write(text)
+print("Done")

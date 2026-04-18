@@ -821,22 +821,17 @@ class WalletBusinessCard extends ConsumerWidget {
                                           errorWidget: (context, url, error) =>
                                               const SizedBox.shrink(),
                                         ),
-                                )
-                                )
-                                )
-                              else ...[
-                                Icon(Icons.verified, color: textColor, size: 14),
-                                const SizedBox(width: 4),
-                                Text(
-                                  badge['name'],
-                                  style: TextStyle(
-                                    color: textColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  ),
                                 ),
-                              ],
+                              if (hasIcon) const SizedBox(width: 4),
+                              Text(
+                                badge['name'],
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
                             ],
                           ),
                         ),
