@@ -4148,7 +4148,11 @@ export default function BusinessDetailsPage() {
  ) : (
  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
  {platformBrands.map(badge => {
- const isSelected = formData.activeBrandIds?.includes(badge.id);
+ const isTunaBadge = badge.name?.toLowerCase().includes('tuna');
+ const isTorosBadge = badge.name?.toLowerCase().includes('toros');
+ const isSelected = formData.activeBrandIds?.includes(badge.id) || 
+                    (isTunaBadge && (formData.brand === 'tuna' || formData.isTunaPartner)) ||
+                    (isTorosBadge && formData.brand === 'akdeniz_toros');
  return (
  <label 
  key={badge.id}
@@ -4161,23 +4165,45 @@ export default function BusinessDetailsPage() {
  <input 
  type="checkbox" 
  checked={isSelected}
- onChange={(e) => {
+ onChange={async (e) => {
  if (!isEditing) return;
  const newIds = e.target.checked 
  ? [...(formData.activeBrandIds || []), badge.id]
  : (formData.activeBrandIds || []).filter(id => id !== badge.id);
  
- // Optional: Auto-sync legacy fields if TUNA/Toros is selected
- // Bu, mobile app full migrate edilene kadar arama ve filtrelemenin bozulmamasını sağlar
- const hasTuna = badge.name.toLowerCase().includes('tuna') && e.target.checked;
- const hasToros = badge.name.toLowerCase().includes('toros') && e.target.checked;
+ const isTuna = badge.name.toLowerCase().includes('tuna');
+ const isToros = badge.name.toLowerCase().includes('toros');
+ 
+ let newBrand = formData.brand;
+ let isTunaPartner = formData.brand === 'tuna';
+ 
+ if (isTuna) {
+    newBrand = e.target.checked ? 'tuna' : '';
+    isTunaPartner = e.target.checked;
+ } else if (isToros) {
+    newBrand = e.target.checked ? 'akdeniz_toros' : '';
+    isTunaPartner = false;
+ }
  
  setFormData({ 
   ...formData, 
   activeBrandIds: newIds,
-  ...(hasTuna ? { brand: 'tuna', brandLabelActive: true } : {}),
-  ...(hasToros ? { brand: 'akdeniz_toros', brandLabelActive: true } : {})
+  brand: newBrand,
+  brandLabelActive: newBrand !== ''
  });
+
+ if (businessId && businessId !== 'new') {
+    try {
+       await updateDoc(doc(db, "businesses", businessId), {
+           activeBrandIds: newIds,
+           brand: newBrand,
+           brandLabelActive: newBrand !== '',
+           isTunaPartner: isTunaPartner,
+           brandLabel: newBrand || null,
+       });
+       showToast(e.target.checked ? "Rozet eklendi (Anlık Yansıtıldı)" : "Rozet kaldırıldı (Anlık Yansıtıldı)", "success");
+    } catch (error) {}
+ }
  }}
  disabled={!isEditing}
  className="w-4 h-4 accent-blue-600"
@@ -4209,11 +4235,29 @@ export default function BusinessDetailsPage() {
   </p>
   <div className="flex flex-wrap gap-4">
   <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTunaProducts ? 'bg-red-600/10 border-red-600/50' : 'bg-background border-border hover:bg-muted'}`}>
-  <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-600" />
+  <input type="checkbox" checked={formData.sellsTunaProducts} onChange={async (e) => {
+    const isChecked = e.target.checked;
+    setFormData({ ...formData, sellsTunaProducts: isChecked });
+    if (businessId && businessId !== 'new') {
+        try {
+            await updateDoc(doc(db, "businesses", businessId), { sellsTunaProducts: isChecked });
+            showToast("Tuna Hazır Paket durumu güncellendi", "success");
+        } catch(e){}
+    }
+  }} disabled={!isEditing} className="w-5 h-5 accent-red-600" />
   <span className="font-medium text-foreground">🔴 TUNA Ürünleri Satıyor</span>
   </label>
   <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTorosProducts ? 'bg-green-600/10 border-green-600/50' : 'bg-background border-border hover:bg-muted'}`}>
-  <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-green-600" />
+  <input type="checkbox" checked={formData.sellsTorosProducts} onChange={async (e) => {
+    const isChecked = e.target.checked;
+    setFormData({ ...formData, sellsTorosProducts: isChecked });
+    if (businessId && businessId !== 'new') {
+        try {
+            await updateDoc(doc(db, "businesses", businessId), { sellsTorosProducts: isChecked });
+            showToast("Toros Hazır Paket durumu güncellendi", "success");
+        } catch(e){}
+    }
+  }} disabled={!isEditing} className="w-5 h-5 accent-green-600" />
   <span className="font-medium text-foreground">🟢 Akdeniz Toros Ürünleri Satıyor</span>
   </label>
   </div>

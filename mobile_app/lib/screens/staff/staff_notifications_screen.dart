@@ -18,6 +18,9 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
   @override
   void initState() {
     super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) markAllStaffNotificationsAsRead();
+    });
   }
 
   Future<String> _fetchSupplyBody(Map<String, dynamic> data, String fallbackBody) async {
@@ -30,15 +33,15 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
       if (!sSnap.exists) {
         final serverSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get();
         if (!serverSnap.exists) return fallbackBody;
-        return _formatDoc(serverSnap.data() as Map<String, dynamic>, kId, fallbackBody);
+        return _formatDoc(serverSnap.data() as Map<String, dynamic>, kId, data['type'] as String? ?? '', fallbackBody);
       }
-      return _formatDoc(sSnap.data() as Map<String, dynamic>, kId, fallbackBody);
+      return _formatDoc(sSnap.data() as Map<String, dynamic>, kId, data['type'] as String? ?? '', fallbackBody);
     } catch (_) {
       return fallbackBody;
     }
   }
 
-  Future<String> _formatDoc(Map<String, dynamic> reqData, String kId, String fallbackBody) async {
+  Future<String> _formatDoc(Map<String, dynamic> reqData, String kId, String type, String fallbackBody) async {
     try {
       final reqUid = reqData['requestedByUid'] as String?;
       if (reqUid == null) return fallbackBody;
@@ -77,7 +80,6 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
 
       final itemName = reqData['itemName'] ?? '';
       
-      final type = data['type'] as String? ?? '';
       if (type == 'supply_alarm_status') {
          final status = reqData['status'] as String?;
          if (status == 'completed') return '"$itemName" talebi tamam olarak işaretlendi.';
@@ -92,10 +94,31 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
     }
   }
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) markAllStaffNotificationsAsRead();
-    });
+  Future<void> markAllStaffNotificationsAsRead() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    
+    try {
+        final batch = FirebaseFirestore.instance.batch();
+        final snap = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('notifications')
+            .where('read', isEqualTo: false)
+            .get();
+            
+        if (snap.docs.isEmpty) return;
+        
+        for (var doc in snap.docs) {
+            batch.update(doc.reference, {'read': true, 'readAt': FieldValue.serverTimestamp()});
+        }
+        await batch.commit();
+    } catch (e) {
+        debugPrint('Error marking all as read: $e');
+    }
   }
+
+
 
   String _formatDate(dynamic createdAt) {
     DateTime? dt;
@@ -1091,7 +1114,7 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                                     const SizedBox(height: 5),
                                     if (type == 'supply_alarm' || type == 'supply_alarm_status')
                                       FutureBuilder<String>(
-                                        future: _fetchSupplyBody(data, body),
+                                        future: _fetchSupplyBody(notif['data'] as Map<String, dynamic>? ?? {}, body),
                                         initialData: body,
                                         builder: (context, snapshot) {
                                           return Text(

@@ -204,8 +204,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   Widget _buildFloatingDeliveryButton(LokmaOrder order) {
     // Only onTheWay orders show the floating button
     final statusText = 'home.courier_on_the_way'.tr();
-    final statusColor = Colors.green;
-    final statusIcon = Icons.motorcycle;
+    final statusColor = const Color(0xFF4CAF50); // LOKMA material green
+    final statusIcon = Icons.delivery_dining;
 
     final isOnTheWay = order.status == OrderStatus.onTheWay;
 

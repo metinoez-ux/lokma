@@ -423,7 +423,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       final isTunaPartner = (data['isTunaPartner'] as bool? ?? false) ||
           (brandLabel?.toLowerCase() == 'tuna') ||
           (brand?.toLowerCase() == 'tuna') ||
-          hasTunaTag ||
+          
           hasDynamicBrand;
 
       // Skip inactive
@@ -616,7 +616,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final isTunaA = (dataA['isTunaPartner'] as bool? ?? false) ||
               (brandLabelA?.toLowerCase() == 'tuna') ||
               (brandA?.toLowerCase() == 'tuna') ||
-              hasTunaTagA || hasDynamicBrandA;
+               hasDynamicBrandA;
 
           bool hasDynamicBrandB = false;
           final activeBrandIdsB = List<String>.from(dataB['activeBrandIds'] ?? []);
@@ -644,7 +644,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final isTunaB = (dataB['isTunaPartner'] as bool? ?? false) ||
               (brandLabelB?.toLowerCase() == 'tuna') ||
               (brandB?.toLowerCase() == 'tuna') ||
-              hasTunaTagB || hasDynamicBrandB;
+               hasDynamicBrandB;
 
           if (isTunaA && !isTunaB) return -1;
           if (!isTunaA && isTunaB) return 1;
@@ -720,6 +720,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch platform brands to ensure dynamic badges trigger a rebuild when loaded
+    ref.watch(platformBrandsProvider);
     final cartState = ref.watch(cartProvider);
     return Stack(
       children: [
@@ -1625,7 +1627,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         final isTunaPartner = (data['isTunaPartner'] as bool? ?? false) ||
             (brandLabel?.toLowerCase() == 'tuna') ||
             (brand?.toLowerCase() == 'tuna') ||
-            hasTunaTag || hasDynamicBrand;
+             hasDynamicBrand;
         if (!isTunaPartner) continue;
       }
 

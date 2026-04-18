@@ -2868,7 +2868,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                           width: 22,
                                                         ),
                                                         errorWidget: (context, url, error) =>
-                                                            Icon(Icons.verified, color: textColor, size: 14),
+                                                            const SizedBox.shrink(),
                                                       )
                                                     : Image.asset(
                                                         badge['iconUrl'],
@@ -2886,7 +2886,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                 letterSpacing: 1.2,
                                               ),
                                             ),
-                                            if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) ...[
+                                            if (isLegacyTuna) ...[
                                               const SizedBox(width: 4),
                                               Icon(Icons.info_outline, color: textColor, size: 15),
                                             ],

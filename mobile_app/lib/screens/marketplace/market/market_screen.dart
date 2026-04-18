@@ -1123,6 +1123,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch platform brands to ensure dynamic badges trigger a rebuild when loaded
+    ref.watch(platformBrandsProvider);
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(

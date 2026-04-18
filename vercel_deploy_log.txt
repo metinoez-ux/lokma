@@ -1,0 +1,9 @@
+Vercel CLI 50.1.2
+Retrieving project…
+Deploying lokma/admin_portal
+Uploading [--------------------] (0.0B/881.5MB)
+Uploading [=====---------------] (220.4MB/881.5MB)
+Uploading [==========----------] (440.8MB/881.5MB)
+Uploading [===============-----] (661.2MB/881.5MB)
+Uploading [====================] (881.5MB/881.5MB)
+Error: File size limit exceeded (100 MB)

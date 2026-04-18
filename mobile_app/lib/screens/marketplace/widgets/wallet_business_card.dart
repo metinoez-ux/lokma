@@ -860,7 +860,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                             width: 38,
                                           ),
                                           errorWidget: (context, url, error) =>
-                                              Icon(Icons.verified, color: textColor, size: 14),
+                                              const SizedBox.shrink(),
                                         ),
                                 )
                               else if (isLegacyTuna)

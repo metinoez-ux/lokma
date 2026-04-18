@@ -254,6 +254,8 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch platform brands to ensure dynamic badges trigger a rebuild when loaded
+    ref.watch(platformBrandsProvider);
     final favoriteIds = ref.watch(butcherFavoritesProvider);
 
     return Scaffold(
