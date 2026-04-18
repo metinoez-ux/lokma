@@ -10124,6 +10124,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       if (parent._isDineIn && (parent._scannedTableNumber ?? parent._tableNumberController.text.trim()).isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('orders.please_enter_table_number')), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
                         return;
+                      }
                       parent._orderNote = widget.noteController.text;
                       // setState'i local kullanarak butonda yuklenme animasyonu gosteriyoruz
                       setState(() { _localIsSubmitting = true; });
