@@ -1314,7 +1314,8 @@
     "farkli_sepet": "Anderer Warenkorb-Warnung",
     "farkli_sepet_desc": "Ihr Warenkorb enthält Artikel eines anderen Geschäfts oder einer Veranstaltung. Ihr aktueller Warenkorb muss gelöscht werden, um neue Artikel hinzuzufügen.",
     "onayliyor_musunuz": "Um Artikel aus dem {} Menü hinzuzufügen, wird Ihr Warenkorb gelöscht. Stimmen Sie zu?",
-    "cart_cleared_and_added": "Warenkorb gelöscht und Artikel aus {} hinzugefügt."
+    "cart_cleared_and_added": "Warenkorb gelöscht und Artikel aus {} hinzugefügt.",
+    "brand_disclaimer": "Dieses abgebildete Zertifikat und Logo werden direkt von {brandName} an die Betriebe vergeben und regelmäßig von ihnen selbst kontrolliert. Sobald ein Betrieb den Verkauf von {brandName}-Produkten einstellt, wird dieses Logo umgehend aus dem Profil des Geschäfts auf der LOKMA-Plattform entfernt. Kurzum: Dieser Sicherheitsstandard wird nicht von LOKMA vergeben, die vollständige Kontrolle und Verantwortung liegt ausschließlich bei {brandName}."
   },
   "masa": {
     "preorder_title": "Vorbestellung aufgeben?",

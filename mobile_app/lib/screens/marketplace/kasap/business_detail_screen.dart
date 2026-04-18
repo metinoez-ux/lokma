@@ -2498,16 +2498,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
+    debugPrint('🔍 [DetailScreen] ${data?['companyName'] ?? 'NoName'}: checking brand resolution. activeBrandIds = ${activeBrandIds}');
     if (platformBrandsAsync.value != null && activeBrandIds.isNotEmpty) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
       for (final brand in platformBrandsAsync.value!) {
         if (activeBrandIds.contains(brand.id)) {
+          debugPrint('✅ [DetailScreen] ${data?['companyName'] ?? 'NoName'}: MATCH! Adding badge ${brand.name}');
           activeBadges.add({
             'name': brand.name,
             'iconUrl': brand.iconUrl,
           });
         }
       }
+    } else {
+      debugPrint('⚠️ [DetailScreen] ${data?['companyName'] ?? 'NoName'}: platformBrandsAsync.value is null (${platformBrandsAsync.value == null}) OR activeBrandIds is empty (${activeBrandIds.isEmpty})');
     }
     
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
@@ -2788,56 +2792,64 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           _showTunaBrandInfo();
                                         }
                                       },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: badgeColor,
-                                          borderRadius: BorderRadius.circular(16),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.3),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
+                                      child: Builder(
+                                        builder: (context) {
+                                          final bool hasIcon = badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty;
+                                          return Container(
+                                            padding: hasIcon ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: hasIcon ? Colors.transparent : badgeColor,
+                                              borderRadius: hasIcon ? BorderRadius.circular(8) : BorderRadius.circular(16),
+                                              boxShadow: [
+                                                if (!hasIcon)
+                                                  BoxShadow(
+                                                    color: Colors.black.withOpacity(0.3),
+                                                    blurRadius: 4,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
-                                              ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: badge['iconUrl'].toString().startsWith('http')
-                                                    ? LokmaNetworkImage(
-                                                        imageUrl: badge['iconUrl'],
-                                                        height: 22,
-                                                        fit: BoxFit.contain,
-                                                        placeholder: (context, url) => Container(
-                                                          color: Colors.transparent,
-                                                          height: 22,
-                                                          width: 22,
-                                                        ),
-                                                        errorWidget: (context, url, error) =>
-                                                            const SizedBox.shrink(),
-                                                      )
-                                                    : Image.asset(
-                                                        badge['iconUrl'],
-                                                        height: 22,
-                                                        fit: BoxFit.contain,
-                                                      ),
-                                              ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              badge['name'],
-                                              style: TextStyle(
-                                                color: textColor,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 1.2,
-                                              ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (hasIcon)
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.circular(8),
+                                                    child: badge['iconUrl'].toString().startsWith('http')
+                                                        ? LokmaNetworkImage(
+                                                            imageUrl: badge['iconUrl'],
+                                                            height: 22,
+                                                            fit: BoxFit.contain,
+                                                            placeholder: (context, url) => Container(
+                                                              color: Colors.transparent,
+                                                              height: 22,
+                                                              width: 22,
+                                                            ),
+                                                            errorWidget: (context, url, error) =>
+                                                                const SizedBox.shrink(),
+                                                          )
+                                                        : Image.asset(
+                                                            badge['iconUrl'],
+                                                            height: 22,
+                                                            fit: BoxFit.contain,
+                                                          ),
+                                                  ),
+                                                if (!hasIcon) ...[
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    badge['name'],
+                                                    style: TextStyle(
+                                                      color: textColor,
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                      letterSpacing: 1.2,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          );
+                                        }
                                       ),
                                     ),
                                   );

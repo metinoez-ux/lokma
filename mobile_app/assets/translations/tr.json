@@ -1316,7 +1316,8 @@
     "farkli_sepet": "Farklı Sepet Uyarısı",
     "farkli_sepet_desc": "Sepetinizde farklı bir işletmeye veya kermese ait ürünler bulunuyor. Yeni ürünleri eklemek için mevcut sepetinizin temizlenmesi gerekmektedir.",
     "onayliyor_musunuz": "{} menüsünden ürün eklemek için sepetiniz temizlenecek. Onaylıyor musunuz?",
-    "cart_cleared_and_added": "Sepet temizlendi ve {} ürünü eklendi."
+    "cart_cleared_and_added": "Sepet temizlendi ve {} ürünü eklendi.",
+    "brand_disclaimer": "Bu gördüğünüz emniyet sertifikası ve logosu, doğrudan {brandName} tarafından işletmelere verilmekte ve düzenli olarak kendileri tarafından denetlenmektedir. Herhangi bir işletme {brandName} ürünlerinin satışını durdurduğu an, bu logo ve sertifika LOKMA platformu üzerindeki işletme profilinden derhal ve otomatik olarak kaldırılır. Kısacası, bu güvenlik standardının LOKMA platformu ile doğrudan bir bağı yoktur; tüm inisiyatif ve kontrol bizzat {brandName} yetkililerine aittir."
   },
   "navigation": {
     "food": "Yemek",

@@ -1309,7 +1309,8 @@
     "farkli_sepet": "Avertissement de Panier Différent",
     "farkli_sepet_desc": "Votre panier contient des articles d'une autre entreprise ou événement. Votre panier actuel doit être vidé pour ajouter de nouveaux articles.",
     "onayliyor_musunuz": "Pour ajouter des articles du menu {}, votre panier sera vidé. Êtes-vous d'accord ?",
-    "cart_cleared_and_added": "Panier vidé et article de {} ajouté."
+    "cart_cleared_and_added": "Panier vidé et article de {} ajouté.",
+    "brand_disclaimer": "Ce certificat de sécurité et ce logo sont délivrés directement par {brandName} aux entreprises et sont régulièrement audités par elles. Dès qu'une entreprise cesse de vendre des produits {brandName}, ce logo sera immédiatement retiré du profil de l'entreprise sur la plateforme LOKMA. En bref, ce standard de sécurité n'est pas délivré par LOKMA ; le contrôle et la responsabilité incombent exclusivement à {brandName}."
   },
   "navigation": {
     "food": "Repas",

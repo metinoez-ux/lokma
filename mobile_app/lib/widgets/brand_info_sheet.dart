@@ -37,6 +37,7 @@ class BrandInfoSheet extends ConsumerWidget {
     final logoAsset = isTurkeyRegion ? 'assets/images/akdeniz_toros_logo_pill.png' : 'assets/images/tuna_logo_pill.png';
     final prefix = isTurkeyRegion ? 'toros' : 'tuna';
     final brandFallback = isTurkeyRegion ? 'AKDENİZ TOROS' : 'TUNA';
+    final legalEntityName = isTurkeyRegion ? 'Akdeniz Toros' : 'TUNA FOOD GmbH';
     final fallbackFontSize = isTurkeyRegion ? 32.0 : 55.0;
 
     return DraggableScrollableSheet(
@@ -92,8 +93,8 @@ class BrandInfoSheet extends ConsumerWidget {
             
              Expanded(
               child: isTurkeyRegion
-                  ? _buildTorosContent(controller, brandWebsite)
-                  : _buildTunaContent(controller, prefix, brandWebsite),
+                  ? _buildTorosContent(controller, brandWebsite, legalEntityName)
+                  : _buildTunaContent(controller, prefix, brandWebsite, legalEntityName),
              ),
            ],
          ),
@@ -101,11 +102,35 @@ class BrandInfoSheet extends ConsumerWidget {
      );
    }
 
-  Widget _buildTorosContent(ScrollController controller, String brandWebsite) {
+  Widget _buildTorosContent(ScrollController controller, String brandWebsite, String legalEntityName) {
     return ListView(
       controller: controller,
       padding: const EdgeInsets.all(24),
       children: [
+        // IMPORTANT: DISCLAIMER BOX
+        Container(
+          margin: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF231414),
+            border: Border.all(color: const Color(0xFF4A2A2A)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white54, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'marketplace.brand_disclaimer'.tr(namedArgs: {'brandName': legalEntityName}),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
         const Text(
           "Akdeniz Toros, çiftlikten sofraya %100 helal ve sağlıklı gıda prensibiyle hareket eder.\n\nKırşehir ve Balıkesir yöresinde %100 yerli ve tamamen bitkisel yemle beslenen büyükbaş, ve üretimin her aşamasında denetim altındaki kanatlı etlerimizle; sofralarınıza her zaman sağlıklı ve güvenilir bir lezzet ulaştırıyoruz.",
           style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
@@ -152,11 +177,35 @@ class BrandInfoSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildTunaContent(ScrollController controller, String prefix, String brandWebsite) {
+  Widget _buildTunaContent(ScrollController controller, String prefix, String brandWebsite, String legalEntityName) {
     return ListView(
       controller: controller,
       padding: const EdgeInsets.all(24),
       children: [
+        // IMPORTANT: DISCLAIMER BOX
+        Container(
+          margin: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF231414),
+            border: Border.all(color: const Color(0xFF4A2A2A)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white54, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'marketplace.brand_disclaimer'.tr(namedArgs: {'brandName': legalEntityName}),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
         // Intro Text
         Text(
           '${'marketplace.${prefix}_description_1'.tr()}\n\n${'marketplace.${prefix}_description_2'.tr()}',

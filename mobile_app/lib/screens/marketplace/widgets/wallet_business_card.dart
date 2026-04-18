@@ -826,16 +826,16 @@ class WalletBusinessCard extends ConsumerWidget {
                                               const SizedBox.shrink(),
                                         ),
                                 ),
-                              if (hasIcon) const SizedBox(width: 4),
-                              Text(
-                                badge['name'],
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
+                              if (!hasIcon)
+                                Text(
+                                  badge['name'],
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),

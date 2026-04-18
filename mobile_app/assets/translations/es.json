@@ -1309,7 +1309,8 @@
     "farkli_sepet": "Advertencia de Carrito Diferente",
     "farkli_sepet_desc": "Tu carrito contiene artículos de otro negocio o evento. El carrito actual debe borrarse para añadir nuevos artículos.",
     "onayliyor_musunuz": "Para añadir artículos del menú de {}, tu carrito será borrado. ¿Estás de acuerdo?",
-    "cart_cleared_and_added": "Carrito borrado y artículo de {} añadido."
+    "cart_cleared_and_added": "Carrito borrado y artículo de {} añadido.",
+    "brand_disclaimer": "This safety certificate and logo are issued directly by {brandName} to the businesses and are regularly audited by them. As soon as a business stops selling {brandName} products, this logo will be immediately removed from the business's profile on the LOKMA platform. In short, this safety standard is not issued by LOKMA; full control and responsibility lie exclusively with {brandName}."
   },
   "navigation": {
     "food": "Comida",
