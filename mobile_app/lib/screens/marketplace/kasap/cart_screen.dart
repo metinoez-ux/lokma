@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:lokma_app/config/app_secrets.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -135,6 +136,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   // Cart listener subscription (listenManual)
   ProviderSubscription<CartState>? _cartSubscription;
+  StreamSubscription<DocumentSnapshot>? _businessSubscription;
 
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
@@ -215,67 +217,73 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     }
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('businesses').doc(cart.butcherId).get();
-      if (doc.exists && mounted) {
-        final data = doc.data();
+      final docRef = FirebaseFirestore.instance.collection('businesses').doc(cart.butcherId);
+      
+      // M-4: Listen to realtime business updates (e.g. working hours changed by admin)
+      _businessSubscription = docRef.snapshots().listen((doc) async {
+        if (doc.exists && mounted) {
+          final data = doc.data();
 
-        // 💚 Check if donation round-up module is enabled via subscription plan
-        bool donationFlag = false;
-        final planCode = data?['subscriptionPlan'] ?? 'basic';
-        try {
-          final planQuery = await FirebaseFirestore.instance
-              .collection('subscription_plans')
-              .where('code', isEqualTo: planCode)
-              .limit(1)
-              .get();
-          if (planQuery.docs.isNotEmpty) {
-            final planData = planQuery.docs.first.data();
-            donationFlag = planData['features']?['donationRoundUp'] == true;
-          }
-        } catch (e) {
-          debugPrint('Error loading plan features: $e');
-        }
-
-        if (!mounted) return;
-        setState(() {
-          _butcherData = data;
-          _loadingButcherParams = false;
-          // Create hours helper if hours exist
-          if (data != null && data['openingHours'] != null) {
-            _hoursHelper = OpeningHoursHelper(data['openingHours']);
-          }
-          // Mode-specific hours helpers (Kurye / Gel Al)
-          if (data != null && data['deliveryHours'] != null) {
-            _deliveryHoursHelper = OpeningHoursHelper(data['deliveryHours']);
-          }
-          if (data != null && data['pickupHours'] != null) {
-            _pickupHoursHelper = OpeningHoursHelper(data['pickupHours']);
-          }
-          // If dine-in and business requires payFirst, reset payment method
-          if (_isDineIn && data?['dineInPaymentMode'] == 'payFirst' && _paymentMethod == 'payLater') {
-            _paymentMethod = null;
-          }
-          _donationEnabled = donationFlag;
-        });
-
-        // 🎯 Fetch user segment for promotion targeting (CUST-3)
-        try {
-          final userId = FirebaseAuth.instance.currentUser?.uid;
-          if (userId != null) {
-            final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-            if (userDoc.exists && mounted) {
-              setState(() {
-                _userSegment = userDoc.data()?['segment'] as String?;
-              });
+          // 💚 Check if donation round-up module is enabled via subscription plan
+          bool donationFlag = false;
+          final planCode = data?['subscriptionPlan'] ?? 'basic';
+          try {
+            final planQuery = await FirebaseFirestore.instance
+                .collection('subscription_plans')
+                .where('code', isEqualTo: planCode)
+                .limit(1)
+                .get();
+            if (planQuery.docs.isNotEmpty) {
+              final planData = planQuery.docs.first.data();
+              donationFlag = planData['features']?['donationRoundUp'] == true;
             }
+          } catch (e) {
+            debugPrint('Error loading plan features: $e');
           }
-        } catch (e) {
-          debugPrint('Error fetching user segment: $e');
-        }
 
-        // 🎯 Trigger initial promo preview (CUST-4)
-        _refreshPromoPreview();
-      }
+          if (!mounted) return;
+          setState(() {
+            _butcherData = data;
+            _loadingButcherParams = false;
+            // Create hours helper if hours exist
+            if (data != null && data['openingHours'] != null) {
+              _hoursHelper = OpeningHoursHelper(data['openingHours']);
+            }
+            // Mode-specific hours helpers (Kurye / Gel Al)
+            if (data != null && data['deliveryHours'] != null) {
+              final helper = OpeningHoursHelper(data['deliveryHours']);
+              if (!helper.isEmpty) _deliveryHoursHelper = helper;
+            }
+            if (data != null && data['pickupHours'] != null) {
+              final helper = OpeningHoursHelper(data['pickupHours']);
+              if (!helper.isEmpty) _pickupHoursHelper = helper;
+            }
+            // If dine-in and business requires payFirst, reset payment method
+            if (_isDineIn && data?['dineInPaymentMode'] == 'payFirst' && _paymentMethod == 'payLater') {
+              _paymentMethod = null;
+            }
+            _donationEnabled = donationFlag;
+          });
+
+          // 🎯 Fetch user segment for promotion targeting (CUST-3)
+          try {
+            final userId = FirebaseAuth.instance.currentUser?.uid;
+            if (userId != null) {
+              final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+              if (userDoc.exists && mounted) {
+                setState(() {
+                  _userSegment = userDoc.data()?['segment'] as String?;
+                });
+              }
+            }
+          } catch (e) {
+            debugPrint('Error fetching user segment: $e');
+          }
+
+          // 🎯 Trigger initial promo preview (CUST-4)
+          if (mounted) _refreshPromoPreview();
+        }
+      });
     } catch (e) {
       debugPrint('Error fetching butcher details: $e');
       if (mounted) setState(() => _loadingButcherParams = false);
@@ -973,6 +981,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       }
     });
     _cartSubscription?.close();
+    _businessSubscription?.cancel();
     _pulseController.dispose();
     _tableNumberController.dispose();
     super.dispose();
@@ -1164,7 +1173,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             final isCompleted = stepBefore < currentStep;
             return Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(top: 13),
+                padding: const EdgeInsets.only(top: 15),
                 child: Container(
                   height: 2,
                   color: isCompleted
@@ -1184,8 +1193,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isCompleted
@@ -1202,12 +1211,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
                 child: Center(
                   child: isCompleted
-                      ? Icon(Icons.check, color: Colors.white, size: 16)
+                      ? Icon(Icons.check, color: Colors.white, size: 18)
                       : Text(
                           '${step + 1}',
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                             color: isDark
                                 ? Colors.white
                                 : (isActive ? accent : Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
@@ -1219,8 +1228,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Text(
                 labels[step],
                 style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isActive || isCompleted ? FontWeight.w500 : FontWeight.w400,
+                  fontSize: 13,
+                  fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.w500,
                   color: isActive || isCompleted
                       ? Theme.of(context).colorScheme.onSurface
                       : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
@@ -2990,30 +2999,32 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 🚴 Delivery Info Pill (Lieferando style)
-              if (!widget.isReservationIntent)
+              if (!widget.isReservationIntent) ...[
                 _buildLieferandoDeliveryPill(),
+                const SizedBox(height: 4),
+              ],
               
-              // 🏪 Business name — simple right-aligned text (always visible)
+              // ❄️ Cold Chain Banner (Kasap + Kurye only)
+              if (hasKasap && _butcherData != null && !_isPickUp && !_isDineIn)
+                _buildColdChainBanner(),
+              
+              // 🏪 Business name — simple right-aligned text (always visible, placed right above the cart items)
               if (hasKasap && _butcherData != null)
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: Alignment.centerLeft, // Left aligned since it's just above the product list now, fits better conceptually as section header! Wait: the original request didn't mention align change. Let's keep it left to sit neatly over products, or centerRight. I'll make it left-aligned inside a padding for better structure.
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 6, bottom: 4, right: 2),
+                    padding: const EdgeInsets.only(top: 8, bottom: 4, left: 2, right: 2),
                     child: Text(
                       _butcherData!['companyName'] ?? 'Kasap',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                         fontSize: 13,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                 ),
-              SizedBox(height: 16),
-              
-              // ❄️ Cold Chain Banner (Kasap + Kurye only)
-              if (hasKasap && _butcherData != null && !_isPickUp && !_isDineIn)
-                _buildColdChainBanner(),
+              SizedBox(height: 4),
               
               // No minimum order bar here - integrated into the checkout button at the bottom
               
@@ -3192,7 +3203,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     
                     if (!isUnderMin) {
                       return Padding(
-                        padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding + 12),
+                        padding: EdgeInsets.fromLTRB(20, 10, 20, bottomPadding > 0 ? (bottomPadding > 20 ? 12 : bottomPadding) : 16),
                         child: _buildLieferandoCheckoutButton(grandTotal),
                       );
                     }
@@ -3224,7 +3235,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             left: 0,
                             right: 0,
                             child: Container(
-                              padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+                              padding: const EdgeInsets.only(top: 8, left: 20, right: 20),
                               decoration: BoxDecoration(
                                 color: infoCardColor,
                                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -3275,9 +3286,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           ),
                           // Layer 3 (Front): Cart button floating inside the Front Lip
                           Positioned(
-                            bottom: bottomPadding + 10,
-                            left: 16, 
-                            right: 16,
+                            bottom: bottomPadding > 0 ? bottomPadding : 10,
+                            left: 20, 
+                            right: 20,
                             child: _buildLieferandoCheckoutButton(grandTotal, isUnderMin: true),
                           ),
                         ],
@@ -3550,18 +3561,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   String _getAddItemLabel() {
     final bType = _butcherData?['type']?.toString().toLowerCase() ??
                   _butcherData?['businessType']?.toString().toLowerCase() ?? '';
-    final isMarket = bType == 'market' || bType == 'supermarket' || bType == 'grocery';
+    final isMarket = bType == 'market' || bType == 'supermarket' || bType == 'grocery' || bType == 'kasap';
     final locale = context.locale.languageCode;
     if (isMarket) {
       // Market segment
       const map = {
-        'tr': 'Urun Ekle',
-        'de': 'Produkt hinzufugen',
-        'en': 'Add Product',
-        'es': 'Agregar producto',
-        'fr': 'Ajouter un produit',
-        'it': 'Aggiungi prodotto',
-        'nl': 'Product toevoegen',
+        'tr': 'Yeni Ürün Ekle',
+        'de': 'Neues Produkt hinzufügen',
+        'en': 'Add New Product',
+        'es': 'Agregar nuevo producto',
+        'fr': 'Ajouter un nouveau produit',
+        'it': 'Aggiungi nuovo prodotto',
+        'nl': 'Nieuw product toevoegen',
       };
       return map[locale] ?? map['de']!;
     } else {
@@ -3614,7 +3625,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Center(child: Text('\u2744\uFE0F', style: TextStyle(fontSize: 16))),
+              child: const Center(
+                child: Icon(
+                  Icons.ac_unit_rounded, 
+                  color: Colors.white, 
+                  size: 20,
+                ),
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -3625,7 +3642,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     'marketplace.cold_chain_delivery'.tr(),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -3634,7 +3651,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     'marketplace.cold_chain_short_desc'.tr(),
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.85),
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       height: 1.35,
                     ),
                   ),
@@ -3659,32 +3676,34 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     }
     
     // Show collapsed inline pill (after dismissal)
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF0D3B66).withOpacity(0.6)
-            : const Color(0xFF4FC3F7).withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('\u2744\uFE0F', style: TextStyle(fontSize: 12)),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              'marketplace.cold_chain_label'.tr(),
-              style: TextStyle(
-                color: isDark ? const Color(0xFF81D4FA) : const Color(0xFF0277BD),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 4, bottom: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? const Color(0xFF0D3B66).withOpacity(0.6)
+              : const Color(0xFF4FC3F7).withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('❄️', style: TextStyle(fontSize: 12)),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                'Soğuk Zincir Teslimatı',
+                style: TextStyle(
+                  color: isDark ? const Color(0xFF81D4FA) : const Color(0xFF0277BD),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -3906,7 +3925,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         GestureDetector(
                           onTap: () => _showNoteDialog(item),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
                               color: isDark ? Colors.grey[900] : Colors.grey[50],
                               border: Border.all(
@@ -3922,15 +3941,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       (item.recipientName != null && item.recipientName!.isNotEmpty)
                                       ? Icons.edit_note
                                       : Icons.note_add_outlined,
-                                  size: 12,
+                                  size: 16,
                                   color: isDark ? Colors.grey[500] : const Color(0xFF3E3E3E),
                                 ),
-                                const SizedBox(width: 3),
+                                const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
                                     _buildNoteDisplayText(item),
                                     style: TextStyle(
-                                      fontSize: 10,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w400,
                                       color: (item.note != null && item.note!.isNotEmpty) ||
                                               (item.recipientName != null && item.recipientName!.isNotEmpty)
@@ -4113,7 +4132,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Text(
                     _isDineIn ? 'cart.food_note'.tr() : 'cart.your_note'.tr(),
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
@@ -4121,83 +4140,26 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   const SizedBox(height: 16),
                   
                   // ═══════════════════════════════════════
-                  // FIELD 1: Kimin için? (Recipient Name)
-                  // Hidden in Masa/dine-in mode
+                  // FIELD: Yemek Notu (Food/Order Note)
                   // ═══════════════════════════════════════
-                  if (!_isDineIn) ...[
                   Text(
-                    'cart.note_recipient_label'.tr(),
+                    'cart.note_product_label'.tr(),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'cart.note_recipient_hint_desc'.tr(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.grey[400] : Colors.grey[500],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A28) : const Color(0xFFF5F0E8),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: recipientController,
-                      maxLength: 40,
-                      maxLines: 1,
-                      autofocus: false,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 15,
-                      ),
-                      onChanged: (_) => setSheetState(() {}),
-                      decoration: InputDecoration(
-                        hintText: 'cart.note_recipient_placeholder'.tr(),
-                        hintStyle: TextStyle(
-                          color: isDark ? Colors.grey[600] : Colors.grey[400],
-                          fontSize: 14,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.person_outline,
-                          color: isDark ? Colors.grey[500] : Colors.grey[400],
-                          size: 20,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        counterText: '',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ],
-                  
-                  // ═══════════════════════════════════════
-                  // FIELD 2: Yemek Notu (Food Note)
-                  // ═══════════════════════════════════════
-                  Text(
-                    'cart.note_food_label'.tr(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     'cart.note_allergy_disclaimer'.tr(),
                     style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                      fontSize: 15,
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
                       height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   
                   // ── Character counter ──
                   Align(
@@ -4216,8 +4178,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Container(
                     constraints: const BoxConstraints(minHeight: 80),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A28) : const Color(0xFFF5F0E8),
+                      color: isDark ? const Color(0xFF3E3E40) : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(14),
+                      border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
                     ),
                     child: TextField(
                       controller: noteController,
@@ -4231,7 +4194,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       ),
                       onChanged: (_) => setSheetState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'cart.note_placeholder'.tr(),
+                        hintText: 'cart.note_product_placeholder'.tr(),
                         hintStyle: TextStyle(
                           color: isDark ? Colors.grey[600] : Colors.grey[400],
                           fontSize: 14,
@@ -4294,7 +4257,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: (noteController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
-                                  ? const Color(0xFF3E3E40)
+                                  ? (isDark ? _accentColor : const Color(0xFF3E3E40))
                                   : (isDark ? Colors.grey[800] : Colors.grey[200]),
                               borderRadius: BorderRadius.circular(14),
                             ),
@@ -5034,17 +4997,17 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return Column(
       children: [
         SizedBox(height: 8),
-        // Subtotal
+        // Subtotal (Now placed first per user request)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'checkout.subtotal'.tr(),
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500),
             ),
             Text(
               '${kasapTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -5056,16 +5019,30 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               Text(
                 'cart.delivery_fee'.tr(),
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8), fontSize: 15, fontWeight: FontWeight.w500),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500),
               ),
               Text(
                 '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8), fontSize: 15, fontWeight: FontWeight.w500),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500),
               ),
             ],
           ),
-          SizedBox(height: 8),
         ],
+        const SizedBox(height: 12),
+        // Grand Total (Includes Delivery + Subtotal)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'cart.total_amount'.tr(),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+            Text(
+              '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -8009,35 +7986,30 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? (isDark ? Colors.grey[800]!.withOpacity(0.6) : Colors.grey[100])
+                                  ? (isDark ? const Color(0xFFE30613).withOpacity(0.1) : Colors.grey[100])
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected
-                                    ? (isDark ? Colors.grey[500]! : Colors.grey[500]!)
-                                    : (isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                                    ? (isDark ? const Color(0xFFE30613) : Colors.grey[600]!)
+                                    : (isDark ? Colors.grey[800]! : Colors.grey[400]!),
                                 width: isSelected ? 1.5 : 1,
                               ),
                             ),
                             child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   timeStr,
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w500
-                                        : FontWeight.w400,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                     color: isSelected
-                                        ? (isDark ? Colors.white : Colors.black87)
-                                        : (isDark
-                                            ? Colors.grey[400]
-                                            : Colors.grey[700]),
+                                        ? (isDark ? const Color(0xFFE30613) : Colors.black87)
+                                        : (isDark ? Colors.grey[400] : Colors.grey[800]),
                                   ),
                                 ),
-                                // Radio indicator — neutral grey
+                                // Radio indicator
                                 Container(
                                   width: 22,
                                   height: 22,
@@ -8045,7 +8017,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: isSelected
-                                          ? (isDark ? Colors.grey[400]! : Colors.grey[600]!)
+                                          ? (isDark ? const Color(0xFFE30613) : Colors.grey[800]!)
                                           : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
                                       width: 2,
                                     ),
@@ -8057,7 +8029,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                             height: 12,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: isDark ? Colors.grey[300] : Colors.grey[700],
+                                              color: isDark ? const Color(0xFFE30613) : Colors.grey[800],
                                             ),
                                           ),
                                         )
@@ -8103,8 +8075,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             child: Text(
                               'checkout.scheduled_info'.tr(),
                               style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.grey[300] : Colors.grey[800],
                                 height: 1.4,
                               ),
                             ),
@@ -8215,11 +8188,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected
                       ? (isDark ? Colors.white : Colors.black87)
-                      : (isDark ? Colors.grey[400] : Colors.grey[700]),
+                      : (isDark ? Colors.grey[400] : Colors.grey[800]),
                 ),
               ),
             ),

@@ -5,6 +5,8 @@ class OpeningHoursHelper {
   
   OpeningHoursHelper([this.openingHours]);
 
+  bool get isEmpty => openingHours == null || (openingHours is List && (openingHours as List).isEmpty) || (openingHours is Map && (openingHours as Map).isEmpty);
+
   // Normalize and find hours string for a specific date
   String? _getHoursStringForDate(DateTime date) {
     if (openingHours == null || (openingHours is List && (openingHours as List).isEmpty)) {
