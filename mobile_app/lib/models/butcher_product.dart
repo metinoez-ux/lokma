@@ -71,7 +71,7 @@ class ButcherProduct {
     }
 
     // Special handling for Image URL: Check Firestore, then Master
-    String? imgUrl = data['imageUrl'];
+    String? imgUrl = data['imageUrl'] ?? data['image'];
     if (imgUrl == null || imgUrl.isEmpty) {
       if (masterData != null && masterData['imageAsset'] != null) {
         imgUrl = masterData['imageAsset'];

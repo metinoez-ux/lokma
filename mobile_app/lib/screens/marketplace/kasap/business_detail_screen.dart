@@ -32,6 +32,18 @@ import '../../../utils/currency_utils.dart';
 import '../../../utils/cart_warning_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+Widget buildKasapProductMedia(String url, BoxFit fit, bool isDark) {
+  if (url.startsWith('assets/')) {
+    return Image.asset(url, fit: fit, errorBuilder: (_, __, ___) => Icon(Icons.restaurant_menu, color: isDark ? Colors.white24 : Colors.grey[400], size: 40));
+  }
+  return LokmaNetworkImage(
+    imageUrl: url,
+    fit: fit,
+    placeholder: (_, __) => Container(color: isDark ? Colors.grey[900] : Colors.grey[100], child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
+    errorWidget: (_, __, ___) => Icon(Icons.restaurant_menu, color: isDark ? Colors.white24 : Colors.grey[400], size: 40),
+  );
+}
+
 class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String businessId;
   final int initialDeliveryMode;
@@ -205,11 +217,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
     
     if (mounted) {
-      setState(() {
-        _pillLeft = chipPos.dx;
-        _pillWidth = chipBox.size.width;
-        _pillInitialized = true;
-      });
+      if ((_pillLeft - chipPos.dx).abs() > 0.5 || (_pillWidth - chipBox.size.width).abs() > 0.5 || !_pillInitialized) {
+        debugPrint('🌀 [LOOP FIX] _updatePillPosition setState: oldLeft=$_pillLeft, newLeft=${chipPos.dx}, oldWidth=$_pillWidth, newWidth=${chipBox.size.width}');
+        setState(() {
+          _pillLeft = chipPos.dx;
+          _pillWidth = chipBox.size.width;
+          _pillInitialized = true;
+        });
+      }
     }
   }
 
@@ -250,6 +265,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
 
     if (visibleCategory != null && visibleCategory != _selectedCategory) {
+      debugPrint('🌀 [LOOP FIX] _onMenuScroll visibleCategory change! $visibleCategory');
       HapticFeedback.selectionClick();
       setState(() {
         _selectedCategory = visibleCategory!;
@@ -305,6 +321,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   List<Map<String, dynamic>> _categories = [
     {'name': 'marketplace.category_all'.tr(), 'icon': Icons.grid_view, 'emoji': '🏠'},
   ];
+  
+  // 🔮 Safe dynamically computed categories (includes missing/orphaned category names from products)
+  List<Map<String, dynamic>> get _effectiveCategories {
+    final existingNames = _categories.map((c) => c['name'] as String).toSet();
+    final effective = List<Map<String, dynamic>>.from(_categories);
+    
+    for (final p in _allProducts) {
+      if (p.category.isNotEmpty && !existingNames.contains(p.category)) {
+        final localizedName = _getLocalizedCategoryName(p.categoryData ?? p.category);
+        
+        // Prevent duplicate localized names or IDs
+        if (!effective.any((c) => c['name'] == localizedName || c['id'] == p.category)) {
+          effective.add({
+            'id': p.category,
+            'name': localizedName,
+            'emoji': '📦',
+            'icon': Icons.inventory_2_outlined,
+            'order': 99,
+          });
+          existingNames.add(p.category);
+        }
+      }
+    }
+    
+    return effective;
+  }
 
   Map<String, dynamic>? _placeDetails;
   DocumentSnapshot? _butcherDoc;
@@ -330,7 +372,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         .collection('businesses')
         .doc(widget.businessId)
         .collection('products')
-        .where('isActive', isEqualTo: true)
+        // Removing server-side where('isActive') so legacy Market products without the field still load
         .snapshots();
     _loadButcherAndReviews();
     _setupCategoriesListener(); // 🔄 Real-time listener for categories
@@ -397,7 +439,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         for (final doc in sortedDocs) {
           final data = doc.data();
           debugPrint('🔵 [LOKMA] Category: ${data['name']} - isActive: ${data['isActive']}');
-          if (data['isActive'] == true) {
+          final bool isActive = data['isActive'] ?? true;
+          if (isActive) {
             dynamicCategories.add({
               'id': doc.id,
               'name': _getLocalizedCategoryName(data['name']),
@@ -409,6 +452,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         }
         
         debugPrint('🔵 [LOKMA] Total active categories: ${dynamicCategories.length}');
+        
+        // If no categories are active, fallback so products still show
+        if (dynamicCategories.length == 1) {
+          dynamicCategories.add({
+            'name': 'marketplace.all_products'.tr(), 
+            'icon': Icons.shopping_bag, 
+            'emoji': '🛒'
+          });
+        }
         
         if (mounted) {
           setState(() {
@@ -619,12 +671,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final accent = isDark ? const Color(0xFFF41C54) : const Color(0xFF282726);      
       showDialog(
         context: context,
         barrierDismissible: true,
         builder: (dialogCtx) {
+          final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+          final accent = isDark ? const Color(0xFFEA184A) : const Color(0xFF282726);      
           return Dialog(
             backgroundColor: Theme.of(dialogCtx).colorScheme.surface,
             surfaceTintColor: Colors.transparent,
@@ -719,8 +771,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: Text(
                         'common.continue_button'.tr(),
                         style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: 0.2,
                           color: Colors.white,
                         ),
@@ -740,15 +792,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         context.go('/');
                       },
                       style: TextButton.styleFrom(
-
-                        foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.7),
+                        foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       child: Text(
                         'marketplace.find_open_businesses'.tr(),
                         style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -1181,20 +1232,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).length,
+                itemCount: _effectiveCategories.where((c) => c['name'] == 'Tümü' || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).length,
                 itemBuilder: (context, index) {
-                  // Only show categories with products (or 'Tümü')
-                  final visibleCategories = _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).toList();
+                  // Only show categories with products (or 'Tümü'/'all_products')
+                  final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'Tümü' || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
                   final cat = visibleCategories[index];
                   final catName = cat['name'] as String;
                   final isSelected = _selectedCategory == catName;
                   
                   // Get product names for this category
                   String productPreview = '';
-                  if (catName == 'Tümü') {
+                  if (catName == 'Tümü' || catName == 'marketplace.all_products'.tr()) {
                     productPreview = _allProducts.take(4).map((p) => p.name).join(', ');
                   } else {
-                    final catProducts = _allProducts.where((p) => p.category == catName).toList();
+                    final catId = cat['id'] as String?;
+                    final catProducts = _allProducts.where((p) => p.category == catName || (catId != null && p.category == catId)).toList();
                     productPreview = catProducts.take(4).map((p) => p.name).join(', ');
                   }
                   if (productPreview.length > 60) {
@@ -1215,7 +1267,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  catName,
+                                  _formatCategoryKey(catName),
                                   style: TextStyle(
                                     color: textPrimary,
                                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -2397,16 +2449,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
 
+  String _formatCategoryKey(String key) {
+    if (key == 'Tümü' || key == 'Diğer' || key.contains(' ')) return key;
+    return key.replaceAll('_', ' ').split(' ').map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1)}' : '').join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     // LIEFERANDO STYLE: Theme-aware color system
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
-    // Force pill recalculation after every build to fix stale positioning
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _updatePillPosition();
-    });
     
     // Dynamic colors based on theme
     final scaffoldBg = isDark ? const Color(0xFF2B2929) : Colors.white;
@@ -2541,6 +2593,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             for (final doc in snapshot.data!.docs) {
               try {
                 final data = doc.data() as Map<String, dynamic>;
+                
+                // Client-side fallback: if 'isActive' is totally missing, assume true
+                final bool isActive = data['isActive'] ?? true;
+                if (!isActive) continue;
+
                 final sku = data['masterProductId'] ?? data['masterProductSku'];
                 final masterData = MASTER_PRODUCT_CATALOG[sku];
                 
@@ -2553,10 +2610,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   'tags': masterData.tags,
                 } : null;
                 
-                products.add(ButcherProduct.fromFirestore(data, doc.id, butcherId: widget.businessId, masterData: masterMap));
+                final productObj = ButcherProduct.fromFirestore(data, doc.id, butcherId: widget.businessId, masterData: masterMap);
+                
+                if (productObj.imageUrl == null || productObj.imageUrl!.isEmpty) {
+                    debugPrint('🔴 [LOKMA] Product image missing! Raw data keys: ${data.keys.toList()}');
+                    // Look for anything resembling 'image'
+                    final imageKeys = data.keys.where((k) => k.toLowerCase().contains('image')).toList();
+                    if (imageKeys.isNotEmpty) {
+                        debugPrint('   -> Potential image fields found:');
+                        for (var k in imageKeys) {
+                            debugPrint('      $k: ${data[k]}');
+                        }
+                    }
+                }
+                products.add(productObj);
               } catch (e) {
                 debugPrint('🔴 [LOKMA] Error parsing product ${doc.id}: $e');
               }
+            }
+            debugPrint('🟢 [LOKMA] Loaded ${products.length} products for ${widget.businessId}');
+            if (products.isNotEmpty) {
+              debugPrint('🟢 [LOKMA] Categories for first 5 products: ${products.take(5).map((p) => p.category).toList()}');
             }
             // 🔍 Update all products for instant search
             _allProducts = products;
@@ -2867,8 +2941,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
                               if (actuallySellsTuna || actuallySellsToros) {
                                 return Positioned(
-                                  top: 12,
-                                  left: 12,
+                                  bottom: 12,
+                                  right: 12,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
@@ -2878,7 +2952,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           margin: const EdgeInsets.only(bottom: 6),
                                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFEA184A).withValues(alpha: 0.9), // TUNA Pink/Red
+                                            color: const Color(0xFF9F1C20).withValues(alpha: 0.95), // TUNA Pink/Red
                                             borderRadius: BorderRadius.circular(16),
                                             boxShadow: [
                                               BoxShadow(
@@ -2888,17 +2962,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               ),
                                             ],
                                           ),
-                                          child: Row(
+                                          child: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
-                                              const SizedBox(width: 6),
-                                              const Text(
-                                                'TUNA Hazır Paket Ürünleri',
-                                                style: TextStyle(
+                                              Text(
+                                                'TUNA',
+                                                style: GoogleFonts.inter(
                                                   color: Colors.white,
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.5,
+                                                  height: 1.2,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Şarküteri Ürünleri',
+                                                style: GoogleFonts.inter(
+                                                  color: Colors.white.withValues(alpha: 0.95),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: 0.2,
+                                                  height: 1.2,
                                                 ),
                                               ),
                                             ],
@@ -2923,12 +3007,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             children: [
                                               const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
                                               const SizedBox(width: 6),
-                                              const Text(
-                                                'Toros Hazır Paket Ürünleri',
-                                                style: TextStyle(
+                                              Text(
+                                                'Akdeniz Toros Şarküteri Ürünleri',
+                                                style: GoogleFonts.inter(
                                                   color: Colors.white,
-                                                  fontSize: 13,
+                                                  fontSize: 11,
                                                   fontWeight: FontWeight.w600,
+                                                  letterSpacing: 0.2,
                                                 ),
                                               ),
                                             ],
@@ -3101,7 +3186,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                              
                              // Separator
-                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                            ],
 
                            // Masa Rezervasyon (only shown in masa mode)
@@ -3143,7 +3228,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  ],
                                ),
                              ),
-                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                            ],
 
                            // Business / Cuisine Type
@@ -3157,7 +3242,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                ),
                              ),
                               if (_isMasaMode || !isOpen || isPausedForCurrentTab)
-                                Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                                const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                             ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
                              Text(
                                'marketplace.business_type_${data!['type'].toString().toLowerCase()}'.tr(),
@@ -3168,7 +3253,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                ),
                              ),
                               if (_isMasaMode || !isOpen || isPausedForCurrentTab)
-                                Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                                const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                             ],
                             
                             // Open/Closed Status
@@ -3227,7 +3312,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            
                            // Delivery Fee (hidden in masa mode)
                            if (!_isMasaMode && data?['deliveryFee'] != null) ...[
-                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                              Row(
                                mainAxisSize: MainAxisSize.min,
                                children: [
@@ -3251,14 +3336,37 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
                            // Min Order (hidden in masa mode)
                            if (!_isMasaMode && parseSafelyDouble(data?['minDeliveryOrder']) > 0) ...[
-                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                             Text(
-                               'Min. ${parseSafelyDouble(data?['minDeliveryOrder']).toStringAsFixed(2).replaceAll('.00', '')}${CurrencyUtils.getCurrencySymbol()}',
-                               style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                 fontSize: 14,
-                                 fontWeight: FontWeight.w500,
-                               ),
+                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                             Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 Text(
+                                   'Min. ',
+                                   style: TextStyle(
+                                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                     fontSize: 14,
+                                     fontWeight: FontWeight.w500,
+                                   ),
+                                 ),
+                                 SvgPicture.asset(
+                                   'assets/images/basket_1.svg',
+                                   width: 14,
+                                   height: 14,
+                                   colorFilter: ColorFilter.mode(
+                                     Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                     BlendMode.srcIn,
+                                   ),
+                                 ),
+                                 const SizedBox(width: 4),
+                                 Text(
+                                   '${parseSafelyDouble(data?['minDeliveryOrder']).toStringAsFixed(2).replaceAll('.00', '')}${CurrencyUtils.getCurrencySymbol()}',
+                                   style: TextStyle(
+                                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                     fontSize: 14,
+                                     fontWeight: FontWeight.w500,
+                                   ),
+                                 ),
+                               ],
                              ),
                            ],
 
@@ -3287,7 +3395,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 child: Builder(
                                   builder: (context) {
                                     // Only show categories that have products (or 'Tümü')
-                                    final visibleCategories = _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).toList();
+                                    final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'Tümü' || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
                                     
                                     // Schedule pill position initialization
                                     if (!_pillInitialized) {
@@ -3363,7 +3471,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                             fontSize: 14,
                                                           ),
                                                           child: Text(
-                                                            catName == 'Tümü' ? tr('business_details.all') : catName,
+                                                            catName == 'Tümü' ? tr('business_details.all') : _formatCategoryKey(catName),
                                                           ),
                                                         ),
                                                         if (catCartCount > 0) ...[
@@ -3457,7 +3565,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ? SliverGrid(
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            childAspectRatio: 0.56,
+                            childAspectRatio: 0.52,
                             crossAxisSpacing: 10,
                             mainAxisSpacing: 10,
                           ),
@@ -3492,9 +3600,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ),
               ] else ...[
               // Category Grouped List/Grid
-              ..._categories.where((c) => c['name'] != 'Tümü').expand((cat) {
+              ..._effectiveCategories.where((c) => c['name'] != 'Tümü').expand((cat) {
                 final catName = cat['name'] as String;
-                final catProducts = products.where((p) => p.category == catName).toList();
+                final catId = cat['id'] as String?;
+                final isFallbackAll = catName == 'marketplace.all_products'.tr();
+                final catProducts = isFallbackAll 
+                    ? products 
+                    : products.where((p) => p.category == catName || (catId != null && p.category == catId)).toList();
+                
+                debugPrint('🟢 [LOKMA] Category Filter Check -> UI Category Name: "$catName" | UI Category ID: "$catId" -> Has ${catProducts.length} products. Is Fallback All? $isFallbackAll.');
+                if (catProducts.isEmpty && products.isNotEmpty) {
+                    debugPrint('🔴 [LOKMA] WARNING: UI Category "$catName" (ID: $catId) yielded 0 products! Here are the first 3 actual product categories from DB: ${products.take(3).map((e) => e.category).toList()}');
+                }
                 
                 if (catProducts.isEmpty) return <Widget>[];
 
@@ -3517,7 +3634,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      catName,
+                                      _formatCategoryKey(catName),
                                       style: TextStyle(
                                         color: isDark ? accent : textPrimary,
                                         fontSize: 18,
@@ -3559,7 +3676,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   padding: EdgeInsets.zero,
                                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
-                                    childAspectRatio: 0.56,
+                                    childAspectRatio: 0.52,
                                     crossAxisSpacing: 10,
                                     mainAxisSpacing: 10,
                                   ),
@@ -4332,15 +4449,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 width: 100,
                                 height: 100,
                                 color: isDark ? Colors.white10 : Colors.grey[100],
-                                child: Image.network(
-                                  product.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Icon(
-                                    Icons.restaurant_menu,
-                                    size: 40,
-                                    color: isDark ? Colors.white24 : Colors.grey[400],
-                                  ),
-                                ),
+                                child: buildKasapProductMedia(product.imageUrl!, BoxFit.cover, isDark),
                               ),
                             ),
                             // + button overlay: bottom-right corner
@@ -4530,7 +4639,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // When IN cart: display the cart quantity
     final selectedQty = _selections[product.sku] ?? defaultQty;
     final displayQty = inCart ? totalQtyInCart : selectedQty;
-    final unitLabel = isByWeight ? (displayQty >= 1.0 ? 'kg' : 'gram') : 'Adet';
+    final unitLabel = isByWeight ? (displayQty >= 1.0 ? 'kg' : 'gr') : '';
     // Convert kg to grams/kg for display
     final displayQtyText = isByWeight 
         ? (displayQty >= 1.0 
@@ -4593,25 +4702,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             children: [
               // 📸 Product Image — landscape 4:3, smaller to give text more room
               AspectRatio(
-                aspectRatio: 1.6,
+                aspectRatio: 1.15,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       hasImage
-                          ? LokmaNetworkImage(
-                              imageUrl: product.imageUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => Container(
-                                color: isDark ? Colors.grey[900] : Colors.grey[100],
-                                child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                              ),
-                              errorWidget: (_, __, ___) => Container(
-                                color: isDark ? Colors.grey[900] : Colors.grey[100],
-                                child: Icon(Icons.image_not_supported, color: textSecondary, size: 40),
-                              ),
-                            )
+                          ? buildKasapProductMedia(product.imageUrl!, BoxFit.cover, isDark)
                           : Container(
                               color: isDark ? Colors.grey[900] : Colors.grey[100],
                               child: Icon(Icons.restaurant_menu, color: textSecondary, size: 40),
@@ -4677,7 +4775,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               // 📝 Product Info — compact padding
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -4690,7 +4788,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               product.name,
                               style: TextStyle(
                                 color: textPrimary,
-                                fontSize: 14,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 height: 1.2,
                               ),
@@ -4716,8 +4814,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             '${product.effectiveAppPrice.toStringAsFixed(product.effectiveAppPrice == product.effectiveAppPrice.roundToDouble() ? 0 : 2)} ${CurrencyUtils.getCurrencySymbol()}',
                             style: TextStyle(
                               color: accent,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -4726,7 +4824,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               'Preis/kg',
                               style: TextStyle(
                                 color: textSecondary,
-                                fontSize: 10,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                         ],
@@ -4746,196 +4845,209 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ),
                       const Spacer(),
                       
-                      // ➕ Quantity controls — separate bordered buttons
-                      // When NOT in cart: +/- adjust local selection (quantity picker)
-                      // When IN cart: +/- directly adjust cart quantity
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Minus button
-                          GestureDetector(
-                            onTap: () {
-                              if (inCart) {
-                                if (productCartItems.isNotEmpty) {
-                                  ref.read(cartProvider.notifier).removeFromCart(productCartItems.first.uniqueKey);
-                                }
-                              } else {
-                                final current = _selections[product.sku] ?? defaultQty;
-                                if (current > defaultQty) {
-                                  setState(() => _selections[product.sku] = current - stepQty);
-                                }
-                              }
-                            },
-                            child: Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                '—',
-                                style: TextStyle(
-                                  color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withOpacity(0.3),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                      // ➕ Quantity & Cart Wrapper
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF222224) : const Color(0xFFF8F8F8),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isDark ? Colors.white.withOpacity(0.04) : Colors.grey.shade200,
+                            width: 1,
                           ),
-                          // Quantity display
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // ➕ Quantity controls — separate bordered buttons
+                            // When NOT in cart: +/- adjust local selection (quantity picker)
+                            // When IN cart: +/- directly adjust cart quantity
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    displayQtyText,
-                                    style: TextStyle(
-                                      color: textPrimary,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
+                                // Minus button
+                                GestureDetector(
+                                  onTap: () {
+                                    if (inCart) {
+                                      if (productCartItems.isNotEmpty) {
+                                        ref.read(cartProvider.notifier).removeFromCart(productCartItems.first.uniqueKey);
+                                      }
+                                    } else {
+                                      final current = _selections[product.sku] ?? defaultQty;
+                                      if (current > defaultQty) {
+                                        setState(() => _selections[product.sku] = current - stepQty);
+                                      }
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF2A2A2C) : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
+                                        width: 1,
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                Text(
-                                  unitLabel,
-                                  style: TextStyle(
-                                    color: textSecondary,
-                                    fontSize: 9,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Plus button
-                          GestureDetector(
-                            onTap: isAvailable ? () {
-                              if (inCart) {
-                                if (product.optionGroups.isNotEmpty) {
-                                  _showProductBottomSheet(product);
-                                } else {
-                                  final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                  final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                                  HapticFeedback.mediumImpact();
-                                  _quickAddToCart(
-                                    product,
-                                    isByWeight ? stepQty : 1,
-                                    widget.businessId,
-                                    butcherName,
-                                    onSuccess: () => setState(() {}),
-                                  );
-                                }
-                              } else {
-                                final current = _selections[product.sku] ?? defaultQty;
-                                setState(() => _selections[product.sku] = current + stepQty);
-                              }
-                            } : null,
-                            child: Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                '+',
-                                style: TextStyle(
-                                  color: accent,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      // 🛒 Sepete Ekle / Sepette button — BRAND RED
-                      GestureDetector(
-                        onTap: isAvailable ? () {
-                          if (inCart) {
-                            // Already in cart — go to cart or show sheet
-                            _showProductBottomSheet(product);
-                          } else {
-                            // NOT in cart — add selected quantity
-                            if (product.optionGroups.isNotEmpty) {
-                              _showProductBottomSheet(product);
-                            } else {
-                              final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                              final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                              final qtyToAdd = _selections[product.sku] ?? defaultQty;
-                              HapticFeedback.mediumImpact();
-                              _quickAddToCart(
-                                product,
-                                qtyToAdd,
-                                widget.businessId,
-                                butcherName,
-                                onSuccess: () {
-                                  setState(() => _selections.remove(product.sku));
-                                }
-                              );
-                            }
-                          }
-                        } : null,
-                        child: Container(
-                          width: double.infinity,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: inCart ? Colors.green.shade600 : accent,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (inCart ? Colors.green : accent).withOpacity(0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  inCart ? Icons.check_circle_outline : Icons.shopping_cart_outlined,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.center,
                                     child: Text(
-                                      inCart
-                                        ? 'cart.in_cart_price'.tr(namedArgs: {'price': totalPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()})
-                                        : 'cart.add_to_cart_price'.tr(namedArgs: {'price': previewPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()}),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
+                                      '—',
+                                      style: TextStyle(
+                                        color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withOpacity(0.3),
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                // Quantity display
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          displayQtyText,
+                                          style: TextStyle(
+                                            color: textPrimary,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      if (unitLabel.isNotEmpty)
+                                        Text(
+                                          unitLabel,
+                                          style: TextStyle(
+                                            color: textSecondary,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                // Plus button
+                                GestureDetector(
+                                  onTap: isAvailable ? () {
+                                    if (inCart) {
+                                      if (product.optionGroups.isNotEmpty) {
+                                        _showProductBottomSheet(product);
+                                      } else {
+                                        final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                                        final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
+                                        HapticFeedback.mediumImpact();
+                                        _quickAddToCart(
+                                          product,
+                                          isByWeight ? stepQty : 1,
+                                          widget.businessId,
+                                          butcherName,
+                                          onSuccess: () => setState(() {}),
+                                        );
+                                      }
+                                    } else {
+                                      final current = _selections[product.sku] ?? defaultQty;
+                                      setState(() => _selections[product.sku] = current + stepQty);
+                                    }
+                                  } : null,
+                                  child: Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF2A2A2C) : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '+',
+                                      style: TextStyle(
+                                        color: accent,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                            
+                            const SizedBox(height: 6),
+                            
+                            // 🛒 Sepete Ekle / Sepette button — BRAND RED
+                            GestureDetector(
+                              onTap: isAvailable ? () {
+                                if (inCart) {
+                                  // Already in cart — go to cart or show sheet
+                                  _showProductBottomSheet(product);
+                                } else {
+                                  // NOT in cart — add selected quantity
+                                  if (product.optionGroups.isNotEmpty) {
+                                    _showProductBottomSheet(product);
+                                  } else {
+                                    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                                    final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
+                                    final qtyToAdd = _selections[product.sku] ?? defaultQty;
+                                    HapticFeedback.mediumImpact();
+                                    _quickAddToCart(
+                                      product,
+                                      qtyToAdd,
+                                      widget.businessId,
+                                      butcherName,
+                                      onSuccess: () {
+                                        setState(() => _selections.remove(product.sku));
+                                      }
+                                    );
+                                  }
+                                }
+                              } : null,
+                              child: Container(
+                                width: double.infinity,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: inCart ? Colors.green.shade600 : accent,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (inCart ? Colors.green : accent).withOpacity(0.3),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Flexible(
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            inCart
+                                              ? 'cart.in_cart_price'.tr(namedArgs: {'price': totalPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()})
+                                              : 'cart.add_to_cart_price'.tr(namedArgs: {'price': previewPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()}),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -5358,14 +5470,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         child: SizedBox(
                           width: 72,
                           height: 72,
-                          child: Image.network(
-                            product.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: isDark ? Colors.white10 : Colors.grey[100],
-                              child: Icon(Icons.image_not_supported, color: textSecondary, size: 24),
-                            ),
-                          ),
+                          child: buildKasapProductMedia(product.imageUrl!, BoxFit.cover, isDark),
                         ),
                       )
                     else

@@ -300,6 +300,92 @@ class WalletBusinessCard extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
+                              Builder(
+                                builder: (ctx) {
+                                  final actuallySellsTuna = data['sellsTunaProducts'] == true;
+                                  final actuallySellsToros = data['sellsTorosProducts'] == true;
+                                  
+                                  if (actuallySellsTuna) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF9F1C20).withOpacity(0.95),
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'TUNA',
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.5,
+                                              height: 1.2,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Şarküteri Ürünleri',
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white.withOpacity(0.95),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              letterSpacing: 0.2,
+                                              height: 1.2,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  
+                                  if (actuallySellsToros) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1B5E20).withOpacity(0.95),
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Akdeniz Toros Şarküteri Ürünleri',
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 0.2,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+
                               if (data['hasReservation'] == true &&
                                   deliveryMode == 'masada')
                                 Opacity(
@@ -768,53 +854,8 @@ class WalletBusinessCard extends ConsumerWidget {
                               ),
                               Builder(
                                 builder: (context) {
-                                  // KURAL 2: Hazir Paket Yazi Ibaresi = sellsTunaProducts / sellsTorosProducts
-                                  bool actuallySellsTuna = data['sellsTunaProducts'] == true;
-                                  bool actuallySellsToros = data['sellsTorosProducts'] == true;
-
                                   if (activeBadges.isNotEmpty) return const SizedBox.shrink();
-
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (actuallySellsTuna)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 6),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFFEA184A)),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                'TUNA Hazır Paket Ürünleri',
-                                                style: GoogleFonts.inter(
-                                                  color: const Color(0xFFEA184A),
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      if (actuallySellsToros)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 6),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.shopping_bag_outlined, size: 13, color: Color(0xFF1B5E20)),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                'Akdeniz Toros Hazır Paket Ürünleri',
-                                                style: GoogleFonts.inter(
-                                                  color: const Color(0xFF1B5E20),
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  );
+                                  return const SizedBox.shrink();
                                 },
                               ),
                             ],

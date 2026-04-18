@@ -57,8 +57,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   double get _height => widget.compact ? 36 : 48;
   double get _borderRadius => _height / 2;
   double get _pillRadius => (_height - 6) / 2;
-  double get _iconSize => widget.compact ? 13 : 18;
-  double get _fontSize => widget.compact ? 12 : 15;
+  double get _iconSize => widget.compact ? 20 : 26;
+  double get _fontSize => widget.compact ? 14 : 16;
   EdgeInsets get _margin =>
       widget.margin ??
       (widget.compact
@@ -278,10 +278,10 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
               height: _iconSize,
               colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
             ),
-            SizedBox(width: widget.compact ? 3 : 4),
+            SizedBox(width: widget.compact ? 8 : 10),
           ] else if (tab.icon != null) ...[
-            Icon(tab.icon, color: textColor, size: _iconSize),
-            SizedBox(width: widget.compact ? 3 : 4),
+            Icon(tab.icon, color: textColor, size: _iconSize.toDouble()),
+            SizedBox(width: widget.compact ? 8 : 10),
           ],
           Flexible(
             child: hasSubtitle
@@ -295,7 +295,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                           color: textColor,
                           fontWeight:
                               isActive ? FontWeight.w600 : FontWeight.w500,
-                          fontSize: widget.compact ? 11 : 13.5,
+                          fontSize: widget.compact ? 12 : 14.5,
                           overflow: TextOverflow.ellipsis,
                           height: 1.0,
                           shadows: isActive
@@ -316,8 +316,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                         style: TextStyle(
                           color: textColor.withOpacity(
                               isActive ? 0.85 : 0.7),
-                          fontWeight: FontWeight.w500,
-                          fontSize: widget.compact ? 9 : 10,
+                          fontWeight: FontWeight.w600,
+                          fontSize: widget.compact ? 10 : 11,
                           overflow: TextOverflow.ellipsis,
                           height: 1.0,
                         ),

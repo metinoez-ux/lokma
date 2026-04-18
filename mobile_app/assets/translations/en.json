@@ -224,6 +224,7 @@
   "checkout": {
     "cart_title": "Cart",
     "title": "Checkout",
+    "no_slots_available": "No delivery slots available at the moment.",
     "order_details": "Order Details",
     "user": "User",
     "add_address": "Add address",

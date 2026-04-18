@@ -224,6 +224,7 @@
   "checkout": {
     "cart_title": "Sepetim",
     "title": "Ödeme",
+    "no_slots_available": "Şu an için uygun teslimat zamanı bulunmamaktadır.",
     "order_details": "Sipariş Detayları",
     "user": "Kullanıcı",
     "add_address": "Adres ekleyin",

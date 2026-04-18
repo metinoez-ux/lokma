@@ -19,6 +19,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
+import 'package:lokma_app/providers/bottom_nav_provider.dart';
 
 import 'package:lokma_app/providers/auth_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
@@ -150,6 +151,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(bottomNavVisibilityProvider.notifier).setVisible(false);
+    });
+    
     _isPickUp = widget.initialPickUp;
     _isDineIn = widget.initialDineIn || widget.isReservationIntent;
     // Auto-set table number from deep link (QR code on table)
@@ -960,6 +965,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   @override
   void dispose() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        ref.read(bottomNavVisibilityProvider.notifier).setVisible(true);
+      } catch (e) {
+        // Safe dispose
+      }
+    });
     _cartSubscription?.close();
     _pulseController.dispose();
     _tableNumberController.dispose();
@@ -3116,40 +3128,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 SizedBox(height: 16),
               ],
 
-              // 🥤 Gratis İçecek (Free Drink Promotion)
-              // -- Threshold logic --
-              // freeDrinkEnabled: business data'dan, false ise hiç gösterme
-              // freeDrinkMinimumOrder: 0 = her zaman, >0 = eşii aşınca göster
-              () {
-                final bool freeDrinkEnabled = _butcherData?['freeDrinkEnabled'] != false;
-                final double threshold = ((_butcherData?['freeDrinkMinimumOrder'] as num?) ?? 0).toDouble();
-                final double cartAmount = kasapTotal;
-
-                if (!freeDrinkEnabled || _freeDrinkProducts.isEmpty) return const SizedBox.shrink();
-
-                // Eşiğe ulaşıldı mı?
-                final bool thresholdMet = threshold <= 0 || cartAmount >= threshold;
-
-                // Eşiğe yaklaşılıyor mu? (son 5€ veya tutarın %30'u, hangisi küçüksä)
-                final double nudgeWindow = threshold > 0 ? (threshold * 0.3).clamp(1.0, 5.0) : 0;
-                final bool nearThreshold = !thresholdMet && threshold > 0 && (threshold - cartAmount) <= nudgeWindow;
-
-                return Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    if (!thresholdMet && threshold > 0)
-                      _buildFreeDrinkNudgeBanner(
-                        remaining: threshold - cartAmount,
-                        threshold: threshold,
-                        nearThreshold: nearThreshold,
-                      ),
-                    if (thresholdMet) ...[
-                      _buildFreeDrinkSection(),
-                      const SizedBox(height: 16),
-                    ],
-                  ],
-                );
-              }(),
+              // (Free Drink Promotion hidden per user request)
+              const SizedBox.shrink(),
               
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kasapTotal, grandTotal),
@@ -5060,11 +5040,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           children: [
             Text(
               'checkout.subtotal'.tr(),
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600),
             ),
             Text(
               '${kasapTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -5076,11 +5056,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               Text(
                 'cart.delivery_fee'.tr(),
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8), fontSize: 15, fontWeight: FontWeight.w500),
               ),
               Text(
                 '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8), fontSize: 15, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -5161,7 +5141,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         : _accentColor;
     final textColor = isUnderMin 
         ? (isDark ? Colors.white54 : Colors.black54) 
-        : Theme.of(context).colorScheme.surface;
+        : Colors.white;
 
     return GestureDetector(
       onTap: () {
@@ -7666,15 +7646,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.grey[500]),
+                  Icon(Icons.info_outline, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[700]),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'checkout.business_closed_schedule'.tr(),
                       style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w100,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.onSurface,
                         height: 1.3,
                       ),
                     ),
@@ -7722,7 +7702,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               const SizedBox(height: 8),
 
               // Cupertino wheel picker (same as Abholung)
-              Container(
+              dayKeys.isEmpty ? Container(
+                height: 150,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[900] : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text('checkout.no_slots_available'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
+              ) : Container(
                 height: 150,
                 decoration: BoxDecoration(
                   color: isDark ? Colors.grey[900] : Colors.grey[100],
@@ -8486,14 +8474,14 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     children: [
                       Row(
                         children: [
-                          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w400)),
+                          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w500)),
                           if (badge != null) badge,
                         ],
                       ),
                       if (subtitle != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
-                          child: Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                          child: Text(subtitle, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w500)),
                         ),
                     ],
                   ),
@@ -8596,7 +8584,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     // ═══════════════════════════════════════
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: Text('checkout.order_details'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
+                      child: Text('checkout.order_details'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                     ),
 
                     // ── User Info Row ──
@@ -8614,8 +8602,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           context,
                           icon: Icons.person_outline,
                           iconColor: brandRed,
-                          title: userName.toString().isNotEmpty ? userName.toString() : 'checkout.user'.tr(),
-                          subtitle: userPhone.toString(),
+                          title: 'checkout.order_customer_title'.tr() == 'checkout.order_customer_title' ? 'İsim, Soyisim, Telefon' : 'checkout.order_customer_title'.tr(),
+                          subtitle: '${userName.toString().isNotEmpty ? userName.toString() : "Müşteri"}${userPhone.toString().isNotEmpty ? " - $userPhone" : ""}',
                           trailing: Icon(Icons.chevron_right, color: chevronColor, size: 22),
                           dividerColor: dividerColor,
                           onTap: () {
@@ -8800,11 +8788,16 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text(hasAddress ? displayStreet.toString() : 'checkout.add_address'.tr(),
-                                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
+                                              Text('checkout.delivery_address_title'.tr() == 'checkout.delivery_address_title' ? 'Teslimat Adresiniz' : 'checkout.delivery_address_title'.tr(),
+                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                               if (hasAddress) ...[
+                                                const SizedBox(height: 4),
+                                                Text(displayStreet.toString(), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w500)),
                                                 const SizedBox(height: 2),
-                                                Text(displayCity.toString(), style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                                                Text(displayCity.toString(), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w500)),
+                                              ] else ...[
+                                                const SizedBox(height: 4),
+                                                Text('checkout.add_address'.tr(), style: TextStyle(color: brandRed, fontSize: 13, fontWeight: FontWeight.w500)),
                                               ],
                                               // Confirmation badge
                                               if (!hasAddress) ...[
@@ -9031,7 +9024,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       _buildCheckoutRow(
                         context,
                         icon: Icons.access_time,
-                        iconColor: parent._deliveryTimeExplicitlyChosen ? Colors.grey[600]! : Colors.grey[500]!,
+                        iconColor: brandRed,
                         title: 'checkout.delivery_time'.tr(),
                         subtitle: !parent._deliveryTimeExplicitlyChosen
                             ? 'checkout.select_time'.tr()
@@ -9297,12 +9290,27 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'checkout.order_summary'.tr(),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w500,
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'checkout.order_summary'.tr(),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                if (parent._butcherData?['companyName'] != null || widget.cart.butcherName != null)
+                                  TextSpan(
+                                    text: ' (${parent._butcherData?['companyName'] ?? widget.cart.butcherName})',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -9310,17 +9318,17 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
                               children: [
-                                Text('${item.quantity}x', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500, fontSize: 14)),
+                                Text(item.product.unitType == 'kg' || item.product.unitType == 'g' ? '${item.quantity}x' : '${item.quantity.toInt()}x', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 15)),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     I18nUtils.getLocalizedText(context, item.product.nameData),
-                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500),
                                   ),
                                 ),
                                 Text(
                                   '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 14),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 15),
                                 ),
                               ],
                             ),
@@ -9328,86 +9336,79 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           Divider(color: dividerColor),
                           const SizedBox(height: 4),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('checkout.subtotal'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                              Text('${widget.total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                              Expanded(child: Text('checkout.subtotal'.tr(), textAlign: TextAlign.right, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600))),
+                              const SizedBox(width: 16),
+                              SizedBox(width: 75, child: Text('${widget.total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w700))),
                             ],
                           ),
                           if (!parent._isPickUp && !parent._isDineIn) ...[
                             const SizedBox(height: 4),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('checkout.delivery_fee'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                                Text('${widget.deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                                Expanded(child: Text('checkout.delivery_fee'.tr(), textAlign: TextAlign.right, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600))),
+                                const SizedBox(width: 16),
+                                SizedBox(width: 75, child: Text('${widget.deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w700))),
                               ],
                             ),
                           ],
                           if (parent._appliedCoupon?.isValid == true) ...[
                             const SizedBox(height: 4),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(children: [
-                                  const Icon(Icons.local_offer, size: 14, color: Colors.green),
-                                  const SizedBox(width: 4),
-                                  Text('checkout.coupon_discount'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
-                                ]),
-                                Text('-${widget.couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500)),
+                                Expanded(child: Text('checkout.coupon_discount'.tr(), textAlign: TextAlign.right, style: TextStyle(color: Colors.green[700], fontSize: 15, fontWeight: FontWeight.w600))),
+                                const SizedBox(width: 16),
+                                SizedBox(width: 75, child: Text('-${widget.couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: Colors.green[700], fontSize: 15, fontWeight: FontWeight.w700))),
                               ],
                             ),
                           ],
                           if (widget.firstOrderDiscountAmount > 0) ...[
                             const SizedBox(height: 4),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('checkout.welcome_discount'.tr(), style: TextStyle(color: Colors.orange[700], fontSize: 13)),
-                                Text('-${widget.firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.orange[700], fontSize: 13, fontWeight: FontWeight.w500)),
+                                Expanded(child: Text('checkout.welcome_discount'.tr(), textAlign: TextAlign.right, style: TextStyle(color: Colors.orange[700], fontSize: 15, fontWeight: FontWeight.w600))),
+                                const SizedBox(width: 16),
+                                SizedBox(width: 75, child: Text('-${widget.firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: Colors.orange[700], fontSize: 15, fontWeight: FontWeight.w700))),
                               ],
                             ),
                           ],
                           if (parent._useWallet && widget.walletApplied > 0) ...[
                             const SizedBox(height: 4),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(children: [
-                                  const Text('💰', style: TextStyle(fontSize: 14)),
-                                  const SizedBox(width: 4),
-                                  Text('checkout.wallet'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
-                                ]),
-                                Text('-${widget.walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500)),
+                                Expanded(child: Text('checkout.wallet'.tr(), textAlign: TextAlign.right, style: TextStyle(color: Colors.green[700], fontSize: 15, fontWeight: FontWeight.w600))),
+                                const SizedBox(width: 16),
+                                SizedBox(width: 75, child: Text('-${widget.walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: Colors.green[700], fontSize: 15, fontWeight: FontWeight.w700))),
                               ],
                             ),
                           ],
                           if (parent._tipAmount > 0) ...[
                             const SizedBox(height: 4),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('checkout.tip'.tr(), style: TextStyle(color: Colors.blue[700], fontSize: 13)),
-                                Text('+${parent._tipAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w500)),
+                                Expanded(child: Text('checkout.tip'.tr(), textAlign: TextAlign.right, style: TextStyle(color: Colors.blue[700], fontSize: 15, fontWeight: FontWeight.w600))),
+                                const SizedBox(width: 16),
+                                SizedBox(width: 75, child: Text('+${parent._tipAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: Colors.blue[700], fontSize: 15, fontWeight: FontWeight.w700))),
                               ],
                             ),
                           ],
                           if (parent._donationAmount > 0) ...[
                             const SizedBox(height: 4),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('checkout.donation'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
-                                Text('+${parent._donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500)),
+                                Expanded(child: Text('checkout.donation'.tr(), textAlign: TextAlign.right, style: TextStyle(color: Colors.green[700], fontSize: 15, fontWeight: FontWeight.w600))),
+                                const SizedBox(width: 16),
+                                SizedBox(width: 75, child: Text('+${parent._donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: Colors.green[700], fontSize: 15, fontWeight: FontWeight.w700))),
                               ],
                             ),
                           ],
                           const SizedBox(height: 8),
+                          Divider(color: dividerColor, height: 16, thickness: 0.5),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('checkout.total'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 16)),
-                              Text('${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 16)),
+                              Expanded(child: Text('checkout.total'.tr(), textAlign: TextAlign.right, style: TextStyle(color: brandRed, fontWeight: FontWeight.w800, fontSize: 17))),
+                              const SizedBox(width: 16),
+                              SizedBox(width: 75, child: Text('${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', textAlign: TextAlign.right, style: TextStyle(color: brandRed, fontWeight: FontWeight.w800, fontSize: 17))),
                             ],
                           ),
                         ],
@@ -9527,7 +9528,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                         child: Row(
                           children: [
-                            Text('checkout.tip_title'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
+                            Text('checkout.tip_title'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                             const SizedBox(width: 6),
                             GestureDetector(
                               onTap: () {
@@ -9580,7 +9581,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('checkout.tip_subtitle'.tr(), style: TextStyle(fontSize: 13, color: Colors.grey[500], height: 1.4)),
+                        child: Text('checkout.tip_subtitle'.tr(), style: TextStyle(fontSize: 14, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], fontWeight: FontWeight.w500, height: 1.4)),
                       ),
                       const SizedBox(height: 12),
                       Padding(
@@ -10193,7 +10194,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     parent._isDineIn && parent._scannedTableNumber != null
                                       ? '${'checkout.submit'.tr()} · Masa ${parent._scannedTableNumber}'
                                       : '${'checkout.submit'.tr()} · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w500),
+                                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
                                   ),
                       ),
                     ),

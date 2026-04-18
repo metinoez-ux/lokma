@@ -746,8 +746,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Text(
                       'common.continue_button'.tr(),
                       style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: 0.2,
                         color: Colors.white,
                       ),
@@ -785,8 +785,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Text(
                       'marketplace.find_open_businesses'.tr(),
                       style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -1140,13 +1140,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: _deliveryMode == 'gelal' ? 210 : 175,
+              expandedHeight: _deliveryMode == 'gelal' ? 218 : 175,
               collapsedHeight: 120, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
                   // Scroll oranını hesapla (0 = tamamen açık, 1 = tamamen kapalı)
-                  final expandedHeight = _deliveryMode == 'gelal' ? 210.0 : 175.0;
+                  final expandedHeight = _deliveryMode == 'gelal' ? 218.0 : 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) / 
@@ -1199,7 +1199,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             if (!_isLoading && _filteredBusinesses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 15, 20, 3),
                   child: Text(
                     tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                     style: TextStyle(
@@ -1896,8 +1896,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     
     final rating = (data['rating'] as num?)?.toDouble() ?? 4.0;
     final reviewCount = (data['reviewCount'] as num?)?.toInt() ?? 0;
-    final imageUrl = data['imageUrl'] as String?;
-    final logoUrl = data['logoUrl'] as String?;
+    final imageUrl = (data['imageUrl'] ?? data['image']) as String?;
+    final logoUrl = (data['logoUrl'] ?? data['logo']) as String?;
     final cuisineType = data['cuisineType'] as String?;
     
     // Business type label

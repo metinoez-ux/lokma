@@ -742,7 +742,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               clipBehavior: Clip.hardEdge,
               expandedHeight: (_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null)
                   ? 120
-                  : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 210 : 175,
+                  : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 218 : 175,
               collapsedHeight:
                   120,
               automaticallyImplyLeading: false,
@@ -750,7 +750,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 builder: (context, constraints) {
                   final expandedHeight = (_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null)
                       ? 120.0
-                      : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 210.0 : 175.0;
+                      : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 218.0 : 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -865,7 +865,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             if (_deliveryMode != 'masa' && !_isLoading && _filteredBusinesses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 5, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 3),
                   child: Text(
                     tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                     style: TextStyle(
@@ -2148,8 +2148,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: Text(
                       'common.continue_button'.tr(),
                       style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: 0.2,
                         color: Colors.white,
                       ),
@@ -2187,8 +2187,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: Text(
                       'marketplace.find_open_businesses'.tr(),
                       style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -2563,8 +2563,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       'count': '$existingItemCount',
                     }),
                     style: TextStyle(
-                      fontSize: 14,
-                      color: onSurface.withOpacity(0.6),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: onSurface.withOpacity(0.8),
                     ),
                     textAlign: TextAlign.center,
                   ),

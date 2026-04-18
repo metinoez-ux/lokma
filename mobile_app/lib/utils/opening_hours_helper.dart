@@ -7,7 +7,13 @@ class OpeningHoursHelper {
 
   // Normalize and find hours string for a specific date
   String? _getHoursStringForDate(DateTime date) {
-    if (openingHours == null) return null;
+    if (openingHours == null || (openingHours is List && (openingHours as List).isEmpty)) {
+      print('⏰ [_getHoursStringForDate] openingHours is NULL or Empty for date $date');
+      return null;
+    }
+    
+    // DEBUG: print the raw map
+    print('⏰ [_getHoursStringForDate] check date: $date | raw hours: $openingHours');
 
     final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
     final dayNamesEng = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -54,20 +60,33 @@ class OpeningHoursHelper {
          return match.group(2)?.trim();
        }
     } else if (openingHours is List) {
-       // Support for Google Places List<String> format: "Monday: 09:00 - 18:00"
        for (var item in openingHours) {
-          if (item is! String) continue;
-          
-          final parts = item.split(':');
-          if (parts.isEmpty) continue;
-          
-          final dayPart = parts[0].trim().toLowerCase();
-          if (dayPart == dayTr.toLowerCase() || dayPart == dayEng.toLowerCase() || dayPart == dayDe.toLowerCase()) {
-             // Found match. Strip "Day:"
-             if (parts.length > 1) {
-                 return parts.sublist(1).join(':').trim(); 
+          if (item is Map) {
+             // Support for Admin Portal DaySchedule Array
+             final dayPart = item['day']?.toString().toLowerCase() ?? '';
+             final dayTrPart = item['dayTr']?.toString().toLowerCase() ?? '';
+             if (dayPart == dayEng.toLowerCase() || dayTrPart == dayTr.toLowerCase()) {
+                final isOpen = item['isOpen'] == true;
+                if (!isOpen) return "Closed";
+                final openH = item['openHour'] ?? '00';
+                final openM = item['openMinute'] ?? '00';
+                final closeH = item['closeHour'] ?? '00';
+                final closeM = item['closeMinute'] ?? '00';
+                return "$openH:$openM-$closeH:$closeM";
              }
-             return item;
+          } else if (item is String) {
+             // Support for Google Places List<String> format: "Monday: 09:00 - 18:00"
+             final parts = item.split(':');
+             if (parts.isEmpty) continue;
+             
+             final dayPart = parts[0].trim().toLowerCase();
+             if (dayPart == dayTr.toLowerCase() || dayPart == dayEng.toLowerCase() || dayPart == dayDe.toLowerCase()) {
+                // Found match. Strip "Day:"
+                if (parts.length > 1) {
+                    return parts.sublist(1).join(':').trim(); 
+                }
+                return item;
+             }
           }
        }
     }
@@ -183,7 +202,7 @@ class OpeningHoursHelper {
   }
 
   bool isOpenAt(DateTime time) {
-    if (openingHours == null) return true;
+    if (openingHours == null || (openingHours is List && (openingHours as List).isEmpty)) return true;
 
     // Check if it's currently open based on TODAY's schedule
     if (_isTimeInScheduleDay(time, time)) return true;

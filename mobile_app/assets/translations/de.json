@@ -225,6 +225,7 @@
   "checkout": {
     "cart_title": "Warenkorb",
     "title": "Bezahlung",
+    "no_slots_available": "Zur Zeit sind keine Lieferzeiten verfügbar.",
     "order_details": "Bestelldetails",
     "user": "Benutzer",
     "add_address": "Adresse hinzufügen",
