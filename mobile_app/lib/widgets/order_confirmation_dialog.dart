@@ -13,6 +13,7 @@ class OrderConfirmationDialog extends StatelessWidget {
   final String? businessType;
   final VoidCallback? onDismiss;
   final VoidCallback? onClearCart;
+  final VoidCallback? onSaveToCalendar;
 
   const OrderConfirmationDialog({
     super.key,
@@ -26,6 +27,7 @@ class OrderConfirmationDialog extends StatelessWidget {
     this.scheduledDate,
     this.onDismiss,
     this.onClearCart,
+    this.onSaveToCalendar,
   });
 
   @override
@@ -152,29 +154,45 @@ class OrderConfirmationDialog extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Action Button
+              if (onSaveToCalendar != null) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: onSaveToCalendar,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
+                      foregroundColor: textColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.calendar_month, color: accentColor, size: 20),
+                        const SizedBox(width: 8),
+                        Text('checkout.save_calendar'.tr(),
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Action Button (Tamam)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // CRITICAL FIX: The checkout page was pushed via
-                    // Navigator.push() (imperative), NOT via go_router.
-                    // context.go('/restoran') only changes the declarative
-                    // go_router stack — it CANNOT pop imperatively-pushed
-                    // routes, leaving them orphaned as a black screen.
-                    //
-                    // Solution: Pop ALL imperative routes (this dialog +
-                    // checkout page) back to the go_router-managed root,
-                    // then clear cart safely.
-                    final rootNav = Navigator.of(context, rootNavigator: true);
-                    rootNav.popUntil((route) => route.isFirst);
-
-                    // Clear cart after navigation is complete
-                    if (onClearCart != null) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        onClearCart!();
-                      });
-                    }
+                    // 1. Clear cart
+                    if (onClearCart != null) onClearCart!();
+                    // 2. Dismiss dialog
+                    Navigator.of(context, rootNavigator: true).pop();
+                    // 3. Notify parent to route back securely
+                    if (onDismiss != null) onDismiss!();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accentColor,

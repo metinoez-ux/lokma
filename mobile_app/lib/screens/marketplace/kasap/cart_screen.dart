@@ -546,8 +546,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return (1000 + rng.nextInt(9000)).toString(); // 1000–9999
   }
 
-  Future<void> _submitOrder() async {
-    if (_isSubmitting) return;
+  Future<bool> _submitOrder() async {
+    if (_isSubmitting) return false;
     
     // Guard: Block regular order submission if a group session is active
     final groupState = ref.read(tableGroupProvider);
@@ -558,7 +558,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           backgroundColor: Colors.orange,
         ),
       );
-      return;
+      return false;
     }
     
     final cart = ref.read(cartProvider);
@@ -575,14 +575,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         backgroundColor: Colors.transparent,
         builder: (ctx) => const LoginBottomSheet(),
       );
-      return;
+      return false;
     }
 
     if (cart.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('cart.cart_empty'.tr())),
       );
-      return;
+      return false;
     }
 
     setState(() => _isSubmitting = true);
@@ -900,7 +900,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           }
           await orderRef.update({'status': 'payment_failed', 'paymentStatus': 'failed'});
           if (mounted) setState(() => _isSubmitting = false);
-          return; // Stop checkout flow
+          return false; // Stop checkout flow
         }
 
         // Update payment success
@@ -911,9 +911,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         });
       }
 
-      // Show success dialog FIRST — cart clearing is handled ONLY after
-      // context.go('/restoran') in OrderConfirmationDialog to avoid
-      // rebuilding checkout page with an empty cart (causing black screen).
+      // Capture cart items before clearing for calendar
+      final calendarItems = cart.items.map((item) => {
+        'productName': item.product.name,
+        'quantity': item.quantity,
+        'totalPrice': item.totalPrice,
+      }).toList();
+      final calendarDeliveryMethod = _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery');
+      final businessNameForCalendar = cart.butcherName ?? _butcherData?['companyName'] ?? 'LOKMA';
+
       if (mounted) {
         showDialog(
           context: context,
@@ -927,38 +933,43 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             isDineIn: _isDineIn,
             isScheduledOrder: _scheduledDeliverySlot != null && !_isPickUp && !_isDineIn,
             scheduledDate: _scheduledDeliverySlot,
-            onDismiss: () {},
+            onDismiss: () {
+              // Dismiss _CheckoutFullPage gracefully prior to go_router action
+              Navigator.of(context).popUntil((route) => route.settings.name == '/cart' || route.isFirst);
+              
+              // Gracefully reset to the home state
+              GoRouter.of(context).go('/restoran');
+            },
             onClearCart: () {
               // Safety net: cart already cleared above after order save,
               // but call again in case of race conditions
               ref.read(cartProvider.notifier).clearCart();
             },
+            onSaveToCalendar: _scheduledDeliverySlot == null ? null : () {
+              if (_isDineIn) {
+                CalendarService.addReservationEvent(
+                  context: context,
+                  reservationTime: _scheduledDeliverySlot!,
+                  businessName: businessNameForCalendar,
+                  partySize: 1,
+                  tableCardNumbers: _scannedTableNumber != null
+                      ? [int.tryParse(_scannedTableNumber!) ?? 0]
+                      : null,
+                );
+              } else {
+                CalendarService.addOrderEvent(
+                  context: context,
+                  deliveryTime: _scheduledDeliverySlot!,
+                  businessName: businessNameForCalendar,
+                  orderNumber: orderNumber,
+                  items: calendarItems,
+                  grandTotal: grandTotalWithDonation,
+                  deliveryMethod: calendarDeliveryMethod,
+                );
+              }
+            },
           ),
         );
-
-        // 📅 Takvim Entegrasyonu — tüm ileri tarihli siparişlerde native takvime ekle
-        // Kurye, Gel-Al, Masa Rezervasyonu, Kermes — hepsi destekleniyor
-        if (_scheduledDeliverySlot != null) {
-          // Capture cart items before clearing
-          final calendarItems = cart.items.map((item) => {
-            'productName': item.product.name,
-            'quantity': item.quantity,
-            'totalPrice': item.totalPrice,
-          }).toList();
-          final calendarDeliveryMethod = _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery');
-          // Small delay so confirmation dialog renders first
-          Future.delayed(const Duration(milliseconds: 800), () {
-            if (mounted) {
-              _showCalendarSavePrompt(
-                businessName: cart.butcherName ?? _butcherData?['companyName'] ?? 'LOKMA',
-                orderNumber: orderNumber,
-                items: calendarItems,
-                grandTotal: grandTotalWithDonation,
-                deliveryMethod: calendarDeliveryMethod,
-              );
-            }
-          });
-        }
       }
 
     } catch (e) {
@@ -966,9 +977,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${'cart.order_error'.tr()}: $e')),
       );
+      return false;
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+    return true;
   }
 
   @override
@@ -2990,12 +3003,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final deliveryFee = (!_isPickUp && !_isDineIn) ? ((_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50) : 0.0;
     final grandTotal = kasapTotal + deliveryFee;
     
-    return Stack(
-      children: [
-        // Scrollable content
-        SingleChildScrollView(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 20),
-          child: Column(
+    return SizedBox.expand(
+      child: Stack(
+        children: [
+          // Scrollable content
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 20),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 🚴 Delivery Info Pill (Lieferando style)
@@ -3155,30 +3169,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           right: 0,
           bottom: 0,
           child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: Theme.of(context).brightness == Brightness.dark
-                    ? [
-                        const Color(0xFF1C1C1E).withOpacity(0.0),
-                        const Color(0xFF1C1C1E).withOpacity(0.95),
-                        const Color(0xFF1C1C1E),
-                      ]
-                    : [
-                        Colors.white.withOpacity(0.0),
-                        Colors.white.withOpacity(0.95),
-                        Colors.white,
-                      ],
-                stops: const [0.0, 0.25, 0.5],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, -4),
-                ),
-              ],
+            // Sadece butonun kndisi havada kalmali, arka planda bir shadow seridi ya da arkaplan rengi olmamali.
+            decoration: const BoxDecoration(
+              color: Colors.transparent, // Arkaplan tamamen saydam
             ),
             child: Center(
               child: ConstrainedBox(
@@ -3203,8 +3196,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     
                     if (!isUnderMin) {
                       return Padding(
-                        padding: EdgeInsets.fromLTRB(20, 10, 20, bottomPadding > 0 ? (bottomPadding > 20 ? 12 : bottomPadding) : 16),
-                        child: _buildLieferandoCheckoutButton(grandTotal),
+                         padding: EdgeInsets.fromLTRB(20, 10, 20, bottomPadding > 0 ? bottomPadding : 16),
+                         child: _buildLieferandoCheckoutButton(grandTotal),
                       );
                     }
                     
@@ -3303,6 +3296,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       ),
     ),
   ],
+  ),
 );
   }
   
@@ -3678,7 +3672,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     // Show collapsed inline pill (after dismissal)
     return Center(
       child: Container(
-        margin: const EdgeInsets.only(top: 4, bottom: 4),
+        margin: const EdgeInsets.only(top: 8, bottom: 4), // 4px daha asa kaysin
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         decoration: BoxDecoration(
           color: isDark
@@ -3693,11 +3687,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                'Soğuk Zincir Teslimatı',
+                'SOĞUK ZİNCİR TESLİMATI', // buyuk bas harf ve hepsi buyuk? User said "büyük baş harfleri ile yazsın". Like "Soğuk Zincir Teslimatı" it was already. Or they meant all caps? "büyük baş harfleri ile" means "SOĞUK ZİNCİR TESLİMATI". Let's do all caps.
                 style: TextStyle(
                   color: isDark ? const Color(0xFF81D4FA) : const Color(0xFF0277BD),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -8274,6 +8269,7 @@ class _CheckoutFullPage extends StatefulWidget {
 class _CheckoutFullPageState extends State<_CheckoutFullPage> {
   final ScrollController _scrollController = ScrollController();
   bool _hasScrolledForKeyboard = false;
+  bool _localIsSubmitting = false;
 
   // Cached futures to prevent re-fetch on every setState (causes tremble)
 
@@ -10128,17 +10124,20 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       if (parent._isDineIn && (parent._scannedTableNumber ?? parent._tableNumberController.text.trim()).isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('orders.please_enter_table_number')), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
                         return;
-                      }
                       parent._orderNote = widget.noteController.text;
-                      Navigator.pop(context);
-                      parent._submitOrder();
+                      // setState'i local kullanarak butonda yuklenme animasyonu gosteriyoruz
+                      setState(() { _localIsSubmitting = true; });
+                      await parent._submitOrder();
+                      if (mounted) {
+                        setState(() { _localIsSubmitting = false; });
+                      }
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: parent._isSubmitting
+                        color: _localIsSubmitting
                             ? Colors.grey
                             : (parent._paymentMethod == null || (!parent._isPickUp && !parent._isDineIn && !parent._deliveryTimeExplicitlyChosen)
                                 ? Colors.grey[400]
@@ -10149,7 +10148,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             : null,
                       ),
                       child: Center(
-                        child: parent._isSubmitting
+                        child: _localIsSubmitting
                             ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
                             : parent._paymentMethod == 'card'
                                 ? Row(
