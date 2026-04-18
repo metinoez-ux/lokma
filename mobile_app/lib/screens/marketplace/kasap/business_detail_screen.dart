@@ -2493,20 +2493,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (diff > 0) pauseRemainingMinutes = diff;
       }
     }
-    final brandLabel = data?['brandLabel'] as String?;
-    final tags = data?['tags'] as List<dynamic>?;
-    final hasTunaTag = tags?.any((t) => t.toString().toLowerCase() == 'tuna') ?? false;
-    final isTunaPartner = (data?['isTunaPartner'] as bool? ?? false) ||
-        (brandLabel?.toLowerCase() == 'tuna') ||
-        (brand?.toString().toLowerCase() == 'tuna') ||
-        hasTunaTag;
-    final showBrandBadge = isTunaPartner || (brand?.toString().toLowerCase() == 'akdeniz_toros');
-    
     // 🆕 PLATFORM BRANDS & BADGES (Dynamic Sync)
     final bool isMarket = checkIsMarket(data);
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
-    final bool hasNewBrandSystem = data?.containsKey('activeBrandIds') ?? false;
     final List<Map<String, dynamic>> activeBadges = [];
     platformBrandsAsync.whenData((brands) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
@@ -2519,38 +2509,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         }
       }
     });
-
-    // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA veya baglanti beklerken
-    if (activeBadges.isEmpty && !hasNewBrandSystem && data?['brandLabelActive'] == true) {
-      bool showLegacyTuna = isTunaPartner;
-      if (showLegacyTuna) {
-        activeBadges.add({
-          'name': 'TUNA',
-          'iconUrl': 'assets/images/tuna_logo_pill.png',
-          'isLegacyTuna': true,
-        });
-      }
-      bool showLegacyToros = brand?.toString().toLowerCase() == 'akdeniz_toros';
-      if (showLegacyToros) {
-        activeBadges.add({
-          'name': 'Akdeniz Toros',
-          'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png',
-          'isLegacyToros': true,
-        });
-      }
-    }
-    
-    // Yükleme sirasinda (ayni anda yeni sistem girilmisse ama henuz fetch edilmediyse)
-    if (activeBadges.isEmpty && data?['brandLabelActive'] == true && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
-      bool showLegacyTuna = isTunaPartner;
-      if (showLegacyTuna) {
-        activeBadges.add({'name': 'TUNA', 'iconUrl': 'assets/images/tuna_logo_pill.png', 'isLegacyTuna': true});
-      }
-      bool showLegacyToros = brand?.toString().toLowerCase() == 'akdeniz_toros';
-      if (showLegacyToros) {
-        activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png', 'isLegacyToros': true});
-      }
-    }
     
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
@@ -2818,21 +2776,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: activeBadges.map((badge) {
-                                  final isLegacyTuna = badge['isLegacyTuna'] == true;
-                                  final isLegacyToros = badge['isLegacyToros'] == true;
-                                  final Color badgeColor = isLegacyTuna 
-                                    ? const Color(0xFFA01E22) 
-                                    : (isLegacyToros ? const Color(0xFF1B5E20) : Theme.of(context).colorScheme.surface);
-                                  final Color textColor = (isLegacyTuna || isLegacyToros) 
-                                    ? Colors.white 
-                                    : Theme.of(context).colorScheme.onSurface;
+                                  final Color badgeColor = Theme.of(context).colorScheme.surface;
+                                  final Color textColor = Theme.of(context).colorScheme.onSurface;
 
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 6),
                                     child: GestureDetector(
                                       onTap: () {
                                         HapticFeedback.lightImpact();
-                                        if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) {
+                                        if (badge['name'].toString().toLowerCase().contains('tuna')) {
                                           _showTunaBrandInfo();
                                         }
                                       },
@@ -2852,9 +2804,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            if (isLegacyTuna || isLegacyToros)
-                                              Icon(Icons.verified, color: textColor, size: 14)
-                                            else if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
+                                            if (badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty)
                                               ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
                                                 child: badge['iconUrl'].toString().startsWith('http')
@@ -2886,10 +2836,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                 letterSpacing: 1.2,
                                               ),
                                             ),
-                                            if (isLegacyTuna) ...[
-                                              const SizedBox(width: 4),
-                                              Icon(Icons.info_outline, color: textColor, size: 15),
-                                            ],
                                           ],
                                         ),
                                       ),

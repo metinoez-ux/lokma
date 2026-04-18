@@ -4171,35 +4171,15 @@ export default function BusinessDetailsPage() {
  ? [...(formData.activeBrandIds || []), badge.id]
  : (formData.activeBrandIds || []).filter(id => id !== badge.id);
  
- const isTuna = badge.name.toLowerCase().includes('tuna');
- const isToros = badge.name.toLowerCase().includes('toros');
- 
- let newBrand = formData.brand;
- let isTunaPartner = formData.brand === 'tuna';
- 
- if (isTuna) {
-    newBrand = e.target.checked ? 'tuna' : '';
-    isTunaPartner = e.target.checked;
- } else if (isToros) {
-    newBrand = e.target.checked ? 'akdeniz_toros' : '';
-    isTunaPartner = false;
- }
- 
  setFormData({ 
   ...formData, 
-  activeBrandIds: newIds,
-  brand: newBrand,
-  brandLabelActive: newBrand !== ''
+  activeBrandIds: newIds
  });
 
  if (businessId && businessId !== 'new') {
     try {
        await updateDoc(doc(db, "businesses", businessId), {
-           activeBrandIds: newIds,
-           brand: newBrand,
-           brandLabelActive: newBrand !== '',
-           isTunaPartner: isTunaPartner,
-           brandLabel: newBrand || null,
+           activeBrandIds: newIds
        });
        showToast(e.target.checked ? "Rozet eklendi (Anlık Yansıtıldı)" : "Rozet kaldırıldı (Anlık Yansıtıldı)", "success");
     } catch (error) {}
@@ -4263,23 +4243,7 @@ export default function BusinessDetailsPage() {
   </div>
   </div>
 
-  <div className="bg-card/50 border border-border rounded-xl p-6 opacity-60 mt-6">
-
- <h4 className="text-foreground font-medium mb-2 line-through">ESKİ KOD MİMARİSİ (SABİT LOGOLAR)</h4>
- <p className="text-xs text-muted-foreground mb-4">Geçiş süresince geriye uyumluluk (backward compatibility) için saklanmaktadır.</p>
- <div className="flex flex-col gap-4">
- <div>
- <label className="text-muted-foreground text-sm"> Eski LOKMA Label</label>
- <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg outline-none mt-1 disabled:opacity-50">
- <option value="">{t('secilmedi')}</option>
- <option value="tuna">🔴 TUNA</option>
- <option value="akdeniz_toros">⚫ Akdeniz Toros</option>
- </select>
- </div>
- 
- </div>
- </div>
- </>
+  </>
  ) : (
  <div className="bg-card/50 border border-border rounded-xl p-6 text-center">
  <p className="text-muted-foreground">{t('zertifikaAyarlariSadeceSuperAdminTarafindan')}</p>

@@ -92,42 +92,7 @@ class WalletBusinessCard extends ConsumerWidget {
         }
       }
 
-      // KURAL 3: Legacy fallback - SADECE yeni sistem YOKSA (activeBrandIds bos ise)
-      if (activeBadges.isEmpty && !hasNewBrandSystem && data['brandLabelActive'] == true) {
-        bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-        if (showLegacyTuna) {
-          try {
-            final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('tuna'));
-            activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
-          } catch (e) {
-            activeBadges.add({'name': 'TUNA', 'iconUrl': 'assets/images/tuna_logo_pill.png', 'isLegacyTuna': true});
-          }
-        }
-        bool showLegacyToros = data['brand'] == 'akdeniz_toros';
-        if (showLegacyToros) {
-          try {
-            final dynamicBrand = brands.firstWhere((b) => b.name.toLowerCase().contains('toros'));
-            activeBadges.add({'name': dynamicBrand.name, 'iconUrl': dynamicBrand.iconUrl});
-          } catch (e) {
-            activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png', 'isLegacyToros': true});
-          }
-        }
-      }
     });
-
-    // In case whenData hasn't executed synchronously (loading state)
-    if (activeBadges.isEmpty && !hasNewBrandSystem && (platformBrandsAsync.isLoading || platformBrandsAsync.hasError)) {
-      if (data['brandLabelActive'] == true) {
-        bool showLegacyTuna = data['brand'] == 'tuna' || isTunaPartner;
-        if (showLegacyTuna) {
-          activeBadges.add({'name': 'TUNA', 'iconUrl': 'assets/images/tuna_logo_pill.png', 'isLegacyTuna': true});
-        }
-        bool showLegacyToros = data['brand'] == 'akdeniz_toros';
-        if (showLegacyToros) {
-          activeBadges.add({'name': 'Akdeniz Toros', 'iconUrl': 'assets/images/akdeniz_toros_logo_pill.png', 'isLegacyToros': true});
-        }
-      }
-    }
 
     final String distanceText = distance < 1
         ? '${(distance * 1000).toInt()} m'
@@ -800,14 +765,8 @@ class WalletBusinessCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ...activeBadges.map((badge) {
-                    final isLegacyTuna = badge['isLegacyTuna'] == true;
-                    final isLegacyToros = badge['isLegacyToros'] == true;
-                    final Color badgeColor = isLegacyTuna 
-                      ? const Color(0xFFA01E22) 
-                      : (isLegacyToros ? const Color(0xFF1B5E20) : Theme.of(context).colorScheme.surface);
-                    final Color textColor = (isLegacyTuna || isLegacyToros) 
-                      ? Colors.white 
-                      : Theme.of(context).colorScheme.onSurface;
+                    final Color badgeColor = Theme.of(context).colorScheme.surface;
+                    final Color textColor = Theme.of(context).colorScheme.onSurface;
 
                     final bool hasIcon = badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty;
 
@@ -816,9 +775,9 @@ class WalletBusinessCard extends ConsumerWidget {
                       child: GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          if (isLegacyTuna || badge['name'].toString().toLowerCase().contains('tuna')) {
+                          if (badge['name'].toString().toLowerCase().contains('tuna')) {
                             BrandInfoSheet.show(context, forcedBrand: 'tuna');
-                          } else if (isLegacyToros || badge['name'].toString().toLowerCase().contains('toros')) {
+                          } else if (badge['name'].toString().toLowerCase().contains('toros')) {
                             BrandInfoSheet.show(context, forcedBrand: 'toros');
                           }
                         },
@@ -863,15 +822,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                               const SizedBox.shrink(),
                                         ),
                                 )
-                              else if (isLegacyTuna)
-                                Text(
-                                  'TUNA',
-                                  style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
                                 )
-                              else if (isLegacyToros)
-                                Text(
-                                  'TOROS',
-                                  style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
                                 )
                               else ...[
                                 Icon(Icons.verified, color: textColor, size: 14),
