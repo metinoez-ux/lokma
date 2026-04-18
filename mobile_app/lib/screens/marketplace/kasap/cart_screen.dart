@@ -669,7 +669,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('cart.user_info_error'.tr())),
         );
-        return;
+        return false;
       }
       
       final userDisplayName = currentUser?.displayName ?? firebaseUser?.displayName ?? firebaseUser?.email ?? 'User';
@@ -934,9 +934,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             isScheduledOrder: _scheduledDeliverySlot != null && !_isPickUp && !_isDineIn,
             scheduledDate: _scheduledDeliverySlot,
             onDismiss: () {
-              // Dismiss _CheckoutFullPage gracefully prior to go_router action
-              Navigator.of(context).popUntil((route) => route.settings.name == '/cart' || route.isFirst);
-              
+              // Pop the Checkout Full Page from root navigator
+              if (Navigator.of(context, rootNavigator: true).canPop()) {
+                Navigator.of(context, rootNavigator: true).pop();
+              }
               // Gracefully reset to the home state
               GoRouter.of(context).go('/restoran');
             },
@@ -5970,7 +5971,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     }
 
     if (!mounted) return;
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder(
         pageBuilder: (routeContext, animation, secondaryAnimation) {
           return _CheckoutFullPage(
@@ -10082,7 +10083,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
-                    onTap: parent._isSubmitting ? null : () {
+                    onTap: parent._isSubmitting ? null : () async {
                       // Payment method check
                       if (parent._paymentMethod == null) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -10150,7 +10151,14 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       ),
                       child: Center(
                         child: _localIsSubmitting
-                            ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                                  const SizedBox(width: 12),
+                                  Text(tr('global.processing', defaultValue: 'İşleniyor, lütfen bekleyin...'), style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
+                                ],
+                              )
                             : parent._paymentMethod == 'card'
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -10287,7 +10295,7 @@ class _PaymentMethodSelectionPageState extends State<_PaymentMethodSelectionPage
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         ),
         centerTitle: true,
         title: Text(

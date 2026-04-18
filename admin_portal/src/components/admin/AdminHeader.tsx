@@ -422,9 +422,7 @@ export default function AdminHeader() {
  >
  <span className="text-yellow-800 dark:text-yellow-400 text-xs font-bold">{pendingOrderCount}</span>
  <span className="text-yellow-300 text-[10px]">{t('pendingOrders')}</span>
- {pendingWaitStr && (
- <span className="text-yellow-500 text-[10px] font-mono">{pendingWaitStr}</span>
- )}
+ <PendingWaitDisplay oldestPendingTime={oldestPendingTime} />
  </button>
  )}
  <div className="relative" ref={tabletProfileRef}>
@@ -1048,9 +1046,7 @@ export default function AdminHeader() {
  >
  <span className="text-yellow-800 dark:text-yellow-400 text-[10px] font-bold">{pendingOrderCount}</span>
  <span className="text-yellow-300 text-[10px]">{t('pendingOrders')}</span>
- {pendingWaitStr && (
- <span className="text-yellow-500 text-[10px] font-mono">{pendingWaitStr}</span>
- )}
+ <PendingWaitDisplay oldestPendingTime={oldestPendingTime} />
  </button>
  )}
  </div>

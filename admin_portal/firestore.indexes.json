@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "meat_orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "butcherId", "order": "ASCENDING" },
+        { "fieldPath": "pickupTime", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "reservations",
       "queryScope": "COLLECTION_GROUP",
       "fields": [

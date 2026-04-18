@@ -2,6 +2,7 @@ import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:permission_handler/permission_handler.dart';
 
 /// Native device calendar integration for scheduled orders & table reservations.
 /// Provides calendar picker bottom sheet and event creation with 1-hour reminder.
@@ -42,6 +43,13 @@ class CalendarService {
           SnackBar(
             content: Text('calendar.permission_denied'.tr()),
             backgroundColor: Colors.amber,
+            action: SnackBarAction(
+              label: 'Ayarlar',
+              textColor: Colors.white,
+              onPressed: () {
+                openAppSettings();
+              },
+            ),
           ),
         );
       }
