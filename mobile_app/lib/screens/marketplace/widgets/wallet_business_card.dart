@@ -14,7 +14,7 @@ import '../../../models/table_group_session_model.dart';
 import '../../../providers/platform_brands_provider.dart';
 import '../../../widgets/group_order_setup_sheet.dart';
 import '../../../widgets/marketplace_group_share_sheet.dart';
-
+import '../../../utils/opening_hours_helper.dart';
 class WalletBusinessCard extends ConsumerWidget {
   final Map<String, dynamic> data;
   final String id;
@@ -544,10 +544,11 @@ class WalletBusinessCard extends ConsumerWidget {
                                           .colorScheme
                                           .onSurface
                                           .withOpacity(0.7),
-                                      fontSize: 13,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
                                     ),
                                   ),
-                                  Expanded(
+                                  Flexible(
                                     child: Text(
                                       cuisineType != null &&
                                               cuisineType!.isNotEmpty
@@ -565,6 +566,36 @@ class WalletBusinessCard extends ConsumerWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
+                                  if (deliveryMode == 'gelal') ...[
+                                    Text(
+                                      ' · ',
+                                      style: GoogleFonts.inter(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                    Text(
+                                      (() {
+                                          String openText = isAvailable ? tr('marketplace.open') : tr('marketplace.closed');
+                                          if (isAvailable && data['openingHours'] != null) {
+                                              final mins = OpeningHoursHelper(data['openingHours']).getMinutesUntilClose(DateTime.now());
+                                              if (mins != null && mins <= 30 && mins > 0) {
+                                                  openText = '$mins dakika daha açık';
+                                              }
+                                          }
+                                          return openText;
+                                      })(),
+                                      style: GoogleFonts.inter(
+                                        color: isAvailable ? Colors.green : Colors.red,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                               const SizedBox(height: 6),
@@ -619,7 +650,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                                       .colorScheme
                                                       .onSurface
                                                       .withOpacity(0.7),
-                                                  fontSize: 13)),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w900)),
                                           Icon(Icons.shopping_basket_outlined,
                                               color: Theme.of(context)
                                                   .colorScheme
@@ -645,6 +677,20 @@ class WalletBusinessCard extends ConsumerWidget {
                                     final hasReservation =
                                         data['hasReservation'] as bool? ??
                                             false;
+                                            
+                                    final addressObj = data['address'] as Map<String, dynamic>?;
+                                    final cityStr = addressObj?['city']?.toString() ?? '';
+                                    final zipStr = (addressObj?['postalCode'] ?? addressObj?['zipCode'])?.toString() ?? '';
+                                    
+                                    String cityDisplayPart = '';
+                                    if (deliveryMode == 'gelal' && cityStr.isNotEmpty) {
+                                      if (zipStr.isNotEmpty) {
+                                        cityDisplayPart = '$zipStr $cityStr';
+                                      } else {
+                                        cityDisplayPart = cityStr;
+                                      }
+                                    }
+
                                     return Row(
                                       children: [
                                         Icon(Icons.location_on_outlined,
@@ -665,6 +711,27 @@ class WalletBusinessCard extends ConsumerWidget {
                                             fontWeight: FontWeight.w400,
                                           ),
                                         ),
+                                        if (cityDisplayPart.isNotEmpty) ...[
+                                          Text(' · ',
+                                              style: GoogleFonts.inter(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withOpacity(0.7),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w900)),
+                                          Text(
+                                            cityDisplayPart,
+                                            style: GoogleFonts.inter(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.8),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
                                         if (hasReservation &&
                                             deliveryMode == 'masada') ...[
                                           Text(' · ',
@@ -673,7 +740,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                                       .colorScheme
                                                       .onSurface
                                                       .withOpacity(0.7),
-                                                  fontSize: 13)),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w900)),
                                           SvgPicture.asset(
                                             'assets/images/icon_masa_rezervasyon.svg',
                                             width: 14,
@@ -810,17 +878,17 @@ class WalletBusinessCard extends ConsumerWidget {
                                   child: badge['iconUrl'].toString().startsWith('assets/')
                                       ? Image.asset(
                                           badge['iconUrl'],
-                                          height: 38,
+                                          height: 33,
                                           fit: BoxFit.contain,
                                         )
                                       : LokmaNetworkImage(
                                           imageUrl: badge['iconUrl'],
-                                          height: 38,
+                                          height: 33,
                                           fit: BoxFit.contain,
                                           placeholder: (context, url) => Container(
                                             color: Colors.transparent,
-                                            height: 38,
-                                            width: 38,
+                                            height: 33,
+                                            width: 33,
                                           ),
                                           errorWidget: (context, url, error) =>
                                               const SizedBox.shrink(),

@@ -124,7 +124,7 @@ class BrandInfoSheet extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'marketplace.brand_disclaimer'.tr(namedArgs: {'brandName': legalEntityName}),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
                 ),
               ),
             ],
@@ -133,7 +133,7 @@ class BrandInfoSheet extends ConsumerWidget {
         
         const Text(
           "Akdeniz Toros, çiftlikten sofraya %100 helal ve sağlıklı gıda prensibiyle hareket eder.\n\nKırşehir ve Balıkesir yöresinde %100 yerli ve tamamen bitkisel yemle beslenen büyükbaş, ve üretimin her aşamasında denetim altındaki kanatlı etlerimizle; sofralarınıza her zaman sağlıklı ve güvenilir bir lezzet ulaştırıyoruz.",
-          style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+          style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.5),
         ),
         const SizedBox(height: 24),
         Row(
@@ -145,7 +145,7 @@ class BrandInfoSheet extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 32),
-        const Text('Neden Akdeniz Toros?', style: TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+        const Text('Neden Akdeniz Toros?', style: TextStyle(color: Color(0xFFE0E0E0), fontSize: 20, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         _buildCheckItem('Helal ve Sağlıklı', 'Besmele ile uzman kasaplar tarafından, İslami usullere tamamen uygun kesim güvencesi.'),
         _buildCheckItem('Yerli ve Bitkisel Besi', 'Hayvanlarımız doğal yöre çiftliklerinde sadece %100 bitkisel yemlerle sağlığa uygun yetiştirilir.'),
@@ -199,7 +199,7 @@ class BrandInfoSheet extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'marketplace.brand_disclaimer'.tr(namedArgs: {'brandName': legalEntityName}),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
                 ),
               ),
             ],
@@ -209,7 +209,7 @@ class BrandInfoSheet extends ConsumerWidget {
         // Intro Text
         Text(
           '${'marketplace.${prefix}_description_1'.tr()}\n\n${'marketplace.${prefix}_description_2'.tr()}',
-          style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+          style: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.5),
         ),
         const SizedBox(height: 24),
         
@@ -225,7 +225,7 @@ class BrandInfoSheet extends ConsumerWidget {
         const SizedBox(height: 32),
         
         // Standards List
-        Text('marketplace.supply_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+        Text('marketplace.supply_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 20, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
         _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
@@ -255,14 +255,14 @@ class BrandInfoSheet extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 'marketplace.kuru_yolum_full_desc'.tr(),
-                style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
               ),
             ],
           ),
         ),
         
         const SizedBox(height: 24),
-        Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+        Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 20, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
         _buildCheckItem('marketplace.without_e621'.tr(), 'marketplace.no_msg'.tr()),
@@ -325,8 +325,9 @@ class BrandInfoSheet extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600, fontSize: 15)),
-                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                Text(title, style: const TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600, fontSize: 16)),
+                const SizedBox(height: 2),
+                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 14)),
               ],
             ),
           ),

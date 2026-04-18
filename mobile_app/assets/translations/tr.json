@@ -1134,7 +1134,7 @@
     "business_type_section": "İşletme Türü",
     "filter_all": "Tümü",
     "business_count": "{} işletme",
-    "order_at_partners": "{count} İş Yerinde Sipariş Ver",
+    "order_at_partners": "{count} LOKMA Partneri'nden sipariş ver",
     "reserve_table_at_partners": "{count} işletmede masa rezervasyonu",
     "reserve_table_discover": "Yakınındaki işletmeleri keşfet",
     "quick_filters_section": "Hızlı Filtreler",

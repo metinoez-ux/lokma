@@ -619,8 +619,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       
-      final accent = const Color(0xFF282726); // LOKMA premium wallet black
-      
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final accent = isDark ? const Color(0xFFF41C54) : const Color(0xFF282726);      
       showDialog(
         context: context,
         barrierDismissible: true,
@@ -719,10 +719,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: Text(
                         'common.continue_button'.tr(),
                         style: GoogleFonts.inter(
-                          fontSize: 14, // Reduced
-                          fontWeight: FontWeight.w200,
-                          letterSpacing: 0.5,
-                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -747,9 +747,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: Text(
                         'marketplace.find_open_businesses'.tr(),
                         style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w200,
-                          letterSpacing: 0.5,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
@@ -2818,19 +2818,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                     child: badge['iconUrl'].toString().startsWith('http')
                                                         ? LokmaNetworkImage(
                                                             imageUrl: badge['iconUrl'],
-                                                            height: 22,
+                                                            height: 33,
                                                             fit: BoxFit.contain,
                                                             placeholder: (context, url) => Container(
                                                               color: Colors.transparent,
-                                                              height: 22,
-                                                              width: 22,
+                                                              height: 33,
+                                                              width: 33,
                                                             ),
                                                             errorWidget: (context, url, error) =>
                                                                 const SizedBox.shrink(),
                                                           )
                                                         : Image.asset(
                                                             badge['iconUrl'],
-                                                            height: 22,
+                                                            height: 33,
                                                             fit: BoxFit.contain,
                                                           ),
                                                   ),
@@ -3191,15 +3191,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  Container(
                                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.4),
                                    child: Text(
-                                     isPausedForCurrentTab
-                                         ? (pauseRemainingMinutes != null
-                                             ? (_deliveryModeIndex == 0
-                                                 ? tr('marketplace.delivery_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'})
-                                                 : tr('marketplace.pickup_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'}))
-                                             : (_deliveryModeIndex == 0
-                                                 ? tr('marketplace.courier_not_available')
-                                                 : tr('marketplace.pickup_paused')))
-                                         : (isOpen ? tr('business_status.open') : tr('business_status.closed')),
+                                     (() {
+                                         if (isPausedForCurrentTab) {
+                                             return pauseRemainingMinutes != null
+                                                 ? (_deliveryModeIndex == 0
+                                                     ? tr('marketplace.delivery_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'})
+                                                     : tr('marketplace.pickup_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'}))
+                                                 : (_deliveryModeIndex == 0
+                                                     ? tr('marketplace.courier_not_available')
+                                                     : tr('marketplace.pickup_paused'));
+                                         }
+                                         String openText = isOpen ? tr('business_status.open') : tr('business_status.closed');
+                                         if (isOpen && data?['openingHours'] != null) {
+                                             final mins = OpeningHoursHelper(data!['openingHours']).getMinutesUntilClose(DateTime.now());
+                                             if (mins != null && mins <= 30 && mins > 0) {
+                                                 openText = '$mins dakika daha açık';
+                                             }
+                                         }
+                                         return openText;
+                                     })(),
                                      style: TextStyle(
                                        color: isPausedForCurrentTab
                                            ? Colors.orange

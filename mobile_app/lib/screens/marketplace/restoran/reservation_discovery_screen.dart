@@ -664,7 +664,7 @@ class _ReservationDiscoveryScreenState
                         '${rating.toStringAsFixed(1)} ($ratingCount)',
                         style: TextStyle(fontSize: 12, color: subtleColor, fontWeight: FontWeight.w500),
                       ),
-                      Text(' · ', style: TextStyle(fontSize: 12, color: subtleColor)),
+                      Text(' · ', style: TextStyle(fontSize: 12, color: subtleColor, fontWeight: FontWeight.w900)),
                     ],
                     Flexible(
                       child: Text(
@@ -692,7 +692,7 @@ class _ReservationDiscoveryScreenState
                       ),
                     ],
                     if (tableCapacity > 0) ...[
-                      if (biz.distanceKm != null) Text(' · ', style: TextStyle(fontSize: 12, color: subtleColor)),
+                      if (biz.distanceKm != null) Text(' · ', style: TextStyle(fontSize: 12, color: subtleColor, fontWeight: FontWeight.w900)),
                       Icon(Icons.table_restaurant_rounded, size: 13, color: subtleColor),
                       const SizedBox(width: 2),
                       Text(

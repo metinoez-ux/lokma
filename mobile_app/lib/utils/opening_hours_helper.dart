@@ -105,18 +105,26 @@ class OpeningHoursHelper {
   }
 
   bool _isTimeInScheduleDay(DateTime time, DateTime scheduleDate) {
+    return _getCloseTimeIfOpen(time, scheduleDate) != null;
+  }
+
+  // Returns the DateTime when the CURRENT shift ends, if the given time is within an open shift.
+  DateTime? _getCloseTimeIfOpen(DateTime time, DateTime scheduleDate) {
     final hoursStr = _getHoursStringForDate(scheduleDate);
     if (hoursStr == null) {
-       return false; 
+       return null; 
     }
     
     final formatted = hoursStr.trim();
     final lower = formatted.toLowerCase();
 
     // Strict Closed Checks
-    if (lower.contains('kapalı') || lower.contains('closed') || formatted == 'Saatler Yok') return false;
-    if (formatted == '-' || formatted.isEmpty) return false;
-    if (lower.contains('24 saat') || lower.contains('open 24')) return true;
+    if (lower.contains('kapalı') || lower.contains('closed') || formatted == 'Saatler Yok') return null;
+    if (formatted == '-' || formatted.isEmpty) return null;
+    if (lower.contains('24 saat') || lower.contains('open 24')) {
+      // Return a distant future date to say it never closes
+      return time.add(const Duration(days: 365));
+    }
 
     try {
       final now = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day); // Base date for parsing logic
@@ -148,16 +156,30 @@ class OpeningHoursHelper {
           
           // Include exact start time (>= instead of >) and exclude exact end time (<)
           if ((time.isAtSameMomentAs(start) || time.isAfter(start)) && time.isBefore(end)) {
-            return true;
+            return end;
           }
       }
     } catch (e) {
       debugPrint('Error parsing hours in helper: $e');
-      // On parsing error, default to OPEN to avoid blocking sales?
-      return true; 
+      // On parsing error, pretend it stays open forever to avoid false closing.
+      return time.add(const Duration(days: 365)); 
     }
     
-    return false;
+    return null;
+  }
+
+  int? getMinutesUntilClose(DateTime time) {
+    if (openingHours == null) return null;
+
+    DateTime? closeTime = _getCloseTimeIfOpen(time, time);
+    if (closeTime == null) {
+      closeTime = _getCloseTimeIfOpen(time, time.subtract(const Duration(days: 1)));
+    }
+    
+    if (closeTime != null) {
+      return closeTime.difference(time).inMinutes;
+    }
+    return null;
   }
 
   bool isOpenAt(DateTime time) {

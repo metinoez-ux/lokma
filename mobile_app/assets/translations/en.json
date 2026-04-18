@@ -1148,7 +1148,7 @@
     "business_type_section": "Business Type",
     "filter_all": "All",
     "business_count": "{} businesses",
-    "order_at_partners": "Order from {count} partners",
+    "order_at_partners": "Order from {count} LOKMA Partners",
     "reserve_table_at_partners": "Reserve a table at {count} partners",
     "reserve_table_discover": "Discover businesses near you",
     "quick_filters_section": "Quick Filters",

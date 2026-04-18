@@ -843,7 +843,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 if (!_isLoading && _filteredBusinesses.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 8),
                       child: Text(
                         tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                         style: TextStyle(
@@ -865,7 +865,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             if (_deliveryMode != 'masa' && !_isLoading && _filteredBusinesses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 5, 20, 8),
                   child: Text(
                     tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                     style: TextStyle(
@@ -1255,12 +1255,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.search, color: Colors.grey[600], size: 22),
+              Icon(Icons.search, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   tr('discovery.search_food_restaurant_cuisine'),
-                  style: TextStyle(color: Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w400),
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700], 
+                    fontSize: 15, 
+                    fontWeight: FontWeight.w500
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -2038,8 +2042,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       context: context,
       barrierDismissible: true,
       builder: (dialogCtx) {
-        final accent = const Color(0xFF282726); // LOKMA premium wallet black
-        
+        final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+        final accent = isDark ? const Color(0xFFF41C54) : const Color(0xFF282726);
         return Dialog(
           backgroundColor: Theme.of(dialogCtx).colorScheme.surface,
           surfaceTintColor: Colors.transparent,
@@ -2144,10 +2148,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: Text(
                       'common.continue_button'.tr(),
                       style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w300,
-                        letterSpacing: 0.5,
-                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -2183,9 +2187,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: Text(
                       'marketplace.find_open_businesses'.tr(),
                       style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w300,
-                        letterSpacing: 0.5,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ),

@@ -1133,7 +1133,7 @@
     "business_type_section": "Geschäftstyp",
     "filter_all": "Alle",
     "business_count": "{} Geschäfte",
-    "order_at_partners": "Bei {count} Partnern bestellen",
+    "order_at_partners": "Bei {count} LOKMA Partnern bestellen",
     "reserve_table_at_partners": "Bei {count} Partnern einen Tisch reservieren",
     "reserve_table_discover": "Partner in deiner Nähe entdecken",
     "quick_filters_section": "Schnellfilter",

@@ -425,6 +425,7 @@ class _KasapScreenState extends State<KasapScreen> {
                   context.push('/business/${doc.id}');
                 }
               },
+              data: data,
             );
           },
         );
@@ -449,6 +450,7 @@ class _BusinessCard extends StatelessWidget {
   final Color sectorColor;
   final String businessId;
   final VoidCallback onTap;
+  final Map<String, dynamic>? data;
 
   const _BusinessCard({
     required this.id,
@@ -466,6 +468,7 @@ class _BusinessCard extends StatelessWidget {
     required this.sectorColor,
     required this.businessId,
     required this.onTap,
+    this.data,
   });
 
   @override
@@ -713,7 +716,17 @@ class _BusinessCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              pauseText ?? (isOpen ? 'marketplace.open'.tr() : 'marketplace.closed'.tr()),
+                              (() {
+                                  if (pauseText != null) return pauseText!;
+                                  String openText = isOpen ? 'marketplace.open'.tr() : 'marketplace.closed'.tr();
+                                  if (isOpen && data != null && data!['openingHours'] != null) {
+                                      final mins = OpeningHoursHelper(data!['openingHours']).getMinutesUntilClose(DateTime.now());
+                                      if (mins != null && mins <= 30 && mins > 0) {
+                                          openText = '$mins dakika daha açık';
+                                      }
+                                  }
+                                  return openText;
+                              })(),
                               style: TextStyle(
                                 color: pauseText != null ? Colors.orange : (isOpen ? Colors.green : Colors.red),
                                 fontSize: pauseText != null ? 10 : 12,
@@ -742,7 +755,7 @@ class _BusinessCard extends StatelessWidget {
                           ),
                           Text(
                             ' · ',
-                            style: TextStyle(color: textColor, fontSize: 15),
+                            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w900),
                           ),
                           Expanded(
                             child: Text(
