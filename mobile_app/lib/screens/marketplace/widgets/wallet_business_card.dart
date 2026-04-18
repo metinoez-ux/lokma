@@ -81,9 +81,9 @@ class WalletBusinessCard extends ConsumerWidget {
     final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
     final bool hasNewBrandSystem = data.containsKey('activeBrandIds') && (data['activeBrandIds'] as List).isNotEmpty;
     final List<Map<String, dynamic>> activeBadges = [];
-    platformBrandsAsync.whenData((brands) {
+    if (platformBrandsAsync.value != null && activeBrandIds.isNotEmpty) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
-      for (final brand in brands) {
+      for (final brand in platformBrandsAsync.value!) {
         if (activeBrandIds.contains(brand.id)) {
           activeBadges.add({
             'name': brand.name,
@@ -91,8 +91,7 @@ class WalletBusinessCard extends ConsumerWidget {
           });
         }
       }
-
-    });
+    }
 
     final String distanceText = distance < 1
         ? '${(distance * 1000).toInt()} m'
