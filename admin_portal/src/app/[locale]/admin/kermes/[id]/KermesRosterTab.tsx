@@ -811,7 +811,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
             Buna kermese henüz vardiya eklenmedi.
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-[880px] mx-auto">
             {Object.keys(groupedRosters).sort().map(dateStr => {
               const dateObj = new Date(dateStr);
               return (

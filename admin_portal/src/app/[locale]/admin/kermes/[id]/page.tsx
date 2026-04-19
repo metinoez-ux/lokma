@@ -2168,7 +2168,7 @@ export default function KermesDetailPage() {
  </div>
 
  {/* Tabs */}
- <div className="flex gap-2 mb-6 bg-card p-1 rounded-xl w-full overflow-x-auto custom-scrollbar">
+ <div className="flex gap-2 mb-6 bg-card p-1 rounded-xl w-full sm:w-fit mx-auto overflow-x-auto custom-scrollbar">
  <button onClick={() => setActiveTab('bilgi')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Bilgiler
