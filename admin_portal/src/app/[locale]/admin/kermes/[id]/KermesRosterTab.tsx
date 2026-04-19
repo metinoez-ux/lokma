@@ -519,13 +519,13 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Vardiya ve Mesai Planlama Paneli */}
       <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-        <div className="flex justify-between items-center mb-4">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+          <div className="flex-1 min-w-0 pr-4">
             <h3 className="text-foreground font-bold flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-cyan-600/20 flex items-center justify-center text-sm">📅</span>
+              <span className="w-8 h-8 rounded-lg bg-cyan-600/20 flex shrink-0 items-center justify-center text-sm">📅</span>
               Vardiya ve Mesai Planlama
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
@@ -535,7 +535,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           <button 
             type="button"
             onClick={() => setIsAddingVardiya(!isAddingVardiya)}
-            className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-lg transition"
+            className="shrink-0 whitespace-nowrap px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold rounded-lg transition"
           >
             {isAddingVardiya ? 'İptal Et' : '+ Yeni Vardiya Ekle'}
           </button>
@@ -544,7 +544,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
         {isAddingVardiya && (
           <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30">
             <h5 className="text-sm font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h5>
-            <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <form onSubmit={handleCreate} className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-end">
           <div className="w-full min-w-0 space-y-1">
             <div className="flex justify-between items-center">
               <label className="text-xs text-muted-foreground">Personel Seç</label>
@@ -675,9 +675,8 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
         </form>
         </div>
         )}
-      </div>
 
-      {/* Coverage Dashboard Accordion */}
+      {/* Coverage Dashboard Accordion (Artik ana kartin icinde unified) */}
       <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
         <button 
           onClick={() => setCoverageOpen(!coverageOpen)}
@@ -974,6 +973,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
