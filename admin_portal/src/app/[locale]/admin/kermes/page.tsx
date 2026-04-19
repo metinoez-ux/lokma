@@ -377,162 +377,142 @@ const { admin, loading: adminLoading } = useAdmin();
 
  if (adminLoading || loading) {
  return (
- <div className="min-h-screen bg-background flex items-center justify-center">
- <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
- </div>
- );
- }
+    <div className="min-h-screen bg-background p-6">
+      {/* Header */}
+      <div className="max-w-6xl mx-auto mb-6">
+        <Link href="/admin/dashboard" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
+          ← Admin Paneli
+        </Link>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              {t('kermes_yonetimi')}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {t('tum_kermesleri_yonetin')} {filteredEvents.length} kermes
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {(admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
+              <Link
+                href="/admin/kermes/new"
+                className="px-6 py-3 bg-white hover:bg-gray-200 text-black dark:bg-gray-100 dark:hover:bg-white dark:text-gray-900 rounded-xl font-bold transition shadow-sm w-full sm:w-auto inline-flex justify-center whitespace-nowrap"
+              >
+                <span>➕</span>
+                {t('yeni_kermes_ekle')}
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
 
- if (!admin) {
- return (
- <div className="min-h-screen bg-background flex items-center justify-center">
- <div className="text-foreground">{t('erisim_reddedildi')}</div>
- </div>
- );
- }
+      {/* Search and Filters */}
+      <div className="max-w-6xl mx-auto mb-6">
+        <div className="bg-card rounded-xl p-4">
+          {/* TOP ROW: Search */}
+          <div className="relative w-full mb-4">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+            <input
+              type="text"
+              placeholder={t('i_sim_posta_kodu_sehir_veya_yetkili_kisi')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
 
- return (
- <div className="min-h-screen bg-background p-6">
- 
- <div className="max-w-6xl mx-auto mb-6">
- <Link href="/admin/dashboard" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
- ← Admin Paneli
- </Link>
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
- <div>
- <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
- {t('kermes_yonetimi')}
- </h1>
- <p className="text-muted-foreground text-sm mt-1">
- {t('tum_kermesleri_yonetin')} {filteredEvents.length} kermes
- </p>
- </div>
- <div className="flex flex-wrap items-center gap-2">
- 
- {(admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
- <Link
- href="/admin/kermes/new"
- className="px-6 py-3 bg-white hover:bg-gray-200 text-black dark:bg-gray-100 dark:hover:bg-white dark:text-gray-900 rounded-xl font-bold transition shadow-sm w-full sm:w-auto inline-flex justify-center whitespace-nowrap"
- >
- <span>➕</span>
- {t('yeni_kermes_ekle')}
- </Link>
- )}
- </div>
- </div>
+          {/* BOTTOM ROW: Filters */}
+          <div className="flex flex-wrap items-center gap-3 w-full">
+            <select
+              title="Sıralama"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'status' | 'newest')}
+              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+            >
+              <option value="status">Tarihe Göre (Önce Aktif)</option>
+              <option value="newest">En Son Eklenenler</option>
+            </select>
 
+            <select
+              title="Ülke Filtresi & Sıla Yolu"
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+            >
+              <option value="all">Tüm Ülkeler</option>
+              <option value="sila_yolu">Sıla Yolu Kermesleri</option>
+              {uniqueCountries.map((country: any) => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
 
- 
-  <div className="max-w-6xl mx-auto mb-6">
-  <div className="bg-card rounded-xl p-4">
-  
-  <div className="relative w-full mb-4">
-  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
-  <input
-  type="text"
-  placeholder={t('i_sim_posta_kodu_sehir_veya_yetkili_kisi')}
-  value={searchQuery}
-  onChange={(e) => setSearchQuery(e.target.value)}
-  className="w-full pl-12 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-  />
-  </div>
+            <select
+              title="Siparis turu filtrele"
+              value={selectedModality}
+              onChange={(e) => setSelectedModality(e.target.value)}
+              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+            >
+              <option value="all">Tüm Sipariş Türleri</option>
+              <option value="menu_only">Sadece Menü</option>
+              <option value="takeaway">Gel-Al</option>
+              <option value="delivery">Kurye</option>
+              <option value="dine_in">Masa</option>
+            </select>
 
-  
-  <div className="flex flex-wrap items-center gap-3 w-full">
-  
- <select
- title="Sıralama"
- value={sortOrder}
- onChange={(e) => setSortOrder(e.target.value as 'status' | 'newest')}
- className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
- >
- <option value="status">Tarihe Göre (Önce Aktif)</option>
- <option value="newest">En Son Eklenenler</option>
- </select>
+            <select
+              title="Rozet filtrele"
+              value={selectedBadge}
+              onChange={(e) => setSelectedBadge(e.target.value)}
+              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+            >
+              <option value="all">Tüm Badgeler</option>
+              <option value="none">Sertifikasız Kermesler</option>
+              {badges.map((b: any) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
 
- 
- <select
- title="Ülke Filtresi & Sıla Yolu"
- value={countryFilter}
- onChange={(e) => setCountryFilter(e.target.value)}
- className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
- >
- <option value="all">Tüm Ülkeler</option>
- <option value="sila_yolu">Sıla Yolu Kermesleri</option>
- {uniqueCountries.map((country: any) => (
- <option key={country} value={country}>{country}</option>
- ))}
- </select>
+            <select
+              title="Zaman durumu filtrele"
+              value={timeStatusFilter}
+              onChange={(e) => setTimeStatusFilter(e.target.value as 'all' | 'past' | 'active' | 'future' | 'archived')}
+              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+            >
+              <option value="all">{t('tum_kermesler')}</option>
+              <option value="active">{t('aktif_devam_eden')}</option>
+              <option value="future">{t('yaklasan')}</option>
+              <option value="past">{t('gecmis')}</option>
+              {admin.role === 'super_admin' && (
+                <option value="archived">{t('arsivlenmis')}</option>
+              )}
+            </select>
+          </div>
+        </div>
+      </div>
 
- 
- <select
- title="Siparis turu filtrele"
- value={selectedModality}
- onChange={(e) => setSelectedModality(e.target.value)}
- className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
- >
- <option value="all">Tüm Sipariş Türleri</option>
- <option value="menu_only">Sadece Menü</option>
- <option value="takeaway">Gel-Al</option>
- <option value="delivery">Kurye</option>
- <option value="dine_in">Masa</option>
- </select>
+      {/* Cards Grid */}
+      <div className="max-w-6xl mx-auto">
+        {filteredEvents.length === 0 ? (
+          <div className="bg-card rounded-xl p-12 text-center">
+            <div className="text-6xl mb-4">K</div>
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              {events.length === 0 ? t('henuz_kermes_yok') : t('sonuc_bulunamadi')}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {events.length === 0 ? t('i_lk_kermes_etkinliginizi_olusturun') : t('arama_kriterlerinize_uygun_kermes_buluna')}
+            </p>
+            {events.length === 0 && (admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
+              <Link
+                href="/admin/kermes/new"
+                className="inline-block bg-pink-600 hover:bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold"
+              >
+                {t('kermes_olustur')}
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
 
- 
- <select
- title="Rozet filtrele"
- value={selectedBadge}
- onChange={(e) => setSelectedBadge(e.target.value)}
- className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
- >
- <option value="all">Tüm Badgeler</option>
- <option value="none">Sertifikasız Kermesler</option>
- {badges.map(b => (
- <option key={b.id} value={b.id}>{b.name}</option>
- ))}
- </select>
-
- 
- <select
- title="Zaman durumu filtrele"
- value={timeStatusFilter}
- onChange={(e) => setTimeStatusFilter(e.target.value as 'all' | 'past' | 'active' | 'future' | 'archived')}
- className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
- >
- <option value="all">{t('tum_kermesler')}</option>
- <option value="active">{t('aktif_devam_eden')}</option>
- <option value="future">{t('yaklasan')}</option>
- <option value="past">{t('gecmis')}</option>
- {admin.role === 'super_admin' && (
- <option value="archived">{t('arsivlenmis')}</option>
- )}
- </select>
- </div>
- </div>
- </div>
-
- 
- <div className="max-w-6xl mx-auto">
- {filteredEvents.length === 0 ? (
- <div className="bg-card rounded-xl p-12 text-center">
- <div className="text-6xl mb-4">K</div>
- <h2 className="text-xl font-bold text-foreground mb-2">
- {events.length === 0 ? t('henuz_kermes_yok') : t('sonuc_bulunamadi')}
- </h2>
- <p className="text-muted-foreground mb-6">
- {events.length === 0 ? t('i_lk_kermes_etkinliginizi_olusturun') : t('arama_kriterlerinize_uygun_kermes_buluna')}
- </p>
- {events.length === 0 && (admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
- <Link
- href="/admin/kermes/new"
- className="inline-block bg-pink-600 hover:bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold"
- >
- {t('kermes_olustur')}
- </Link>
- )}
- </div>
- ) : (
- <div className="space-y-3">
  {paginatedEvents.map((event) => {
  const timeStatus = getKermesTimeStatus(event);
  const statusConfig = getStatusConfig(timeStatus);
