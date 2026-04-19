@@ -540,14 +540,7 @@ const { admin, loading: adminLoading } = useAdmin();
  <div className="flex items-center gap-4">
  
  <div className={`w-1 h-12 rounded-full ${statusConfig.color}`} />
-
- 
- <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center font-bold text-muted-foreground shadow-sm flex-shrink-0">
- {event.title ? event.title.charAt(0).toUpperCase() : 'K'}
- </div>
-
- 
- <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
+  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
  
  <div className="md:col-span-2">
  <h3 className="text-foreground font-semibold truncate group-hover:text-pink-800 dark:text-pink-400 transition">
@@ -634,26 +627,15 @@ const { admin, loading: adminLoading } = useAdmin();
  </div>
 
  
- <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${statusConfig.color} text-white hidden sm:block`}>
- {statusConfig.label}
- </span>
-
- 
  <div className="flex gap-2 flex-shrink-0">
- <Link
+  <Link
  href={`/admin/kermes/${event.id}`}
  className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-500 transition text-sm font-medium"
  onClick={(ev) => ev.stopPropagation()}
  >
  ✏️
  </Link>
- <button
- onClick={(ev) => handleArchive(event.id, ev)}
- className="px-3 py-2 bg-muted/50 text-foreground/90 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-amber-600 hover:text-white transition text-sm"
- >
- 📦
- </button>
- </div>
+  </div>
  </div>
 
  
