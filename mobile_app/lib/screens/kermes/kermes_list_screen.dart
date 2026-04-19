@@ -1658,113 +1658,119 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         ),
                         const Spacer(),
                         // Sadece Aktif Chip — sort butonunun solunda, yan yana
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            setState(() {
-                              _onlyActive = !_onlyActive;
-                              _updateFilteredEvents();
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                            decoration: BoxDecoration(
-                              color: _onlyActive
-                                  ? lokmaPink.withOpacity(0.15)
-                                  : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
+                        SizedBox(
+                          height: 38,
+                          child: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() {
+                                _onlyActive = !_onlyActive;
+                                _updateFilteredEvents();
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
                                 color: _onlyActive
-                                    ? lokmaPink.withOpacity(0.6)
-                                    : Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                                    ? lokmaPink.withOpacity(0.15)
+                                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: _onlyActive
+                                      ? lokmaPink.withOpacity(0.6)
+                                      : Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _onlyActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                  size: 16,
-                                  color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  'kermes.filter_only_active'.tr(),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _onlyActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                    size: 16,
+                                    color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    'kermes.filter_only_active'.tr(),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         // Siralama ters cevirme ikonu
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            setState(() {
-                              if (_sortBy == 'date_asc') {
-                                _sortBy = 'date_desc';
-                              } else if (_sortBy == 'date_desc') {
-                                _sortBy = 'date_asc';
-                              } else if (_sortBy == 'distance_asc') {
-                                _sortBy = 'distance_desc';
-                              } else if (_sortBy == 'distance_desc') {
-                                _sortBy = 'distance_asc';
-                              }
-                              _updateFilteredEvents();
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
+                        SizedBox(
+                          height: 38,
+                          child: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() {
+                                if (_sortBy == 'date_asc') {
+                                  _sortBy = 'date_desc';
+                                } else if (_sortBy == 'date_desc') {
+                                  _sortBy = 'date_asc';
+                                } else if (_sortBy == 'distance_asc') {
+                                  _sortBy = 'distance_desc';
+                                } else if (_sortBy == 'distance_desc') {
+                                  _sortBy = 'distance_asc';
+                                }
+                                _updateFilteredEvents();
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
                                 color: Theme.of(context)
                                     .colorScheme
-                                    .outline
-                                    .withOpacity(0.15),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _sortBy.contains('date')
-                                      ? Icons.calendar_today_rounded
-                                      : Icons.near_me_rounded,
-                                  size: 16,
+                                    .surfaceContainerHighest
+                                    .withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
                                   color: Theme.of(context)
                                       .colorScheme
-                                      .onSurface
-                                      .withOpacity(0.7),
+                                      .outline
+                                      .withOpacity(0.15),
                                 ),
-                                const SizedBox(width: 5),
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(
-                                    (_sortBy == 'date_asc' ||
-                                            _sortBy == 'distance_asc')
-                                        ? Icons.arrow_upward_rounded
-                                        : Icons.arrow_downward_rounded,
-                                    key: ValueKey(_sortBy),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _sortBy.contains('date')
+                                        ? Icons.calendar_today_rounded
+                                        : Icons.near_me_rounded,
                                     size: 16,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
                                         .withOpacity(0.7),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 5),
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Icon(
+                                      (_sortBy == 'date_asc' ||
+                                              _sortBy == 'distance_asc')
+                                          ? Icons.arrow_upward_rounded
+                                          : Icons.arrow_downward_rounded,
+                                      key: ValueKey(_sortBy),
+                                      size: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
