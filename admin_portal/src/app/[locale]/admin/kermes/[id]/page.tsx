@@ -2226,9 +2226,9 @@ export default function KermesDetailPage() {
  <div className="space-y-4">
 
   {/* Sub-Tab Navigation */}
-  <div className="bg-card rounded-xl p-1.5 flex gap-1 overflow-x-auto">
-   {([{k:'genel' as const,l:'Genel Ayarlar',c:'bg-pink-600'},{k:'marka' as const,l:'Marka & Sertifika',c:'bg-purple-600'},{k:'ozellikler' as const,l:'Ozellikler',c:'bg-amber-600'},{k:'teslimat' as const,l:'Siparis & Teslimat',c:'bg-blue-600'},{k:'fiyat' as const,l: t('fiyat_ayarlari') || 'Fiyat Ayarlari',c:'bg-emerald-600'},{k:'imkanlar' as const,l:'Park Ayarlari',c:'bg-teal-600'}]).map(t=>(
-    <button key={t.k} onClick={()=>setBilgiSubTab(t.k)} className={`px-3 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-shrink-0 ${bilgiSubTab===t.k?t.c+' text-white shadow':'text-muted-foreground hover:text-foreground hover:bg-muted/60'}`}>{t.l}</button>
+  <div className="flex gap-4 overflow-x-auto border-b border-border/40 pb-2 mb-4 items-center">
+   {([{k:'genel' as const,l:'Genel Ayarlar'},{k:'marka' as const,l:'Marka & Sertifika'},{k:'teslimat' as const,l:'Sipariş & Teslimat'},{k:'fiyat' as const,l: t('fiyat_ayarlari') || 'Fiyat Ayarları'},{k:'imkanlar' as const,l:'Park Ayarları'}]).map(t=>(
+    <button key={t.k} onClick={()=>setBilgiSubTab(t.k)} className={`text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${bilgiSubTab===t.k ? 'text-pink-500 border-b-2 border-pink-500 pb-1' : 'text-muted-foreground hover:text-foreground'}`}>{t.l}</button>
    ))}
    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
     {!isEditing ? (
@@ -2343,7 +2343,7 @@ export default function KermesDetailPage() {
 
  {/* Konum Bilgileri */}
  <div className="pt-4 border-t border-border">
- <h4 className="text-foreground font-medium mb-3">📍 Konum Bilgileri</h4>
+ <h4 className="text-foreground font-medium mb-3">Konum Bilgileri</h4>
  
  {/* Dernek Sec Button */}
  <div className="mb-4">
@@ -2352,8 +2352,7 @@ export default function KermesDetailPage() {
  onClick={() => setShowOrgSearchModal(true)}
  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
  >
- <span>🕌</span>
- <span>Dernek Sec</span>
+ <span>Dernek Seç</span>
  </button>
  <p className="text-xs text-muted-foreground/80 mt-1">
  VIKZ derneklerinden birini secerek konum bilgilerini otomatik doldurabilirsiniz
@@ -2387,10 +2386,10 @@ export default function KermesDetailPage() {
  <button
  type="button"
  onClick={() => setMainMapOpen(true)}
- className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition flex items-center gap-2 flex-shrink-0"
+ className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg border border-border transition flex items-center gap-2 flex-shrink-0"
  title="Haritada Koordinat İşaretle"
  >
- <span>📍</span>
+ <span>Harita</span>
  </button>
  </div>
  {(editForm.latitude && editForm.longitude) && (
@@ -2422,12 +2421,12 @@ export default function KermesDetailPage() {
  </div>
  {/* Kurumsal Ayarlar (Pfand & KDV) */}
  <div className="pt-4 border-t border-border">
- <h4 className="text-foreground font-medium mb-3">🏢 {t('kurumsal_ayarlar') || 'Kurumsal Ayarlar'}</h4>
+ <h4 className="text-foreground font-medium mb-3">{t('kurumsal_ayarlar') || 'Kurumsal Ayarlar'}</h4>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  {/* Pfand Sistemi */}
  <div className="bg-card shadow-sm p-4 rounded-xl border border-border">
  <div className="flex items-center justify-between mb-2">
- <span className="text-foreground font-medium">🍶 Pfand (Depozito) Sistemi</span>
+ <span className="text-foreground font-medium">Pfand (Depozito) Sistemi</span>
  <label className="relative inline-flex items-center cursor-pointer">
  <input type="checkbox" checked={editForm.hasPfandSystem} onChange={(e) => setEditForm({ ...editForm, hasPfandSystem: e.target.checked })} className="sr-only peer" />
  <div className="w-11 h-6 bg-slate-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background dark:after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 transition-colors"></div>
@@ -2467,6 +2466,50 @@ export default function KermesDetailPage() {
  )}
  </div>
  </div>
+ </div>
+
+ </div>
+
+ {/* Ozellikler (Edit Mode) */}
+ <div className="pt-4 border-t border-border mt-4">
+  <label className="text-foreground font-medium block mb-3">{t('ozellikler')}</label>
+  <div className="space-y-4">
+   <div>
+    <label className="text-muted-foreground text-xs block mb-2">{t('etkinlik_ozellikleri_sabit')}</label>
+    <div className="flex flex-wrap gap-2">
+     {eventFeatures.map(f => (
+      <span key={f.id} className="inline-flex items-center gap-0.5 group">
+       <button type="button" onClick={() => toggleFeature(f.id)}
+        className={`px-3 py-1 rounded-full text-xs font-semibold transition inline-flex items-center gap-1.5 ${editFeatures.includes(f.id) ? 'text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+        style={editFeatures.includes(f.id) ? { backgroundColor: f.color } : {}}>
+        {getLocalizedFeatureLabel(f)}
+       </button>
+      </span>
+     ))}
+    </div>
+   </div>
+   <div>
+    <label className="text-muted-foreground text-xs block mb-2">{t('ozel_ozellikler_max_3')}</label>
+    <div className="flex flex-wrap gap-2 mb-2">
+     {editCustomFeatures.map((cf, idx) => (
+      <span key={idx} className="px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white flex items-center gap-1">
+       {cf}
+       <button type="button" onClick={() => setEditCustomFeatures(editCustomFeatures.filter((_, i) => i !== idx))}
+        className="w-4 h-4 rounded-full bg-blue-800 hover:bg-blue-700 flex items-center justify-center text-xs">x</button>
+      </span>
+     ))}
+    </div>
+    {editCustomFeatures.length < 3 && (
+     <div className="flex gap-2">
+      <input type="text" placeholder={t('yeni_ozellik_adi')} id="custom-feature-input-tab"
+       className="flex-1 px-3 py-1 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow text-xs"
+       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.value.trim() && editCustomFeatures.length < 3) { setEditCustomFeatures([...editCustomFeatures, input.value.trim()]); input.value = ''; } } }} />
+      <button type="button" onClick={() => { const input = document.getElementById('custom-feature-input-tab') as HTMLInputElement; if (input?.value.trim() && editCustomFeatures.length < 3) { setEditCustomFeatures([...editCustomFeatures, input.value.trim()]); input.value = ''; } }}
+       className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-500 transition font-medium">+ {t('ekle')}</button>
+     </div>
+    )}
+   </div>
+  </div>
  </div>
 
  </div>
@@ -2746,7 +2789,6 @@ export default function KermesDetailPage() {
  {/* Sila Yolu Kermesi */}
  <div className="bg-card rounded-xl p-6">
   <div className="flex items-center gap-3 mb-1">
-   <span className="text-xl">🛣️</span>
    <h3 className="text-foreground font-bold">Sıla Yolu Kermesi</h3>
   </div>
   <p className="text-muted-foreground text-xs mb-4">
@@ -2766,7 +2808,7 @@ export default function KermesDetailPage() {
    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
     (kermes as any).isSilaYolu ? 'bg-emerald-600/30 text-emerald-400' : 'bg-gray-600/30 text-gray-400'
    }`}>
-    {(kermes as any).isSilaYolu ? '🛣️ Sıla Yolu Kermesi' : 'Normal Kermes'}
+    {(kermes as any).isSilaYolu ? 'Sıla Yolu Kermesi' : 'Normal Kermes'}
    </span>
   )}
  </div>
@@ -2925,76 +2967,7 @@ export default function KermesDetailPage() {
  )}
 
  {/* TAB: Ozellikler */}
- {bilgiSubTab === 'ozellikler' && (
- <div className="bg-card rounded-xl p-6">
- <h3 className="text-foreground font-bold mb-4">Ozellikler</h3>
- {isEditing ? (
- <div className="space-y-6">
- {/* Sabit Ozellikler */}
- <div>
- <label className="text-muted-foreground text-xs block mb-2">{t('etkinlik_ozellikleri_sabit')}</label>
- <div className="flex flex-wrap gap-2">
- {eventFeatures.map(f => (
- <span key={f.id} className="inline-flex items-center gap-0.5 group">
- <button type="button" onClick={() => toggleFeature(f.id)}
- className={`px-3 py-1 rounded-full text-xs font-semibold transition inline-flex items-center gap-1.5 ${editFeatures.includes(f.id) ? 'text-white' : 'bg-gray-700 text-muted-foreground'}`}
- style={editFeatures.includes(f.id) ? { backgroundColor: f.color } : {}}>
- {f.iconUrl ? <img src={f.iconUrl} alt={f.label} className="w-4 h-4 object-contain rounded-sm inline-block" /> : (f.icon && (f.icon.startsWith('http') ? <img src={f.icon} alt="" className="w-4 h-4 object-contain rounded-sm inline-block" /> : <span>{f.icon}</span>))}
- {getLocalizedFeatureLabel(f)}
- </button>
- </span>
- ))}
- </div>
- </div>
 
- {/* Ozel Ozellikler - Max 3 */}
- <div>
- <label className="text-muted-foreground text-xs block mb-2">{t('ozel_ozellikler_max_3')}</label>
- <div className="flex flex-wrap gap-2 mb-2">
- {editCustomFeatures.map((cf, idx) => (
- <span key={idx} className="px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white flex items-center gap-1">
- {cf}
- <button type="button" onClick={() => setEditCustomFeatures(editCustomFeatures.filter((_, i) => i !== idx))}
- className="w-4 h-4 rounded-full bg-blue-800 hover:bg-blue-700 flex items-center justify-center text-xs">x</button>
- </span>
- ))}
- </div>
- {editCustomFeatures.length < 3 && (
- <div className="flex gap-2">
- <input type="text" placeholder={t('yeni_ozellik_adi')} id="custom-feature-input-tab"
- className="flex-1 px-3 py-1 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow text-xs"
- onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.value.trim() && editCustomFeatures.length < 3) { setEditCustomFeatures([...editCustomFeatures, input.value.trim()]); input.value = ''; } } }} />
- <button type="button" onClick={() => { const input = document.getElementById('custom-feature-input-tab') as HTMLInputElement; if (input?.value.trim() && editCustomFeatures.length < 3) { setEditCustomFeatures([...editCustomFeatures, input.value.trim()]); input.value = ''; } }}
- className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-500 transition font-medium">+ {t('ekle')}</button>
- </div>
- )}
- </div>
- </div>
- ) : (
- <div className="space-y-4">
- {kermes.features && Array.isArray(kermes.features) && kermes.features.length > 0 && (
- <div>
- <span className="text-muted-foreground/80 text-sm block mb-2">{t('ozellikler')}</span>
- <div className="flex flex-wrap gap-2">
- {kermes.features.map((fId: string) => (
- <span key={fId} className="px-3 py-1 bg-pink-600/20 text-pink-800 dark:text-pink-400 rounded-full text-xs inline-flex items-center gap-1">
- {(() => { const ic = getFeatureIcon(fId); return ic ? (ic.startsWith('http') ? <img src={ic} alt="" className="w-3.5 h-3.5 object-contain rounded-sm" /> : <span>{ic}</span>) : null; })()}
- {getFeatureLabel(fId)}
- </span>
- ))}
- {kermes.customFeatures && kermes.customFeatures.map((cf: string, idx: number) => (
- <span key={`custom-${idx}`} className="px-3 py-1 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-full text-xs">{cf}</span>
- ))}
- </div>
- </div>
- )}
- {(!kermes.features || kermes.features.length === 0) && (
- <p className="text-muted-foreground text-sm">Henuz ozellik eklenmedi.</p>
- )}
- </div>
- )}
- </div>
- )}
 
  {/* TAB: Fiyat Ayarlari */}
  {bilgiSubTab === 'fiyat' && (
