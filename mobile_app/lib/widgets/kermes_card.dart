@@ -390,44 +390,27 @@ class _KermesCardState extends State<KermesCard> {
                       alignment: Alignment.topCenter,
                       child: Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.calendar_month,
-                                size: 15,
-                                color: Colors.white70),
-                            const SizedBox(width: 6),
-                            Text(
-                              dateRangeText,
-                              style: GoogleFonts.inter(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.3,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          dateRangeText,
+                          style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                     if (bannerRightText.isNotEmpty)
                       Positioned(
-                        right: 12,
-                        top: 5,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            bannerRightText,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                        right: 16,
+                        top: 6,
+                        child: Text(
+                          bannerRightText,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
                           ),
                         ),
                       ),

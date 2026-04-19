@@ -1673,12 +1673,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: _onlyActive
-                                    ? lokmaPink.withOpacity(0.15)
+                                    ? Colors.green.withOpacity(0.15)
                                     : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: _onlyActive
-                                      ? lokmaPink.withOpacity(0.6)
+                                      ? Colors.green.withOpacity(0.6)
                                       : Theme.of(context).colorScheme.outline.withOpacity(0.15),
                                 ),
                               ),
@@ -1688,7 +1688,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                   Icon(
                                     _onlyActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                                     size: 16,
-                                    color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                    color: _onlyActive ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                   ),
                                   const SizedBox(width: 5),
                                   Text(
@@ -1696,7 +1696,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                      color: _onlyActive ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                     ),
                                   ),
                                 ],
