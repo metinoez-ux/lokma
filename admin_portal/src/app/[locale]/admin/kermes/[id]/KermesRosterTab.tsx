@@ -530,9 +530,8 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
       <div id="new-roster-form" className="bg-card border border-border rounded-xl p-5 shadow-sm transition-all duration-500">
         <h4 className="font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h4>
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="w-full space-y-1">
+        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          <div className="w-full min-w-0 space-y-1">
             <div className="flex justify-between items-center">
               <label className="text-xs text-muted-foreground">Personel Seç</label>
               <button 
@@ -558,7 +557,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               ))}
             </select>
           </div>
-          <div className="w-full space-y-1">
+          <div className="w-full min-w-0 space-y-1">
             <label className="text-xs text-muted-foreground">Görev / Rol</label>
             <select 
               value={form.role} 
@@ -588,11 +587,9 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               </optgroup>
             </select>
           </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-            <div className="md:col-span-5 lg:col-span-6 w-full space-y-1">
+          <div className="w-full min-w-0 space-y-1">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs text-muted-foreground">Tarih Aralığı (Başlangıç - Bitiş)</label>
+              <label className="text-xs text-muted-foreground">Tarih Aralığı</label>
               <label className="text-[10px] flex items-center gap-1 cursor-pointer text-blue-500 hover:text-blue-600 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">
                 <input 
                   type="checkbox" 
@@ -606,10 +603,10 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                   }} 
                   className="rounded border-blue-300 w-3 h-3 text-blue-600 focus:ring-blue-500" 
                 />
-                Tüm Kermes Boyunca
+                Tüm Kermes
               </label>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 min-w-0">
               <input 
                 type="date" 
                 value={form.startDate}
@@ -620,7 +617,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                   const val = e.target.value;
                   setForm(prev => ({...prev, startDate: val, endDate: prev.endDate < val ? val : prev.endDate}));
                 }}
-                className="w-full bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
               />
               <span className="text-muted-foreground">-</span>
               <input 
@@ -630,37 +627,36 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                 max={kermesEnd || ''}
                 disabled={isFullKermes}
                 onChange={e => setForm({...form, endDate: e.target.value})}
-                className="w-full bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
           </div>
-            <div className="md:col-span-4 lg:col-span-4 w-full space-y-1">
+          <div className="w-full min-w-0 space-y-1">
             <label className="text-xs text-muted-foreground">Saat (Başlangıç - Bitiş)</label>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 min-w-0">
               <input 
                 type="time" 
                 value={form.startTime}
                 onChange={e => setForm({...form, startTime: e.target.value})}
-                className="w-full bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
+                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
               />
               <span className="text-muted-foreground">-</span>
               <input 
                 type="time" 
                 value={form.endTime}
                 onChange={e => setForm({...form, endTime: e.target.value})}
-                className="w-full bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
+                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
-            <div className="md:col-span-3 lg:col-span-2 w-full shrink-0">
+          <div className="w-full md:col-span-2 flex justify-end mt-2">
             <button 
               type="submit" 
               disabled={isCreating}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg py-2 px-4 transition disabled:opacity-50"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg py-2 px-8 transition disabled:opacity-50 min-w-[150px]"
             >
-              {isCreating ? '...' : 'Ekle'}
+              {isCreating ? 'Ekleniyor...' : 'Kermese Vardiya Ekle'}
             </button>
-          </div>
           </div>
         </form>
       </div>
