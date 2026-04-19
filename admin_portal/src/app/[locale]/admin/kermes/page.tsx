@@ -375,8 +375,17 @@ const { admin, loading: adminLoading } = useAdmin();
  setConfirmArchiveId(null);
  };
 
- if (adminLoading || loading) {
- return (
+  if (adminLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!admin) return null;
+
+  return (
     <div className="min-h-screen bg-background p-6">
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-6">
@@ -675,6 +684,4 @@ const { admin, loading: adminLoading } = useAdmin();
  />
  </div>
  );
-}
-
 }
