@@ -534,7 +534,7 @@ const { admin, loading: adminLoading } = useAdmin();
  return (
  <div
  key={event.id}
- className={`${statusConfig.bg} rounded-xl p-4 border ${statusConfig.border}/30 hover:border-pink-500/50 transition cursor-pointer group`}
+ className={`${statusConfig.bg} rounded-xl p-4 border ${statusConfig.border}/30 hover:border-slate-500/50 transition cursor-pointer group`}
  onClick={() => router.push(`/admin/kermes/${event.id}`)}
  >
  <div className="flex items-center gap-4">
@@ -543,7 +543,7 @@ const { admin, loading: adminLoading } = useAdmin();
   <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
  
  <div className="md:col-span-2">
- <h3 className="text-foreground font-semibold truncate group-hover:text-pink-800 dark:text-pink-400 transition">
+ <h3 className="text-foreground font-semibold truncate transition">
  {event.title || 'İsimsiz Kermes'}
  </h3>
  {event.organizationName && (
