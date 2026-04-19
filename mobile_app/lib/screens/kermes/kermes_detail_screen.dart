@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,25 +99,25 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     if (_currentEvent.hasDelivery) {
       modes.add((
         absoluteIndex: 0,
-        title: 'Evine',
+        title: 'kermes.delivery_home'.tr(),
         icon: Icons.delivery_dining,
-        subtitle: 'gelsin'
+        subtitle: 'kermes.delivery_home_sub'.tr()
       ));
     }
     if (_currentEvent.hasTakeaway) {
       modes.add((
         absoluteIndex: 1,
-        title: 'Gel Al',
+        title: 'kermes.delivery_takeaway'.tr(),
         icon: Icons.shopping_bag_outlined,
-        subtitle: 'Sıra bekleme'
+        subtitle: 'kermes.delivery_takeaway_sub'.tr()
       ));
     }
     if (_currentEvent.hasDineIn) {
       modes.add((
         absoluteIndex: 2,
-        title: '(Masa)',
+        title: 'kermes.delivery_dinein'.tr(),
         icon: Icons.restaurant,
-        subtitle: 'Kermeste ye'
+        subtitle: 'kermes.delivery_dinein_sub'.tr()
       ));
     }
     return modes;
@@ -230,16 +231,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   }
 
   String _getTurkishDayName(DateTime date) {
-    const days = [
-      'Pazartesi',
-      'Salı',
-      'Çarşamba',
-      'Perşembe',
-      'Cuma',
-      'Cumartesi',
-      'Pazar'
-    ];
-    return days[date.weekday - 1];
+    return DateFormat('EEEE', context.locale.languageCode).format(date);
   }
 
   DateTime _lastScrollTime = DateTime.now();
@@ -743,7 +735,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Sadece Dijital Menü',
+                'kermes.digital_menu_only'.tr(),
                 style: TextStyle(
                   color: Theme.of(dialogContext).brightness == Brightness.dark
                       ? Colors.white
@@ -839,7 +831,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
             SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Farklı Kermes Siparişi',
+                'kermes.different_kermes_order'.tr(),
                 style: TextStyle(
                   color: Theme.of(dialogContext).brightness == Brightness.dark
                       ? Colors.white
@@ -979,7 +971,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                 )
               else
                 Text(
-                  'Bu kermes ${badge.label} onaylı ürünler ve sertifikalı tedarikçiler ile çalışmaktadır.',
+                  'kermes.badge_certified_text'.tr(namedArgs: {'badge': badge.label}),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
@@ -1001,7 +993,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     ),
                   ),
                   child: Text(
-                    'Anladım',
+                    'kermes.understood'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -1783,6 +1775,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                                     ),
                                                     child: Text(
                                                       _getTranslatedCategory(category),
+                                                    ),
                                                   ),
                                                   // Cart count badge
                                                   Builder(builder: (context) {
@@ -1790,7 +1783,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                                         ref.watch(
                                                             kermesCartProvider);
                                                     final catCartCount = category ==
-                                                            'Alle'
+                                                            'marketplace.category_all'.tr()
                                                         ? kermesCart.totalItems
                                                         : kermesCart.items
                                                             .where((ci) =>
@@ -1905,7 +1898,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                 isDark ? Colors.grey[700] : Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'Menüde ürün bulunmuyor',
+                          'kermes.no_menu_items'.tr(),
                           style: TextStyle(color: textSecondary, fontSize: 16),
                         ),
                       ],
@@ -2346,22 +2339,22 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                         if (now.isBefore(start)) {
                           final days = start.difference(now).inDays;
                           if (days == 0) {
-                            countdownText = 'BUGÜN BASLIYOR!';
+                            countdownText = 'kermes.starts_today'.tr();
                           } else if (days == 1) {
-                            countdownText = 'YARIN BASLIYOR!';
+                            countdownText = 'kermes.starts_tomorrow'.tr();
                           } else {
-                            countdownText = 'BASLAMASINA $days G\u00dcN';
+                            countdownText = 'kermes.starts_in_days'.tr(namedArgs: {'days': '$days'});
                           }
                         } else if (now.isAfter(end)) {
-                          countdownText = 'KERMES SONA ERDI';
+                          countdownText = 'kermes.event_ended'.tr();
                         } else {
                           final days = end.difference(now).inDays;
                           if (days == 0) {
-                            countdownText = 'SON G\u00dcN!';
+                            countdownText = 'kermes.last_day'.tr();
                           } else if (days == 1) {
-                            countdownText = 'YARIN SONA ERIYOR';
+                            countdownText = 'kermes.ends_tomorrow'.tr();
                           } else {
-                            countdownText = 'BITMESINE $days G\u00dcN';
+                            countdownText = 'kermes.ends_in_days'.tr(namedArgs: {'days': '$days'});
                           }
                         }
                         return Text(
@@ -2419,7 +2412,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'TARİH',
+                                    'kermes.date_label'.tr(),
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.5),
                                       fontSize: 10,
@@ -2467,7 +2460,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    'SAAT',
+                                    'kermes.time_label'.tr(),
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.5),
                                       fontSize: 10,
@@ -2867,8 +2860,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          const Text(
-                            'OTOPARK DURUMU',
+                          Text(
+                            'kermes.parking_status'.tr(),
                             style: TextStyle(
                               color: Color(0xFF4ADE80),
                               fontSize: 10,
@@ -2901,7 +2894,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                       Row(
                         children: [
                           Text(
-                            'Boş Yer: ',
+                            'kermes.parking_empty'.tr(),
                             style:
                                 TextStyle(color: subtleTextColor, fontSize: 12),
                           ),
@@ -2938,21 +2931,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   }
 
   String _formatDateShort(DateTime date) {
-    const months = [
-      'Oca',
-      'Şub',
-      'Mar',
-      'Nis',
-      'May',
-      'Haz',
-      'Tem',
-      'Ağu',
-      'Eyl',
-      'Eki',
-      'Kas',
-      'Ara'
-    ];
-    return '${date.day} ${months[date.month - 1]}';
+    return DateFormat('d MMM', context.locale.languageCode).format(date);
   }
 
   /// OpenWeatherMap ikon kodunu Flutter Material ikona cevirir
@@ -3516,8 +3495,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                     ),
                                     child: Text(
                                       isToday
-                                          ? 'Bugün - ${dayNum}. Gün'
-                                          : '${dayNum}. Gün',
+                                          ? 'kermes.today_day'.tr(namedArgs: {'day': '$dayNum'})
+                                          : 'kermes.nth_day'.tr(namedArgs: {'day': '$dayNum'}),
                                       style: TextStyle(
                                         color: isToday
                                             ? Colors.green
@@ -3757,7 +3736,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'İLETİŞİM',
+                    'kermes.contact_title'.tr(),
                     style: TextStyle(
                       color: subtleTextColor,
                       fontSize: 10,
@@ -3766,7 +3745,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     ),
                   ),
                   Text(
-                    'Bize Ulaşın',
+                    'kermes.contact_us'.tr(),
                     style: TextStyle(
                       color: textColor,
                       fontSize: 14,

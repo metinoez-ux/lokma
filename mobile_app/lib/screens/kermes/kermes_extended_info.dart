@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/services/weather_service.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
@@ -68,6 +69,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
       final forecast = await WeatherService.getForecast(
         lat: widget.event.latitude,
         lon: widget.event.longitude,
+        locale: context.locale.languageCode,
       );
 
       if (mounted && forecast != null) {
@@ -176,7 +178,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'LOKASYON',
+                            'kermes.location_label'.tr(),
                             style: TextStyle(
                               color: isDark ? Colors.grey[400] : Colors.grey[500],
                               fontSize: 9,
@@ -238,12 +240,12 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.navigation, color: Colors.white, size: 18),
-                  SizedBox(width: 12),
+                children: [
+                  const Icon(Icons.navigation, color: Colors.white, size: 18),
+                  const SizedBox(width: 12),
                   Text(
-                    'NAVİGASYON',
-                    style: TextStyle(
+                    'kermes.navigation'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
@@ -359,9 +361,9 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Park Bilgisi',
-                          style: TextStyle(
+                        Text(
+                          'kermes.parking_info'.tr(),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -386,9 +388,9 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Text(
-                              'Müsait Park Alanı',
-                              style: TextStyle(
+                            Text(
+                              'kermes.parking_available'.tr(),
+                              style: const TextStyle(
                                 color: Color(0xFF34D399),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -457,14 +459,14 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
                   color: const Color(0xFF22C55E).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.circle, color: Color(0xFF22C55E), size: 6),
-                    SizedBox(width: 4),
+                    const Icon(Icons.circle, color: Color(0xFF22C55E), size: 6),
+                    const SizedBox(width: 4),
                     Text(
-                      'CANLI',
-                      style: TextStyle(
+                      'kermes.live'.tr(),
+                      style: const TextStyle(
                         color: Color(0xFF22C55E),
                         fontSize: 8,
                         fontWeight: FontWeight.w900,
@@ -476,7 +478,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
               ),
               const SizedBox(width: 12),
               Text(
-                '${widget.event.city.toUpperCase()} HAVA DURUMU',
+                'kermes.city_weather'.tr(namedArgs: {'city': widget.event.city.toUpperCase()}),
                 style: TextStyle(
                   color: isDark ? Colors.grey[400] : Colors.grey[500],
                   fontSize: 11,
@@ -650,7 +652,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              'SAATLİK TAHMİN',
+              'kermes.hourly_forecast'.tr(),
               style: TextStyle(
                 color: isDark ? Colors.grey[500] : Colors.grey[400],
                 fontSize: 9,
@@ -733,7 +735,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 16),
           child: Text(
-            '${widget.event.city.toUpperCase()} KERMES GÜNLERİ\nTAHMİNİ HAVA DURUMU',
+            'kermes.kermes_days_forecast'.tr(namedArgs: {'city': widget.event.city.toUpperCase()}),
             style: TextStyle(
               color: isDark ? Colors.grey[400] : Colors.grey[500],
               fontSize: 11,
@@ -773,7 +775,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$dayNumber. KERMES GÜNÜ',
+                      'kermes.kermes_day'.tr(namedArgs: {'day': '$dayNumber'}),
                       style: TextStyle(
                         color: isDark ? Colors.grey[400] : Colors.grey[500],
                         fontSize: 10,
@@ -864,7 +866,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'YETKİLİ KİŞİ',
+                  'kermes.contact_person'.tr(),
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[500],
                     fontSize: 9,
@@ -878,7 +880,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
                       ? widget.event.contactName!
                       : (widget.event.title.isNotEmpty
                           ? widget.event.title
-                          : 'Yetkili Kişi'),
+                          : 'kermes.contact_person_name'.tr()),
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
                     fontSize: 15,
