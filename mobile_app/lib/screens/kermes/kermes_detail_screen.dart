@@ -2091,8 +2091,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  Colors.black,
-                  Colors.black.withOpacity(0.3),
+                  Colors.black.withOpacity(0.55),
+                  Colors.black.withOpacity(0.15),
                   Colors.transparent,
                 ],
               ),
@@ -2385,20 +2385,28 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
 
                 // Glassmorphic Date & Time Card
                 Container(
-                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withOpacity(0.15),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white.withOpacity(0.15)),
+                        ),
+                        child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Date
@@ -2512,6 +2520,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     ],
                   ),
                 ),
+              ),
+            ),
+          ),
               ],
             ),
           ),
