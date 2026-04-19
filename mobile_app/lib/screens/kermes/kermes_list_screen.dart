@@ -539,17 +539,17 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   if (locations.isNotEmpty) {
                     eventLat = locations.first.latitude;
                     eventLng = locations.first.longitude;
-                    // NOT: Koordinat yazimi sadece admin yapar, mobil istemci Firestore'a yazma yapmamali
                   }
                 } catch (geoErr) {
                   if (city != 'Bilinmiyor') {
                     try {
+                      // Fallback: search by city and country instead of hardcoding Germany
+                      final fallbackCountry = country.isNotEmpty ? country : 'Germany';
                       final cityLocations =
-                          await geo.locationFromAddress('$city, Germany');
+                          await geo.locationFromAddress('$city, $fallbackCountry');
                       if (cityLocations.isNotEmpty) {
                         eventLat = cityLocations.first.latitude;
                         eventLng = cityLocations.first.longitude;
-                        // NOT: Koordinat yazimi sadece admin yapar, mobil istemci Firestore'a yazma yapmamali
                       }
                     } catch (_) {
                       eventLat = 51.0;
