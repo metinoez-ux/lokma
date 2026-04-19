@@ -533,10 +533,14 @@ class SearchNotifier extends Notifier<SearchState> {
           for (final doc in kermesSnapshot.docs) {
             final data = doc.data();
             final title = _normalizeTurkish((data['title'] ?? data['name'] ?? '').toString().toLowerCase());
-            final location = _normalizeTurkish((data['city'] ?? data['state'] ?? data['location'] ?? '').toString().toLowerCase());
+            final city = _normalizeTurkish((data['city'] ?? '').toString().toLowerCase());
+            final stateName = _normalizeTurkish((data['state'] ?? '').toString().toLowerCase());
+            final address = _normalizeTurkish((data['address'] ?? '').toString().toLowerCase());
+            final description = _normalizeTurkish((data['description'] ?? '').toString().toLowerCase());
+            final postalCode = _normalizeTurkish((data['postalCode'] ?? '').toString().toLowerCase());
 
             final queryWords = queryNormalized.split(RegExp(r'\s+')).where((w) => w.length >= 2).toList();
-            final searchableText = '$title $location kermes';
+            final searchableText = '$title $city $stateName $address $description $postalCode kermes';
 
             bool allWordsMatch = queryWords.isNotEmpty && queryWords.every((word) => searchableText.contains(word));
 

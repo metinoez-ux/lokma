@@ -251,7 +251,7 @@ const { admin, loading: adminLoading } = useAdmin();
  // Turkish character normalization for search
  const normalizeForSearch = (text: any): string => {
  if (text === null || typeof text === 'undefined') return '';
- return String(text).toLowerCase()
+ return String(text).toLowerCase().trim()
  .replace(/ş/g, 's').replace(/Ş/g, 's')
  .replace(/ı/g, 'i').replace(/İ/g, 'i')
  .replace(/ü/g, 'u').replace(/Ü/g, 'u')
