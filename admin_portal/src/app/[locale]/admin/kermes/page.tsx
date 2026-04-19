@@ -249,9 +249,9 @@ const { admin, loading: adminLoading } = useAdmin();
  }, []);
 
  // Turkish character normalization for search
- const normalizeForSearch = (text: string | null | undefined): string => {
- if (!text) return '';
- return text.toLowerCase()
+ const normalizeForSearch = (text: any): string => {
+ if (text === null || typeof text === 'undefined') return '';
+ return String(text).toLowerCase()
  .replace(/ş/g, 's').replace(/Ş/g, 's')
  .replace(/ı/g, 'i').replace(/İ/g, 'i')
  .replace(/ü/g, 'u').replace(/Ü/g, 'u')
@@ -331,10 +331,11 @@ const { admin, loading: adminLoading } = useAdmin();
  event.organizationPhone,
  ];
 
- return searchableFields.some(field =>
- normalizeForSearch(field)?.includes(query) ||
- field?.includes(searchQuery)
- );
+ return searchableFields.some(field => {
+  if (field === null || field === undefined) return false;
+  const strField = String(field);
+  return normalizeForSearch(strField).includes(query) || strField.includes(searchQuery);
+ });
  })
  // Sort
  .sort((a, b) => {
