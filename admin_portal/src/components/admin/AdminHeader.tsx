@@ -721,6 +721,14 @@ export default function AdminHeader() {
  </button>
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[240px] overflow-hidden">
  <div className="py-1">
+ <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">Kermes Yönetimi</p>
+ <Link href="/admin/settings/kermes-categories" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Kategoriler</Link>
+ <Link href="/admin/settings/kermes-menus" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Menüler</Link>
+ <Link href="/admin/settings/kermes-features" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özellikler (Features)</Link>
+ <Link href="/admin/settings/kermes-gender-types" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özel Ziyaret Alanları</Link>
+ <Link href="/admin/settings/kermes-stock-images" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Stock Görseller</Link>
+ <Link href="/admin/settings/donation-funds" className="px-4 py-2 text-xs transition-colors text-pink-600 dark:text-pink-400 hover:bg-muted font-bold block">Yardım Vakıfları</Link>
+ <div className="h-px bg-border my-1"></div>
  <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">{t('settings')}</p>
  <Link href="/admin/settings" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
  {t('iotSettings')}
