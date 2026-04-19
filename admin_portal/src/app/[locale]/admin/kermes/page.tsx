@@ -315,11 +315,15 @@ const { admin, loading: adminLoading } = useAdmin();
  const e = event as any;
  const searchableFields = [
  e.title,
+ e.description,
  e.city,
  e.postalCode,
  e.address,
  e.location,
  e.country,
+ e.country === 'AT' ? 'österreich austria avusturya' : '',
+ e.country === 'DE' ? 'deutschland germany almanya' : '',
+ e.country === 'TR' ? 'türkiye turkey' : '',
  e.contactName,
  e.contactFirstName,
  e.contactLastName,
