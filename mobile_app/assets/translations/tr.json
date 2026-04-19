@@ -935,6 +935,7 @@
         "sort_distance_far": "Uzak",
         "sort_distance_default": "Mesafe",
         "sort_section_title": "SIRALAMA",
+        "filter_only_active": "Sadece Açık",
         "sort_nearest_date": "En Yakin Tarih",
         "sort_by_date": "Tarihe gore sirala",
         "sort_nearest_distance": "En Yakin Mesafe",

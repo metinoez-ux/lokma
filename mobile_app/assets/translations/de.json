@@ -936,6 +936,7 @@
         "sort_distance_far": "Fern",
         "sort_distance_default": "Entfernung",
         "sort_section_title": "SORTIERUNG",
+        "filter_only_active": "Nur Aktive",
         "sort_nearest_date": "Naechstes Datum",
         "sort_by_date": "Nach Datum sortieren",
         "sort_nearest_distance": "Kuerzeste Entfernung",

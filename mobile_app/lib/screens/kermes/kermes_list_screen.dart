@@ -41,6 +41,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Position? _currentPosition;
   String _userCountryCode = '';
   String _sortBy = 'distance_asc';
+  bool _onlyActive = false; // Sadece su an aktif/acik kermesleri goster
   double _maxDistance = 50; // default: 50km
   Set<String> _favoriteKermesIds = {};
   List<KermesEvent> _cachedFilteredEvents = [];
@@ -873,6 +874,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       }).toList();
     }
 
+    // Aktif filtresi: Sadece su an baslayan ve bitmemis kermesler
+    if (_onlyActive) {
+      final now = DateTime.now();
+      events = events.where((e) {
+        return !e.startDate.isAfter(now) && !e.endDate.isBefore(now);
+      }).toList();
+    }
+
     // Sort
     events.sort((a, b) {
       if (_sortBy == 'date_asc' || _sortBy == 'favorites') {
@@ -1648,6 +1657,51 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                 .onSurface
                                 .withOpacity(0.85),
                             letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Sadece Aktif Chip
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() {
+                              _onlyActive = !_onlyActive;
+                              _updateFilteredEvents();
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _onlyActive
+                                  ? lokmaPink.withOpacity(0.15)
+                                  : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _onlyActive
+                                    ? lokmaPink.withOpacity(0.6)
+                                    : Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _onlyActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                  size: 14,
+                                  color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'kermes.filter_only_active'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const Spacer(),

@@ -934,6 +934,7 @@
         "sort_distance_far": "Lontano",
         "sort_distance_default": "Distanza",
         "sort_section_title": "ORDINA PER",
+        "filter_only_active": "Solo Attivi",
         "sort_nearest_date": "Data piu vicina",
         "sort_by_date": "Ordina per data",
         "sort_nearest_distance": "Distanza piu vicina",
