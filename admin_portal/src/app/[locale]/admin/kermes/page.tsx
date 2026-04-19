@@ -393,7 +393,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
  return (
  <div className="min-h-screen bg-background p-6">
- {/* Header */}
+ 
  <div className="max-w-6xl mx-auto mb-6">
  <Link href="/admin/dashboard" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
  ← Admin Paneli
@@ -408,7 +408,7 @@ const { admin, loading: adminLoading } = useAdmin();
  </p>
  </div>
  <div className="flex flex-wrap items-center gap-2">
- {/* Create button for Super Admin and Kermes Admin */}
+ 
  {(admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
  <Link
  href="/admin/kermes/new"
@@ -420,25 +420,26 @@ const { admin, loading: adminLoading } = useAdmin();
  )}
  </div>
  </div>
- </div>
 
- {/* Search and Filters */}
- <div className="max-w-6xl mx-auto mb-6">
- <div className="bg-card rounded-xl p-4">
- {/* Search */}
+
+ 
+  <div className="max-w-6xl mx-auto mb-6">
+  <div className="bg-card rounded-xl p-4">
+  
   <div className="relative w-full mb-4">
- <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
- <input
- type="text"
- placeholder={t('i_sim_posta_kodu_sehir_veya_yetkili_kisi')}
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
- />
- </div>
+  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+  <input
+  type="text"
+  placeholder={t('i_sim_posta_kodu_sehir_veya_yetkili_kisi')}
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  className="w-full pl-12 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  />
+  </div>
 
- </div><div className="flex flex-wrap items-center gap-3 w-full">
-  {/* Sorting Filter */}
+  
+  <div className="flex flex-wrap items-center gap-3 w-full">
+  
  <select
  title="Sıralama"
  value={sortOrder}
@@ -449,7 +450,7 @@ const { admin, loading: adminLoading } = useAdmin();
  <option value="newest">En Son Eklenenler</option>
  </select>
 
- {/* Country Filter */}
+ 
  <select
  title="Ülke Filtresi & Sıla Yolu"
  value={countryFilter}
@@ -463,7 +464,7 @@ const { admin, loading: adminLoading } = useAdmin();
  ))}
  </select>
 
- {/* Modality Filter */}
+ 
  <select
  title="Siparis turu filtrele"
  value={selectedModality}
@@ -477,7 +478,7 @@ const { admin, loading: adminLoading } = useAdmin();
  <option value="dine_in">Masa</option>
  </select>
 
- {/* Badge Filter */}
+ 
  <select
  title="Rozet filtrele"
  value={selectedBadge}
@@ -491,7 +492,7 @@ const { admin, loading: adminLoading } = useAdmin();
  ))}
  </select>
 
- {/* Time Status Filter */}
+ 
  <select
  title="Zaman durumu filtrele"
  value={timeStatusFilter}
@@ -510,7 +511,7 @@ const { admin, loading: adminLoading } = useAdmin();
  </div>
  </div>
 
- {/* Cards Grid */}
+ 
  <div className="max-w-6xl mx-auto">
  {filteredEvents.length === 0 ? (
  <div className="bg-card rounded-xl p-12 text-center">
@@ -548,17 +549,17 @@ const { admin, loading: adminLoading } = useAdmin();
  onClick={() => router.push(`/admin/kermes/${event.id}`)}
  >
  <div className="flex items-center gap-4">
- {/* Status Indicator */}
+ 
  <div className={`w-1 h-12 rounded-full ${statusConfig.color}`} />
 
- {/* Icon */}
+ 
  <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center font-bold text-muted-foreground shadow-sm flex-shrink-0">
  {event.title ? event.title.charAt(0).toUpperCase() : 'K'}
  </div>
 
- {/* Main Info */}
+ 
  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
- {/* Title & Org */}
+ 
  <div className="md:col-span-2">
  <h3 className="text-foreground font-semibold truncate group-hover:text-pink-800 dark:text-pink-400 transition">
  {event.title || 'İsimsiz Kermes'}
@@ -591,7 +592,7 @@ const { admin, loading: adminLoading } = useAdmin();
  </>
  )}
 
- {/* Real Badges (e.g. Tuna, Helal) */}
+ 
  {event.activeBadgeIds && event.activeBadgeIds.map(badgeId => {
  const badgeDef = badges.find(b => b.id === badgeId);
  if (!badgeDef) return null;
@@ -609,19 +610,19 @@ const { admin, loading: adminLoading } = useAdmin();
  </div>
  </div>
 
- {/* Date */}
+ 
  <div className="hidden md:block">
  <span className="text-muted-foreground/80 text-xs">{t('tarih')}</span>
  <p className="text-foreground text-sm truncate">{formatDateRange(event)}</p>
  </div>
 
- {/* Location */}
+ 
  <div className="hidden md:block">
  <span className="text-muted-foreground/80 text-xs">Konum</span>
  <p className="text-foreground text-sm truncate">{getLocationDisplay(event)}</p>
  </div>
 
- {/* Contact */}
+ 
  <div className="hidden md:block">
  <span className="text-muted-foreground/80 text-xs">Sorumlu</span>
  <p className="text-foreground text-sm truncate">{contactName}</p>
@@ -636,19 +637,19 @@ const { admin, loading: adminLoading } = useAdmin();
  )}
  </div>
 
- {/* Menu Count */}
+ 
  <div className="hidden md:block">
  <span className="text-muted-foreground/80 text-xs">{t('menu')}</span>
  <p className="text-cyan-800 dark:text-cyan-400 text-sm">{event.productCount || 0} {t('urun')}</p>
  </div>
  </div>
 
- {/* Status Badge */}
+ 
  <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${statusConfig.color} text-white hidden sm:block`}>
  {statusConfig.label}
  </span>
 
- {/* Actions */}
+ 
  <div className="flex gap-2 flex-shrink-0">
  <Link
  href={`/admin/kermes/${event.id}`}
@@ -666,7 +667,7 @@ const { admin, loading: adminLoading } = useAdmin();
  </div>
  </div>
 
- {/* Mobile Details */}
+ 
  <div className="md:hidden mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-2 text-xs">
  <div><span className="text-muted-foreground/80"></span> {formatDateRange(event)}</div>
  <div><span className="text-muted-foreground/80">📍</span> {getLocationDisplay(event)}</div>
@@ -680,7 +681,7 @@ const { admin, loading: adminLoading } = useAdmin();
  )}
  </div>
 
- {/* Archive Confirmation Modal */}
+ 
  <ConfirmModal
  isOpen={!!confirmArchiveId}
  onClose={() => setConfirmArchiveId(null)}
