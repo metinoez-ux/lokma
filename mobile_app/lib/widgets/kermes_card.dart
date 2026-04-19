@@ -492,8 +492,6 @@ class _KermesCardState extends State<KermesCard> {
                                 ? LokmaNetworkImage(
                                     imageUrl: imagePath,
                                     fit: BoxFit.cover,
-                                    memCacheHeight: 600,
-                                    maxWidthDiskCache: 800,
                                     fadeInDuration: Duration.zero,
                                     fadeOutDuration: Duration.zero,
                                     useOldImageOnUrlChange: true,

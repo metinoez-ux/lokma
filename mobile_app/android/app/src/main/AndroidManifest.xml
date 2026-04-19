@@ -34,11 +34,15 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Required for Play Services on Android 11+ on strict OEM ROMs like Motorola/Xiaomi -->
+        <package android:name="com.google.android.gms" />
+        <package android:name="com.google.android.gsf" />
+        <package android:name="com.android.vending" />
+
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-    
         <intent>
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />

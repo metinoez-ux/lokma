@@ -114,10 +114,10 @@ class CalendarService {
       tz_data.initializeTimeZones();
       
       // Fallback local timezone to Berlin timezone to ensure safe conversion without flutter_timezone
-      final location = tz.getLocation('Europe/Berlin');
+      final tzLocation = tz.getLocation('Europe/Berlin');
       
-      final tzStart = tz.TZDateTime.from(startTime, location);
-      final tzEnd = tz.TZDateTime.from(startTime.add(duration), location);
+      final tzStart = tz.TZDateTime.from(startTime, tzLocation);
+      final tzEnd = tz.TZDateTime.from(startTime.add(duration), tzLocation);
 
       final event = Event(
         calendarId,

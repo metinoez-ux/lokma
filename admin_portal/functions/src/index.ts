@@ -10,6 +10,7 @@ import { createLexwareInvoice, buildMonthlyInvoicePayload, downloadLexwareInvoic
 import { collectMonthlyBillingData } from "./services/billingDataCollector";
 import { iotApp } from "./iot-gateway";
 import { getPushTranslations, getUserLanguage, getDayNames, getDateLabel } from "./utils/translation";
+import { optimizeLokmaImages } from "./imageOptimizer";
 
 // Define secrets for secure key management
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -3712,3 +3713,6 @@ export { onKermesRosterCreated } from "./kermesRosterFunctions";
 export * from "./kermesRosterFunctions";
 export * from './kermesTvFunctions';
 export * from './kermesSupplyFunctions';
+
+// Image Resizer System
+export { optimizeLokmaImages } from "./imageOptimizer";

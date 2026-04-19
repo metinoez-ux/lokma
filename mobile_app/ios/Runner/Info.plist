@@ -101,6 +101,9 @@
 			<string>comgooglemaps</string>
 			<string>maps</string>
 		</array>
+		<key>UIStatusBarHidden</key>
+		<true/>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
 	</dict>
 </plist>
-

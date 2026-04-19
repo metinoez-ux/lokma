@@ -14,13 +14,17 @@ import 'providers/theme_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'utils/firestore_asset_loader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 String? _initError;
 
 void main() async {
   // Wrap everything in a zone to catch all errors
   runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+    WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+    // Keep native splash screen alive while we fetch heavy configs
+    FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+    
     await EasyLocalization.ensureInitialized();
     
     // Set up Flutter error handler
@@ -91,6 +95,10 @@ void main() async {
         ),
       ),
     );
+    
+    // Now that the app UI is built and heavy sync operations are done, remove the splash
+    FlutterNativeSplash.remove();
+    
   }, (error, stack) {
     debugPrint('Uncaught error: $error');
     debugPrint('Stack: $stack');

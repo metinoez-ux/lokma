@@ -115,7 +115,7 @@ export const onKermesRosterCreated = onDocumentCreated(
             const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Kermes+Vardiyasi+-+${encodeURIComponent(role)}&dates=${dateStrClean}T${startClean}/${dateStrClean}T${endClean}&details=${encodeURIComponent(kermesName + ' - ' + bolumStr)}`;
 
             // 3. Add to Inbox (users/{uid}/notifications)
-            await db.collection("users").doc(userId).collection("notifications").add({
+            const docRef = await db.collection("users").doc(userId).collection("notifications").add({
                 title,
                 body,
                 type: "roster_shift",

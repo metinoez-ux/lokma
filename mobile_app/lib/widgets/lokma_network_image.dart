@@ -65,11 +65,9 @@ class LokmaNetworkImage extends StatelessWidget {
         colorBlendMode: colorBlendMode,
         alignment: alignment,
         filterQuality: filterQuality,
-        // Dynamic memory scaling caching to prevent memory leaks and UI lag when loading huge lists
-        memCacheHeight: memCacheHeight ?? (height != null && height! > 0 && height! < double.infinity ? (height! * 2).toInt() : 800),
-        memCacheWidth: memCacheWidth ?? (width != null && width! > 0 && width! < double.infinity ? (width! * 2).toInt() : null),
-        maxWidthDiskCache: maxWidthDiskCache,
-        maxHeightDiskCache: maxHeightDiskCache,
+        // Removed dynamic memory scaling defaults which force heavy software resizing on old Android CPUs (causing 30s lags)
+        memCacheHeight: memCacheHeight,
+        memCacheWidth: memCacheWidth,
         fadeInDuration: fadeInDuration ?? const Duration(milliseconds: 200),
         fadeOutDuration: fadeOutDuration ?? const Duration(milliseconds: 200),
         useOldImageOnUrlChange: useOldImageOnUrlChange ?? true,

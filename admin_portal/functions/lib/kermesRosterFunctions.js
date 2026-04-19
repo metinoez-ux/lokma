@@ -135,7 +135,7 @@ exports.onKermesRosterCreated = (0, firestore_1.onDocumentCreated)({
         const endClean = endStr.replace(':', '') + '00';
         const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Kermes+Vardiyasi+-+${encodeURIComponent(role)}&dates=${dateStrClean}T${startClean}/${dateStrClean}T${endClean}&details=${encodeURIComponent(kermesName + ' - ' + bolumStr)}`;
         // 3. Add to Inbox (users/{uid}/notifications)
-        await db.collection("users").doc(userId).collection("notifications").add({
+        const docRef = await db.collection("users").doc(userId).collection("notifications").add({
             title,
             body,
             type: "roster_shift",
@@ -155,6 +155,7 @@ exports.onKermesRosterCreated = (0, firestore_1.onDocumentCreated)({
             read: false,
             deepLinkUrl: "roster_dashboard" // Instruct app to route to their staff dashboard
         });
+        const notificationId = docRef.id;
         console.log(`[Roster Notify] Inbox stored for ${userId}`);
         // 4. Send Push Notification
         const fcmTokens = [];
@@ -176,7 +177,8 @@ exports.onKermesRosterCreated = (0, firestore_1.onDocumentCreated)({
                     date: dateStr,
                     startTime: startStr,
                     endTime: endStr,
-                    batchId: roster.batchId || ''
+                    batchId: roster.batchId || '',
+                    notificationId
                 },
                 apns: {
                     payload: {

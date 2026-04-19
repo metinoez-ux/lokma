@@ -20,6 +20,7 @@
         "firebase-functions": "^7.2.5",
         "pdfkit": "^0.17.2",
         "resend": "^6.9.1",
+        "sharp": "^0.34.5",
         "stripe": "^18.0.0"
     },
     "devDependencies": {
