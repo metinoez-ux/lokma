@@ -30,16 +30,16 @@ const { admin, loading: adminLoading } = useAdmin();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
+  const [timeStatusFilter, setTimeStatusFilter] = useState<'all' | 'past' | 'active' | 'future' | 'archived'>('all');
+  const [selectedBadge, setSelectedBadge] = useState<string>('all');
+  const [selectedModality, setSelectedModality] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'status' | 'newest'>('status');
+  const [countryFilter, setCountryFilter] = useState<string>('all');
+  const router = useRouter();
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, countryFilter, selectedBadge, selectedModality, timeStatusFilter, sortOrder]);
-
- const [timeStatusFilter, setTimeStatusFilter] = useState<'all' | 'past' | 'active' | 'future' | 'archived'>('all');
- const [selectedBadge, setSelectedBadge] = useState<string>('all');
- const [selectedModality, setSelectedModality] = useState<string>('all');
- const [sortOrder, setSortOrder] = useState<'status' | 'newest'>('status');
- const [countryFilter, setCountryFilter] = useState<string>('all');
- const router = useRouter();
 
  // Calculate kermes status based on dates
  type TimeStatus = 'past' | 'active' | 'future';
