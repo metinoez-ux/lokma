@@ -2568,7 +2568,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     const SizedBox(width: 8),
                   ],
                   Text(
-                    f.label,
+                    'kermes.feature_${f.id}'.tr() != 'kermes.feature_${f.id}'
+                        ? 'kermes.feature_${f.id}'.tr()
+                        : f.label,
                     style: TextStyle(
                       color: textColor,
                       fontSize: 11,
