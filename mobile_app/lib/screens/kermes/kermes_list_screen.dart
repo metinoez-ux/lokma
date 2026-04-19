@@ -874,11 +874,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       }).toList();
     }
 
-    // Aktif filtresi: Sadece su an baslayan ve bitmemis kermesler
+    // Aktif filtresi: Bugunun tarihi kermes tarih araligininda mi? (saat bakma)
     if (_onlyActive) {
       final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
       events = events.where((e) {
-        return !e.startDate.isAfter(now) && !e.endDate.isBefore(now);
+        final startDay = DateTime(e.startDate.year, e.startDate.month, e.startDate.day);
+        final endDay = DateTime(e.endDate.year, e.endDate.month, e.endDate.day);
+        return !startDay.isAfter(today) && !endDay.isBefore(today);
       }).toList();
     }
 
