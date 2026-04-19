@@ -565,9 +565,9 @@ class SearchNotifier extends Notifier<SearchState> {
                 subtitle: distanceKm != null
                     ? '${data['city'] ?? ''} • ${distanceKm.toStringAsFixed(1)} km'
                     : data['city'] ?? '',
-                imageUrl: data['imageUrl'] ?? data['image'],
+                imageUrl: data['headerImage'] ?? data['imageUrl'] ?? data['image'],
                 type: SearchResultType.vendor, // Acts as vendor entry point
-                route: '/kermes/${doc.id}',
+                route: '/kermesler/${doc.id}',
                 distance: distanceKm,
                 metadata: data,
               ));
@@ -785,9 +785,9 @@ class SearchNotifier extends Notifier<SearchState> {
                 id: item['id'] ?? '${kermesDoc.id}_$itemName',
                 title: item['name'] ?? item['ad'] ?? 'Ürün',
                 subtitle: '$kermesName${priceStr.isNotEmpty ? ' • $priceStr' : ''}',
-                imageUrl: item['imageUrl'] ?? item['image'],
+                imageUrl: item['imageUrl'] ?? item['image'] ?? kermesData['headerImage'],
                 type: SearchResultType.product,
-                route: '/kermes/${kermesDoc.id}/menu', // Navigate to kermes menu
+                route: '/kermesler/${kermesDoc.id}', // Navigate to kermes menu
                 metadata: {
                   ...item,
                   'kermesId': kermesDoc.id,
