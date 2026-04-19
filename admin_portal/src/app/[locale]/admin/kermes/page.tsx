@@ -526,6 +526,47 @@ const { admin, loading: adminLoading } = useAdmin();
  const timeStatus = getKermesTimeStatus(event);
  const statusConfig = getStatusConfig(timeStatus);
  const e = event as any;
+
+  const getTimeStatusDisplay = (event: any) => {
+    const e = event;
+    const parseLocal = (d: any) => {
+      if (!d) return null;
+      if (d.toDate) return d.toDate();
+      if (d.seconds) return new Date(d.seconds * 1000);
+      if (typeof d === 'string') return new Date(d);
+      if (d instanceof Date) return d;
+      return null;
+    };
+    const startDate = parseLocal(e.startDate) || parseLocal(e.date);
+    const endDate = parseLocal(e.endDate) || startDate;
+    if (!startDate) return { text: '-', color: 'text-muted-foreground' };
+    
+    const now = new Date();
+    const start = new Date(startDate);
+    start.setHours(0,0,0,0);
+    const end = endDate ? new Date(endDate) : new Date(start);
+    end.setHours(23,59,59,999);
+    
+    const nowDay = new Date();
+    nowDay.setHours(0,0,0,0);
+
+    if (nowDay < start) {
+      const diffDays = Math.round((start.getTime() - nowDay.getTime()) / (1000 * 3600 * 24));
+      if (diffDays > 30) return { text: `~${Math.floor(diffDays/30)} ay sonra`, color: 'text-cyan-600 dark:text-cyan-400' };
+      if (diffDays === 1) return { text: `Yarın`, color: 'text-amber-500 dark:text-amber-400 font-bold' };
+      return { text: `${diffDays} gün kaldı`, color: 'text-cyan-600 dark:text-cyan-400' };
+    } else if (now > end) {
+      const diffDays = Math.round((nowDay.getTime() - new Date(end.setHours(0,0,0,0)).getTime()) / (1000 * 3600 * 24));
+      if (diffDays > 30) return { text: `~${Math.floor(diffDays/30)} ay geçti`, color: 'text-slate-400' };
+      if (diffDays === 1) return { text: `Dün bitti`, color: 'text-slate-400' };
+      return { text: `${diffDays} gün geçti`, color: 'text-slate-400' };
+    } else {
+      const diffDays = Math.round((nowDay.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1;
+      return { text: `${diffDays}. Günü`, color: 'text-green-600 dark:text-green-400 font-bold' };
+    }
+  };
+  const timeDisplay = getTimeStatusDisplay(event);
+
  const contactPhone = e.contactPhone || event.organizationPhone;
  const contactName = e.contactFirstName && e.contactLastName
  ? `${e.contactFirstName} ${e.contactLastName}`
@@ -540,7 +581,7 @@ const { admin, loading: adminLoading } = useAdmin();
  <div className="flex items-center gap-4">
  
  <div className={`w-1 h-12 rounded-full ${statusConfig.color}`} />
-  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
+  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-7 gap-3 items-center">
  
  <div className="md:col-span-2">
  <h3 className="text-foreground font-semibold truncate transition">
@@ -624,6 +665,12 @@ const { admin, loading: adminLoading } = useAdmin();
  <span className="text-muted-foreground/80 text-xs">{t('menu')}</span>
  <p className="text-cyan-800 dark:text-cyan-400 text-sm">{event.productCount || 0} {t('urun')}</p>
  </div>
+
+  <div className="hidden md:block">
+  <span className="text-muted-foreground/80 text-xs">Durum</span>
+  <p className={`text-sm ${timeDisplay.color}`}>{timeDisplay.text}</p>
+  </div>
+
  </div>
 
  
