@@ -620,7 +620,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                 Tüm Kermes
               </label>
             </div>
-            <div className="flex items-center gap-1 min-w-0">
+            <div className="flex flex-col sm:flex-row items-center gap-2 min-w-0">
               <input 
                 type="date" 
                 value={form.startDate}
@@ -633,7 +633,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                 }}
                 className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
               />
-              <span className="text-muted-foreground">-</span>
+              <span className="hidden sm:inline text-muted-foreground">-</span>
               <input 
                 type="date" 
                 value={form.endDate}
@@ -647,14 +647,14 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           </div>
           <div className="w-full min-w-0 space-y-1">
             <label className="text-xs text-muted-foreground">Saat (Başlangıç - Bitiş)</label>
-            <div className="flex items-center gap-1 min-w-0">
+            <div className="flex flex-col sm:flex-row items-center gap-2 min-w-0">
               <input 
                 type="time" 
                 value={form.startTime}
                 onChange={e => setForm({...form, startTime: e.target.value})}
                 className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
               />
-              <span className="text-muted-foreground">-</span>
+              <span className="hidden sm:inline text-muted-foreground">-</span>
               <input 
                 type="time" 
                 value={form.endTime}
@@ -676,8 +676,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
         </div>
         )}
 
-      {/* Coverage Dashboard Accordion (Artik ana kartin icinde unified) */}
-      <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+      <div className="border border-border rounded-xl bg-background/50 overflow-hidden mb-6">
         <button 
           onClick={() => setCoverageOpen(!coverageOpen)}
           className="w-full bg-slate-900/40 hover:bg-slate-800/60 p-4 flex items-center justify-between transition-colors text-left"
