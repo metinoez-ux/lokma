@@ -186,7 +186,89 @@ export default function SettingsPage() {
  )}
  </div>
 
- {/* SUPER ADMIN - IoT Einstellungen */}
+ 
+  {/* SUPER ADMIN - Kermes Einstellungen */}
+  {admin?.adminType === 'super' && (
+  <div className="mb-8 bg-card border border-border rounded-2xl p-8">
+  <div className="flex items-center gap-3 mb-6">
+    <span className="text-3xl">🎪</span>
+    <div>
+      <h2 className="text-xl font-bold">Kermes Yönetim Ayarları</h2>
+      <p className="text-muted-foreground text-sm">Tüm platformdaki kermes altyapısını yönetin</p>
+    </div>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Link
+      href="/admin/settings/kermes-menus"
+      className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-pink-600 hover:bg-pink-950/20 transition-all group"
+    >
+      <div className="w-12 h-12 rounded-xl bg-pink-900/50 flex items-center justify-center text-2xl group-hover:bg-pink-800/50 transition">
+        🍔
+      </div>
+      <div>
+        <h3 className="font-bold text-foreground group-hover:text-pink-300 transition">Kermes Menüleri</h3>
+        <p className="text-xs text-muted-foreground/80">Kermeslere özel ürün paketleri</p>
+      </div>
+      <span className="ml-auto text-muted-foreground group-hover:text-pink-400 transition text-xl">→</span>
+    </Link>
+    <Link
+      href="/admin/settings/kermes-features"
+      className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-pink-600 hover:bg-pink-950/20 transition-all group"
+    >
+      <div className="w-12 h-12 rounded-xl bg-pink-900/50 flex items-center justify-center text-2xl group-hover:bg-pink-800/50 transition">
+        🏷️
+      </div>
+      <div>
+        <h3 className="font-bold text-foreground group-hover:text-pink-300 transition">Kermes Özellikleri</h3>
+        <p className="text-xs text-muted-foreground/80">Filtre ve donanım etiketleri</p>
+      </div>
+      <span className="ml-auto text-muted-foreground group-hover:text-pink-400 transition text-xl">→</span>
+    </Link>
+    <Link
+      href="/admin/settings/donation-funds"
+      className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-pink-600 hover:bg-pink-950/20 transition-all group"
+    >
+      <div className="w-12 h-12 rounded-xl bg-pink-900/50 flex items-center justify-center text-2xl group-hover:bg-pink-800/50 transition">
+        🤝
+      </div>
+      <div>
+        <h3 className="font-bold text-foreground group-hover:text-pink-300 transition">Bağış Fonları</h3>
+        <p className="text-xs text-muted-foreground/80">Checkout bağış projeleri</p>
+      </div>
+      <span className="ml-auto text-muted-foreground group-hover:text-pink-400 transition text-xl">→</span>
+    </Link>
+    <Link
+      href="/admin/settings/kermes-gender-types"
+      className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-pink-600 hover:bg-pink-950/20 transition-all group"
+    >
+      <div className="w-12 h-12 rounded-xl bg-pink-900/50 flex items-center justify-center text-2xl group-hover:bg-pink-800/50 transition">
+        👥
+      </div>
+      <div>
+        <h3 className="font-bold text-foreground group-hover:text-pink-300 transition">Bölüm Tipleri</h3>
+        <p className="text-xs text-muted-foreground/80">Kadın/Erkek vb. tahsisler</p>
+      </div>
+      <span className="ml-auto text-muted-foreground group-hover:text-pink-400 transition text-xl">→</span>
+    </Link>
+    <Link
+      href="/admin/settings/kermes-stock-images"
+      className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-pink-600 hover:bg-pink-950/20 transition-all group"
+    >
+      <div className="w-12 h-12 rounded-xl bg-pink-900/50 flex items-center justify-center text-2xl group-hover:bg-pink-800/50 transition">
+        🖼️
+      </div>
+      <div>
+        <h3 className="font-bold text-foreground group-hover:text-pink-300 transition">Stok Görseller</h3>
+        <p className="text-xs text-muted-foreground/80">Hazır banner arşivleri</p>
+      </div>
+      <span className="ml-auto text-muted-foreground group-hover:text-pink-400 transition text-xl">→</span>
+    </Link>
+  </div>
+  </div>
+  )}
+
+  {/* SUPER ADMIN - IoT Einstellungen */}
  {admin?.adminType === 'super' && (
  <div className="mb-8">
  <h2 className="text-lg font-semibold text-foreground mb-1">IoT Einstellungen</h2>

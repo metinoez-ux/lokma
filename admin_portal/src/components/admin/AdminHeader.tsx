@@ -392,16 +392,8 @@ export default function AdminHeader() {
  )}
  </svg>
  </button>
- <HeaderClock currentLocale={currentLocale} />
-  {process.env.NEXT_PUBLIC_BUILD_TIME && (
-    <>
-      <span className="text-muted-foreground/80 text-xs">|</span>
-      <span className="text-xs font-semibold text-rose-500/80">
-      v.{process.env.NEXT_PUBLIC_BUILD_TIME}
-      </span>
-    </>
-  )}
- {/* Printer status compact */}
+    <HeaderClock currentLocale={currentLocale} />
+  {/* Printer status compact */}
  <Link
  href="/admin/settings"
  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition ${!printerSettings.enabled || !printerSettings.printerIp ? 'text-muted-foreground/80' : printerHealth.status === 'online' ? 'text-green-800 dark:text-green-400' : printerHealth.status === 'offline' ? 'text-red-800 dark:text-red-400 animate-pulse' : 'text-yellow-800 dark:text-yellow-400'}`}
@@ -518,21 +510,10 @@ export default function AdminHeader() {
 
  {/* FULL DESKTOP BAR - hidden on tablet */}
  <div className="hidden min-[1921px]:block bg-[var(--header-bg)] border-b border-[var(--header-border)] shadow-md relative z-40">
- <div className="w-full px-6 py-2 flex items-center gap-4 relative">
- {/* CENTER: Clock + Version Stamp - always centered */}
- <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none z-10">
- <HeaderClock currentLocale={currentLocale} />
- {process.env.NEXT_PUBLIC_BUILD_TIME && (
- <>
- <span className="text-muted-foreground/80 text-xs">|</span>
- <span className="text-xs font-semibold text-rose-500/80">
- v.{process.env.NEXT_PUBLIC_BUILD_TIME}
- </span>
- </>
- )}
- </div>
+ <div className="w-full max-w-[1800px] mx-auto px-6 py-2 flex items-center justify-between gap-6">
 
- <div className="flex flex-wrap items-center gap-1.5 flex-1">
+ {/* LEFT: Navigation Menus */}
+ <div className="flex flex-wrap items-center gap-1.5 shrink-0 grow">
  {/* 1. Analytik */}
  <Link
  href="/admin/analytics"
@@ -716,8 +697,13 @@ export default function AdminHeader() {
  </div>
  </div>
 
- {/* Right Side - Settings, Profile */}
- <div className="flex items-center shrink-0 gap-2">
+ {/* CENTER: Clock integrated gracefully into flow so it won't overlap */}
+ <div className="hidden min-[1500px]:flex items-center justify-center opacity-60 gap-1.5 shrink-0 pointer-events-none min-w-[200px]">
+   <HeaderClock currentLocale={currentLocale} />
+ </div>
+
+ {/* RIGHT: Settings, Profile */}
+ <div className="flex items-center justify-end shrink-0 gap-2">
  <ThemeToggle />
  {/* Einstellungen Nav — en sag taraf */}
  <div className="relative group">

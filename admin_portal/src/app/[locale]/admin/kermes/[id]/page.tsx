@@ -562,6 +562,7 @@ export default function KermesDetailPage() {
  // Ürün ekleme öncesi düzenleme modalı
  const [editingCustomRole, setEditingCustomRole] = useState<{ id: string; name: string; icon: string; color: string; } | null>(null);
  const [isUploadingRoleIcon, setIsUploadingRoleIcon] = useState(false);
+ const [isUploadingHeader, setIsUploadingHeader] = useState(false);
 
  const [editBeforeAdd, setEditBeforeAdd] = useState<{
  item: KermesMenuItemData | MasterProduct | null;
@@ -2139,8 +2140,8 @@ export default function KermesDetailPage() {
  <div className="flex items-center gap-4">
  <Link href="/admin/kermes" className="text-muted-foreground hover:text-white">← Geri</Link>
  <div>
- <h1 className="text-xl font-bold text-foreground flex items-center gap-2">🎪 {kermes.title}</h1>
- {kermes.organizationName && <p className="text-muted-foreground text-sm">🕌 {kermes.organizationName}</p>}
+ <h1 className="text-xl font-bold text-foreground flex items-center gap-2">{kermes.title}</h1>
+ {kermes.organizationName && <p className="text-muted-foreground text-sm">{kermes.organizationName}</p>}
  </div>
  </div>
  <div className="flex items-center gap-2">
@@ -2159,15 +2160,6 @@ export default function KermesDetailPage() {
    <div className="h-10 px-4 bg-amber-600/20 text-amber-800 dark:text-amber-400 rounded-lg text-sm font-bold flex items-center justify-center gap-2 border border-amber-600/30 whitespace-nowrap">
      <img src="/akdeniz_toros_logo_pill.png" alt="TOROS" className="h-5 drop-shadow-sm" /> TOROS
    </div>
- )}
- <button onClick={toggleActiveStatus}
- className={`h-10 px-4 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${kermes.isActive ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
- {kermes.isActive ? t('aktif') : t('kapali')}
- </button>
- {admin?.role === 'super_admin' && (
- <button onClick={handleDeleteKermes} disabled={saving} className="h-10 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap">
- 🗑️ Sil
- </button>
  )}
  </div>
  </div>
@@ -2494,7 +2486,7 @@ export default function KermesDetailPage() {
  </div>
  )}
  <div className="flex justify-between text-sm md:col-span-2">
- <span className="text-muted-foreground/80">📍 Adres:</span>
+ <span className="text-muted-foreground/80">Adres:</span>
  <div className="text-right">
  <div className="text-foreground">{kermes.address || '-'}</div>
  {(kermes.secondStreetName) && <div className="text-muted-foreground text-xs">{kermes.secondStreetName}</div>}
@@ -2505,7 +2497,7 @@ export default function KermesDetailPage() {
  {/* Bilingual Bilgiler */}
  {kermes.titleSecondary && (
  <div className="flex justify-between text-sm md:col-span-2 border-t border-border pt-2 mt-2">
- <span className="text-muted-foreground/80">🌍 {kermes.secondaryLanguage?.toUpperCase()} {t('baslik')}</span>
+ <span className="text-muted-foreground/80">{kermes.secondaryLanguage?.toUpperCase()} {t('baslik')}</span>
  <div className="text-right">
  <div className="text-foreground">{kermes.titleSecondary}</div>
  {kermes.descriptionSecondary && <div className="text-muted-foreground text-xs truncate max-w-[200px]">{kermes.descriptionSecondary}</div>}
@@ -2517,7 +2509,7 @@ export default function KermesDetailPage() {
  {/* Kurumsal Bilgiler */}
  {(kermes.hasPfandSystem || kermes.showKdv) && (
  <div className="pt-4 border-t border-border">
- <h4 className="text-muted-foreground/80 text-sm font-medium mb-2">🏢 Kurumsal Bilgiler</h4>
+ <h4 className="text-muted-foreground/80 text-sm font-medium mb-2">Kurumsal Kayıtlar</h4>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
  {kermes.hasPfandSystem && (
  <div className="bg-card p-2 rounded border border-gray-600">
@@ -2577,11 +2569,11 @@ export default function KermesDetailPage() {
  ) : (
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="flex items-center gap-3 text-sm">
- <span className="text-muted-foreground/80">👤 İsim:</span>
+ <span className="text-muted-foreground/80">İsim:</span>
  <span className="text-foreground">{kermes.contactName || '-'}</span>
  </div>
  <div className="flex items-center gap-3 text-sm">
- <span className="text-muted-foreground/80">📞 Telefon:</span>
+ <span className="text-muted-foreground/80">Telefon:</span>
  <span className="text-foreground">{kermes.contactPhone || '-'}</span>
  </div>
  </div>
@@ -2775,6 +2767,39 @@ export default function KermesDetailPage() {
   )}
  </div>
 
+ {/************************************************************************/}
+ {/* KERMES YÖNETİMİ & TEHLİKELİ ALAN (DANGER ZONE) */}
+ {/************************************************************************/}
+ <div className="bg-card rounded-xl p-6 border border-red-900/30">
+  <h3 className="text-foreground font-bold mb-4 opacity-80">Kermes Durumu ve Yönetimi</h3>
+  <div className="flex flex-wrap gap-4 items-center">
+    <div className="flex-1 min-w-[200px]">
+      <div className="text-sm text-muted-foreground mb-1">Durum: <span className={kermes.isActive ? "text-green-500 font-bold" : "text-red-500 font-bold"}>{kermes.isActive ? t('aktif') : t('kapali')}</span></div>
+      <p className="text-xs text-muted-foreground opacity-70">Mobil uygulamada ve KDS ekranlarında kermesin yayın durumunu belirler.</p>
+    </div>
+    <button onClick={toggleActiveStatus}
+      className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-colors ${kermes.isActive ? 'bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/50' : 'bg-green-600/10 hover:bg-green-600/20 text-green-500 border border-green-500/50'}`}>
+      {kermes.isActive ? "Sistemi Kapat (Pasife Al)" : "Sistemi Aç (Aktife Al)"}
+    </button>
+  </div>
+  
+  {admin?.role === 'super_admin' && (
+    <>
+      <div className="h-px w-full bg-border/50 my-6"></div>
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex-1 min-w-[200px]">
+          <div className="text-sm font-bold text-red-500 mb-1">Kermesi Komple Sil</div>
+          <p className="text-xs text-muted-foreground opacity-70">Uyarı: Bu işlem geri alınamaz. Kermese ait tüm siparişler, ürünler ve personel verileri silinir.</p>
+        </div>
+        <button onClick={handleDeleteKermes} disabled={saving} className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-colors">
+          Kermesi Sil
+        </button>
+      </div>
+    </>
+  )}
+ </div>
+
+
  </>
  )}
 
@@ -2795,13 +2820,51 @@ export default function KermesDetailPage() {
  className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white rounded text-xs">{t('kaldir')}</button>
  </div>
  ) : (
- <button type="button" onClick={() => setShowStockImageModal(true)}
- className="w-full h-32 border-2 border-dashed border-gray-500 rounded-lg hover:border-cyan-500 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-cyan-800 dark:text-cyan-400">
- <span className="text-3xl">&#x1f5bc;&#xfe0f;</span>
- <span className="text-sm">{t('stok_gorsel_sec')}</span>
- </button>
+  <div className="grid grid-cols-2 gap-4">
+    {/* Stok Görsel Seçme Butonu */}
+    <button type="button" onClick={() => setShowStockImageModal(true)}
+    className="w-full h-32 border-2 border-dashed border-gray-500 rounded-lg hover:border-cyan-500 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-cyan-800 dark:text-cyan-400">
+    <span className="text-3xl">&#x1f5bc;&#xfe0f;</span>
+    <span className="text-sm">{t('stok_gorsel_sec') || 'Arşivden Seç'}</span>
+    </button>
+
+    {/* Bilgisayardan Yükle Butonu */}
+    <label className={`w-full h-32 border-2 border-dashed border-gray-500 rounded-lg hover:border-pink-500 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-pink-600 dark:text-pink-400 cursor-pointer ${isUploadingHeader ? 'opacity-50 pointer-events-none' : ''}`}>
+    <input 
+    type="file" 
+    className="hidden" 
+    accept="image/*"
+    disabled={isUploadingHeader}
+    onChange={async (e) => {
+      if (!e.target.files || !e.target.files[0]) return;
+      try {
+        setIsUploadingHeader(true);
+        const file = e.target.files[0];
+        
+        const compressedFile = await compressLokmaImage(file, false);
+        const fileExt = file.name.split('.').pop() || 'jpg';
+        const fileName = `header_${Date.now()}.${fileExt}`;
+        const storageRef = ref(storage, `kermes/${kermesId || 'new'}/header/${fileName}`);
+        
+        await uploadBytes(storageRef, compressedFile);
+        const url = await getDownloadURL(storageRef);
+        
+        setEditForm({ ...editForm, headerImage: url, headerImageId: 'custom_upload' });
+        showToast('Kapak görseli başarıyla yüklendi', 'success');
+      } catch (error) {
+        console.error('Upload Error:', error);
+        showToast('Görsel yüklenirken bir hata oluştu', 'error');
+      } finally {
+        setIsUploadingHeader(false);
+      }
+    }}
+    />
+    <span className="text-3xl">&#x1f4e4;</span>
+    <span className="text-sm font-medium">{isUploadingHeader ? 'Yükleniyor...' : 'Bilgisayardan Yükle'}</span>
+    </label>
+  </div>
  )}
- <p className="text-muted-foreground/80 text-xs mt-2 text-center">{t('onerilen_1200_675px_16_9')}</p>
+ <p className="text-muted-foreground/80 text-xs mt-3 text-center">{t('onerilen_1200_675px_16_9')}</p>
  </div>
  </div>
 

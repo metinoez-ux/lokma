@@ -27,6 +27,13 @@ const { admin, loading: adminLoading } = useAdmin();
  const [events, setEvents] = useState<KermesWithOrg[]>([]);
  const [badges, setBadges] = useState<{id: string, name: string, iconUrl: string}[]>([]);
  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, countryFilter, selectedBadge, selectedModality, timeStatusFilter, sortOrder]);
+
  const [timeStatusFilter, setTimeStatusFilter] = useState<'all' | 'past' | 'active' | 'future' | 'archived'>('all');
  const [selectedBadge, setSelectedBadge] = useState<string>('all');
  const [selectedModality, setSelectedModality] = useState<string>('all');
@@ -272,7 +279,11 @@ const { admin, loading: adminLoading } = useAdmin();
 
  // Rozet Filtresi
  if (selectedBadge !== 'all') {
- if (!event.activeBadgeIds?.includes(selectedBadge)) return false;
+ if (selectedBadge === 'none') {
+   if (event.activeBadgeIds && event.activeBadgeIds.length > 0) return false;
+ } else {
+   if (!event.activeBadgeIds?.includes(selectedBadge)) return false;
+ }
  }
 
  // Sipariş Türü Filtresi
@@ -284,10 +295,16 @@ const { admin, loading: adminLoading } = useAdmin();
  if (selectedModality === 'dine_in' && (e.isMenuOnly || !e.hasDineIn)) return false;
  }
 
- // Ülke Filtresi
+ // Ülke veya Sıla Yolu Filtresi
  if (countryFilter !== 'all') {
  const e = event as any;
- if (e.country !== countryFilter) return false;
+ if (countryFilter === 'sila_yolu') {
+   const isSilaStrict = !!e.isSilaYolu;
+   const isSilaSoft = e.title && typeof e.title === 'string' && e.title.toLowerCase().includes('sıla');
+   if (!isSilaStrict && !isSilaSoft) return false;
+ } else {
+   if (e.country !== countryFilter) return false;
+ }
  }
 
  if (!searchQuery) return true;
@@ -330,6 +347,9 @@ const { admin, loading: adminLoading } = useAdmin();
  const order = { active: 0, future: 1, past: 2 };
  return order[getKermesTimeStatus(a)] - order[getKermesTimeStatus(b)];
  });
+
+ const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
+ const paginatedEvents = filteredEvents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
  const uniqueCountries = Array.from(new Set(events.map((e: any) => e.country).filter(Boolean))).sort();
 
@@ -388,59 +408,11 @@ const { admin, loading: adminLoading } = useAdmin();
  </p>
  </div>
  <div className="flex flex-wrap items-center gap-2">
- {/* Super Admin Only: Settings Buttons */}
- {admin.role === 'super_admin' && (
- <>
- <Link
- href="/admin/settings/kermes-menus"
- className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
- >
- <span>🍽️</span>
- {t('kermes_menuleri')}
- </Link>
-
- <Link
- href="/admin/settings/kermes-features"
- className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
- >
- <span>⭐</span>
- {t('kermes_ozellikleri')}
- </Link>
- <Link
- href="/admin/settings/platform-brands"
- className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
- >
- <span>🏅</span>
- Markalar & Rozetler
- </Link>
- <Link
- href="/admin/settings/donation-funds"
- className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
- >
- <span>💝</span>
- Bagis Fonlari
- </Link>
- <Link
- href="/admin/settings/kermes-gender-types"
- className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
- >
- <span>⚤</span>
- Bolum Tipleri
- </Link>
- <Link
- href="/admin/settings/kermes-stock-images"
- className="px-4 py-2.5 bg-gradient-to-r from-cyan-700 to-teal-700 hover:from-cyan-600 hover:to-teal-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-cyan-600"
- >
- <span>🖼️</span>
- {t('stok_gorseller')}
- </Link>
- </>
- )}
  {/* Create button for Super Admin and Kermes Admin */}
  {(admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
  <Link
  href="/admin/kermes/new"
- className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
+ className="px-6 py-3 bg-white hover:bg-gray-200 text-black dark:bg-gray-100 dark:hover:bg-white dark:text-gray-900 rounded-xl font-bold transition shadow-sm w-full sm:w-auto inline-flex justify-center whitespace-nowrap"
  >
  <span>➕</span>
  {t('yeni_kermes_ekle')}
@@ -453,9 +425,8 @@ const { admin, loading: adminLoading } = useAdmin();
  {/* Search and Filters */}
  <div className="max-w-6xl mx-auto mb-6">
  <div className="bg-card rounded-xl p-4">
- <div className="flex flex-col sm:flex-row gap-4">
  {/* Search */}
- <div className="flex-1 relative">
+  <div className="relative w-full mb-4">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
  <input
  type="text"
@@ -466,7 +437,8 @@ const { admin, loading: adminLoading } = useAdmin();
  />
  </div>
 
- {/* Sorting Filter */}
+ </div><div className="flex flex-wrap items-center gap-3 w-full">
+  {/* Sorting Filter */}
  <select
  title="Sıralama"
  value={sortOrder}
@@ -478,19 +450,18 @@ const { admin, loading: adminLoading } = useAdmin();
  </select>
 
  {/* Country Filter */}
- {uniqueCountries.length > 0 && (
  <select
- title="Ülke"
+ title="Ülke Filtresi & Sıla Yolu"
  value={countryFilter}
  onChange={(e) => setCountryFilter(e.target.value)}
  className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
  >
  <option value="all">Tüm Ülkeler</option>
+ <option value="sila_yolu">Sıla Yolu Kermesleri</option>
  {uniqueCountries.map((country: any) => (
  <option key={country} value={country}>{country}</option>
  ))}
  </select>
- )}
 
  {/* Modality Filter */}
  <select
@@ -514,6 +485,7 @@ const { admin, loading: adminLoading } = useAdmin();
  className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
  >
  <option value="all">Tüm Badgeler</option>
+ <option value="none">Sertifikasız Kermesler</option>
  {badges.map(b => (
  <option key={b.id} value={b.id}>{b.name}</option>
  ))}
@@ -542,7 +514,7 @@ const { admin, loading: adminLoading } = useAdmin();
  <div className="max-w-6xl mx-auto">
  {filteredEvents.length === 0 ? (
  <div className="bg-card rounded-xl p-12 text-center">
- <div className="text-6xl mb-4">🎪</div>
+ <div className="text-6xl mb-4">K</div>
  <h2 className="text-xl font-bold text-foreground mb-2">
  {events.length === 0 ? t('henuz_kermes_yok') : t('sonuc_bulunamadi')}
  </h2>
@@ -560,7 +532,7 @@ const { admin, loading: adminLoading } = useAdmin();
  </div>
  ) : (
  <div className="space-y-3">
- {filteredEvents.map((event) => {
+ {paginatedEvents.map((event) => {
  const timeStatus = getKermesTimeStatus(event);
  const statusConfig = getStatusConfig(timeStatus);
  const e = event as any;
@@ -577,11 +549,11 @@ const { admin, loading: adminLoading } = useAdmin();
  >
  <div className="flex items-center gap-4">
  {/* Status Indicator */}
- <div className={`w-2 h-16 rounded-full ${statusConfig.color}`} />
+ <div className={`w-1 h-12 rounded-full ${statusConfig.color}`} />
 
  {/* Icon */}
- <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-600 to-purple-600 flex items-center justify-center text-2xl shadow-lg flex-shrink-0">
- 🎪
+ <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center font-bold text-muted-foreground shadow-sm flex-shrink-0">
+ {event.title ? event.title.charAt(0).toUpperCase() : 'K'}
  </div>
 
  {/* Main Info */}
@@ -613,7 +585,7 @@ const { admin, loading: adminLoading } = useAdmin();
  )}
  {e.hasDineIn && (
  <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 rounded text-[10px] font-medium border border-green-200 dark:border-green-800/50">
- 🍽️ Masa
+ Masa
  </span>
  )}
  </>
@@ -645,13 +617,13 @@ const { admin, loading: adminLoading } = useAdmin();
 
  {/* Location */}
  <div className="hidden md:block">
- <span className="text-muted-foreground/80 text-xs">📍 Konum</span>
+ <span className="text-muted-foreground/80 text-xs">Konum</span>
  <p className="text-foreground text-sm truncate">{getLocationDisplay(event)}</p>
  </div>
 
  {/* Contact */}
  <div className="hidden md:block">
- <span className="text-muted-foreground/80 text-xs">📞 Sorumlu</span>
+ <span className="text-muted-foreground/80 text-xs">Sorumlu</span>
  <p className="text-foreground text-sm truncate">{contactName}</p>
  {contactPhone && (
  <a
@@ -696,7 +668,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
  {/* Mobile Details */}
  <div className="md:hidden mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-2 text-xs">
- <div><span className="text-muted-foreground/80">📅</span> {formatDateRange(event)}</div>
+ <div><span className="text-muted-foreground/80"></span> {formatDateRange(event)}</div>
  <div><span className="text-muted-foreground/80">📍</span> {getLocationDisplay(event)}</div>
  <div><span className="text-muted-foreground/80">📞</span> {contactPhone || '-'}</div>
  <div><span className="text-muted-foreground/80">🍽️</span> {event.productCount || 0} {t('urun')}</div>
