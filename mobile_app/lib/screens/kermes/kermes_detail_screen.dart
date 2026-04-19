@@ -65,7 +65,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
       _productsSubscription;
   List<KermesMenuItem>? _liveMenu;
 
-  String _selectedCategory = '';
+  final ValueNotifier<String> _selectedCategory = ValueNotifier('');
 
   // Scroll spy controller and keys
   final ScrollController _scrollController = ScrollController();
@@ -77,10 +77,10 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   final ScrollController _chipScrollController = ScrollController();
 
   // Sliding pill indicator state
-  double _pillLeft = 0;
-  double _pillWidth = 60;
+  final ValueNotifier<double> _pillLeft = ValueNotifier(0.0);
+  final ValueNotifier<double> _pillWidth = ValueNotifier(60.0);
   bool _isFavorite = false;
-  bool _pillInitialized = false;
+  final ValueNotifier<bool> _pillInitialized = ValueNotifier(false);
   final GlobalKey _chipRowKey = GlobalKey();
 
   // Delivery mode toggle
@@ -252,9 +252,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     _lastScrollTime = now;
 
     if (_scrollController.hasClients && _scrollController.offset < 10) {
-      if (_selectedCategory != 'marketplace.category_all'.tr()) {
+      if (_selectedCategory.value != 'marketplace.category_all'.tr()) {
         HapticFeedback.selectionClick();
-        setState(() => _selectedCategory = 'marketplace.category_all'.tr());
+        _selectedCategory.value = 'marketplace.category_all'.tr();
         Future.delayed(const Duration(milliseconds: 50), () {
           if (mounted) {
             _scrollChipBarToSelected('marketplace.category_all'.tr());
@@ -285,11 +285,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
       }
     }
 
-    if (visibleCategory != null && visibleCategory != _selectedCategory) {
+    if (visibleCategory != null && visibleCategory != _selectedCategory.value) {
       HapticFeedback.selectionClick();
-      setState(() {
-        _selectedCategory = visibleCategory!;
-      });
+      _selectedCategory.value = visibleCategory!;
       Future.delayed(const Duration(milliseconds: 50), () {
         if (mounted) {
           _scrollChipBarToSelected(visibleCategory!);
@@ -329,7 +327,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   }
 
   void _updatePillPosition([String? cat]) {
-    final category = cat ?? _selectedCategory;
+    final category = cat ?? _selectedCategory.value;
     final tabKey = _tabKeys[category];
     if (tabKey?.currentContext == null || _chipRowKey.currentContext == null)
       return;
@@ -343,17 +341,15 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
 
     if (mounted) {
-      setState(() {
-        _pillLeft = chipPos.dx;
-        _pillWidth = chipBox.size.width;
-        _pillInitialized = true;
-      });
+      _pillLeft.value = chipPos.dx;
+      _pillWidth.value = chipBox.size.width;
+      _pillInitialized.value = true;
     }
   }
 
   void _selectCategory(String category) {
-    if (_selectedCategory == category) return;
-    setState(() => _selectedCategory = category);
+    if (_selectedCategory.value == category) return;
+    _selectedCategory.value = category;
     _isUserScrolling = false;
 
     _scrollChipBarToSelected(category);
@@ -1275,7 +1271,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                 itemCount: _categories.length,
                 itemBuilder: (context, index) {
                   final catName = _categories[index];
-                  final isSelected = _selectedCategory == catName;
+                  final isSelected = _selectedCategory.value == catName;
 
                   // Get product names for this category
                   String productPreview = '';
@@ -1349,8 +1345,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (_selectedCategory.isEmpty) {
-      _selectedCategory = 'marketplace.category_all'.tr();
+    if (_selectedCategory.value.isEmpty) {
+      _selectedCategory.value = 'marketplace.category_all'.tr();
     }
     for (final category in _categoriesWithoutAll) {
       _sectionKeys.putIfAbsent(category, () => GlobalKey());
@@ -1661,7 +1657,15 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     height: 52,
                     child: Column(
                       children: [
-                        Row(
+                        AnimatedBuilder(
+                          animation: Listenable.merge([
+                            _selectedCategory,
+                            _pillLeft,
+                            _pillWidth,
+                            _pillInitialized,
+                          ]),
+                          builder: (context, _) {
+                            return Row(
                           children: [
                             Expanded(
                               child: SingleChildScrollView(
@@ -1673,19 +1677,19 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                   alignment: Alignment.centerLeft,
                                   children: [
                                     // 1. Sliding pill indicator
-                                    if (_pillInitialized)
+                                    if (_pillInitialized.value)
                                       AnimatedPositioned(
                                         duration:
                                             const Duration(milliseconds: 400),
                                         curve: Curves.easeOutBack,
-                                        left: _pillLeft,
+                                        left: _pillLeft.value,
                                         top: 0,
                                         bottom: 0,
                                         child: AnimatedContainer(
                                           duration:
                                               const Duration(milliseconds: 400),
                                           curve: Curves.easeOutBack,
-                                          width: _pillWidth,
+                                          width: _pillWidth.value,
                                           decoration: BoxDecoration(
                                             color: isDark
                                                 ? Colors.white
@@ -1712,7 +1716,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                         _tabKeys.putIfAbsent(
                                             category, () => GlobalKey());
                                         final isSelected =
-                                            category == _selectedCategory;
+                                            category == _selectedCategory.value;
 
                                         return Padding(
                                           padding:
@@ -1847,7 +1851,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                               ),
                             ),
                           ],
-                        ),
+                        );
+                      },
+                    ),
                         Divider(
                             height: 1,
                             thickness: 0.5,
