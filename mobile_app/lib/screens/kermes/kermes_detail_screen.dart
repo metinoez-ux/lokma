@@ -169,9 +169,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
       // Tahmin ve anlık hava durumunu paralel cek
       final results = await Future.wait([
         WeatherService.getForecast(
-            lat: _currentEvent.latitude, lon: _currentEvent.longitude),
+            lat: _currentEvent.latitude, lon: _currentEvent.longitude, locale: context.locale.languageCode),
         WeatherService.getCurrentWeather(
-            lat: _currentEvent.latitude, lon: _currentEvent.longitude),
+            lat: _currentEvent.latitude, lon: _currentEvent.longitude, locale: context.locale.languageCode),
       ]);
       final forecast = results[0] as WeatherForecast?;
       CurrentWeather? current = results[1] as CurrentWeather?;
@@ -650,6 +650,32 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     }
   }
 
+  String _getTranslatedCategory(String category) {
+    if (category == 'marketplace.category_all'.tr()) return category;
+    final map = {
+      'ana yemek': 'kermes.cat_main_course',
+      'çorba': 'kermes.cat_soups',
+      'corba': 'kermes.cat_soups',
+      'tatlı': 'kermes.cat_desserts',
+      'tatli': 'kermes.cat_desserts',
+      'tatlilar': 'kermes.cat_desserts',
+      'içecek': 'kermes.cat_drinks',
+      'icecek': 'kermes.cat_drinks',
+      'icecekler': 'kermes.cat_drinks',
+      'aperatif': 'kermes.cat_snacks',
+      'grill': 'kermes.cat_grill',
+      'diğer': 'kermes.cat_others',
+      'diger': 'kermes.cat_others',
+      'hamur isleri': 'kermes.cat_pastries'
+    };
+    final key = map[category.toLowerCase()];
+    if (key != null) {
+      final translated = key.tr();
+      if (translated != key) return translated;
+    }
+    return category;
+  }
+
   Map<String, List<KermesMenuItem>> get _groupedMenu {
     final grouped = <String, List<KermesMenuItem>>{};
     for (final category in _categoriesWithoutAll) {
@@ -733,14 +759,14 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Bu Kermes henüz dijital online sipariş alma imkanı sunmuyor.',
+            Text('kermes.no_online_order'.tr(),
                 style: TextStyle(
                     color: Theme.of(dialogContext).brightness == Brightness.dark
                         ? Colors.white70
                         : Colors.black87,
                     fontSize: 15)),
             const SizedBox(height: 12),
-            Text('Sorularınız için Kermes Yetkilisine danışabilirsiniz:',
+            Text('kermes.contact_staff_questions'.tr(),
                 style: TextStyle(
                     color: Theme.of(dialogContext).brightness == Brightness.dark
                         ? Colors.white54
@@ -1412,9 +1438,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _menuSearchQuery.isNotEmpty
-                                ? _menuSearchQuery
-                                : 'Menude ara...',
+                            _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'customer.menude_ara'.tr(),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -1545,12 +1569,12 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: const [
+                                  children: [
                                     Icon(Icons.star,
                                         color: Colors.white, size: 12),
                                     SizedBox(width: 4),
-                                    Text('POPULER',
-                                        style: TextStyle(
+                                    Text('kermes.populer'.tr(),
+                                        style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
@@ -1581,7 +1605,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                                     color: primaryRuby,
                                                     shape: BoxShape.circle)),
                                             const SizedBox(width: 8),
-                                            Text('LEZZET SOLENI',
+                                            Text('kermes.lezzet_soleni'.tr(),
                                                 style: TextStyle(
                                                     color: Colors.white
                                                         .withOpacity(0.7),
@@ -1591,15 +1615,15 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                           ],
                                         ),
                                         const SizedBox(height: 6),
-                                        const Text('Menu ve Siparis',
-                                            style: TextStyle(
+                                        Text('kermes.menu_and_order'.tr(),
+                                            style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 26,
                                                 fontWeight: FontWeight.bold,
                                                 height: 1.1)),
                                         const SizedBox(height: 4),
                                         Text(
-                                            'Kebaplar, tatlilar ve sokak lezzetlerini kesfet.',
+                                            'kermes.kermes_flavor_desc'.tr(),
                                             style: TextStyle(
                                                 color: Colors.white
                                                     .withOpacity(0.6),
@@ -1757,7 +1781,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                                           : FontWeight.w500,
                                                       fontSize: 14,
                                                     ),
-                                                    child: Text(category),
+                                                    child: Text(
+                                                      _getTranslatedCategory(category),
                                                   ),
                                                   // Cart count badge
                                                   Builder(builder: (context) {
@@ -1914,7 +1939,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      category,
+                                      _getTranslatedCategory(category),
                                       style: TextStyle(
                                         color:
                                             isDark ? lokmaPink : Colors.black87,
@@ -2191,14 +2216,13 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                 borderRadius: BorderRadius.circular(4),
                                 child: LokmaNetworkImage(
                                   imageUrl: badge.iconUrl,
-                                  height:
-                                      52, // Detay sayfasinda daha net ve buyuk
-                                  width: 52,
+                                  height: 52,
+                                  width: (badge.label.toLowerCase().contains('tuna') || badge.label.toLowerCase().contains('toros')) ? 160 : 52,
                                   fit: BoxFit.contain,
                                   placeholder: (context, url) => Container(
                                     color: Colors.transparent,
                                     height: 52,
-                                    width: 52,
+                                    width: (badge.label.toLowerCase().contains('tuna') || badge.label.toLowerCase().contains('toros')) ? 160 : 52,
                                   ),
                                   errorWidget: (context, url, error) => Icon(
                                       Icons.verified,
@@ -2619,7 +2643,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'LOKASYON',
+                            'kermes.location_caps'.tr(),
                             style: TextStyle(
                               color: subtleTextColor,
                               fontSize: 10,
@@ -2713,12 +2737,12 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.navigation, color: Colors.white, size: 16),
-                        SizedBox(width: 6),
+                      children: [
+                        const Icon(Icons.navigation, color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
                         Text(
-                          'Yol Tarifi',
-                          style: TextStyle(
+                          'kermes.directions'.tr(),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -2756,7 +2780,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                               color: const Color(0xFF2196F3), size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            'Park Bilgisi',
+                            'kermes.parking_info'.tr(),
                             style: TextStyle(
                               color: const Color(0xFF2196F3),
                               fontSize: 12,
@@ -2865,7 +2889,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Park Bilgisi',
+                        'kermes.parking_info'.tr(),
                         style: TextStyle(
                           color: textColor,
                           fontSize: 18,
@@ -3048,7 +3072,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Sorularınız için iletişime geçebilirsiniz.',
+                        'kermes.contact_questions'.tr(),
                         style: TextStyle(
                           color: subtleTextColor,
                           fontSize: 12,
@@ -3089,7 +3113,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Telefon',
+                          'kermes.phone'.tr(),
                           style: TextStyle(
                             color: subtleTextColor,
                             fontSize: 12,
@@ -3277,7 +3301,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'KERMES ALANI HAVA DURUMU',
+                      'kermes.weather_title'.tr(),
                       style: TextStyle(
                         color: subtleTextColor,
                         fontSize: 12,
@@ -3287,7 +3311,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${_currentEvent.city} - Etkinlik Günleri Tahmini',
+                      '${_currentEvent.city} - ${'kermes.event_days_forecast'.tr()}',
                       style: TextStyle(
                         color: textColor,
                         fontSize: 15,
@@ -3316,7 +3340,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                       color: subtleTextColor, size: 40),
                   const SizedBox(height: 12),
                   Text(
-                    'Hava durumu henuz mevcut degil',
+                    'kermes.weather_not_available'.tr(),
                     style: TextStyle(
                         color: textColor,
                         fontSize: 15,
@@ -3325,8 +3349,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                   const SizedBox(height: 6),
                   Text(
                     now.isBefore(start)
-                        ? 'Etkinlik yaklaştıkca hava durumu burada görünecek. Tahminler genellikle 5 gün öncesinden itibaren mevcut olur.'
-                        : 'Kermes alani icin hava durumu verisi alinamadi.',
+                        ? 'kermes.weather_approx'.tr()
+                        : 'kermes.weather_fetch_failed'.tr(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: subtleTextColor, fontSize: 12, height: 1.5),
@@ -3342,7 +3366,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
             Row(
               children: [
                 Text(
-                  'BUGÜN',
+                  'kermes.today_caps'.tr(),
                   style: TextStyle(
                       color: subtleTextColor,
                       fontSize: 13,
@@ -3358,7 +3382,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    'Kermesin ${_getEventDayNumber(now)}. Günü',
+                    'kermes.kermes_day_nth'.tr(args: [_getEventDayNumber(now).toString()]),
                     style: const TextStyle(
                         color: Colors.green,
                         fontSize: 10,
@@ -3425,7 +3449,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
           if (hasForecast) ...[
             const SizedBox(height: 20),
             Text(
-              'ETKİNLİK GÜNLERİ',
+              'kermes.event_days_caps'.tr(),
               style: TextStyle(
                   color: subtleTextColor,
                   fontSize: 13,
@@ -3671,7 +3695,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Sorulariniz icin iletisime gecebilirsiniz.',
+                      'kermes.contact_questions'.tr(),
                       style: TextStyle(
                         color: subtleTextColor,
                         fontSize: 13,
@@ -3785,7 +3809,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Telefon',
+                        'kermes.phone'.tr(),
                         style: TextStyle(
                           color: subtleTextColor,
                           fontSize: 13,
@@ -4059,7 +4083,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                       : Colors.grey[600]),
                               const SizedBox(width: 4),
                               Text(
-                                'Secenekli',
+                                'kermes.with_options'.tr(),
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w500,

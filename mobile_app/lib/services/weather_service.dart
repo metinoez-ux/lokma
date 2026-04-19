@@ -12,10 +12,11 @@ class WeatherService {
   static Future<WeatherForecast?> getForecast({
     required double lat,
     required double lon,
+    String locale = 'en',
   }) async {
     try {
       final url = Uri.parse(
-        '$_baseUrl/forecast?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=tr&cnt=40',
+        '$_baseUrl/forecast?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=$locale&cnt=40',
       );
       
       final response = await http.get(url);
@@ -35,10 +36,11 @@ class WeatherService {
   static Future<CurrentWeather?> getCurrentWeather({
     required double lat,
     required double lon,
+    String locale = 'en',
   }) async {
     try {
       final url = Uri.parse(
-        '$_baseUrl/weather?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=tr',
+        '$_baseUrl/weather?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=$locale',
       );
       
       final response = await http.get(url);

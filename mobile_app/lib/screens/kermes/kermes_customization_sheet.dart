@@ -87,7 +87,8 @@ class _KermesCustomizationSheetState
     return total;
   }
 
-  double get _unitPrice => widget.item.price + _optionsTotal;
+  double get _effectiveBasePrice => widget.item.isDiscounted ? widget.item.discountPrice! : widget.item.price;
+  double get _unitPrice => _effectiveBasePrice + _optionsTotal;
   double get _totalPrice => _unitPrice * _quantity;
 
   List<SelectedOption> get _selectedOptions {
@@ -192,20 +193,20 @@ class _KermesCustomizationSheetState
                   const SizedBox(height: 8),
 
                   // Product image
-                  if (item.allImages.isNotEmpty)
+                  if ((item.imageUrl?.isNotEmpty == true) || item.allImages.isNotEmpty)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: SizedBox(
                         width: double.infinity,
                         height: 180,
                         child: LokmaNetworkImage(
-                          imageUrl: item.allImages.first,
+                          imageUrl: item.imageUrl?.isNotEmpty == true ? item.imageUrl! : item.allImages.first,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => const SizedBox.shrink(),
                         ),
                       ),
                     ),
-                  if (item.allImages.isNotEmpty) const SizedBox(height: 14),
+                  if ((item.imageUrl?.isNotEmpty == true) || item.allImages.isNotEmpty) const SizedBox(height: 14),
 
                   // Product name
                   Text(
@@ -232,14 +233,39 @@ class _KermesCustomizationSheetState
                   const SizedBox(height: 4),
 
                   // Price
-                  Text(
-                    '${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2).replaceAll('.', ',')}',
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: textPrimary,
-                      fontWeight: FontWeight.w700,
+                  if (item.isDiscounted) ...[
+                    Row(
+                      children: [
+                        Text(
+                          '${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: textSecondary,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: textSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${CurrencyUtils.getCurrencySymbol()}${item.discountPrice!.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ] else
+                    Text(
+                      '${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2).replaceAll('.', ',')}',
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
 
                   // Description
                   if (item.description != null && item.description!.isNotEmpty) ...[
@@ -356,7 +382,7 @@ class _KermesCustomizationSheetState
                           ),
                           child: Text(
                             widget.editMode
-                                ? 'Guncelle  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2).replaceAll('.', ',')}'
+                                ? '${'common.update'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2).replaceAll('.', ',')}'
                                 : '${'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2).replaceAll('.', ',')}',
                             style: const TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w600),

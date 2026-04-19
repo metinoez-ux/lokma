@@ -2133,7 +2133,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Kermes ara: sehir, eyalet, menu...',
+                    'kermes.kermes_search_hint'.tr(),
                     style: TextStyle(
                       color: isDark ? Colors.grey[300] : Colors.grey[600],
                       fontSize: 14.5,

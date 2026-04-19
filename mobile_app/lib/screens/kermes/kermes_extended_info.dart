@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/services/weather_service.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
@@ -821,16 +822,7 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
   }
 
   String _getTurkishDayName(DateTime date) {
-    const days = [
-      'Pazartesi',
-      'Salı',
-      'Çarşamba',
-      'Perşembe',
-      'Cuma',
-      'Cumartesi',
-      'Pazar'
-    ];
-    return days[date.weekday - 1];
+    return DateFormat('EEEE', context.locale.languageCode).format(date);
   }
 
   /// İletişim Kartı
@@ -1030,7 +1022,9 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
         displayFeatures.add(_buildDynamicFeatureChip(
           emoji: feature.icon,
           iconUrl: feature.iconUrl,
-          label: feature.label,
+          label: 'kermes.feature_$featureId'.tr() != 'kermes.feature_$featureId'
+              ? 'kermes.feature_$featureId'.tr()
+              : feature.label,
           color: feature.colorValue,
         ));
       }
