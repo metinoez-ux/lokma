@@ -337,7 +337,16 @@ const { admin, loading: adminLoading } = useAdmin();
 
  return searchableFields.some(field => {
   if (field === null || field === undefined) return false;
-  const strField = typeof field === 'object' ? JSON.stringify(field) : String(field);
+  let strField = '';
+  if (typeof field === 'object') {
+    try {
+      strField = Object.values(field).filter(v => typeof v === 'string' || typeof v === 'number').join(' ');
+    } catch (e) {
+      strField = '';
+    }
+  } else {
+    strField = String(field);
+  }
   return normalizeForSearch(strField).includes(query) || strField.includes(searchQuery);
  });
  })
