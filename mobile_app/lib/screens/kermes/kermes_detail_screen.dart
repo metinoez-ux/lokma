@@ -2048,6 +2048,18 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
         lower.contains('hungary') ||
         lower.contains('ungarn') ||
         lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
+    if (lower.contains('norvec') ||
+        lower.contains('norway') ||
+        lower.contains('norwegen') ||
+        lower == 'no') return '\u{1F1F3}\u{1F1F4}';
+    if (lower.contains('danimarka') ||
+        lower.contains('denmark') ||
+        lower.contains('danemark') ||
+        lower == 'dk') return '\u{1F1E9}\u{1F1F0}';
+    if (lower.contains('isvec') ||
+        lower.contains('sweden') ||
+        lower.contains('schweden') ||
+        lower == 'se') return '\u{1F1F8}\u{1F1EA}';
     return '\u{1F1E9}\u{1F1EA}'; // Varsayilan Almanya
   }
 
