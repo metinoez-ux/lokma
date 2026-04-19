@@ -2508,11 +2508,11 @@ export default function KermesDetailPage() {
        className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-500 transition font-medium">+ {t('ekle')}</button>
      </div>
     )}
-   </div>
   </div>
  </div>
 
  </div>
+ </>
  ) : (
  <div className="space-y-4">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
