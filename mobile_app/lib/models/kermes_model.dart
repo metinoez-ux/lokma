@@ -105,6 +105,7 @@ class KermesEvent {
   final String country; // Ülke
   final String? state; // Eyalet
   final String title;
+  final String description;
   final String address;
   final String phoneNumber;
   final DateTime startDate;
@@ -212,6 +213,7 @@ class KermesEvent {
     this.country = 'Almanya', // Varsayılan: Almanya
     this.state, // Eyalet opsiyonel
     required this.title,
+    this.description = '',
     required this.address,
     required this.phoneNumber,
     required this.startDate,
@@ -658,6 +660,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 4)),
     latitude: 51.0536,
     longitude: 6.2208,
+    description: '',
     hasKidsActivities: true,
     hasFamilyArea: true,
     hasOutdoor: true,
@@ -708,6 +711,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 12)),
     latitude: 51.1985,
     longitude: 6.4382,
+    description: '',
     hasKidsActivities: true,
     hasFamilyArea: false,
     hasOutdoor: true,
@@ -744,6 +748,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 22)),
     latitude: 50.7667,
     longitude: 6.2333,
+    description: '',
     hasKidsActivities: false,
     hasFamilyArea: true,
     hasOutdoor: false,
@@ -781,6 +786,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 7)),
     latitude: 48.1814,
     longitude: 16.3339,
+    description: '',
     hasKidsActivities: true,
     hasFamilyArea: true,
     hasOutdoor: true,
@@ -820,6 +826,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 10)),
     latitude: 44.7866,
     longitude: 20.4489,
+    description: '',
     hasKidsActivities: true,
     hasFamilyArea: true,
     hasOutdoor: false,
@@ -858,6 +865,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 8)),
     latitude: 47.4979,
     longitude: 19.0402,
+    description: '',
     hasKidsActivities: false,
     hasFamilyArea: true,
     hasOutdoor: true,
@@ -898,6 +906,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 5)),
     latitude: 41.0054,
     longitude: 28.9768,
+    description: '',
     hasKidsActivities: true,
     hasFamilyArea: true,
     hasOutdoor: true,
@@ -935,6 +944,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 12)),
     latitude: 40.9915,
     longitude: 29.0321,
+    description: '',
     hasKidsActivities: true,
     hasFamilyArea: false,
     hasOutdoor: true,
@@ -969,6 +979,7 @@ final List<KermesEvent> mockKermesEvents = [
     endDate: DateTime.now().add(const Duration(days: 17)),
     latitude: 41.0264,
     longitude: 29.0155,
+    description: '',
     hasKidsActivities: true,
     hasFamilyArea: true,
     hasOutdoor: true,

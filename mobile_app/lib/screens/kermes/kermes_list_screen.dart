@@ -575,6 +575,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               country: country,
               state: data['state'],
               title: data['name'] ?? data['title'] ?? 'Kermes',
+              description: data['description']?.toString() ?? '',
               address: fullAddress,
               phoneNumber: phoneNumber,
               startDate: startDate,
@@ -739,6 +740,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           final stateNorm =
               _normalizeTurkish((event.state ?? '').toLowerCase());
           final addressNorm = _normalizeTurkish(event.address.toLowerCase());
+          final descNorm = _normalizeTurkish(event.description.toLowerCase());
 
           // Eyalet kisaltma eslestirme
           String stateExpanded = stateNorm;
@@ -770,7 +772,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               .join(' ');
 
           final searchableText =
-              '$cityNorm $titleNorm $countryExpanded $stateExpanded $addressNorm $menuNames';
+              '$cityNorm $titleNorm $countryExpanded $stateExpanded $addressNorm $descNorm $menuNames';
 
           return queryWords.every((word) => searchableText.contains(word));
         }).toList();
