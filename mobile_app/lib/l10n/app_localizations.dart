@@ -67,7 +67,7 @@ import 'app_localizations_tr.dart';
 /// property.
 abstract class L {
   L(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -89,11 +89,11 @@ abstract class L {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -102,7 +102,7 @@ abstract class L {
     Locale('fr'),
     Locale('it'),
     Locale('nl'),
-    Locale('tr')
+    Locale('tr'),
   ];
 
   /// No description provided for @appName.
@@ -506,13 +506,13 @@ class _LDelegate extends LocalizationsDelegate<L> {
 
   @override
   bool isSupported(Locale locale) => <String>[
-        'de',
-        'es',
-        'fr',
-        'it',
-        'nl',
-        'tr'
-      ].contains(locale.languageCode);
+    'de',
+    'es',
+    'fr',
+    'it',
+    'nl',
+    'tr',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_LDelegate old) => false;
@@ -536,8 +536,9 @@ L lookupL(Locale locale) {
   }
 
   throw FlutterError(
-      'L.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'L.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

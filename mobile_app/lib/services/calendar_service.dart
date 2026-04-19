@@ -1,6 +1,7 @@
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 
@@ -109,8 +110,14 @@ class CalendarService {
     String? location,
   }) async {
     try {
-      final tzStart = tz.TZDateTime.from(startTime, tz.local);
-      final tzEnd = tz.TZDateTime.from(startTime.add(duration), tz.local);
+      // Initialize timezone database to prevent LocationNotFoundException
+      tz_data.initializeTimeZones();
+      
+      // Fallback local timezone to Berlin timezone to ensure safe conversion without flutter_timezone
+      final location = tz.getLocation('Europe/Berlin');
+      
+      final tzStart = tz.TZDateTime.from(startTime, location);
+      final tzEnd = tz.TZDateTime.from(startTime.add(duration), location);
 
       final event = Event(
         calendarId,

@@ -115,7 +115,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                         : 'order_confirmation.delivery_hint'.tr()),
                 textAlign: TextAlign.center,
                 style:
-                    TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
+                    TextStyle(color: subtextColor, fontSize: 14, fontWeight: FontWeight.w500, height: 1.4),
               ),
 
               const SizedBox(height: 12),
@@ -145,8 +145,8 @@ class OrderConfirmationDialog extends StatelessWidget {
                       'order_confirmation.notification_reminder'.tr(),
                       style: TextStyle(
                           color: subtextColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],

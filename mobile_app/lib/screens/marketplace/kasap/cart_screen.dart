@@ -939,7 +939,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 Navigator.of(context, rootNavigator: true).pop();
               }
               // Gracefully reset to the home state
-              GoRouter.of(context).go('/restoran');
+              final bType = (_butcherData?['type'] ?? '').toString().toLowerCase();
+              final marketTypes = {'kasap', 'market', 'sarkuteri', 'kuruyemis', 'petshop', 'kozmetik', 'eticaret', 'balik'};
+              if (bType == 'kermes') {
+                GoRouter.of(context).go('/kermes');
+              } else if (marketTypes.contains(bType)) {
+                GoRouter.of(context).go('/market');
+              } else {
+                GoRouter.of(context).go('/restoran');
+              }
             },
             onClearCart: () {
               // Safety net: cart already cleared above after order save,
@@ -10151,14 +10159,14 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       ),
                       child: Center(
                         child: _localIsSubmitting
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
-                                  const SizedBox(width: 12),
-                                  Text(tr('global.processing', defaultValue: 'İşleniyor, lütfen bekleyin...'), style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
-                                ],
-                              )
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                                    const SizedBox(width: 12),
+                                    Text('İşleniyor, lütfen bekleyin...', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
+                                  ],
+                                )
                             : parent._paymentMethod == 'card'
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
