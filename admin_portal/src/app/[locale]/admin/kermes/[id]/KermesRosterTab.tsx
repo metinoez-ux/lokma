@@ -54,6 +54,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [targetRoster, setTargetRoster] = useState<KermesRoster | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingVardiya, setIsAddingVardiya] = useState(false);
 
   // Coverage Dashboard State
   const [coverageOpen, setCoverageOpen] = useState(false);
@@ -518,19 +519,32 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="bg-gradient-to-r from-blue-900/10 to-indigo-900/10 border border-blue-500/20 rounded-xl p-5">
-        <h3 className="text-lg font-bold text-blue-100 flex items-center gap-2 mb-2">
-          <span>📅</span> Vardiya ve Mesai Planlama
-        </h3>
-        <p className="text-sm text-blue-200/70">
-          Personel havuzunuzdaki kişileri kermes süresi boyunca belirli gün ve saatlere görevlendirerek takvimi netleştirin.
-        </p>
-      </div>
+    <div className="space-y-6">
+      {/* Vardiya ve Mesai Planlama Paneli */}
+      <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="text-foreground font-bold flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-cyan-600/20 flex items-center justify-center text-sm">📅</span>
+              Vardiya ve Mesai Planlama
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Personel havuzunuzdaki kişileri kermes süresi boyunca belirli gün ve saatlere görevlendirerek takvimi netleştirin.
+            </p>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setIsAddingVardiya(!isAddingVardiya)}
+            className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-lg transition"
+          >
+            {isAddingVardiya ? 'İptal Et' : '+ Yeni Vardiya Ekle'}
+          </button>
+        </div>
 
-      <div id="new-roster-form" className="bg-card border border-border rounded-xl p-5 shadow-sm transition-all duration-500">
-        <h4 className="font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h4>
-        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        {isAddingVardiya && (
+          <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30">
+            <h5 className="text-sm font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h5>
+            <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
           <div className="w-full min-w-0 space-y-1">
             <div className="flex justify-between items-center">
               <label className="text-xs text-muted-foreground">Personel Seç</label>
@@ -659,6 +673,8 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
             </button>
           </div>
         </form>
+        </div>
+        )}
       </div>
 
       {/* Coverage Dashboard Accordion */}
