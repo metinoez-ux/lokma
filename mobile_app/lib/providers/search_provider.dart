@@ -538,9 +538,10 @@ class SearchNotifier extends Notifier<SearchState> {
             final address = _normalizeTurkish((data['address'] ?? '').toString().toLowerCase());
             final description = _normalizeTurkish((data['description'] ?? '').toString().toLowerCase());
             final postalCode = _normalizeTurkish((data['postalCode'] ?? '').toString().toLowerCase());
+            final locationText = _normalizeTurkish((data['location'] ?? '').toString().toLowerCase());
 
             final queryWords = queryNormalized.split(RegExp(r'\s+')).where((w) => w.length >= 2).toList();
-            final searchableText = '$title $city $stateName $address $description $postalCode kermes';
+            final searchableText = '$title $city $stateName $address $description $postalCode $locationText kermes';
 
             bool allWordsMatch = queryWords.isNotEmpty && queryWords.every((word) => searchableText.contains(word));
 
@@ -563,13 +564,23 @@ class SearchNotifier extends Notifier<SearchState> {
 
               final groupKey = '🎪 Kermesler';
               resultsByCategory.putIfAbsent(groupKey, () => []);
+
+              String? validImageUrl;
+              final headerImg = data['headerImage']?.toString();
+              final imgUrl = data['imageUrl']?.toString();
+              final img = data['image']?.toString();
+              
+              if (headerImg != null && headerImg.trim().isNotEmpty) validImageUrl = headerImg;
+              else if (imgUrl != null && imgUrl.trim().isNotEmpty) validImageUrl = imgUrl;
+              else if (img != null && img.trim().isNotEmpty) validImageUrl = img;
+
               resultsByCategory[groupKey]!.add(SearchResult(
                 id: doc.id,
                 title: data['title'] ?? data['name'] ?? 'Kermes',
                 subtitle: distanceKm != null
                     ? '${data['city'] ?? ''} • ${distanceKm.toStringAsFixed(1)} km'
                     : data['city'] ?? '',
-                imageUrl: data['headerImage'] ?? data['imageUrl'] ?? data['image'],
+                imageUrl: validImageUrl,
                 type: SearchResultType.vendor, // Acts as vendor entry point
                 route: '/kermesler/${doc.id}',
                 distance: distanceKm,
