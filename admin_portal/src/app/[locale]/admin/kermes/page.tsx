@@ -260,6 +260,22 @@ const { admin, loading: adminLoading } = useAdmin();
  .replace(/ğ/g, 'g').replace(/Ğ/g, 'g');
  };
 
+ const normalizeCountry = (country: any): string => {
+   if (!country) return 'Bilinmiyor';
+   const raw = String(country).toUpperCase().trim();
+   if (['DE', 'GERMANY', 'DEUTSCHLAND', 'ALMANYA'].includes(raw)) return 'Almanya';
+   if (['TR', 'TURKEY', 'TÜRKIYE', 'TÜRKİYE'].includes(raw)) return 'Türkiye';
+   if (['AT', 'AUSTRIA', 'ÖSTERREICH', 'AVUSTURYA'].includes(raw)) return 'Avusturya';
+   if (['BG', 'BULGARIA', 'BULGARISTAN', 'BULGARİSTAN'].includes(raw)) return 'Bulgaristan';
+   if (['RS', 'SERBIA', 'SIRBISTAN', 'SIRBİSTAN'].includes(raw)) return 'Sırbistan';
+   if (['HU', 'HUNGARY', 'MACARISTAN', 'MACARİSTAN'].includes(raw)) return 'Macaristan';
+   if (['FR', 'FRANCE', 'FRANSA'].includes(raw)) return 'Fransa';
+   if (['NL', 'NETHERLANDS', 'HOLLANDA'].includes(raw)) return 'Hollanda';
+   if (['BE', 'BELGIUM', 'BELÇIKA', 'BELÇİKA'].includes(raw)) return 'Belçika';
+   if (['CH', 'SWITZERLAND', 'ISVIÇRE', 'İSVİÇRE'].includes(raw)) return 'İsviçre';
+   return String(country).charAt(0).toUpperCase() + String(country).slice(1).toLowerCase();
+ };
+
  // Filter events
  const filteredEvents = events
  .filter(event => {
@@ -303,7 +319,7 @@ const { admin, loading: adminLoading } = useAdmin();
    const isSilaSoft = e.title && typeof e.title === 'string' && e.title.toLowerCase().includes('sıla');
    if (!isSilaStrict && !isSilaSoft) return false;
  } else {
-   if (e.country !== countryFilter) return false;
+   if (normalizeCountry(e.country) !== countryFilter) return false;
  }
  }
 
@@ -365,7 +381,7 @@ const { admin, loading: adminLoading } = useAdmin();
  const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
  const paginatedEvents = filteredEvents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
- const uniqueCountries = Array.from(new Set(events.map((e: any) => e.country).filter(Boolean))).sort();
+ const uniqueCountries = Array.from(new Set(events.map((e: any) => e.country ? normalizeCountry(e.country) : null).filter(Boolean))).sort();
 
  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
 
