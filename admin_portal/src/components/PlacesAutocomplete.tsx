@@ -14,6 +14,7 @@ interface PlaceResult {
  formattedAddress: string;
  street: string;
  city: string;
+ state?: string; // e.g. Eyalet
  postalCode: string;
  country: string;
  lat?: number;
@@ -171,6 +172,7 @@ export function PlacesAutocomplete({
  let street = '';
  let streetNumber = '';
  let city = '';
+ let state = '';
  let postalCode = '';
  let country = '';
 
@@ -183,6 +185,8 @@ export function PlacesAutocomplete({
  streetNumber = component.long_name;
  } else if (types.includes('locality')) {
  city = component.long_name;
+ } else if (types.includes('administrative_area_level_1')) {
+ state = component.long_name;
  } else if (types.includes('postal_code')) {
  postalCode = component.long_name;
  } else if (types.includes('country')) {
@@ -197,6 +201,7 @@ export function PlacesAutocomplete({
  formattedAddress: place.formatted_address || '',
  street: fullStreet,
  city,
+ state,
  postalCode,
  country,
  lat: place.geometry?.location?.lat(),

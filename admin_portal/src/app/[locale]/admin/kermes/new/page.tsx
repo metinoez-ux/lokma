@@ -100,6 +100,7 @@ function NewKermesContent() {
  location: '',
  address: '',
  city: '',
+ state: '',
  postalCode: '',
  country: '', // Google Places'tan otomatik algılanır
  latitude: null as number | null,
@@ -313,6 +314,7 @@ function NewKermesContent() {
  location: formData.location,
  address: formData.address || null,
  city: formData.city || null,
+ state: formData.state || null,
  postalCode: formData.postalCode || null,
  country: formData.country || null,
  latitude: formData.latitude,
@@ -505,6 +507,7 @@ function NewKermesContent() {
  ...formData,
  address: place.street || place.formattedAddress || formData.address,
  city: place.city || formData.city,
+ state: place.state || formData.state,
  postalCode: place.postalCode || formData.postalCode,
  country: place.country || formData.country,
  latitude: place.lat || formData.latitude,

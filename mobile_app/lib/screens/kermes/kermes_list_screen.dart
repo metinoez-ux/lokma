@@ -122,6 +122,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     'macaristan': ['ungarn', 'hungary', 'hu'],
     'bulgaristan': ['bulgarien', 'bulgaria', 'bg'],
     'isvicre': ['schweiz', 'switzerland', 'ch'],
+    'norvec': ['norwegen', 'norway', 'no'],
+    'danimarka': ['danemark', 'denmark', 'dk', 'dänemark'],
+    'isvec': ['schweden', 'sweden', 'se'],
   };
 
   @override
@@ -914,17 +917,29 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   /// State adi / kisaltma eslesmesi -- alias tablosunu kullanir
   bool _statesMatch(String userState, String eventState) {
     if (userState == eventState) return true;
-    if (userState.contains(eventState) || eventState.contains(userState))
-      return true;
+    if (userState.length > 2 && eventState.length > 2) {
+      if (userState.contains(eventState) || eventState.contains(userState)) {
+        return true;
+      }
+    }
+
     for (final entry in stateAliases.entries) {
       final fullName = _normalizeTurkish(entry.key);
       final aliases = entry.value.map(_normalizeTurkish).toList();
       final allNames = [fullName, ...aliases];
-      final userMatchesThis =
-          allNames.any((n) => userState.contains(n) || n.contains(userState));
+      
+      final userMatchesThis = allNames.any((n) {
+        if (userState == n) return true;
+        if (n.length <= 2) return false;
+        return userState.contains(n) || n.contains(userState);
+      });
+      
       if (userMatchesThis) {
-        final eventMatchesThis = allNames
-            .any((n) => eventState.contains(n) || n.contains(eventState));
+        final eventMatchesThis = allNames.any((n) {
+          if (eventState == n) return true;
+          if (n.length <= 2) return false;
+          return eventState.contains(n) || n.contains(eventState);
+        });
         if (eventMatchesThis) return true;
       }
     }
@@ -937,16 +952,27 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     final eNorm = _normalizeTurkish(eventCountry.toLowerCase());
     
     if (fNorm == eNorm) return true;
-    if (fNorm.contains(eNorm) || eNorm.contains(fNorm)) return true;
+    if (fNorm.length > 2 && eNorm.length > 2) {
+      if (fNorm.contains(eNorm) || eNorm.contains(fNorm)) return true;
+    }
 
     for (final entry in countryAliases.entries) {
       final fullName = _normalizeTurkish(entry.key);
       final aliases = entry.value.map(_normalizeTurkish).toList();
       final allNames = [fullName, ...aliases];
       
-      final filterMatchesThis = allNames.any((n) => fNorm.contains(n) || n.contains(fNorm));
+      final filterMatchesThis = allNames.any((n) {
+        if (fNorm == n) return true;
+        if (n.length <= 2) return false;
+        return fNorm.contains(n) || n.contains(fNorm);
+      });
+      
       if (filterMatchesThis) {
-        final eventMatchesThis = allNames.any((n) => eNorm.contains(n) || n.contains(eNorm));
+        final eventMatchesThis = allNames.any((n) {
+          if (eNorm == n) return true;
+          if (n.length <= 2) return false;
+          return eNorm.contains(n) || n.contains(eNorm);
+        });
         if (eventMatchesThis) return true;
       }
     }

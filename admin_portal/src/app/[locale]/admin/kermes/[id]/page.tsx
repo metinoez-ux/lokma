@@ -179,6 +179,8 @@ interface KermesEvent {
  // 2. Sokak Adı
  secondStreetName?: string;
  postalCode?: string;
+ city?: string;
+ state?: string; // e.g. Nordrhein-Westfalen
  country?: string;
  latitude?: number | null;
  longitude?: number | null;
@@ -348,6 +350,7 @@ export default function KermesDetailPage() {
  address: '',
  secondStreetName: '',
  city: '',
+ state: '',
  postalCode: '',
  country: '',
  latitude: null as number | null,
@@ -663,6 +666,7 @@ export default function KermesDetailPage() {
  address: data.address || '',
  secondStreetName: data.secondStreetName || '',
  city: data.city || '',
+ state: data.state || '',
  postalCode: data.postalCode || '',
  country: data.country || '',
  latitude: data.latitude || null,
@@ -2374,6 +2378,7 @@ export default function KermesDetailPage() {
  ...editForm,
  address: place.street || place.formattedAddress || editForm.address,
  city: place.city || editForm.city,
+ state: place.state || editForm.state,
  postalCode: place.postalCode || editForm.postalCode,
  country: place.country || editForm.country,
  latitude: place.lat || editForm.latitude,

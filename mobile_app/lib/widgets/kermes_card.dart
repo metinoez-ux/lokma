@@ -574,12 +574,12 @@ class _KermesCardState extends State<KermesCard> {
                                             borderRadius: BorderRadius.circular(8),
                                             child: LokmaNetworkImage(
                                               imageUrl: badge.iconUrl,
-                                              height: 38,
+                                              height: 33,
                                               fit: BoxFit.contain,
                                               placeholder: (context, url) => Container(
                                                 color: Colors.transparent,
-                                                height: 38,
-                                                width: 38,
+                                                height: 33,
+                                                width: 33,
                                               ),
                                               errorWidget: (context, url, error) =>
                                                   Icon(Icons.verified, color: textColor, size: 20),
@@ -797,6 +797,9 @@ class _KermesCardState extends State<KermesCard> {
     if (lower.contains('belcika') || lower.contains('belgium') || lower.contains('belgien') || lower == 'be') return '\u{1F1E7}\u{1F1EA}';
     if (lower.contains('isvicre') || lower.contains('switzerland') || lower.contains('schweiz') || lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
     if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
+    if (lower.contains('norvec') || lower.contains('norway') || lower.contains('norwegen') || lower == 'no') return '\u{1F1F3}\u{1F1F4}';
+    if (lower.contains('danimarka') || lower.contains('denmark') || lower.contains('danemark') || lower == 'dk') return '\u{1F1E9}\u{1F1F0}';
+    if (lower.contains('isvec') || lower.contains('sweden') || lower.contains('schweden') || lower == 'se') return '\u{1F1F8}\u{1F1EA}';
     return '\u{1F1E9}\u{1F1EA}';
   }
 
