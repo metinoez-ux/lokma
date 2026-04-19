@@ -536,10 +536,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   if (locations.isNotEmpty) {
                     eventLat = locations.first.latitude;
                     eventLng = locations.first.longitude;
-                    try {
-                      doc.reference.update(
-                          {'latitude': eventLat, 'longitude': eventLng});
-                    } catch (_) {}
+                    // NOT: Koordinat yazimi sadece admin yapar, mobil istemci Firestore'a yazma yapmamali
                   }
                 } catch (geoErr) {
                   if (city != 'Bilinmiyor') {
@@ -549,10 +546,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       if (cityLocations.isNotEmpty) {
                         eventLat = cityLocations.first.latitude;
                         eventLng = cityLocations.first.longitude;
-                        try {
-                          doc.reference.update(
-                              {'latitude': eventLat, 'longitude': eventLng});
-                        } catch (_) {}
+                        // NOT: Koordinat yazimi sadece admin yapar, mobil istemci Firestore'a yazma yapmamali
                       }
                     } catch (_) {
                       eventLat = 51.0;
@@ -1662,8 +1656,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             letterSpacing: -0.2,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        // Sadece Aktif Chip
+                        const Spacer(),
+                        // Sadece Aktif Chip — sort butonunun solunda, yan yana
                         GestureDetector(
                           onTap: () {
                             HapticFeedback.lightImpact();
@@ -1674,7 +1668,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                             decoration: BoxDecoration(
                               color: _onlyActive
                                   ? lokmaPink.withOpacity(0.15)
@@ -1691,14 +1685,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               children: [
                                 Icon(
                                   _onlyActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                  size: 14,
+                                  size: 16,
                                   color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 5),
                                 Text(
                                   'kermes.filter_only_active'.tr(),
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                     color: _onlyActive ? lokmaPink : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                   ),
@@ -1707,8 +1701,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             ),
                           ),
                         ),
-                        const Spacer(),
-                        // Tek tersine cevirme ikonu - mevcut siralamayi ters cevirir
+                        const SizedBox(width: 8),
+                        // Siralama ters cevirme ikonu
                         GestureDetector(
                           onTap: () {
                             HapticFeedback.lightImpact();
@@ -1723,13 +1717,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                 _sortBy = 'distance_asc';
                               }
                               _updateFilteredEvents();
-                              // favorites icin tersine cevirme yok
                             });
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                             decoration: BoxDecoration(
                               color: Theme.of(context)
                                   .colorScheme
@@ -1750,13 +1742,13 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                   _sortBy.contains('date')
                                       ? Icons.calendar_today_rounded
                                       : Icons.near_me_rounded,
-                                  size: 14,
+                                  size: 16,
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurface
                                       .withOpacity(0.7),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 5),
                                 AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 200),
                                   child: Icon(
