@@ -2206,16 +2206,15 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                           children: [
                             if (hasIcon)
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(8),
                                 child: LokmaNetworkImage(
                                   imageUrl: badge.iconUrl,
-                                  height: 52,
-                                  width: (badge.label.toLowerCase().contains('tuna') || badge.label.toLowerCase().contains('toros')) ? 160 : 52,
+                                  height: 33,
                                   fit: BoxFit.contain,
                                   placeholder: (context, url) => Container(
                                     color: Colors.transparent,
-                                    height: 52,
-                                    width: (badge.label.toLowerCase().contains('tuna') || badge.label.toLowerCase().contains('toros')) ? 160 : 52,
+                                    height: 33,
+                                    width: 33,
                                   ),
                                   errorWidget: (context, url, error) => Icon(
                                       Icons.verified,
@@ -2662,43 +2661,44 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: dividerBg,
-                      border: Border.all(color: dividerBg),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.near_me, color: subtleTextColor, size: 14),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${_distanceKm.toStringAsFixed(1)} km',
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+              if (widget.currentPosition != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: dividerBg,
+                        border: Border.all(color: dividerBg),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.near_me, color: subtleTextColor, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${_distanceKm.toStringAsFixed(1)} km',
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${(_distanceKm * 2.5 + 3).ceil()} Dk.',
-                    style: TextStyle(
-                      color: subtleTextColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  )
-                ],
-              ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${(_distanceKm * 2.5 + 3).ceil()} Dk.',
+                      style: TextStyle(
+                        color: subtleTextColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  ],
+                ),
             ],
           ),
           const SizedBox(height: 16),
