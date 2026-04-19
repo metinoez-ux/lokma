@@ -821,8 +821,22 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       }
     } else if (_scopeMode == 'silaYolu') {
       events = events.where((e) => e.isSilaYolu).toList();
+    } else if (_scopeMode == 'country') {
+      // Ensure we explicitly filter by the user's localized country name if they select "all in Germany/Turkey"
+      String targetCountry = 'Almanya';
+      if (_userCountryCode == 'TR') targetCountry = 'Türkiye';
+      else if (_userCountryCode == 'BG') targetCountry = 'Bulgaristan';
+      else if (_userCountryCode == 'AT') targetCountry = 'Avusturya';
+      else if (_userCountryCode == 'CH') targetCountry = 'İsviçre';
+      else if (_userCountryCode == 'NL') targetCountry = 'Hollanda';
+      else if (_userCountryCode == 'FR') targetCountry = 'Fransa';
+      else if (_userCountryCode == 'BE') targetCountry = 'Belçika';
+      
+      events = events.where((e) {
+        if (e.country.isEmpty) return true; // Show unmapped events as fallback
+        return e.country == targetCountry;
+      }).toList();
     }
-    // _scopeMode == 'country' -> no distance filter, show all in that country
 
     // Quick features filter
     if (_selectedFeatureIds.isNotEmpty) {
