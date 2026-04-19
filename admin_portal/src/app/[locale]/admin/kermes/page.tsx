@@ -351,25 +351,26 @@ const { admin, loading: adminLoading } = useAdmin();
  event.organizationPhone,
  ];
 
+ const extractNestedText = (obj: any, seen = new WeakSet()): string => {
+   if (obj === null || obj === undefined) return '';
+   if (typeof obj === 'string' || typeof obj === 'number') return String(obj);
+   if (typeof obj === 'object') {
+     if (seen.has(obj)) return '';
+     seen.add(obj);
+     if (typeof obj.toDate === 'function') return ''; // Skip Timestamp
+     if (typeof obj.latitude === 'number' && typeof obj.longitude === 'number') return ''; // Skip GeoPoint
+     try {
+       return Object.values(obj).map(v => extractNestedText(v, seen)).join(' ');
+     } catch (err) {
+       return '';
+     }
+   }
+   return '';
+ };
+
  return searchableFields.some(field => {
   if (field === null || field === undefined) return false;
-  let strField = '';
-  if (typeof field === 'object') {
-    try {
-      const seen = new WeakSet();
-      strField = JSON.stringify(field, (key, value) => {
-        if (typeof value === 'object' && value !== null) {
-          if (seen.has(value)) return;
-          seen.add(value);
-        }
-        return value;
-      });
-    } catch (e) {
-      strField = '';
-    }
-  } else {
-    strField = String(field);
-  }
+  let strField = extractNestedText(field);
   return normalizeForSearch(strField).includes(query) || strField.includes(searchQuery);
  });
  })
