@@ -356,7 +356,14 @@ const { admin, loading: adminLoading } = useAdmin();
   let strField = '';
   if (typeof field === 'object') {
     try {
-      strField = Object.values(field).filter(v => typeof v === 'string' || typeof v === 'number').join(' ');
+      const seen = new WeakSet();
+      strField = JSON.stringify(field, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) return;
+          seen.add(value);
+        }
+        return value;
+      });
     } catch (e) {
       strField = '';
     }
