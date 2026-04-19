@@ -413,30 +413,45 @@ const { admin, loading: adminLoading } = useAdmin();
             )}
           </div>
         </div>
+
+        {/* SİSTEM AYARLARI */}
+        <div className="mt-8 border border-border/50 rounded-xl bg-card p-4">
+          <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span>⚙️</span> SİSTEM AYARLARI
+          </h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/admin/settings/kermes-menus" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Menüs</Link>
+            <Link href="/admin/settings/kermes-features" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Funktionen</Link>
+            <Link href="/admin/settings/kermes-categories" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Markalar & Rozetler</Link>
+            <Link href="/admin/settings/kermes-donation-funds" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bagis Fonlari</Link>
+            <Link href="/admin/settings/kermes-gender-types" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bolum Tipleri</Link>
+            <Link href="/admin/settings/kermes-stock-images" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Archivbilder</Link>
+          </div>
+        </div>
       </div>
 
       {/* Search and Filters */}
       <div className="max-w-6xl mx-auto mb-6">
-        <div className="bg-card rounded-xl p-4">
+        <div className="bg-card border border-border/50 rounded-xl p-4">
           {/* TOP ROW: Search */}
-          <div className="relative w-full mb-4">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+          <div className="relative w-full mb-3">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
             <input
               type="text"
               placeholder={t('i_sim_posta_kodu_sehir_veya_yetkili_kisi')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-background shadow-sm border border-border/50 rounded-lg text-foreground placeholder:-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition"
             />
           </div>
 
           {/* BOTTOM ROW: Filters */}
-          <div className="flex flex-wrap items-center gap-3 w-full">
+          <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full">
             <select
               title="Sıralama"
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'status' | 'newest')}
-              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+              className="flex-1 w-full lg:w-auto px-3 py-2.5 bg-background shadow-sm text-foreground rounded-lg border border-border/50 focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition appearance-none"
             >
               <option value="status">Tarihe Göre (Önce Aktif)</option>
               <option value="newest">En Son Eklenenler</option>
@@ -446,7 +461,7 @@ const { admin, loading: adminLoading } = useAdmin();
               title="Ülke Filtresi & Sıla Yolu"
               value={countryFilter}
               onChange={(e) => setCountryFilter(e.target.value)}
-              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+              className="flex-1 w-full lg:w-auto px-3 py-2.5 bg-background shadow-sm text-foreground rounded-lg border border-border/50 focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition appearance-none"
             >
               <option value="all">Tüm Ülkeler</option>
               <option value="sila_yolu">Sıla Yolu Kermesleri</option>
@@ -459,7 +474,7 @@ const { admin, loading: adminLoading } = useAdmin();
               title="Siparis turu filtrele"
               value={selectedModality}
               onChange={(e) => setSelectedModality(e.target.value)}
-              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+              className="flex-1 w-full lg:w-auto px-3 py-2.5 bg-background shadow-sm text-foreground rounded-lg border border-border/50 focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition appearance-none"
             >
               <option value="all">Tüm Sipariş Türleri</option>
               <option value="menu_only">Sadece Menü</option>
@@ -472,7 +487,7 @@ const { admin, loading: adminLoading } = useAdmin();
               title="Rozet filtrele"
               value={selectedBadge}
               onChange={(e) => setSelectedBadge(e.target.value)}
-              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+              className="flex-1 w-full lg:w-auto px-3 py-2.5 bg-background shadow-sm text-foreground rounded-lg border border-border/50 focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition appearance-none"
             >
               <option value="all">Tüm Badgeler</option>
               <option value="none">Sertifikasız Kermesler</option>
@@ -485,14 +500,14 @@ const { admin, loading: adminLoading } = useAdmin();
               title="Zaman durumu filtrele"
               value={timeStatusFilter}
               onChange={(e) => setTimeStatusFilter(e.target.value as 'all' | 'past' | 'active' | 'future' | 'archived')}
-              className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+              className="flex-1 w-full lg:w-auto px-3 py-2.5 bg-background shadow-sm text-foreground rounded-lg border border-border/50 focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition appearance-none"
             >
-              <option value="all">{t('tum_kermesler')}</option>
-              <option value="active">{t('aktif_devam_eden')}</option>
-              <option value="future">{t('yaklasan')}</option>
-              <option value="past">{t('gecmis')}</option>
+              <option value="all">{t('tum_kermesler') || 'Tüm Kermesler'}</option>
+              <option value="active">{t('aktif_devam_eden') || 'Aktif (Devam Eden)'}</option>
+              <option value="future">{t('yaklasan') || 'Yaklaşan'}</option>
+              <option value="past">{t('gecmis') || 'Geçmiş'}</option>
               {admin.role === 'super_admin' && (
-                <option value="archived">{t('arsivlenmis')}</option>
+                <option value="archived">{t('arsivlenmis') || 'Arşivlenmiş'}</option>
               )}
             </select>
           </div>
@@ -528,44 +543,54 @@ const { admin, loading: adminLoading } = useAdmin();
  const e = event as any;
 
   const getTimeStatusDisplay = (event: any) => {
-    const e = event;
-    const parseLocal = (d: any) => {
-      if (!d) return null;
-      if (d.toDate) return d.toDate();
-      if (d.seconds) return new Date(d.seconds * 1000);
-      if (typeof d === 'string') return new Date(d);
-      if (d instanceof Date) return d;
-      return null;
-    };
-    const startDate = parseLocal(e.startDate) || parseLocal(e.date);
-    const endDate = parseLocal(e.endDate) || startDate;
-    if (!startDate) return { text: '-', color: 'text-muted-foreground' };
-    
-    const now = new Date();
-    const start = new Date(startDate);
-    start.setHours(0,0,0,0);
-    const end = endDate ? new Date(endDate) : new Date(start);
-    end.setHours(23,59,59,999);
-    
-    const nowDay = new Date();
-    nowDay.setHours(0,0,0,0);
+     const e = event;
+     const parseLocal = (d: any) => {
+       if (!d) return null;
+       if (d.toDate) return d.toDate();
+       if (d.seconds) return new Date(d.seconds * 1000);
+       if (typeof d === 'string') return new Date(d);
+       if (d instanceof Date) return d;
+       return null;
+     };
+     const startDate = parseLocal(e.startDate) || parseLocal(e.date);
+     const endDate = parseLocal(e.endDate) || startDate;
+     if (!startDate) return { text: '-', color: 'text-muted-foreground' };
+     
+     const now = new Date();
+     const start = new Date(startDate);
+     start.setHours(0,0,0,0);
+     const end = endDate ? new Date(endDate) : new Date(start);
+     end.setHours(23,59,59,999);
+     
+     const formatTime = (ms: number) => {
+       const totalHrs = Math.floor(ms / (1000 * 60 * 60));
+       const days = Math.floor(totalHrs / 24);
+       const hrs = totalHrs % 24;
+       const months = Math.floor(days / 30);
+       const remainingDays = days % 30;
+       
+       let parts = [];
+       if (months > 0) parts.push(`${months} ay`);
+       if (remainingDays > 0) parts.push(`${remainingDays} gün`);
+       if (hrs > 0 && months === 0) parts.push(`${hrs} saat`);
+       return parts.join(' ') || '< 1 saat';
+     };
 
-    if (nowDay < start) {
-      const diffDays = Math.round((start.getTime() - nowDay.getTime()) / (1000 * 3600 * 24));
-      if (diffDays > 30) return { text: `~${Math.floor(diffDays/30)} ay sonra`, color: 'text-cyan-600 dark:text-cyan-400' };
-      if (diffDays === 1) return { text: `Yarın`, color: 'text-amber-500 dark:text-amber-400 font-bold' };
-      return { text: `${diffDays} gün kaldı`, color: 'text-cyan-600 dark:text-cyan-400' };
-    } else if (now > end) {
-      const diffDays = Math.round((nowDay.getTime() - new Date(end.setHours(0,0,0,0)).getTime()) / (1000 * 3600 * 24));
-      if (diffDays > 30) return { text: `~${Math.floor(diffDays/30)} ay geçti`, color: 'text-slate-400' };
-      if (diffDays === 1) return { text: `Dün bitti`, color: 'text-slate-400' };
-      return { text: `${diffDays} gün geçti`, color: 'text-slate-400' };
-    } else {
-      const diffDays = Math.round((nowDay.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1;
-      return { text: `${diffDays}. Günü`, color: 'text-green-600 dark:text-green-400 font-bold' };
-    }
-  };
-  const timeDisplay = getTimeStatusDisplay(event);
+     if (now < start) {
+       const ms = start.getTime() - now.getTime();
+       return { text: `${formatTime(ms)} kaldı`, color: 'text-cyan-400' };
+     } else if (now > end) {
+       const ms = now.getTime() - end.getTime();
+       return { text: `${formatTime(ms)} geçti`, color: 'text-slate-400' };
+     } else {
+       const ms = now.getTime() - start.getTime();
+       const totalHrs = Math.floor(ms / (1000 * 60 * 60));
+       const days = Math.floor(totalHrs / 24);
+       const hrs = totalHrs % 24;
+       return { text: `${days + 1}. Günü (${hrs} saat)`, color: 'text-green-400 font-bold' };
+     }
+   };
+   const timeDisplay = getTimeStatusDisplay(event);
 
  const contactPhone = e.contactPhone || event.organizationPhone;
  const contactName = e.contactFirstName && e.contactLastName
@@ -581,46 +606,42 @@ const { admin, loading: adminLoading } = useAdmin();
  <div className="flex items-center gap-4">
  
  <div className={`w-1 h-12 rounded-full ${statusConfig.color}`} />
-  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-7 gap-3 items-center">
+  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-[1.8fr_1.5fr_1fr_1fr_0.5fr_1fr] gap-4 items-center">
  
- <div className="md:col-span-2">
- <h3 className="text-foreground font-semibold truncate transition">
+ <div className="min-w-0">
+ <h3 className="text-foreground font-semibold truncate transition text-base">
  {event.title || 'İsimsiz Kermes'}
  </h3>
- {event.organizationName && (
- <p className="text-muted-foreground text-sm truncate">{event.organizationName}</p>
- )}
- <div className="flex flex-wrap gap-1 mt-2">
+ <div className="flex flex-wrap gap-1.5 mt-1.5">
  {e.isMenuOnly ? (
- <span className="px-2 py-0.5 bg-muted text-foreground/80 dark:bg-gray-800 dark:text-gray-300 rounded text-[10px] font-medium border border-border/50 dark:border-gray-700">
+ <span className="px-2 py-0.5 bg-gray-800 text-gray-300 rounded-md text-[10px] font-medium border border-gray-700">
  Sadece Menü
  </span>
  ) : (
  <>
  {e.hasTakeaway && (
- <span className="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-medium border border-amber-200 dark:border-amber-800/50">
+ <span className="px-2 py-0.5 bg-orange-950/50 text-orange-400 rounded-md text-[10px] font-medium border border-orange-500/30">
  🛍️ Gel-Al
  </span>
  )}
  {e.hasDelivery && (
- <span className="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-medium border border-blue-200 dark:border-blue-800/50">
+ <span className="px-2 py-0.5 bg-blue-950/50 text-blue-400 rounded-md text-[10px] font-medium border border-blue-500/30">
  🛵 Kurye
  </span>
  )}
  {e.hasDineIn && (
- <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 rounded text-[10px] font-medium border border-green-200 dark:border-green-800/50">
+ <span className="px-2 py-0.5 bg-green-950/50 text-green-400 rounded-md text-[10px] font-medium border border-green-500/30">
  Masa
  </span>
  )}
  </>
  )}
 
- 
  {event.activeBadgeIds && event.activeBadgeIds.map(badgeId => {
  const badgeDef = badges.find(b => b.id === badgeId);
  if (!badgeDef) return null;
  return (
- <span key={badgeId} className="px-2 py-0.5 bg-background text-foreground/90 dark:bg-gray-800/80 dark:text-gray-200 rounded text-[10px] font-bold border border-border/50 dark:border-gray-700 shadow-sm flex items-center gap-1.5">
+ <span key={badgeId} className="px-2 py-0.5 bg-[#1C1F2E] text-gray-200 rounded-md text-[10px] font-bold border border-gray-700/50 shadow-sm flex items-center gap-1.5">
  {badgeDef.iconUrl ? (
  <img src={badgeDef.iconUrl} alt={badgeDef.name} className="w-3.5 h-3.5 object-contain" />
  ) : (
@@ -633,51 +654,37 @@ const { admin, loading: adminLoading } = useAdmin();
  </div>
  </div>
 
- 
  <div className="hidden md:block">
- <span className="text-muted-foreground/80 text-xs">{t('tarih')}</span>
- <p className="text-foreground text-sm truncate">{formatDateRange(event)}</p>
+ <span className="text-muted-foreground/60 text-[11px] uppercase tracking-wider">{t('tarih')}</span>
+ <p className="text-gray-200 text-sm truncate">{formatDateRange(event)}</p>
  </div>
 
- 
  <div className="hidden md:block">
- <span className="text-muted-foreground/80 text-xs">Konum</span>
- <p className="text-foreground text-sm truncate">{getLocationDisplay(event)}</p>
+ <span className="text-muted-foreground/60 text-[11px] uppercase tracking-wider">Konum</span>
+ <p className="text-gray-200 text-sm truncate">{getLocationDisplay(event)}</p>
  </div>
 
- 
  <div className="hidden md:block">
- <span className="text-muted-foreground/80 text-xs">Sorumlu</span>
- <p className="text-foreground text-sm truncate">{contactName}</p>
- {contactPhone && (
- <a
- href={`tel:${contactPhone}`}
- className="text-cyan-800 dark:text-cyan-400 text-xs hover:text-cyan-300"
- onClick={(ev) => ev.stopPropagation()}
- >
- {contactPhone}
- </a>
- )}
+ <span className="text-muted-foreground/60 text-[11px] uppercase tracking-wider">Sorumlu</span>
+ <p className="text-gray-200 text-sm truncate">{contactName}</p>
  </div>
 
- 
  <div className="hidden md:block">
- <span className="text-muted-foreground/80 text-xs">{t('menu')}</span>
- <p className="text-cyan-800 dark:text-cyan-400 text-sm">{event.productCount || 0} {t('urun')}</p>
+ <span className="text-muted-foreground/60 text-[11px] uppercase tracking-wider">{t('menu')}</span>
+ <p className="text-cyan-400 font-medium text-sm">{event.productCount || 0} {t('urun')}</p>
  </div>
 
-  <div className="hidden md:block">
-  <span className="text-muted-foreground/80 text-xs">Durum</span>
-  <p className={`text-sm ${timeDisplay.color}`}>{timeDisplay.text}</p>
-  </div>
+ <div className="hidden md:block">
+ <span className="text-muted-foreground/60 text-[11px] uppercase tracking-wider">Durum</span>
+ <p className={`text-sm font-medium ${timeDisplay.color}`}>{timeDisplay.text}</p>
+ </div>
 
  </div>
 
- 
- <div className="flex gap-2 flex-shrink-0">
+ <div className="flex gap-2 flex-shrink-0 ml-2">
   <Link
  href={`/admin/kermes/${event.id}`}
- className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-500 transition text-sm font-medium"
+ className="w-10 h-10 flex items-center justify-center bg-pink-600 text-white rounded-lg hover:bg-pink-500 transition shadow-md"
  onClick={(ev) => ev.stopPropagation()}
  >
  ✏️
@@ -696,6 +703,61 @@ const { admin, loading: adminLoading } = useAdmin();
  );
  })}
  </div>
+ )}
+
+ {totalPages > 1 && (
+  <div className="flex justify-center items-center gap-2 mt-8 mb-4 flex-wrap">
+    <button
+      onClick={() => setCurrentPage(1)}
+      disabled={currentPage === 1}
+      className="px-4 py-2 bg-card border border-border/50 rounded-lg disabled:opacity-50 hover:bg-muted transition text-foreground font-medium"
+      title={t('birinci_sayfa') || '1. Sayfa'}
+    >
+      İlk
+    </button>
+    <button
+      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+      disabled={currentPage === 1}
+      className="px-4 py-2 bg-card border border-border/50 rounded-lg disabled:opacity-50 hover:bg-muted transition text-foreground"
+    >
+      Önceki
+    </button>
+    
+    <div className="flex items-center gap-2 mx-2">
+      <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Sayfa</span>
+      <input
+        type="number"
+        min={1}
+        max={totalPages}
+        value={currentPage}
+        onChange={(e) => {
+          let val = parseInt(e.target.value);
+          if (isNaN(val)) return;
+          if (val < 1) val = 1;
+          if (val > totalPages) val = totalPages;
+          setCurrentPage(val);
+        }}
+        className="w-14 h-10 text-center bg-background border border-border/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-foreground font-medium"
+      />
+      <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">/ {totalPages}</span>
+    </div>
+
+    <button
+      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+      disabled={currentPage === totalPages}
+      className="px-4 py-2 bg-card border border-border/50 rounded-lg disabled:opacity-50 hover:bg-muted transition text-foreground"
+    >
+      Sonraki
+    </button>
+    <button
+      onClick={() => setCurrentPage(totalPages)}
+      disabled={currentPage === totalPages}
+      className="px-4 py-2 bg-card border border-border/50 rounded-lg disabled:opacity-50 hover:bg-muted transition text-foreground font-medium"
+      title={t('sonuncu_sayfa') || 'Son Sayfa'}
+    >
+      Son
+    </button>
+  </div>
  )}
  </div>
 

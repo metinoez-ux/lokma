@@ -915,7 +915,7 @@ export default function TableManagementPanel({
                                       if (e.target.checked) {
                                           if (!upd[idx].prepZoneFilters.includes(pz)) upd[idx].prepZoneFilters.push(pz);
                                       } else {
-                                          upd[idx].prepZoneFilters = upd[idx].prepZoneFilters.filter(x => x !== pz);
+                                          upd[idx].prepZoneFilters = upd[idx].prepZoneFilters.filter((x: string) => x !== pz);
                                       }
                                       setDeliveryZones(upd);
                                       updateAndSave(undefined, undefined, undefined, undefined, undefined, upd);

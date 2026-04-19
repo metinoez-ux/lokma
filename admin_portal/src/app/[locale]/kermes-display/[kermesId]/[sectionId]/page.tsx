@@ -24,7 +24,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
-  prepZone?: string;
+  prepZone?: string | string[];
   itemStatus?: string;
   claimedByStaffId?: string;
   claimedByStaffName?: string;

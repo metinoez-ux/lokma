@@ -186,6 +186,7 @@ interface KermesEvent {
  startDate?: any;
  endDate?: any;
  deliveryZones?: any[];
+ tableSectionsV2?: any[];
  openingTime?: string;
  closingTime?: string;
  organizerId?: string;
@@ -392,6 +393,7 @@ export default function KermesDetailPage() {
  isSilaYolu: false,
  // Roles
  customRoles: [] as KermesCustomRole[],
+ tableSectionsV2: [] as any[],
  });
  const [editFeatures, setEditFeatures] = useState<string[]>([]);
  const [editCustomFeatures, setEditCustomFeatures] = useState<string[]>([]); // Max 3 özel özellik
@@ -703,6 +705,7 @@ export default function KermesDetailPage() {
  selectedDonationFundName: data.selectedDonationFundName || '',
  isSilaYolu: data.isSilaYolu || false,
  customRoles: (data.customRoles || []),
+ tableSectionsV2: data.tableSectionsV2 || [],
  });
  setEditFeatures(Array.isArray(data.features) ? data.features : []);
  setEditCustomFeatures(Array.isArray(data.customFeatures) ? data.customFeatures : []);
@@ -1148,7 +1151,7 @@ export default function KermesDetailPage() {
 
  const handleDeletePersonCompletely = async (personId: string) => {
   const answer = prompt('Bu personeli sistemden TAMAMEN silmek istediğinize emin misiniz?\nİşlemi onaylamak için büyük harflerle EVET yazın:');
-  if (answer !== 'EVET') { showToast('Silme işlemi iptal edildi', 'info'); return; }
+  if (answer !== 'EVET') { showToast('Silme işlemi iptal edildi', 'error'); return; }
  
  try {
  // Remove from assignments first
@@ -1901,10 +1904,10 @@ export default function KermesDetailPage() {
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify({
          kermesId,
-         kermesTitle: kermes.title,
+         kermesTitle: kermes?.title || 'Kermes',
          targetRadiusKm: flashSaleRadius,
-         kermesLat: kermes.latitude || null,
-         kermesLng: kermes.longitude || null,
+         kermesLat: kermes?.latitude || null,
+         kermesLng: kermes?.longitude || null,
          targetGroups: {
            favorites: flashTargetFavorites,
            staff: flashTargetStaff,
@@ -1915,7 +1918,7 @@ export default function KermesDetailPage() {
            name: getLocalizedText(p.name, locale),
            price: p.price,
            discountPrice: p.discountPrice,
-           image: p.imageUrls?.[0] || p.imageUrl || null
+           image: p.imageUrls?.[0] || (p as any).imageUrl || null
          })),
        }),
      });
@@ -1950,21 +1953,21 @@ export default function KermesDetailPage() {
       if (vehicleBrand.trim()) vehicleInfo += vehicleBrand.trim() + ' ';
       vehicleInfo += `(${plateUpper})`;
       const message = `ACIL PARK ANONSU: ${vehicleInfo} plakalı araç sahibi, lütfen aracınızı acilen çekiniz!`;
-      console.log('[PARKING-PUSH] Sending:', { kermesId, message, kermesLat: kermes.latitude, kermesLng: kermes.longitude });
+      console.log('[PARKING-PUSH] Sending:', { kermesId, message, kermesLat: kermes?.latitude, kermesLng: kermes?.longitude });
       const response = await fetch('/api/notifications/kermes-parking-announcement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           kermesId,
-          kermesTitle: kermes.title,
+          kermesTitle: kermes?.title || 'Kermes',
           message,
           vehiclePlate: plateUpper,
           vehicleColor: vehicleColor.trim(),
           vehicleBrand: vehicleBrand.trim(),
           vehicleImageUrl: vehicleImageUrl || null,
           targetRadiusKm: parkRadius,
-          kermesLat: kermes.latitude || null,
-          kermesLng: kermes.longitude || null,
+          kermesLat: kermes?.latitude || null,
+          kermesLng: kermes?.longitude || null,
           targetGroups: { favorites: true, staff: true, nearby: true }, // Park anonsu her zaman personellere ve favorilere gitmeli
         }),
       });
@@ -2008,12 +2011,12 @@ export default function KermesDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           kermesId,
-          kermesTitle: kermes.title,
+          kermesTitle: kermes?.title || 'Kermes',
           title: manualTitle.trim(),
           body: manualBody.trim(),
           targetRadiusKm: manualRadius,
-          kermesLat: kermes.latitude || null,
-          kermesLng: kermes.longitude || null,
+          kermesLat: kermes?.latitude || null,
+          kermesLng: kermes?.longitude || null,
           targetGroups: { favorites: manualTargetFavorites, staff: manualTargetStaff, nearby: manualTargetNearby },
         }),
       });
@@ -2267,6 +2270,7 @@ export default function KermesDetailPage() {
     latitude: kermes?.latitude || null, longitude: kermes?.longitude || null,
     customRoles: kermes?.customRoles || [],
     isSilaYolu: (kermes as any)?.isSilaYolu || false,
+    tableSectionsV2: kermes?.tableSectionsV2 || [],
     });
     setEditFeatures(kermes?.features || []);
     setEditCustomFeatures(kermes?.customFeatures || []);
@@ -6516,7 +6520,7 @@ export default function KermesDetailPage() {
     kermesStart={editForm.date}
     kermesEnd={editForm.endDate}
     isSuperAdmin={isSuperAdmin}
-    adminGender={admin?.gender || admin?.profile?.gender || 'unknown'}
+    adminGender={(admin as any)?.gender || (admin as any)?.profile?.gender || 'unknown'}
     kermesSections={editForm.tableSectionsV2 || []}
     customRoles={(editForm.customRoles || [])}
   />
