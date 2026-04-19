@@ -530,8 +530,9 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
 
       <div id="new-roster-form" className="bg-card border border-border rounded-xl p-5 shadow-sm transition-all duration-500">
         <h4 className="font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h4>
-        <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3 sm:gap-4">
-          <div className="flex-[1.2] min-w-[180px] space-y-1">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="w-full space-y-1">
             <div className="flex justify-between items-center">
               <label className="text-xs text-muted-foreground">Personel Seç</label>
               <button 
@@ -557,7 +558,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               ))}
             </select>
           </div>
-          <div className="flex-[1.2] min-w-[180px] space-y-1">
+          <div className="w-full space-y-1">
             <label className="text-xs text-muted-foreground">Görev / Rol</label>
             <select 
               value={form.role} 
@@ -587,7 +588,9 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               </optgroup>
             </select>
           </div>
-          <div className="flex-[1.8] min-w-[280px] space-y-1">
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div className="md:col-span-5 lg:col-span-6 w-full space-y-1">
             <div className="flex justify-between items-center mb-1">
               <label className="text-xs text-muted-foreground">Tarih Aralığı (Başlangıç - Bitiş)</label>
               <label className="text-[10px] flex items-center gap-1 cursor-pointer text-blue-500 hover:text-blue-600 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">
@@ -631,7 +634,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               />
             </div>
           </div>
-          <div className="flex-1 min-w-[180px] space-y-1">
+            <div className="md:col-span-4 lg:col-span-4 w-full space-y-1">
             <label className="text-xs text-muted-foreground">Saat (Başlangıç - Bitiş)</label>
             <div className="flex items-center gap-1">
               <input 
@@ -649,7 +652,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               />
             </div>
           </div>
-          <div className="w-full sm:w-auto shrink-0 min-w-[100px]">
+            <div className="md:col-span-3 lg:col-span-2 w-full shrink-0">
             <button 
               type="submit" 
               disabled={isCreating}
@@ -657,6 +660,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
             >
               {isCreating ? '...' : 'Ekle'}
             </button>
+          </div>
           </div>
         </form>
       </div>
