@@ -6486,18 +6486,20 @@ export default function KermesDetailPage() {
  )}
 
  {activeTab === "vardiya" && (
-  <KermesRosterTab
-    kermesId={kermesId as string}
-    assignedStaffIds={[...new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters])]}
-    workspaceStaff={assignedStaffDetails}
-    adminUid={adminUid}
-    kermesStart={editForm.date}
-    kermesEnd={editForm.endDate}
-    isSuperAdmin={isSuperAdmin}
-    adminGender={(admin as any)?.gender || (admin as any)?.profile?.gender || 'unknown'}
-    kermesSections={editForm.tableSectionsV2 || []}
-    customRoles={(editForm.customRoles || [])}
-  />
+  <div className="max-w-5xl mx-auto">
+   <KermesRosterTab
+     kermesId={kermesId as string}
+     assignedStaffIds={[...new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters])]}
+     workspaceStaff={assignedStaffDetails}
+     adminUid={adminUid}
+     kermesStart={editForm.date}
+     kermesEnd={editForm.endDate}
+     isSuperAdmin={isSuperAdmin}
+     adminGender={(admin as any)?.gender || (admin as any)?.profile?.gender || 'unknown'}
+     kermesSections={editForm.tableSectionsV2 || []}
+     customRoles={(editForm.customRoles || [])}
+   />
+  </div>
  )}
 
  </div>
