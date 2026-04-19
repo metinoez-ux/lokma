@@ -521,7 +521,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   return (
     <div className="space-y-6 ">
       {/* Vardiya ve Mesai Planlama Paneli */}
-      <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+      <div className="bg-card rounded-xl p-6 shadow-sm border border-border overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <div className="flex-1 min-w-0 pr-4">
             <h3 className="text-foreground font-bold flex items-center gap-2">
@@ -544,7 +544,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
         {isAddingVardiya && (
           <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30">
             <h5 className="text-sm font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h5>
-            <form onSubmit={handleCreate} className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-end">
+            <form onSubmit={handleCreate} className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-end">
           <div className="w-full min-w-0 space-y-1">
             <div className="flex justify-between items-center">
               <label className="text-xs text-muted-foreground">Personel Seç</label>
@@ -663,7 +663,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
               />
             </div>
           </div>
-          <div className="w-full md:col-span-2 flex justify-end mt-2">
+          <div className="w-full xl:col-span-2 flex justify-end mt-2">
             <button 
               type="submit" 
               disabled={isCreating}
