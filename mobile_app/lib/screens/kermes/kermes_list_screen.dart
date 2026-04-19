@@ -2631,9 +2631,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         scopeIcon = Icons.map;
         break;
       default:
-        scopeLabel = _currentStepIndex == _kmSteps.length - 1
-            ? '${_kmSteps[_currentStepIndex].toInt()} km (Maks)'
-            : '${_kmSteps[_currentStepIndex].toInt()} km';
+        scopeLabel = '${_kmSteps[_currentStepIndex].toInt()} km';
         scopeIcon = Icons.near_me;
     }
 
