@@ -228,8 +228,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
   }
 
+  DateTime _lastScrollTime = DateTime.now();
+
   void _onMenuScroll() {
     if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
+
+    final now = DateTime.now();
+    if (now.difference(_lastScrollTime).inMilliseconds < 100) return;
+    _lastScrollTime = now;
 
     // When scrolled to the very top, always select 'Tümü'
     if (_scrollController.hasClients && _scrollController.offset < 10) {
@@ -247,6 +253,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       return;
     }
 
+    final RenderObject? ancestor = context.findRenderObject();
+    if (ancestor == null) return;
+
     String? visibleCategory;
 
     for (var entry in _categoryKeys.entries) {
@@ -254,7 +263,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       if (key.currentContext != null) {
         final RenderBox? box = key.currentContext!.findRenderObject() as RenderBox?;
         if (box != null) {
-          final position = box.localToGlobal(Offset.zero, ancestor: context.findRenderObject());
+          final position = box.localToGlobal(Offset.zero, ancestor: ancestor);
           // 200 to 400 is roughly where the sticky header is.
           if (position.dy > 150 && position.dy < 400) {
              visibleCategory = entry.key;
@@ -2892,19 +2901,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                     child: badge['iconUrl'].toString().startsWith('http')
                                                         ? LokmaNetworkImage(
                                                             imageUrl: badge['iconUrl'],
-                                                            height: 33,
+                                                            height: 38,
                                                             fit: BoxFit.contain,
                                                             placeholder: (context, url) => Container(
                                                               color: Colors.transparent,
-                                                              height: 33,
-                                                              width: 33,
+                                                              height: 38,
+                                                              width: 38,
                                                             ),
                                                             errorWidget: (context, url, error) =>
                                                                 const SizedBox.shrink(),
                                                           )
                                                         : Image.asset(
                                                             badge['iconUrl'],
-                                                            height: 33,
+                                                            height: 38,
                                                             fit: BoxFit.contain,
                                                           ),
                                                   ),

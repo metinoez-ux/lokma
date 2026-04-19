@@ -2295,6 +2295,7 @@ export default function KermesDetailPage() {
   <h3 className="text-foreground font-bold mb-4">Kermes Bilgileri</h3>
 
  {isEditing ? (
+ <>
  <div className="space-y-4">
  {/* Temel Bilgiler */}
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

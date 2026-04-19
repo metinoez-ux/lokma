@@ -242,8 +242,14 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     return days[date.weekday - 1];
   }
 
+  DateTime _lastScrollTime = DateTime.now();
+
   void _onMenuScroll() {
     if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
+
+    final now = DateTime.now();
+    if (now.difference(_lastScrollTime).inMilliseconds < 100) return;
+    _lastScrollTime = now;
 
     if (_scrollController.hasClients && _scrollController.offset < 10) {
       if (_selectedCategory != 'marketplace.category_all'.tr()) {
@@ -259,6 +265,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
       return;
     }
 
+    final RenderObject? ancestor = context.findRenderObject();
+    if (ancestor == null) return;
+
     String? visibleCategory;
     for (var entry in _sectionKeys.entries) {
       final key = entry.value;
@@ -267,7 +276,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
             key.currentContext!.findRenderObject() as RenderBox?;
         if (box != null) {
           final position = box.localToGlobal(Offset.zero,
-              ancestor: context.findRenderObject());
+              ancestor: ancestor);
           if (position.dy > 150 && position.dy < 400) {
             visibleCategory = entry.key;
             break;
