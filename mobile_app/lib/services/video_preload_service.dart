@@ -2,6 +2,7 @@ import 'package:video_player/video_player.dart';
 
 class VideoPreloadService {
   static final Map<String, VideoPlayerController> _cache = {};
+  static final Map<String, Future<void>> _initFutures = {};
   static final List<String> _order = [];
 
   static VideoPlayerController getController(String url) {
@@ -9,22 +10,27 @@ class VideoPreloadService {
       return _cache[url]!;
     }
 
-    // Yeni controller olustur
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
     _cache[url] = controller;
     _order.add(url);
 
-    // Arka planda sessizce yuklemeye basla (UI kilitlenmez)
-    controller.initialize().catchError((_) {});
+    // Başlatma işlemini asenkron olarak kaydet
+    _initFutures[url] = controller.initialize().catchError((_) {});
 
-    // Hafiza sismemesi icin en fazla 3 videoyu cache'te tutalim
     if (_order.length > 3) {
       final oldestUrl = _order.removeAt(0);
       final oldestController = _cache.remove(oldestUrl);
+      _initFutures.remove(oldestUrl);
       oldestController?.dispose();
     }
 
     return controller;
+  }
+
+  static Future<void> waitForInitialization(String url) async {
+    if (_initFutures.containsKey(url)) {
+      await _initFutures[url];
+    }
   }
 
   /// Tüm cache'i temizle (örneğin bellek uyarısında çağrılabilir)

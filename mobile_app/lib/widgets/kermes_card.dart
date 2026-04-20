@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/currency_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:video_player/video_player.dart';
 import 'brand_info_sheet.dart';
 import '../../utils/distance_utils.dart';
 import '../../services/video_preload_service.dart';
@@ -473,24 +474,33 @@ class _KermesCardState extends State<KermesCard> {
                         height: 230,
                         width: double.infinity,
                         child: imagePath != null
-                            ? (isNetworkImage
-                                ? LokmaNetworkImage(
-                                    imageUrl: imagePath,
+                            ? ((imagePath.toLowerCase().contains('.mp4') || imagePath.toLowerCase().contains('.mov') || imagePath.toLowerCase().contains('video%2F'))
+                                ? FittedBox(
                                     fit: BoxFit.cover,
-                                    fadeInDuration: Duration.zero,
-                                    fadeOutDuration: Duration.zero,
-                                    useOldImageOnUrlChange: true,
-                                    placeholder: (context, url) =>
-                                        Container(color: Colors.grey[200]),
-                                    errorWidget: (context, url, error) =>
-                                        Container(
-                                      color: Colors.grey[200],
-                                      child: const Center(
-                                          child: Icon(Icons.image_not_supported,
-                                              color: Colors.grey)),
+                                    child: SizedBox(
+                                      width: 1600, // typical aspect ratio
+                                      height: 900,
+                                      child: VideoPlayer(VideoPreloadService.getController(imagePath)),
                                     ),
                                   )
-                                : Image.asset(imagePath, fit: BoxFit.cover))
+                                : isNetworkImage
+                                    ? LokmaNetworkImage(
+                                        imageUrl: imagePath,
+                                        fit: BoxFit.cover,
+                                        fadeInDuration: Duration.zero,
+                                        fadeOutDuration: Duration.zero,
+                                        useOldImageOnUrlChange: true,
+                                        placeholder: (context, url) =>
+                                            Container(color: Colors.grey[200]),
+                                        errorWidget: (context, url, error) =>
+                                            Container(
+                                          color: Colors.grey[200],
+                                          child: const Center(
+                                              child: Icon(Icons.image_not_supported,
+                                                  color: Colors.grey)),
+                                        ),
+                                      )
+                                    : Image.asset(imagePath, fit: BoxFit.cover))
                             : _buildFallbackGradient(),
                       ),
 

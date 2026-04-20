@@ -50,9 +50,8 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
       
       _controller.addListener(_videoListener);
 
-      if (!_controller.value.isInitialized) {
-        await _controller.initialize();
-      }
+      // Çifte initialize çağırmamak için servisteki başlatma işlemini beklet
+      await VideoPreloadService.waitForInitialization(widget.videoUrl);
       
       await _controller.setVolume(0.0); // Mute for looping background
       await _controller.setLooping(false); // Sadece bir kere oynasin ve dursun
@@ -61,6 +60,9 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
         setState(() {
           _isInitialized = true;
         });
+        
+        // Video'nun basina sar ve oynat. (Ekrandan cikip girince veya ilk acilista)
+        await _controller.seekTo(Duration.zero);
         await _controller.play();
       }
     } catch (e) {
@@ -89,10 +91,12 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     }
   }
 
+  bool _wasCollapsed = false;
+
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
-      // Fallback if video fails to load: Give it a red tint so the user knows it's a CODEC/Error issue, not just "black"
+      // Fallback if video fails to load
       return Container(
         width: widget.width,
         height: widget.height,
@@ -135,20 +139,34 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     final vWidth = _controller.value.size.width;
     final vHeight = _controller.value.size.height;
     
-    return GestureDetector(
-      onTap: _replayVideo,
-      child: SizedBox(
-        width: widget.width,
-        height: widget.height,
-        child: FittedBox(
-          fit: widget.fit,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Eğer maxHeight 100'ün altındaysa (SliverAppBar kapandıysa) durumu kaydet.
+        // Tekrar 100'ün üzerine çıkarsa (açılırsa), videoyu baştan oynat.
+        if (constraints.maxHeight <= 100) {
+          _wasCollapsed = true;
+        } else if (_wasCollapsed && constraints.maxHeight > 100) {
+          _wasCollapsed = false;
+          // Asenkron triggerla
+          Future.microtask(() => _replayVideo());
+        }
+
+        return GestureDetector(
+          onTap: _replayVideo,
           child: SizedBox(
-            width: vWidth > 0 ? vWidth : 1600,
-            height: vHeight > 0 ? vHeight : 900,
-            child: VideoPlayer(_controller),
+            width: widget.width,
+            height: widget.height,
+            child: FittedBox(
+              fit: widget.fit,
+              child: SizedBox(
+                width: vWidth > 0 ? vWidth : 1600,
+                height: vHeight > 0 ? vHeight : 900,
+                child: VideoPlayer(_controller),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
 }
