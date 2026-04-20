@@ -1148,37 +1148,7 @@ export default function AdminHeader() {
  </div>
  </div>
 
- {/* Personel Dropdown for Regular Admin */}
- <div className="relative group">
- <button
- className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/staff-dashboard') ||
- isActiveNav('/admin/staff-shifts')
- ? 'bg-accent border border-border text-foreground shadow-inner'
- : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
- }`}
- >
- {t('staff')}
- <span className="text-[10px]">▼</span>
- </button>
 
- {/* Dropdown Menu */}
- <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
- <div className="py-1">
- <Link
- href="/admin/staff-dashboard"
- className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-dashboard') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
- >
- {t('staff')}
- </Link>
- <Link
- href="/admin/staff-shifts"
- className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-shifts') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
- >
- {t('shifts')}
- </Link>
- </div>
- </div>
- </div>
 
  {/* Settings Link for Regular Admin */}
  <Link
@@ -1379,19 +1349,7 @@ export default function AdminHeader() {
   )}
   </div>
 
- {/* Personel section */}
- <div className="border-t border-border mt-1 pt-1">
- <button onClick={() => toggleSection('staff')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
- {t('staff')}
- <span className={`text-xs transition-transform ${expandedSection === 'staff' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
- </button>
- {expandedSection === 'staff' && (
- <div className="bg-muted/50 py-1">
- <Link href="/admin/staff-dashboard" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('staff')}</Link>
- <Link href="/admin/staff-shifts" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('shifts')}</Link>
- </div>
- )}
- </div>
+
 
  {/* Settings Link */}
  <div className="border-t border-border mt-1 pt-1">

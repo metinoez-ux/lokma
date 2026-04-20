@@ -74,9 +74,24 @@ export default function SettingsPage() {
  </div>
  <div>
  <h3 className="font-bold text-foreground group-hover:text-foreground transition">{t('personel') || 'Personel'}</h3>
- <p className="text-xs text-muted-foreground/80">{t('personel_listesi_ve_yonetimi')}</p>
+ <p className="text-xs text-muted-foreground/80">{t('personel_listesi_ve_yonetimi') || 'Personel Listesi ve Yönetimi'}</p>
  </div>
  <span className="ml-auto text-muted-foreground group-hover:text-muted-foreground transition text-xl">→</span>
+ </Link>
+
+ {/* Personel Vardıyaları (Staff Shifts) */}
+ <Link
+ href="/admin/staff-shifts"
+ className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-teal-600 hover:bg-teal-950/20 transition-all group"
+ >
+ <div className="w-12 h-12 rounded-xl bg-teal-900/50 flex items-center justify-center text-2xl group-hover:bg-teal-800/50 transition">
+ 📅
+ </div>
+ <div>
+ <h3 className="font-bold text-foreground group-hover:text-teal-300 transition">{t('shifts') || 'Vardiya Yönetimi'}</h3>
+ <p className="text-xs text-muted-foreground/80">{t('vardiya_planlama_ve_takibi') || 'Vardiya planlama ve takibi'}</p>
+ </div>
+ <span className="ml-auto text-muted-foreground group-hover:text-teal-400 transition text-xl">→</span>
  </Link>
 
  {/* Kermes Kategorileri */}
