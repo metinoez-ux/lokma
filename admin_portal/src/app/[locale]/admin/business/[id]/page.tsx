@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
 import { normalizeTimeString, getScheduleForToday, parseOpeningHoursBlock } from "@/utils/timeUtils";
-import { Store, Utensils, Users, CreditCard, Gift, Rocket, Wand2, Truck } from "lucide-react";
+import { Store, Utensils, Users, CreditCard, Gift, Rocket, Wand2, Truck, Clock } from "lucide-react";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
@@ -199,7 +199,7 @@ export default function BusinessDetailsPage() {
  const searchParams = useSearchParams();
  const businessId = params.id as string;
  const initialTab = searchParams.get('tab') as 'overview' | 'orders' | 'reservations' | 'settings' || 'overview';
-	const initialSubTab = searchParams.get('settingsSubTab') as 'isletme' | 'menu' | 'personel' | 'masa' | 'abonelik' | 'odeme' | 'promosyon' | 'marketing' | 'teslimat' || 'isletme';
+	const initialSubTab = searchParams.get('settingsSubTab') as 'isletme' | 'menu' | 'personel' | 'masa' | 'abonelik' | 'odeme' | 'promosyon' | 'marketing' | 'teslimat' | 'saatler' || 'isletme';
 
  const { admin, loading: adminLoading } = useAdmin();
  const { getActiveSectors } = useSectors();
@@ -230,10 +230,10 @@ export default function BusinessDetailsPage() {
  "overview" | "orders" | "reservations" | "settings" | "procurement"
  >(initialTab);
  const [settingsSubTab, setSettingsSubTab] = useState<
- "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing" | "teslimat"
+ "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing" | "teslimat" | "saatler"
  >(initialSubTab);
  const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
- const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat">("bilgiler");
+ const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat" | "saatler">("bilgiler");
  const [saatlerSubTab, setSaatlerSubTab] = useState<"genel" | "kurye" | "gelal">("genel");
  const [overviewHoursTab, setOverviewHoursTab] = useState<"genel" | "kurye" | "gelal">("genel");
  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
@@ -3774,7 +3774,7 @@ export default function BusinessDetailsPage() {
  </h3>
  <div className="flex items-center gap-3">
  {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
- {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || admin?.adminType === 'super') && (
+ {settingsSubTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || admin?.adminType === 'super') && (
  <button
  onClick={async () => {
  const newValue = !formData.temporaryDeliveryPaused;
@@ -3805,7 +3805,7 @@ export default function BusinessDetailsPage() {
  🛵 {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
  </button>
  )}
- {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && (planFeatures.pickup || admin?.adminType === 'super') && (
+ {settingsSubTab === "teslimat" && (planFeatures.pickup || admin?.adminType === 'super') && (
  <button
  onClick={async () => {
  const newValue = !formData.temporaryPickupPaused;
@@ -3879,16 +3879,17 @@ export default function BusinessDetailsPage() {
  </div>
 
  {/* Sub-Tab: İşletme */}
- {settingsSubTab === "isletme" && (
+						{(settingsSubTab === "isletme" || settingsSubTab === "teslimat" || settingsSubTab === "saatler") && (
  <>
  {/* Internal Tab Bar for İşletme */}
- <div className="flex gap-2 border-b border-border pb-3 mb-6 flex-wrap">
+ {settingsSubTab === "isletme" && (
+							<div className="flex gap-2 border-b border-border pb-3 mb-6 flex-wrap">
  {[
  { id: "bilgiler" as const, label: t('isletmeBilgileri') },
  { id: "fatura" as const, label: t('fatura_adresi') },
- ...(admin?.adminType === 'super' ? [{ id: "zertifikalar" as const, label: t('sertifikalarLabel')} ] : []),
+ 
  { id: "gorseller" as const, label: t('gorseller') },
- { id: "saatler" as const, label: t('acilisSaatleri') },
+ 
  ].map((tab) => (
  <button
  key={tab.id}
@@ -3903,8 +3904,9 @@ export default function BusinessDetailsPage() {
  ))}
  </div>
 
+       )}
  {/* ═══════ Tab 1: İşletme Bilgileri ═══════ */}
- {isletmeInternalTab === "bilgiler" && (
+ {settingsSubTab === "isletme" && isletmeInternalTab === "bilgiler" && (
  <div className="space-y-6">
  {/* Şirket Adı */}
  <div>
@@ -4255,7 +4257,7 @@ export default function BusinessDetailsPage() {
  )}
 
  {/* ═══════ Tab 4: Görseller ═══════ */}
- {isletmeInternalTab === "gorseller" && (
+ {settingsSubTab === "isletme" && isletmeInternalTab === "gorseller" && (
  <div className="space-y-6">
  {/* İşletme Kart Görseli */}
  <div className="bg-card/50 border border-border rounded-xl p-6">
@@ -4297,7 +4299,7 @@ export default function BusinessDetailsPage() {
  )}
 
  {/* ═══════ Tab 5: Açılış Saatleri (Genel / Kurye / Gel-Al) ═══════ */}
- {isletmeInternalTab === "saatler" && (
+ {settingsSubTab === "saatler" && (
  <div className="space-y-6">
  {/* Left Sidebar + Content Grid Layout */}
  <div className="flex gap-0 rounded-xl overflow-hidden border border-border">
@@ -4528,7 +4530,7 @@ export default function BusinessDetailsPage() {
 
 							<div className="flex-1 bg-card rounded-xl border border-border p-6 shadow-sm min-h-[600px]">
  {/* ═══════ Tab 6: Teslimat Ayarları ═══════ */}
- {isletmeInternalTab === "teslimat" && (
+ {settingsSubTab === "teslimat" && (
  <LockedModuleOverlay featureKey="delivery">
  <div className="space-y-6">
  <div className="bg-card/50 border border-border rounded-xl p-6">
