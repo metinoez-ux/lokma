@@ -877,6 +877,16 @@
         "repeat": "Wiederholen"
     },
     "kermes": {
+        "map_title": "Kermes-Karte",
+        "map_showing_count": "{} Kermes angezeigt",
+        "view_details": "Ansehen",
+        "map_street": "Karte",
+        "map_satellite": "Satellit",
+        "map_hybrid": "Hybrid",
+        "filter_all": "Alle",
+        "filter_active": "Aktiv",
+        "filter_upcoming": "Bevorstehend",
+        "filter_heimatroute": "Heimatroute",
         "add_menu_item": "Menüpunkt hinzufügen",
         "add_parking_area": "Parkplatz hinzufügen",
         "kermes_added_waiting_approval": "Kermes erfolgreich hinzugefügt! Warten auf Genehmigung.",

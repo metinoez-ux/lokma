@@ -2736,8 +2736,8 @@ String _getLocalizedCountry(String rawCountry) {
                             '${_currentEvent.city}, ${_getLocalizedCountry(_currentEvent.country)}',
                             style: TextStyle(
                               color: textColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

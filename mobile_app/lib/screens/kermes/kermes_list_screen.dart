@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_map/flutter_map.dart';
@@ -2898,6 +2899,8 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
   late AnimationController _pulseController;
   KermesEvent? _selectedEvent;
   double _currentZoom = 8;
+  String _mapFilter = 'all'; // 'all', 'active', 'upcoming'
+  String _mapLayerType = 'street'; // 'street', 'satellite', 'hybrid'
 
   static const Color lokmaPink = Color(0xFFEA184A);
   static const List<double> _ringRadiiM = [25000, 50000, 100000];
@@ -2964,8 +2967,163 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
           event.longitude,
         ) /
         1000;
-    if (dist < 1) return '${(dist * 1000).round()} m';
-    return '${dist.toStringAsFixed(1)} km';
+        
+    String distStr = dist < 1 ? '${(dist * 1000).round()} m' : '${dist.toStringAsFixed(1)} km';
+    
+    final totalMins = (dist / 80 * 60).round();
+    String timeStr = '';
+    if (totalMins < 60) {
+      timeStr = '$totalMins dk';
+    } else {
+      final days = totalMins ~/ (24 * 60);
+      final hours = (totalMins % (24 * 60)) ~/ 60;
+      final mins = totalMins % 60;
+      final parts = <String>[];
+      if (days > 0) parts.add('$days gn');
+      if (hours > 0) parts.add('$hours sa');
+      if (days == 0 && mins > 0) parts.add('$mins dk');
+      timeStr = parts.join(' ');
+    }
+    
+    return '$distStr • ~$timeStr';
+  }
+
+  List<KermesEvent> get _filteredMapEvents {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    if (_mapFilter == 'active') {
+      return widget.events.where((e) {
+        final startDay = DateTime(e.startDate.year, e.startDate.month, e.startDate.day);
+        final endDay = DateTime(e.endDate.year, e.endDate.month, e.endDate.day);
+        return !startDay.isAfter(today) && !endDay.isBefore(today);
+      }).toList();
+    } else if (_mapFilter == 'upcoming') {
+      return widget.events.where((e) {
+        final startDay = DateTime(e.startDate.year, e.startDate.month, e.startDate.day);
+        return startDay.isAfter(today);
+      }).toList();
+    } else if (_mapFilter == 'heimat') {
+      return widget.events.where((e) {
+        final t = e.title.toLowerCase();
+        return e.isSilaYolu || t.contains('sıla') || t.contains('sila') || t.contains('heimat');
+      }).toList();
+    }
+    return widget.events;
+  }
+
+  Widget _buildFilterChip(String value, String label, bool isDark) {
+    final isActive = _mapFilter == value;
+    final chipColor = value == 'active'
+        ? const Color(0xFF2E7D32)
+        : value == 'upcoming'
+            ? const Color(0xFFFF6D00)
+            : value == 'heimat'
+                ? const Color(0xFF1976D2)
+                : (isDark ? Colors.grey[600]! : Colors.grey[500]!);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _mapFilter = value;
+          _selectedEvent = null;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isActive
+              ? chipColor.withValues(alpha: 0.15)
+              : (isDark ? Colors.grey[800]!.withValues(alpha: 0.3) : Colors.grey[100]!),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? chipColor : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+            width: isActive ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (value != 'all')
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  color: chipColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive
+                    ? chipColor
+                    : (isDark ? Colors.grey[300] : Colors.grey[700]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScaleBar(BuildContext context) {
+    if (widget.events.isEmpty && widget.userLat == null) return const SizedBox.shrink();
+    
+    double lat = widget.userLat ?? widget.events.first.latitude;
+    double metersPerPx = 156543.03 * math.cos(lat * math.pi / 180) / math.pow(2, _currentZoom);
+    
+    // Target ~80 pixels width
+    double targetMeters = metersPerPx * 80;
+    
+    int niceMeters = 10;
+    if (targetMeters > 500000) niceMeters = 500000;
+    else if (targetMeters > 100000) niceMeters = 100000;
+    else if (targetMeters > 50000) niceMeters = 50000;
+    else if (targetMeters > 20000) niceMeters = 20000;
+    else if (targetMeters > 10000) niceMeters = 10000;
+    else if (targetMeters > 5000) niceMeters = 5000;
+    else if (targetMeters > 2000) niceMeters = 2000;
+    else if (targetMeters > 1000) niceMeters = 1000;
+    else if (targetMeters > 500) niceMeters = 500;
+    else if (targetMeters > 200) niceMeters = 200;
+    else if (targetMeters > 100) niceMeters = 100;
+    else if (targetMeters > 50) niceMeters = 50;
+    else niceMeters = 20;
+
+    double barWidthPx = niceMeters / metersPerPx;
+    String label = niceMeters >= 1000 ? '${niceMeters ~/ 1000} km' : '$niceMeters m';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black)),
+          Container(
+            width: barWidthPx,
+            height: 4,
+            decoration: const BoxDecoration(
+              border: Border(
+                left: BorderSide(color: Colors.black, width: 1.5),
+                right: BorderSide(color: Colors.black, width: 1.5),
+                bottom: BorderSide(color: Colors.black, width: 1.5),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -2974,6 +3132,10 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final center = _calculateCenter();
     final zoom = _calculateZoom();
+    
+    final tileUrl = _mapLayerType == 'satellite' || _mapLayerType == 'hybrid'
+        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.82,
@@ -3017,7 +3179,7 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Kermes Haritasi',
+                                'kermes.map_title'.tr(),
                                 style: TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w700,
@@ -3025,7 +3187,7 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                 ),
                               ),
                               Text(
-                                '${widget.events.length} kermes gosteriliyor',
+                                'kermes.map_showing_count'.tr(args: [_filteredMapEvents.length.toString()]),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: isDark
@@ -3045,9 +3207,49 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                         ),
                       ],
                     ),
+                    const SizedBox(height: 14),
+                    // Map Layer Selector
+                    SizedBox(
+                      width: double.infinity,
+                      child: ThreeDimensionalPillTabBar(
+                        compact: true,
+                        selectedIndex: _mapLayerType == 'street' ? 0 : (_mapLayerType == 'satellite' ? 1 : 2),
+                        onTabSelected: (i) {
+                          setState(() {
+                            if (i == 0) _mapLayerType = 'street';
+                            else if (i == 1) _mapLayerType = 'satellite';
+                            else _mapLayerType = 'hybrid';
+                          });
+                        },
+                        tabs: [
+                          TabItem(title: 'kermes.map_street'.tr()),
+                          TabItem(title: 'kermes.map_satellite'.tr()),
+                          TabItem(title: 'kermes.map_hybrid'.tr()),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
+              // Filter chips
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('all', 'kermes.filter_all'.tr(), isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('active', 'kermes.filter_active'.tr(), isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('upcoming', 'kermes.filter_upcoming'.tr(), isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('heimat', 'kermes.filter_heimatroute'.tr(), isDark),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
               // Map
               Expanded(
                 child: ClipRRect(
@@ -3061,7 +3263,7 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                       initialCenter: center,
                       initialZoom: zoom,
                       onPositionChanged: (camera, _) {
-                        if (camera.zoom != _currentZoom) {
+                        if ((camera.zoom - _currentZoom).abs() > 0.5) {
                           setState(() => _currentZoom = camera.zoom);
                         }
                       },
@@ -3073,10 +3275,18 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        urlTemplate: tileUrl,
                         userAgentPackageName: 'com.lokma.app',
+                        keepBuffer: 3,
+                        panBuffer: 1,
                       ),
+                      if (_mapLayerType == 'hybrid')
+                        TileLayer(
+                          urlTemplate: 'http://mt1.google.com/vt/lyrs=h&hl=${context.locale.languageCode}&x={x}&y={y}&z={z}',
+                          userAgentPackageName: 'com.lokma.app',
+                          keepBuffer: 3,
+                          panBuffer: 1,
+                        ),
                       // Distance rings around user
                       if (widget.userLat != null && widget.userLng != null)
                         CircleLayer(
@@ -3158,16 +3368,19 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                       // Kermes markers
                       MarkerLayer(
                         rotate: true,
-                        markers: widget.events.map((event) {
+                        markers: _filteredMapEvents.map((event) {
                           final isSelected = _selectedEvent?.id == event.id;
                           final scaleFactor =
                               (1.0 + (_currentZoom - 8) * 0.15).clamp(0.8, 2.5);
                           
                           // Detect live/active kermes
                           final now = DateTime.now();
-                          final isLive = now.isAfter(event.startDate) && now.isBefore(event.endDate);
-                          final isUpcoming = event.startDate.difference(now).inDays <= 7 && event.startDate.isAfter(now);
-
+                          final today = DateTime(now.year, now.month, now.day);
+                          final startDay = DateTime(event.startDate.year, event.startDate.month, event.startDate.day);
+                          final endDay = DateTime(event.endDate.year, event.endDate.month, event.endDate.day);
+                          
+                          final isLive = !startDay.isAfter(today) && !endDay.isBefore(today);
+                          
                           return Marker(
                             point: LatLng(event.latitude, event.longitude),
                             width: 120 * scaleFactor,
@@ -3195,24 +3408,28 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                         children: [
                                           AnimatedBuilder(
                                             animation: _pulseController,
-                                            builder: (context, child) =>
-                                                Container(
-                                              width: 20 +
-                                                  (_pulseController.value * 12),
-                                              height: 20 +
-                                                  (_pulseController.value * 12),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: lokmaPink.withValues(
-                                                      alpha: 0.5 *
-                                                          (1 -
-                                                              _pulseController
-                                                                  .value)),
-                                                  width: 2,
+                                            builder: (context, child) {
+                                              final markerColor = isLive
+                                                  ? const Color(0xFF2E7D32)
+                                                  : const Color(0xFFFF6D00);
+                                              return Container(
+                                                width: 20 +
+                                                    (_pulseController.value * 12),
+                                                height: 20 +
+                                                    (_pulseController.value * 12),
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                    color: markerColor.withValues(
+                                                        alpha: 0.5 *
+                                                            (1 -
+                                                                _pulseController
+                                                                    .value)),
+                                                    width: 2,
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
+                                              );
+                                            },
                                           ),
                                           Container(
                                             width: (isSelected ? 30 : 26) *
@@ -3223,8 +3440,8 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                               color: isSelected
                                                   ? lokmaPink
                                                   : isLive
-                                                      ? const Color(0xFFFF6D00)
-                                                      : const Color(0xFF2E7D32),
+                                                      ? const Color(0xFF2E7D32)
+                                                      : const Color(0xFFFF6D00),
                                               shape: BoxShape.circle,
                                               border: Border.all(
                                                   color: Colors.white,
@@ -3234,9 +3451,8 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                                   color: (isSelected
                                                           ? lokmaPink
                                                           : isLive
-                                                              ? const Color(0xFFFF6D00)
-                                                              : const Color(
-                                                                  0xFF2E7D32))
+                                                              ? const Color(0xFF2E7D32)
+                                                              : const Color(0xFFFF6D00))
                                                       .withValues(alpha: isLive ? 0.6 : 0.4),
                                                   blurRadius: isLive ? 10 : 6,
                                                   spreadRadius: isLive ? 3 : 1,
@@ -3269,7 +3485,7 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                         border: Border.all(
                                           color: isSelected
                                               ? Colors.transparent
-                                              : lokmaPink.withValues(
+                                              : (isLive ? const Color(0xFF2E7D32) : const Color(0xFFFF6D00)).withValues(
                                                   alpha: 0.2),
                                           width: 0.5,
                                         ),
@@ -3318,6 +3534,45 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
               SizedBox(height: bottomPadding),
             ],
           ),
+          // My Location Button
+          if (widget.userLat != null && widget.userLng != null)
+            Positioned(
+              right: 16,
+              bottom: _selectedEvent != null ? bottomPadding + 140 : bottomPadding + 16,
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _mapController.move(LatLng(widget.userLat!, widget.userLng!), 11);
+                },
+                child: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2A28) : Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      )
+                    ],
+                    border: Border.all(
+                      color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                    ),
+                  ),
+                  child: const Icon(Icons.my_location, color: lokmaPink, size: 24),
+                ),
+              ),
+            ),
+            
+          // Scale bar
+          Positioned(
+            left: 16,
+            bottom: _selectedEvent != null ? bottomPadding + 140 : bottomPadding + 22,
+            child: _buildScaleBar(context),
+          ),
+            
           // Selected event info card
           if (_selectedEvent != null)
             Positioned(
@@ -3334,6 +3589,13 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
   Widget _buildInfoCard(bool isDark) {
     final event = _selectedEvent!;
     final dist = _distanceText(event);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDay = DateTime(event.startDate.year, event.startDate.month, event.startDate.day);
+    final endDay = DateTime(event.endDate.year, event.endDate.month, event.endDate.day);
+    
+    final isEventLive = !startDay.isAfter(today) && !endDay.isBefore(today);
+    final accentColor = isEventLive ? const Color(0xFF2E7D32) : const Color(0xFFFF6D00);
 
     return Material(
       color: Colors.transparent,
@@ -3350,7 +3612,7 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
             ),
           ],
           border: Border.all(
-            color: lokmaPink.withValues(alpha: 0.3),
+            color: accentColor.withValues(alpha: 0.4),
             width: 1,
           ),
         ),
@@ -3361,10 +3623,10 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: lokmaPink.withValues(alpha: 0.1),
+                color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.festival, color: lokmaPink, size: 22),
+              child: Icon(Icons.festival, color: accentColor, size: 22),
             ),
             const SizedBox(width: 12),
             // Info
@@ -3387,13 +3649,13 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                   Row(
                     children: [
                       if (dist.isNotEmpty) ...[
-                        Icon(Icons.near_me, size: 12, color: lokmaPink),
+                        Icon(Icons.near_me, size: 12, color: accentColor),
                         const SizedBox(width: 3),
                         Text(
                           dist,
                           style: TextStyle(
                               fontSize: 12,
-                              color: lokmaPink,
+                              color: accentColor,
                               fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(width: 8),
@@ -3428,17 +3690,17 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                         ),
                       ),
                       // Aktiv badge
-                      if (DateTime.now().isAfter(event.startDate) && DateTime.now().isBefore(event.endDate)) ...[
+                      if (isEventLive) ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFF6D00).withValues(alpha: 0.15),
+                            color: const Color(0xFF2E7D32).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             context.locale.languageCode == 'tr' ? 'Kermes Zamani' : (context.locale.languageCode == 'de' ? 'Aktiv' : 'Active'),
-                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFFFF6D00)),
+                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF2E7D32)),
                           ),
                         ),
                       ],
@@ -3459,12 +3721,12 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: lokmaPink,
+                  color: accentColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'Incele',
-                  style: TextStyle(
+                child: Text(
+                  'kermes.view_details'.tr(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

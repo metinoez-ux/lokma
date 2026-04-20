@@ -876,6 +876,16 @@
         "repeat": "Tekrarla"
     },
     "kermes": {
+        "map_title": "Kermes Haritası",
+        "map_showing_count": "{} kermes gösteriliyor",
+        "view_details": "İncele",
+        "map_street": "Kart",
+        "map_satellite": "Uydu",
+        "map_hybrid": "Karma",
+        "filter_all": "Hepsi",
+        "filter_active": "Aktif",
+        "filter_upcoming": "Yaklaşan",
+        "filter_heimatroute": "Sıla Yolu",
         "add_menu_item": "Menü Öğesi Ekle",
         "add_parking_area": "Park Alanı Ekle",
         "kermes_added_waiting_approval": "Kermes başarıyla eklendi! Onay bekleniyor.",
