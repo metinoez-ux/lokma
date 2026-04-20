@@ -4063,8 +4063,8 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  {admin?.adminType === 'super' && (
- {/* Google Place */}
  <div className="space-y-4 pt-4 border-t border-border mt-4">
+ {/* Google Place */}
  <h4 className="text-foreground font-medium pb-2">🗺️ Google Place</h4>
  <div className="relative">
  <label className="text-muted-foreground text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
