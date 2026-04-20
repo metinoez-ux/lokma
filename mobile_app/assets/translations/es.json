@@ -1047,7 +1047,9 @@
         "navigation": "NAVIGATION",
         "parking_available": "Available Parking",
         "contact_person": "CONTACT PERSON",
-        "contact_person_name": "Contact Person"
+        "contact_person_name": "Contact Person",
+        "feature_argaleto_dondurma": "Helado Argaleto",
+        "feature_sleeping_accommodation": "Alojamiento"
     },
     "marketplace": {
         "available_now": "Disponible ahora",

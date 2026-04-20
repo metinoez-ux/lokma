@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 // Export the provider so components using it as an ImageProvider don't break
 export 'package:cached_network_image/cached_network_image.dart' show CachedNetworkImageProvider;
@@ -54,9 +55,27 @@ class LokmaNetworkImage extends StatelessWidget {
       return _buildErrorPlaceholder();
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: CachedNetworkImage(
+    Widget imageWidget;
+    
+    // Check if the image is an SVG
+    final isSvg = imageUrl.toLowerCase().split('?').first.endsWith('.svg');
+    
+    if (isSvg) {
+      imageWidget = SvgPicture.network(
+        imageUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        alignment: alignment,
+        colorFilter: color != null 
+            ? ColorFilter.mode(color!, colorBlendMode ?? BlendMode.srcIn)
+            : null,
+        placeholderBuilder: (context) => placeholder != null 
+            ? placeholder(context, imageUrl) 
+            : _buildShimmerPlaceholder(),
+      );
+    } else {
+      imageWidget = CachedNetworkImage(
         imageUrl: imageUrl,
         width: width,
         height: height,
@@ -73,7 +92,12 @@ class LokmaNetworkImage extends StatelessWidget {
         useOldImageOnUrlChange: useOldImageOnUrlChange ?? true,
         placeholder: (context, url) => placeholder != null ? placeholder(context, url) : _buildShimmerPlaceholder(),
         errorWidget: (context, url, error) => errorWidget != null ? errorWidget(context, url, error) : _buildErrorPlaceholder(),
-      ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: imageWidget,
     );
   }
 

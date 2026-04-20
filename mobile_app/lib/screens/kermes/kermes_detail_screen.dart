@@ -19,6 +19,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lokma_app/data/kermes_menu_templates.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
+import 'package:lokma_app/models/product_option.dart';
 import 'package:lokma_app/providers/kermes_category_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
@@ -140,7 +141,6 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchLiveWeather();
     _loadGlobalFeatures();
     _loadGlobalMenuImage();
     _loadBadges();
@@ -196,14 +196,26 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     }
   }
 
+  bool _weatherFetched = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_weatherFetched) {
+      _weatherFetched = true;
+      _fetchLiveWeather();
+    }
+  }
+
   Future<void> _fetchLiveWeather() async {
     try {
-      // Tahmin ve anlık hava durumunu paralel cek
+      final localeCode = context.locale.languageCode;
+      
       final results = await Future.wait([
         WeatherService.getForecast(
-            lat: _currentEvent.latitude, lon: _currentEvent.longitude, locale: context.locale.languageCode),
+            lat: _currentEvent.latitude, lon: _currentEvent.longitude, locale: localeCode),
         WeatherService.getCurrentWeather(
-            lat: _currentEvent.latitude, lon: _currentEvent.longitude, locale: context.locale.languageCode),
+            lat: _currentEvent.latitude, lon: _currentEvent.longitude, locale: localeCode),
       ]);
       final forecast = results[0] as WeatherForecast?;
       CurrentWeather? current = results[1] as CurrentWeather?;
@@ -236,6 +248,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
         });
       }
     } catch (e) {
+      debugPrint('Weather API Error in screen: $e');
       if (mounted) {
         setState(() => _isLoadingWeather = false);
       }
@@ -778,7 +791,7 @@ String _getLocalizedCountry(String rawCountry) {
   int get _totalItems => ref.read(kermesCartProvider).totalItems;
   double get _totalPrice => ref.read(kermesCartProvider).totalAmount;
 
-  void _addToCart(KermesMenuItem item) {
+  Future<void> _addToCart(KermesMenuItem item) async {
     HapticFeedback.lightImpact();
 
     if (_currentEvent.isMenuOnly) {
@@ -788,7 +801,7 @@ String _getLocalizedCountry(String rawCountry) {
 
     // Multi-step: show customization sheet if item has option groups
     if (item.isComboMenu) {
-      showModalBottomSheet(
+      final result = await showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -799,6 +812,14 @@ String _getLocalizedCountry(String rawCountry) {
           eventName: _currentEvent.city,
         ),
       );
+      
+      if (result is Map) {
+         _showDifferentKermesWarning(
+           item, 
+           options: result['options'] as List<SelectedOption>?, 
+           quantity: result['quantity'] as int? ?? 1,
+         );
+      }
       return;
     }
 
@@ -815,7 +836,7 @@ String _getLocalizedCountry(String rawCountry) {
 
   void _showMenuOnlyDialog() {
     final phone = _currentEvent.contactPhone ?? '';
-    final name = _currentEvent.contactName ?? 'Yetkili';
+    final name = _currentEvent.contactName ?? 'kermes.default_contact_name'.tr();
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -909,7 +930,7 @@ String _getLocalizedCountry(String rawCountry) {
     );
   }
 
-  void _showDifferentKermesWarning(KermesMenuItem item) {
+  void _showDifferentKermesWarning(KermesMenuItem item, {List<SelectedOption>? options, int quantity = 1}) {
     final currentKermesName =
         ref.read(kermesCartProvider.notifier).currentKermesName;
     showDialog(
@@ -968,7 +989,7 @@ String _getLocalizedCountry(String rawCountry) {
             onPressed: () {
               Navigator.pop(dialogContext);
               ref.read(kermesCartProvider.notifier).clearAndAddFromNewKermes(
-                  item, _currentEvent.id, _currentEvent.city);
+                  item, _currentEvent.id, _currentEvent.city, selectedOptions: options ?? [], quantity: quantity);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('marketplace.cart_updated_for_city'
                       .tr(args: [_currentEvent.city])),
@@ -1105,11 +1126,11 @@ String _getLocalizedCountry(String rawCountry) {
   }
 
   String _getInviteText(String lang) {
-    if (lang.startsWith('de')) return 'Verfolgen Sie Kermes-Veranstaltungen mit der LOKMA-App! Bestellen Sie Lieferung, Abholung oder Dine-in für ein völlig neues Erlebnis!';
-    if (lang.startsWith('nl')) return 'Volg Kermes-evenementen met de LOKMA-app! Bestel voor bezorging, afhaal of dine-in voor een compleet nieuwe ervaring!';
-    if (lang.startsWith('fr')) return 'Suivez les événements Kermes avec l\'application LOKMA ! Commandez en livraison, à emporter ou sur place pour une toute nouvelle expérience !';
-    if (lang.startsWith('en')) return 'Follow Kermes events with the LOKMA App! Order delivery, pickup, or dine-in for a completely new experience!';
-    return 'LOKMA App ile Kermesleri takip edin! Evinize sipariş verin, Gel-Al veya Masaya Servis ile yeni bir deneyim yaşayın!';
+    if (lang.startsWith('de')) return 'Verfolgen Sie Kermes-Veranstaltungen mit der LOKMA-App! Bestellen Sie Lieferung, Abholung oder Dine-in für ein völlig neues Erlebnis!\n\nIhr seid alle herzlich zu unserer Kermes eingeladen, wir erwarten euch!';
+    if (lang.startsWith('nl')) return 'Volg Kermes-evenementen met de LOKMA-app! Bestel voor bezorging, afhaal of dine-in voor een compleet nieuwe ervaring!\n\nJullie zijn allemaal van harte uitgenodigd op onze Kermes, we verwachten jullie!';
+    if (lang.startsWith('fr')) return 'Suivez les événements Kermes avec l\'application LOKMA ! Commandez en livraison, à emporter ou sur place pour une toute nouvelle expérience !\n\nVous êtes tous chaleureusement invités à notre Kermes, nous vous attendons !';
+    if (lang.startsWith('en')) return 'Follow Kermes events with the LOKMA App! Order delivery, pickup, or dine-in for a completely new experience!\n\nYou are all warmly invited to our Kermes, we are waiting for you!';
+    return 'LOKMA App ile Kermesleri takip edin! Evinize sipariş verin, Gel-Al veya Masaya Servis ile yeni bir deneyim yaşayın!\n\nHepiniz kermesimize davetlisiniz, bekliyoruz!';
   }
 
   String _getSearchText(String lang) {
@@ -1253,7 +1274,15 @@ String _getLocalizedCountry(String rawCountry) {
     // Use the localized text as the payload payload caption
     final event = _currentEvent;
     final lang = context.locale.languageCode;
-    final text = '${event.title}\n${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}\n${_getCleanAddress()}, ${event.postalCode} ${event.city}\n\n${_getInviteText(lang)}';
+    final dateStr = '${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}';
+    final timeStr = '10:00 - 22:00';
+    
+    final countryName = event.country.isNotEmpty ? _getLocalizedCountry(event.country) : '';
+    final addressStr = '${_getCleanAddress()}\n${event.postalCode} ${event.city}\n$countryName'.trim();
+    
+    final downloadText = '*App Store veya Google Play\\'de LOKMA aratın ve uygulamayı indirin.*';
+    
+    final text = '*${event.title}*\n\nTarih: $dateStr\nSaat: $timeStr\n\n*Adres:*\n$addressStr\n\n${_getInviteText(lang)}\n\n$downloadText';
 
     setState(() => _isSharing = true);
     
@@ -1826,32 +1855,13 @@ String _getLocalizedCountry(String rawCountry) {
                                 ),
                               ),
                             ),
-                            // Populer badge
+
+                          // Dynamic Sponsor / Certificate Badges
+                          if (_currentEvent.activeBadgeIds.isNotEmpty && _activeBadges != null)
                             Positioned(
                               top: 16,
-                              right: 16,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: primaryRuby.withOpacity(0.9),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.star,
-                                        color: Colors.white, size: 12),
-                                    SizedBox(width: 4),
-                                    Text('kermes.populer'.tr(),
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 1)),
-                                  ],
-                                ),
-                              ),
+                              left: 16,
+                              child: _buildDynamicBadges(context),
                             ),
                             // Bottom content
                             Positioned(
@@ -2396,35 +2406,52 @@ String _getLocalizedCountry(String rawCountry) {
 
           // Kermes Custom Logo (Always visible if exists)
           if (_currentEvent.logoUrl != null && _currentEvent.logoUrl!.isNotEmpty)
-            Positioned(
-              bottom: 130, // Align with title/hero text vertically on the right
-              right: 24,
-              child: Container(
-                height: 41,
-                constraints: const BoxConstraints(minWidth: 41, maxWidth: 90),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: LokmaNetworkImage(
-                    imageUrl: _currentEvent.logoUrl!,
-                    fit: BoxFit.contain,
+            Builder(
+              builder: (context) {
+                final bool isPng = _currentEvent.logoUrl!.toLowerCase().contains('.png');
+                return Positioned(
+                  top: 56, // Replaced the previous Tuna Logo position
+                  left: 16,
+                  child: Container(
+                    height: 60,
+                    constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
+                    decoration: isPng ? null : BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(50), // Pill shape
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: isPng
+                      ? LokmaNetworkImage(
+                          imageUrl: _currentEvent.logoUrl!,
+                          fit: BoxFit.contain, // Fit entire logo natively
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: LokmaNetworkImage(
+                            imageUrl: _currentEvent.logoUrl!,
+                            fit: BoxFit.contain, // Fit entire logo securely
+                          ),
+                        ),
                   ),
-                ),
-              ),
+                );
+              }
             ),
 
+
+          // Bottom Right: Dynamic Sponsor / Certificate Badges (Tuna)
+          if (_currentEvent.activeBadgeIds.isNotEmpty && _activeBadges != null)
+            Positioned(
+              bottom: 110,
+              right: 24,
+              child: _buildDynamicBadges(context, alignment: CrossAxisAlignment.end),
+            ),
           // Top Action Buttons
           if (!isForShare)
             Positioned(
@@ -2457,137 +2484,6 @@ String _getLocalizedCountry(String rawCountry) {
               ),
             ),
 
-          // Dynamic Sponsor / Certificate Badges
-          if (_currentEvent.activeBadgeIds.isNotEmpty && _activeBadges != null)
-            Positioned(
-              top: 56,
-              left: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: () {
-                  bool isTurkey = false;
-                  if (widget.currentPosition != null) {
-                    final lat = widget.currentPosition!.latitude;
-                    final lng = widget.currentPosition!.longitude;
-                    if (lat >= 35.8 &&
-                        lat <= 42.1 &&
-                        lng >= 25.6 &&
-                        lng <= 44.8) isTurkey = true;
-                  }
-
-                  final uniqueBadges = <String, KermesBadge>{};
-                  for (final badgeId in _currentEvent.activeBadgeIds) {
-                    KermesBadge? badge = _activeBadges![badgeId];
-                    if (badge == null || !badge.isActive) continue;
-
-                    String bName = badge.label.toLowerCase();
-                    if (bName.contains('tuna') || bName.contains('toros')) {
-                      if (isTurkey) {
-                        final torosBadge = _activeBadges!.values
-                            .where(
-                                (b) => b.label.toLowerCase().contains('toros'))
-                            .firstOrNull;
-                        if (torosBadge != null) badge = torosBadge;
-                      } else {
-                        final tunaBadge = _activeBadges!.values
-                            .where(
-                                (b) => b.label.toLowerCase().contains('tuna'))
-                            .firstOrNull;
-                        if (tunaBadge != null) badge = tunaBadge;
-                      }
-                    }
-                    uniqueBadges[badge!.id] = badge;
-                  }
-
-                  return uniqueBadges.values.map((badge) {
-                    final bgColor = Color(
-                        int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
-                    final textColor = Color(int.parse(
-                        badge.textColorHex.replaceFirst('#', '0xFF')));
-
-                    final hasIcon = badge.iconUrl.isNotEmpty;
-
-                    return GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        final badgeLower = badge.label.toLowerCase();
-                        if (badgeLower.contains('tuna')) {
-                          BrandInfoSheet.show(context, forcedBrand: 'tuna');
-                        } else if (badgeLower.contains('toros')) {
-                          BrandInfoSheet.show(context, forcedBrand: 'toros');
-                        } else {
-                          _showBadgeDetailsBottomSheet(badge);
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: EdgeInsets.symmetric(
-                            horizontal: hasIcon ? 4 : 14,
-                            vertical: hasIcon ? 4 : 6),
-                        decoration: BoxDecoration(
-                          color: hasIcon ? Colors.transparent : bgColor,
-                          borderRadius: BorderRadius.circular(50),
-                          border: hasIcon
-                              ? null
-                              : Border.all(color: Colors.white24, width: 0.5),
-                          boxShadow: hasIcon
-                              ? null
-                              : [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (hasIcon)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: LokmaNetworkImage(
-                                  imageUrl: badge.iconUrl,
-                                  height: 33,
-                                  fit: BoxFit.contain,
-                                  placeholder: (context, url) => Container(
-                                    color: Colors.transparent,
-                                    height: 33,
-                                    width: 33,
-                                  ),
-                                  errorWidget: (context, url, error) => Icon(
-                                      Icons.verified,
-                                      color: textColor,
-                                      size: 24),
-                                ),
-                              )
-                            else ...[
-                              Icon(Icons.verified, color: textColor, size: 15),
-                              const SizedBox(width: 6),
-                              Text(
-                                badge.label.toUpperCase(),
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.info_outline,
-                                color: textColor.withOpacity(0.8),
-                                size: 16,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList();
-                }(),
-              ),
-            ),
 
           // Bottom Content
           Positioned(
@@ -2619,7 +2515,7 @@ String _getLocalizedCountry(String rawCountry) {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${_currentEvent.country.split(' ').first} ${_getCountryFlag(_currentEvent.country)}',
+                      '${_getLocalizedCountry(_currentEvent.country).split(' ').first} ${_getCountryFlag(_currentEvent.country)}',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 12,
@@ -3294,7 +3190,7 @@ String _getLocalizedCountry(String rawCountry) {
   }
 
   String _formatDateShort(DateTime date) {
-    return DateFormat('d MMM', context.locale.languageCode).format(date);
+    return DateFormat('d MMMM', context.locale.languageCode).format(date);
   }
 
   /// OpenWeatherMap ikon kodunu Flutter Material ikona cevirir
@@ -3378,7 +3274,7 @@ String _getLocalizedCountry(String rawCountry) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Kermes Yetkilisi Top Section
+          // Kermes İrtibat Top Section
           Padding(
             padding: const EdgeInsets.all(24),
             child: Row(
@@ -3392,8 +3288,8 @@ String _getLocalizedCountry(String rawCountry) {
                     border: Border.all(color: dividerBg, width: 2),
                   ),
                   child: Icon(
-                    Icons.admin_panel_settings_rounded,
-                    color: isDark ? Colors.amber[400] : Colors.amber[700],
+                    Icons.person,
+                    color: isDark ? Colors.blue[400] : Colors.blue[600],
                     size: 26,
                   ),
                 ),
@@ -3403,22 +3299,27 @@ String _getLocalizedCountry(String rawCountry) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _currentEvent.contactName ?? 'Kermes Yetkilisi',
+                        'kermes.default_contact_name'.tr(),
                         style: TextStyle(
                           color: textColor,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'kermes.contact_questions'.tr(),
+                        _currentEvent.contactName?.isNotEmpty == true &&
+                                _currentEvent.contactName != 'Kermes Yetkilisi' &&
+                                _currentEvent.contactName != 'Yetkili'
+                            ? _currentEvent.contactName!
+                            : 'kermes.contact_questions'.tr(),
                         style: TextStyle(
                           color: subtleTextColor,
-                          fontSize: 12,
+                          fontSize: 14,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -3426,58 +3327,98 @@ String _getLocalizedCountry(String rawCountry) {
               ],
             ),
           ),
+          
           // Bize Ulaşın Bottom Section
-          Padding(
-            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.03),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child:
-                        const Icon(Icons.phone, color: Colors.green, size: 20),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'kermes.phone'.tr(),
-                          style: TextStyle(
-                            color: subtleTextColor,
-                            fontSize: 12,
+          if (_currentEvent.phoneNumber.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.black.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'kermes.phone'.tr(),
+                            style: TextStyle(
+                              color: subtleTextColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _currentEvent.phoneNumber,
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                          const SizedBox(height: 2),
+                          Text(
+                            _currentEvent.phoneNumber,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    
+                    // Telefon Butonu (SVG)
+                    InkWell(
+                      onTap: () async {
+                        final uri = Uri.parse('tel:${_currentEvent.phoneNumber.replaceAll(RegExp(r'[^\d+]'), '')}');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: SvgPicture.asset(
+                          'assets/icons/telephone-call_74451.svg',
+                          width: 24,
+                          height: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // WhatsApp Butonu (SVG)
+                    InkWell(
+                      onTap: () async {
+                        final cleanPhone = _currentEvent.phoneNumber.replaceAll(RegExp(r'\D'), '');
+                        final waUrl = 'https://wa.me/$cleanPhone';
+                        final uri = Uri.parse(waUrl);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF25D366).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: SvgPicture.asset(
+                          'assets/icons/whatsapp_134937.svg',
+                          width: 24,
+                          height: 24,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -3530,19 +3471,49 @@ String _getLocalizedCountry(String rawCountry) {
     final start = _currentEvent.startDate;
     final end = _currentEvent.endDate;
 
-    // Etkinlik gunleri icin filtrelenecek
+    // API'den gelen tum günlük özetleri alıyoruz
     final dailySummaries = _weatherForecast?.getDailySummaries() ?? [];
 
-    // Sadece etkinlik gunlerine denk gelen tahminleri filtrele
-    final eventDailySummaries = dailySummaries.where((day) {
-      final dayDate = DateTime(day.date.year, day.date.month, day.date.day);
-      final startDate = DateTime(start.year, start.month, start.day);
-      final endDate = DateTime(end.year, end.month, end.day);
-      return !dayDate.isBefore(startDate) && !dayDate.isAfter(endDate);
-    }).toList();
+    // Kullanıcının isteği: Kermes açık olmasa bile, API'dan gelen mevcut hava durumunu direkt gösterelim.
+    // O yüzden tarih filtrelemesini kaldırdık.
+    final eventDailySummaries = dailySummaries;
 
-    // Bugunun saatlik tahminleri (etkinlik suresi icindeyse)
-    final todayHourly = _weatherForecast?.getHourlyForDay(now) ?? [];
+    // Bugunun saatlik tahminleri
+    final todayHourly = List<HourlyWeather>.from(_weatherForecast?.getHourlyForDay(now) ?? []);
+    
+    if (_currentWeather != null) {
+      final nowHourly = HourlyWeather(
+        dateTime: now,
+        temperature: _currentWeather!.temperature,
+        feelsLike: _currentWeather!.feelsLike,
+        rainProbability: todayHourly.isNotEmpty ? todayHourly.first.rainProbability : 0, 
+        windSpeed: _currentWeather!.windSpeed,
+        description: _currentWeather!.description,
+        icon: _currentWeather!.icon,
+      );
+      
+      if (todayHourly.isEmpty || todayHourly.first.dateTime.hour > now.hour) {
+        todayHourly.insert(0, nowHourly);
+      } else if (todayHourly.first.dateTime.hour == now.hour) {
+        todayHourly[0] = nowHourly;
+      } else {
+        // Eger ilk öğe geçmişte kalmışsa (mesela 14:00, biz 14:40'tayız), 
+        // araya sıkıştırma veya eskisini tutma kararı alabiliriz. 
+        // Genelde forecast apisi geçmişi atmaz, ama emin olmak için en başa ekleyelim (eğer yoksa).
+        bool hasNow = false;
+        for (int i = 0; i < todayHourly.length; i++) {
+          if (todayHourly[i].dateTime.hour == now.hour) {
+            todayHourly[i] = nowHourly;
+            hasNow = true;
+            break;
+          }
+        }
+        if (!hasNow) {
+          todayHourly.insert(0, nowHourly);
+          todayHourly.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+        }
+      }
+    }
     final isEventDay =
         !now.isBefore(DateTime(start.year, start.month, start.day)) &&
             !now.isAfter(DateTime(end.year, end.month, end.day));
@@ -3703,7 +3674,7 @@ String _getLocalizedCountry(String rawCountry) {
           ],
 
           // ======= BUGUNUN SAATLIK TAHMINI =======
-          if (hasForecast && isEventDay && todayHourly.isNotEmpty) ...[
+          if (hasForecast && todayHourly.isNotEmpty) ...[
             const SizedBox(height: 20),
             Row(
               children: [
@@ -3715,22 +3686,24 @@ String _getLocalizedCountry(String rawCountry) {
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
+                if (isEventDay) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'kermes.kermes_day_nth'.tr(args: [_getEventDayNumber(now).toString()]),
+                      style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700),
+                    ),
                   ),
-                  child: Text(
-                    'kermes.kermes_day_nth'.tr(args: [_getEventDayNumber(now).toString()]),
-                    style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
+                ],
               ],
             ),
             const SizedBox(height: 12),
@@ -3847,36 +3820,42 @@ String _getLocalizedCountry(String rawCountry) {
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: isToday
-                                          ? Colors.green.withOpacity(0.15)
-                                          : Colors.orange.withOpacity(0.12),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      isToday
-                                          ? 'kermes.today_day'.tr(namedArgs: {'day': '$dayNum'})
-                                          : 'kermes.nth_day'.tr(namedArgs: {'day': '$dayNum'}),
-                                      style: TextStyle(
+                                  if (dayNum > 0 && 
+                                      !day.date.isBefore(DateTime(start.year, start.month, start.day)) &&
+                                      !day.date.isAfter(DateTime(end.year, end.month, end.day))) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 1),
+                                      decoration: BoxDecoration(
                                         color: isToday
-                                            ? Colors.green
-                                            : Colors.orange,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
+                                            ? Colors.green.withOpacity(0.15)
+                                            : Colors.orange.withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        isToday
+                                            ? 'kermes.today_day'.tr(namedArgs: {'day': '$dayNum'})
+                                            : 'kermes.nth_day'.tr(namedArgs: {'day': '$dayNum'}),
+                                        style: TextStyle(
+                                          color: isToday
+                                              ? Colors.green
+                                              : Colors.orange,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    day.description,
-                                    style: TextStyle(
-                                        color: subtleTextColor,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500),
-                                    overflow: TextOverflow.ellipsis,
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Expanded(
+                                    child: Text(
+                                      day.description,
+                                      style: TextStyle(
+                                          color: subtleTextColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -3946,18 +3925,14 @@ String _getLocalizedCountry(String rawCountry) {
                             children: [
                               Icon(
                                 Icons.water_drop,
-                                color: day.maxRainProbability > 50
-                                    ? Colors.blue
-                                    : subtleTextColor,
+                                color: Colors.blue,
                                 size: 14,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${day.maxRainProbability.round()}%',
                                 style: TextStyle(
-                                  color: day.maxRainProbability > 50
-                                      ? Colors.blue
-                                      : subtleTextColor,
+                                  color: Colors.blue,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -4028,7 +4003,7 @@ String _getLocalizedCountry(String rawCountry) {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _currentEvent.contactName ?? 'Kermes Yetkilisi',
+                      _currentEvent.contactName?.isNotEmpty == true ? _currentEvent.contactName! : 'kermes.default_contact_name'.tr(),
                       style: TextStyle(
                         color: textColor,
                         fontSize: 16,
@@ -4587,6 +4562,85 @@ String _getLocalizedCountry(String rawCountry) {
       return Icons.restaurant;
     }
   }
+  Widget _buildDynamicBadges(BuildContext context, {CrossAxisAlignment alignment = CrossAxisAlignment.start}) {
+    bool isTurkey = false;
+    if (widget.currentPosition != null) {
+      final lat = widget.currentPosition!.latitude;
+      final lng = widget.currentPosition!.longitude;
+      if (lat >= 35.8 && lat <= 42.1 && lng >= 25.6 && lng <= 44.8) isTurkey = true;
+    }
+    final uniqueBadges = <String, KermesBadge>{};
+    for (final badgeId in _currentEvent.activeBadgeIds) {
+      KermesBadge? badge = _activeBadges![badgeId];
+      if (badge == null || !badge.isActive) continue;
+      String bName = badge.label.toLowerCase();
+      if (bName.contains('tuna') || bName.contains('toros')) {
+        if (isTurkey) {
+          final torosBadge = _activeBadges!.values.where((b) => b.label.toLowerCase().contains('toros')).firstOrNull;
+          if (torosBadge != null) badge = torosBadge;
+        } else {
+          final tunaBadge = _activeBadges!.values.where((b) => b.label.toLowerCase().contains('tuna')).firstOrNull;
+          if (tunaBadge != null) badge = tunaBadge;
+        }
+      }
+      uniqueBadges[badge!.id] = badge;
+    }
+    return Column(
+      crossAxisAlignment: alignment,
+      mainAxisSize: MainAxisSize.min,
+      children: uniqueBadges.values.map((badge) {
+        final bgColor = Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
+        final textColor = Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF')));
+        final hasIcon = badge.iconUrl.isNotEmpty;
+        return GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            final badgeLower = badge.label.toLowerCase();
+            if (badgeLower.contains('tuna')) {
+              BrandInfoSheet.show(context, forcedBrand: 'tuna');
+            } else if (badgeLower.contains('toros')) {
+              BrandInfoSheet.show(context, forcedBrand: 'toros');
+            } else {
+              _showBadgeDetailsBottomSheet(badge);
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.symmetric(horizontal: hasIcon ? 4 : 14, vertical: hasIcon ? 4 : 6),
+            decoration: BoxDecoration(
+              color: hasIcon ? Colors.transparent : bgColor,
+              borderRadius: BorderRadius.circular(50),
+              border: hasIcon ? null : Border.all(color: Colors.white24, width: 0.5),
+              boxShadow: hasIcon ? null : [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasIcon)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LokmaNetworkImage(
+                      imageUrl: badge.iconUrl,
+                      height: 33,
+                      fit: BoxFit.contain,
+                      placeholder: (context, url) => Container(color: Colors.transparent, height: 33, width: 33),
+                      errorWidget: (context, url, error) => Icon(Icons.verified, color: textColor, size: 24),
+                    ),
+                  )
+                else ...[
+                  Icon(Icons.verified, color: textColor, size: 15),
+                  const SizedBox(width: 6),
+                  Text(badge.label.toUpperCase(), style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
+                  const SizedBox(width: 8),
+                  Icon(Icons.info_outline, color: textColor.withOpacity(0.8), size: 16),
+                ],
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 }
 
 class _KermesCategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -4610,4 +4664,5 @@ class _KermesCategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_KermesCategoryHeaderDelegate oldDelegate) {
     return oldDelegate.child != child;
   }
+
 }

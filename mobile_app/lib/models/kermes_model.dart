@@ -257,6 +257,7 @@ class KermesEvent {
     this.isMenuOnly = false,
     this.hasTakeaway = true, // Eski kermesler için varsayılan Gel-Al açıktır
     this.hasDineIn = false,
+    this.contactName,
     this.contactPhone,
     this.headerImage,
     this.logoUrl,

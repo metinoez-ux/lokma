@@ -977,6 +977,7 @@
         "weather_title": "WETTER VOR ORT",
         "today_caps": "HEUTE",
         "event_days_caps": "VERANSTALTUNGSTAGE",
+        "default_contact_name": "Kermes-Kontakt",
         "contact_questions": "Für Fragen können Sie uns kontaktieren.",
         "phone": "Telefon",
         "weather_not_available": "Wetterdaten noch nicht verfügbar",
@@ -1062,7 +1063,9 @@
         "navigation": "NAVIGATION",
         "parking_available": "Freie Parkplatze",
         "contact_person": "ANSPRECHPARTNER",
-        "contact_person_name": "Ansprechpartner"
+        "contact_person_name": "Ansprechpartner",
+        "feature_argaleto_dondurma": "Argaleto Eis",
+        "feature_sleeping_accommodation": "Übernachtungsmöglichkeit"
     },
     "marketplace": {
         "available_now": "Jetzt möglich",

@@ -8507,7 +8507,7 @@
     "vegetarian": "Vegetarisch",
     "free_entry": "Freier Eintritt",
     "argaleto_ice_cream": "Argaleto Eis",
-    "sleeping_accommodation": "Schlafmöglichkeit",
+    "sleeping_accommodation": "Übernachtungsmöglichkeit",
     "accessible": "Barrierefrei",
     "halal": "Halal",
     "wifi": "WLAN",
@@ -8516,6 +8516,7 @@
     "parking": "Parkplatz",
     "first_aid": "Erste Hilfe",
     "security": "Sicherheit",
-    "atm": "Geldautomat"
+    "atm": "Geldautomat",
+    "argaleto_dondurma": "Argaleto Eis"
   }
 }

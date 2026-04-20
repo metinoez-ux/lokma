@@ -2934,10 +2934,18 @@ export default function KermesDetailPage() {
  <label className="text-muted-foreground text-xs block mb-2">{t('ozel_kermes_logosu') || 'Özel Kermes Logosu'}</label>
  <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-lg p-4">
  {editForm.logoUrl ? (
- <div className="relative inline-block">
- <img src={editForm.logoUrl} alt="Logo" className="w-24 h-24 object-cover rounded-full border-4 border-white shadow-md" />
+ <div className="relative inline-block mt-2">
+ {editForm.logoUrl.toLowerCase().includes('.png') ? (
+   <div className="h-24 max-w-[200px] flex items-center justify-center p-1">
+       <img src={editForm.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-md" />
+   </div>
+ ) : (
+   <div className="h-24 min-w-[96px] max-w-[200px] flex items-center justify-center bg-white rounded-[48px] border-4 border-white shadow-md overflow-hidden">
+       <img src={editForm.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+   </div>
+ )}
  <button type="button" onClick={() => setEditForm({ ...editForm, logoUrl: '', logoUrlId: '' })}
- className="absolute top-0 right-0 px-2 py-1 bg-red-600 text-white rounded-full text-xs shadow-sm" title={t('kaldir')}>&times;</button>
+ className="absolute top-0 right-0 px-2 py-1 bg-red-600 text-white rounded-full text-xs shadow-sm translate-x-2 -translate-y-2 pointer-events-auto" title={t('kaldir')}>&times;</button>
  </div>
  ) : (
   <div className="grid grid-cols-1 gap-4">

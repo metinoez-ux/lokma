@@ -1048,7 +1048,9 @@
         "navigation": "NAVIGATION",
         "parking_available": "Available Parking",
         "contact_person": "CONTACT PERSON",
-        "contact_person_name": "Contact Person"
+        "contact_person_name": "Contact Person",
+        "feature_argaleto_dondurma": "Argaleto Ijs",
+        "feature_sleeping_accommodation": "Overnachting"
     },
     "marketplace": {
         "available_now": "Available Now",

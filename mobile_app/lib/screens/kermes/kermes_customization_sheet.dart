@@ -144,8 +144,14 @@ class _KermesCustomizationSheetState
       quantity: _quantity, // <-- FIX: Artik miktar ekleniyor
     );
     if (added) {
-      Navigator.pop(context);
+      Navigator.pop(context, true);
       HapticFeedback.heavyImpact();
+    } else {
+      // Failed specifically due to a different store / cart conflict
+      Navigator.pop(context, {
+        'options': _selectedOptions,
+        'quantity': _quantity,
+      });
     }
   }
 

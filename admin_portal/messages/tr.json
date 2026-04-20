@@ -8536,7 +8536,7 @@
     "vegetarian": "Vejetaryen",
     "free_entry": "Ücretsiz Giriş",
     "argaleto_ice_cream": "Argaleto Dondurma",
-    "sleeping_accommodation": "Konaklama İmkanı",
+    "sleeping_accommodation": "Konaklama",
     "accessible": "Engelli Erişimi",
     "halal": "Helal Gıda",
     "wifi": "WiFi",
@@ -8545,6 +8545,7 @@
     "parking": "Otopark",
     "first_aid": "İlk Yardım",
     "security": "Güvenlik",
-    "atm": "ATM"
+    "atm": "ATM",
+    "argaleto_dondurma": "Argaleto Dondurma"
   }
 }

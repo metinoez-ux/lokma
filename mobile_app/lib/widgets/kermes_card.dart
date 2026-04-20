@@ -494,41 +494,51 @@ class _KermesCardState extends State<KermesCard> {
                       ),
 
                       // Bottom Left: Kermes Custom Logo (Aligned with Tuna logo horizontally)
-                      if (event.logoUrl != null && event.logoUrl!.isNotEmpty)
-                        Positioned(
-                          bottom: 12,
-                          left: 12,
-                          child: Container(
-                            height: 41,
-                            constraints: const BoxConstraints(minWidth: 41, maxWidth: 90),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(color: Colors.white, width: 1.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                )
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: LokmaNetworkImage(
-                                imageUrl: event.logoUrl!,
-                                fit: BoxFit.contain,
-                                fadeInDuration: const Duration(milliseconds: 200),
+                      if (widget.event.logoUrl != null && widget.event.logoUrl!.isNotEmpty)
+                        Builder(
+                          builder: (context) {
+                            final bool isPng = widget.event.logoUrl!.toLowerCase().contains('.png');
+                            return Positioned(
+                              bottom: 12,
+                              left: 12,
+                              child: Container(
+                                height: 50,
+                                constraints: const BoxConstraints(minWidth: 50, maxWidth: 120),
+                                decoration: isPng ? null : BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(50), // Makes it a pill shape
+                                  border: Border.all(color: Colors.white, width: 1.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ],
+                                ),
+                                child: isPng 
+                                  ? LokmaNetworkImage(
+                                      imageUrl: widget.event.logoUrl!,
+                                      fit: BoxFit.contain, // Allow entire logo to fit natively
+                                      fadeInDuration: const Duration(milliseconds: 200),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(50),
+                                      child: LokmaNetworkImage(
+                                        imageUrl: widget.event.logoUrl!,
+                                        fit: BoxFit.contain, // Allows logo to dictate width without cropping
+                                        fadeInDuration: const Duration(milliseconds: 200),
+                                      ),
+                                    ),
                               ),
-                            ),
-                          ),
+                            );
+                          }
                         ),
 
-                      // Favorite Button (Adjusted position if logo exists)
+                      // Favorite Button (No longer overlaps or moves weirdly)
                       Positioned(
                         top: 12,
-                        right: (event.logoUrl != null && event.logoUrl!.isNotEmpty) ? 56 : 12,
+                        right: 12,
                         child: GestureDetector(
                           onTap: _toggleFavorite,
                           child: ClipRRect(
