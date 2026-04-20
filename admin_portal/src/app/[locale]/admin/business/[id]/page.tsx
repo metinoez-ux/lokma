@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
 import { normalizeTimeString, getScheduleForToday, parseOpeningHoursBlock } from "@/utils/timeUtils";
-import { Store, Utensils, Users, CreditCard, Gift, Rocket, Wand2 } from "lucide-react";
+import { Store, Utensils, Users, CreditCard, Gift, Rocket, Wand2, Truck } from "lucide-react";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
@@ -199,7 +199,7 @@ export default function BusinessDetailsPage() {
  const searchParams = useSearchParams();
  const businessId = params.id as string;
  const initialTab = searchParams.get('tab') as 'overview' | 'orders' | 'reservations' | 'settings' || 'overview';
-	const initialSubTab = searchParams.get('settingsSubTab') as 'isletme' | 'menu' | 'personel' | 'masa' | 'abonelik' | 'odeme' | 'promosyon' | 'marketing' || 'isletme';
+	const initialSubTab = searchParams.get('settingsSubTab') as 'isletme' | 'menu' | 'personel' | 'masa' | 'abonelik' | 'odeme' | 'promosyon' | 'marketing' | 'teslimat' || 'isletme';
 
  const { admin, loading: adminLoading } = useAdmin();
  const { getActiveSectors } = useSectors();
@@ -230,7 +230,7 @@ export default function BusinessDetailsPage() {
  "overview" | "orders" | "reservations" | "settings" | "procurement"
  >(initialTab);
  const [settingsSubTab, setSettingsSubTab] = useState<
- "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing"
+ "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing" | "teslimat"
  >(initialSubTab);
  const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
  const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat">("bilgiler");
@@ -4523,6 +4523,11 @@ export default function BusinessDetailsPage() {
  </div>
  )}
 
+ </>
+ )}
+
+
+							<div className="flex-1 bg-card rounded-xl border border-border p-6 shadow-sm min-h-[600px]">
  {/* ═══════ Tab 6: Teslimat Ayarları ═══════ */}
  {isletmeInternalTab === "teslimat" && (
  <LockedModuleOverlay featureKey="delivery">
@@ -4584,9 +4589,7 @@ export default function BusinessDetailsPage() {
  </div>
  </LockedModuleOverlay>
  )}
- </>
- )}
-
+							</div>
  {/* Sub-Tab: Menü & Ürünler */}
  {
  settingsSubTab === "menu" && (
