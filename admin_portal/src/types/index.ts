@@ -843,6 +843,8 @@ export interface AdminAssignment {
  entityId: string; // businessId or kermesId
  entityType: 'business' | 'kermes';
  entityName: string; // For display purposes (e.g. 'A&P Pizzeria')
+ city?: string; // Location city
+ postalCode?: string; // Location postal code
  role: AdminType; // e.g. 'isletme_staff', 'kermes_admin', 'teslimat'
  assignedAt?: string | Date;
 }

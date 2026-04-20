@@ -631,6 +631,7 @@ String _getLocalizedCountry(String rawCountry) {
             contactName: data['contactName']?.toString() ?? e.contactName,
             contactPhone: data['contactPhone']?.toString() ?? e.contactPhone,
             headerImage: data['headerImage']?.toString() ?? e.headerImage,
+            logoUrl: data['logoUrl']?.toString(),
             generalParkingNote:
                 data['generalParkingNote']?.toString() ?? e.generalParkingNote,
             activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>?)
@@ -1121,13 +1122,28 @@ String _getLocalizedCountry(String rawCountry) {
 
   Widget _buildOffScreenShareCard() {
     final lang = context.locale.languageCode;
+    // We wrap everything in a slightly tinted outer container with extra padding,
+    // so WhatsApp thumbnail generator limits its crop to this outer container,
+    // leaving the actual white card with rounded boundaries completely intact.
     return Container(
-      width: 440,
-      padding: const EdgeInsets.all(20),
-      color: Colors.white,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      width: 480,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      color: const Color(0xFFF5F0E8), // Subtle Lokma Brand Background
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Image curved like a modern card, giving it a polaroid/flyer vibe
           ClipRRect(
@@ -1227,6 +1243,7 @@ String _getLocalizedCountry(String rawCountry) {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -2376,6 +2393,37 @@ String _getLocalizedCountry(String rawCountry) {
               ),
             ),
           ),
+
+          // Kermes Custom Logo (Always visible if exists)
+          if (_currentEvent.logoUrl != null && _currentEvent.logoUrl!.isNotEmpty)
+            Positioned(
+              bottom: 130, // Align with title/hero text vertically on the right
+              right: 24,
+              child: Container(
+                height: 41,
+                constraints: const BoxConstraints(minWidth: 41, maxWidth: 90),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: LokmaNetworkImage(
+                    imageUrl: _currentEvent.logoUrl!,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
 
           // Top Action Buttons
           if (!isForShare)

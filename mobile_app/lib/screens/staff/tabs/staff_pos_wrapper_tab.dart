@@ -201,6 +201,8 @@ class StaffPosWrapperTab extends ConsumerWidget {
       weatherForecast: const [],
       openingTime: data['openingTime'] ?? '10:00',
       closingTime: data['closingTime'] ?? '22:00',
+      logoUrl: data['logoUrl']?.toString(),
+      logoUrlId: data['logoUrlId']?.toString(),
       features: features,
       hasPfandSystem: data['hasPfandSystem'] ?? false,
       pfandAmount: (data['pfandAmount'] as num?)?.toDouble() ?? 0.25,

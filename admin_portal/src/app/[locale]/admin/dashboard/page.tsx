@@ -54,6 +54,7 @@ export default function StatisticsPage() {
  const [perfLoading, setPerfLoading] = useState(false);
  const [perfDateRange, setPerfDateRange] = useState<'7d' | '30d' | '90d'>('30d');
  const [periodTab, setPeriodTab] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
+ const [isPauseLogsExpanded, setIsPauseLogsExpanded] = useState(false);
 
  // Load businesses for mapping
  useEffect(() => {
@@ -815,7 +816,7 @@ export default function StatisticsPage() {
  {/* Tables Row */}
  <div className="grid md:grid-cols-2 gap-6">
  {/* Top Products */}
- <div className="bg-card rounded-xl p-6">
+ <div className={`bg-card rounded-xl p-6 ${admin?.adminType !== 'super' ? 'md:col-span-2' : ''}`}>
  <h3 className="text-foreground font-bold mb-4">{t('en_cok_satan_urunler')}</h3>
  {analytics.topProducts.length === 0 ? (
  <p className="text-muted-foreground/80 text-center py-8">{t('urun_verisi_bulunamadi')}</p>
@@ -938,17 +939,28 @@ export default function StatisticsPage() {
  {pauseLogs.length === 0 ? (
  <tr><td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">{t('henuz_kurye_acma_kapama_kaydi_yok')}</td></tr>
  ) : (
- pauseLogs.slice(0, 20).map(log => (
+ <>
+ {pauseLogs.slice(0, isPauseLogsExpanded ? pauseLogs.length : 3).map(log => (
  <tr key={log.id} className={log.action === 'paused' ? 'bg-amber-900/20' : 'bg-green-900/20'}>
  <td className="px-4 py-3 text-sm text-foreground">{formatPerfDate(log.timestamp)}</td>
  <td className="px-4 py-3">
  {log.action === 'paused'
- ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-600 text-white text-xs font-medium">⏸️ Durduruldu</span>
- : <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-xs font-medium">▶️ Devam Etti</span>}
+ ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-600 text-white text-[10px] font-medium leading-none">⏸️ Durduruldu</span>
+ : <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-[10px] font-medium leading-none">▶️ Devam Etti</span>}
  </td>
- <td className="px-4 py-3 text-sm text-foreground">{log.adminName || log.adminEmail}</td>
+ <td className="px-4 py-3 text-xs text-foreground truncate max-w-[100px]">{log.adminName || log.adminEmail}</td>
  </tr>
- ))
+ ))}
+ {pauseLogs.length > 3 && (
+ <tr>
+ <td colSpan={3} className="px-2 py-2 text-center bg-card">
+ <button onClick={() => setIsPauseLogsExpanded(!isPauseLogsExpanded)} className="text-xs font-semibold text-blue-500 hover:text-blue-400 py-1 transition-colors">
+ {isPauseLogsExpanded ? 'Daralt' : `+ Tümünü Göster (${pauseLogs.length})`}
+ </button>
+ </td>
+ </tr>
+ )}
+ </>
  )}
  </tbody>
  </table>

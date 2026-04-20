@@ -621,6 +621,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               contactName: contactName,
               contactPhone: data['contactPhone']?.toString() ?? phoneNumber,
               headerImage: data['headerImage']?.toString(),
+              logoUrl: data['logoUrl']?.toString(),
               openingTime: openingTime,
               closingTime: closingTime,
               sponsor: sponsor,

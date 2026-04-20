@@ -244,6 +244,8 @@ interface KermesEvent {
  // Başlık görseli (Stok veya özel)
  headerImage?: string;
  headerImageId?: string; // Stok görsel ID'si (kullanım sayacı için)
+ logoUrl?: string;
+ logoUrlId?: string;
  // Badges / Sertifikalar
  activeBadgeIds?: string[];
  // Yuvarlama ile Destek
@@ -387,6 +389,8 @@ export default function KermesDetailPage() {
  // Başlık görseli
  headerImage: '',
  headerImageId: '',
+ logoUrl: '',
+ logoUrlId: '',
  sponsor: 'none' as 'tuna' | 'akdeniz_toros' | 'none',
  activeBadgeIds: [] as string[],
  // Bagis
@@ -568,6 +572,7 @@ export default function KermesDetailPage() {
  const [editingCustomRole, setEditingCustomRole] = useState<{ id: string; name: string; icon: string; color: string; } | null>(null);
  const [isUploadingRoleIcon, setIsUploadingRoleIcon] = useState(false);
  const [isUploadingHeader, setIsUploadingHeader] = useState(false);
+ const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
  const [editBeforeAdd, setEditBeforeAdd] = useState<{
  item: KermesMenuItemData | MasterProduct | null;
@@ -702,6 +707,8 @@ export default function KermesDetailPage() {
  // Başlık görseli
  headerImage: data.headerImage || '',
  headerImageId: data.headerImageId || '',
+ logoUrl: data.logoUrl || '',
+ logoUrlId: data.logoUrlId || '',
  sponsor: data.sponsor || 'none',
  activeBadgeIds: data.activeBadgeIds || [],
  acceptsDonations: data.acceptsDonations || false,
@@ -1303,6 +1310,8 @@ export default function KermesDetailPage() {
  // Başlık görseli
  headerImage: editForm.headerImage || null,
  headerImageId: editForm.headerImageId || null,
+ logoUrl: editForm.logoUrl || null,
+ logoUrlId: editForm.logoUrlId || null,
  sponsor: editForm.sponsor !== 'none' ? editForm.sponsor : null,
  activeBadgeIds: Array.isArray(editForm.activeBadgeIds) ? editForm.activeBadgeIds : [],
  acceptsDonations: editForm.acceptsDonations || false,
@@ -2266,7 +2275,7 @@ export default function KermesDetailPage() {
     foodTaxRate: (kermes as any)?.foodTaxRate ?? 7,
     nonFoodTaxRate: (kermes as any)?.nonFoodTaxRate ?? 19,
     pricesIncludeKdv: kermes?.pricesIncludeKdv !== false,
-    headerImage: kermes?.headerImage || '', headerImageId: kermes?.headerImageId || '',
+    headerImage: kermes?.headerImage || '', headerImageId: kermes?.headerImageId || '', logoUrl: kermes?.logoUrl || '', logoUrlId: kermes?.logoUrlId || '',
     sponsor: kermes?.sponsor || 'none', activeBadgeIds: kermes?.activeBadgeIds || [],
     acceptsDonations: kermes?.acceptsDonations || false,
     selectedDonationFundId: kermes?.selectedDonationFundId || '',
@@ -2920,6 +2929,57 @@ export default function KermesDetailPage() {
  </div>
  </div>
 
+ {/* Custom Logo */}
+ <div className="mt-6">
+ <label className="text-muted-foreground text-xs block mb-2">{t('ozel_kermes_logosu') || 'Özel Kermes Logosu'}</label>
+ <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-lg p-4">
+ {editForm.logoUrl ? (
+ <div className="relative inline-block">
+ <img src={editForm.logoUrl} alt="Logo" className="w-24 h-24 object-cover rounded-full border-4 border-white shadow-md" />
+ <button type="button" onClick={() => setEditForm({ ...editForm, logoUrl: '', logoUrlId: '' })}
+ className="absolute top-0 right-0 px-2 py-1 bg-red-600 text-white rounded-full text-xs shadow-sm" title={t('kaldir')}>&times;</button>
+ </div>
+ ) : (
+  <div className="grid grid-cols-1 gap-4">
+    <label className={`w-full max-w-[200px] h-24 border-2 border-dashed border-gray-500 rounded-lg hover:border-pink-500 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-pink-600 dark:text-pink-400 cursor-pointer ${isUploadingLogo ? 'opacity-50 pointer-events-none' : ''}`}>
+    <input 
+    type="file" 
+    className="hidden" 
+    accept="image/*"
+    disabled={isUploadingLogo}
+    onChange={async (e) => {
+      if (!e.target.files || !e.target.files[0]) return;
+      try {
+        setIsUploadingLogo(true);
+        const file = e.target.files[0];
+        
+        const compressedFile = await compressLokmaImage(file, false);
+        const fileExt = file.name.split('.').pop() || 'jpg';
+        const fileName = `logo_${Date.now()}.${fileExt}`;
+        const storageRef = ref(storage, `kermes/${kermesId || 'new'}/logo/${fileName}`);
+        
+        await uploadBytes(storageRef, compressedFile);
+        const url = await getDownloadURL(storageRef);
+        
+        setEditForm({ ...editForm, logoUrl: url, logoUrlId: fileName });
+        showToast('Logo başarıyla yüklendi', 'success');
+      } catch (error) {
+        console.error('Upload Error:', error);
+        showToast('Görsel yüklenirken bir hata oluştu', 'error');
+      } finally {
+        setIsUploadingLogo(false);
+      }
+    }}
+    />
+    <span className="text-2xl">&#x1f4e4;</span>
+    <span className="text-xs font-medium text-center px-2">{isUploadingLogo ? 'Yükleniyor...' : 'Logo Yükle'}</span>
+    </label>
+  </div>
+ )}
+ <p className="text-muted-foreground/80 text-xs mt-3">{t('onerilen_kare_veya_yuvarlak') || 'Önerilen: 500x500. Kare veya yuvarlak formatında, transparan bir PNG veya temiz arka plan.'}</p>
+ </div>
+ </div>
+
  {/* Marka & Sertifika Rozetleri */}
  <div>
  <h4 className="text-foreground font-medium mb-3">Marka & Sertifika Rozetleri</h4>
@@ -2964,7 +3024,13 @@ export default function KermesDetailPage() {
  </div>
  </div>
  )}
- {(!kermes?.headerImage && (!kermes?.activeBadgeIds || kermes.activeBadgeIds.length === 0)) && (
+  {kermes?.logoUrl && (
+  <div>
+  <span className="text-muted-foreground/80 text-sm block mb-2">{t('ozel_kermes_logosu') || 'Özel Kermes Logosu'}</span>
+  <img src={kermes.logoUrl} alt="Logo" className="w-16 h-16 object-cover rounded-full border-2 border-white shadow-sm" />
+  </div>
+  )}
+ {(!kermes?.headerImage && !kermes?.logoUrl && (!kermes?.activeBadgeIds || kermes.activeBadgeIds.length === 0)) && (
  <p className="text-muted-foreground text-sm">Henuz marka veya sertifika bilgisi eklenmedi.</p>
  )}
  </div>

@@ -3539,6 +3539,10 @@
     "aciklamaNot": "Açıklama / Not",
     "aciklamaTurkce": "Açıklama (Türkçe)",
     "acilisSaati": "Açılış Saati",
+    "birinci_sayfa": "1. Sayfa",
+    "sonuncu_sayfa": "Son Sayfa",
+    "onceki_sayfa": "Önceki",
+    "sonraki_sayfa": "Sonraki",
     "adresGirilinceOtomatikAlgilanir": "Adres girilince otomatik algılanır...",
     "adresSectiginizdeUlkeOtomatikAlgilanir": "Adres seçtiğinizde ülke otomatik algılanır",
     "aileBolumu": "Aile Bölümü",
@@ -3919,6 +3923,8 @@
     "clear_selection_title": "Clear selection title"
   },
   "AdminKermesDetail": {
+    "ozel_kermes_logosu": "Kermes Logosu",
+    "ozel_kermes_logosu_desc": "Kermese özel logo yükleyebilirsiniz.",
     "cinsiyet_seciniz": "Cinsiyet Seçiniz",
     "erkek": "Erkek",
     "kadin": "Kadın",
@@ -4658,7 +4664,15 @@
     "giris_yapilan_hesap": "Giris yapilan hesap",
     "is_ortagi_basvurusu_yap": "Is ortagi basvurusu yap",
     "farkli_hesapla_giris_yap": "Farkli hesapla giris yap",
-    "ana_sayfaya_don": "Ana sayfaya don"
+    "ana_sayfaya_don": "Ana sayfaya don",
+    "select_workspace_title": "Çalışma Alanı Seçin",
+    "select_workspace_desc": "Devam etmek için işlem yapmak istediğiniz çalışma alanını seçin.",
+    "unnamed_area": "İsimsiz Alan",
+    "cancel_and_logout": "İptal et ve Çıkış yap",
+    "role_driver": "SÜRÜCÜ",
+    "role_staff": "PERSONEL",
+    "role_admin": "YÖNETİCİ",
+    "role_waiter": "GARSON"
   },
   "AdminNav": {
     "accounting": "Muhasebe",
@@ -8520,6 +8534,9 @@
     "kids_area": "Çocuk Alanı",
     "card_payment": "Kart ile Ödeme",
     "vegetarian": "Vejetaryen",
+    "free_entry": "Ücretsiz Giriş",
+    "argaleto_ice_cream": "Argaleto Dondurma",
+    "sleeping_accommodation": "Konaklama İmkanı",
     "accessible": "Engelli Erişimi",
     "halal": "Helal Gıda",
     "wifi": "WiFi",

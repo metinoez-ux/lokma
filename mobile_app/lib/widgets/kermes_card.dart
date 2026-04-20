@@ -493,10 +493,42 @@ class _KermesCardState extends State<KermesCard> {
                             : _buildFallbackGradient(),
                       ),
 
-                      // Top Right: Favorite Button
+                      // Bottom Left: Kermes Custom Logo (Aligned with Tuna logo horizontally)
+                      if (event.logoUrl != null && event.logoUrl!.isNotEmpty)
+                        Positioned(
+                          bottom: 12,
+                          left: 12,
+                          child: Container(
+                            height: 41,
+                            constraints: const BoxConstraints(minWidth: 41, maxWidth: 90),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(50),
+                              border: Border.all(color: Colors.white, width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(50),
+                              child: LokmaNetworkImage(
+                                imageUrl: event.logoUrl!,
+                                fit: BoxFit.contain,
+                                fadeInDuration: const Duration(milliseconds: 200),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Favorite Button (Adjusted position if logo exists)
                       Positioned(
                         top: 12,
-                        right: 12,
+                        right: (event.logoUrl != null && event.logoUrl!.isNotEmpty) ? 56 : 12,
                         child: GestureDetector(
                           onTap: _toggleFavorite,
                           child: ClipRRect(
@@ -512,7 +544,7 @@ class _KermesCardState extends State<KermesCard> {
                                       : Icons.favorite_outline,
                                   color:
                                       _isFavorite ? primaryRose : Colors.white,
-                                  size: 24,
+                                  size: 20, // slightly smaller to compensate
                                 ),
                               ),
                             ),

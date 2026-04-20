@@ -165,6 +165,8 @@ class KermesEvent {
   final String? contactName; // Admin Portal'dan gelen yetkili adi
   final String? contactPhone; // Admin Portal'dan gelen yetkili telefonu
   final String? headerImage; // Admin Portal'dan seçilen baslik gorseli
+  final String? logoUrl; // Admin Portal'dan seçilen ozel kermes logosu
+  final String? logoUrlId; // Ozel logonun storage ID'si
   
   // Sponsorlu Urun Reklam Altyapisi
   final List<int> sponsoredMenuItems; // Menudan one cikarilacak urun indeksleri
@@ -255,9 +257,10 @@ class KermesEvent {
     this.isMenuOnly = false,
     this.hasTakeaway = true, // Eski kermesler için varsayılan Gel-Al açıktır
     this.hasDineIn = false,
-    this.contactName,
     this.contactPhone,
     this.headerImage,
+    this.logoUrl,
+    this.logoUrlId,
     this.generalParkingNote,
     // Sponsorlu urunler
     this.sponsoredMenuItems = const [],

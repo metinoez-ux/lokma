@@ -181,30 +181,6 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  </nav>
 
  <div className="flex items-center gap-3">
- {/* Date / Time Stamp (like Admin Panel) */}
- {currentTime && (
-   <div className="hidden lg:flex items-center gap-2 mr-2">
-   <span className="text-sm font-light tabular-nums tracking-wider text-foreground">
-     {currentTime.toLocaleTimeString(localeToBcp47[currentLang] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
-   </span>
-   <span className="text-muted-foreground/60 text-xs">|</span>
-   <span className="text-xs text-muted-foreground font-medium">
-     {currentTime.toLocaleDateString(localeToBcp47[currentLang] || 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-   </span>
-   <span className="text-muted-foreground/60 text-xs">|</span>
-   <span className="text-xs text-muted-foreground font-medium">
-     {currentTime.toLocaleDateString(localeToBcp47[currentLang] || 'de-DE', { weekday: 'short' })}
-   </span>
-   {process.env.NEXT_PUBLIC_BUILD_TIME && (
-     <>
-     <span className="text-muted-foreground/60 text-xs">|</span>
-     <span className="text-[11px] font-semibold text-rose-500/80">
-       v.{process.env.NEXT_PUBLIC_BUILD_TIME}
-     </span>
-     </>
-   )}
-   </div>
- )}
 
  {/* Unified Region & Language Selector */}
  <div className="relative" ref={countryRef}>

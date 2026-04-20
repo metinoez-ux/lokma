@@ -114,6 +114,10 @@ export default function AdminHeader() {
  const [tabletProfileOpen, setTabletProfileOpen] = useState(false);
  const tabletProfileRef = useRef<HTMLDivElement>(null);
  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+ const [kermesMenuOpen, setKermesMenuOpen] = useState(false);
+ const [serviceMenuOpen, setServiceMenuOpen] = useState(false);
+ const [accountingMenuOpen, setAccountingMenuOpen] = useState(false);
+ const [sonstigeEinstellungenOpen, setSonstigeEinstellungenOpen] = useState(false);
  const [pendingOrderCount, setPendingOrderCount] = useState(0);
  const [oldestPendingTime, setOldestPendingTime] = useState<Date | null>(null);
 
@@ -612,32 +616,7 @@ export default function AdminHeader() {
  </div>
  </div>
 
- {/* 5. Buchhaltung */}
- <div className="relative group">
- <Link
- href="/admin/invoices"
- className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')
- ? 'bg-background/10 border border-[var(--header-border)] text-white shadow-inner'
- : 'text-slate-300 hover:text-white hover:bg-background/10'
- }`}
- >
- {t('accounting')}
- <span className="text-[10px]">&#9660;</span>
- </Link>
- <div className="absolute left-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[180px] overflow-hidden">
- <div className="py-1">
- <Link href="/admin/invoices" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
- {t('invoices')}
- </Link>
- <Link href="/admin/commissions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
- {t('commissions')}
- </Link>
- <Link href="/admin/plans" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
- {t('plans')}
- </Link>
- </div>
- </div>
- </div>
+
 
  {/* 6. Kampagnen */}
  <div className="relative group">
@@ -672,34 +651,7 @@ export default function AdminHeader() {
 
 
 
- {/* 8. Service */}
- <div className="relative group">
- <Link
- href="/admin/activity-logs"
- className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/activity-logs') || isActiveNav('/admin/reports')
- ? 'bg-background/10 border border-[var(--header-border)] text-white shadow-inner'
- : 'text-slate-300 hover:text-white hover:bg-background/10'
- }`}
- >
- {t('service')}
- <span className="text-[10px]">&#9660;</span>
- </Link>
- <div className="absolute left-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
- <div className="py-1">
- <Link href="/admin/activity-logs" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
- {t('activityLogs')}
- </Link>
- <Link href="/admin/reports" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
- {t('reports')}
- </Link>
- </div>
- </div>
- </div>
- </div>
 
- {/* CENTER: Clock integrated gracefully into flow so it won't overlap */}
- <div className="hidden min-[1500px]:flex items-center justify-center opacity-60 gap-1.5 shrink-0 pointer-events-none min-w-[200px]">
-   <HeaderClock currentLocale={currentLocale} />
  </div>
 
  {/* RIGHT: Settings, Profile */}
@@ -708,7 +660,7 @@ export default function AdminHeader() {
  {/* Einstellungen Nav — en sag taraf */}
  <div className="relative group">
  <button
- className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
+ className={`flex flex-col items-center justify-center px-2 py-0.5 rounded-md transition-all ${
  isActiveNav('/admin/settings') ||
  isActiveNav('/admin/ui-translations') || isActiveNav('/admin/image-generator') ||
  isActiveNav('/admin/ameise')
@@ -716,38 +668,79 @@ export default function AdminHeader() {
  : 'text-slate-300 hover:text-white hover:bg-background/10'
  }`}
  >
- {t('settings')}
- <span className="text-[10px]">&#9660;</span>
+ <div className="flex items-center gap-1 opacity-70 pointer-events-none scale-[0.65] origin-bottom -mb-0.5">
+   <HeaderClock currentLocale={currentLocale} />
+ </div>
+ <div className="flex items-center gap-1 text-xs font-medium leading-none">
+   {t('settings')}
+   <span className="text-[10px]">&#9660;</span>
+ </div>
  </button>
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[240px] overflow-hidden">
  <div className="py-1">
- <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">Kermes Yönetimi</p>
- <Link href="/admin/settings/kermes-categories" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Kategoriler</Link>
- <Link href="/admin/settings/kermes-menus" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Menüler</Link>
- <Link href="/admin/settings/kermes-features" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özellikler (Features)</Link>
- <Link href="/admin/settings/kermes-gender-types" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özel Ziyaret Alanları</Link>
- <Link href="/admin/settings/kermes-stock-images" className="px-4 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Stock Görseller</Link>
- <Link href="/admin/settings/donation-funds" className="px-4 py-2 text-xs transition-colors text-pink-600 dark:text-pink-400 hover:bg-muted font-bold block">Yardım Vakıfları</Link>
+ <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setKermesMenuOpen(!kermesMenuOpen); }} className="w-full text-left px-4 py-1.5 flex justify-between items-center group/kermes hover:bg-muted/30 transition-colors">
+   <span className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">Kermes Yönetimi</span>
+   <span className={`text-[10px] text-muted-foreground transition-transform ${kermesMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+ </button>
+ {kermesMenuOpen && (
+   <div className="bg-muted/10 py-1">
+     <Link href="/admin/settings/kermes-categories" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Kategoriler</Link>
+     <Link href="/admin/settings/kermes-menus" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Menüler</Link>
+     <Link href="/admin/settings/kermes-features" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özellikler (Features)</Link>
+     <Link href="/admin/settings/kermes-gender-types" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özel Ziyaret Alanları</Link>
+     <Link href="/admin/settings/kermes-stock-images" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Stock Görseller</Link>
+     <Link href="/admin/settings/donation-funds" className="px-6 py-2 text-xs transition-colors text-pink-600 dark:text-pink-400 hover:bg-muted font-bold block">Yardım Vakıfları</Link>
+   </div>
+ )}
  <div className="h-px bg-border my-1"></div>
- <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">{t('settings')}</p>
- <Link href="/admin/settings" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
- {t('iotSettings')}
- </Link>
- <Link href="/admin/settings/company" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
- {t('companySettings')}
- </Link>
- <Link href="/admin/ui-translations" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
- {t('uiTranslations')}
- </Link>
- <Link href="/admin/image-generator" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
- {t('imageGen')}
- </Link>
- <Link href="/admin/ameise" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
- {t('ameise')}
- </Link>
- <Link href="/admin/settings/platform-brands" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-bold text-amber-500">
- Markalar & Rozetler
- </Link>
+ <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setServiceMenuOpen(!serviceMenuOpen); }} className="w-full text-left px-4 py-1.5 flex justify-between items-center group/service hover:bg-muted/30 transition-colors">
+   <span className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">{t('service')}</span>
+   <span className={`text-[10px] text-muted-foreground transition-transform ${serviceMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+ </button>
+ {serviceMenuOpen && (
+   <div className="bg-muted/10 py-1">
+     <Link href="/admin/activity-logs" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">{t('activityLogs')}</Link>
+     <Link href="/admin/reports" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">{t('reports')}</Link>
+   </div>
+ )}
+ <div className="h-px bg-border my-1"></div>
+ <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAccountingMenuOpen(!accountingMenuOpen); }} className="w-full text-left px-4 py-1.5 flex justify-between items-center group/accounting hover:bg-muted/30 transition-colors">
+   <span className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">{t('accounting')}</span>
+   <span className={`text-[10px] text-muted-foreground transition-transform ${accountingMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+ </button>
+ {accountingMenuOpen && (
+   <div className="bg-muted/10 py-1">
+     <Link href="/admin/invoices" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">{t('invoices')}</Link>
+     <Link href="/admin/commissions" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">{t('commissions')}</Link>
+     <Link href="/admin/plans" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">{t('plans')}</Link>
+   </div>
+ )}
+ <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSonstigeEinstellungenOpen(!sonstigeEinstellungenOpen); }} className="w-full text-left px-4 py-1.5 flex justify-between items-center group/sonstige hover:bg-muted/30 transition-colors">
+   <span className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">Sonstige Einstellungen</span>
+   <span className={`text-[10px] text-muted-foreground transition-transform ${sonstigeEinstellungenOpen ? 'rotate-180' : ''}`}>▼</span>
+ </button>
+ {sonstigeEinstellungenOpen && (
+   <div className="bg-muted/10 py-1">
+     <Link href="/admin/settings" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">
+     {t('iotSettings')}
+     </Link>
+     <Link href="/admin/settings/company" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">
+     {t('companySettings')}
+     </Link>
+     <Link href="/admin/ui-translations" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">
+     {t('uiTranslations')}
+     </Link>
+     <Link href="/admin/image-generator" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">
+     {t('imageGen')}
+     </Link>
+     <Link href="/admin/ameise" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">
+     {t('ameise')}
+     </Link>
+     <Link href="/admin/settings/platform-brands" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-bold text-amber-500">
+     Markalar & Rozetler
+     </Link>
+   </div>
+ )}
  </div>
  </div>
  </div>
@@ -1048,15 +1041,13 @@ export default function AdminHeader() {
  {/* Navigation Chips - hidden on tablet, visible on desktop */}
  <div className="hidden min-[1921px]:flex flex-wrap items-center gap-1.5 flex-1">
  {[
- { href: '/admin/orders', label: t('orders') },
- { href: '/admin/statistics', label: t('dashboard') },
- { href: '/admin/reservations', label: t('reservations') },
- { href: '/admin/dashboard?view=customers', label: t('customers') },
- { href: '/admin/orders/suppliers', label: t('suppliers') },
- { href: '/admin/products', label: t('productsCategories') },
- { href: '/admin/promotions', label: t('promotions') },
- { href: '/admin/reports', label: t('reports') },
- ].map(({ href, label }) => (
+  { href: '/admin/dashboard', label: t('dashboard') },
+  { href: '/admin/orders', label: t('orders') },
+  { href: '/admin/reservations', label: t('reservations') },
+  { href: '/admin/orders/suppliers', label: t('suppliers') },
+  { href: '/admin/products', label: t('productsCategories') },
+  { href: '/admin/reports', label: t('reports') },
+  ].map(({ href, label }) => (
  <Link
  key={href}
  href={href}
@@ -1069,16 +1060,34 @@ export default function AdminHeader() {
  </Link>
  ))}
 
- {/* Sponsored Ads for Regular Admin */}
- <Link
- href="/admin/sponsored-ads"
- className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/sponsored-ads')
+ {/* Werbung Dropdown for Regular Admin */}
+ <div className="relative group">
+ <button
+ className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/promotions') || isActiveNav('/admin/sponsored-ads')
  ? 'bg-accent border border-border text-foreground shadow-inner'
  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
  }`}
  >
+ Werbung
+ <span className="text-[10px]">▼</span>
+ </button>
+ <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+ <div className="py-1">
+ <Link
+ href="/admin/promotions"
+ className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/promotions') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
+ >
+ {t('promotions')}
+ </Link>
+ <Link
+ href="/admin/sponsored-ads"
+ className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/sponsored-ads') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
+ >
  {t('sponsoredAds')}
  </Link>
+ </div>
+ </div>
+ </div>
 
  {/* Personel Dropdown for Regular Admin */}
  <div className="relative group">
@@ -1302,15 +1311,26 @@ export default function AdminHeader() {
  <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-foreground text-xl">{`\u2715`}</button>
  </div>
  <nav className="py-2">
- <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('orders')}</Link>
- <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
- <Link href="/admin/statistics" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
- <Link href="/admin/dashboard?view=customers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('customers')}</Link>
- <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('suppliers')}</Link>
- <Link href="/admin/products" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('productsCategories')}</Link>
- <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('promotions')}</Link>
- <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reports')}</Link>
- <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
+  <Link href="/admin/dashboard" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
+  <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('orders')}</Link>
+  <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
+  <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('suppliers')}</Link>
+  <Link href="/admin/products" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('productsCategories')}</Link>
+  <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reports')}</Link>
+
+  {/* Werbung section */}
+  <div className="border-t border-border mt-1 pt-1">
+  <button onClick={() => toggleSection('werbung')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
+  Werbung
+  <span className={`text-xs transition-transform ${expandedSection === 'werbung' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
+  </button>
+  {expandedSection === 'werbung' && (
+  <div className="bg-muted/50 py-1">
+  <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('promotions')}</Link>
+  <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
+  </div>
+  )}
+  </div>
 
  {/* Personel section */}
  <div className="border-t border-border mt-1 pt-1">

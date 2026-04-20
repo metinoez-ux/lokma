@@ -3898,6 +3898,8 @@
     "clear_selection_title": "Clear selection title"
   },
   "AdminKermesDetail": {
+    "ozel_kermes_logosu": "Kermes Logo",
+    "ozel_kermes_logosu_desc": "Sie können ein spezielles Logo für das Kermes hochladen.",
     "cinsiyet_seciniz": "Geschlecht wählen",
     "erkek": "Mann",
     "kadin": "Frau",
@@ -4633,7 +4635,15 @@
     "giris_yapilan_hesap": "Giris yapilan hesap",
     "is_ortagi_basvurusu_yap": "Is ortagi basvurusu yap",
     "farkli_hesapla_giris_yap": "Farkli hesapla giris yap",
-    "ana_sayfaya_don": "Ana sayfaya don"
+    "ana_sayfaya_don": "Ana sayfaya don",
+    "select_workspace_title": "Arbeitsbereich Auswählen",
+    "select_workspace_desc": "Bitte wählen Sie Ihren Arbeitsbereich aus, um fortzufahren.",
+    "unnamed_area": "Unbenannter Bereich",
+    "cancel_and_logout": "Abbrechen und Abmelden",
+    "role_driver": "FAHRER",
+    "role_staff": "PERSONAL",
+    "role_admin": "MANAGER",
+    "role_waiter": "KELLNER"
   },
   "AdminNav": {
     "accounting": "Buchhaltung",
@@ -8495,6 +8505,9 @@
     "kids_area": "Kinderbereich",
     "card_payment": "Kartenzahlung",
     "vegetarian": "Vegetarisch",
+    "free_entry": "Freier Eintritt",
+    "argaleto_ice_cream": "Argaleto Eis",
+    "sleeping_accommodation": "Schlafmöglichkeit",
     "accessible": "Barrierefrei",
     "halal": "Halal",
     "wifi": "WLAN",
