@@ -3050,7 +3050,7 @@ export default function KermesDetailPage() {
   {kermes?.logoUrl && (
   <div>
   <span className="text-muted-foreground/80 text-sm block mb-2">{t('ozel_kermes_logosu') || 'Özel Kermes Logosu'}</span>
-  <img src={kermes.logoUrl} alt="Logo" className="w-20 h-20 object-contain bg-white dark:bg-gray-800 p-1.5 rounded-full border-2 border-white shadow-md" />
+  <img src={kermes.logoUrl} alt="Logo" className="h-16 object-contain drop-shadow-md" />
   </div>
   )}
  {(!kermes?.headerImage && !kermes?.logoUrl && (!kermes?.activeBadgeIds || kermes.activeBadgeIds.length === 0)) && (
