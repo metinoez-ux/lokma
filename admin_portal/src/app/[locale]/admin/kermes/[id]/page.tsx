@@ -2925,7 +2925,14 @@ export default function KermesDetailPage() {
     }}
     />
     <span className="text-3xl">&#x1f4e4;</span>
-    <span className="text-sm font-medium">{isUploadingHeader ? 'Yükleniyor...' : 'Bilgisayardan Yükle'}</span>
+    <span className="text-sm font-medium text-center leading-tight">
+      {isUploadingHeader ? 'Yükleniyor...' : (
+        <>
+          Bilgisayardan Yükle<br/>
+          <span className="text-xs text-pink-500 font-normal">Video(MP4) veya Resim</span>
+        </>
+      )}
+    </span>
     </label>
   </div>
  )}
@@ -3043,7 +3050,7 @@ export default function KermesDetailPage() {
   {kermes?.logoUrl && (
   <div>
   <span className="text-muted-foreground/80 text-sm block mb-2">{t('ozel_kermes_logosu') || 'Özel Kermes Logosu'}</span>
-  <img src={kermes.logoUrl} alt="Logo" className="w-16 h-16 object-cover rounded-full border-2 border-white shadow-sm" />
+  <img src={kermes.logoUrl} alt="Logo" className="w-20 h-20 object-contain bg-white dark:bg-gray-800 p-1.5 rounded-full border-2 border-white shadow-md" />
   </div>
   )}
  {(!kermes?.headerImage && !kermes?.logoUrl && (!kermes?.activeBadgeIds || kermes.activeBadgeIds.length === 0)) && (
