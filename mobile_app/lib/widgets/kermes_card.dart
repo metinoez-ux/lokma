@@ -15,7 +15,6 @@ import '../../utils/currency_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'brand_info_sheet.dart';
 import '../../utils/distance_utils.dart';
-import '../screens/kermes/widgets/kermes_video_header.dart';
 
 class KermesCard extends StatefulWidget {
   final KermesEvent event;
@@ -473,29 +472,24 @@ class _KermesCardState extends State<KermesCard> {
                         height: 230,
                         width: double.infinity,
                         child: imagePath != null
-                            ? ((imagePath.toLowerCase().contains('.mp4') || imagePath.toLowerCase().contains('.mov') || imagePath.toLowerCase().contains('video%2F'))
-                                ? KermesVideoHeader(
-                                    videoUrl: imagePath,
+                            ? (isNetworkImage
+                                ? LokmaNetworkImage(
+                                    imageUrl: imagePath,
                                     fit: BoxFit.cover,
+                                    fadeInDuration: Duration.zero,
+                                    fadeOutDuration: Duration.zero,
+                                    useOldImageOnUrlChange: true,
+                                    placeholder: (context, url) =>
+                                        Container(color: Colors.grey[200]),
+                                    errorWidget: (context, url, error) =>
+                                        Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                          child: Icon(Icons.image_not_supported,
+                                              color: Colors.grey)),
+                                    ),
                                   )
-                                : (isNetworkImage
-                                    ? LokmaNetworkImage(
-                                        imageUrl: imagePath,
-                                        fit: BoxFit.cover,
-                                        fadeInDuration: Duration.zero,
-                                        fadeOutDuration: Duration.zero,
-                                        useOldImageOnUrlChange: true,
-                                        placeholder: (context, url) =>
-                                            Container(color: Colors.grey[200]),
-                                        errorWidget: (context, url, error) =>
-                                            Container(
-                                          color: Colors.grey[200],
-                                          child: const Center(
-                                              child: Icon(Icons.image_not_supported,
-                                                  color: Colors.grey)),
-                                        ),
-                                      )
-                                    : Image.asset(imagePath, fit: BoxFit.cover)))
+                                : Image.asset(imagePath, fit: BoxFit.cover))
                             : _buildFallbackGradient(),
                       ),
 

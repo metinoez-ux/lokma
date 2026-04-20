@@ -23,6 +23,7 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
   bool _hasError = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -33,9 +34,22 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
   Future<void> _initializeVideo() async {
     try {
       _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+      
+      _controller.addListener(() {
+        if (_controller.value.hasError && mounted) {
+          if (!_hasError) {
+            setState(() {
+              _hasError = true;
+              _errorMessage = _controller.value.errorDescription ?? 'Bilinmeyen Hata';
+            });
+          }
+        }
+      });
+
       await _controller.initialize();
       await _controller.setVolume(0.0); // Mute for looping background
-      await _controller.setLooping(true); // Loop forever
+      await _controller.setLooping(false); // Sadece bir kere oynasin ve dursun
+      
       if (mounted) {
         setState(() {
           _isInitialized = true;
@@ -45,7 +59,10 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     } catch (e) {
       debugPrint('Error initializing video header: $e');
       if (mounted) {
-        setState(() => _hasError = true);
+        setState(() {
+          _hasError = true;
+          _errorMessage = e.toString();
+        });
       }
     }
   }
@@ -56,16 +73,40 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     super.dispose();
   }
 
+  void _replayVideo() {
+    if (_isInitialized && !_hasError) {
+      _controller.seekTo(Duration.zero);
+      _controller.play();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
-      // Fallback if video fails to load
+      // Fallback if video fails to load: Give it a red tint so the user knows it's a CODEC/Error issue, not just "black"
       return Container(
         width: widget.width,
         height: widget.height,
-        color: Colors.grey.shade900,
-        child: const Center(
-          child: Icon(Icons.error_outline, color: Colors.white54, size: 40),
+        color: Colors.red.shade900.withOpacity(0.8),
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 40),
+              const SizedBox(height: 8),
+              const Text(
+                'Video Açılamadı',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _errorMessage ?? 'Desteklenmeyen AI formatı veya bağlantı koptu.',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -74,7 +115,7 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
       return Container(
         width: widget.width,
         height: widget.height,
-        color: Colors.grey.shade900,
+        color: const Color(0xFF1E1E1E), // Dark grey loading
         child: const Center(
           child: CircularProgressIndicator(color: Colors.white54, strokeWidth: 2),
         ),
@@ -82,15 +123,21 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     }
 
     // Video is ready
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: FittedBox(
-        fit: widget.fit,
-        child: SizedBox(
-          width: _controller.value.size.width,
-          height: _controller.value.size.height,
-          child: VideoPlayer(_controller),
+    final vWidth = _controller.value.size.width;
+    final vHeight = _controller.value.size.height;
+    
+    return GestureDetector(
+      onTap: _replayVideo,
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: FittedBox(
+          fit: widget.fit,
+          child: SizedBox(
+            width: vWidth > 0 ? vWidth : 1600,
+            height: vHeight > 0 ? vHeight : 900,
+            child: VideoPlayer(_controller),
+          ),
         ),
       ),
     );
