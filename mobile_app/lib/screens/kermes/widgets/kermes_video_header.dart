@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../../../services/video_preload_service.dart';
 
 class KermesVideoHeader extends StatefulWidget {
   final String videoUrl;
@@ -31,22 +32,28 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     _initializeVideo();
   }
 
+  void _videoListener() {
+    if (_controller.value.hasError && mounted) {
+      if (!_hasError) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = _controller.value.errorDescription ?? 'Bilinmeyen Hata';
+        });
+      }
+    }
+  }
+
   Future<void> _initializeVideo() async {
     try {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+      // Servis üzerinden controller al. Önceden başlatılmış olabilir!
+      _controller = VideoPreloadService.getController(widget.videoUrl);
       
-      _controller.addListener(() {
-        if (_controller.value.hasError && mounted) {
-          if (!_hasError) {
-            setState(() {
-              _hasError = true;
-              _errorMessage = _controller.value.errorDescription ?? 'Bilinmeyen Hata';
-            });
-          }
-        }
-      });
+      _controller.addListener(_videoListener);
 
-      await _controller.initialize();
+      if (!_controller.value.isInitialized) {
+        await _controller.initialize();
+      }
+      
       await _controller.setVolume(0.0); // Mute for looping background
       await _controller.setLooping(false); // Sadece bir kere oynasin ve dursun
       
@@ -69,7 +76,9 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller.removeListener(_videoListener);
+    // NOT: _controller.dispose() ISLEMINI BURADA YAPMIYORUZ! 
+    // VideoPreloadService on bellegi yonettigi icin, temizligi o yapacak.
     super.dispose();
   }
 
