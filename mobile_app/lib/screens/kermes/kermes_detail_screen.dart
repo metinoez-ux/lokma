@@ -2808,8 +2808,8 @@ String _getLocalizedCountry(String rawCountry) {
                   if (f.iconUrl != null && f.iconUrl!.isNotEmpty) ...[
                     LokmaNetworkImage(
                       imageUrl: f.iconUrl!,
-                      width: 22,
-                      height: 22,
+                      width: 26,
+                      height: 26,
                     ),
                     const SizedBox(width: 8),
                   ] else if (f.icon.isNotEmpty) ...[
