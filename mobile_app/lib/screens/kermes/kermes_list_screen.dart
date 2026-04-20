@@ -14,6 +14,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/widgets/kermes_card.dart';
+import 'package:lokma_app/screens/kermes/kermes_detail_screen.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:lokma_app/services/kermes_badge_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1599,6 +1600,20 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Widget build(BuildContext context) {
     // Watch location from cached provider
     final locationAsync = ref.watch(userLocationProvider);
+    if (locationAsync.value != null && locationAsync.value!.latitude != 0.0) {
+      _currentPosition = Position(
+        latitude: locationAsync.value!.latitude,
+        longitude: locationAsync.value!.longitude,
+        timestamp: DateTime.now(),
+        accuracy: 0.0,
+        altitude: 0.0,
+        heading: 0.0,
+        speed: 0.0,
+        speedAccuracy: 0.0,
+        altitudeAccuracy: 0.0,
+        headingAccuracy: 0.0,
+      );
+    }
     locationAsync.whenData((location) {
       _updateLocationFromProvider(location);
     });
@@ -3189,10 +3204,11 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                               Text(
                                 'kermes.map_showing_count'.tr(args: [_filteredMapEvents.length.toString()]),
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
                                   color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
+                                      ? Colors.grey[300]
+                                      : Colors.grey[700],
                                 ),
                               ),
                             ],
@@ -3665,9 +3681,10 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                           child: Text(
                             event.city!,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
                               color:
-                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                                  isDark ? Colors.grey[300] : Colors.grey[700],
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -3715,7 +3732,31 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
               onTap: () {
                 HapticFeedback.mediumImpact();
                 Navigator.pop(context);
-                // Navigasyonu context kullanarak yap
+                
+                Position? pos;
+                if (widget.userLat != null && widget.userLng != null) {
+                  pos = Position(
+                    latitude: widget.userLat!,
+                    longitude: widget.userLng!,
+                    timestamp: DateTime.now(),
+                    accuracy: 0.0,
+                    altitude: 0.0,
+                    heading: 0.0,
+                    speed: 0.0,
+                    speedAccuracy: 0.0,
+                    altitudeAccuracy: 0.0,
+                    headingAccuracy: 0.0,
+                  );
+                }
+                
+                Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(
+                    builder: (context) => KermesDetailScreen(
+                      event: event,
+                      currentPosition: pos,
+                    ),
+                  ),
+                );
               },
               child: Container(
                 padding:

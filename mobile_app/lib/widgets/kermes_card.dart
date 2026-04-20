@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../utils/currency_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'brand_info_sheet.dart';
+import '../../utils/distance_utils.dart';
 
 class KermesCard extends StatefulWidget {
   final KermesEvent event;
@@ -850,7 +851,7 @@ class _KermesCardState extends State<KermesCard> {
           widget.event.longitude,
         ) /
         1000;
-    final totalMins = (dist / 80 * 60).round(); // ortalama 80 km/h surus hizi
+    final totalMins = DistanceUtils.calculateEstimatedDrivingMinutes(dist);
     if (totalMins < 60) return '$totalMins dk';
     final days = totalMins ~/ (24 * 60);
     final hours = (totalMins % (24 * 60)) ~/ 60;

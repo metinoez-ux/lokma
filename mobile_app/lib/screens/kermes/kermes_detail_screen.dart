@@ -9,14 +9,20 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lokma_app/data/kermes_menu_templates.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'package:lokma_app/providers/kermes_category_provider.dart';
+import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
+import 'package:lokma_app/utils/distance_utils.dart';
 import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
@@ -49,6 +55,9 @@ class KermesDetailScreen extends ConsumerStatefulWidget {
 
 class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   static const Color lokmaPink = Color(0xFFEA184A);
+  final GlobalKey _shareBoundaryKey = GlobalKey();
+  bool _isSharing = false;
+
   WeatherForecast? _weatherForecast;
   CurrentWeather? _currentWeather;
   bool _isLoadingWeather = true;
@@ -234,10 +243,23 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   }
 
   double get _distanceKm {
-    if (widget.currentPosition == null || (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0)) return 0.0;
+    Position? pos = widget.currentPosition;
+    if (pos == null) {
+      final loc = ref.read(userLocationProvider).value;
+      if (loc != null && loc.latitude != 0.0) {
+        pos = Position(
+          latitude: loc.latitude, longitude: loc.longitude,
+          timestamp: DateTime.now(), accuracy: 0.0, altitude: 0.0,
+          heading: 0.0, speed: 0.0, speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0, headingAccuracy: 0.0,
+        );
+      }
+    }
+    
+    if (pos == null || (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0)) return 0.0;
     return Geolocator.distanceBetween(
-          widget.currentPosition!.latitude,
-          widget.currentPosition!.longitude,
+          pos.latitude,
+          pos.longitude,
           _currentEvent.latitude,
           _currentEvent.longitude,
         ) /
@@ -1081,12 +1103,173 @@ String _getLocalizedCountry(String rawCountry) {
     );
   }
 
-  void _shareKermes() {
+  String _getInviteText(String lang) {
+    if (lang.startsWith('de')) return 'Verfolgen Sie Kermes-Veranstaltungen mit der LOKMA-App! Bestellen Sie Lieferung, Abholung oder Dine-in für ein völlig neues Erlebnis!';
+    if (lang.startsWith('nl')) return 'Volg Kermes-evenementen met de LOKMA-app! Bestel voor bezorging, afhaal of dine-in voor een compleet nieuwe ervaring!';
+    if (lang.startsWith('fr')) return 'Suivez les événements Kermes avec l\'application LOKMA ! Commandez en livraison, à emporter ou sur place pour une toute nouvelle expérience !';
+    if (lang.startsWith('en')) return 'Follow Kermes events with the LOKMA App! Order delivery, pickup, or dine-in for a completely new experience!';
+    return 'LOKMA App ile Kermesleri takip edin! Evinize sipariş verin, Gel-Al veya Masaya Servis ile yeni bir deneyim yaşayın!';
+  }
+
+  String _getSearchText(String lang) {
+    if (lang.startsWith('de')) return 'Suchen Sie nach "LOKMA" in den App Stores';
+    if (lang.startsWith('nl')) return 'Zoek naar "LOKMA" in de App Stores';
+    if (lang.startsWith('fr')) return 'Recherchez "LOKMA" dans les magasins d\'applications';
+    if (lang.startsWith('en')) return 'Search for "LOKMA" on the App Stores';
+    return 'App Store veya Google Play\'de "LOKMA" aratın';
+  }
+
+  Widget _buildOffScreenShareCard() {
+    final lang = context.locale.languageCode;
+    return Container(
+      width: 440,
+      padding: const EdgeInsets.all(20),
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Image curved like a modern card, giving it a polaroid/flyer vibe
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: _buildHeroSection(context, isForShare: true),
+          ),
+          
+          // 2. The seamlessly integrated footer text area on the same white background
+          Padding(
+            padding: const EdgeInsets.only(top: 24, bottom: 8, left: 12, right: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/logo_lokma_red.png',
+                  height: 48,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.fastfood, color: lokmaPink, size: 48),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  _getInviteText(lang),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF151515),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Natively drawn App Store Badge
+                    Container(
+                      width: 146,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const FaIcon(FontAwesomeIcons.apple, color: Colors.white, size: 24),
+                          const SizedBox(width: 8),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text('Download on the', style: TextStyle(color: Colors.white, fontSize: 10, height: 1)),
+                              Text('App Store', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600, height: 1.1)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Natively drawn Google Play Badge
+                    Container(
+                      width: 146,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const FaIcon(FontAwesomeIcons.googlePlay, color: Colors.white, size: 20),
+                          const SizedBox(width: 8),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text('GET IT ON', style: TextStyle(color: Colors.white, fontSize: 10, height: 1)),
+                              Text('Google Play', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600, height: 1.1)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _getSearchText(lang),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _shareKermes() async {
     HapticFeedback.lightImpact();
+    // Use the localized text as the payload payload caption
     final event = _currentEvent;
-    final text =
-        '${event.title}\n${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}\n${event.address}, ${event.postalCode} ${event.city}';
-    Share.share(text, subject: event.title);
+    final lang = context.locale.languageCode;
+    final text = '${event.title}\n${event.startDate.day}.${event.startDate.month}.${event.startDate.year} - ${event.endDate.day}.${event.endDate.month}.${event.endDate.year}\n${_getCleanAddress()}, ${event.postalCode} ${event.city}\n\n${_getInviteText(lang)}';
+
+    setState(() => _isSharing = true);
+    
+    try {
+      // 1. Wait a frame to ensure the boundary has potentially painted
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      // 2. Find the RepaintBoundary correctly rendered offscreen
+      final boundary = _shareBoundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        // Fallback to old text share if boundary missing unexpectedly
+        Share.share(text, subject: event.title);
+        return;
+      }
+      
+      // 3. Convert to Image (dpr 2.5 for high quality retina output)
+      final image = await boundary.toImage(pixelRatio: 2.5);
+      final byteData = await image.toByteData(format: ImageByteFormat.png);
+      final pngBytes = byteData!.buffer.asUint8List();
+
+      // 4. Save to temporary file
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/kermes_davetiye_${event.id}.png').create();
+      await file.writeAsBytes(pngBytes);
+
+      // 5. Share
+      await Share.shareXFiles([XFile(file.path)], text: text, subject: event.title);
+    } catch (e) {
+      debugPrint('Share image capture failed: $e');
+      Share.share(text, subject: event.title); // fallback
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
   }
 
   /// Normalize Turkish/German/special characters for flexible search
@@ -1468,6 +1651,15 @@ String _getLocalizedCountry(String rawCountry) {
           isDark ? const Color(0xFF2B2929) : const Color(0xFFF9F9F9),
       body: Stack(
         children: [
+          // Hidden offstage boundary for augmented share UI
+          Transform.translate(
+            offset: const Offset(-10000, -10000),
+            child: RepaintBoundary(
+              key: _shareBoundaryKey,
+              child: _buildOffScreenShareCard(),
+            ),
+          ),
+          
           CustomScrollView(
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
@@ -2072,6 +2264,28 @@ String _getLocalizedCountry(String rawCountry) {
           : null,
     );
   }
+  String _getCleanAddress() {
+    String addr = _currentEvent.address.trim();
+    if (addr.isEmpty) return addr;
+    final pc = _currentEvent.postalCode.trim();
+    final city = _currentEvent.city.trim();
+    
+    if (pc.isNotEmpty && city.isNotEmpty) {
+      final suffixes = [
+        ', $pc $city',
+        ' $pc $city',
+        ',$pc $city',
+        ', $pc, $city',
+      ];
+      
+      for (final suffix in suffixes) {
+        if (addr.toLowerCase().endsWith(suffix.toLowerCase())) {
+          return addr.substring(0, addr.length - suffix.length).trim().replaceAll(RegExp(r',$'), '');
+        }
+      }
+    }
+    return addr;
+  }
 
   String _getCountryFlag(String country) {
     final lower = country
@@ -2127,7 +2341,7 @@ String _getLocalizedCountry(String rawCountry) {
     return ''; // Varsayilan Almanya hatasini giderdik
   }
 
-  Widget _buildHeroSection(BuildContext context) {
+  Widget _buildHeroSection(BuildContext context, {bool isForShare = false}) {
     return Container(
       height: 440,
       width: double.infinity,
@@ -2164,35 +2378,36 @@ String _getLocalizedCountry(String rawCountry) {
           ),
 
           // Top Action Buttons
-          Positioned(
-            top: 12,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildGlassButton(
-                    Icons.arrow_back, () => Navigator.pop(context)),
-                Row(
-                  children: [
-                    _buildGlassButton(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border,
-                      () {
-                        HapticFeedback.lightImpact();
-                        setState(() {
-                          _isFavorite = !_isFavorite;
-                        });
-                      },
-                      color:
-                          _isFavorite ? const Color(0xFFE50055) : Colors.white,
-                    ),
-                    const SizedBox(width: 12),
-                    _buildGlassButton(Icons.share, () => _shareKermes()),
-                  ],
-                ),
-              ],
+          if (!isForShare)
+            Positioned(
+              top: 12,
+              left: 16,
+              right: 16,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildGlassButton(
+                      Icons.arrow_back, () => Navigator.pop(context)),
+                  Row(
+                    children: [
+                      _buildGlassButton(
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        () {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            _isFavorite = !_isFavorite;
+                          });
+                        },
+                        color:
+                            _isFavorite ? const Color(0xFFE50055) : Colors.white,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildGlassButton(Icons.share, () => _shareKermes()),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
 
           // Dynamic Sponsor / Certificate Badges
           if (_currentEvent.activeBadgeIds.isNotEmpty && _activeBadges != null)
@@ -2358,9 +2573,9 @@ String _getLocalizedCountry(String rawCountry) {
                     Text(
                       '${_currentEvent.country.split(' ').first} ${_getCountryFlag(_currentEvent.country)}',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withOpacity(0.9),
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -2498,8 +2713,8 @@ String _getLocalizedCountry(String rawCountry) {
                                     'kermes.date_label'.tr(),
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.5),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
                                       letterSpacing: 1,
                                     ),
                                   ),
@@ -2510,8 +2725,8 @@ String _getLocalizedCountry(String rawCountry) {
                                       '${_currentEvent.startDate.day}.${_currentEvent.startDate.month} - ${_currentEvent.endDate.day}.${_currentEvent.endDate.month}.${_currentEvent.endDate.year}',
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ),
@@ -2546,8 +2761,8 @@ String _getLocalizedCountry(String rawCountry) {
                                     'kermes.time_label'.tr(),
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.5),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
                                       letterSpacing: 1,
                                     ),
                                   ),
@@ -2558,8 +2773,8 @@ String _getLocalizedCountry(String rawCountry) {
                                       '10:00 - 22:00',
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ),
@@ -2761,15 +2976,16 @@ String _getLocalizedCountry(String rawCountry) {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.near_me, color: subtleTextColor, size: 14),
+                        Icon(Icons.near_me, color: subtleTextColor, size: 16),
                         const SizedBox(width: 6),
-                          Text(
-                            (widget.currentPosition == null || (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0))
-                              ? '~ km'
-                              : '${_distanceKm.toStringAsFixed(1)} km',
-                            style: TextStyle(
+                        Text(
+                          ((widget.currentPosition == null && (ref.read(userLocationProvider).value == null || ref.read(userLocationProvider).value!.latitude == 0.0)) || 
+                           (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0))
+                            ? '~ km'
+                            : '${_distanceKm.toStringAsFixed(1)} km',
+                          style: TextStyle(
                             color: textColor,
-                            fontSize: 10,
+                            fontSize: 13,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -2777,13 +2993,22 @@ String _getLocalizedCountry(String rawCountry) {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    (widget.currentPosition != null && !(_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0)) ? '${(_distanceKm * 2.5 + 3).ceil()} Dk.' : '-- Dk.',
-                    style: TextStyle(
-                      color: subtleTextColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.directions_car, color: lokmaPink, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        ((widget.currentPosition != null || (ref.read(userLocationProvider).value != null && ref.read(userLocationProvider).value!.latitude != 0.0)) && !(_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0)) 
+                            ? '${DistanceUtils.calculateEstimatedDrivingMinutes(_distanceKm)} Dk.' 
+                            : '-- Dk.',
+                        style: const TextStyle(
+                          color: lokmaPink,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   )
                 ],
               ),
@@ -2791,7 +3016,7 @@ String _getLocalizedCountry(String rawCountry) {
           ),
           Text(
             [
-              if (_currentEvent.address.isNotEmpty) _currentEvent.address,
+              if (_currentEvent.address.isNotEmpty) _getCleanAddress(),
               if (_currentEvent.postalCode.isNotEmpty ||
                   _currentEvent.city.isNotEmpty)
                 '${_currentEvent.postalCode} ${_currentEvent.city}'.trim(),
