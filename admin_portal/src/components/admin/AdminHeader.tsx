@@ -581,6 +581,12 @@ export default function AdminHeader() {
  <Link href="/admin/sponsored-ads" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
  {t('sponsoredAds')}
  </Link>
+										<Link
+											href={`/admin/business/${businessId}?tab=settings&settingsSubTab=marketing`}
+											className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground`}
+										>
+											Marketing Boost
+										</Link>
  </div>
  </div>
  </div>
@@ -874,6 +880,12 @@ export default function AdminHeader() {
  <Link href="/admin/sectors" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sectors')}</Link>
  <Link href="/admin/kermes" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('kermes')}</Link>
  <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
+										<Link
+											href={`/admin/business/${businessId}?tab=settings&settingsSubTab=marketing`}
+											className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground`}
+										>
+											Marketing Boost
+										</Link>
  </div>
  )}
  </div>
@@ -1131,8 +1143,8 @@ export default function AdminHeader() {
  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
  }`}
  >
- Werbung
- <span className="text-[10px]">▼</span>
+									Marketing
+									<span className="text-[10px]">▼</span>
  </button>
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
  <div className="py-1">
@@ -1148,6 +1160,12 @@ export default function AdminHeader() {
  >
  {t('sponsoredAds')}
  </Link>
+										<Link
+											href={`/admin/business/${businessId}?tab=settings&settingsSubTab=marketing`}
+											className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground`}
+										>
+											Marketing Boost
+										</Link>
  </div>
  </div>
  </div>
@@ -1342,13 +1360,19 @@ export default function AdminHeader() {
   {/* Werbung section */}
   <div className="border-t border-border mt-1 pt-1">
   <button onClick={() => toggleSection('werbung')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
-  Werbung
-  <span className={`text-xs transition-transform ${expandedSection === 'werbung' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
+									Marketing
+									<span className={`text-xs transition-transform ${expandedSection === 'werbung' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
   </button>
   {expandedSection === 'werbung' && (
   <div className="bg-muted/50 py-1">
   <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('promotions')}</Link>
   <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
+										<Link
+											href={`/admin/business/${businessId}?tab=settings&settingsSubTab=marketing`}
+											className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground`}
+										>
+											Marketing Boost
+										</Link>
   </div>
   )}
   </div>

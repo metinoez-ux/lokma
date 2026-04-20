@@ -199,6 +199,7 @@ export default function BusinessDetailsPage() {
  const searchParams = useSearchParams();
  const businessId = params.id as string;
  const initialTab = searchParams.get('tab') as 'overview' | 'orders' | 'reservations' | 'settings' || 'overview';
+	const initialSubTab = searchParams.get('settingsSubTab') as 'isletme' | 'menu' | 'personel' | 'masa' | 'abonelik' | 'odeme' | 'promosyon' | 'marketing' || 'isletme';
 
  const { admin, loading: adminLoading } = useAdmin();
  const { getActiveSectors } = useSectors();
@@ -230,7 +231,7 @@ export default function BusinessDetailsPage() {
  >(initialTab);
  const [settingsSubTab, setSettingsSubTab] = useState<
  "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing"
- >("isletme");
+ >(initialSubTab);
  const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
  const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat">("bilgiler");
  const [saatlerSubTab, setSaatlerSubTab] = useState<"genel" | "kurye" | "gelal">("genel");
@@ -3735,7 +3736,7 @@ export default function BusinessDetailsPage() {
  { key: "abonelik", label: t('abonelikPlani'), icon: <Star className="w-5 h-5"/> },
  { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
  { key: "promosyon", label: t('promosyon_label'), icon: <Gift className="w-5 h-5"/>, featureKey: "promotions" },
- { key: "marketing", label: t('marketing_boost'), icon: <Rocket className="w-5 h-5"/>, featureKey: "marketing" },
+ 
  ] as { key: string; label: string; icon: React.ReactNode; featureKey?: string }[]).map((item) => {
  const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
  if (isGated) return null; // Hide gated features in sidebar to keep UI clean, or show with lock
