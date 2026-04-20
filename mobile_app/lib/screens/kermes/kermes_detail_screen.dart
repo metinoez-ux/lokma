@@ -244,37 +244,45 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
         1000;
   }
 
-  String _getLocalizedCountry(String rawCountry) {
+String _getLocalizedCountry(String rawCountry) {
     if (rawCountry.isEmpty) return rawCountry;
     
     final lang = context.locale.languageCode;
-    final lower = rawCountry.toLowerCase();
-    final isNorway = lower.contains("norve") || lower.contains("norway") || lower.contains("norwegen");
-    final isGermany = lower.contains("alman") || lower.contains("german") || lower.contains("deutsch");
+    final cc = _currentEvent.countryCode.toUpperCase();
     
-    if (lang == 'de') {
-      if (isNorway) return "Norwegen";
-      if (isGermany) return "Deutschland";
-    } else if (lang == 'tr') {
-      if (isNorway) return "Norveç";
-      if (isGermany) return "Almanya";
-    } else if (lang == 'nl') {
-       if (isNorway) return "Noorwegen";
-       if (isGermany) return "Duitsland";
-    } else if (lang == 'en') {
-       if (isNorway) return "Norway";
-       if (isGermany) return "Germany";
-    } else if (lang == 'fr') {
-       if (isNorway) return "Norvège";
-       if (isGermany) return "Allemagne";
-    } else if (lang == 'it') {
-       if (isNorway) return "Norvegia";
-       if (isGermany) return "Germania";
-    } else if (lang == 'es') {
-       if (isNorway) return "Noruega";
-       if (isGermany) return "Alemania";
+    if (cc.isNotEmpty) {
+      return _localizeCountryCode(cc, lang) ?? rawCountry;
     }
-    return rawCountry.split(' ').first;
+    return rawCountry;
+  }
+
+  static String? _localizeCountryCode(String cc, String lang) {
+    const table = <String, Map<String, String>>{
+      'DE': {'de': 'Deutschland', 'tr': 'Almanya', 'en': 'Germany', 'nl': 'Duitsland', 'fr': 'Allemagne', 'it': 'Germania', 'es': 'Alemania'},
+      'NO': {'de': 'Norwegen', 'tr': 'Norvec', 'en': 'Norway', 'nl': 'Noorwegen', 'fr': 'Norvege', 'it': 'Norvegia', 'es': 'Noruega'},
+      'TR': {'de': 'Turkei', 'tr': 'Turkiye', 'en': 'Turkey', 'nl': 'Turkije', 'fr': 'Turquie', 'it': 'Turchia', 'es': 'Turquia'},
+      'AT': {'de': 'Osterreich', 'tr': 'Avusturya', 'en': 'Austria', 'nl': 'Oostenrijk', 'fr': 'Autriche', 'it': 'Austria', 'es': 'Austria'},
+      'RS': {'de': 'Serbien', 'tr': 'Sirbistan', 'en': 'Serbia', 'nl': 'Servie', 'fr': 'Serbie', 'it': 'Serbia', 'es': 'Serbia'},
+      'BG': {'de': 'Bulgarien', 'tr': 'Bulgaristan', 'en': 'Bulgaria', 'nl': 'Bulgarije', 'fr': 'Bulgarie', 'it': 'Bulgaria', 'es': 'Bulgaria'},
+      'HU': {'de': 'Ungarn', 'tr': 'Macaristan', 'en': 'Hungary', 'nl': 'Hongarije', 'fr': 'Hongrie', 'it': 'Ungheria', 'es': 'Hungria'},
+      'FR': {'de': 'Frankreich', 'tr': 'Fransa', 'en': 'France', 'nl': 'Frankrijk', 'fr': 'France', 'it': 'Francia', 'es': 'Francia'},
+      'NL': {'de': 'Niederlande', 'tr': 'Hollanda', 'en': 'Netherlands', 'nl': 'Nederland', 'fr': 'Pays-Bas', 'it': 'Paesi Bassi', 'es': 'Paises Bajos'},
+      'BE': {'de': 'Belgien', 'tr': 'Belcika', 'en': 'Belgium', 'nl': 'Belgie', 'fr': 'Belgique', 'it': 'Belgio', 'es': 'Belgica'},
+      'CH': {'de': 'Schweiz', 'tr': 'Isvicre', 'en': 'Switzerland', 'nl': 'Zwitserland', 'fr': 'Suisse', 'it': 'Svizzera', 'es': 'Suiza'},
+      'MX': {'de': 'Mexiko', 'tr': 'Meksika', 'en': 'Mexico', 'nl': 'Mexico', 'fr': 'Mexique', 'it': 'Messico', 'es': 'Mexico'},
+      'DK': {'de': 'Danemark', 'tr': 'Danimarka', 'en': 'Denmark', 'nl': 'Denemarken', 'fr': 'Danemark', 'it': 'Danimarca', 'es': 'Dinamarca'},
+      'SE': {'de': 'Schweden', 'tr': 'Isvec', 'en': 'Sweden', 'nl': 'Zweden', 'fr': 'Suede', 'it': 'Svezia', 'es': 'Suecia'},
+      'RO': {'de': 'Rumanien', 'tr': 'Romanya', 'en': 'Romania', 'nl': 'Roemenie', 'fr': 'Roumanie', 'it': 'Romania', 'es': 'Rumania'},
+      'IT': {'de': 'Italien', 'tr': 'Italya', 'en': 'Italy', 'nl': 'Italie', 'fr': 'Italie', 'it': 'Italia', 'es': 'Italia'},
+      'ES': {'de': 'Spanien', 'tr': 'Ispanya', 'en': 'Spain', 'nl': 'Spanje', 'fr': 'Espagne', 'it': 'Spagna', 'es': 'Espana'},
+      'GR': {'de': 'Griechenland', 'tr': 'Yunanistan', 'en': 'Greece', 'nl': 'Griekenland', 'fr': 'Grece', 'it': 'Grecia', 'es': 'Grecia'},
+      'PL': {'de': 'Polen', 'tr': 'Polonya', 'en': 'Poland', 'nl': 'Polen', 'fr': 'Pologne', 'it': 'Polonia', 'es': 'Polonia'},
+      'HR': {'de': 'Kroatien', 'tr': 'Hirvatistan', 'en': 'Croatia', 'nl': 'Kroatie', 'fr': 'Croatie', 'it': 'Croazia', 'es': 'Croacia'},
+    };
+    
+    final countryMap = table[cc];
+    if (countryMap == null) return null;
+    return countryMap[lang] ?? countryMap['de'];
   }
 
   Future<void> _openMaps() async {

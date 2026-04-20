@@ -418,61 +418,38 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                     .map((e) => e.toString())
                     .toList();
 
+            // Country: now standardized in Firestore with countryCode (ISO) + country (display name)
+            String countryCode = '';
             String country = '';
-            if (data['address'] is Map &&
-                (data['address'] as Map)['country'] != null) {
-              final cc =
-                  (data['address'] as Map)['country'].toString().toUpperCase();
-              if (cc == 'DE')
-                country = 'Almanya';
-              else if (cc == 'TR')
-                country = 'Türkiye';
-              else if (cc == 'BG')
-                country = 'Bulgaristan';
-              else
-                country = cc;
-            } else if (data['country'] != null &&
-                data['country'].toString().isNotEmpty) {
-              country = data['country'].toString();
-              final cc = country.toUpperCase();
-              if (cc == 'TR')
-                country = 'Türkiye';
-              else if (cc == 'DE')
-                country = 'Almanya';
-              else if (cc == 'BG') country = 'Bulgaristan';
-            } else {
+            
+            // 1. Read countryCode (most reliable - ISO 2-letter)
+            countryCode = data['countryCode']?.toString() ?? '';
+            if (countryCode.isEmpty && data['address'] is Map) {
+              countryCode = (data['address'] as Map)['countryCode']?.toString() ?? '';
+            }
+            
+            // 2. Read country display name
+            country = data['country']?.toString() ?? '';
+            if (country.isEmpty && data['address'] is Map) {
+              country = (data['address'] as Map)['country']?.toString() ?? '';
+            }
+            
+            // 3. Fallback: if countryCode empty but country has an ISO code
+            if (countryCode.isEmpty && country.length == 2) {
+              countryCode = country.toUpperCase();
+            }
+            
+            // 4. Last resort: detect from address/city for truly old records
+            if (countryCode.isEmpty && country.isEmpty) {
               final lowerAddr = data['address']?.toString().toLowerCase() ?? '';
               final lowerCity = city.toLowerCase();
-
-              final Set<String> trProvinces = {
-                'adana', 'adiyaman', 'afyon', 'afyonkarahisar', 'agri', 'aksaray',
-                'amasya', 'ankara', 'antalya', 'ardahan', 'artvin', 'aydin',
-                'balikesir', 'balıkesir', 'bartin', 'batman', 'bayburt', 'bilecik',
-                'bingol', 'bitlis', 'bolu', 'burdur', 'bursa', 'canakkale',
-                'cankiri', 'corum', 'denizli', 'diyarbakir', 'duzce', 'edirne',
-                'elazig', 'erzincan', 'erzurum', 'eskisehir', 'gaziantep',
-                'giresun', 'gumushane', 'hakkari', 'hatay', 'igdir', 'isparta',
-                'istanbul', 'izmir', 'kahramanmaras', 'karabuk', 'karaman',
-                'kars', 'kastamonu', 'kayseri', 'kirikkale', 'kirklareli',
-                'kirsehir', 'kilis', 'kocaeli', 'konya', 'kutahya', 'malatya',
-                'manisa', 'mardin', 'mersin', 'mugla', 'mus', 'nevsehir',
-                'nigde', 'ordu', 'osmaniye', 'rize', 'sakarya', 'samsun',
-                'siirt', 'sinop', 'sivas', 'sanliurfa', 'sirnak', 'tekirdag',
-                'tokat', 'trabzon', 'tunceli', 'usak', 'van', 'yalova',
-                'yozgat', 'zonguldak', 'bigadi'
-              };
-
-              bool isTrProvince = trProvinces
-                  .any((p) => lowerCity.contains(p) || lowerAddr.contains(p));
-
-              if (lowerAddr.contains('türkiye') ||
-                  lowerAddr.contains('turkey') ||
-                  lowerAddr.contains('turkiye') ||
-                  isTrProvince) {
-                country = 'Türkiye';
-              } else if (lowerAddr.contains('bulgaristan') ||
-                  lowerAddr.contains('bulgaria')) {
-                country = 'Bulgaristan';
+              
+              if (lowerAddr.contains('deutschland') || lowerAddr.contains('germany')) {
+                countryCode = 'DE';
+                country = 'Deutschland';
+              } else if (lowerAddr.contains('türkiye') || lowerAddr.contains('turkey') || lowerAddr.contains('turkiye')) {
+                countryCode = 'TR';
+                country = 'Turkei';
               }
             }
 
@@ -598,6 +575,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               city: city,
               postalCode: data['postalCode']?.toString() ?? '',
               country: country,
+              countryCode: countryCode,
               state: data['state'],
               title: data['name'] ?? data['title'] ?? 'Kermes',
               description: data['description']?.toString() ?? '',

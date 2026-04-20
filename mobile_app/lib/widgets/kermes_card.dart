@@ -787,65 +787,46 @@ class _KermesCardState extends State<KermesCard> {
     if (rawCountry.isEmpty) return rawCountry;
     
     final lang = context.locale.languageCode;
-    final lower = rawCountry.toLowerCase();
+    final cc = widget.event.countryCode.toUpperCase();
     
-    // Check if it's Norway
-    final isNorway = lower.contains("norve") || lower.contains("norway") || lower.contains("norwegen");
-    // Check if it's Germany
-    final isGermany = lower.contains("alman") || lower.contains("german") || lower.contains("deutsch");
-    
-    if (lang == 'de') {
-      if (isNorway) return "Norwegen";
-      if (isGermany) return "Deutschland";
-    } else if (lang == 'tr') {
-      if (isNorway) return "Norveç";
-      if (isGermany) return "Almanya";
-    } else if (lang == 'nl') {
-       if (isNorway) return "Noorwegen";
-       if (isGermany) return "Duitsland";
-    } else if (lang == 'en') {
-       if (isNorway) return "Norway";
-       if (isGermany) return "Germany";
-    } else if (lang == 'fr') {
-       if (isNorway) return "Norvège";
-       if (isGermany) return "Allemagne";
-    } else if (lang == 'it') {
-       if (isNorway) return "Norvegia";
-       if (isGermany) return "Germania";
-    } else if (lang == 'es') {
-       if (isNorway) return "Noruega";
-       if (isGermany) return "Alemania";
+    if (cc.isNotEmpty) {
+      const table = <String, Map<String, String>>{
+        'DE': {'de': 'Deutschland', 'tr': 'Almanya', 'en': 'Germany', 'nl': 'Duitsland', 'fr': 'Allemagne', 'it': 'Germania', 'es': 'Alemania'},
+        'NO': {'de': 'Norwegen', 'tr': 'Norvec', 'en': 'Norway', 'nl': 'Noorwegen', 'fr': 'Norvege', 'it': 'Norvegia', 'es': 'Noruega'},
+        'TR': {'de': 'Turkei', 'tr': 'Turkiye', 'en': 'Turkey', 'nl': 'Turkije', 'fr': 'Turquie', 'it': 'Turchia', 'es': 'Turquia'},
+        'AT': {'de': 'Osterreich', 'tr': 'Avusturya', 'en': 'Austria', 'nl': 'Oostenrijk', 'fr': 'Autriche', 'it': 'Austria', 'es': 'Austria'},
+        'RS': {'de': 'Serbien', 'tr': 'Sirbistan', 'en': 'Serbia', 'nl': 'Servie', 'fr': 'Serbie', 'it': 'Serbia', 'es': 'Serbia'},
+        'BG': {'de': 'Bulgarien', 'tr': 'Bulgaristan', 'en': 'Bulgaria', 'nl': 'Bulgarije', 'fr': 'Bulgarie', 'it': 'Bulgaria', 'es': 'Bulgaria'},
+        'HU': {'de': 'Ungarn', 'tr': 'Macaristan', 'en': 'Hungary', 'nl': 'Hongarije', 'fr': 'Hongrie', 'it': 'Ungheria', 'es': 'Hungria'},
+        'FR': {'de': 'Frankreich', 'tr': 'Fransa', 'en': 'France', 'nl': 'Frankrijk', 'fr': 'France', 'it': 'Francia', 'es': 'Francia'},
+        'NL': {'de': 'Niederlande', 'tr': 'Hollanda', 'en': 'Netherlands', 'nl': 'Nederland', 'fr': 'Pays-Bas', 'it': 'Paesi Bassi', 'es': 'Paises Bajos'},
+        'BE': {'de': 'Belgien', 'tr': 'Belcika', 'en': 'Belgium', 'nl': 'Belgie', 'fr': 'Belgique', 'it': 'Belgio', 'es': 'Belgica'},
+        'CH': {'de': 'Schweiz', 'tr': 'Isvicre', 'en': 'Switzerland', 'nl': 'Zwitserland', 'fr': 'Suisse', 'it': 'Svizzera', 'es': 'Suiza'},
+        'MX': {'de': 'Mexiko', 'tr': 'Meksika', 'en': 'Mexico', 'nl': 'Mexico', 'fr': 'Mexique', 'it': 'Messico', 'es': 'Mexico'},
+        'DK': {'de': 'Danemark', 'tr': 'Danimarka', 'en': 'Denmark', 'nl': 'Denemarken', 'fr': 'Danemark', 'it': 'Danimarca', 'es': 'Dinamarca'},
+        'SE': {'de': 'Schweden', 'tr': 'Isvec', 'en': 'Sweden', 'nl': 'Zweden', 'fr': 'Suede', 'it': 'Svezia', 'es': 'Suecia'},
+        'RO': {'de': 'Rumanien', 'tr': 'Romanya', 'en': 'Romania', 'nl': 'Roemenie', 'fr': 'Roumanie', 'it': 'Romania', 'es': 'Rumania'},
+        'IT': {'de': 'Italien', 'tr': 'Italya', 'en': 'Italy', 'nl': 'Italie', 'fr': 'Italie', 'it': 'Italia', 'es': 'Italia'},
+        'ES': {'de': 'Spanien', 'tr': 'Ispanya', 'en': 'Spain', 'nl': 'Spanje', 'fr': 'Espagne', 'it': 'Spagna', 'es': 'Espana'},
+        'GR': {'de': 'Griechenland', 'tr': 'Yunanistan', 'en': 'Greece', 'nl': 'Griekenland', 'fr': 'Grece', 'it': 'Grecia', 'es': 'Grecia'},
+        'PL': {'de': 'Polen', 'tr': 'Polonya', 'en': 'Poland', 'nl': 'Polen', 'fr': 'Pologne', 'it': 'Polonia', 'es': 'Polonia'},
+        'HR': {'de': 'Kroatien', 'tr': 'Hirvatistan', 'en': 'Croatia', 'nl': 'Kroatie', 'fr': 'Croatie', 'it': 'Croazia', 'es': 'Croacia'},
+      };
+      final countryMap = table[cc];
+      if (countryMap != null) return countryMap[lang] ?? countryMap['de'] ?? rawCountry;
     }
-    return rawCountry.split(' ').first;
+    return rawCountry;
   }
 
   String _getCountryFlag(String country) {
-    final lower = country.toLowerCase()
-        .replaceAll('\u0131', 'i')
-        .replaceAll('\u00fc', 'u')
-        .replaceAll('\u00f6', 'o')
-        .replaceAll('\u015f', 's')
-        .replaceAll('\u00e7', 'c')
-        .replaceAll('\u011f', 'g');
-    if (lower.contains('avusturya') || lower.contains('austria') || lower.contains('osterreich') || lower == 'at') return '\u{1F1E6}\u{1F1F9}';
-    if (lower.contains('sirbistan') || lower.contains('serbia') || lower.contains('serbien') || lower == 'rs') return '\u{1F1F7}\u{1F1F8}';
-    if (lower.contains('bulgaristan') || lower.contains('bulgaria') || lower.contains('bulgarien') || lower == 'bg') return '\u{1F1E7}\u{1F1EC}';
-    if (lower.contains('turkiye') || lower.contains('turkey') || lower.contains('turkei') || lower == 'tr') return '\u{1F1F9}\u{1F1F7}';
-    if (lower.contains('hollanda') || lower.contains('netherlands') || lower.contains('niederlande') || lower == 'nl') return '\u{1F1F3}\u{1F1F1}';
-    if (lower.contains('fransa') || lower.contains('france') || lower.contains('frankreich') || lower == 'fr') return '\u{1F1EB}\u{1F1F7}';
-    if (lower.contains('belcika') || lower.contains('belgium') || lower.contains('belgien') || lower == 'be') return '\u{1F1E7}\u{1F1EA}';
-    if (lower.contains('isvicre') || lower.contains('switzerland') || lower.contains('schweiz') || lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
-    if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '🇭🇺';
-    if (lower.contains('norvec') || lower.contains('norway') || lower.contains('norwegen') || lower == 'no') return '🇳🇴';
-    if (lower.contains('danimarka') || lower.contains('denmark') || lower.contains('danemark') || lower == 'dk') return '🇩🇰';
-    if (lower.contains('isvec') || lower.contains('sweden') || lower.contains('schweden') || lower == 'se') return '🇸🇪';
-    if (lower.contains('ispanya') || lower.contains('spain') || lower.contains('spanien') || lower == 'es') return '🇪🇸';
-    if (lower.contains('romanya') || lower.contains('romania') || lower.contains('rumanien') || lower == 'ro') return '🇷🇴';
-    if (lower.contains('italya') || lower.contains('italy') || lower.contains('italien') || lower == 'it') return '🇮🇹';
-    if (lower.contains('meksika') || lower.contains('mexico') || lower.contains('mexiko') || lower == 'mx') return '🇲🇽';
-    if (lower.contains('yunanistan') || lower.contains('greece') || lower.contains('griechenland') || lower == 'gr') return '🇬🇷';
-    if (lower.contains('almanya') || lower.contains('germany') || lower.contains('deutschland') || lower == 'de') return '🇩🇪';
-    return ''; // Varsayilan olarak bilmedigimiz yerlere Almanya bayragi basmamak icin bos ceviriyoruz.
+    // Use countryCode (ISO 2-letter) to generate flag emoji algorithmically
+    final cc = widget.event.countryCode.toUpperCase();
+    if (cc.length == 2) {
+      // ISO country code -> flag emoji: each letter maps to regional indicator symbol
+      final int base = 0x1F1E6 - 0x41; // 'A' offset
+      return String.fromCharCode(cc.codeUnitAt(0) + base) + String.fromCharCode(cc.codeUnitAt(1) + base);
+    }
+    return '';
   }
 
   String get _distanceKm {

@@ -102,7 +102,8 @@ class KermesEvent {
   final String id;
   final String city;
   final String postalCode;
-  final String country; // Ülke
+  final String country; // Ulke (display name)
+  final String countryCode; // ISO 2-letter (DE, NO, TR, etc.)
   final String? state; // Eyalet
   final String title;
   final String description;
@@ -211,6 +212,7 @@ class KermesEvent {
     required this.city,
     this.postalCode = '',
     this.country = '',
+    this.countryCode = '',
     this.state,
     required this.title,
     this.description = '',
