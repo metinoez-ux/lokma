@@ -12,7 +12,11 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
-    const t = useTranslations('AdminSettings');
+    const rawT = useTranslations('AdminSettings');
+    const t = (key: string) => {
+        const val = rawT(key as any);
+        return val === `AdminSettings.${key}` || val === key ? '' : val;
+    };
     const { admin } = useAdmin();
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
