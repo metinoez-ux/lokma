@@ -4628,7 +4628,7 @@ export default function BusinessDetailsPage() {
  {/* Header with Add button */}
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <span className="text-2xl">📂</span>
+ 
  <div>
  <h4 className="text-foreground font-bold">{t('kategoriler')}</h4>
  <p className="text-muted-foreground text-xs">{inlineCategories.length} {t('kategori')}</p>
@@ -4685,7 +4685,7 @@ export default function BusinessDetailsPage() {
  {/* Empty state */}
  {!loadingCategories && inlineCategories.length === 0 && (
  <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
- <span className="text-4xl">🗂️</span>
+ 
  <h4 className="text-foreground font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
  <p className="text-muted-foreground text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
  <div className="flex items-center gap-3 mt-4">
@@ -4726,8 +4726,7 @@ export default function BusinessDetailsPage() {
  >▼</button>
  </div>
 
- {/* Icon */}
- <span className="text-3xl">{cat.icon}</span>
+ 
 
  {/* Info */}
  <div className="flex-1 min-w-0">
@@ -5122,7 +5121,7 @@ export default function BusinessDetailsPage() {
  <option value="" disabled>📂 Kategoriye Taşı...</option>
  {inlineCategories.map((cat: any) => {
  const cn = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
- return <option key={cat.id} value={cn}>{cat.icon || ''} {cn}</option>;
+ return <option key={cat.id} value={cn}>{cn}</option>;
  })}
  </select>
 
@@ -6955,9 +6954,9 @@ export default function BusinessDetailsPage() {
  {/* Header */}
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
- <span className="text-3xl">📢</span>
+ 
  <div>
- <h3 className="text-xl font-bold text-foreground">{t('marketing_boost')}</h3>
+ 
  <p className="text-sm text-muted-foreground">{t('marketingBoostAciklama')}</p>
  </div>
  </div>
@@ -6972,21 +6971,21 @@ export default function BusinessDetailsPage() {
  {/* How It Works Info Card */}
  <div className="bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-indigo-900/20 border border-purple-500/30 rounded-xl p-5">
  <h4 className="text-purple-300 font-bold text-sm mb-3 flex items-center gap-2">
- <span>💡</span> {t('nasil_calisir')}
+  {t('nasil_calisir')}
  </h4>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <div className="text-center">
- <span className="text-2xl">🎯</span>
+ 
  <p className="text-white text-xs font-medium mt-1">{t('boost_step1')}</p>
  <p className="text-muted-foreground text-[10px] mt-0.5">{t('boost_step1_desc')}</p>
  </div>
  <div className="text-center">
- <span className="text-2xl">💰</span>
+ 
  <p className="text-white text-xs font-medium mt-1">{t('boost_step2')}</p>
  <p className="text-muted-foreground text-[10px] mt-0.5">{t('boost_step2_desc')}</p>
  </div>
  <div className="text-center">
- <span className="text-2xl">🚀</span>
+ 
  <p className="text-white text-xs font-medium mt-1">{t('boost_step3')}</p>
  <p className="text-muted-foreground text-[10px] mt-0.5">{t('boost_step3_desc')}</p>
  </div>
@@ -6996,7 +6995,7 @@ export default function BusinessDetailsPage() {
  {/* Ranking Algorithm Explanation */}
  <div className="bg-card/40 border border-border rounded-xl p-4">
  <h4 className="text-foreground font-bold text-sm mb-2 flex items-center gap-2">
- <span>📊</span> {t('boost_ranking')}
+  {t('boost_ranking')}
  </h4>
  <div className="flex flex-wrap gap-2">
  {[
@@ -7274,7 +7273,7 @@ export default function BusinessDetailsPage() {
  {/* ==== Active Campaigns List ==== */}
  <div>
  <h4 className="text-foreground font-bold text-sm mb-3 flex items-center gap-2">
- <span>📋</span> {t('boost_aktif_kampanyalar')}
+ <span></span> {t('boost_aktif_kampanyalar')}
  </h4>
  {loadingBoostCampaigns ? (
  <div className="flex justify-center py-8">
@@ -8266,7 +8265,7 @@ export default function BusinessDetailsPage() {
  const catName = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
  return (
  <option key={cat.id} value={catName}>
- {cat.icon || ''} {catName}
+ {catName}
  </option>
  );
  })}
