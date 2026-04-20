@@ -3161,7 +3161,12 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                         markers: widget.events.map((event) {
                           final isSelected = _selectedEvent?.id == event.id;
                           final scaleFactor =
-                              (1.0 + (_currentZoom - 8) * 0.12).clamp(0.7, 2.0);
+                              (1.0 + (_currentZoom - 8) * 0.15).clamp(0.8, 2.5);
+                          
+                          // Detect live/active kermes
+                          final now = DateTime.now();
+                          final isLive = now.isAfter(event.startDate) && now.isBefore(event.endDate);
+                          final isUpcoming = event.startDate.difference(now).inDays <= 7 && event.startDate.isAfter(now);
 
                           return Marker(
                             point: LatLng(event.latitude, event.longitude),
@@ -3210,34 +3215,38 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                                             ),
                                           ),
                                           Container(
-                                            width: (isSelected ? 26 : 22) *
+                                            width: (isSelected ? 30 : 26) *
                                                 scaleFactor,
-                                            height: (isSelected ? 26 : 22) *
+                                            height: (isSelected ? 30 : 26) *
                                                 scaleFactor,
                                             decoration: BoxDecoration(
                                               color: isSelected
                                                   ? lokmaPink
-                                                  : const Color(0xFF2E7D32),
+                                                  : isLive
+                                                      ? const Color(0xFFFF6D00)
+                                                      : const Color(0xFF2E7D32),
                                               shape: BoxShape.circle,
                                               border: Border.all(
                                                   color: Colors.white,
-                                                  width: 2),
+                                                  width: 2.5),
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: (isSelected
                                                           ? lokmaPink
-                                                          : const Color(
-                                                              0xFF2E7D32))
-                                                      .withValues(alpha: 0.4),
-                                                  blurRadius: 6,
-                                                  spreadRadius: 1,
+                                                          : isLive
+                                                              ? const Color(0xFFFF6D00)
+                                                              : const Color(
+                                                                  0xFF2E7D32))
+                                                      .withValues(alpha: isLive ? 0.6 : 0.4),
+                                                  blurRadius: isLive ? 10 : 6,
+                                                  spreadRadius: isLive ? 3 : 1,
                                                 ),
                                               ],
                                             ),
                                             child: Icon(
                                               Icons.festival,
                                               color: Colors.white,
-                                              size: (isSelected ? 13 : 11) *
+                                              size: (isSelected ? 15 : 13) *
                                                   scaleFactor,
                                             ),
                                           ),
@@ -3402,6 +3411,37 @@ class _KermesMapSheetState extends State<_KermesMapSheet>
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                    ],
+                  ),
+                  // Date row
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 12, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${event.startDate.day.toString().padLeft(2, '0')}.${event.startDate.month.toString().padLeft(2, '0')}.${event.startDate.year} - ${event.endDate.day.toString().padLeft(2, '0')}.${event.endDate.month.toString().padLeft(2, '0')}.${event.endDate.year}',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.grey[300] : Colors.grey[700],
+                        ),
+                      ),
+                      // Aktiv badge
+                      if (DateTime.now().isAfter(event.startDate) && DateTime.now().isBefore(event.endDate)) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF6D00).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            context.locale.languageCode == 'tr' ? 'Kermes Zamani' : (context.locale.languageCode == 'de' ? 'Aktiv' : 'Active'),
+                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFFFF6D00)),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],

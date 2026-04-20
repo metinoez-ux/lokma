@@ -1330,7 +1330,7 @@ export default function KermesDetailPage() {
  setKermes({ id: freshDoc.id, ...freshDoc.data() } as KermesEvent);
  }
  setIsEditing(false);
- showToast('✅ Kaydedildi');
+ showToast('Kaydedildi');
  } catch (error: any) {
  console.error('Kermes error:', error);
  showToast(`${t('kaydetme_hatasi')}: ${error.message || 'Bilinmeyen hata'}`, 'error');
@@ -1353,7 +1353,7 @@ export default function KermesDetailPage() {
  setSaving(true);
  try {
  await deleteDoc(doc(db, 'kermes_events', kermesId));
- showToast('✅ Kermes silindi');
+ showToast('Kermes silindi');
  router.push('/admin/kermes');
  } catch (error) {
  console.error('Error deleting kermes:', error);
@@ -1385,7 +1385,7 @@ export default function KermesDetailPage() {
  setCategories([...categories, catName]);
  setNewCategoryName('');
  setShowCategoryModal(false);
- showToast(`✅ "${catName}" kategorisi eklendi`);
+ showToast(`"${catName}" kategorisi eklendi`);
  } catch (error) {
  console.error('Error adding category:', error);
  showToast(t('kategori_eklenemedi'), 'error');
@@ -1424,7 +1424,7 @@ export default function KermesDetailPage() {
  };
  const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'products'), productData);
  setProducts([...products, { id: docRef.id, ...productData } as KermesProduct]);
- showToast(`✅ ${catalogItem.name} eklendi`);
+ showToast(`${catalogItem.name} eklendi`);
  } else {
  const masterItem = item as MasterProduct;
  const productData = {
@@ -1438,7 +1438,7 @@ export default function KermesDetailPage() {
  };
  const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'products'), productData);
  setProducts([...products, { id: docRef.id, ...productData } as KermesProduct]);
- showToast(`✅ ${masterItem.name} eklendi`);
+ showToast(`${masterItem.name} eklendi`);
  }
  setEditBeforeAdd(null);
  } catch (error) {
@@ -1684,7 +1684,7 @@ export default function KermesDetailPage() {
  ? { ...p, ...updateData }
  : p
  ));
- showToast(`✅ ${getLocalizedText(editProduct.product.name, locale)} güncellendi`);
+ showToast(`${getLocalizedText(editProduct.product.name, locale)} güncellendi`);
  setEditProduct(null);
  } catch (error) {
  console.error('Error updating product:', error);
@@ -1715,7 +1715,7 @@ export default function KermesDetailPage() {
  setProducts([...products, { id: docRef.id, ...productData } as KermesProduct]);
  setCustomProduct({ name: '', category: 'Ana Yemek', price: 0, prepZone: [], serviceType: 'prepped', counterAvailability: 'all' });
  setShowAddModal(false);
- showToast(`✅ "${customProduct.name}" oluşturuldu`);
+ showToast(`"${customProduct.name}" oluşturuldu`);
  } catch (error) {
  showToast(t('hata'), 'error');
  } finally {
