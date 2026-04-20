@@ -1280,7 +1280,7 @@ String _getLocalizedCountry(String rawCountry) {
     final countryName = event.country.isNotEmpty ? _getLocalizedCountry(event.country) : '';
     final addressStr = '${_getCleanAddress()}\n${event.postalCode} ${event.city}\n$countryName'.trim();
     
-    final downloadText = '*App Store veya Google Play\\'de LOKMA aratın ve uygulamayı indirin.*';
+    final downloadText = "*App Store veya Google Play'de LOKMA aratın ve uygulamayı indirin.*";
     
     final text = '*${event.title}*\n\nTarih: $dateStr\nSaat: $timeStr\n\n*Adres:*\n$addressStr\n\n${_getInviteText(lang)}\n\n$downloadText';
 
