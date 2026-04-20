@@ -1,5 +1,8 @@
 import '../../utils/currency_utils.dart';
 import '../../widgets/brand_info_sheet.dart';
+import '../../widgets/lokma_network_image_extended.dart';
+import '../../widgets/image_viewer_screen.dart';
+import 'widgets/kermes_video_header.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
@@ -2381,12 +2384,17 @@ String _getLocalizedCountry(String rawCountry) {
           // Background Image
           _currentEvent.headerImage != null &&
                   _currentEvent.headerImage!.isNotEmpty
-              ? LokmaNetworkImage(
-                  imageUrl: _currentEvent.headerImage!,
-                  fit: BoxFit.cover,
-                  color: Colors.black.withOpacity(0.1),
-                  colorBlendMode: BlendMode.darken,
-                )
+              ? (_currentEvent.headerImage!.toLowerCase().contains('.mp4') || _currentEvent.headerImage!.toLowerCase().contains('video%2F'))
+                  ? KermesVideoHeader(
+                      videoUrl: _currentEvent.headerImage!,
+                      fit: BoxFit.cover,
+                    )
+                  : LokmaNetworkImage(
+                      imageUrl: _currentEvent.headerImage!,
+                      fit: BoxFit.cover,
+                      color: Colors.black.withOpacity(0.1),
+                      colorBlendMode: BlendMode.darken,
+                    )
               : Container(color: const Color(0xFF1E1E1E)),
 
           // Gradient Overlay

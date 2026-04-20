@@ -61,6 +61,7 @@ dependencies:
   flutter_stripe: ^11.3.0
   mek_stripe_terminal: ^4.6.3
   screen_brightness: ^2.1.7
+  video_player: ^2.9.2
   flutter_svg: ^2.2.3
   path_provider: ^2.1.5
   mobile_scanner: ^7.1.4
