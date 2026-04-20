@@ -3736,6 +3736,8 @@ export default function BusinessDetailsPage() {
  { key: "abonelik", label: t('abonelikPlani'), icon: <Star className="w-5 h-5"/> },
  { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
  { key: "promosyon", label: t('promosyon_label'), icon: <Gift className="w-5 h-5"/>, featureKey: "promotions" },
+									{ key: "teslimat", label: t('teslimatAyarlari'), icon: <Truck className="w-5 h-5"/> },
+									{ key: "saatler", label: t('acilisSaatleri'), icon: <Clock className="w-5 h-5"/> },
  
  ] as { key: string; label: string; icon: React.ReactNode; featureKey?: string }[]).map((item) => {
  const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
