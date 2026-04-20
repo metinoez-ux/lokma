@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:video_player/video_player.dart';
 import '../../../services/video_preload_service.dart';
 
@@ -7,6 +8,7 @@ class KermesVideoHeader extends StatefulWidget {
   final double height;
   final double width;
   final BoxFit fit;
+  final ScrollController? scrollController;
 
   const KermesVideoHeader({
     Key? key,
@@ -14,6 +16,7 @@ class KermesVideoHeader extends StatefulWidget {
     this.height = double.infinity,
     this.width = double.infinity,
     this.fit = BoxFit.cover,
+    this.scrollController,
   }) : super(key: key);
 
   @override
@@ -25,11 +28,27 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
   bool _isInitialized = false;
   bool _hasError = false;
   String? _errorMessage;
+  bool _wasCollapsed = false;
 
   @override
   void initState() {
     super.initState();
     _initializeVideo();
+    widget.scrollController?.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (widget.scrollController != null && widget.scrollController!.hasClients) {
+      final offset = widget.scrollController!.offset;
+      // 400px civari kaydirinca video ekrandan cikar
+      if (offset > 400 && !_wasCollapsed) {
+        _wasCollapsed = true;
+        if (_isInitialized) _controller.pause();
+      } else if (offset <= 400 && _wasCollapsed) {
+        _wasCollapsed = false;
+        if (_isInitialized) _replayVideo();
+      }
+    }
   }
 
   void _videoListener() {
@@ -45,32 +64,39 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
 
   Future<void> _initializeVideo() async {
     try {
-      // Servis üzerinden controller al. Önceden başlatılmış olabilir!
       _controller = VideoPreloadService.getController(widget.videoUrl);
-      
       _controller.addListener(_videoListener);
 
-      // Çifte initialize çağırmamak için servisteki başlatma işlemini beklet
       await VideoPreloadService.waitForInitialization(widget.videoUrl);
-      
-      await _controller.setVolume(0.0); // Mute for looping background
-      await _controller.setLooping(false); // Sadece bir kere oynasin ve dursun
-      
+
+      // Eger yukleme sirasinda hata olduysa veya hala initialize olamadiysa devam etme!
+      // Diger turlu setVolume veya play() metodlari platform kanalini cokertebilir (StateError firlatir).
+      if (_controller.value.hasError) {
+        throw Exception(_controller.value.errorDescription ?? 'Video yüklenemedi (Bağlantı hatası)');
+      }
+      if (!_controller.value.isInitialized) {
+        throw Exception('Video başlatılamadı. Lütfen internet bağlantınızı kontrol edin.');
+      }
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
-        
-        // Video'nun basina sar ve oynat. (Ekrandan cikip girince veya ilk acilista)
+        await _controller.setLooping(false);
+        await _controller.setVolume(0);
         await _controller.seekTo(Duration.zero);
-        await _controller.play();
+        await _controller.play(); // Ilk baslangicta oynat!
       }
     } catch (e) {
-      debugPrint('Error initializing video header: $e');
+      // Hata firlatildiginda catch et!
       if (mounted) {
         setState(() {
           _hasError = true;
-          _errorMessage = e.toString();
+          if (e.toString().contains('StateError') || e.toString().contains('Future already completed')) {
+            _errorMessage = 'Medya oynatıcı geçici bir hata verdi. Lütfen sayfayı yenileyin.';
+          } else {
+            _errorMessage = e.toString().replaceAll('Exception: ', '');
+          }
         });
       }
     }
@@ -78,6 +104,7 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
 
   @override
   void dispose() {
+    widget.scrollController?.removeListener(_scrollListener);
     _controller.removeListener(_videoListener);
     // NOT: _controller.dispose() ISLEMINI BURADA YAPMIYORUZ! 
     // VideoPreloadService on bellegi yonettigi icin, temizligi o yapacak.
@@ -90,8 +117,6 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
       _controller.play();
     }
   }
-
-  bool _wasCollapsed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -139,34 +164,20 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     final vWidth = _controller.value.size.width;
     final vHeight = _controller.value.size.height;
     
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Eğer maxHeight 100'ün altındaysa (SliverAppBar kapandıysa) durumu kaydet.
-        // Tekrar 100'ün üzerine çıkarsa (açılırsa), videoyu baştan oynat.
-        if (constraints.maxHeight <= 100) {
-          _wasCollapsed = true;
-        } else if (_wasCollapsed && constraints.maxHeight > 100) {
-          _wasCollapsed = false;
-          // Asenkron triggerla
-          Future.microtask(() => _replayVideo());
-        }
-
-        return GestureDetector(
-          onTap: _replayVideo,
+    return GestureDetector(
+      onTap: _replayVideo,
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: FittedBox(
+          fit: widget.fit,
           child: SizedBox(
-            width: widget.width,
-            height: widget.height,
-            child: FittedBox(
-              fit: widget.fit,
-              child: SizedBox(
-                width: vWidth > 0 ? vWidth : 1600,
-                height: vHeight > 0 ? vHeight : 900,
-                child: VideoPlayer(_controller),
-              ),
-            ),
+            width: vWidth > 0 ? vWidth : 1600,
+            height: vHeight > 0 ? vHeight : 900,
+            child: VideoPlayer(_controller),
           ),
-        );
-      }
+        ),
+      ),
     );
   }
 }

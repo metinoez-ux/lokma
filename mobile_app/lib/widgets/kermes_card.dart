@@ -467,30 +467,57 @@ class _KermesCardState extends State<KermesCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- TOP SECTION: IMAGE ---
-                  Stack(
-                    children: [
-                      SizedBox(
-                        height: 230,
-                        width: double.infinity,
-                        child: imagePath != null
-                            ? ((imagePath.toLowerCase().contains('.mp4') || imagePath.toLowerCase().contains('.mov') || imagePath.toLowerCase().contains('video%2F'))
-                                ? Builder(
-                                    builder: (context) {
-                                      final controller = VideoPreloadService.getController(imagePath);
-                                      return ValueListenableBuilder(
-                                        valueListenable: controller,
-                                        builder: (context, VideoPlayerValue value, child) {
+                    // --- TOP SECTION: IMAGE ---
+                    Stack(
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: imagePath != null
+                              ? ((imagePath.toLowerCase().contains('.mp4') || imagePath.toLowerCase().contains('.mov') || imagePath.toLowerCase().contains('video%2F'))
+                                  ? Builder(
+                                      builder: (context) {
+                                        final controller = VideoPreloadService.getController(imagePath);
+                                        return ValueListenableBuilder(
+                                          valueListenable: controller,
+                                          builder: (context, VideoPlayerValue value, child) {
                                           if (!value.isInitialized) {
                                             return Container(color: Colors.grey[200]);
                                           }
-                                          // İlk kareyi çekmesi için ufak siyah ekranı engelliyoruz: aspect ratio korur.
-                                          return FittedBox(
-                                            fit: BoxFit.cover,
-                                            child: SizedBox(
-                                              width: value.size.width > 0 ? value.size.width : 1600,
-                                              height: value.size.height > 0 ? value.size.height : 900,
-                                              child: VideoPlayer(controller),
+                                          // Taşmayı önlemek için ClipRect ve güzel bir geçiş için AnimatedSwitcher
+                                          // Dikey (9:16) formatındaki videoları yatay kartta çok şık göstermek için 
+                                          // Arka plana bulanık kaplama, öne ise daraltılmış ana videoyu koyuyoruz.
+                                          return ClipRect(
+                                            child: AnimatedSwitcher(
+                                              duration: const Duration(milliseconds: 500),
+                                              child: Stack(
+                                                key: const ValueKey('video_frame'),
+                                                fit: StackFit.expand,
+                                                children: [
+                                                  // 1. Katman: Arka plan (Taşan ve bulanık)
+                                                  FittedBox(
+                                                    fit: BoxFit.cover,
+                                                    child: SizedBox(
+                                                      width: value.size.width > 0 ? value.size.width : 1600,
+                                                      height: value.size.height > 0 ? value.size.height : 900,
+                                                      child: VideoPlayer(controller),
+                                                    ),
+                                                  ),
+                                                  // 1.5 Katman: Film tadında karanlık ve bulanık filtre
+                                                  BackdropFilter(
+                                                    filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                                                    child: Container(color: Colors.black.withOpacity(0.4)),
+                                                  ),
+                                                  // 2. Katman: Ön plan (Videounun tamamı)
+                                                  FittedBox(
+                                                    fit: BoxFit.contain,
+                                                    child: SizedBox(
+                                                      width: value.size.width > 0 ? value.size.width : 1600,
+                                                      height: value.size.height > 0 ? value.size.height : 900,
+                                                      child: VideoPlayer(controller),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           );
                                         },

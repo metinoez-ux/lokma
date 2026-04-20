@@ -17,7 +17,7 @@ class VideoPreloadService {
     // Başlatma işlemini asenkron olarak kaydet
     _initFutures[url] = controller.initialize().catchError((_) {});
 
-    if (_order.length > 3) {
+    if (_order.length > 20) {
       final oldestUrl = _order.removeAt(0);
       final oldestController = _cache.remove(oldestUrl);
       _initFutures.remove(oldestUrl);

@@ -2386,6 +2386,7 @@ String _getLocalizedCountry(String rawCountry) {
                   ? KermesVideoHeader(
                       videoUrl: _currentEvent.headerImage!,
                       fit: BoxFit.cover,
+                      scrollController: _scrollController,
                     )
                   : LokmaNetworkImage(
                       imageUrl: _currentEvent.headerImage!,
