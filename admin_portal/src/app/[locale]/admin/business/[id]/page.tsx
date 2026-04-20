@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
 import { normalizeTimeString, getScheduleForToday, parseOpeningHoursBlock } from "@/utils/timeUtils";
+import { Store, Utensils, Users, Star, CreditCard, Gift, Rocket, Wand2 } from "lucide-react";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
@@ -2573,7 +2574,8 @@ export default function BusinessDetailsPage() {
  </div>
  )}
 
- {/* Header */}
+ {/* Header - Only Super Admin needs to navigate these tabs globally from here */}
+ {admin?.adminType === 'super' && (
  <header className="bg-card border-b border-border sticky top-0 z-30">
  <div className="max-w-6xl mx-auto px-4 py-3">
  <div className="flex items-center justify-between">
@@ -2657,6 +2659,7 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  </header>
+ )}
 
  <main className="max-w-6xl mx-auto px-4 py-6">
  {/* Overview Tab */}
@@ -3722,19 +3725,18 @@ export default function BusinessDetailsPage() {
  <div className="w-full md:w-64 flex-shrink-0 bg-card rounded-xl border border-border p-3 h-fit sticky top-24 shadow-sm">
  <h3 className="text-lg font-bold text-foreground mb-4 px-3 flex items-center justify-between">
  {t('ayarlar')}
- <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{business?.companyName}</span>
  </h3>
  <nav className="flex flex-col gap-1">
  {([
- { key: "isletme", label: t('isletme'), icon: "🏢" },
- { key: "menu", label: t('menuUrunler'), icon: "🍽️" },
- { key: "personel", label: t('personel_label'), icon: "👥", featureKey: "staffShiftTracking" },
+ { key: "isletme", label: t('isletme'), icon: <Store className="w-5 h-5"/> },
+ { key: "menu", label: t('menuUrunler'), icon: <Utensils className="w-5 h-5"/> },
+ { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/>, featureKey: "staffShiftTracking" },
  // "masa" (Table Mgmt) was moved to Reservations tab
- { key: "abonelik", label: t('abonelikPlani'), icon: "⭐" },
- { key: "odeme", label: t('odemeBilgileri'), icon: "💳" },
- { key: "promosyon", label: t('promosyon_label'), icon: "🎁", featureKey: "promotions" },
- { key: "marketing", label: t('marketing_boost'), icon: "🚀", featureKey: "marketing" },
- ] as { key: string; label: string; icon: string; featureKey?: string }[]).map((item) => {
+ { key: "abonelik", label: t('abonelikPlani'), icon: <Star className="w-5 h-5"/> },
+ { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
+ { key: "promosyon", label: t('promosyon_label'), icon: <Gift className="w-5 h-5"/>, featureKey: "promotions" },
+ { key: "marketing", label: t('marketing_boost'), icon: <Rocket className="w-5 h-5"/>, featureKey: "marketing" },
+ ] as { key: string; label: string; icon: React.ReactNode; featureKey?: string }[]).map((item) => {
  const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
  if (isGated) return null; // Hide gated features in sidebar to keep UI clean, or show with lock
  return (
@@ -3747,8 +3749,8 @@ export default function BusinessDetailsPage() {
  : "text-foreground hover:bg-muted"
  }`}
  >
- <span className="text-lg opacity-80">{item.icon}</span>
- <span>{item.label}</span>
+ <span className="opacity-80 flex items-center justify-center">{item.icon}</span>
+ <span className="font-medium">{item.label}</span>
  </button>
  );
  })}
@@ -4267,7 +4269,7 @@ export default function BusinessDetailsPage() {
  <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
  <div className="flex items-center gap-2 my-1"><span className="text-muted-foreground text-xs">{t('veya')}</span></div>
  <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-card text-foreground rounded-lg hover:bg-muted dark:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
- {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
+ {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<Wand2 className="w-4 h-4 mr-2" />)} Google'dan Bilgileri Doldur (Server)
  </button>
  {!formData.googlePlaceId && (<p className="text-xs text-red-800 dark:text-red-400">{t('google_id_gerekli')}</p>)}
  </div>
@@ -4278,7 +4280,7 @@ export default function BusinessDetailsPage() {
  <div className="bg-card/50 border border-border rounded-xl p-6">
  <h4 className="text-foreground font-medium mb-4">{t('isletmeLogosuKare')}</h4>
  <div className="flex items-center gap-4">
- {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-border" />) : (<div className="w-20 h-20 rounded-lg bg-muted border border-dashed border-gray-500 flex items-center justify-center text-muted-foreground text-3xl">🏪</div>)}
+ {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-border" />) : (<div className="w-20 h-20 rounded-lg bg-muted border border-dashed border-gray-500 flex items-center justify-center text-muted-foreground"><Store className="w-8 h-8 opacity-50" /></div>)}
  {isEditing && (
  <div className="flex flex-col gap-2">
  <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer text-sm">
