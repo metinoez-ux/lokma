@@ -451,9 +451,21 @@ export default function AdminHeader() {
  </button>
  {tabletProfileOpen && (
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border z-50 min-w-[200px]">
- <Link href="/admin/settings" onClick={() => setTabletProfileOpen(false)} className="block px-4 py-3 border-b border-border hover:bg-muted/50 transition">
- <p className="text-foreground text-sm font-medium truncate">{admin.displayName || 'Super Admin'}</p>
- <p className="text-muted-foreground text-xs truncate">{admin.email || ''}</p>
+ <div className="px-4 py-3 border-b border-border bg-muted/20">
+ <p className="text-foreground text-sm font-bold truncate">{admin.displayName || 'Super Admin'}</p>
+ <p className="text-muted-foreground text-xs truncate opacity-70">{admin.email || admin.phone || ''}</p>
+ </div>
+ 
+ <Link
+ href="/admin/reports"
+ onClick={() => setTabletProfileOpen(false)}
+ className="flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium"
+ >
+ <span>⚠️</span> {t('reports')}
+ </Link>
+
+ <Link href="/admin/settings" onClick={() => setTabletProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium">
+ <span>⚙️</span> {t('settings')}
  </Link>
  {/* Workspace Switcher */}
  {admin.assignments && admin.assignments.length > 1 && (
@@ -499,8 +511,9 @@ export default function AdminHeader() {
  ))}
  </div>
  </div>
- <button
- onMouseDown={handleLogout}
+
+  <button
+  onMouseDown={handleLogout}
  disabled={loggingOut}
  className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-800 dark:text-red-400 transition text-xs font-medium rounded-b-lg disabled:opacity-50"
  >
@@ -579,7 +592,7 @@ export default function AdminHeader() {
  : 'text-slate-300 hover:text-white hover:bg-background/10'
  }`}
  >
- {t('orders')}
+ KDS
  </Link>
 
  {/* 3. Reservierungen */}
@@ -593,28 +606,32 @@ export default function AdminHeader() {
  {t('reservations')}
  </Link>
 
- {/* 4. Produkte & Kategorien */}
- <div className="relative group">
- <button
- className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
- isActiveNav('/admin/products') || isActiveNav('/admin/ai-menu')
- ? 'bg-background/10 border border-[var(--header-border)] text-white shadow-inner'
- : 'text-slate-300 hover:text-white hover:bg-background/10'
- }`}
- >
- {t('productsCategories')} <span className="text-[10px] opacity-70">&#9660;</span>
- </button>
- <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 z-50">
- <div className="bg-card border border-border rounded-xl shadow-2xl shadow-black/50 py-2 min-w-[200px] overflow-hidden">
- <Link href="/admin/products" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
- {t('productsCategories')}
- </Link>
- <Link href="/admin/ai-menu" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
- {t('aiMenu')}
- </Link>
- </div>
- </div>
- </div>
+  {/* 4. Produkte & Lieferanten */}
+  <div className="relative group">
+  <button
+  className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
+  isActiveNav('/admin/products') || isActiveNav('/admin/categories') || isActiveNav('/admin/orders/suppliers') || isActiveNav('/admin/ai-menu')
+  ? 'bg-background/10 border border-[var(--header-border)] text-white shadow-inner'
+  : 'text-slate-300 hover:text-white hover:bg-background/10'
+  }`}
+  >
+  Produkte & Lieferanten <span className="text-[10px] opacity-70">&#9660;</span>
+  </button>
+  <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 z-50">
+  <div className="bg-card border border-border rounded-xl shadow-2xl shadow-black/50 py-2 min-w-[200px] overflow-hidden">
+  <Link href="/admin/products" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
+  Produkte
+  </Link>
+  <Link href="/admin/orders/suppliers" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
+  Lieferanten
+  </Link>
+  <div className="border-t border-border my-1"></div>
+  <Link href="/admin/ai-menu" className="px-4 py-2.5 text-xs transition-colors text-amber-500 font-medium hover:bg-muted block">
+  {t('aiMenu')}
+  </Link>
+  </div>
+  </div>
+  </div>
 
 
 
@@ -700,7 +717,6 @@ export default function AdminHeader() {
  {serviceMenuOpen && (
    <div className="bg-muted/10 py-1">
      <Link href="/admin/activity-logs" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">{t('activityLogs')}</Link>
-     <Link href="/admin/reports" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">{t('reports')}</Link>
    </div>
  )}
  <div className="h-px bg-border my-1"></div>
@@ -772,13 +788,24 @@ export default function AdminHeader() {
 
  {/* Dropdown Menu (including Settings) */}
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
- <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-muted/50 transition">
- <p className="text-foreground text-sm font-medium truncate">
+ <div className="px-4 py-3 border-b border-border bg-muted/20">
+ <p className="text-foreground text-sm font-bold truncate">
  {admin.displayName || 'Super Admin'}
  </p>
- <p className="text-muted-foreground text-xs truncate">
+ <p className="text-muted-foreground text-xs truncate opacity-70">
  {admin.email || admin.phone || ''}
  </p>
+ </div>
+
+ <Link
+ href="/admin/reports"
+ className="w-full flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium"
+ >
+ <span>⚠️</span> {t('reports')}
+ </Link>
+
+ <Link href="/admin/settings" className="w-full flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium">
+ <span>⚙️</span> {t('settings')}
  </Link>
 
  {/* Language Selection */}
@@ -848,25 +875,26 @@ export default function AdminHeader() {
  </div>
  )}
 
- {/* 2. Bestellungen */}
- <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('orders')}</Link>
+ {/* 2. KDS */}
+ <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
 
  {/* 3. Reservierungen */}
  <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
 
- {/* 4. Produkte & Kategorien */}
- <div>
- <button onClick={() => toggleSection('products')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
- {t('productsCategories')}
- <span className={`text-xs transition-transform ${expandedSection === 'products' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
- </button>
- {expandedSection === 'products' && (
- <div className="bg-muted/50 py-1">
- <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('productsCategories')}</Link>
- <Link href="/admin/ai-menu" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('aiMenu')}</Link>
- </div>
- )}
- </div>
+  {/* 4. Produkte & Lieferanten */}
+  <div>
+  <button onClick={() => toggleSection('products')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
+  Produkte & Lieferanten
+  <span className={`text-xs transition-transform ${expandedSection === 'products' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
+  </button>
+  {expandedSection === 'products' && (
+  <div className="bg-muted/50 py-1">
+  <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Produkte</Link>
+  <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Lieferanten</Link>
+  <Link href="/admin/ai-menu" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-amber-500 font-medium hover:bg-muted">{t('aiMenu')}</Link>
+  </div>
+  )}
+  </div>
 
  {/* 5. Buchhaltung */}
  <div>
@@ -908,7 +936,6 @@ export default function AdminHeader() {
  {expandedSection === 'service' && (
  <div className="bg-muted/50 py-1">
  <Link href="/admin/activity-logs" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('activityLogs')}</Link>
- <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('reports')}</Link>
  </div>
  )}
  </div>
@@ -1042,11 +1069,8 @@ export default function AdminHeader() {
  <div className="hidden min-[1921px]:flex flex-wrap items-center gap-1.5 flex-1">
  {[
   { href: '/admin/dashboard', label: t('dashboard') },
-  { href: '/admin/orders', label: t('orders') },
+  { href: '/admin/orders', label: 'KDS' },
   { href: '/admin/reservations', label: t('reservations') },
-  { href: '/admin/orders/suppliers', label: t('suppliers') },
-  { href: '/admin/products', label: t('productsCategories') },
-  { href: '/admin/reports', label: t('reports') },
   ].map(({ href, label }) => (
  <Link
  key={href}
@@ -1060,7 +1084,42 @@ export default function AdminHeader() {
  </Link>
  ))}
 
- {/* Werbung Dropdown for Regular Admin */}
+  {/* Produkte & Lieferanten Dropdown for Regular Admin */}
+  <div className="relative group">
+  <button
+  className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/products') || isActiveNav('/admin/categories') || isActiveNav('/admin/orders/suppliers') || isActiveNav('/admin/ai-menu')
+  ? 'bg-accent border border-border text-foreground shadow-inner'
+  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+  }`}
+  >
+  Produkte & Lieferanten
+  <span className="text-[10px]">▼</span>
+  </button>
+  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+  <div className="py-1">
+  <Link
+  href="/admin/products"
+  className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/products') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
+  >
+  Produkte
+  </Link>
+  <Link
+  href="/admin/categories"
+  className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/categories') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
+  >
+  Kategorien
+  </Link>
+  <Link
+  href="/admin/orders/suppliers"
+  className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/orders/suppliers') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
+  >
+  Lieferanten
+  </Link>
+  </div>
+  </div>
+  </div>
+
+  {/* Werbung Dropdown for Regular Admin */}
  <div className="relative group">
  <button
  className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/promotions') || isActiveNav('/admin/sponsored-ads')
@@ -1121,46 +1180,16 @@ export default function AdminHeader() {
  </div>
  </div>
 
- {/* Settings Dropdown for Regular Admin */}
- <div className="relative group">
- <button
- className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/settings') ||
- isActiveNav('/admin/delivery-settings')
+ {/* Settings Link for Regular Admin */}
+ <Link
+ href="/admin/settings"
+ className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/settings') || isActiveNav('/admin/settings/company')
  ? 'bg-accent border border-border text-foreground shadow-inner'
  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
  }`}
  >
  {t('settings')}
- <span className="text-[10px]">▼</span>
- </button>
-
- {/* Dropdown Menu */}
- <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
- <div className="py-1">
- <Link
- href="/admin/settings"
- className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/settings') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
- >
- {t('settings')}
  </Link>
- <Link
- href="/admin/delivery-settings"
- className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/delivery-settings') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
- >
- {t('teslimat_ayarlari')}
- </Link>
- {/* Add AI Menu here for regular admins as well if it's available for them */}
- {admin?.adminType === 'restoran' && (
- <Link
- href="/admin/ai-menu"
- className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/ai-menu') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
- >
- {t('aiMenu')}
- </Link>
- )}
- </div>
- </div>
- </div>
  </div>
 
  {/* Printer Status + Profile & Role */}
@@ -1280,6 +1309,12 @@ export default function AdminHeader() {
  </div>
  </div>
  <Link
+ href="/admin/reports"
+ className="w-full flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium"
+ >
+ {t('reports')}
+ </Link>
+ <Link
  href="/account"
  className="w-full flex items-center gap-2 px-4 py-3 text-blue-800 dark:text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 transition text-sm border-b border-border"
  >
@@ -1312,11 +1347,23 @@ export default function AdminHeader() {
  </div>
  <nav className="py-2">
   <Link href="/admin/dashboard" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
-  <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('orders')}</Link>
+  <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
   <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
-  <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('suppliers')}</Link>
-  <Link href="/admin/products" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('productsCategories')}</Link>
-  <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reports')}</Link>
+
+  {/* Produkte & Lieferanten section */}
+  <div className="border-t border-border mt-1 pt-1">
+  <button onClick={() => toggleSection('products_admin')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
+  Produkte & Lieferanten
+  <span className={`text-xs transition-transform ${expandedSection === 'products_admin' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
+  </button>
+  {expandedSection === 'products_admin' && (
+  <div className="bg-muted/50 py-1">
+  <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Produkte</Link>
+  <Link href="/admin/categories" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Kategorien</Link>
+  <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Lieferanten</Link>
+  </div>
+  )}
+  </div>
 
   {/* Werbung section */}
   <div className="border-t border-border mt-1 pt-1">
@@ -1346,18 +1393,11 @@ export default function AdminHeader() {
  )}
  </div>
 
- {/* Settings section */}
- <div>
- <button onClick={() => toggleSection('settings')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
+ {/* Settings Link */}
+ <div className="border-t border-border mt-1 pt-1">
+ <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">
  {t('settings')}
- <span className={`text-xs transition-transform ${expandedSection === 'settings' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
- </button>
- {expandedSection === 'settings' && (
- <div className="bg-muted/50 py-1">
- <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('settings')}</Link>
- <Link href="/admin/delivery-settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('teslimat_ayarlari')}</Link>
- </div>
- )}
+ </Link>
  </div>
  </nav>
  </div>

@@ -34,6 +34,21 @@ export default function SettingsPage() {
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* İşletme Bilgileri */}
+  <Link
+    href="/admin/settings/company?target=bilgiler"
+    className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-red-600 hover:bg-red-950/20 transition-all group"
+  >
+    <div className="w-12 h-12 rounded-xl bg-red-900/50 flex items-center justify-center text-2xl group-hover:bg-red-800/50 transition">
+      🏪
+    </div>
+    <div>
+      <h3 className="font-bold text-foreground group-hover:text-red-300 transition">{t('isletmeBilgileri') || 'İşletme Bilgileri'}</h3>
+      <p className="text-xs text-muted-foreground/80">{t('isletmeProfilAdresIletisim') || 'Profil, adres, resimler ve iletişim'}</p>
+    </div>
+    <span className="ml-auto text-muted-foreground group-hover:text-red-400 transition text-xl">→</span>
+  </Link>
+
  {/* Menü ve Ürünler */}
  <Link
  href="/admin/products"
@@ -79,20 +94,20 @@ export default function SettingsPage() {
  <span className="ml-auto text-muted-foreground group-hover:text-indigo-400 transition text-xl">→</span>
  </Link>
 
- {/* Teslimat */}
- <Link
- href="/admin/delivery-settings"
- className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-amber-600 hover:bg-amber-950/20 transition-all group"
- >
- <div className="w-12 h-12 rounded-xl bg-amber-900/50 flex items-center justify-center text-2xl group-hover:bg-amber-800/50 transition">
- 🚚
- </div>
- <div>
- <h3 className="font-bold text-foreground group-hover:text-amber-300 transition">{t('teslimat') || 'Teslimat'}</h3>
- <p className="text-xs text-muted-foreground/80">{t('kurye_teslimat_ucreti_ve_siparis_saatler')}</p>
- </div>
- <span className="ml-auto text-muted-foreground group-hover:text-amber-800 dark:text-amber-400 transition text-xl">→</span>
- </Link>
+  {/* Teslimat */}
+  <Link
+    href="/admin/settings/company?target=teslimat"
+    className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-amber-600 hover:bg-amber-950/20 transition-all group"
+  >
+    <div className="w-12 h-12 rounded-xl bg-amber-900/50 flex items-center justify-center text-2xl group-hover:bg-amber-800/50 transition">
+      🚚
+    </div>
+    <div>
+      <h3 className="font-bold text-foreground group-hover:text-amber-300 transition">{t('teslimat') || 'Teslimat'}</h3>
+      <p className="text-xs text-muted-foreground/80">{t('kurye_teslimat_ucreti_ve_siparis_saatler')}</p>
+    </div>
+    <span className="ml-auto text-muted-foreground group-hover:text-amber-800 dark:text-amber-400 transition text-xl">→</span>
+  </Link>
 
  {/* Abonelik & Plan */}
  <Link

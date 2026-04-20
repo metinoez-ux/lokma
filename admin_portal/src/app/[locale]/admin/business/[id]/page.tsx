@@ -4062,8 +4062,9 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  </div>
+ {admin?.adminType === 'super' && (
  {/* Google Place */}
- <div className="space-y-4 pt-4 border-t border-border">
+ <div className="space-y-4 pt-4 border-t border-border mt-4">
  <h4 className="text-foreground font-medium pb-2">🗺️ Google Place</h4>
  <div className="relative">
  <label className="text-muted-foreground text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
@@ -4091,6 +4092,7 @@ export default function BusinessDetailsPage() {
  {formData.googlePlaceId && (<p className="text-xs text-green-800 dark:text-green-400 mt-1">{t('google_place_id_set')}</p>)}
  </div>
  </div>
+ )}
  </div>
  )}
 
