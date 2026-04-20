@@ -475,13 +475,27 @@ class _KermesCardState extends State<KermesCard> {
                         width: double.infinity,
                         child: imagePath != null
                             ? ((imagePath.toLowerCase().contains('.mp4') || imagePath.toLowerCase().contains('.mov') || imagePath.toLowerCase().contains('video%2F'))
-                                ? FittedBox(
-                                    fit: BoxFit.cover,
-                                    child: SizedBox(
-                                      width: 1600, // typical aspect ratio
-                                      height: 900,
-                                      child: VideoPlayer(VideoPreloadService.getController(imagePath)),
-                                    ),
+                                ? Builder(
+                                    builder: (context) {
+                                      final controller = VideoPreloadService.getController(imagePath);
+                                      return ValueListenableBuilder(
+                                        valueListenable: controller,
+                                        builder: (context, VideoPlayerValue value, child) {
+                                          if (!value.isInitialized) {
+                                            return Container(color: Colors.grey[200]);
+                                          }
+                                          // İlk kareyi çekmesi için ufak siyah ekranı engelliyoruz: aspect ratio korur.
+                                          return FittedBox(
+                                            fit: BoxFit.cover,
+                                            child: SizedBox(
+                                              width: value.size.width > 0 ? value.size.width : 1600,
+                                              height: value.size.height > 0 ? value.size.height : 900,
+                                              child: VideoPlayer(controller),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
                                   )
                                 : isNetworkImage
                                     ? LokmaNetworkImage(
