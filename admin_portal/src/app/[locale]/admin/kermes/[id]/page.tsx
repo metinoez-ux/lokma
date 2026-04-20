@@ -2876,7 +2876,7 @@ export default function KermesDetailPage() {
  <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-lg p-4">
  {editForm.headerImage ? (
  <div className="relative">
- {editForm.headerImage.toLowerCase().match(/\.(mp4|mov)$/) || editForm.headerImage.includes('video%2F') ? (
+ {editForm.headerImage.toLowerCase().match(/\.(mp4|mov)/) || editForm.headerImage.includes('video%2F') ? (
    <video src={editForm.headerImage} className="w-full h-32 object-cover rounded-lg" autoPlay loop muted playsInline />
  ) : (
    <img src={editForm.headerImage} alt={t('baslik_gorseli')} className="w-full h-32 object-cover rounded-lg" />
@@ -3024,7 +3024,7 @@ export default function KermesDetailPage() {
  <div className="space-y-4">
  {kermes?.headerImage && (
  <div>
- {kermes.headerImage.toLowerCase().match(/\.(mp4|mov)$/) || kermes.headerImage.includes('video%2F') ? (
+ {kermes.headerImage.toLowerCase().match(/\.(mp4|mov)/) || kermes.headerImage.includes('video%2F') ? (
    <video src={kermes.headerImage} className="w-full h-32 object-cover rounded-lg" autoPlay loop muted playsInline />
  ) : (
    <img src={kermes.headerImage} alt="Header" className="w-full h-32 object-cover rounded-lg" />
