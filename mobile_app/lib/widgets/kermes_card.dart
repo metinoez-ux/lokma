@@ -307,7 +307,7 @@ class _KermesCardState extends State<KermesCard> {
       parts.add(widget.event.state!);
     }
     if (widget.event.country.isNotEmpty) {
-      parts.add('${widget.event.country} ${_getCountryFlag(widget.event.country)}');
+      parts.add('${_getLocalizedCountry(widget.event.country)} ${_getCountryFlag(widget.event.country)}');
     }
     final formattedLocation = parts.join(' • ');
 
@@ -703,34 +703,37 @@ class _KermesCardState extends State<KermesCard> {
                         // Info Row (Distance + Courier)
                         Row(
                           children: [
-                            if (widget.currentPosition != null)
-                              GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  final lat = widget.event.latitude;
-                                  final lng = widget.event.longitude;
-                                  final label =
-                                      Uri.encodeComponent(widget.event.title);
-                                  // Apple Maps with driving directions
-                                  final url = Uri.parse(
-                                      'https://maps.apple.com/?daddr=$lat,$lng&dirflg=d&t=m&q=$label');
-                                  launchUrl(url,
-                                      mode: LaunchMode.externalApplication);
-                                },
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _buildIconText(Icons.near_me,
-                                        '$_distanceKm km', primaryRose, isDark),
-                                    const SizedBox(width: 12),
-                                    _buildIconText(
-                                        Icons.directions_car,
-                                        '~$_travelTime',
-                                        primaryRose,
-                                        isDark),
-                                  ],
-                                ),
+                            GestureDetector(
+                              onTap: () {
+                                if (widget.currentPosition == null) return;
+                                HapticFeedback.lightImpact();
+                                final lat = widget.event.latitude;
+                                final lng = widget.event.longitude;
+                                final label =
+                                    Uri.encodeComponent(widget.event.title);
+                                final addressStr =
+                                    Uri.encodeComponent(widget.event.address);
+                                // Apple Maps with driving directions
+                                final url = (lat == 0.0 && lng == 0.0 && widget.event.address.isNotEmpty)
+                                    ? Uri.parse('https://maps.apple.com/?daddr=$addressStr&dirflg=d&t=m&q=$label')
+                                    : Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d&t=m&q=$label');
+                                launchUrl(url,
+                                    mode: LaunchMode.externalApplication);
+                              },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildIconText(Icons.near_me,
+                                      '$_distanceKm km', primaryRose, isDark),
+                                  const SizedBox(width: 12),
+                                  _buildIconText(
+                                      Icons.directions_car,
+                                      '~$_travelTime',
+                                      primaryRose,
+                                      isDark),
+                                ],
                               ),
+                            ),
                             const Spacer(),
                             if (widget.event.hasDelivery)
                               Row(
@@ -780,6 +783,42 @@ class _KermesCardState extends State<KermesCard> {
   }
 
   // --- Helpers ---
+  String _getLocalizedCountry(String rawCountry) {
+    if (rawCountry.isEmpty) return rawCountry;
+    
+    final lang = context.locale.languageCode;
+    final lower = rawCountry.toLowerCase();
+    
+    // Check if it's Norway
+    final isNorway = lower.contains("norve") || lower.contains("norway") || lower.contains("norwegen");
+    // Check if it's Germany
+    final isGermany = lower.contains("alman") || lower.contains("german") || lower.contains("deutsch");
+    
+    if (lang == 'de') {
+      if (isNorway) return "Norwegen";
+      if (isGermany) return "Deutschland";
+    } else if (lang == 'tr') {
+      if (isNorway) return "Norveç";
+      if (isGermany) return "Almanya";
+    } else if (lang == 'nl') {
+       if (isNorway) return "Noorwegen";
+       if (isGermany) return "Duitsland";
+    } else if (lang == 'en') {
+       if (isNorway) return "Norway";
+       if (isGermany) return "Germany";
+    } else if (lang == 'fr') {
+       if (isNorway) return "Norvège";
+       if (isGermany) return "Allemagne";
+    } else if (lang == 'it') {
+       if (isNorway) return "Norvegia";
+       if (isGermany) return "Germania";
+    } else if (lang == 'es') {
+       if (isNorway) return "Noruega";
+       if (isGermany) return "Alemania";
+    }
+    return rawCountry.split(' ').first;
+  }
+
   String _getCountryFlag(String country) {
     final lower = country.toLowerCase()
         .replaceAll('\u0131', 'i')
@@ -796,15 +835,21 @@ class _KermesCardState extends State<KermesCard> {
     if (lower.contains('fransa') || lower.contains('france') || lower.contains('frankreich') || lower == 'fr') return '\u{1F1EB}\u{1F1F7}';
     if (lower.contains('belcika') || lower.contains('belgium') || lower.contains('belgien') || lower == 'be') return '\u{1F1E7}\u{1F1EA}';
     if (lower.contains('isvicre') || lower.contains('switzerland') || lower.contains('schweiz') || lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
-    if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
-    if (lower.contains('norvec') || lower.contains('norway') || lower.contains('norwegen') || lower == 'no') return '\u{1F1F3}\u{1F1F4}';
-    if (lower.contains('danimarka') || lower.contains('denmark') || lower.contains('danemark') || lower == 'dk') return '\u{1F1E9}\u{1F1F0}';
-    if (lower.contains('isvec') || lower.contains('sweden') || lower.contains('schweden') || lower == 'se') return '\u{1F1F8}\u{1F1EA}';
-    return '\u{1F1E9}\u{1F1EA}';
+    if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '🇭🇺';
+    if (lower.contains('norvec') || lower.contains('norway') || lower.contains('norwegen') || lower == 'no') return '🇳🇴';
+    if (lower.contains('danimarka') || lower.contains('denmark') || lower.contains('danemark') || lower == 'dk') return '🇩🇰';
+    if (lower.contains('isvec') || lower.contains('sweden') || lower.contains('schweden') || lower == 'se') return '🇸🇪';
+    if (lower.contains('ispanya') || lower.contains('spain') || lower.contains('spanien') || lower == 'es') return '🇪🇸';
+    if (lower.contains('romanya') || lower.contains('romania') || lower.contains('rumanien') || lower == 'ro') return '🇷🇴';
+    if (lower.contains('italya') || lower.contains('italy') || lower.contains('italien') || lower == 'it') return '🇮🇹';
+    if (lower.contains('meksika') || lower.contains('mexico') || lower.contains('mexiko') || lower == 'mx') return '🇲🇽';
+    if (lower.contains('yunanistan') || lower.contains('greece') || lower.contains('griechenland') || lower == 'gr') return '🇬🇷';
+    if (lower.contains('almanya') || lower.contains('germany') || lower.contains('deutschland') || lower == 'de') return '🇩🇪';
+    return ''; // Varsayilan olarak bilmedigimiz yerlere Almanya bayragi basmamak icin bos ceviriyoruz.
   }
 
   String get _distanceKm {
-    if (widget.currentPosition == null) return '';
+    if (widget.currentPosition == null || (widget.event.latitude == 0.0 && widget.event.longitude == 0.0)) return '~';
     final dist = Geolocator.distanceBetween(
           widget.currentPosition!.latitude,
           widget.currentPosition!.longitude,
@@ -816,7 +861,7 @@ class _KermesCardState extends State<KermesCard> {
   }
 
   String get _travelTime {
-    if (widget.currentPosition == null) return '';
+    if (widget.currentPosition == null || (widget.event.latitude == 0.0 && widget.event.longitude == 0.0)) return '-- dk';
     final dist = Geolocator.distanceBetween(
           widget.currentPosition!.latitude,
           widget.currentPosition!.longitude,

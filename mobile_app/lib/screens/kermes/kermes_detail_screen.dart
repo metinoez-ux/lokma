@@ -64,6 +64,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   // Realtime products listener
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
       _productsSubscription;
+      
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _globalImageSubscription;
   List<KermesMenuItem>? _liveMenu;
 
   final ValueNotifier<String> _selectedCategory = ValueNotifier('');
@@ -123,11 +126,14 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     return modes;
   }
 
+  String? _menuBackgroundImageUrl;
+
   @override
   void initState() {
     super.initState();
     _fetchLiveWeather();
     _loadGlobalFeatures();
+    _loadGlobalMenuImage();
     _loadBadges();
     _listenToProducts();
     _listenToEventDocument();
@@ -141,8 +147,24 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     }
   }
 
+  void _loadGlobalMenuImage() {
+    try {
+      _globalImageSubscription?.cancel();
+      _globalImageSubscription = FirebaseFirestore.instance.collection('settings').doc('kermes_system').snapshots().listen((doc) {
+        if (doc.exists && mounted) {
+          setState(() {
+            _menuBackgroundImageUrl = doc.data()?['menuImageUrl'] as String?;
+          });
+        }
+      });
+    } catch (e) {
+      debugPrint('Error loading global menu image: $e');
+    }
+  }
+
   @override
   void dispose() {
+    _globalImageSubscription?.cancel();
     _scrollController.removeListener(_onMenuScroll);
     _scrollController.dispose();
     _chipScrollController.dispose();
@@ -212,7 +234,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
   }
 
   double get _distanceKm {
-    if (widget.currentPosition == null) return 0;
+    if (widget.currentPosition == null || (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0)) return 0.0;
     return Geolocator.distanceBetween(
           widget.currentPosition!.latitude,
           widget.currentPosition!.longitude,
@@ -222,9 +244,44 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
         1000;
   }
 
+  String _getLocalizedCountry(String rawCountry) {
+    if (rawCountry.isEmpty) return rawCountry;
+    
+    final lang = context.locale.languageCode;
+    final lower = rawCountry.toLowerCase();
+    final isNorway = lower.contains("norve") || lower.contains("norway") || lower.contains("norwegen");
+    final isGermany = lower.contains("alman") || lower.contains("german") || lower.contains("deutsch");
+    
+    if (lang == 'de') {
+      if (isNorway) return "Norwegen";
+      if (isGermany) return "Deutschland";
+    } else if (lang == 'tr') {
+      if (isNorway) return "Norveç";
+      if (isGermany) return "Almanya";
+    } else if (lang == 'nl') {
+       if (isNorway) return "Noorwegen";
+       if (isGermany) return "Duitsland";
+    } else if (lang == 'en') {
+       if (isNorway) return "Norway";
+       if (isGermany) return "Germany";
+    } else if (lang == 'fr') {
+       if (isNorway) return "Norvège";
+       if (isGermany) return "Allemagne";
+    } else if (lang == 'it') {
+       if (isNorway) return "Norvegia";
+       if (isGermany) return "Germania";
+    } else if (lang == 'es') {
+       if (isNorway) return "Noruega";
+       if (isGermany) return "Alemania";
+    }
+    return rawCountry.split(' ').first;
+  }
+
   Future<void> _openMaps() async {
-    final uri = Uri.parse(
-        'https://www.google.com/maps/dir/?api=1&destination=${_currentEvent.latitude},${_currentEvent.longitude}');
+    final addressStr = Uri.encodeComponent(_currentEvent.address);
+    final uri = (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0 && _currentEvent.address.isNotEmpty)
+        ? Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$addressStr')
+        : Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${_currentEvent.latitude},${_currentEvent.longitude}');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -466,8 +523,14 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
       // Parse coordinates
       double lat = widget.event.latitude;
       double lng = widget.event.longitude;
-      if (data['latitude'] is num) lat = (data['latitude'] as num).toDouble();
-      if (data['longitude'] is num) lng = (data['longitude'] as num).toDouble();
+      if (data['latitude'] is num) {
+         final dbLat = (data['latitude'] as num).toDouble();
+         if (dbLat != 0.0) lat = dbLat;
+      }
+      if (data['longitude'] is num) {
+         final dbLng = (data['longitude'] as num).toDouble();
+         if (dbLng != 0.0) lng = dbLng;
+      }
 
       // Parse Dates from stream
       DateTime parseDate(dynamic val, DateTime fallback) {
@@ -1510,18 +1573,16 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                     },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
+                      child: SizedBox(
+                        height: 200,
+                        width: double.infinity,
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
                             // Background image
-                            _currentEvent.menu.isNotEmpty &&
-                                    _currentEvent
-                                        .menu.first.allImages.isNotEmpty
+                            _menuBackgroundImageUrl != null && _menuBackgroundImageUrl!.isNotEmpty
                                 ? LokmaNetworkImage(
-                                    imageUrl: _currentEvent
-                                        .menu.first.allImages.first,
+                                    imageUrl: _menuBackgroundImageUrl!,
                                     fit: BoxFit.cover,
                                   )
                                 : Container(
@@ -1618,8 +1679,9 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                                             'kermes.kermes_flavor_desc'.tr(),
                                             style: TextStyle(
                                                 color: Colors.white
-                                                    .withOpacity(0.6),
-                                                fontSize: 12)),
+                                                    .withOpacity(0.85),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500)),
                                       ],
                                     ),
                                   ),
@@ -2044,23 +2106,17 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
         lower.contains('switzerland') ||
         lower.contains('schweiz') ||
         lower == 'ch') return '\u{1F1E8}\u{1F1ED}';
-    if (lower.contains('macaristan') ||
-        lower.contains('hungary') ||
-        lower.contains('ungarn') ||
-        lower == 'hu') return '\u{1F1ED}\u{1F1FA}';
-    if (lower.contains('norvec') ||
-        lower.contains('norway') ||
-        lower.contains('norwegen') ||
-        lower == 'no') return '\u{1F1F3}\u{1F1F4}';
-    if (lower.contains('danimarka') ||
-        lower.contains('denmark') ||
-        lower.contains('danemark') ||
-        lower == 'dk') return '\u{1F1E9}\u{1F1F0}';
-    if (lower.contains('isvec') ||
-        lower.contains('sweden') ||
-        lower.contains('schweden') ||
-        lower == 'se') return '\u{1F1F8}\u{1F1EA}';
-    return '\u{1F1E9}\u{1F1EA}'; // Varsayilan Almanya
+    if (lower.contains('macaristan') || lower.contains('hungary') || lower.contains('ungarn') || lower == 'hu') return '🇭🇺';
+    if (lower.contains('norvec') || lower.contains('norway') || lower.contains('norwegen') || lower == 'no') return '🇳🇴';
+    if (lower.contains('danimarka') || lower.contains('denmark') || lower.contains('danemark') || lower == 'dk') return '🇩🇰';
+    if (lower.contains('isvec') || lower.contains('sweden') || lower.contains('schweden') || lower == 'se') return '🇸🇪';
+    if (lower.contains('ispanya') || lower.contains('spain') || lower.contains('spanien') || lower == 'es') return '🇪🇸';
+    if (lower.contains('romanya') || lower.contains('romania') || lower.contains('rumanien') || lower == 'ro') return '🇷🇴';
+    if (lower.contains('italya') || lower.contains('italy') || lower.contains('italien') || lower == 'it') return '🇮🇹';
+    if (lower.contains('meksika') || lower.contains('mexico') || lower.contains('mexiko') || lower == 'mx') return '🇲🇽';
+    if (lower.contains('yunanistan') || lower.contains('greece') || lower.contains('griechenland') || lower == 'gr') return '🇬🇷';
+    if (lower.contains('almanya') || lower.contains('germany') || lower.contains('deutschland') || lower == 'de') return '🇩🇪';
+    return ''; // Varsayilan Almanya hatasini giderdik
   }
 
   Widget _buildHeroSection(BuildContext context) {
@@ -2669,7 +2725,7 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                             ),
                           ),
                           Text(
-                            '${_currentEvent.city}, ${_currentEvent.country.split(' ').first}',
+                            '${_currentEvent.city}, ${_getLocalizedCountry(_currentEvent.country)}',
                             style: TextStyle(
                               color: textColor,
                               fontSize: 14,
@@ -2684,47 +2740,47 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              if (widget.currentPosition != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: dividerBg,
-                        border: Border.all(color: dividerBg),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.near_me, color: subtleTextColor, size: 14),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${_distanceKm.toStringAsFixed(1)} km',
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: dividerBg,
+                      border: Border.all(color: dividerBg),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${(_distanceKm * 2.5 + 3).ceil()} Dk.',
-                      style: TextStyle(
-                        color: subtleTextColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    )
-                  ],
-                ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.near_me, color: subtleTextColor, size: 14),
+                        const SizedBox(width: 6),
+                          Text(
+                            (widget.currentPosition == null || (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0))
+                              ? '~ km'
+                              : '${_distanceKm.toStringAsFixed(1)} km',
+                            style: TextStyle(
+                            color: textColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    (widget.currentPosition != null && !(_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0)) ? '${(_distanceKm * 2.5 + 3).ceil()} Dk.' : '-- Dk.',
+                    style: TextStyle(
+                      color: subtleTextColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 16),
           Text(
             [
               if (_currentEvent.address.isNotEmpty) _currentEvent.address,
@@ -2732,7 +2788,8 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
                   _currentEvent.city.isNotEmpty)
                 '${_currentEvent.postalCode} ${_currentEvent.city}'.trim(),
               if (_currentEvent.state?.isNotEmpty == true) _currentEvent.state!,
-              if (_currentEvent.country.isNotEmpty) _currentEvent.country,
+              if (_currentEvent.country.isNotEmpty) 
+                _getLocalizedCountry(_currentEvent.country),
             ].join('\n'),
             style: TextStyle(
               color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,

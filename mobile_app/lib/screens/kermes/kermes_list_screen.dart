@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart' as geo;
@@ -14,6 +16,7 @@ import 'package:lokma_app/widgets/kermes_card.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:lokma_app/services/kermes_badge_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lokma_app/config/app_secrets.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/utils/time_utils.dart' as time_utils;
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
@@ -415,7 +418,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                     .map((e) => e.toString())
                     .toList();
 
-            String country = 'Almanya';
+            String country = '';
             if (data['address'] is Map &&
                 (data['address'] as Map)['country'] != null) {
               final cc =
@@ -535,34 +538,58 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 (eventLat == 51.0 && eventLng == 6.0)) {
               if (fullAddress.isNotEmpty) {
                 try {
-                  final locations = await geo.locationFromAddress(fullAddress);
-                  if (locations.isNotEmpty) {
-                    eventLat = locations.first.latitude;
-                    eventLng = locations.first.longitude;
+                  final fallbackCountry = country.isNotEmpty ? country : '';
+                  
+                  // 1. HTTP Request to Google Geocoding API (Most reliable)
+                  if (AppSecrets.googlePlacesApiKey.isNotEmpty) {
+                    final queryAddress = (fallbackCountry.isNotEmpty && !fullAddress.toLowerCase().contains(fallbackCountry.toLowerCase()))
+                        ? '$fullAddress, $fallbackCountry'
+                        : fullAddress;
+                    
+                    final uri = Uri.parse(
+                        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(queryAddress)}&key=${AppSecrets.googlePlacesApiKey}');
+                    final response = await http.get(uri);
+                    if (response.statusCode == 200) {
+                      final jsonMap = jsonDecode(response.body);
+                      if (jsonMap['status'] == 'OK' && (jsonMap['results'] as List).isNotEmpty) {
+                        final loc = jsonMap['results'][0]['geometry']['location'];
+                        eventLat = (loc['lat'] as num).toDouble();
+                        eventLng = (loc['lng'] as num).toDouble();
+                      }
+                    }
+                  }
+
+                  // 2. Native Geocoding Package (If Google API failed or key is missing)
+                  if (eventLat == 0.0 && eventLng == 0.0) {
+                    final locations = await geo.locationFromAddress(fullAddress);
+                    if (locations.isNotEmpty) {
+                      eventLat = locations.first.latitude;
+                      eventLng = locations.first.longitude;
+                    }
                   }
                 } catch (geoErr) {
+                  // 3. Fallback: Search by city using native geocoder
                   if (city != 'Bilinmiyor') {
                     try {
-                      // Fallback: search by city and country instead of hardcoding Germany
-                      final fallbackCountry = country.isNotEmpty ? country : 'Germany';
-                      final cityLocations =
-                          await geo.locationFromAddress('$city, $fallbackCountry');
+                      final fallbackCountry = country.isNotEmpty ? country : '';
+                      final query = fallbackCountry.isNotEmpty ? '$city, $fallbackCountry' : city;
+                      final cityLocations = await geo.locationFromAddress(query);
                       if (cityLocations.isNotEmpty) {
                         eventLat = cityLocations.first.latitude;
                         eventLng = cityLocations.first.longitude;
                       }
                     } catch (_) {
-                      eventLat = 51.0;
-                      eventLng = 6.0;
+                      eventLat = 0.0;
+                      eventLng = 0.0;
                     }
                   } else {
-                    eventLat = 51.0;
-                    eventLng = 6.0;
+                    eventLat = 0.0;
+                    eventLng = 0.0;
                   }
                 }
               } else {
-                eventLat = 51.0;
-                eventLng = 6.0;
+                eventLat = 0.0;
+                eventLng = 0.0;
               }
             }
 
@@ -823,17 +850,19 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       events = events.where((e) => e.isSilaYolu).toList();
     } else if (_scopeMode == 'country') {
       // Ensure we explicitly filter by the user's localized country name if they select "all in Germany/Turkey"
-      String targetCountry = 'Almanya';
+      String targetCountry = '';
       if (_userCountryCode == 'TR') targetCountry = 'Türkiye';
+      else if (_userCountryCode == 'DE') targetCountry = 'Almanya';
       else if (_userCountryCode == 'BG') targetCountry = 'Bulgaristan';
       else if (_userCountryCode == 'AT') targetCountry = 'Avusturya';
       else if (_userCountryCode == 'CH') targetCountry = 'İsviçre';
       else if (_userCountryCode == 'NL') targetCountry = 'Hollanda';
       else if (_userCountryCode == 'FR') targetCountry = 'Fransa';
       else if (_userCountryCode == 'BE') targetCountry = 'Belçika';
+      else targetCountry = _userCountryCode.isNotEmpty ? _userCountryCode : '';
       
       events = events.where((e) {
-        if (e.country.isEmpty) return false;
+        if (targetCountry.isEmpty || e.country.isEmpty) return false;
         return _countriesMatch(targetCountry, e.country);
       }).toList();
     }

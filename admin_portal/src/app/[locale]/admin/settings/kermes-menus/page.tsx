@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useRouter } from 'next/navigation';
-import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import Link from 'next/link';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useTranslations } from 'next-intl';
@@ -46,6 +47,10 @@ export default function KermesMenusPage() {
  const [searchQuery, setSearchQuery] = useState('');
  const [showAddModal, setShowAddModal] = useState(false);
  const [editingItem, setEditingItem] = useState<KermesMenuItem | null>(null);
+
+ // Global Menu Image State
+ const [menuImageUrl, setMenuImageUrl] = useState<string | null>(null);
+ const [uploadingImage, setUploadingImage] = useState(false);
 
  // Form state
  const [formData, setFormData] = useState<{
@@ -91,6 +96,12 @@ export default function KermesMenusPage() {
  setCategories(['Ana Yemek', t('corba'), t('tatli'), t('i_cecek'), t('atistirmalik')]);
  }
 
+ // Load global menu image
+ const sysDoc = await getDoc(doc(db, 'settings', 'kermes_system'));
+ if (sysDoc.exists()) {
+   setMenuImageUrl(sysDoc.data()?.menuImageUrl || null);
+ }
+
  // Load menu items
  const menuQuery = query(collection(db, 'kermes_menu_catalog'), orderBy('sortOrder', 'asc'));
  const menuSnapshot = await getDocs(menuQuery);
@@ -102,6 +113,68 @@ export default function KermesMenusPage() {
  setLoading(false);
  }
  };
+
+  const handleGlobalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      // Client-side Resize & WebP compression
+      const compressToWebP = (file: File): Promise<Blob> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            const MAX_SIZE = 1200;
+            
+            if (width > height) {
+              if (width > MAX_SIZE) {
+                height *= MAX_SIZE / width;
+                width = MAX_SIZE;
+              }
+            } else {
+              if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height;
+                height = MAX_SIZE;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) resolve(blob);
+              else reject(new Error('Canvas conversion failed'));
+            }, 'image/webp', 0.85);
+          };
+          img.onerror = reject;
+          img.src = URL.createObjectURL(file);
+        });
+      };
+
+      const compressedBlob = await compressToWebP(file);
+      const fileName = `kermes_system/menu_bg_${Date.now()}.webp`;
+      const storageRef = ref(storage, fileName);
+      
+      await uploadBytes(storageRef, compressedBlob, { contentType: 'image/webp', cacheControl: 'public, max-age=31536000' });
+      const downloadUrl = await getDownloadURL(storageRef);
+
+      await setDoc(doc(db, 'settings', 'kermes_system'), { 
+        menuImageUrl: downloadUrl 
+      }, { merge: true });
+
+      setMenuImageUrl(downloadUrl);
+    } catch(err) {
+      console.error('Resim yükleme hatası:', err);
+      alert('Resim yükleme başarısız. Lütfen tekrar deneyin.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
  useEffect(() => {
  if (!adminLoading && admin?.role === 'super_admin') {
@@ -253,12 +326,55 @@ export default function KermesMenusPage() {
  onClick={() => { resetForm(); setEditingItem(null); setShowAddModal(true); }}
  className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
  >
- <span>➕</span>
  {t('yeni_menu_ekle')}
  </button>
  </div>
 
- {/* Filters */}
+ {/* Global Menu Background Image */}
+  <div className="bg-card rounded-xl p-6 border border-gray-700/50 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div className="flex-1">
+      <h2 className="text-lg font-bold text-foreground mb-1">Meniu Kartı Arka Plan Resmi</h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        Bu görsel, tüm kermes detay sayfalarında "Menü & Sipariş" kartının arka planı olarak kullanılacaktır.
+      </p>
+      {menuImageUrl ? (
+        <div className="relative w-full max-w-[320px] aspect-[21/9] rounded-lg overflow-hidden border border-gray-600">
+          <img src={menuImageUrl} alt="Menü Arka Plan" className="w-full h-full object-cover" />
+          <button 
+           onClick={async () => {
+             if (confirm('Emin misiniz?')) {
+               await setDoc(doc(db, 'settings', 'kermes_system'), { menuImageUrl: null }, { merge: true });
+               setMenuImageUrl(null);
+             }
+           }}
+           className="absolute top-2 right-2 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 shadow"
+          >
+           ×
+          </button>
+        </div>
+      ) : (
+        <div className="h-20 max-w-[320px] border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-muted-foreground text-sm flex-col">
+           <span>Görsel Yüklü Değil</span>
+           <span className="text-xs opacity-70">Varsayılan siyah/kahverengi gradyan kullanılır.</span>
+        </div>
+      )}
+    </div>
+    
+    <div className="shrink-0 flex items-center gap-4">
+      <label className="cursor-pointer px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition flex items-center gap-2">
+        <span>{uploadingImage ? 'Yükleniyor...' : (menuImageUrl ? 'Resmi Değiştir' : 'Resim Yükle')}</span>
+        <input 
+          type="file" 
+          accept="image/*"
+          className="hidden" 
+          onChange={handleGlobalImageUpload}
+          disabled={uploadingImage}
+        />
+      </label>
+    </div>
+  </div>
+
+  {/* Filters */}
  <div className="flex flex-col md:flex-row gap-4 mb-6">
  <div className="flex-1 relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>

@@ -210,8 +210,8 @@ class KermesEvent {
     required this.id,
     required this.city,
     this.postalCode = '',
-    this.country = 'Almanya', // Varsayılan: Almanya
-    this.state, // Eyalet opsiyonel
+    this.country = '',
+    this.state,
     required this.title,
     this.description = '',
     required this.address,
@@ -481,7 +481,7 @@ class KermesParkingInfo {
     this.street = '',
     this.city = '',
     this.postalCode = '',
-    this.country = 'Deutschland',
+    this.country = '',
     this.description = '',
     this.imageUrl,
     this.images = const [],
@@ -526,7 +526,7 @@ class KermesParkingInfo {
       street: json['street'] as String? ?? '',
       city: json['city'] as String? ?? '',
       postalCode: json['postalCode'] as String? ?? '',
-      country: json['country'] as String? ?? 'Deutschland',
+      country: json['country'] as String? ?? '',
       description: json['description'] as String? ?? '',
       imageUrl: json['imageUrl'] as String?,
       images: (json['images'] as List<dynamic>?)?.cast<String>() ?? [],
