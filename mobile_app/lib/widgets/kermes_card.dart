@@ -15,7 +15,7 @@ import '../../utils/currency_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'brand_info_sheet.dart';
 import '../../utils/distance_utils.dart';
-import '../../screens/kermes/widgets/kermes_video_header.dart';
+import '../screens/kermes/widgets/kermes_video_header.dart';
 
 class KermesCard extends StatefulWidget {
   final KermesEvent event;
