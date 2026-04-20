@@ -1,0 +1,2870 @@
+ {settingsSubTab === 'isletme' && (
+ <>
+ {!isEditing ? (
+ <button
+ onClick={() => setIsEditing(true)}
+ className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-medium transition flex items-center gap-2"
+ >
+ ✏️ {t('duzenle') || 'Düzenle'}
+ </button>
+ ) : (
+ <>
+ <button
+ onClick={() => setIsEditing(false)}
+ className="px-4 py-2 bg-muted border border-border text-foreground text-white rounded-lg hover:bg-gray-500 font-medium transition text-sm"
+ >
+ {t('iptal1') || 'İptal'}
+ </button>
+ <button
+ onClick={handleSave}
+ disabled={saving}
+ className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium transition"
+ >
+ {saving ? '...' : t('kaydet')}
+ </button>
+ </>
+ )}
+ </>
+ )}
+ </div>
+ </div>
+
+ {/* Sub-Tab: İşletme */}
+ {settingsSubTab === "isletme" && (
+ <>
+ {/* Internal Tab Bar for İşletme */}
+ <div className="flex gap-2 border-b border-border pb-3 mb-6 flex-wrap">
+ {[
+ { id: "bilgiler" as const, label: t('isletmeBilgileri') },
+ { id: "fatura" as const, label: t('fatura_adresi') },
+ { id: "zertifikalar" as const, label: t('sertifikalarLabel') },
+ { id: "gorseller" as const, label: t('gorseller') },
+ { id: "saatler" as const, label: t('acilisSaatleri') },
+ { id: "teslimat" as const, label: t('teslimatAyarlari') },
+ ].map((tab) => (
+ <button
+ key={tab.id}
+ onClick={() => setIsletmeInternalTab(tab.id)}
+ className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${isletmeInternalTab === tab.id
+ ? "bg-red-600 text-white"
+ : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
+ }`}
+ >
+ {tab.label}
+ </button>
+ ))}
+ </div>
+
+ {/* ═══════ Tab 1: İşletme Bilgileri ═══════ */}
+ {isletmeInternalTab === "bilgiler" && (
+ <div className="space-y-6">
+ {/* Şirket Adı */}
+ <div>
+ <label className="text-muted-foreground text-sm">{t('sirketAdi')}</label>
+ <input type="text" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ {/* Mutfak Türü */}
+ <div>
+ <label className="text-muted-foreground text-sm">{t('mutfakTuruAltBaslik')}</label>
+ <input type="text" value={formData.cuisineType} onChange={(e) => setFormData({ ...formData, cuisineType: e.target.value })} disabled={!isEditing} placeholder={t('ornKebapDonerTurkisch')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ <p className="text-xs text-muted-foreground mt-1">{t('kartlardaIsletmeAdiAltindaGosterilir')}</p>
+ </div>
+ {/* İşletme Türleri */}
+ <div>
+ <label className="text-muted-foreground text-sm block mb-2">{t('isletmeTurleri')}</label>
+ <div className="flex flex-wrap gap-2">
+ {dynamicSectorTypes.map((sector) => {
+ const isSelected = formData.types?.includes(sector.id);
+ return (
+ <button key={sector.id} type="button" onClick={() => { if (!isEditing) return; const newTypes = isSelected ? formData.types.filter(t => t !== sector.id) : [...(formData.types || []), sector.id]; setFormData({ ...formData, types: newTypes }); }} disabled={!isEditing} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'bg-blue-600 text-white ring-2 ring-white/50' : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+ <span>{sector.icon}</span><span>{sector.label}</span>{isSelected && <span className="text-white/80">✓</span>}
+ </button>
+ );
+ })}
+ </div>
+ {formData.types?.length > 0 && (<p className="text-xs text-green-800 dark:text-green-400 mt-2">{formData.types.length} {t('modulAktifHerModulAyriUcretlendirilir')}</p>)}
+ </div>
+ {/* Müşteri No */}
+ <div>
+ <label className="text-muted-foreground text-sm">{t('musteriNo')}</label>
+ <input type="text" value={formData.customerId} readOnly disabled={true} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 opacity-50 cursor-not-allowed" />
+ <p className="text-xs text-muted-foreground mt-1">{t('musteriNoDegistirilemez')}</p>
+ </div>
+ {/* Vergi UID */}
+ <div>
+ <label className="text-muted-foreground text-sm">{t('vergi_uid_nummer_vat')}</label>
+ <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
+ <p className="text-xs text-muted-foreground mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789')}</p>
+ </div>
+ {/* Adres */}
+ <div className="space-y-4 pt-4 border-t border-border">
+ <h4 className="text-foreground font-medium pb-2"> {t('adres_baslik')}</h4>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('sokakCadde')}</label>
+ <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div className="grid grid-cols-2 gap-2">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('postaKodu')}</label>
+ <input type="text" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('sehir1')}</label>
+ <input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ </div>
+ <div className="mt-4">
+ <label className="text-muted-foreground text-sm">{t('ulke') || 'Ülke'}</label>
+ <select value={formData.country || 'DE'} onChange={(e) => setFormData({ ...formData, country: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50">
+ <option value="DE">Deutschland</option>
+ <option value="TR">Türkiye</option>
+ <option value="AT">Österreich</option>
+ <option value="CH">Schweiz</option>
+ <option value="NL">Niederlande</option>
+ <option value="FR">Frankreich</option>
+ <option value="BE">Belgien</option>
+ </select>
+ </div>
+ </div>
+ {/* İletişim */}
+ <div className="space-y-4 pt-4 border-t border-border">
+ <h4 className="text-foreground font-medium pb-2">{t('iletisim')}</h4>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('telefon_label')}</label>
+ <input type="tel" value={formData.shopPhone || ''} onChange={(e) => setFormData({ ...formData, shopPhone: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('ePosta')}</label>
+ <input type="email" value={formData.shopEmail || ''} onChange={(e) => setFormData({ ...formData, shopEmail: e.target.value })} disabled={!isEditing} placeholder="info@example.com" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('webSitesi')}</label>
+ <input type="url" value={formData.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} disabled={!isEditing} placeholder="https://www.example.com" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ </div>
+ {/* Sosyal Medya */}
+ <div className="space-y-4 pt-4 border-t border-border">
+ <h4 className="text-foreground font-medium pb-2">📱 {t('sosyalMedya')}</h4>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('instagram')}</label>
+ <input type="text" value={formData.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">📘 Facebook</label>
+ <input type="text" value={formData.facebook || ''} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} disabled={!isEditing} placeholder="facebook.com/..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">💬 WhatsApp</label>
+ <input type="tel" value={formData.whatsapp || ''} onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">🎵 TikTok</label>
+ <input type="text" value={formData.tiktok || ''} onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">▶️ YouTube</label>
+ <input type="text" value={formData.youtube || ''} onChange={(e) => setFormData({ ...formData, youtube: e.target.value })} disabled={!isEditing} placeholder="youtube.com/..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ </div>
+ </div>
+ {/* İrtibat Kişisi */}
+ <div className="space-y-4 pt-4 border-t border-border">
+ <h4 className="text-blue-800 dark:text-blue-400 font-medium text-sm">{t('lokmaYetkiliIrtibatKisisi')}</h4>
+ <div className="grid grid-cols-2 gap-4">
+ <div><label className="text-muted-foreground text-xs block mb-1">{t('adi')}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
+ <div><label className="text-muted-foreground text-xs block mb-1">{t('soyadi')}</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
+ </div>
+ <div className="grid grid-cols-2 gap-4">
+ <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselTel')}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
+ <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselEmail')}</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
+ </div>
+ </div>
+ {/* Impressum / Rechtliche Angaben */}
+ <div className="space-y-4 pt-4 border-t border-border">
+ <h4 className="text-foreground font-medium pb-2">📜 {t('impressumBaslik')}</h4>
+ <p className="text-muted-foreground text-xs -mt-2">{t('impressumAciklama')}</p>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('rechtsform')}</label>
+ <select value={formData.legalForm || ''} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50">
+ <option value="">{t('bitteWaehlen')}</option>
+ {Object.entries(GERMAN_LEGAL_FORM_LABELS).map(([key, label]) => (
+ <option key={key} value={key}>{label}</option>
+ ))}
+ </select>
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('geschaeftsfuehrer')}</label>
+ <input type="text" value={formData.managingDirector || ''} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('vertretungsberechtigter')}</label>
+ <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('registergericht')}</label>
+ <input type="text" value={formData.registerCourt || ''} onChange={(e) => setFormData({ ...formData, registerCourt: e.target.value })} disabled={!isEditing} placeholder="z.B. Amtsgericht Mönchengladbach" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('handelsregisternummer')}</label>
+ <input type="text" value={formData.registerNumber || ''} onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value })} disabled={!isEditing} placeholder="z.B. HRB 12345" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
+ </div>
+ </div>
+ </div>
+ {/* Google Place */}
+ <div className="space-y-4 pt-4 border-t border-border">
+ <h4 className="text-foreground font-medium pb-2">🗺️ Google Place</h4>
+ <div className="relative">
+ <label className="text-muted-foreground text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
+ {isEditing && (
+ <div className="flex gap-2 mt-1 mb-2">
+ <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder={t('isletmeAdiVeyaAdresiAra')} className="flex-1 bg-foreground text-background shadow-md px-3 py-2 rounded-lg border border-border focus:border-blue-500" />
+ <button type="button" onClick={() => handleGooglePlacesSearch()} disabled={googleSearchLoading || googleSearchQuery.length < 3} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+ {googleSearchLoading ? (<span className="animate-spin"></span>) : (<span></span>)} {t('ara_button')}
+ </button>
+ </div>
+ )}
+ {showGoogleDropdown && googleSearchResults.length > 0 && (
+ <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
+ {googleSearchResults.map((place, index) => (
+ <button key={place.place_id || index} type="button" onClick={() => handleSelectGooglePlace(place)} className="w-full text-left px-4 py-3 hover:bg-muted border-b border-border last:border-0 transition">
+ <p className="text-foreground font-medium">{place.name}</p>
+ <p className="text-muted-foreground text-sm">{place.formatted_address}</p>
+ {place.rating && (<p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} {t('degerlendirme')}</p>)}
+ </button>
+ ))}
+ <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-muted text-muted-foreground hover:text-foreground text-sm">✕ {t('kapat_button')}</button>
+ </div>
+ )}
+ <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono text-sm" />
+ {formData.googlePlaceId && (<p className="text-xs text-green-800 dark:text-green-400 mt-1">{t('google_place_id_set')}</p>)}
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* ═══════ Tab 2: Fatura Adresi ═══════ */}
+ {isletmeInternalTab === t(t('fatura')) && (
+ <div className="space-y-6">
+ <div className="bg-card/50 border border-border rounded-xl p-6">
+ <label className="flex items-center gap-3 cursor-pointer mb-4">
+ <input type="checkbox" checked={formData.hasDifferentBillingAddress || false} onChange={(e) => setFormData({ ...formData, hasDifferentBillingAddress: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-500" />
+ <span className="text-foreground font-medium">{t('faturaFarkliBirKisifirmaUzerineKesilsin')}</span>
+ </label>
+ <p className="text-xs text-muted-foreground mb-4">{t('geneldeIsletmeIsmiIleFaturaIsmi')}</p>
+ {formData.hasDifferentBillingAddress && (
+ <div className="space-y-4 pt-4 border-t border-border">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('faturaFirmaKisiAdi')}</label>
+ <input type="text" value={formData.billingName || ''} onChange={(e) => setFormData({ ...formData, billingName: e.target.value })} disabled={!isEditing} placeholder={t('ornAbcGmbh')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('fatura_adresi')}</label>
+ <input type="text" value={formData.billingStreet || ''} onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })} disabled={!isEditing} placeholder={t('sokakCadde')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('postaKodu')}</label>
+ <input type="text" value={formData.billingPostalCode || ''} onChange={(e) => setFormData({ ...formData, billingPostalCode: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('sehir1')}</label>
+ <input type="text" value={formData.billingCity || ''} onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('fatura_vergi_no')}</label>
+ <input type="text" value={formData.billingVatNumber || ''} onChange={(e) => setFormData({ ...formData, billingVatNumber: e.target.value })} disabled={!isEditing} placeholder="DE..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
+ </div>
+ </div>
+ )}
+ </div>
+ </div>
+ )}
+
+ {/* ═══════ Tab 3: Zertifikalar ═══════ */}
+ {isletmeInternalTab === "zertifikalar" && (
+ <div className="space-y-6">
+ {admin?.adminType === 'super' ? (
+ <>
+ <div className="bg-card/50 border border-border rounded-xl p-6">
+ <h4 className="text-foreground font-medium mb-4">LOKMA Platform Markaları & Rozetleri</h4>
+ <p className="text-xs text-muted-foreground mb-4">Bu işletmenin listeleme sayfasında ve detaylarında görünmesini istediğiniz logoları seçin.</p>
+ {platformBrands.length === 0 ? (
+ <div className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500 rounded p-4">
+ Henüz sistemde aktif marka / logo bulunmuyor. Lütfen önce MIRA Yönetim Merkezi üzerinden Platform Markaları ekleyin.
+ </div>
+ ) : (
+ <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+ {platformBrands.map(badge => {
+ const isSelected = formData.activeBrandIds?.includes(badge.id);
+ return (
+ <label 
+ key={badge.id}
+ className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+ isSelected 
+ ? 'bg-blue-600/10 border-blue-500 ring-1 ring-blue-500 shadow-sm' 
+ : 'bg-muted/50 border-border hover:bg-muted'
+ } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+ >
+ <input 
+ type="checkbox" 
+ checked={isSelected}
+ onChange={async (e) => {
+ if (!isEditing) return;
+ const newIds = e.target.checked 
+ ? [...(formData.activeBrandIds || []), badge.id]
+ : (formData.activeBrandIds || []).filter(id => id !== badge.id);
+ 
+ setFormData({ 
+  ...formData, 
+  activeBrandIds: newIds
+ });
+
+ if (businessId && businessId !== 'new') {
+    try {
+       await updateDoc(doc(db, "businesses", businessId), {
+           activeBrandIds: newIds
+       });
+       showToast(e.target.checked ? "Rozet eklendi (Anlık Yansıtıldı)" : "Rozet kaldırıldı (Anlık Yansıtıldı)", "success");
+    } catch (error) {}
+ }
+ }}
+ disabled={!isEditing}
+ className="w-4 h-4 accent-blue-600"
+ />
+ <div className="flex items-center gap-2 overflow-hidden">
+ {badge.iconUrl && (
+ <img src={badge.iconUrl} alt={badge.name} className="w-8 h-8 object-contain rounded-md bg-white p-0.5 shrink-0 border border-border" />
+ )}
+ <span className="font-medium text-sm truncate text-foreground" title={badge.name}>
+ {badge.name}
+ </span>
+ </div>
+ </label>
+ );
+ })}
+ </div>
+ )}
+ <p className="text-xs text-green-800 dark:text-green-400 mt-4 border-t border-border pt-4">
+ Seçilen markalar, mobil uygulamada işletme detaylarında ve kartında gösterilecektir.
+ </p>
+ </div>
+ 
+ 
+  {/* Hazır Ürün Filtreleri - SADECE MARKET & KASAPLARDA GÖRÜNSÜN */}
+  {isKasapType && (
+    <div className="bg-card/50 border border-border rounded-xl p-6 mt-6">
+    <h4 className="text-foreground font-medium mb-2">🛍️ Hazır Paket Ürün Satışı (Mobil Filtreleme)</h4>
+    <p className="text-xs text-muted-foreground mb-4">
+    Marketler veya bu ürünleri paketli satan işletmeler için işaretleyin. Bu sayede kasap/restoran (sertifikalı TUNA kullananlar) dışında da aramalarda çıkacaktır.
+    </p>
+    <div className="flex flex-wrap gap-4">
+    <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTunaProducts ? 'bg-red-600/10 border-red-600/50' : 'bg-background border-border hover:bg-muted'}`}>
+    <input type="checkbox" checked={formData.sellsTunaProducts} onChange={async (e) => {
+      const isChecked = e.target.checked;
+      setFormData({ ...formData, sellsTunaProducts: isChecked });
+      if (businessId && businessId !== 'new') {
+          try {
+              await updateDoc(doc(db, "businesses", businessId), { sellsTunaProducts: isChecked });
+              showToast("Tuna Hazır Paket durumu güncellendi", "success");
+          } catch(e){}
+      }
+    }} disabled={!isEditing} className="w-5 h-5 accent-red-600" />
+    <span className="font-medium text-foreground">🔴 TUNA Ürünleri Satıyor</span>
+    </label>
+    <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTorosProducts ? 'bg-green-600/10 border-green-600/50' : 'bg-background border-border hover:bg-muted'}`}>
+    <input type="checkbox" checked={formData.sellsTorosProducts} onChange={async (e) => {
+      const isChecked = e.target.checked;
+      setFormData({ ...formData, sellsTorosProducts: isChecked });
+      if (businessId && businessId !== 'new') {
+          try {
+              await updateDoc(doc(db, "businesses", businessId), { sellsTorosProducts: isChecked });
+              showToast("Toros Hazır Paket durumu güncellendi", "success");
+          } catch(e){}
+      }
+    }} disabled={!isEditing} className="w-5 h-5 accent-green-600" />
+    <span className="font-medium text-foreground">🟢 Akdeniz Toros Ürünleri Satıyor</span>
+    </label>
+    </div>
+    </div>
+  )}
+
+  </>
+ ) : (
+ <div className="bg-card/50 border border-border rounded-xl p-6 text-center">
+ <p className="text-muted-foreground">{t('zertifikaAyarlariSadeceSuperAdminTarafindan')}</p>
+ </div>
+ )}
+ </div>
+ )}
+
+ {/* ═══════ Tab 4: Görseller ═══════ */}
+ {isletmeInternalTab === "gorseller" && (
+ <div className="space-y-6">
+ {/* İşletme Kart Görseli */}
+ <div className="bg-card/50 border border-border rounded-xl p-6">
+ <h4 className="text-foreground font-medium mb-4">{t('isletmeKartGorseli')}</h4>
+ <div className="flex items-start gap-4">
+ <div className="w-32 h-32 bg-muted rounded-lg overflow-hidden flex items-center justify-center border border-border shrink-0">
+ {formData.imageUrl ? (<img src={formData.imageUrl} alt="Business" className="w-full h-full object-cover" />) : (<span className="text-4xl">{getBusinessTypeLabel((business as any)?.types || (business as any)?.type).emoji}</span>)}
+ </div>
+ {isEditing && (
+ <div className="flex flex-col gap-2 w-full">
+ <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
+ <div className="flex items-center gap-2 my-1"><span className="text-muted-foreground text-xs">{t('veya')}</span></div>
+ <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-card text-foreground rounded-lg hover:bg-muted dark:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
+ {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
+ </button>
+ {!formData.googlePlaceId && (<p className="text-xs text-red-800 dark:text-red-400">{t('google_id_gerekli')}</p>)}
+ </div>
+ )}
+ </div>
+ </div>
+ {/* İşletme Logosu */}
+ <div className="bg-card/50 border border-border rounded-xl p-6">
+ <h4 className="text-foreground font-medium mb-4">{t('isletmeLogosuKare')}</h4>
+ <div className="flex items-center gap-4">
+ {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-border" />) : (<div className="w-20 h-20 rounded-lg bg-muted border border-dashed border-gray-500 flex items-center justify-center text-muted-foreground text-3xl">🏪</div>)}
+ {isEditing && (
+ <div className="flex flex-col gap-2">
+ <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer text-sm">
+ {t('logoYukle')}
+ <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if (e.target.files && e.target.files[0]) { const file = e.target.files[0]; const logoRef = ref(storage, `business_logos/${businessId}/logo_${Date.now()}.jpg`); const uploadTask = uploadBytesResumable(logoRef, file); uploadTask.on('state_changed', () => { }, (error) => { console.error('Logo upload error:', error); showToast(t('logoYuklenirkenHataOlustu'), 'error'); }, async () => { const url = await getDownloadURL(uploadTask.snapshot.ref); setFormData({ ...formData, logoUrl: url }); showToast(t('logoYuklendi'), 'success'); }); } }} />
+ </label>
+ {formData.logoUrl && (<button type="button" onClick={() => setFormData({ ...formData, logoUrl: '' })} className="text-red-800 dark:text-red-400 text-xs hover:text-red-300">{t('logoyuKaldir')}</button>)}
+ </div>
+ )}
+ </div>
+ <p className="text-xs text-muted-foreground mt-2">{t('onerilenBoyut64x64PikselKare')}</p>
+ </div>
+ </div>
+ )}
+
+ {/* ═══════ Tab 5: Açılış Saatleri (Genel / Kurye / Gel-Al) ═══════ */}
+ {isletmeInternalTab === "saatler" && (
+ <div className="space-y-6">
+ {/* Left Sidebar + Content Grid Layout */}
+ <div className="flex gap-0 rounded-xl overflow-hidden border border-border">
+ {/* Left Sidebar Navigation */}
+ <div className="w-48 bg-card/80 border-r border-border flex-shrink-0">
+ {[
+ { id: "genel" as const, label: t('acilisSaatleri') },
+ { id: "kurye" as const, label: t('kuryeSaatleri') },
+ { id: "gelal" as const, label: t('gelAlSaatleri') },
+ ].map((tab) => (
+ <button
+ key={tab.id}
+ onClick={() => setSaatlerSubTab(tab.id)}
+ className={`w-full text-left px-4 py-3.5 text-sm font-medium transition border-b border-border/50 last:border-0 ${saatlerSubTab === tab.id
+ ? "bg-blue-600/20 text-blue-800 dark:text-blue-400 border-l-2 border-l-blue-500"
+ : "text-muted-foreground hover:bg-muted/50 hover:text-white border-l-2 border-l-transparent"
+ }`}
+ >
+ {tab.label}
+ </button>
+ ))}
+ </div>
+
+ {/* Right Content Area */}
+ <div className="flex-1 bg-card/30 p-6">
+ {/* === Genel Açılış Saatleri === */}
+ {saatlerSubTab === "genel" && (
+ <div>
+ <h4 className="text-foreground font-medium mb-4">{t('calismaSaatleri3')}</h4>
+ <div className="space-y-2">
+ {(() => {
+ const DAY_DEFS = [
+ { display: t('pazartesi'), variants: ["Pazartesi", "Monday", "Montag", t('pazartesi')] },
+ { display: t('sali'), variants: ["Salı", "Salı", "Tuesday", "Dienstag", t('sali')] },
+ { display: t('carsamba'), variants: ["Çarşamba", "Çarşamba", "Wednesday", "Mittwoch", t('carsamba')] },
+ { display: t('persembe'), variants: ["Perşembe", "Perşembe", "Thursday", "Donnerstag", t('persembe')] },
+ { display: t('cuma'), variants: ["Cuma", "Friday", "Freitag", t('cuma')] },
+ { display: t('cumartesi'), variants: ["Cumartesi", "Saturday", "Samstag", t('cumartesi')] },
+ { display: t('pazar'), variants: ["Pazar", "Sunday", "Sonntag", t('pazar')] },
+ ];
+ const findLine = (data: string, variants: string[]) => data.split("\n").find((l) => variants.some(v => l.startsWith(v + ":") || l.startsWith(v + " "))) || "";
+ return DAY_DEFS.map((day, dayIndex) => {
+ const currentLine = findLine(formData.openingHours || "", day.variants);
+ const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed") || currentLine.toLowerCase().includes("geschlossen");
+ let startTime = ""; let endTime = "";
+ if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+ const updateHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+ const newLines = DAY_DEFS.map((dd, i) => {
+ if (i === dayIndex) { if (newClosed) return `${dd.display}${t('kapali2')}`; return `${dd.display}: ${newStart} - ${newEnd}`; }
+ const existingLine = findLine(formData.openingHours || "", dd.variants);
+ if (existingLine) { const content = existingLine.split(": ").slice(1).join(": "); return content ? `${dd.display}: ${content}` : `${dd.display}${t('kapali2')}`; }
+ return `${dd.display}${t('kapali2')}`;
+ });
+ setFormData({ ...formData, openingHours: newLines.join("\n") });
+ };
+ return (
+ <div key={day.display} className="flex items-center gap-3">
+ <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
+ <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+ <span className="text-muted-foreground font-bold">–</span>
+ <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+ <label className="flex items-center cursor-pointer ml-auto relative">
+ <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+ <div className="w-9 h-5 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+ <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+ </label>
+ </div>
+ );
+ });
+ })()}
+ </div>
+ </div>
+ )}
+
+ {/* === Kurye Saatleri (Per-Day) === */}
+ {saatlerSubTab === "kurye" && (
+ <div>
+ <div className="flex items-center justify-between mb-4">
+ <div>
+ <h4 className="text-foreground font-medium">{t('kuryeAcilisSaatleri')}</h4>
+ <p className="text-xs text-muted-foreground mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
+ </div>
+ {formData.openingHours && (
+ <button
+ onClick={() => {
+ if (formData.deliveryHours && !confirm(t('procurement_delivery_hours_confirm'))) return;
+ setFormData({ ...formData, deliveryHours: formData.openingHours });
+ }}
+ className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-800 dark:text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
+ >
+ <span>↻</span>
+ {t('genelSaatleriKopyala')}
+ </button>
+ )}
+ </div>
+ {!formData.deliveryHours && !formData.deliveryStartTime && !formData.deliveryEndTime && formData.openingHours && (
+ <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700/50">
+ <p className="text-xs text-amber-300">{t('henuzOzelKuryeSaati')}</p>
+ </div>
+ )}
+ <div className="space-y-2">
+ {(() => {
+ const DAY_DEFS = [
+ { display: t('pazartesi'), variants: ["Pazartesi", "Monday", "Montag", t('pazartesi')] },
+ { display: t('sali'), variants: ["Salı", "Salı", "Tuesday", "Dienstag", t('sali')] },
+ { display: t('carsamba'), variants: ["Çarşamba", "Çarşamba", "Wednesday", "Mittwoch", t('carsamba')] },
+ { display: t('persembe'), variants: ["Perşembe", "Perşembe", "Thursday", "Donnerstag", t('persembe')] },
+ { display: t('cuma'), variants: ["Cuma", "Friday", "Freitag", t('cuma')] },
+ { display: t('cumartesi'), variants: ["Cumartesi", "Saturday", "Samstag", t('cumartesi')] },
+ { display: t('pazar'), variants: ["Pazar", "Sunday", "Sonntag", t('pazar')] },
+ ];
+ const findLine = (data: string, variants: string[]) => data.split("\n").find((l) => variants.some(v => l.startsWith(v + ":") || l.startsWith(v + " "))) || "";
+ return DAY_DEFS.map((day, dayIndex) => {
+ const hoursData = formData.deliveryHours || formData.openingHours || "";
+ const currentLine = findLine(hoursData, day.variants);
+ const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed") || currentLine.toLowerCase().includes("geschlossen");
+ let startTime = ""; let endTime = "";
+ if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+ const updateDeliveryHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+ const baseHours = formData.deliveryHours || formData.openingHours || "";
+ const newLines = DAY_DEFS.map((dd, i) => {
+ if (i === dayIndex) { if (newClosed) return `${dd.display}${t('kapali2')}`; return `${dd.display}: ${newStart} - ${newEnd}`; }
+ const existingLine = findLine(baseHours, dd.variants);
+ if (existingLine) { const content = existingLine.split(": ").slice(1).join(": "); return content ? `${dd.display}: ${content}` : `${dd.display}${t('kapali2')}`; }
+ return `${dd.display}${t('kapali2')}`;
+ });
+ setFormData({ ...formData, deliveryHours: newLines.join("\n") });
+ };
+ return (
+ <div key={day.display} className="flex items-center gap-3">
+ <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
+ <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+ <span className="text-muted-foreground font-bold">–</span>
+ <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+ <label className="flex items-center cursor-pointer ml-auto relative">
+ <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+ <div className="w-9 h-5 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+ <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+ </label>
+ </div>
+ );
+ });
+ })()}
+ </div>
+ </div>
+ )}
+
+ {/* === Gel-Al Saatleri (Per-Day) === */}
+ {saatlerSubTab === "gelal" && (
+ <div>
+ <div className="flex items-center justify-between mb-4">
+ <div>
+ <h4 className="text-foreground font-medium">{t('gelAlAcilisSaatleri')}</h4>
+ <p className="text-xs text-muted-foreground mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
+ </div>
+ {formData.openingHours && (
+ <button
+ onClick={() => {
+ if (formData.pickupHours && !confirm(t('procurement_pickup_hours_confirm'))) return;
+ setFormData({ ...formData, pickupHours: formData.openingHours });
+ }}
+ className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-800 dark:text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
+ >
+ <span>↻</span>
+ {t('genelSaatleriKopyala')}
+ </button>
+ )}
+ </div>
+ {!formData.pickupHours && !formData.pickupStartTime && !formData.pickupEndTime && formData.openingHours && (
+ <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700/50">
+ <p className="text-xs text-amber-300">{t('henuzOzelGelAlSaati')}</p>
+ </div>
+ )}
+ <div className="space-y-2">
+ {(() => {
+ const DAY_DEFS = [
+ { display: t('pazartesi'), variants: ["Pazartesi", "Monday", "Montag", t('pazartesi')] },
+ { display: t('sali'), variants: ["Salı", "Salı", "Tuesday", "Dienstag", t('sali')] },
+ { display: t('carsamba'), variants: ["Çarşamba", "Çarşamba", "Wednesday", "Mittwoch", t('carsamba')] },
+ { display: t('persembe'), variants: ["Perşembe", "Perşembe", "Thursday", "Donnerstag", t('persembe')] },
+ { display: t('cuma'), variants: ["Cuma", "Friday", "Freitag", t('cuma')] },
+ { display: t('cumartesi'), variants: ["Cumartesi", "Saturday", "Samstag", t('cumartesi')] },
+ { display: t('pazar'), variants: ["Pazar", "Sunday", "Sonntag", t('pazar')] },
+ ];
+ const findLine = (data: string, variants: string[]) => data.split("\n").find((l) => variants.some(v => l.startsWith(v + ":") || l.startsWith(v + " "))) || "";
+ return DAY_DEFS.map((day, dayIndex) => {
+ const hoursData = formData.pickupHours || formData.openingHours || "";
+ const currentLine = findLine(hoursData, day.variants);
+ const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed") || currentLine.toLowerCase().includes("geschlossen");
+ let startTime = ""; let endTime = "";
+ if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+ const updatePickupHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+ const baseHours = formData.pickupHours || formData.openingHours || "";
+ const newLines = DAY_DEFS.map((dd, i) => {
+ if (i === dayIndex) { if (newClosed) return `${dd.display}${t('kapali2')}`; return `${dd.display}: ${newStart} - ${newEnd}`; }
+ const existingLine = findLine(baseHours, dd.variants);
+ if (existingLine) { const content = existingLine.split(": ").slice(1).join(": "); return content ? `${dd.display}: ${content}` : `${dd.display}${t('kapali2')}`; }
+ return `${dd.display}${t('kapali2')}`;
+ });
+ setFormData({ ...formData, pickupHours: newLines.join("\n") });
+ };
+ return (
+ <div key={day.display} className="flex items-center gap-3">
+ <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
+ <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+ <span className="text-muted-foreground font-bold">–</span>
+ <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+ <label className="flex items-center cursor-pointer ml-auto relative">
+ <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+ <div className="w-9 h-5 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+ <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+ </label>
+ </div>
+ );
+ });
+ })()}
+ </div>
+ </div>
+ )}
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* ═══════ Tab 6: Teslimat Ayarları ═══════ */}
+ {isletmeInternalTab === "teslimat" && (
+ <LockedModuleOverlay featureKey="delivery">
+ <div className="space-y-6">
+ <div className="bg-card/50 border border-border rounded-xl p-6">
+ <h4 className="text-foreground font-medium border-b border-border pb-2 mb-4">{t('teslimatAyarlari')}</h4>
+ <div className="space-y-4">
+ {/* Kurye Desteği Checkbox */}
+ <div className="flex items-center gap-3">
+ <input type="checkbox" checked={formData.supportsDelivery} onChange={(e) => setFormData({ ...formData, supportsDelivery: e.target.checked })} disabled={!isEditing} className="w-5 h-5" />
+ <span className="text-foreground">{t('kuryeDestegiVar')}</span>
+ </div>
+ {formData.supportsDelivery && (
+ <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+ <div>
+ <label className="text-muted-foreground text-sm">{t('minSiparis')}</label>
+ <input type="number" value={formData.minDeliveryOrder} onChange={(e) => setFormData({ ...formData, minDeliveryOrder: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('teslimatUcreti')}</label>
+ <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('maksMesafe')}</label>
+ <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+ </div>
+ </div>
+ )}
+
+ {/* Ücretsiz Teslimat Eşiği */}
+ <div className="mt-3">
+ <label className="text-muted-foreground text-sm flex items-center gap-1">{t('ucretsizTeslimatEsigi')}</label>
+ <div className="flex items-center gap-2 mt-1">
+ <input type="number" value={formData.freeDeliveryThreshold || 0} onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-32 bg-foreground text-background shadow-md px-3 py-2 rounded-lg disabled:opacity-50" min="0" step="0.01" />
+ <span className="text-muted-foreground text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
+ </div>
+ <p className="text-xs text-muted-foreground mt-1">{t('0HerZamanTeslimatUcretiUygulanir')}</p>
+ </div>
+
+ {/* Ön Sipariş Checkbox */}
+ <div className="mt-3 flex items-center gap-3">
+ <input type="checkbox" checked={formData.preOrderEnabled} onChange={(e) => setFormData({ ...formData, preOrderEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-amber-500" />
+ <div>
+ <span className="text-foreground">{t('onSiparisKabulEt')}</span>
+ <p className="text-xs text-muted-foreground">{t('isletmeKapaliykenDeErtesiGunIcin')}</p>
+ </div>
+ </div>
+
+ {/* Gel-Al (Pickup) Desteği Checkbox */}
+ <div className="mt-3 flex items-center gap-3">
+ <input type="checkbox" checked={formData.pickupEnabled !== false} onChange={(e) => setFormData({ ...formData, pickupEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-green-500" />
+ <div>
+ <span className="text-foreground">{t('gelAlDestegiVar')}</span>
+ <p className="text-xs text-muted-foreground">{t('musterilerSiparisiKendisiAlabilir')}</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </LockedModuleOverlay>
+ )}
+ </>
+ )}
+
+ {/* Sub-Tab: Menü & Ürünler */}
+ {
+ settingsSubTab === "menu" && (
+ <div className="space-y-6">
+ {/* Internal Tab Bar */}
+ <div className="flex gap-2 border-b border-border pb-3">
+ <button
+ onClick={() => setMenuInternalTab("kategoriler")}
+ className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "kategoriler"
+ ? "bg-red-600 text-white"
+ : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
+ }`}
+ >
+ {t('kategoriler')} ({inlineCategories.length})
+ </button>
+ <button
+ onClick={() => setMenuInternalTab("urunler")}
+ className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "urunler"
+ ? "bg-red-600 text-white"
+ : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
+ }`}
+ >
+ {t('urunler')}{inlineProducts.length})
+ </button>
+ <button
+ onClick={() => setMenuInternalTab("sponsored")}
+ className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "sponsored"
+ ? "bg-amber-600 text-white"
+ : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
+ } ${!planFeatures.sponsoredProducts && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
+ >
+ {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
+ </button>
+ </div>
+
+ {/* ==================== KATEGORİLER ==================== */}
+ {menuInternalTab === "kategoriler" && (
+ <div className="space-y-4">
+ {/* Header with Add button */}
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <span className="text-2xl">📂</span>
+ <div>
+ <h4 className="text-foreground font-bold">{t('kategoriler')}</h4>
+ <p className="text-muted-foreground text-xs">{inlineCategories.length} {t('kategori')}</p>
+ </div>
+ </div>
+ <div className="flex items-center gap-2">
+ {isKasapType && (
+ <>
+ <button
+ onClick={() => {
+ if (inlineCategories.length > 0) {
+ setConfirmModal({
+ show: true,
+ title: '📂 Kategori Şablonu Yükle',
+ message: `Bu işletmede zaten ${inlineCategories.length} kategori var. Şablon uygulandığında 5 kategori mevcut olan kategorilerin ÜSTÜNE eklenecektir. Devam etmek istiyor musunuz?`,
+ confirmText: 'Evet, Ekle',
+ confirmColor: 'bg-emerald-600 hover:bg-emerald-500',
+ onConfirm: async () => {
+ setConfirmModal(prev => ({ ...prev, show: false }));
+ await applyCategoryTemplate();
+ },
+ });
+ } else {
+ applyCategoryTemplate();
+ }
+ }}
+ disabled={applyingTemplate}
+ className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
+ >
+ {applyingTemplate ? ' Yükleniyor...' : '📂 Kategori Şablonu Yükle'}
+ </button>
+ </>
+ )}
+ <button
+ onClick={() => {
+ setEditingCategory(null);
+ setCategoryForm({ name: { tr: '' }, icon: '', isActive: true });
+ setShowCategoryModal(true);
+ }}
+ className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-foreground text-sm font-medium rounded-lg transition"
+ >
+ + Yeni Kategori
+ </button>
+ </div>
+ </div>
+
+ {/* Loading */}
+ {loadingCategories && (
+ <div className="flex justify-center py-8">
+ <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500"></div>
+ </div>
+ )}
+
+ {/* Empty state */}
+ {!loadingCategories && inlineCategories.length === 0 && (
+ <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
+ <span className="text-4xl">🗂️</span>
+ <h4 className="text-foreground font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
+ <p className="text-muted-foreground text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
+ <div className="flex items-center gap-3 mt-4">
+ <button
+ onClick={() => {
+ setEditingCategory(null);
+ setCategoryForm({ name: { tr: '' }, icon: '', isActive: true });
+ setShowCategoryModal(true);
+ }}
+ className="px-5 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition text-sm"
+ >
+ {t('ilkKategoriyiEkle')}
+ </button>
+ </div>
+ </div>
+ )}
+
+ {/* Category List */}
+ {!loadingCategories && inlineCategories.length > 0 && (
+ <div className="space-y-2">
+ {inlineCategories.map((cat, index) => (
+ <div
+ key={cat.id}
+ className={`bg-card/80 rounded-xl p-3 border transition flex items-center gap-3 ${cat.isActive ? 'border-border' : 'border-red-900/50 opacity-60'}`}
+ >
+ {/* Move buttons */}
+ <div className="flex flex-col items-center gap-0.5">
+ <button
+ onClick={() => moveCategoryInline(index, 'up')}
+ disabled={index === 0}
+ className="text-muted-foreground hover:text-white disabled:opacity-20 text-xs"
+ >▲</button>
+ <span className="text-[10px] text-muted-foreground">{index + 1}</span>
+ <button
+ onClick={() => moveCategoryInline(index, 'down')}
+ disabled={index === inlineCategories.length - 1}
+ className="text-muted-foreground hover:text-white disabled:opacity-20 text-xs"
+ >▼</button>
+ </div>
+
+ {/* Icon */}
+ <span className="text-3xl">{cat.icon}</span>
+
+ {/* Info */}
+ <div className="flex-1 min-w-0">
+ <h5 className="text-foreground font-bold text-sm">{typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name}</h5>
+ <p className="text-muted-foreground text-xs">
+ {inlineProducts.filter((p: any) => p.category === (typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name) || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? ' Aktif' : t('pasif')}
+ </p>
+ </div>
+
+ {/* Actions */}
+ <div className="flex items-center gap-1.5">
+ <button
+ onClick={() => {
+ setEditingCategory(cat);
+ setCategoryForm({ name: cat.name, icon: cat.icon, isActive: cat.isActive });
+ setShowCategoryModal(true);
+ }}
+ className="p-1.5 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg transition text-white text-xs"
+ title={t('duzenle1')}
+ ></button>
+ <button
+ onClick={() => setDeletingCategoryId(cat.id)}
+ className="p-1.5 bg-red-600/80 hover:bg-red-500 rounded-lg transition text-white text-xs"
+ title={t('sil')}
+ >️</button>
+ </div>
+ </div>
+ ))}
+ </div>
+ )}
+
+ {/* Category Add/Edit Modal */}
+ {showCategoryModal && (
+ <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+ <div className="bg-card rounded-xl p-6 w-full max-w-md">
+ <h2 className="text-xl font-bold text-foreground mb-4">
+ {editingCategory ? t('kategoriDuzenle') : t('yeni_kategori')}
+ </h2>
+
+ {/* Icon Selection */}
+ <div className="mb-4">
+ <label className="text-muted-foreground text-sm mb-2 block">{t('ikon')}</label>
+ <div className="flex flex-wrap gap-2">
+ {CATEGORY_ICONS.map(icon => (
+ <button
+ key={icon}
+ onClick={() => setCategoryForm({ ...categoryForm, icon })}
+ className={`w-10 h-10 text-2xl rounded-lg transition ${categoryForm.icon === icon
+ ? 'bg-violet-600 ring-2 ring-violet-400'
+ : 'bg-muted hover:bg-muted border border-border text-foreground'
+ }`}
+ >
+ {icon}
+ </button>
+ ))}
+ </div>
+ </div>
+
+ {/* Name */}
+ <div className="mb-4">
+ <MultiLanguageInput
+ label={t('kategoriAdi')}
+ value={categoryForm.name}
+ onChange={(val) => setCategoryForm({ ...categoryForm, name: val })}
+ placeholder={t('ornKebaplarIceceklerTatlilar')}
+ />
+ </div>
+
+ {/* Active Toggle */}
+ <div className="mb-6">
+ <label className="flex items-center gap-3 cursor-pointer">
+ <input
+ type="checkbox"
+ checked={categoryForm.isActive}
+ onChange={(e) => setCategoryForm({ ...categoryForm, isActive: e.target.checked })}
+ className="w-5 h-5 rounded bg-muted border-border text-violet-500"
+ />
+ <span className="text-foreground">{t('aktifUygulamadaGorunsun')}</span>
+ </label>
+ </div>
+
+ {/* Buttons */}
+ <div className="flex gap-3">
+ <button
+ onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }}
+ className="flex-1 px-4 py-3 bg-accent text-foreground dark:bg-muted dark:text-gray-100 rounded-lg hover:bg-muted border border-border text-foreground transition"
+ >{t('iptal1')}</button>
+ <button
+ onClick={handleSaveCategory}
+ disabled={savingCategory || !(typeof categoryForm.name === 'object' ? getLocalizedText(categoryForm.name) : categoryForm.name)?.trim()}
+ className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition disabled:opacity-50"
+ >
+ {savingCategory ? 'Kaydediliyor...' : t('kaydet')}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* Category Delete Confirmation */}
+ {deletingCategoryId && (
+ <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+ <div className="bg-card rounded-xl p-6 w-full max-w-sm text-center">
+ <span className="text-4xl">⚠️</span>
+ <h3 className="text-lg font-bold text-foreground mt-3">{t('kategoriyi_sil')}</h3>
+ <p className="text-muted-foreground text-sm mt-2">
+ {t('buKategoriyiKaliciOlarakSilmekIstediginizden')}
+ </p>
+ <div className="flex gap-3 mt-5">
+ <button
+ onClick={() => setDeletingCategoryId(null)}
+ className="flex-1 px-4 py-2.5 bg-accent text-foreground dark:bg-muted dark:text-gray-100 rounded-lg hover:bg-muted border border-border text-foreground"
+ >{t('iptal1')}</button>
+ <button
+ onClick={() => handleDeleteCategory(deletingCategoryId)}
+ className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-500"
+ >{t('evet_sil')}</button>
+ </div>
+ </div>
+ </div>
+ )}
+ </div>
+ )}
+
+ {/* ==================== ÜRÜNLER ==================== */}
+ {menuInternalTab === "urunler" && (
+ <div className="space-y-4">
+ {/* Header */}
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <span className="text-2xl"></span>
+ <div>
+ <h4 className="text-foreground font-bold">{t('urunler1')}</h4>
+ <p className="text-muted-foreground text-xs">{inlineProducts.length} {t('urun1')}</p>
+ </div>
+ </div>
+ <div className="flex items-center gap-2">
+ {isKasapType && (
+ <button
+ onClick={() => applyProductTemplate()}
+ disabled={applyingProductTemplate}
+ className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
+ >
+ {applyingProductTemplate ? ` ${t('yukleniyor')}` : `${t('urun_sablonu')} ${t('yukle')}`}
+ </button>
+ )}
+ <button
+ onClick={() => setProductModalOpen(true)}
+ className="px-3 py-2 bg-green-600 hover:bg-green-500 text-foreground text-sm font-medium rounded-lg transition inline-flex items-center gap-1"
+ >
+ + Yeni Ürün Ekle
+ </button>
+ </div>
+ </div>
+
+ {/* Search Input */}
+ {!loadingProducts && inlineProducts.length > 0 && (
+ <div className="relative">
+ <input
+ type="text"
+ value={productSearchQuery}
+ onChange={(e) => {
+ setProductSearchQuery(e.target.value);
+ setProductCurrentPage(1);
+ }}
+ placeholder={t('urun_ara_placeholder')}
+ className="w-full px-4 py-2.5 pl-10 bg-card border border-border rounded-lg text-foreground text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background transition"
+ />
+ <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+ </svg>
+ {productSearchQuery && (
+ <button
+ onClick={() => {
+ setProductSearchQuery('');
+ setProductCurrentPage(1);
+ }}
+ className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition"
+ >
+ ✕
+ </button>
+ )}
+ </div>
+ )}
+
+ {/* Category Filter Chips + Status Filter */}
+ {!loadingProducts && inlineProducts.length > 0 && (() => {
+ // Build category counts
+ const catCounts: Record<string, number> = {};
+ inlineProducts.forEach((p: any) => {
+ const rawCat = p.category || 'Kategorisiz';
+ const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+ catCounts[catName] = (catCounts[catName] || 0) + 1;
+ });
+ const catNames = Object.keys(catCounts);
+
+ return (
+ <div className="flex flex-wrap items-center gap-2">
+ {/* Category chips */}
+ <button
+ onClick={() => { setInlineCategoryFilter('all'); setProductCurrentPage(1); }}
+ className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === 'all'
+ ? 'bg-green-600 text-white'
+ : 'bg-muted/80 text-foreground hover:bg-muted border border-border text-foreground'
+ }`}
+ >
+ Tümü {inlineProducts.length}
+ </button>
+ {catNames.map(cn => {
+ const catInfo = inlineCategories.find((c: any) => (typeof c.name === 'object' ? getLocalizedText(c.name) : c.name) === cn);
+ return (
+ <button
+ key={cn}
+ onClick={() => { setInlineCategoryFilter(cn); setProductCurrentPage(1); }}
+ className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === cn
+ ? 'bg-blue-600 text-white'
+ : 'bg-muted/80 text-foreground hover:bg-muted border border-border text-foreground'
+ }`}
+ >
+ {catInfo?.icon || ''} {cn} {catCounts[cn]}
+ </button>
+ );
+ })}
+
+ {/* Status filter dropdown — pushed right */}
+ <div className="ml-auto flex items-center gap-2">
+ <span className="text-muted-foreground text-xs">{t('status_filter') || "Durum Filtresi:"}</span>
+ <select
+ value={inlineStatusFilter}
+ onChange={(e) => { setInlineStatusFilter(e.target.value); setProductCurrentPage(1); }}
+ className="bg-foreground text-background shadow-md text-xs rounded-lg px-3 py-1.5 border border-border focus:border-blue-500 focus:outline-none"
+ >
+ <option value="all"> Tümü ({inlineProducts.length})</option>
+ <option value="active">{t('aktif')}</option>
+ <option value="passive">{t('pasif')}</option>
+ <option value="outOfStock">{t('stokta_yok')}</option>
+ </select>
+ </div>
+ </div>
+ );
+ })()}
+
+ {/* Loading */}
+ {loadingProducts && (
+ <div className="flex justify-center py-8">
+ <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+ </div>
+ )}
+
+ {/* Empty state */}
+ {!loadingProducts && inlineProducts.length === 0 && (
+ <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
+ <span className="text-4xl"></span>
+ <h4 className="text-foreground font-medium mt-3">{t('henuzUrunEklenmemis')}</h4>
+ <p className="text-muted-foreground text-sm mt-1">{t('isletmeyeUrunAtamakIcinUrunYonetimine')}</p>
+ <button
+ onClick={() => setProductModalOpen(true)}
+ className="mt-4 inline-block px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+ >
+ + Yeni Ürün Ekle
+ </button>
+ </div>
+ )}
+
+ {/* Product Table */}
+ {!loadingProducts && inlineProducts.length > 0 && (() => {
+ // Filter products
+ let filtered = [...inlineProducts];
+
+ // Category filter
+ if (inlineCategoryFilter !== 'all') {
+ filtered = filtered.filter((p: any) => {
+ const rawCat = p.category || 'Kategorisiz';
+ const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+ return catName === inlineCategoryFilter;
+ });
+ }
+
+ // Status filter
+ if (inlineStatusFilter === 'active') {
+ filtered = filtered.filter((p: any) => p.isActive !== false);
+ } else if (inlineStatusFilter === 'passive') {
+ filtered = filtered.filter((p: any) => p.isActive === false);
+ } else if (inlineStatusFilter === 'outOfStock') {
+ filtered = filtered.filter((p: any) => p.outOfStock === true);
+ }
+
+ // Search filter with Turkish/multi-language character normalization
+ if (productSearchQuery.trim()) {
+ const normalizeSearch = (str: string): string => {
+ return str
+ .replace(/İ/g, 'i') // Turkish capital İ → i
+ .replace(/ı/g, 'i') // Turkish lowercase ı → i
+ .toLowerCase()
+ .normalize('NFD')
+ .replace(/[\u0300-\u036f]/g, ''); // strip combining diacritics (ö→o, ü→u, ç→c, ş→s, g→g, etc.)
+ };
+ const q = normalizeSearch(productSearchQuery);
+ filtered = filtered.filter((p: any) => {
+ const name = typeof p.name === 'object' ? getLocalizedText(p.name) : (p.name || '');
+ const sku = p.id || p.sku || '';
+ const cat = typeof p.category === 'object' ? getLocalizedText(p.category) : (p.category || '');
+ const desc = typeof p.description === 'object' ? getLocalizedText(p.description) : (p.description || '');
+ return normalizeSearch(name).includes(q) || normalizeSearch(sku).includes(q) || normalizeSearch(cat).includes(q) || normalizeSearch(desc).includes(q);
+ });
+ }
+
+ // Pagination
+ const totalFiltered = filtered.length;
+ const totalPages = Math.max(1, Math.ceil(totalFiltered / productsPerPage));
+ const safeCurrentPage = Math.min(productCurrentPage, totalPages);
+ const startIdx = (safeCurrentPage - 1) * productsPerPage;
+ const endIdx = startIdx + productsPerPage;
+ const paginatedProducts = filtered.slice(startIdx, endIdx);
+
+ const allSelected = paginatedProducts.length > 0 && paginatedProducts.every((p: any) => selectedInlineProducts.has(p.id));
+
+ // Generate page numbers for display
+ const getPageNumbers = () => {
+ const pages: (number | '...')[] = [];
+ if (totalPages <= 7) {
+ for (let i = 1; i <= totalPages; i++) pages.push(i);
+ } else {
+ pages.push(1);
+ if (safeCurrentPage > 3) pages.push('...');
+ for (let i = Math.max(2, safeCurrentPage - 1); i <= Math.min(totalPages - 1, safeCurrentPage + 1); i++) {
+ pages.push(i);
+ }
+ if (safeCurrentPage < totalPages - 2) pages.push('...');
+ pages.push(totalPages);
+ }
+ return pages;
+ };
+
+ return (
+ <div>
+ {/* Bulk Action Bar — Above Table */}
+ {selectedInlineProducts.size > 0 && (
+ <div className="bg-gradient-to-r from-gray-800 to-gray-900 border border-amber-500/30 rounded-xl px-4 py-2.5 mb-2 flex items-center gap-2 flex-wrap shadow-lg">
+ <span className="text-green-800 dark:text-green-400 text-sm font-bold flex items-center gap-1">
+ ☑ {selectedInlineProducts.size} ürün seçili
+ </span>
+ <span className="w-px h-5 bg-muted border border-border text-foreground"></span>
+
+ {/* Status */}
+ <select
+ value=""
+ onChange={(e) => {
+ const v = e.target.value;
+ if (v === 'active') handleInlineBulkStatus(true);
+ else if (v === 'passive') handleInlineBulkStatus(false);
+ }}
+ className="bg-orange-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+ >
+ <option value="" disabled> Durum</option>
+ <option value="active">{t('aktif_yap')}</option>
+ <option value="passive">{t('pasif_yap')}</option>
+ </select>
+
+ {/* Stock */}
+ <select
+ value=""
+ onChange={(e) => {
+ const v = e.target.value;
+ if (v === 'in') handleInlineBulkStock(true);
+ else if (v === 'out') handleInlineBulkStock(false);
+ }}
+ className="bg-yellow-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+ >
+ <option value="" disabled> Stok</option>
+ <option value="in">{t('stokta')}</option>
+ <option value="out">{t('stokta_yok')}</option>
+ </select>
+
+ {/* Featured */}
+ <button
+ onClick={() => handleInlineBulkFeatured()}
+ className="bg-amber-600 hover:bg-amber-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+ >
+ {t('one_cikan')}
+ </button>
+
+ {/* Category Move */}
+ <select
+ value=""
+ onChange={(e) => {
+ const v = e.target.value;
+ if (v) handleInlineBulkCategoryMove(v);
+ }}
+ className="bg-blue-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+ >
+ <option value="" disabled>📂 Kategoriye Taşı...</option>
+ {inlineCategories.map((cat: any) => {
+ const cn = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
+ return <option key={cat.id} value={cn}>{cat.icon || ''} {cn}</option>;
+ })}
+ </select>
+
+ {/* Delete + Cancel — pushed right */}
+ <div className="ml-auto flex items-center gap-2">
+ <button
+ onClick={() => handleInlineBulkDelete()}
+ className="bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+ >
+ ️ Sil
+ </button>
+ <button
+ onClick={() => setSelectedInlineProducts(new Set())}
+ className="bg-muted border border-border text-foreground hover:bg-gray-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+ >
+ {t('iptal')}
+ </button>
+ </div>
+ </div>
+ )}
+
+ <div className="bg-card/60 rounded-xl border border-border overflow-hidden">
+ {/* Table Header */}
+ <div className="px-4 py-2.5 bg-muted/50 border-b border-border grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-muted-foreground font-medium">
+ <div className="flex justify-center">
+ <input
+ type="checkbox"
+ checked={allSelected}
+ onChange={() => {
+ if (allSelected) {
+ setSelectedInlineProducts(new Set());
+ } else {
+ setSelectedInlineProducts(new Set(paginatedProducts.map((p: any) => p.id)));
+ }
+ }}
+ className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+ />
+ </div>
+ <div></div>
+ <div>{t('urun_adi')}</div>
+ <div>{t('sku') || "SKU"}</div>
+ <div>{t('price_netto_brutto') || "Fiyat (Netto / Brutto)"}</div>
+ <div>{t('birim')}</div>
+ <div>{t('durum_col')}</div>
+ <div className="text-right">{t('islemler')}</div>
+ </div>
+
+ {/* Table Body */}
+ <div className="divide-y divide-border/50">
+ {paginatedProducts.map((product: any) => {
+ const isSelected = selectedInlineProducts.has(product.id);
+ const productName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
+ const imageUrl = product.imageUrl || (product.images && product.images[0]) || null;
+ const basePrice = product.sellingPrice || product.price || null;
+ const appPrice = product.appSellingPrice || basePrice;
+ const taxRate = product.taxRate || 7;
+ const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
+ const currSym = getCurrencySymbol(business?.currency);
+ const unitSuffix = product.unit === 'kg' ? '/kg' : '';
+ const isActive = product.isActive !== false;
+ const sku = product.id || product.sku || '—';
+ const rawCat = product.category || 'Kategorisiz';
+ const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+
+ return (
+ <Fragment key={product.id}>
+ <div
+ className={`px-4 py-2 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center hover:bg-muted/30 transition cursor-pointer ${isSelected ? 'bg-blue-900/20' : ''} ${editingInlineProduct?.id === product.id ? 'bg-blue-900/30 border-l-2 border-blue-500' : ''} ${!isActive ? 'opacity-60' : ''}`}
+ >
+ {/* Checkbox */}
+ <div className="flex justify-center">
+ <input
+ type="checkbox"
+ checked={isSelected}
+ onChange={() => {
+ const next = new Set(selectedInlineProducts);
+ if (next.has(product.id)) next.delete(product.id);
+ else next.add(product.id);
+ setSelectedInlineProducts(next);
+ }}
+ className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+ />
+ </div>
+ {/* Thumbnail */}
+ <div>
+ {imageUrl ? (
+ <img
+ src={imageUrl}
+ alt={productName}
+ loading="lazy"
+ className="w-9 h-9 rounded-lg object-cover"
+ />
+ ) : (
+ <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xs">
+ 📷
+ </div>
+ )}
+ </div>
+ {/* Name + Description */}
+ <div className="min-w-0">
+ <p className="text-foreground text-sm font-medium truncate">{productName}</p>
+ <p className="text-muted-foreground text-xs truncate">
+ {getLocalizedText(product.description) || ''}
+ </p>
+ </div>
+ {/* SKU */}
+ <div className="text-muted-foreground text-xs truncate font-mono">{sku.length > 16 ? sku.slice(0, 16) + '...' : sku}</div>
+ {/* Price */}
+ <div className="text-right">
+ {appPrice ? (
+ <div className="space-y-0.5">
+ <div className="text-green-800 dark:text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-muted-foreground text-[10px] font-normal">{t('brutto')}</span></div>
+ <div className="text-muted-foreground text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-muted-foreground text-[10px]">{t('netto')}</span></div>
+ </div>
+ ) : (
+ <span className="text-muted-foreground text-xs">—</span>
+ )}
+ </div>
+ {/* Unit */}
+ <div className="text-foreground text-xs text-center">{product.unit === 'kg' ? 'kg' : 'Adet'}</div>
+ {/* Status */}
+ <div className="flex flex-col items-center gap-0.5">
+ <span
+ onClick={() => toggleProductActive(product.id, isActive)}
+ className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer font-medium ${isActive ? 'bg-green-900/60 text-green-800 dark:text-green-400' : 'bg-red-900/60 text-red-800 dark:text-red-400'}`}
+ title={isActive ? t('pasif_yap') : t('aktif_yap')}
+ >
+ {isActive ? t('aktif') : t('pasif')}
+ </span>
+ {product.outOfStock && (
+ <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-900/60 text-yellow-800 dark:text-yellow-400 font-medium">
+ {t('stokta_yok')}
+ </span>
+ )}
+ </div>
+ {/* Actions */}
+ <div className="flex items-center justify-end gap-1">
+ <button
+ onClick={() => {
+ // Full inline edit – populate all known fields
+ setEditingInlineProduct(product);
+ setEditInlineTab('general');
+ setProductMode('custom');
+ setCustomProductForm({
+ name: product.name || { tr: '' },
+ price: String(product.price || product.sellingPrice || ''),
+ unit: product.unit || product.defaultUnit || 'kg',
+ imageFile: null,
+ });
+ setEditFormFull({
+ name: product.name || { tr: '' },
+ unit: product.unit || product.defaultUnit || 'kg',
+ brand: product.brand || '',
+ barcode: product.barcode || '',
+ category: product.category || '',
+ isActive: product.isActive !== false,
+ isFeatured: product.isFeatured || false,
+ sellingPrice: String(product.price || product.sellingPrice || ''),
+ purchasePrice: product.purchasePrice || '',
+ discountedPrice: product.discountedPrice || '',
+ appPrice: product.appPrice || '',
+ eslPrice: product.eslPrice || '',
+ courierPrice: product.courierPrice || '',
+ storePrice: product.storePrice || '',
+ taxRate: String(product.taxRate ?? '7'),
+ outOfStock: product.outOfStock || false,
+ description: product.description || { tr: '' },
+ ingredients: product.ingredients || '',
+ consumptionInfo: product.consumptionInfo || '',
+ specialInfo: product.specialInfo || '',
+ weight: product.weight || '',
+ mhd: product.mhd || '',
+ packung: product.packung || '',
+ artikelnummer: product.artikelnummer || '',
+ storageTemp: product.storageTemp || '',
+ allergens: product.allergens || {},
+ containsAlcohol: product.containsAlcohol || false,
+ additives: product.additives || [],
+ nutritionPer100g: product.nutritionPer100g || {},
+ certifications: product.certifications || [],
+ origin: product.origin || '',
+ productionDate: product.productionDate || '',
+ expirationDate: product.expirationDate || '',
+ optionGroups: product.optionGroups || [],
+ internalNotes: product.internalNotes || '',
+ tags: product.tags || [],
+ brandLabels: product.brandLabels || [],
+ supplierName: product.supplierName || '',
+ batchNumber: product.batchNumber || '',
+ currentStock: product.currentStock || '',
+ minStock: product.minStock || '',
+ reorderPoint: product.reorderPoint || '',
+ stockUnit: product.stockUnit || 'kg',
+ stockLocation: product.stockLocation || '',
+ });
+ // Scroll to inline edit panel
+ setTimeout(() => {
+ document.getElementById('inline-edit-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+ }, 100);
+ }}
+ className="text-xs px-2 py-1 bg-blue-600/80 hover:bg-blue-500 text-white rounded transition"
+ title={t('edit_title')}
+ >
+ Düzenle
+ </button>
+ <button
+ onClick={() => handleDeleteProduct(product.id)}
+ className="text-xs px-2 py-1 bg-red-600/80 hover:bg-red-500 text-white rounded transition"
+ title={t('delete_title')}
+ >
+ Sil
+ </button>
+ </div>
+ </div>
+ {/* ═══ ACCORDION EDIT PANEL ═══ */}
+ {editingInlineProduct?.id === product.id && (
+ <div className="col-span-full bg-card/90 border-l-2 border-blue-500 rounded-b-lg overflow-hidden" style={{ backdropFilter: 'blur(8px)', minHeight: '420px' }}>
+ <div id="inline-edit-panel" className="p-4">
+ {/* Tab Navigation */}
+ <div className="flex items-center justify-between mb-4">
+ <div className="flex gap-1 overflow-x-auto">
+ {[
+ { key: 'general', label: t('tab_general') },
+ { key: 'pricing', label: t('tab_pricing') },
+ { key: 'stock', label: t('tab_stock') },
+ { key: 'media', label: t('tab_media') },
+ { key: 'contentCompliance', label: t('tab_content_compliance') },
+ { key: 'app', label: 'App' },
+ ].map(tab => (
+ <button
+ key={tab.key}
+ onClick={() => setEditInlineTab(tab.key as any)}
+ className={`px-3 py-1.5 text-xs font-medium rounded whitespace-nowrap transition ${editInlineTab === tab.key
+ ? 'bg-blue-500 text-white'
+ : 'text-muted-foreground hover:text-white hover:bg-muted/50'
+ }`}
+ >
+ {tab.label}
+ </button>
+ ))}
+ </div>
+ <button
+ onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }}
+ className="text-muted-foreground hover:text-white p-1 transition"
+ >
+ ✕
+ </button>
+ </div>
+
+ {/* Tab Content */}
+ <div className="max-h-[50vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+ {editInlineTab === 'general' && (
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('sku_id') || "SKU (ID)"}</label>
+ <input value={editFormFull.sku || editingInlineProduct?.id || ''} readOnly className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('barkod')}</label>
+ <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('kategori_label')}</label>
+ <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none">
+ <option value="">{t('kategori_secin')}</option>
+ {inlineCategories.map((cat: any) => (
+ <option key={cat.id || cat.name} value={typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}>{typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}</option>
+ ))}
+ </select>
+ </div>
+ <div className="md:col-span-2">
+ <label className="text-xs text-muted-foreground mb-1 block">{t('urun_adi')}</label>
+ <MultiLanguageInput label={t('urun_adi_label')} value={editFormFull.name || customProductForm.name} onChange={(v: any) => { setEditFormFull((p: any) => ({ ...p, name: v })); setCustomProductForm((prev: any) => ({ ...prev, name: v })); }} />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('marka')}</label>
+ <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div className="flex gap-2">
+ <div className="flex-1">
+ <label className="text-xs text-muted-foreground mb-1 block">{t('birim')}</label>
+ <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <option value="kg">{t('kg') || "Kg"}</option><option value="adet">{t('adet')}</option><option value="litre">{t('litre')}</option><option value="paket">{t('paket')}</option>
+ </select>
+ </div>
+ <div className="flex-1">
+ <label className="text-xs text-muted-foreground mb-1 block">{t('durum_label')}</label>
+ <select value={editFormFull.isActive !== false ? 'active' : 'passive'} onChange={e => setEditFormFull((p: any) => ({ ...p, isActive: e.target.value === 'active' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <option value="active">{t('aktif')}</option><option value="passive">{t('pasif')}</option>
+ </select>
+ </div>
+ <div className="flex-1">
+ <label className="text-xs text-muted-foreground mb-1 block">{t('tax_vat') || "KDV"}</label>
+ <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <option value="7">%7</option><option value="19">%19</option><option value="0">%0</option>
+ </select>
+ </div>
+ </div>
+ <div className="md:col-span-2 lg:col-span-3">
+ <label className="text-xs text-muted-foreground mb-1 block">{t('aciklama')}</label>
+ <MultiLanguageInput label="Açıklama" value={editFormFull.description || { tr: '' }} onChange={(v: any) => setEditFormFull((p: any) => ({ ...p, description: v }))} isTextArea />
+ </div>
+ </div>
+ )}
+
+ {editInlineTab === 'pricing' && (() => {
+ const taxRate = editFormFull.taxRate === undefined ? 7 : parseFloat(editFormFull.taxRate || '7');
+ const taxMultiplier = 1 + (taxRate / 100);
+ const priceInputMode = editFormFull._priceInputMode || 'netto';
+ const calcBrutto = (netto: number) => netto > 0 ? parseFloat((netto * taxMultiplier).toFixed(2)) : 0;
+ const calcNetto = (brutto: number) => brutto > 0 ? parseFloat((brutto / taxMultiplier).toFixed(2)) : 0;
+
+ const sp = parseFloat(editFormFull.sellingPrice || '0');
+ const pp = parseFloat(editFormFull.purchasePrice || '0');
+ const dp = parseFloat(editFormFull.discountedPrice || '0');
+ const discountPct = sp > 0 && dp > 0 && dp < sp ? ((1 - dp / sp) * 100).toFixed(1) : null;
+
+ return (
+ <div className="space-y-6">
+ {/* Vergi Oranı */}
+ <div className="border-b border-border pb-4">
+ <div className="flex items-center justify-between mb-3">
+ <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">{t('vergi_orani')}</h3>
+ <span className="text-xs text-muted-foreground">{t('netto_brutto_hint')}</span>
+ </div>
+ <div className="flex items-center gap-3">
+ <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+ <option value="0">{t('tax_zero')}</option>
+ <option value="7">{t('tax_reduced')}</option>
+ <option value="19">{t('tax_standard')}</option>
+ <option value="custom">{t('manuel_giris')}</option>
+ </select>
+ {![0, 7, 19].includes(taxRate) && (
+ <span className="px-3 py-1.5 bg-blue-900/50 text-blue-300 rounded-lg text-xs">{t('ozel_vergi', {rate: taxRate})}</span>
+ )}
+ </div>
+ </div>
+
+ {/* {t('fiyatlandirma')} + Netto/Brutto Toggle */}
+ <div className="border-b border-border pb-4">
+ <div className="flex items-center justify-between mb-4">
+ <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400"> {t('fiyatlandirma')}</h3>
+ <div className="flex items-center bg-card rounded-lg p-0.5 border border-border">
+ <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
+ {t('netto_input')}
+ </button>
+ <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'brutto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'brutto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
+ {t('brutto_input')}
+ </button>
+ </div>
+ </div>
+
+ {/* Alış Fiyatı */}
+ <div className="mb-4">
+ <label className="block text-sm text-foreground font-medium mb-2">{t('alis_fiyati')}</label>
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
+ {priceInputMode === 'netto' ? (
+ <input type="number" step="0.01" value={editFormFull.purchasePrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, purchasePrice: e.target.value }))} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+ ) : (
+ <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
+ {pp > 0 ? `€${pp.toFixed(2)}` : <span className="text-muted-foreground">--</span>}
+ </div>
+ )}
+ </div>
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">Brutto (€) <span className="text-muted-foreground">inkl. {taxRate}% MwSt.</span></label>
+ {priceInputMode === 'brutto' ? (
+ <input type="number" step="0.01" value={pp > 0 ? calcBrutto(pp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, purchasePrice: String(calcNetto(brutto)) })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+ ) : (
+ <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
+ {pp > 0 ? `€${calcBrutto(pp).toFixed(2)}` : <span className="text-muted-foreground">--</span>}
+ </div>
+ )}
+ </div>
+ </div>
+ </div>
+
+ {/* Satış Fiyatı */}
+ <div className="mb-4">
+ <label className="block text-sm text-foreground font-medium mb-2">{t('satis_fiyati')}</label>
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
+ {priceInputMode === 'netto' ? (
+ <input type="number" step="0.01" value={editFormFull.sellingPrice || ''} onChange={e => { setEditFormFull((p: any) => ({ ...p, sellingPrice: e.target.value })); setCustomProductForm((prev: any) => ({ ...prev, price: e.target.value })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+ ) : (
+ <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
+ {sp > 0 ? `€${sp.toFixed(2)}` : <span className="text-muted-foreground">--</span>}
+ </div>
+ )}
+ </div>
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">Brutto (€) <span className="text-muted-foreground">inkl. {taxRate}% MwSt.</span></label>
+ {priceInputMode === 'brutto' ? (
+ <input type="number" step="0.01" value={sp > 0 ? calcBrutto(sp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; const netto = calcNetto(brutto); setEditFormFull((p: any) => ({ ...p, sellingPrice: String(netto) })); setCustomProductForm((prev: any) => ({ ...prev, price: String(netto) })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+ ) : (
+ <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
+ {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : <span className="text-muted-foreground">--</span>}
+ </div>
+ )}
+ </div>
+ </div>
+ </div>
+
+ {/* İndirimli Fiyat */}
+ <div className="mb-4">
+ <label className="block text-sm text-foreground font-medium mb-2 flex items-center gap-2">
+ {t('discounted_price')}
+ {discountPct && (
+ <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-600/80 text-white animate-pulse">
+ -%{discountPct}
+ </span>
+ )}
+ </label>
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
+ {priceInputMode === 'netto' ? (
+ <input type="number" step="0.01" value={editFormFull.discountedPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, discountedPrice: e.target.value }))} className="w-full bg-background border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00 (opsiyonel)" />
+ ) : (
+ <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
+ {dp > 0 ? `€${dp.toFixed(2)}` : <span className="text-muted-foreground">--</span>}
+ </div>
+ )}
+ </div>
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">Brutto (€) <span className="text-muted-foreground">inkl. {taxRate}% MwSt.</span></label>
+ {priceInputMode === 'brutto' ? (
+ <input type="number" step="0.01" value={dp > 0 ? calcBrutto(dp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, discountedPrice: String(calcNetto(brutto)) })); }} className="w-full bg-background border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00" />
+ ) : (
+ <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
+ {dp > 0 ? `€${calcBrutto(dp).toFixed(2)}` : <span className="text-muted-foreground">--</span>}
+ </div>
+ )}
+ </div>
+ </div>
+ </div>
+
+ {/* Kar Marjı Özet */}
+ <div className="bg-card/50 rounded-lg p-3 border border-border">
+ <div className="grid grid-cols-3 gap-3 text-center">
+ <div>
+ <span className="block text-xs text-muted-foreground mb-1">{t('kar_marji')}</span>
+ <span className="text-sm font-medium text-emerald-800 dark:text-emerald-400">
+ {sp > 0 && pp > 0 ? `%${(((sp - pp) / pp) * 100).toFixed(1)}` : '--'}
+ </span>
+ </div>
+ <div>
+ <span className="block text-xs text-muted-foreground mb-1">{t('vergi_tutari')}</span>
+ <span className="text-sm font-medium text-amber-800 dark:text-amber-400">
+ {sp > 0 ? `€${(sp * taxRate / 100).toFixed(2)}` : '--'}
+ </span>
+ </div>
+ <div>
+ <span className="block text-xs text-muted-foreground mb-1">{t('brutto_satis')}</span>
+ <span className="text-sm font-medium text-foreground">
+ {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : '--'}
+ </span>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ {/* 📱 App Satış Fiyatı */}
+ <div className="border-b border-border pb-4">
+ <div className="flex items-center justify-between mb-3">
+ <h3 className="text-sm font-medium text-blue-800 dark:text-blue-400">{t('app_sales_price')}</h3>
+ <label className="flex items-center gap-2 cursor-pointer">
+ <input type="checkbox" checked={!!(editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0)} onChange={e => { if (!e.target.checked) { setEditFormFull((p: any) => ({ ...p, appPrice: '' })); } else { setEditFormFull((p: any) => ({ ...p, appPrice: editFormFull.sellingPrice || '0' })); } }} className="w-4 h-4 rounded accent-blue-500" />
+ <span className="text-xs text-muted-foreground">{t('farkli_fiyat_uygula')}</span>
+ </label>
+ </div>
+ <p className="text-xs text-muted-foreground mb-3">{t('app_price_desc')}</p>
+ {editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0 ? (
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
+ <input type="number" step="0.01" value={editFormFull.appPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, appPrice: e.target.value }))} className="w-full bg-background border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
+ </div>
+ <div>
+ <label className="block text-xs text-muted-foreground mb-1">{t('brutto')} <span className="text-muted-foreground">inkl. {taxRate}%</span></label>
+ <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
+ {parseFloat(editFormFull.appPrice) > 0 ? `€${calcBrutto(parseFloat(editFormFull.appPrice)).toFixed(2)}` : '--'}
+ </div>
+ </div>
+ </div>
+ ) : (
+ <div className="px-4 py-3 bg-card/40 border border-border rounded-lg text-center">
+ <span className="text-sm text-muted-foreground">{t('same_as_selling_price')}{sp > 0 ? ` (€${sp.toFixed(2)})` : ''}</span>
+ </div>
+ )}
+ </div>
+
+ {/* Kanal Fiyatları (Konsolide) */}
+ <div className="pb-4">
+ <h3 className="text-sm font-medium text-emerald-800 dark:text-emerald-400 mb-3"> {t('kanal_fiyatlari')}</h3>
+ <p className="text-xs text-muted-foreground mb-3">{t('esl_price_hint')}</p>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('esl_store_pickup_price')} (€)</label>
+ <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
+ <span className="text-[10px] text-muted-foreground mt-1 block">{t('esl_price_hint')}</span>
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('courier_price_label')} (€)</label>
+ <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
+ <span className="text-[10px] text-muted-foreground mt-1 block">{t('kurye_fiyat_aciklama')}</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ );
+ })()}
+
+ {editInlineTab === 'stock' && (
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('stok_durumu')}</label>
+ <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <option value="in">{t('stokta')}</option><option value="out">{t('stokta_degil')}</option>
+ </select>
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('mevcut_stok')}</label>
+ <input type="number" value={editFormFull.currentStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, currentStock: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('min_stok')}</label>
+ <input type="number" value={editFormFull.minStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, minStock: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('tedarikci_label')}</label>
+ <input value={editFormFull.supplierName || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, supplierName: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('parti_no')}</label>
+ <input value={editFormFull.batchNumber || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, batchNumber: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('depo_konumu')}</label>
+ <input value={editFormFull.stockLocation || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, stockLocation: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ </div>
+ )}
+
+ {editInlineTab === 'media' && (
+ <div className="space-y-4">
+ {/* Mevcut Görseller */}
+ <div>
+ <label className="text-xs text-muted-foreground mb-2 block">{t('mevcut_gorseller')}</label>
+ <div className="flex gap-2 flex-wrap">
+ {editingInlineProduct?.imageUrl && (
+ <div className="relative group">
+ <img src={editingInlineProduct.imageUrl} alt="" className="w-20 h-20 rounded object-cover border border-border" />
+ </div>
+ )}
+ {(editFormFull.images || editingInlineProduct?.images || []).map((img: string, i: number) => (
+ <div key={i} className="relative group">
+ <img src={img} alt="" className="w-20 h-20 rounded object-cover border border-border" />
+ <button
+ type="button"
+ onClick={() => {
+ setEditFormFull((p: any) => {
+ const current = [...(p.images || editingInlineProduct?.images || [])];
+ current.splice(i, 1);
+ return { ...p, images: current };
+ });
+ }}
+ className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+ >
+ ✕
+ </button>
+ </div>
+ ))}
+ {!editingInlineProduct?.imageUrl && !(editFormFull.images || editingInlineProduct?.images || []).length && (
+ <p className="text-muted-foreground text-sm">{t('gorsel_yok')}</p>
+ )}
+ </div>
+ </div>
+
+ {/* Dosyadan Yükle */}
+ <div>
+ <label className="text-xs text-muted-foreground mb-2 block">📤 Görsel Yükle (Dosya Seç)</label>
+ <input
+ type="file"
+ accept="image/*"
+ multiple
+ onChange={async (e) => {
+ if (!e.target.files || e.target.files.length === 0) return;
+ const files = Array.from(e.target.files);
+ for (const file of files) {
+ try {
+ const storageRef = ref(storage, `business_products/${businessId}/${Date.now()}_${file.name}`);
+ const uploadTask = uploadBytesResumable(storageRef, file);
+ uploadTask.on('state_changed', () => { }, (error) => {
+ console.error('Image upload error:', error);
+ showToast(t('image_upload_error'), 'error');
+ }, async () => {
+ const url = await getDownloadURL(uploadTask.snapshot.ref);
+ setEditFormFull((p: any) => ({
+ ...p,
+ imageUrl: p.imageUrl || url,
+ images: [...(p.images || []), url]
+ }));
+ showToast(t('image_uploaded'), 'success');
+ });
+ } catch (err) {
+ console.error('Upload error:', err);
+ }
+ }
+ e.target.value = '';
+ }}
+ className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30"
+ />
+ <p className="text-xs text-muted-foreground mt-1">Birden fazla dosya seçebilirsiniz. JPG, PNG, WebP formatları desteklenir.</p>
+ </div>
+
+ {/* URL ile ekle */}
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">🔗 Görsel URL (opsiyonel)</label>
+ <input value={editFormFull.imageUrl || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, imageUrl: e.target.value }))} placeholder="https://..." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ </div>
+ )}
+
+ {editInlineTab === 'contentCompliance' && (
+ <div className="space-y-6">
+
+ {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
+ <div>
+ <h4 className="text-xs font-semibold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+ <span></span> {t('ingredients_title')}
+ </h4>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+ <div className="md:col-span-2">
+ <label className="text-xs text-muted-foreground mb-1 block">{t('ingredients_label')}</label>
+ <textarea value={editFormFull.ingredients || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, ingredients: e.target.value }))} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('consumption_info_label')}</label>
+ <textarea value={editFormFull.consumptionInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, consumptionInfo: e.target.value }))} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('additives_label')}</label>
+ <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('origin') || "Herkunft / Menşe"}</label>
+ <input value={editFormFull.origin || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, origin: e.target.value }))} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div className="flex items-center gap-3">
+ <label className="inline-flex items-center gap-2 cursor-pointer">
+ <input type="checkbox" checked={editFormFull.containsAlcohol || false} onChange={e => setEditFormFull((p: any) => ({ ...p, containsAlcohol: e.target.checked }))} className="w-4 h-4 rounded border-border bg-card" />
+ <span className="text-xs text-foreground">🍷 Alkol İçerir (Alkoholhaltig)</span>
+ </label>
+ </div>
+ </div>
+ </div>
+
+ <hr className="border-border/50" />
+
+ {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
+ <div>
+ <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+ <span></span> {t('allergens_title')}
+ </h4>
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+ {[
+ { key: 'gluten', label: t('allergen_gluten'), emoji: '🌾' },
+ { key: 'crustaceans', label: t('allergen_crustaceans'), emoji: '🦐' },
+ { key: 'eggs', label: t('allergen_eggs'), emoji: '🥚' },
+ { key: 'fish', label: t('allergen_fish'), emoji: '🐟' },
+ { key: 'peanuts', label: t('allergen_peanuts'), emoji: '🥜' },
+ { key: 'soy', label: t('allergen_soy'), emoji: '🫘' },
+ { key: 'milk', label: t('allergen_milk'), emoji: '🥛' },
+ { key: 'treeNuts', label: t('allergen_treeNuts'), emoji: '🌰' },
+ { key: 'celery', label: t('allergen_celery'), emoji: '🥬' },
+ { key: 'mustard', label: t('allergen_mustard'), emoji: '🟡' },
+ { key: 'sesame', label: t('allergen_sesame'), emoji: '⚪' },
+ { key: 'sulfites', label: t('allergen_sulfites'), emoji: '🧪' },
+ { key: 'lupin', label: t('allergen_lupin'), emoji: '🌸' },
+ { key: 'molluscs', label: t('allergen_molluscs'), emoji: '🐚' },
+ ].map(allergen => {
+ const checked = (editFormFull.allergens || {})[allergen.key] === true;
+ return (
+ <button
+ key={allergen.key}
+ type="button"
+ onClick={() => setEditFormFull((p: any) => ({
+ ...p,
+ allergens: { ...(p.allergens || {}), [allergen.key]: !(p.allergens || {})[allergen.key] }
+ }))}
+ className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition ${checked
+ ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+ : 'bg-card/50 border-border text-muted-foreground hover:border-gray-500'
+ }`}
+ >
+ <span className="text-lg">{allergen.emoji}</span>
+ <span className="text-[10px] font-medium leading-tight">{allergen.label}</span>
+ </button>
+ );
+ })}
+ </div>
+ </div>
+
+ <hr className="border-border/50" />
+
+ {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
+ <div>
+ <h4 className="text-xs font-semibold text-green-800 dark:text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+ <span></span> {t('nutrition_title')}
+ </h4>
+ <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+ {[
+ { key: 'energie_kj', label: t('nutrition_energie'), unit: 'kJ', required: true },
+ { key: 'energie_kcal', label: t('nutrition_energie'), unit: 'kcal', required: true },
+ { key: 'fett', label: t('nutrition_fett'), unit: 'g', required: true },
+ { key: 'gesaettigte_fettsaeuren', label: t('nutrition_ges_fetts'), unit: 'g', required: true },
+ { key: 'kohlenhydrate', label: t('nutrition_kohlenh'), unit: 'g', required: true },
+ { key: 'zucker', label: t('nutrition_zucker'), unit: 'g', required: true },
+ { key: 'protein', label: t('nutrition_eiweiss'), unit: 'g', required: true },
+ { key: 'salz', label: t('nutrition_salz'), unit: 'g', required: true },
+ { key: 'ballaststoffe', label: t('nutrition_ballaststoffe'), unit: 'g', required: false },
+ { key: 'einfach_unges_fett', label: t('nutrition_einf_ung_f'), unit: 'g', required: false },
+ { key: 'mehrfach_unges_fett', label: t('nutrition_mehrf_ung_f'), unit: 'g', required: false },
+ { key: 'staerke', label: t('nutrition_staerke'), unit: 'g', required: false },
+ ].map(item => (
+ <div key={item.key}>
+ <span className={`text-[9px] block mb-0.5 ${item.required ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
+ {item.label} ({item.unit}){item.required ? ' *' : ''}
+ </span>
+ <input
+ type="number"
+ step="0.01"
+ value={(editFormFull.nutritionPer100g || {})[item.key] ?? ''}
+ onChange={e => setEditFormFull((p: any) => ({
+ ...p,
+ nutritionPer100g: { ...(p.nutritionPer100g || {}), [item.key]: e.target.value === '' ? undefined : parseFloat(e.target.value) }
+ }))}
+ className="w-full bg-background/50 text-white text-xs rounded px-2 py-1.5 border border-border focus:border-green-500 focus:outline-none"
+ />
+ </div>
+ ))}
+ </div>
+ <p className="text-[10px] text-muted-foreground mt-1">{t('eu_big7_note')}</p>
+ </div>
+
+ <hr className="border-border/50" />
+
+ {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
+ <div>
+ <h4 className="text-xs font-semibold text-purple-800 dark:text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+ <span></span> {t('certificates_title')}
+ </h4>
+ <div className="flex flex-wrap gap-2">
+ {[
+ { key: 'cert_tuna', label: t('cert_tuna_label'), emoji: '🐟', color: 'blue' },
+ { key: 'cert_akdeniz', label: t('cert_akdeniz_label'), emoji: '🌊', color: 'cyan' },
+ { key: 'cert_halal', label: t('cert_halal_label'), emoji: '☪️', color: 'green' },
+ { key: 'cert_bio', label: t('cert_bio_label'), emoji: '🌿', color: 'green' },
+ { key: 'cert_vegan', label: t('cert_vegan_label'), emoji: '🌱', color: 'green' },
+ { key: 'cert_vegetarian', label: t('cert_vegetarian_label'), emoji: '🥬', color: 'green' },
+ { key: 'cert_glutenfree', label: t('cert_glutenfree_label'), emoji: '🚫', color: 'amber' },
+ { key: 'cert_lactosefree', label: t('cert_lactosefree_label'), emoji: '🚫', color: 'amber' },
+ { key: 'cert_ifs', label: t('cert_ifs_label'), emoji: '🛡️', color: 'purple' },
+ { key: 'cert_haccp', label: t('cert_haccp_label'), emoji: '✅', color: 'purple' },
+ { key: 'cert_msc', label: t('cert_msc_label'), emoji: '🔵', color: 'blue' },
+ { key: 'cert_fairtrade', label: t('cert_fairtrade_label'), emoji: '🟢', color: 'green' },
+ { key: 'cert_eigenmarke', label: t('cert_eigenmarke_label'), emoji: '🇩🇪', color: 'gray' },
+ ].map(cert => {
+ const selected = (editFormFull.certifications || []).includes(cert.key);
+ return (
+ <button
+ key={cert.key}
+ type="button"
+ onClick={() => {
+ setEditFormFull((p: any) => {
+ const current = p.certifications || [];
+ return {
+ ...p,
+ certifications: selected
+ ? current.filter((c: string) => c !== cert.key)
+ : [...current, cert.key]
+ };
+ });
+ }}
+ className={`px-3 py-2 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${selected
+ ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-sm shadow-purple-500/10'
+ : 'bg-card/50 border-border text-muted-foreground hover:border-gray-500'
+ }`}
+ >
+ <span>{cert.emoji}</span>
+ <span>{selected ? '✓ ' : ''}{cert.label}</span>
+ </button>
+ );
+ })}
+ </div>
+ </div>
+
+ <hr className="border-border/50" />
+
+ {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
+ <div>
+ <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+ <span></span> {t('internal_notes_title')}
+ </h4>
+ <div className="space-y-3">
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">Dahili {t('notlar')}</label>
+ <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" placeholder="Sadece admin panelinde görünür notlar..." />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('etiketler')}</label>
+ <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ </div>
+ </div>
+
+ <hr className="border-border/50" />
+
+ {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
+ <div>
+ <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+ <span></span> {t('audit_trail_title')}
+ </h4>
+ <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+ <div className="bg-background/30 rounded p-3 border border-border/50">
+ <p className="text-xs text-muted-foreground mb-1">{t('olusturulma')}</p>
+ <p className="text-xs text-foreground">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
+ </div>
+ <div className="bg-background/30 rounded p-3 border border-border/50">
+ <p className="text-xs text-muted-foreground mb-1">{t('guncelleme')}</p>
+ <p className="text-xs text-foreground">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
+ </div>
+ <div className="bg-background/30 rounded p-3 border border-border/50">
+ <p className="text-xs text-muted-foreground mb-1">{t('sku_master_id') || "SKU / Master ID"}</p>
+ <p className="text-xs text-foreground">{editingInlineProduct?.id || '—'}</p>
+ <p className="text-xs text-muted-foreground">{editingInlineProduct?.masterId ? `Master: ${editingInlineProduct.masterId}` : ''}</p>
+ </div>
+ </div>
+ </div>
+
+ <hr className="border-border/50" />
+
+ {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
+ <div>
+ <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+ <span></span> {t('physical_info_title')}
+ </h4>
+ <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('weight') || "Gewicht (Ağırlık)"}</label>
+ <input value={editFormFull.weight || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, weight: e.target.value }))} placeholder="500g, 1kg" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('packaging') || "Packung (Ambalaj)"}</label>
+ <input value={editFormFull.packung || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, packung: e.target.value }))} placeholder="Vakuum, Schale" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('storage_temp') || "Gehäusetemperatur (Saklama)"}</label>
+ <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('mhd_label')}</label>
+ <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div className="col-span-2">
+ <p className="text-xs text-amber-800 dark:text-amber-400/80 bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded px-3 py-2">
+ {t('mhd_note')}
+ </p>
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('artikelnummer')}</label>
+ <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ </div>
+ <div className="col-span-2 md:col-span-3 lg:col-span-4">
+ <label className="text-xs text-muted-foreground mb-1 block">{t('special_info_label')}</label>
+ <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder={t('ozel_uyarilar_placeholder')} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+ </div>
+ </div>
+ </div>
+
+ </div>
+ )}
+
+ {editInlineTab === 'app' && (
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('one_cikan_urun')}</label>
+ <select value={editFormFull.isFeatured ? 'yes' : 'no'} onChange={e => setEditFormFull((p: any) => ({ ...p, isFeatured: e.target.value === 'yes' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <option value="no">{t('hayir')}</option>
+ <option value="yes">Evet ⭐</option>
+ </select>
+ </div>
+ <div>
+ <label className="text-xs text-muted-foreground mb-1 block">{t('stock_status_app') || "Stok Durumu (App)"}</label>
+ <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <option value="in">{t('stokta')}</option>
+ <option value="out">{t('stokta_yok')}</option>
+ </select>
+ </div>
+ <div className="md:col-span-2 lg:col-span-3">
+ <label className="text-xs text-muted-foreground mb-2 block">{t('option_groups') || "Seçenek Grupları (Opsiyonlar/Extras)"}</label>
+ {(editFormFull.optionGroups || []).length > 0 ? (
+ <div className="space-y-2">
+ {(editFormFull.optionGroups || []).map((group: any, i: number) => (
+ <div key={i} className="bg-background/30 rounded p-2 border border-border/50 text-sm text-foreground">
+ <span className="font-medium text-foreground">{group.name || `Grup ${i + 1}`}</span>
+ {group.options?.length > 0 && (
+ <span className="text-muted-foreground ml-2">({group.options.length} seçenek)</span>
+ )}
+ </div>
+ ))}
+ </div>
+ ) : (
+ <p className="text-muted-foreground text-sm">{t('secenek_grubu_tanimlanmamis')}</p>
+ )}
+ </div>
+ <div className="md:col-span-2 lg:col-span-3 bg-background/20 rounded p-3 border border-border/30">
+ <p className="text-xs text-muted-foreground">💡 Mobil uygulamada bu ürünün nasıl görüneceğini buradan yönetebilirsiniz. {t('fiyatlandirma')} farklılıkları &quot;Fiyat &amp; Vergi&quot; sekmesindedir.</p>
+ </div>
+ </div>
+ )}
+
+
+ </div>
+
+ {/* Footer */}
+ <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-border/50">
+ <button onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }} className="px-6 py-2 text-sm text-muted-foreground hover:text-white transition">
+ {t('iptal')}
+ </button>
+ <button onClick={handleAddProduct} disabled={addingProduct} className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-foreground text-sm font-medium rounded-lg shadow-lg shadow-blue-500/20 transition active:scale-95 disabled:opacity-50">
+ {addingProduct ? 'Kaydediliyor...' : 'Kaydet'}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+ </Fragment>
+ );
+ })}
+ </div>
+
+ {/* Pagination Controls */}
+ {
+ totalPages > 1 && (
+ <div className="px-4 py-3 bg-muted/30 border-t border-border flex items-center justify-between flex-wrap gap-2">
+ {/* Left: Info */}
+ <div className="text-muted-foreground text-xs">
+ {startIdx + 1}–{Math.min(endIdx, totalFiltered)} / {totalFiltered} ürün
+ {productSearchQuery.trim() && (
+ <span className="text-blue-800 dark:text-blue-400 ml-1">({t('search_results') || "arama sonuçları"})</span>
+ )}
+ </div>
+
+ {/* Center: Page Buttons */}
+ <div className="flex items-center gap-1">
+ <button
+ onClick={() => setProductCurrentPage(1)}
+ disabled={safeCurrentPage === 1}
+ className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
+ >
+ «
+ </button>
+ <button
+ onClick={() => setProductCurrentPage(Math.max(1, safeCurrentPage - 1))}
+ disabled={safeCurrentPage === 1}
+ className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
+ >
+ ‹
+ </button>
+ {getPageNumbers().map((pg, idx) => (
+ pg === '...' ? (
+ <span key={`dots-${idx}`} className="px-1 text-muted-foreground text-xs">…</span>
+ ) : (
+ <button
+ key={pg}
+ onClick={() => setProductCurrentPage(pg)}
+ className={`px-2.5 py-1 rounded text-xs font-medium transition ${pg === safeCurrentPage
+ ? 'bg-blue-600 text-white'
+ : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'
+ }`}
+ >
+ {pg}
+ </button>
+ )
+ ))}
+ <button
+ onClick={() => setProductCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
+ disabled={safeCurrentPage === totalPages}
+ className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
+ >
+ ›
+ </button>
+ <button
+ onClick={() => setProductCurrentPage(totalPages)}
+ disabled={safeCurrentPage === totalPages}
+ className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
+ >
+ »
+ </button>
+ </div>
+
+ {/* Right: Per page selector */}
+ <div className="flex items-center gap-2">
+ <span className="text-muted-foreground text-xs">{t('per_page') || "Sayfa başı:"}</span>
+ <select
+ value={productsPerPage}
+ onChange={(e) => {
+ setProductsPerPage(Number(e.target.value));
+ setProductCurrentPage(1);
+ }}
+ className="bg-foreground text-background shadow-md text-xs rounded px-2 py-1 border border-border focus:border-blue-500 focus:outline-none"
+ >
+ <option value={10}>10</option>
+ <option value={20}>20</option>
+ <option value={50}>50</option>
+ <option value={100}>100</option>
+ </select>
+ </div>
+ </div>
+ )
+ }
+
+ {/* No results message for search */}
+ {
+ totalFiltered === 0 && productSearchQuery.trim() && (
+ <div className="px-4 py-8 text-center">
+ <p className="text-muted-foreground text-sm">{t('aranilan')} <span className="text-foreground font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
+ <button
+ onClick={() => {
+ setProductSearchQuery('');
+ setProductCurrentPage(1);
+ }}
+ className="mt-2 text-blue-800 dark:text-blue-400 hover:text-blue-300 text-sm transition"
+ >
+ Aramayı temizle
+ </button>
+ </div>
+ )
+ }
+ </div>
+ </div>
+ );
+ })()}
+ </div>
+ )}
+
+ {/* ==================== SPONSORED PRODUCTS ==================== */}
+ {menuInternalTab === "sponsored" && (
+ <LockedModuleOverlay featureKey="sponsoredProducts">
+ <div className="space-y-4">
+ {/* Header */}
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <span className="text-2xl">⭐</span>
+ <div>
+ <h4 className="text-foreground font-bold">{t('one_cikan_urunler')}</h4>
+ <p className="text-muted-foreground text-xs">{t('one_cikan_aciklama')}</p>
+ </div>
+ </div>
+ </div>
+
+ {/* Limit Progress Bar */}
+ <div className="bg-card/60 rounded-xl border border-amber-500/30 p-4">
+ <div className="flex items-center justify-between mb-2">
+ <span className="text-sm text-foreground font-medium">
+ {t('sponsored_kullanim')}
+ </span>
+ <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
+ ? 'text-red-800 dark:text-red-400'
+ : 'text-amber-800 dark:text-amber-400'
+ }`}>
+ {sponsoredProducts.length} / {sponsoredSettings.maxProductsPerBusiness}
+ </span>
+ </div>
+ <div className="w-full bg-muted rounded-full h-2.5">
+ <div
+ className={`h-2.5 rounded-full transition-all duration-500 ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
+ ? 'bg-red-500'
+ : sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness * 0.8
+ ? 'bg-amber-500'
+ : 'bg-emerald-500'
+ }`}
+ style={{ width: `${Math.min((sponsoredProducts.length / Math.max(sponsoredSettings.maxProductsPerBusiness, 1)) * 100, 100)}%` }}
+ />
+ </div>
+ {sponsoredSettings.feePerConversion > 0 && (
+ <p className="text-xs text-muted-foreground mt-2">
+ {t('sponsored_donusum_ucret')} {sponsoredSettings.feePerConversion}€
+ </p>
+ )}
+ </div>
+
+ {/* Product List with Checkboxes */}
+ {loadingProducts ? (
+ <div className="flex justify-center py-8">
+ <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+ </div>
+ ) : inlineProducts.length === 0 ? (
+ <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
+ <span className="text-4xl"></span>
+ <h4 className="text-foreground font-medium mt-3">{t('henuz_urun_eklenmemis')}</h4>
+ <p className="text-muted-foreground text-sm mt-1">{t('sponsored_urun_once_ekle')}</p>
+ </div>
+ ) : (
+ <div className="space-y-1">
+ {inlineProducts.filter((p: any) => p.isActive !== false).map((product: any) => {
+ const isSponsored = sponsoredProducts.includes(product.id);
+ const limitReached = sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness;
+ const disabled = !isSponsored && limitReached;
+ return (
+ <label
+ key={product.id}
+ className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer ${isSponsored
+ ? 'bg-amber-900/20 border-amber-500/40 hover:border-amber-400/60'
+ : disabled
+ ? 'bg-card/30 border-border/50 opacity-50 cursor-not-allowed'
+ : 'bg-card/40 border-border hover:border-gray-500'
+ }`}
+ >
+ <input
+ type="checkbox"
+ checked={isSponsored}
+ disabled={disabled}
+ onChange={() => {
+ if (isSponsored) {
+ setSponsoredProducts(prev => prev.filter(id => id !== product.id));
+ } else if (!limitReached) {
+ setSponsoredProducts(prev => [...prev, product.id]);
+ }
+ }}
+ className="w-5 h-5 rounded bg-muted border-border text-amber-500 focus:ring-amber-500 accent-amber-500"
+ />
+ {/* Product image */}
+ {product.imageUrl || (product.images && product.images[0]) ? (
+ <img
+ src={product.imageUrl || product.images[0]}
+ alt={product.name}
+ className="w-10 h-10 rounded-lg object-cover"
+ />
+ ) : (
+ <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-lg">
+ 📷
+ </div>
+ )}
+ {/* Name */}
+ <div className="flex-1 min-w-0">
+ <p className="text-foreground text-sm font-medium truncate">
+ {typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}
+ </p>
+ <p className="text-muted-foreground text-xs truncate">
+ {product.category || ''}
+ </p>
+ </div>
+ {/* Price */}
+ <div className="text-right">
+ {product.price != null && (
+ <span className="text-green-800 dark:text-green-400 font-bold text-sm">
+ {typeof product.price === 'number' ? product.price.toFixed(2) : product.price}€
+ </span>
+ )}
+ </div>
+ {/* Star badge */}
+ {isSponsored && (
+ <span className="text-amber-800 dark:text-amber-400 text-lg">⭐</span>
+ )}
+ </label>
+ );
+ })}
+ </div>
+ )}
+
+ {/* Save Button */}
+ <div className="flex justify-end pt-2">
+ <button
+ onClick={async () => {
+ if (!businessId) return;
+ setSponsoredSaving(true);
+ try {
+ await updateDoc(doc(db, 'businesses', businessId), {
+ sponsoredProducts: sponsoredProducts,
+ hasSponsoredProducts: sponsoredProducts.length > 0,
+ });
+ showToast(t('sponsored_kaydedildi'), 'success');
+ } catch (error) {
+ console.error('Error saving sponsored products:', error);
+ showToast(t('sponsored_kaydetme_hatasi'), 'error');
+ }
+ setSponsoredSaving(false);
+ }}
+ disabled={sponsoredSaving}
+ className="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-medium text-sm transition-all disabled:opacity-50 flex items-center gap-2"
+ >
+ {sponsoredSaving ? (
+ <>
+ <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+ {t('sponsored_kaydediliyor')}
+ </>
+ ) : (
+ <>
+ {t('sponsored_kaydet')} ({sponsoredProducts.length} {t('sponsored_urun')})
+ </>
+ )}
+ </button>
+ </div>
+ </div>
+ </LockedModuleOverlay>
+ )}
+ </div>
+ )
+ }
+
+ {/* Sub-Tab: Personel */}
+ {
+ settingsSubTab === "personel" && (
+ <LockedModuleOverlay featureKey="staffShiftTracking">
+ <div className="space-y-6">
+
+ {/* ═══════ Aktif Vardiyalar Panel ═══════ */}
+ {activeShifts.length > 0 && (
+ <div className="bg-gradient-to-br from-green-100 dark:from-green-900/40 to-green-50 dark:to-green-800/20 border border-green-600/30 rounded-xl p-5">
+ <div className="flex items-center gap-2 mb-4">
+ <span className="text-2xl">🟢</span>
+ <h3 className="text-lg font-bold text-green-300">
+ {t('aktif_vardiyalar')}{activeShifts.length})
+ </h3>
+ </div>
+ <div className="overflow-x-auto">
+ <table className="w-full text-left text-sm">
+ <thead className="text-green-800 dark:text-green-400/80 border-b border-green-200 dark:border-green-700/50">
+ <tr>
+ <th className="pb-2 pr-3">{t('personel_th')}</th>
+ <th className="pb-2 pr-3">{t('baslangic')}</th>
+ <th className="pb-2 pr-3">{t('sure')}</th>
+ <th className="pb-2 pr-3">{t('konum_th')}</th>
+ <th className="pb-2 pr-3">{t('masalar_th')}</th>
+ <th className="pb-2">{t('durum')}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {activeShifts.map(shift => {
+ const startTime = shift.shiftStartedAt?.toDate?.() || shift.shiftStartedAt;
+ const startStr = startTime
+ ? new Date(startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+ : '—';
+ const elapsed = startTime
+ ? Math.floor((Date.now() - new Date(startTime).getTime()) / 60000)
+ : 0;
+ const hrs = Math.floor(elapsed / 60);
+ const mins = elapsed % 60;
+ const elapsedStr = hrs > 0 ? `${hrs}sa ${mins}dk` : `${mins}dk`;
+ const isPaused = shift.shiftStatus === 'paused';
+ return (
+ <tr key={shift.id} className="border-b border-green-800/30">
+ <td className="py-2.5 pr-3 text-foreground font-medium">
+ {shift.displayName || shift.email || t('isimsiz')}
+ </td>
+ <td className="py-2.5 pr-3 text-foreground">{startStr}</td>
+ <td className="py-2.5 pr-3 text-foreground font-mono">{elapsedStr}</td>
+ <td className="py-2.5 pr-3 text-muted-foreground max-w-[150px] truncate" title={shift.shiftStartLocation?.address}>
+ {shift.shiftStartLocation?.address
+ ? shift.shiftStartLocation.address.substring(0, 30) + (shift.shiftStartLocation.address.length > 30 ? '…' : '')
+ : '—'}
+ </td>
+ <td className="py-2.5 pr-3 text-foreground">
+ {shift.shiftAssignedTables?.length
+ ? shift.shiftAssignedTables.join(', ')
+ : '—'}
+ </td>
+ <td className="py-2.5">
+ <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${isPaused
+ ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+ : 'bg-green-500/20 text-green-300 border border-green-500/30'
+ }`}>
+ {isPaused ? t('mola') : t('aktif_status')}
+ </span>
+ </td>
+ </tr>
+ );
+ })}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ )}
+
+ {/* Aktif / Arşivlenmiş Tabs */}
+ <div className="flex gap-2 mb-4">
+ <button
+ onClick={() => setStaffStatusFilter('active')}
+ className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'active'
+ ? 'bg-green-600 text-white'
+ : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'
+ }`}
+ >
+ {t('aktif')}{staffList.filter(s => s.isActive !== false).length})
+ </button>
+ <button
+ onClick={() => setStaffStatusFilter('archived')}
+ className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'archived'
+ ? 'bg-amber-600 text-white'
+ : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'
+ }`}
+ >
+ {t('arsivlenmis')}{staffList.filter(s => s.isActive === false).length})
+ </button>
+ </div>
+
+ {/* Search */}
+ <div className="relative">
+ <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></span>
+ <input
+ type="text"
+ placeholder={t('isimEpostaVeyaTelefonIleAra')}
+ value={staffSearchQuery}
+ onChange={(e) => setStaffSearchQuery(e.target.value)}
+ className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
+ />
+ </div>
+
+ {/* Staff Table */}
+ <div>
+ <h3 className="text-foreground font-medium mb-3">
+ {t('personel_mevcut')} ({staffList.filter(s => {
+ const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
+ const matchesSearch = !staffSearchQuery ||
+ s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+ s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+ s.phoneNumber?.includes(staffSearchQuery);
+ return matchesStatus && matchesSearch;
+ }).length})
+ </h3>
+
+ {staffList.length === 0 ? (
+ <div className="text-center py-8 text-muted-foreground">
+ <p className="text-4xl mb-2"></p>
+ <p>{t('henuzPersonelYok')}</p>
+ </div>
+ ) : (
+ <table className="w-full text-left">
+ <thead className="text-muted-foreground border-b border-border">
+ <tr>
+ <th className="pb-3 py-2">{t('kullanici')}</th>
+ <th className="pb-3 py-2">{t('personel_rol')}</th>
+ <th className="pb-3 py-2">{t('durum')}</th>
+ <th className="pb-3 py-2">{t('islemler')}</th>
+ </tr>
+ </thead>
+ <tbody className="text-foreground">
+ {staffList.filter(s => {
+ const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
+ const matchesSearch = !staffSearchQuery ||
+ s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+ s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+ s.phoneNumber?.includes(staffSearchQuery);
+ return matchesStatus && matchesSearch;
+ }).length === 0 && (
+ <tr>
+ <td colSpan={4} className="py-8 text-center text-muted-foreground">
+ <p className="text-2xl mb-2"></p>
+ <p>{staffStatusFilter === 'archived' ? t('arsivlenmisPersonelBulunamadi') : t('personelBulunamadi')}</p>
+ </td>
+ </tr>
+ )}
+ {staffList.filter(s => {
+ const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
+ const matchesSearch = !staffSearchQuery ||
+ s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+ s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+ s.phoneNumber?.includes(staffSearchQuery);
+ return matchesStatus && matchesSearch;
+ }).map((staff) => (
+ <tr key={staff.id} className="border-b border-border hover:bg-muted/40 dark:bg-muted/10 border-border">
+ <td className="py-4">
+ <div>
+ <p className="font-medium">{staff.displayName}</p>
+ <p className="text-muted-foreground text-sm">{staff.email || '-'}</p>
+ <p className="text-muted-foreground text-xs">{staff.phoneNumber}</p>
+ </div>
+ </td>
+ <td className="py-4">
+ <span className={`px-2 py-1 rounded text-xs ${staff.adminType?.includes('Admin') || staff.adminType?.includes('_admin')
+ ? 'bg-purple-600'
+ : 'bg-blue-600'
+ }`}>
+ {staff.adminType || t('personel_rol')}
+ </span>
+ </td>
+ <td className="py-4">
+ <span className={`px-2 py-1 rounded text-xs ${staff.isActive !== false ? 'bg-green-600' : 'bg-red-600'}`}>
+ {staff.isActive !== false ? t('aktif') : t('pasif')}
+ </span>
+ </td>
+ <td className="py-4">
+ <div className="flex flex-wrap gap-2">
+ {/* Arşivle / Aktifleştir toggle */}
+ <button
+ onClick={() => {
+ const isActive = staff.isActive !== false;
+ setConfirmModal({
+ show: true,
+ title: isActive ? t('personelArsivle') : t('personelAktiflestir'),
+ message: isActive
+ ? `${staff.displayName} ${t('adliPersoneliArsivlemekIstediginizeEminMisiniz')}`
+ : `${staff.displayName} ${t('adliPersoneliTekrarAktiflestirmekIstediginizeEmin')}`,
+ confirmText: isActive ? t('evetArsivle') : t('evetAktiflestir'),
+ confirmColor: isActive ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500',
+ onConfirm: async () => {
+ setConfirmModal(prev => ({ ...prev, show: false }));
+ try {
+ const adminRef = doc(db, 'admins', staff.id);
+ const now = new Date();
+ if (isActive) {
+ await updateDoc(adminRef, {
+ isActive: false,
+ deactivatedAt: now,
+ deactivationReason: t('isletmePanelindenArsivlendi'),
+ });
+ showToast(`${staff.displayName} ${t('arsivlendi')}`, 'success');
+ } else {
+ await updateDoc(adminRef, {
+ isActive: true,
+ deactivatedAt: null,
+ deactivationReason: null,
+ });
+ showToast(`${staff.displayName} ${t('tekrarAktiflestirildi')}`, 'success');
+ }
+ loadStaff();
+ } catch (error) {
+ console.error('Archive error:', error);
+ showToast(t('islemBasarisiz'), 'error');
+ }
+ },
+ });
+ }}
+ className={`text-xs px-2 py-1 rounded ${staff.isActive !== false
+ ? 'bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white'
+ : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600 hover:text-white'}`}
+ >
+ {staff.isActive !== false ? t('arsivle1') : t('aktiflestir')}
+ </button>
+ {/* Yetkiyi Kaldır */}
+ <button
+ onClick={() => {
+ setConfirmModal({
+ show: true,
+ title: t('yetkiyiKaldir'),
+ message: `${staff.displayName} ${t('adliPersonelinYetkisiniKaldirmakIstediginizeEmin')}`,
+ confirmText: t('evetKaldir'),
+ confirmColor: 'bg-red-600 hover:bg-red-500',
+ onConfirm: async () => {
+ setConfirmModal(prev => ({ ...prev, show: false }));
+ try {
+ const adminRef = doc(db, 'admins', staff.id);
+ await updateDoc(adminRef, {
+ isActive: false,
+ adminType: null,
+ butcherId: null,
+ butcherName: null,
+ deactivatedAt: new Date(),
+ deactivationReason: t('yetkiKaldirildi'),
+ });
+ showToast(`${staff.displayName} ${t('yetkisiKaldirildi')}`, 'success');
+ loadStaff();
+ } catch (error) {
+ console.error('Remove permission error:', error);
+ showToast(t('islemBasarisiz'), 'error');
+ }
+ },
+ });
+ }}
+ className="text-xs px-2 py-1 rounded bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white"
+ >
+ {t('yetkiyiKaldir1')}
+ </button>
+ </div>
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ )}
+ </div>
+
+ {/* Invite New Staff */}
+ <div className="bg-background/50 rounded-xl p-6 border border-border">
+ <h3 className="text-foreground font-bold text-lg mb-4">
+ {t('yeni_personel_ekle')}
+ </h3>
+ <div className="grid grid-cols-2 gap-3">
+ <input
+ type="text"
+ placeholder={t('isim')}
+ value={inviteFirstName}
+ onChange={(e) => setInviteFirstName(e.target.value)}
+ className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
+ />
+ <input
+ type="text"
+ placeholder={t('soyisim_opsiyonel')}
+ value={inviteLastName}
+ onChange={(e) => setInviteLastName(e.target.value)}
+ className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
+ />
+ </div>
+ <div className="flex gap-2 mt-3">
+ <select
+ value={inviteCountryCode}
+ onChange={(e) => setInviteCountryCode(e.target.value)}
+ className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg w-24"
+ >
+ <option value="+49">🇩🇪 +49</option>
+ <option value="+90">🇹🇷 +90</option>
+ <option value="+43">🇦🇹 +43</option>
+ </select>
+ <input
+ type="tel"
+ placeholder={t('telefonNumarasi')}
+ value={invitePhone}
+ onChange={(e) =>
+ setInvitePhone(e.target.value.replace(/\D/g, ""))
+ }
+ className="flex-1 bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
+ />
+ </div>
+ <input
+ type="email"
+ placeholder={t('epostaOpsiyonelBildirimIcin')}
+ value={inviteEmail}
+ onChange={(e) => setInviteEmail(e.target.value)}
+ className="w-full mt-3 bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
+ />
+ <div className="mt-3">
+ <label className="text-muted-foreground text-sm">{t('rol')}</label>
+ <select
+ value={inviteRole}
+ onChange={(e) => setInviteRole(e.target.value)}
+ className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1"
+ >
+ <option value="Personel">{t('personel_rol')}</option>
+ <option value="Admin">{t('isletmeAdmin')}</option>
+ </select>
+ </div>
+ <button
+ onClick={handleInviteStaff}
+ disabled={staffLoading}
+ className="w-full mt-3 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium"
+ >
+ {staffLoading
+ ? t('hesapOlusturuluyor')
+ : t('hesapOlusturDavetGonder')}
+ </button>
+
+ {/* Invite Result Feedback */}
+ {inviteResult && inviteResult.success && (
+ <div className="mt-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
+ <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
+ <div className="bg-card p-3 rounded text-sm">
+ <p className="text-muted-foreground">{t('geciciSifre')}</p>
+ <p className="text-foreground font-mono text-lg">{inviteResult.tempPassword}</p>
+ </div>
+ {inviteResult.notifications && (
+ <div className="flex flex-col gap-2 text-xs">
+ <div className="flex flex-wrap gap-2">
+ <span title={(inviteResult.notifications.email as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
+ {inviteResult.notifications.email?.sent ? '✓' : '✗'} Email
+ </span>
+ <span title={(inviteResult.notifications.whatsapp as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
+ {inviteResult.notifications.whatsapp?.sent ? '✓' : '✗'} WhatsApp
+ </span>
+ <span title={(inviteResult.notifications.sms as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
+ {inviteResult.notifications.sms?.sent ? '✓' : '✗'} SMS
+ </span>
+ </div>
+ {(!inviteResult.notifications.email?.sent || !inviteResult.notifications.whatsapp?.sent || !inviteResult.notifications.sms?.sent) && (
+ <p className="text-red-400 mt-1">⚠️ Bazı bildirimler gönderilemedi. Hata detayını görmek için üzerlerine gelin.</p>
+ )}
+ </div>
+ )}
+ <button
+ onClick={() => setInviteResult(null)}
+ className="text-xs text-muted-foreground hover:text-white"
+ >
+ {t('kapat')}
+ </button>
+ </div>
+ )}
+ </div>
+ </div>
+ </LockedModuleOverlay>
+ )
+ }

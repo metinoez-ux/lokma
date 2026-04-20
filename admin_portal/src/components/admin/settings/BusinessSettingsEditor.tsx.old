@@ -523,7 +523,9 @@ export default function BusinessSettingsEditor({
  }
  setSaving(false);
  setConfirmModal({ ...confirmModal, show: false });
- },
+        }
+    });
+};
 
     return (
         <div className="space-y-6">
@@ -555,8 +557,6 @@ export default function BusinessSettingsEditor({
  )}
  </>
  )}
- </div>
- </div>
 
  {/* Sub-Tab: İşletme */}
  {settingsSubTab === "isletme" && (

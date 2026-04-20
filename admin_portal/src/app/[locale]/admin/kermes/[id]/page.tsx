@@ -173,7 +173,6 @@ interface KermesEvent {
  descriptionSecondary?: string;
  secondaryLanguage?: string; // de, tr, nl, fr, en
  description?: string;
- city?: string;
  address?: string;
  location?: string;
  // 2. Sokak Adı
@@ -2258,6 +2257,7 @@ export default function KermesDetailPage() {
     closingTime: normalizeTimeString(kermes?.closingTime || '') || '',
     address: kermes?.address || '', secondStreetName: kermes?.secondStreetName || '',
     city: kermes?.city || '', postalCode: kermes?.postalCode || '',
+    state: kermes?.state || '',
     country: kermes?.country || '',
     contactName: kermes?.contactName || '', contactFirstName: kermes?.contactFirstName || '',
     contactLastName: kermes?.contactLastName || '', contactPhone: kermes?.contactPhone || '',

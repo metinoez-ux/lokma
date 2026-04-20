@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
 import { normalizeTimeString, getScheduleForToday, parseOpeningHoursBlock } from "@/utils/timeUtils";
-import { Store, Utensils, Users, Star, CreditCard, Gift, Rocket, Wand2 } from "lucide-react";
+import { Store, Utensils, Users, CreditCard, Gift, Rocket, Wand2 } from "lucide-react";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
