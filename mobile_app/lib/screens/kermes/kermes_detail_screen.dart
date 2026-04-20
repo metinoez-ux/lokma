@@ -1,7 +1,5 @@
 import '../../utils/currency_utils.dart';
 import '../../widgets/brand_info_sheet.dart';
-import '../../widgets/lokma_network_image_extended.dart';
-import '../../widgets/image_viewer_screen.dart';
 import 'widgets/kermes_video_header.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
