@@ -2793,13 +2793,17 @@ String _getLocalizedCountry(String rawCountry) {
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: bg,
                 border: Border.all(color: bg),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   if (f.iconUrl != null && f.iconUrl!.isNotEmpty) ...[
                     LokmaNetworkImage(
@@ -2809,7 +2813,11 @@ String _getLocalizedCountry(String rawCountry) {
                     ),
                     const SizedBox(width: 8),
                   ] else if (f.icon.isNotEmpty) ...[
-                    Text(f.icon, style: const TextStyle(fontSize: 18)),
+                    Text(
+                      f.icon, 
+                      style: const TextStyle(fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(width: 8),
                   ],
                   Text(
@@ -2818,9 +2826,10 @@ String _getLocalizedCountry(String rawCountry) {
                         : f.label,
                     style: TextStyle(
                       color: textColor,
-                      fontSize: 11,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.5,
+                      height: 1.2,
                     ),
                   ),
                 ],
