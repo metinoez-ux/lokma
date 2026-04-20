@@ -3886,10 +3886,9 @@ export default function BusinessDetailsPage() {
  {[
  { id: "bilgiler" as const, label: t('isletmeBilgileri') },
  { id: "fatura" as const, label: t('fatura_adresi') },
- { id: "zertifikalar" as const, label: t('sertifikalarLabel') },
+ ...(admin?.adminType === 'super' ? [{ id: "zertifikalar" as const, label: t('sertifikalarLabel')} ] : []),
  { id: "gorseller" as const, label: t('gorseller') },
  { id: "saatler" as const, label: t('acilisSaatleri') },
- { id: "teslimat" as const, label: t('teslimatAyarlari') },
  ].map((tab) => (
  <button
  key={tab.id}
