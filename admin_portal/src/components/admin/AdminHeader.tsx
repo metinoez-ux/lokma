@@ -456,6 +456,7 @@ export default function AdminHeader() {
  <p className="text-muted-foreground text-xs truncate opacity-70">{admin.email || admin.phone || ''}</p>
  </div>
  
+ {admin?.adminType === 'super' && (
  <Link
  href="/admin/reports"
  onClick={() => setTabletProfileOpen(false)}
@@ -463,6 +464,7 @@ export default function AdminHeader() {
  >
  <span>⚠️</span> {t('reports')}
  </Link>
+ )}
 
  <Link href="/admin/settings" onClick={() => setTabletProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium">
  <span>⚙️</span> {t('settings')}
@@ -797,12 +799,14 @@ export default function AdminHeader() {
  </p>
  </div>
 
+ {admin?.adminType === 'super' && (
  <Link
  href="/admin/reports"
  className="w-full flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium"
  >
  <span>⚠️</span> {t('reports')}
  </Link>
+ )}
 
  <Link href="/admin/settings" className="w-full flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium">
  <span>⚙️</span> {t('settings')}
