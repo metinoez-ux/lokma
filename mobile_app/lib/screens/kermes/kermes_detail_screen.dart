@@ -2804,12 +2804,12 @@ String _getLocalizedCountry(String rawCountry) {
                   if (f.iconUrl != null && f.iconUrl!.isNotEmpty) ...[
                     LokmaNetworkImage(
                       imageUrl: f.iconUrl!,
-                      width: 14,
-                      height: 14,
+                      width: 18,
+                      height: 18,
                     ),
                     const SizedBox(width: 8),
                   ] else if (f.icon.isNotEmpty) ...[
-                    Text(f.icon, style: const TextStyle(fontSize: 14)),
+                    Text(f.icon, style: const TextStyle(fontSize: 18)),
                     const SizedBox(width: 8),
                   ],
                   Text(
