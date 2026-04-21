@@ -145,6 +145,16 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     final isCartPage = currentPath == '/cart';
     final isBottomNavVisible = ref.watch(bottomNavVisibilityProvider);
 
+    // Self-healing: if we left /cart but navbar is still hidden (dispose race
+    // condition), force it back to visible on the next frame.
+    if (!isCartPage && !isBottomNavVisible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(bottomNavVisibilityProvider.notifier).setVisible(true);
+        }
+      });
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Status Bar: dark mode → white icons, light mode → dark icons
