@@ -404,7 +404,11 @@ export default function BusinessDetailsPage() {
  bankIban: "",
  bankBic: "",
  bankAccountHolder: "",
- bankName: "",
+ payoutBankIban: "",
+	payoutBankBic: "",
+	payoutBankAccountHolder: "",
+	payoutBankName: "",
+	bankName: "",
  // 🆕 Lieferando-style fields
  cuisineType: "", // "Kebap, Döner, Türkisch" - Mutfak türü/alt başlık
  logoUrl: "", // Kare işletme logosu URL'i
@@ -889,6 +893,10 @@ export default function BusinessDetailsPage() {
  bankBic: d.bankDetails?.bic || "",
  bankAccountHolder: d.bankDetails?.accountHolder || "",
  bankName: d.bankDetails?.bankName || "",
+		payoutBankIban: d.payoutBankDetails?.iban || "",
+		payoutBankBic: d.payoutBankDetails?.bic || "",
+		payoutBankAccountHolder: d.payoutBankDetails?.accountHolder || "",
+		payoutBankName: d.payoutBankDetails?.bankName || "",
  // 🆕 Lieferando-style fields
  cuisineType: d.cuisineType || "",
  logoUrl: d.logoUrl || "",
@@ -2326,6 +2334,12 @@ export default function BusinessDetailsPage() {
  bic: formData.bankBic || "",
  accountHolder: formData.bankAccountHolder || "",
  bankName: formData.bankName || "",
+				payoutBankDetails: {
+					iban: formData.payoutBankIban || "",
+					bic: formData.payoutBankBic || "",
+					accountHolder: formData.payoutBankAccountHolder || "",
+					bankName: formData.payoutBankName || "",
+				},
  },
  };
 
@@ -3762,7 +3776,7 @@ export default function BusinessDetailsPage() {
 
  {/* Right Content Pane */}
  <div className="flex-1 w-full flex flex-col min-w-0">
- <div className="bg-card rounded-xl border border-border p-6 shadow-sm min-h-[600px]">
+ <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
  {/* Settings Sub-Tab Header */}
  <div className="flex justify-between items-center mb-6">
  <h3 className="text-foreground font-bold text-2xl flex items-center gap-3">
@@ -6861,7 +6875,7 @@ export default function BusinessDetailsPage() {
  {/* Bank Details (SEPA) */}
  <div className="space-y-4">
  <h4 className="text-foreground font-medium border-b border-border pb-2">
- {t('banka_bilgileri_sepa')}
+ {t('banka_bilgileri_rechnungen', { defaultValue: "Bankverbindung für Rechnungen" })}
  </h4>
  <div>
  <label className="text-muted-foreground text-sm">
@@ -6911,17 +6925,81 @@ export default function BusinessDetailsPage() {
  <div>
  <label className="text-muted-foreground text-sm">{t('bic')}</label>
  <input
- type="text"
- value={formData.bankBic}
- onChange={(e) =>
- setFormData({ ...formData, bankBic: e.target.value })
- }
- disabled={!isEditing}
- className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
- />
- </div>
- </div>
- </div>
+												type="text"
+												value={formData.bankBic}
+												onChange={(e) =>
+													setFormData({ ...formData, bankBic: e.target.value })
+												}
+												disabled={!isEditing}
+												className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
+											/>
+										</div>
+									</div>
+								</div>
+								{/* Bank Details (Auszahlungen) */}
+								<div className="space-y-4 pt-6 border-t border-border mt-6">
+									<h4 className="text-foreground font-medium border-b border-border pb-2">
+										{t('banka_bilgileri_payouts', { defaultValue: "Bankverbindung für Auszahlungen (Payouts)" })}
+									</h4>
+									<div>
+										<label className="text-muted-foreground text-sm">
+											{t('hesap_sahibi')}
+										</label>
+										<input
+											type="text"
+											value={formData.payoutBankAccountHolder || ''}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													payoutBankAccountHolder: e.target.value,
+												})
+											}
+											disabled={!isEditing}
+											placeholder={t('ornAhmetYilmaz')}
+											className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
+										/>
+									</div>
+									<div>
+										<label className="text-muted-foreground text-sm">{t('bankaAdi1')}</label>
+										<input
+											type="text"
+											value={formData.payoutBankName || ''}
+											onChange={(e) =>
+												setFormData({ ...formData, payoutBankName: e.target.value })
+											}
+											disabled={!isEditing}
+											placeholder={t('ornSparkasse')}
+											className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
+										/>
+									</div>
+									<div className="grid grid-cols-2 gap-2">
+										<div>
+											<label className="text-muted-foreground text-sm">{t('iban')}</label>
+											<input
+												type="text"
+												value={formData.payoutBankIban || ''}
+												onChange={(e) =>
+													setFormData({ ...formData, payoutBankIban: e.target.value })
+												}
+												disabled={!isEditing}
+												placeholder="DE..."
+												className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
+											/>
+										</div>
+										<div>
+											<label className="text-muted-foreground text-sm">{t('bic')}</label>
+											<input
+												type="text"
+												value={formData.payoutBankBic || ''}
+												onChange={(e) =>
+													setFormData({ ...formData, payoutBankBic: e.target.value })
+												}
+												disabled={!isEditing}
+												className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
+											/>
+										</div>
+									</div>
+								</div>
 
  </div>
  </div>
