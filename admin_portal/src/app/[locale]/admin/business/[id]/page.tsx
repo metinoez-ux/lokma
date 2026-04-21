@@ -3937,18 +3937,17 @@ export default function BusinessDetailsPage() {
  </div>
  {/* İşletme Türleri */}
  <div>
- <label className="text-muted-foreground text-sm block mb-2">{t('isletmeTurleri')}</label>
- <div className="flex flex-wrap gap-2">
- {dynamicSectorTypes.map((sector) => {
- const isSelected = formData.types?.includes(sector.id);
- return (
- <button key={sector.id} type="button" onClick={() => { if (!isEditing) return; const newTypes = isSelected ? formData.types.filter(t => t !== sector.id) : [...(formData.types || []), sector.id]; setFormData({ ...formData, types: newTypes }); }} disabled={!isEditing} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'bg-blue-600 text-white ring-2 ring-white/50' : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
- <span>{sector.icon}</span><span>{sector.label}</span>{isSelected && <span className="text-white/80">✓</span>}
- </button>
- );
- })}
- </div>
- {formData.types?.length > 0 && (<p className="text-xs text-green-800 dark:text-green-400 mt-2">{formData.types.length} {t('modulAktifHerModulAyriUcretlendirilir')}</p>)}
+ <label className="text-muted-foreground text-sm block mb-1">{t('isletmeTurleri')}</label>
+ <select
+ value={formData.types?.[0] || 'restaurant'}
+ onChange={(e) => setFormData({ ...formData, types: [e.target.value] })}
+ disabled={!isEditing}
+ className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50"
+ >
+ {dynamicSectorTypes.map((sector) => (
+ <option key={sector.id} value={sector.id}>{sector.label}</option>
+ ))}
+ </select>
  </div>
  {/* Müşteri No */}
  <div>
@@ -3956,12 +3955,7 @@ export default function BusinessDetailsPage() {
  <input type="text" value={formData.customerId} readOnly disabled={true} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 opacity-50 cursor-not-allowed" />
  <p className="text-xs text-muted-foreground mt-1">{t('musteriNoDegistirilemez')}</p>
  </div>
- {/* Vergi UID */}
- <div>
- <label className="text-muted-foreground text-sm">{t('vergi_uid_nummer_vat')}</label>
- <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
- <p className="text-xs text-muted-foreground mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789')}</p>
- </div>
+ 
  {/* Adres */}
  <div className="space-y-4 pt-4 border-t border-border">
  <h4 className="text-foreground font-medium pb-2"> {t('adres_baslik')}</h4>
@@ -4071,6 +4065,11 @@ export default function BusinessDetailsPage() {
  <label className="text-muted-foreground text-sm">{t('vertretungsberechtigter')}</label>
  <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
  </div>
+ <div>
+ <label className="text-muted-foreground text-sm">{t('vergi_uid_nummer_vat') || 'Umsatzsteuer-ID (USt-IdNr.)'}</label>
+ <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
+ <p className="text-xs text-muted-foreground mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789') || 'z.B. DE123456789'}</p>
+ </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
  <label className="text-muted-foreground text-sm">{t('registergericht')}</label>
@@ -4119,7 +4118,7 @@ export default function BusinessDetailsPage() {
  {/* ═══════ Tab 2: Fatura Adresi ═══════ */}
  {isletmeInternalTab === t(t('fatura')) && (
  <div className="space-y-6">
- <div className="bg-card/50 border border-border rounded-xl p-6">
+ <div>
  <label className="flex items-center gap-3 cursor-pointer mb-4">
  <input type="checkbox" checked={formData.hasDifferentBillingAddress || false} onChange={(e) => setFormData({ ...formData, hasDifferentBillingAddress: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-500" />
  <span className="text-foreground font-medium">{t('faturaFarkliBirKisifirmaUzerineKesilsin')}</span>
@@ -4160,7 +4159,7 @@ export default function BusinessDetailsPage() {
  <div className="space-y-6">
  {admin?.adminType === 'super' ? (
  <>
- <div className="bg-card/50 border border-border rounded-xl p-6">
+ <div>
  <h4 className="text-foreground font-medium mb-4">LOKMA Platform Markaları & Rozetleri</h4>
  <p className="text-xs text-muted-foreground mb-4">Bu işletmenin listeleme sayfasında ve detaylarında görünmesini istediğiniz logoları seçin.</p>
  {platformBrands.length === 0 ? (
@@ -4227,7 +4226,7 @@ export default function BusinessDetailsPage() {
  
   {/* Hazır Ürün Filtreleri - SADECE MARKET & KASAPLARDA GÖRÜNSÜN */}
   {isKasapType && (
-    <div className="bg-card/50 border border-border rounded-xl p-6 mt-6">
+    <div className="mt-6">
     <h4 className="text-foreground font-medium mb-2">🛍️ Hazır Paket Ürün Satışı (Mobil Filtreleme)</h4>
     <p className="text-xs text-muted-foreground mb-4">
     Marketler veya bu ürünleri paketli satan işletmeler için işaretleyin. Bu sayede kasap/restoran (sertifikalı TUNA kullananlar) dışında da aramalarda çıkacaktır.
@@ -4265,7 +4264,7 @@ export default function BusinessDetailsPage() {
 
   </>
  ) : (
- <div className="bg-card/50 border border-border rounded-xl p-6 text-center">
+ <div className="text-center">
  <p className="text-muted-foreground">{t('zertifikaAyarlariSadeceSuperAdminTarafindan')}</p>
  </div>
  )}
@@ -4276,7 +4275,7 @@ export default function BusinessDetailsPage() {
  {settingsSubTab === "isletme" && isletmeInternalTab === "gorseller" && (
  <div className="space-y-6">
  {/* İşletme Kart Görseli */}
- <div className="bg-card/50 border border-border rounded-xl p-6">
+ <div>
  <h4 className="text-foreground font-medium mb-4">{t('isletmeKartGorseli')}</h4>
  <div className="flex items-start gap-4">
  <div className="w-32 h-32 bg-muted rounded-lg overflow-hidden flex items-center justify-center border border-border shrink-0">
@@ -4295,7 +4294,7 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  {/* İşletme Logosu */}
- <div className="bg-card/50 border border-border rounded-xl p-6">
+ <div>
  <h4 className="text-foreground font-medium mb-4">{t('isletmeLogosuKare')}</h4>
  <div className="flex items-center gap-4">
  {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-border" />) : (<div className="w-20 h-20 rounded-lg bg-muted border border-dashed border-gray-500 flex items-center justify-center text-muted-foreground"><Store className="w-8 h-8 opacity-50" /></div>)}
@@ -4550,7 +4549,7 @@ export default function BusinessDetailsPage() {
 							<div className="flex-1 bg-card rounded-xl border border-border p-6 shadow-sm h-auto">
  <LockedModuleOverlay featureKey="delivery">
  <div className="space-y-6">
- <div className="bg-card/50 border border-border rounded-xl p-6">
+ <div>
  <h4 className="text-foreground font-medium border-b border-border pb-2 mb-4">{t('teslimatAyarlari')}</h4>
  <div className="space-y-4">
  {/* Kurye Desteği Checkbox */}
@@ -6750,7 +6749,7 @@ export default function BusinessDetailsPage() {
  <div className="space-y-6">
  <div className="space-y-6">
  {/* Current Plan Display */}
- <div className="bg-card/50 border border-border rounded-xl p-6 space-y-4">
+ <div className="space-y-4 pt-4 border-t border-border mt-4">
  <div className="flex items-center justify-between">
  <h4 className="text-foreground font-medium text-lg">{t('uyelikAbonelik')}</h4>
  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -7657,7 +7656,7 @@ export default function BusinessDetailsPage() {
  </div>
 
  {/* Masa & Yerinde Sipariş Ayarları (Consolidated from hidden Masa tab) */}
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 p-5 bg-card/50 rounded-xl border border-border">
+ <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 p-5 border-t border-border mt-6">
  <div className="space-y-4">
  <h3 className="font-semibold text-foreground border-b border-border pb-2">{t('masa_rezervasyonu') || 'Masa Rezervasyonu'}</h3>
  <label className="flex items-start gap-3 cursor-pointer">
