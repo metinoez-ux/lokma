@@ -3745,7 +3745,7 @@ export default function BusinessDetailsPage() {
  {([
  { key: "isletme", label: t('isletme'), icon: <Store className="w-5 h-5"/> },
  { key: "menu", label: t('menuUrunler'), icon: <Utensils className="w-5 h-5"/> },
- { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/>, featureKey: "staffShiftTracking" },
+ // { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/>, featureKey: "staffShiftTracking" },
  // "masa" (Table Mgmt) was moved to Reservations tab
  { key: "abonelik", label: t('abonelikPlani'), icon: <Star className="w-5 h-5"/> },
  { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
@@ -4545,9 +4545,9 @@ export default function BusinessDetailsPage() {
  )}
 
 
-							<div className="flex-1 bg-card rounded-xl border border-border p-6 shadow-sm min-h-[600px]">
- {/* ═══════ Tab 6: Teslimat Ayarları ═══════ */}
- {settingsSubTab === "teslimat" && (
+							{/* ═══════ Tab 6: Teslimat Ayarları ═══════ */}
+								{settingsSubTab === "teslimat" && (
+							<div className="flex-1 bg-card rounded-xl border border-border p-6 shadow-sm h-auto">
  <LockedModuleOverlay featureKey="delivery">
  <div className="space-y-6">
  <div className="bg-card/50 border border-border rounded-xl p-6">
@@ -4606,8 +4606,8 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  </LockedModuleOverlay>
- )}
 							</div>
+ )}
  {/* Sub-Tab: Menü & Ürünler */}
  {
  settingsSubTab === "menu" && (
