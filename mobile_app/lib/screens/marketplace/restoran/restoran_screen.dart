@@ -1261,7 +1261,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 child: Text(
                   tr('discovery.search_food_restaurant_cuisine'),
                   style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700], 
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[500], 
                     fontSize: 15, 
                     fontWeight: FontWeight.w500
                   ),

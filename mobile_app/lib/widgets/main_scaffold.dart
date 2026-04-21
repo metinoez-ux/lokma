@@ -15,6 +15,7 @@ import '../screens/orders/courier_tracking_screen.dart';
 import '../providers/unpaid_kermes_orders_provider.dart';
 import '../widgets/kermes/order_qr_dialog.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
   final Widget child;
@@ -545,10 +546,10 @@ class GlassBottomBar extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           item.label,
-          style: TextStyle(
+          style: GoogleFonts.inter(
             color: color,
-            fontSize: 10,
-            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+            fontSize: 9.5,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
             letterSpacing: -0.2,
           ),
         ),

@@ -58,7 +58,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   double get _borderRadius => _height / 2;
   double get _pillRadius => (_height - 6) / 2;
   double get _iconSize => widget.compact ? 20 : 26;
-  double get _fontSize => widget.compact ? 14 : 16;
+  double get _fontSize => widget.compact ? 13 : 15;
   EdgeInsets get _margin =>
       widget.margin ??
       (widget.compact
@@ -294,7 +294,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                         style: TextStyle(
                           color: textColor,
                           fontWeight:
-                              isActive ? FontWeight.w600 : FontWeight.w500,
+                              isActive ? FontWeight.w500 : FontWeight.w400,
                           fontSize: widget.compact ? 12 : 14.5,
                           overflow: TextOverflow.ellipsis,
                           height: 1.0,
@@ -316,7 +316,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                         style: TextStyle(
                           color: textColor.withOpacity(
                               isActive ? 0.85 : 0.7),
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           fontSize: widget.compact ? 10 : 11,
                           overflow: TextOverflow.ellipsis,
                           height: 1.0,
@@ -330,7 +330,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                     tab.title,
                     style: TextStyle(
                       color: textColor,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
                       fontSize: _fontSize,
                       overflow: TextOverflow.ellipsis,
                       height: 1.0,

@@ -15,6 +15,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'utils/firestore_asset_loader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 String? _initError;
 
@@ -23,7 +24,7 @@ void main() async {
   runZonedGuarded(() async {
     WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     // Keep native splash screen alive while we fetch heavy configs
-    FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+    // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     
     await EasyLocalization.ensureInitialized();
     
@@ -97,7 +98,7 @@ void main() async {
     );
     
     // Now that the app UI is built and heavy sync operations are done, remove the splash
-    FlutterNativeSplash.remove();
+    // FlutterNativeSplash.remove();
     
   }, (error, stack) {
     debugPrint('Uncaught error: $error');
@@ -158,6 +159,8 @@ class LokmaApp extends ConsumerWidget {
       locale: context.locale,
       themeMode: themeMode, // Dynamic theme based on user preference
       theme: ThemeData(
+        fontFamily: GoogleFonts.inter().fontFamily,
+        textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
         useMaterial3: true,
         brightness: Brightness.light,
         primaryColor: const Color(0xFFEA184A), // Added to fix simple auth screen
@@ -191,6 +194,8 @@ class LokmaApp extends ConsumerWidget {
         ),
       ),
       darkTheme: ThemeData(
+        fontFamily: GoogleFonts.inter().fontFamily,
+        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
         useMaterial3: true,
         brightness: Brightness.dark,
         primaryColor: const Color(0xFFEA184A), // Added to fix simple auth screen

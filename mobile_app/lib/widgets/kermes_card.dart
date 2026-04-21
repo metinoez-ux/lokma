@@ -749,10 +749,10 @@ class _KermesCardState extends State<KermesCard> {
                                 children: [
                                   Text(
                                     widget.event.title,
-                                    style: TextStyle(
-                                      fontSize: 18,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 15.5,
                                       fontWeight: FontWeight.w600,
-                                      height: 1.2,
+                                      height: 1.15,
                                       color: isDark ? Colors.white : textDark,
                                     ),
                                     maxLines: 2,
@@ -767,12 +767,12 @@ class _KermesCardState extends State<KermesCard> {
                                       Expanded(
                                         child: Text(
                                           formattedLocation,
-                                          style: TextStyle(
+                                          style: GoogleFonts.inter(
                                             color: isDark
                                                 ? Colors.grey[300]
                                                 : Colors.grey[700],
-                                            fontSize: 14.5,
-                                            fontWeight: FontWeight.w500,
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.w400,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,

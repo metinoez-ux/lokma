@@ -50,7 +50,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDm92A_RuTIj85tFR0LKQo80A6aTgBffgA',
-    appId: '1:259070566992:android:533bbfa3a5d8c2111e2755',
+    appId: '1:259070566992:android:946417324a9025d21e2755',
     messagingSenderId: '259070566992',
     projectId: 'aylar-a45af',
     storageBucket: 'aylar-a45af.firebasestorage.app',
