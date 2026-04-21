@@ -893,13 +893,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 4),
                 SvgPicture.asset(
-                  'assets/images/ozsoft_logo.svg',
-                  height: 22,
+                  'assets/images/ozsoft_app_fusslogo_blau.svg',
+                  height: 60,
                   colorFilter: ColorFilter.mode(
                     isDark
                         ? Colors.white.withOpacity(0.55)
                         : Colors.grey.shade600,
                     BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'www.ozsoft.net',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isDark 
+                        ? Colors.white.withOpacity(0.45) 
+                        : Colors.grey.shade600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: isDark 
+                        ? Colors.white.withOpacity(0.45) 
+                        : Colors.grey.shade600,
                   ),
                 ),
               ],
