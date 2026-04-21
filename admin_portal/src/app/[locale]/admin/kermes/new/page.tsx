@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { addDoc, collection, doc, getDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
+import { runTransaction, addDoc, collection, doc, getDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -56,8 +56,6 @@ const DEFAULT_FEATURES: KermesFeature[] = [
  { id: 'wifi', label: 'WiFi', icon: '📶', color: '#3F51B5', isActive: true },
 ];
 
-import { db } from '@/lib/firebase';
-import { runTransaction, doc, collection, addDoc } from 'firebase/firestore';
 
 const BUSINESS_COUNTER_DOC = 'business_counter';
 const STARTING_BUSINESS_NUMBER = 100001;
