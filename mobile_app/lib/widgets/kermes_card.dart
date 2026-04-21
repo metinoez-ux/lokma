@@ -1,21 +1,21 @@
-import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lokma_app/widgets/lokma_network_image.dart';
+
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import '../../services/kermes_badge_service.dart';
-import '../../services/kermes_favorite_service.dart';
+
 import '../../screens/kermes/kermes_detail_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/currency_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:video_player/video_player.dart';
+import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'brand_info_sheet.dart';
 import '../../utils/distance_utils.dart';
+import 'package:video_player/video_player.dart';
 import '../../services/video_preload_service.dart';
 
 class KermesCard extends StatefulWidget {
@@ -483,9 +483,9 @@ class _KermesCardState extends State<KermesCard> {
                                           if (!value.isInitialized) {
                                             return Container(color: Colors.grey[200]);
                                           }
-                                          // Taşmayı önlemek için ClipRect ve güzel bir geçiş için AnimatedSwitcher
-                                          // Dikey (9:16) formatındaki videoları yatay kartta çok şık göstermek için 
-                                          // Arka plana bulanık kaplama, öne ise daraltılmış ana videoyu koyuyoruz.
+                                          // Tasmayı onlemek icin ClipRect ve guzel bir gecis icin AnimatedSwitcher
+                                          // Dikey (9:16) formatindaki videolari yatay kartta cok sik gostermek icin
+                                          // Arka plana bulanik kaplama, one ise daraltilmis ana videoyu koyuyoruz.
                                           return ClipRect(
                                             child: AnimatedSwitcher(
                                               duration: const Duration(milliseconds: 500),
@@ -493,7 +493,7 @@ class _KermesCardState extends State<KermesCard> {
                                                 key: const ValueKey('video_frame'),
                                                 fit: StackFit.expand,
                                                 children: [
-                                                  // 1. Katman: Arka plan (Taşan ve bulanık)
+                                                  // 1. Katman: Arka plan (Tasan ve bulanik)
                                                   FittedBox(
                                                     fit: BoxFit.cover,
                                                     child: SizedBox(
@@ -502,12 +502,12 @@ class _KermesCardState extends State<KermesCard> {
                                                       child: VideoPlayer(controller),
                                                     ),
                                                   ),
-                                                  // 1.5 Katman: Film tadında karanlık ve bulanık filtre
+                                                  // 1.5 Katman: Film tadinda karanlik ve bulanik filtre
                                                   BackdropFilter(
                                                     filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                                                    child: Container(color: Colors.black.withOpacity(0.4)),
+                                                    child: Container(color: Colors.black.withValues(alpha: 0.4)),
                                                   ),
-                                                  // 2. Katman: Ön plan (Videounun tamamı)
+                                                  // 2. Katman: On plan (Videonun tamami)
                                                   FittedBox(
                                                     fit: BoxFit.contain,
                                                     child: SizedBox(

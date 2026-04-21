@@ -14,18 +14,32 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   bool _showBitten = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
+
     _initAndNavigate();
   }
 
   @override
   void dispose() {
+    _scaleController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -56,10 +70,13 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (_) {}
 
-    // Play custom animation and sound!
-    // Wait for 1 second to ensure native splash is removed and user can see the whole logo
-    await Future.delayed(const Duration(milliseconds: 1000));
+    // Quick brand animation: whole logo visible -> bite transition
+    // Native splash already showed same logo on same red background,
+    // so user sees a seamless continuation.
+    await Future.delayed(const Duration(milliseconds: 600));
     if (mounted) {
+      // Trigger the bite animation
+      _scaleController.forward();
       setState(() {
         _showBitten = true;
       });
@@ -68,9 +85,11 @@ class _SplashScreenState extends State<SplashScreen> {
       } catch (e) {
         // audio might fail on some simulators, ignore
       }
-      
+
       // Let the user see the bitten logo briefly
-      await Future.delayed(const Duration(milliseconds: 1500));
+      await Future.delayed(const Duration(milliseconds: 800));
+      _scaleController.reverse();
+      await Future.delayed(const Duration(milliseconds: 200));
     }
 
     // Navigate to app
@@ -89,39 +108,33 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF61028),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Pre-cache by keeping both images alive in the layer tree.
-          // Bottom layer: whole O (invisible when bitten is requested)
-          Opacity(
-            opacity: _showBitten ? 0.0 : 1.0,
-            child: Center(
-              child: FractionallySizedBox(
-                widthFactor: 0.6,
-                child: Image.asset(
-                  'assets/images/lokma_splash_whole.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
+      body: Center(
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: _showBitten
+                ? FractionallySizedBox(
+                    key: const ValueKey('bitten'),
+                    widthFactor: 0.55,
+                    child: Image.asset(
+                      'assets/images/lokma_splash_bitten.png',
+                      fit: BoxFit.contain,
+                    ),
+                  )
+                : FractionallySizedBox(
+                    key: const ValueKey('whole'),
+                    widthFactor: 0.55,
+                    child: Image.asset(
+                      'assets/images/lokma_splash_whole.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
           ),
-          // Top layer: bitten O (invisible at first, instant cache hit later)
-          Opacity(
-            opacity: _showBitten ? 1.0 : 0.0,
-            child: Center(
-              child: FractionallySizedBox(
-                widthFactor: 0.6,
-                child: Image.asset(
-                  'assets/images/lokma_splash_bitten.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
-

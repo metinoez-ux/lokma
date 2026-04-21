@@ -24,7 +24,7 @@ void main() async {
   runZonedGuarded(() async {
     WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     // Keep native splash screen alive while we fetch heavy configs
-    // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+    FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     
     await EasyLocalization.ensureInitialized();
     
@@ -98,7 +98,7 @@ void main() async {
     );
     
     // Now that the app UI is built and heavy sync operations are done, remove the splash
-    // FlutterNativeSplash.remove();
+    FlutterNativeSplash.remove();
     
   }, (error, stack) {
     debugPrint('Uncaught error: $error');
