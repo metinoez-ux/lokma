@@ -56,6 +56,29 @@ const DEFAULT_FEATURES: KermesFeature[] = [
  { id: 'wifi', label: 'WiFi', icon: '📶', color: '#3F51B5', isActive: true },
 ];
 
+import { db } from '@/lib/firebase';
+import { runTransaction, doc, collection, addDoc } from 'firebase/firestore';
+
+const BUSINESS_COUNTER_DOC = 'business_counter';
+const STARTING_BUSINESS_NUMBER = 100001;
+
+async function getNextBusinessNumber(): Promise<string> {
+    const counterRef = doc(db, 'system_config', BUSINESS_COUNTER_DOC);
+    const newNumber = await runTransaction(db, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        let currentNumber: number;
+        if (!counterDoc.exists()) {
+            currentNumber = STARTING_BUSINESS_NUMBER;
+            transaction.set(counterRef, { lastNumber: currentNumber });
+        } else {
+            currentNumber = (counterDoc.data().lastNumber || STARTING_BUSINESS_NUMBER - 1) + 1;
+            transaction.update(counterRef, { lastNumber: currentNumber });
+        }
+        return currentNumber;
+    });
+    return newNumber.toString();
+}
+
 export default function NewKermesPage() {
  
  const t = useTranslations('AdminKermesNew');
@@ -370,7 +393,12 @@ function NewKermesContent() {
  kermesData.organizationName = organization.name;
  }
 
- await addDoc(collection(db, 'kermes_events'), kermesData);
+ const customerId = await getNextBusinessNumber();
+      const finalData = {
+          ...kermesData,
+          customerId,
+      };
+      await addDoc(collection(db, 'kermes_events'), finalData);
  router.push('/admin/kermes');
  } catch (error: any) { console.error(error); alert("Kaydetme hatasi: " + (error?.message || "Bilinmeyen hata"));
  console.error('Error creating event:', error);

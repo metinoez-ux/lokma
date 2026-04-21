@@ -362,6 +362,14 @@ export default function KermesDetailPage() {
  contactLastName: '',
  contactPhone: '',
  phoneCountryCode: '+49',
+	// Yeni Impressum / Rechtliche Angaben
+	legalForm: '',
+	managingDirector: '',
+	authorizedRepresentative: '',
+	registerCourt: '',
+	registerNumber: '',
+	vatNumber: '',
+	customerId: '',
  // Sipariş Yöntemleri ve İstisnalar
  isMenuOnly: false,
  hasTakeaway: true,
@@ -2262,6 +2270,13 @@ export default function KermesDetailPage() {
     contactName: kermes?.contactName || '', contactFirstName: kermes?.contactFirstName || '',
     contactLastName: kermes?.contactLastName || '', contactPhone: kermes?.contactPhone || '',
     phoneCountryCode: kermes?.phoneCountryCode || '+49',
+						legalForm: kermes?.legalForm || '',
+						managingDirector: kermes?.managingDirector || '',
+						authorizedRepresentative: kermes?.authorizedRepresentative || '',
+						registerCourt: kermes?.registerCourt || '',
+						registerNumber: kermes?.registerNumber || '',
+						vatNumber: kermes?.vatNumber || '',
+						customerId: kermes?.customerId || '',
     isMenuOnly: kermes?.isMenuOnly || false,
     hasTakeaway: kermes?.hasTakeaway !== false, hasDineIn: kermes?.hasDineIn ?? true,
     hasDelivery: kermes?.hasDelivery || false,
@@ -2354,6 +2369,53 @@ export default function KermesDetailPage() {
  className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow" />
  </div>
  </div>
+
+							{/* Müşteri No */}
+							<div className="pt-4 mt-4 border-t border-border">
+								<label className="text-muted-foreground text-xs block mb-1">{t('musteriNo') || 'Müşteri No'}</label>
+								<input type="text" value={editForm.customerId || ''} readOnly disabled={true} className="w-full bg-background text-foreground border border-input px-3 py-2 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none opacity-50 cursor-not-allowed" />
+								<p className="text-xs text-muted-foreground mt-1">{t('musteriNoDegistirilemez') || 'Müşteri numarası değiştirilemez'}</p>
+							</div>
+
+							{/* Impressum / Rechtliche Angaben */}
+							<div className="space-y-4 pt-6 mt-6 border-t border-border">
+								<h4 className="text-foreground font-medium pb-2">📜 {t('impressumBaslik') || 'Impressum / Rechtliche Angaben'}</h4>
+								<p className="text-muted-foreground text-xs -mt-2">{t('impressumAciklama') || 'Diese Angaben werden im Impressum der mobilen App angezeigt.'}</p>
+								
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<div>
+										<label className="text-muted-foreground text-xs block mb-1">{t('rechtsform') || 'Rechtsform'}</label>
+										<select value={editForm.legalForm || ''} onChange={(e) => setEditForm({ ...editForm, legalForm: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-input px-3 py-2 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none disabled:opacity-50">
+											<option value="">Lütfen seçin...</option>
+											<option value="eingetragener Verein (e.V.)">eingetragener Verein (e.V.)</option>
+											<option value="Gemeinnütziger Verein">Gemeinnütziger Verein</option>
+											<option value="Moschee / Stiftung">Moschee / Stiftung</option>
+										</select>
+									</div>
+									<div>
+										<label className="text-muted-foreground text-xs block mb-1">{t('geschaeftsfuehrer') || 'Geschäftsführer / Vorstand'}</label>
+										<input type="text" value={editForm.managingDirector || ''} onChange={(e) => setEditForm({ ...editForm, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-background text-foreground border border-input px-3 py-2 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none disabled:opacity-50" />
+									</div>
+									<div className="md:col-span-2">
+										<label className="text-muted-foreground text-xs block mb-1">{t('vertretungsberechtigter') || 'Vertretungsberechtigte/r'}</label>
+										<input type="text" value={editForm.authorizedRepresentative || ''} onChange={(e) => setEditForm({ ...editForm, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Vorstand/Geschäftsführer" className="w-full bg-background text-foreground border border-input px-3 py-2 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none disabled:opacity-50" />
+									</div>
+									<div>
+										<label className="text-muted-foreground text-xs block mb-1">{t('registergericht') || 'Registergericht'}</label>
+										<input type="text" value={editForm.registerCourt || ''} onChange={(e) => setEditForm({ ...editForm, registerCourt: e.target.value })} disabled={!isEditing} placeholder="z.B. Amtsgericht Köln" className="w-full bg-background text-foreground border border-input px-3 py-2 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none disabled:opacity-50" />
+									</div>
+									<div>
+										<label className="text-muted-foreground text-xs block mb-1">{t('handelsregisternummer') || 'Vereins-/Handelsregisternummer'}</label>
+										<input type="text" value={editForm.registerNumber || ''} onChange={(e) => setEditForm({ ...editForm, registerNumber: e.target.value })} disabled={!isEditing} placeholder="z.B. VR 123456" className="w-full bg-background text-foreground border border-input px-3 py-2 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none disabled:opacity-50 font-mono" />
+									</div>
+									<div className="md:col-span-2">
+										<label className="text-muted-foreground text-xs block mb-1">{t('vergi_uid_nummer_vat') || 'Umsatzsteuer-ID (USt-IdNr.)'}</label>
+										<input type="text" value={editForm.vatNumber || ''} onChange={(e) => setEditForm({ ...editForm, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-background text-foreground border border-input px-3 py-2 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none disabled:opacity-50 font-mono" />
+										<p className="text-xs text-muted-foreground mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789') || 'z.B. DE123456789'}</p>
+									</div>
+								</div>
+							</div>
+
 
  {/* Konum Bilgileri */}
  <div className="pt-4 border-t border-border">
