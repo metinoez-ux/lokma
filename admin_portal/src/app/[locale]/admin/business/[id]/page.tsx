@@ -4061,6 +4061,7 @@ export default function BusinessDetailsPage() {
  <input type="text" value={formData.managingDirector || ''} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
  </div>
  </div>
+ </div>
  <div>
  <label className="text-muted-foreground text-sm">{t('vertretungsberechtigter')}</label>
  <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
@@ -4638,7 +4639,7 @@ export default function BusinessDetailsPage() {
  : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
  } ${!planFeatures.sponsoredProducts && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
  >
- {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
+ {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}Sponsored Products ({sponsoredProducts.length})
  </button>
  </div>
 
@@ -4879,7 +4880,7 @@ export default function BusinessDetailsPage() {
  <div className="flex items-center gap-2">
  <span className="text-2xl"></span>
  <div>
- <h4 className="text-foreground font-bold">{t('urunler1')}</h4>
+ <h4 className="text-foreground font-bold">Sponsored Products</h4>
  <p className="text-muted-foreground text-xs">{inlineProducts.length} {t('urun1')}</p>
  </div>
  </div>
@@ -5272,7 +5273,7 @@ export default function BusinessDetailsPage() {
  {isActive ? t('aktif') : t('pasif')}
  </span>
  {product.outOfStock && (
- <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-900/60 text-yellow-800 dark:text-yellow-400 font-medium">
+ <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-900/60 text-yellow-800 dark:yellow-400 font-medium">
  {t('stokta_yok')}
  </span>
  )}
