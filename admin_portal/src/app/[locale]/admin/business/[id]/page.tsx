@@ -4303,30 +4303,31 @@ export default function BusinessDetailsPage() {
  {/* ═══════ Tab 5: Açılış Saatleri (Genel / Kurye / Gel-Al) ═══════ */}
  {settingsSubTab === "saatler" && (
  <div className="space-y-6">
- {/* Left Sidebar + Content Grid Layout */}
- <div className="flex gap-0 rounded-xl overflow-hidden border border-border">
- {/* Left Sidebar Navigation */}
- <div className="w-48 bg-card/80 border-r border-border flex-shrink-0">
- {[
- { id: "genel" as const, label: t('acilisSaatleri') },
- { id: "kurye" as const, label: t('kuryeSaatleri') },
- { id: "gelal" as const, label: t('gelAlSaatleri') },
- ].map((tab) => (
- <button
- key={tab.id}
- onClick={() => setSaatlerSubTab(tab.id)}
- className={`w-full text-left px-4 py-3.5 text-sm font-medium transition border-b border-border/50 last:border-0 ${saatlerSubTab === tab.id
- ? "bg-blue-600/20 text-blue-800 dark:text-blue-400 border-l-2 border-l-blue-500"
- : "text-muted-foreground hover:bg-muted/50 hover:text-white border-l-2 border-l-transparent"
- }`}
- >
- {tab.label}
- </button>
- ))}
- </div>
+								{/* Horizontal Tab Navigation */}
+								<div>
+									{/* Tab Bar */}
+									<div className="flex gap-2 border-b border-border pb-3 mb-6 flex-wrap mt-2">
+										{[
+											{ id: "genel" as const, label: t('acilisSaatleri') },
+											{ id: "kurye" as const, label: t('kuryeSaatleri') },
+											{ id: "gelal" as const, label: t('gelAlSaatleri') },
+										].map((tab) => (
+											<button
+												key={tab.id}
+												onClick={() => setSaatlerSubTab(tab.id)}
+												className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${
+													saatlerSubTab === tab.id
+														? "bg-red-600 text-white"
+														: "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
+												}`}
+											>
+												{tab.label}
+											</button>
+										))}
+									</div>
 
- {/* Right Content Area */}
- <div className="flex-1 bg-card/30 p-6">
+									{/* Content Area */}
+									<div className="flex-1">
  {/* === Genel Açılış Saatleri === */}
  {saatlerSubTab === "genel" && (
  <div>
