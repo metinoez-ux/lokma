@@ -1473,7 +1473,9 @@
     "flash_sale_preview": "Telefonlarda Çıkacak Önizleme:",
     "flash_sale_cancel": "İptal",
     "flash_sale_send": "Şimdi Gönder",
-    "flash_sale_sending": "Gönderiliyor"
+    "flash_sale_sending": "Gönderiliyor",
+    "banka_bilgileri_rechnungen": "Fatura Banka Bilgileri",
+    "banka_bilgileri_payouts": "Ödeme (Payout) Banka Bilgileri"
   },
   "AdminBusinessDetail": {
     "pending": "Beklemede",

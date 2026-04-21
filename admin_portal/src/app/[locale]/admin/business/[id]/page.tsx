@@ -3776,7 +3776,7 @@ export default function BusinessDetailsPage() {
 
  {/* Right Content Pane */}
  <div className="flex-1 w-full flex flex-col min-w-0">
- <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
+ <div className="mb-6">
  {/* Settings Sub-Tab Header */}
  <div className="flex justify-between items-center mb-6">
  <h3 className="text-foreground font-bold text-2xl flex items-center gap-3">
