@@ -58,7 +58,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   double get _borderRadius => _height / 2;
   double get _pillRadius => (_height - 6) / 2;
   double get _iconSize => widget.compact ? 20 : 26;
-  double get _fontSize => widget.compact ? 13 : 15;
+  double get _fontSize => widget.compact ? 12 : 14;
   EdgeInsets get _margin =>
       widget.margin ??
       (widget.compact

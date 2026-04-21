@@ -1504,12 +1504,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.search, color: Colors.grey[600], size: 22),
+              Icon(Icons.search, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Market, ürün veya şehir ara...',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w400),
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[500], 
+                    fontSize: 15, 
+                    fontWeight: FontWeight.w500
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
