@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:video_player/video_player.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'dart:typed_data';
 import '../../../services/video_preload_service.dart';
 
 class KermesVideoHeader extends StatefulWidget {
@@ -29,12 +33,73 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
   bool _hasError = false;
   String? _errorMessage;
   bool _wasCollapsed = false;
+  Stream<Uint8List>? _thumbnailStream;
 
   @override
   void initState() {
     super.initState();
+    _thumbnailStream = _getThumbnailStream(widget.videoUrl);
     _initializeVideo();
     widget.scrollController?.addListener(_scrollListener);
+  }
+
+  Stream<Uint8List> _getThumbnailStream(String videoUrl) async* {
+    try {
+      final hash = videoUrl.hashCode;
+      final tempDir = await getTemporaryDirectory();
+      final lowFile = File('${tempDir.path}/thumb_low_$hash.jpg');
+      final highFile = File('${tempDir.path}/thumb_high_$hash.jpg');
+
+      if (await highFile.exists()) {
+        final bytes = await highFile.readAsBytes();
+        if (bytes.isNotEmpty) {
+          yield bytes;
+          return;
+        }
+      }
+
+      bool hasLowRes = false;
+      if (await lowFile.exists()) {
+        final bytes = await lowFile.readAsBytes();
+        if (bytes.isNotEmpty) {
+          yield bytes;
+          hasLowRes = true;
+        }
+      }
+
+      // Android'de ağdan video thumbnail çekmek aşırı yavaş (3-10 saniye) ve UI kitliyor!
+      // Eğer videoUrl HTTP ise ve dosya yoksa Android'de bunu atlıyoruz, video frame gelene kadar siyah kalması kitlenmekten iyidir.
+      // iOS'ta bu işlem hızlı olduğu için çalışmaya devam edebilir.
+      if (Platform.isAndroid && videoUrl.startsWith('http')) {
+         return; // Thumbnail üretme, direkt videonun yüklenmesini bekle.
+      }
+
+      if (!hasLowRes) {
+        final lowBytes = await VideoThumbnail.thumbnailData(
+          video: videoUrl,
+          imageFormat: ImageFormat.JPEG,
+          maxWidth: 400,
+          quality: 40,
+        );
+        if (lowBytes != null && lowBytes.isNotEmpty) {
+          await lowFile.writeAsBytes(lowBytes);
+          yield lowBytes;
+        }
+      }
+
+      final highBytes = await VideoThumbnail.thumbnailData(
+        video: videoUrl,
+        imageFormat: ImageFormat.JPEG,
+        maxWidth: 800,
+        quality: 75,
+      );
+      if (highBytes != null && highBytes.isNotEmpty) {
+        await highFile.writeAsBytes(highBytes);
+        yield highBytes;
+      }
+    } catch (e) {
+      debugPrint('Error generating header thumbnail: $e');
+    }
   }
 
   void _scrollListener() {
@@ -149,33 +214,45 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
       );
     }
 
-    if (!_isInitialized) {
-      return Container(
-        width: widget.width,
-        height: widget.height,
-        color: const Color(0xFF1E1E1E), // Dark grey loading
-        child: const Center(
-          child: CircularProgressIndicator(color: Colors.white54, strokeWidth: 2),
-        ),
-      );
-    }
+    // Video is ready or initializing. Show thumbnail behind the video player.
+    // If _hasError, it's already handled above.
 
-    // Video is ready
-    final vWidth = _controller.value.size.width;
-    final vHeight = _controller.value.size.height;
-    
     return GestureDetector(
       onTap: _replayVideo,
       child: SizedBox(
         width: widget.width,
         height: widget.height,
-        child: FittedBox(
-          fit: widget.fit,
-          child: SizedBox(
-            width: vWidth > 0 ? vWidth : 1600,
-            height: vHeight > 0 ? vHeight : 900,
-            child: VideoPlayer(_controller),
-          ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // 1. Static Image (Always behind, prevents flicker during transition)
+            StreamBuilder<Uint8List>(
+              stream: _thumbnailStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Image.memory(
+                    snapshot.data!,
+                    fit: widget.fit,
+                    width: widget.width,
+                    height: widget.height,
+                    gaplessPlayback: true,
+                  );
+                }
+                return Container(color: const Color(0xFF1E1E1E));
+              },
+            ),
+            
+            // 2. Video Player (renders on top once initialized)
+            if (_isInitialized)
+              FittedBox(
+                fit: widget.fit,
+                child: SizedBox(
+                  width: _controller.value.size.width > 0 ? _controller.value.size.width : 1600,
+                  height: _controller.value.size.height > 0 ? _controller.value.size.height : 900,
+                  child: VideoPlayer(_controller),
+                ),
+              ),
+          ],
         ),
       ),
     );

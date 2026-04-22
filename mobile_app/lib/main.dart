@@ -23,10 +23,13 @@ void main() async {
   // Wrap everything in a zone to catch all errors
   runZonedGuarded(() async {
     WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-    // Keep native splash screen alive while we fetch heavy configs
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     
-    await EasyLocalization.ensureInitialized();
+    // ---------------------------------------------------------------
+    // CRITICAL PATH: Only await what is absolutely required before
+    // runApp(). Everything else runs in parallel or is deferred.
+    // Goal: get to runApp() in < 1 second.
+    // ---------------------------------------------------------------
     
     // Set up Flutter error handler
     FlutterError.onError = (details) {
@@ -34,48 +37,36 @@ void main() async {
       debugPrint('FlutterError: ${details.exception}');
     };
     
+    // These two are synchronous-fast and required before runApp:
+    await EasyLocalization.ensureInitialized();
+    
+    // Firebase MUST be ready before the widget tree (Firestore, Auth, etc.)
     try {
-      // Initialize Firebase on both platforms
-      // On iOS, APNs token handling is done in AppDelegate.swift
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
       }
-      
-      // Initialize Stripe SDK
-      await StripePaymentService.initialize();
-      
-      // Initialize FCM for push notifications asynchronously to prevent blocking the UI
-      // while waiting for APNs token or user permission prompt
-      FCMService().initialize().catchError((e) {
-        debugPrint('FCM initialization error in background: $e');
-      });
-      
-      // Initialize date formatting for all locales (multi-language ready)
-      await initializeDateFormatting('tr');
-      // Future: add more locales here (de, en, ar, etc.)
-      
-      // Auto-detect system language — no manual language selection on first launch
-      // Users can change language later in Profile settings
-      final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding = prefs.getBool('onboarding_seen') ?? false;
-      
-      // Detect system locale (reserved for future use)
-      try {
-        final systemLang = Platform.localeName.split('_')[0].toLowerCase();
-        const supportedCodes = ['tr', 'en', 'de', 'it', 'fr', 'es'];
-        // Future: use detected locale for auto-language selection
-        debugPrint('System language detected: $systemLang, supported: ${supportedCodes.contains(systemLang)}');
-      } catch (_) {}
-      
-      AppRouter.initializeRouter(hasSeenOnboarding);
-      
     } catch (e, stack) {
       _initError = 'Firebase Error: $e';
       debugPrint('Firebase init error: $e\n$stack');
     }
-
+    
+    // SharedPreferences is fast (~10ms) and needed for router
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('onboarding_seen') ?? false;
+    
+    AppRouter.initializeRouter(hasSeenOnboarding);
+    
+    // ---------------------------------------------------------------
+    // NON-CRITICAL: Fire and forget. These run in background while
+    // the splash animation plays. No need to block the UI.
+    // ---------------------------------------------------------------
+    _initializeBackgroundServices();
+    
+    // ---------------------------------------------------------------
+    // LAUNCH: Get the Flutter engine rendering ASAP.
+    // ---------------------------------------------------------------
     runApp(
       ProviderScope(
         child: EasyLocalization(
@@ -97,14 +88,43 @@ void main() async {
       ),
     );
     
-    // Now that the app UI is built and heavy sync operations are done, remove the splash
-    FlutterNativeSplash.remove();
+    // Remove native splash quickly after runApp.
+    // The SplashScreen widget paints the same red background,
+    // so removing the native splash here is invisible to the user.
+    // We use a short delay to let the first frame render.
+    Future.delayed(const Duration(milliseconds: 100), () {
+      FlutterNativeSplash.remove();
+    });
     
   }, (error, stack) {
     debugPrint('Uncaught error: $error');
     debugPrint('Stack: $stack');
     _initError = 'Uncaught Error: $error';
   });
+}
+
+/// Background services that don't need to block the UI.
+/// These initialize while the splash animation is playing (~2s window).
+void _initializeBackgroundServices() {
+  // Stripe SDK -- needed before first payment, not before first frame
+  StripePaymentService.initialize().catchError((e) {
+    debugPrint('Stripe init error (non-blocking): $e');
+  });
+  
+  // FCM push notifications
+  FCMService().initialize().catchError((e) {
+    debugPrint('FCM initialization error (non-blocking): $e');
+  });
+  
+  // Date formatting
+  initializeDateFormatting('tr').catchError((_) {});
+  
+  // Detect system locale (informational only)
+  try {
+    final systemLang = Platform.localeName.split('_')[0].toLowerCase();
+    const supportedCodes = ['tr', 'en', 'de', 'it', 'fr', 'es'];
+    debugPrint('System language detected: $systemLang, supported: ${supportedCodes.contains(systemLang)}');
+  } catch (_) {}
 }
 
 class LokmaApp extends ConsumerWidget {

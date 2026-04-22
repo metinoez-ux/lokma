@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -920,10 +921,56 @@ class _KermesExtendedInfoState extends State<KermesExtendedInfo> {
   }
 
   void _openMaps() async {
-    final url = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=${widget.event.latitude},${widget.event.longitude}');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+    final lat = widget.event.latitude;
+    final lng = widget.event.longitude;
+    final addressStr = Uri.encodeComponent(widget.event.address);
+    
+    if (lat != 0.0 && lng != 0.0) {
+      if (Platform.isAndroid) {
+        final uri = Uri.parse('geo:0,0?q=$lat,$lng');
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } else if (Platform.isIOS) {
+        final appleUrl = Uri.parse('http://maps.apple.com/?daddr=$lat,$lng');
+        if (await canLaunchUrl(appleUrl)) {
+          await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+        final googleUrl = Uri.parse('comgooglemaps://?daddr=$lat,$lng&directionsmode=driving');
+        if (await canLaunchUrl(googleUrl)) {
+          await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+      }
+    } else if (widget.event.address.isNotEmpty) {
+      if (Platform.isAndroid) {
+        final uri = Uri.parse('geo:0,0?q=$addressStr');
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } else if (Platform.isIOS) {
+        final appleUrl = Uri.parse('http://maps.apple.com/?daddr=$addressStr');
+        if (await canLaunchUrl(appleUrl)) {
+          await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+        final googleUrl = Uri.parse('comgooglemaps://?daddr=$addressStr&directionsmode=driving');
+        if (await canLaunchUrl(googleUrl)) {
+          await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+      }
+    }
+    
+    final fallbackUrl = (lat == 0.0 && lng == 0.0 && widget.event.address.isNotEmpty)
+        ? Uri.parse('https://www.google.com/maps/search/?api=1&query=$addressStr')
+        : Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+        
+    if (await canLaunchUrl(fallbackUrl)) {
+      await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
     }
   }
 

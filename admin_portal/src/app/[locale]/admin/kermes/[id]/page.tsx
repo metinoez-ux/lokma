@@ -1248,9 +1248,13 @@ export default function KermesDetailPage() {
  };
 
  const handleSaveEdits = async () => {
- if (!kermes) return;
- setSaving(true);
- try {
+  if (!kermes) return;
+  if (isUploadingHeader || isUploadingLogo) {
+    showToast(t('lutfen_yuklemenin_bitmesini_bekleyin') || 'Lütfen yüklemenin bitmesini bekleyin', 'error');
+    return;
+  }
+  setSaving(true);
+  try {
  // Adres degistiyse ve koordinatlar Places ile guncellenmemisse, otomatik geocode yap
  const addressChanged = editForm.address !== (kermes.address || '') || editForm.city !== (kermes.city || '') || editForm.postalCode !== (kermes.postalCode || '');
  const coordsUnchanged = editForm.latitude === (kermes.latitude || null) && editForm.longitude === (kermes.longitude || null);
@@ -2309,7 +2313,7 @@ export default function KermesDetailPage() {
     ) : (
     <>
     <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 bg-gray-600 text-gray-300 rounded-lg text-xs hover:bg-gray-500 transition border border-gray-500">{t('cancel_btn')}</button>
-    <button onClick={handleSaveEdits} disabled={saving} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-500 transition font-semibold disabled:opacity-50">{saving ? '...' : t('kaydet')}</button>
+    <button onClick={handleSaveEdits} disabled={saving || isUploadingHeader || isUploadingLogo} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-500 transition font-semibold disabled:opacity-50">{(isUploadingHeader || isUploadingLogo) ? 'Yükleniyor...' : (saving ? '...' : t('kaydet'))}</button>
     </>
     )}
    </div>

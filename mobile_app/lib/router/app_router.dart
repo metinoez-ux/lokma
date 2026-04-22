@@ -44,12 +44,13 @@ class AppRouter {
       GlobalKey<NavigatorState>();
 
   static late final GoRouter router;
+  static bool _hasSeenOnboarding = false;
 
   static void initializeRouter(bool hasSeenOnboarding) {
+    _hasSeenOnboarding = hasSeenOnboarding;
     router = GoRouter(
       navigatorKey: navigatorKey,
-      initialLocation:
-          '/splash', // Always show quick animated brand splash first
+      initialLocation: _hasSeenOnboarding ? '/restoran' : '/onboarding',
       // Handle Firebase Auth callback URLs - redirect to login and let Firebase SDK handle internally
       redirect: (context, state) {
         final location = state.uri.toString();
@@ -63,7 +64,7 @@ class AppRouter {
       routes: [
         GoRoute(
           path: '/splash',
-          builder: (context, state) => const SplashScreen(),
+          builder: (context, state) => SplashScreen(hasSeenOnboarding: _hasSeenOnboarding),
         ),
         GoRoute(
           path: '/onboarding',

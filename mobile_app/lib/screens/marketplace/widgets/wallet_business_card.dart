@@ -213,17 +213,13 @@ class WalletBusinessCard extends ConsumerWidget {
                               ? LokmaNetworkImage(
                                   imageUrl: imageUrl!,
                                   fit: BoxFit.cover,
+                                  fadeInDuration: Duration.zero,
+                                  fadeOutDuration: Duration.zero,
                                   placeholder: (context, url) => Container(
                                     color: Theme.of(context).brightness ==
                                             Brightness.dark
                                         ? const Color(0xFF2A2A28)
                                         : Colors.grey[200],
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        color: lokmaPink,
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
                                   ),
                                   errorWidget: (context, url, error) =>
                                       Container(

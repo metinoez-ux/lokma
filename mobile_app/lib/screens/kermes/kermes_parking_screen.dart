@@ -699,9 +699,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     Uri url;
     if (lat != null && lng != null) {
       // Navigasyon modu: koordinata yonlendir (adres degil)
-      url = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d');
+      url = Uri.parse('http://maps.apple.com/?daddr=$lat,$lng&dirflg=d');
     } else {
-      url = Uri.parse('https://maps.apple.com/?daddr=${Uri.encodeComponent(address)}&dirflg=d');
+      url = Uri.parse('http://maps.apple.com/?daddr=${Uri.encodeComponent(address)}&dirflg=d');
     }
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -710,14 +710,39 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
 
   Future<void> _launchGoogleMaps(String address, double? lat, double? lng) async {
     Uri url;
-    if (lat != null && lng != null) {
-      // Navigasyon modu: tam koordinata yonlendir
-      url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+    if (Platform.isIOS) {
+      if (lat != null && lng != null) {
+        url = Uri.parse('comgooglemaps://?daddr=$lat,$lng&directionsmode=driving');
+      } else {
+        url = Uri.parse('comgooglemaps://?daddr=${Uri.encodeComponent(address)}&directionsmode=driving');
+      }
+    } else if (Platform.isAndroid) {
+      if (lat != null && lng != null) {
+        url = Uri.parse('geo:0,0?q=$lat,$lng');
+      } else {
+        url = Uri.parse('geo:0,0?q=${Uri.encodeComponent(address)}');
+      }
     } else {
-      url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${Uri.encodeComponent(address)}&travelmode=driving');
+      if (lat != null && lng != null) {
+        url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+      } else {
+        url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${Uri.encodeComponent(address)}&travelmode=driving');
+      }
     }
+    
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      // Fallback
+      Uri fallbackUrl;
+      if (lat != null && lng != null) {
+        fallbackUrl = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+      } else {
+        fallbackUrl = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${Uri.encodeComponent(address)}&travelmode=driving');
+      }
+      if (await canLaunchUrl(fallbackUrl)) {
+        await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
+      }
     }
   }
 

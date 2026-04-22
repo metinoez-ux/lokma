@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geocoding/geocoding.dart' as geo;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lokma_app/widgets/lokma_network_image.dart';
@@ -18,7 +17,7 @@ import 'package:lokma_app/screens/kermes/kermes_detail_screen.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:lokma_app/services/kermes_badge_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lokma_app/config/app_secrets.dart';
+
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/utils/time_utils.dart' as time_utils;
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
@@ -300,35 +299,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               }
             }
 
-            // 2. Fetch from 'products' subcollection (SADECE CACHE'DEN OKU)
-            // Bu islem listeyi 3 saniye dondurdugu icin sadece onbellek (cache) uzerinden alinir.
-            try {
-              final productsSnapshot = await FirebaseFirestore.instance
-                  .collection('kermes_events')
-                  .doc(doc.id)
-                  .collection('products')
-                  .get(const GetOptions(source: Source.cache));
-
-              if (productsSnapshot.docs.isNotEmpty) {
-                for (final productDoc in productsSnapshot.docs) {
-                  final productData = productDoc.data();
-                  try {
-                    final parsedProduct = KermesMenuItem.fromJson(productData);
-                    final existingIndex = menuItems
-                        .indexWhere((m) => m.name == parsedProduct.name);
-                    if (existingIndex >= 0) {
-                      menuItems[existingIndex] = parsedProduct;
-                    } else {
-                      menuItems.add(parsedProduct);
-                    }
-                  } catch (e) {
-                    // Ignore
-                  }
-                }
-              }
-            } catch (e) {
-              // Ignore
-            }
+            // NOTE: Products subcollection is NOT fetched here for performance.
+            // The inline 'menu' array from the parent doc is sufficient for
+            // card thumbnails. Full product data loads on detail screen.
 
             // Parse parking info
             List<KermesParkingInfo> parkingInfo = [];
@@ -513,64 +486,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               eventLng = gp.longitude;
             }
 
-            if ((eventLat == 0.0 && eventLng == 0.0) ||
-                (eventLat == 51.0 && eventLng == 6.0)) {
-              if (fullAddress.isNotEmpty) {
-                try {
-                  final fallbackCountry = country.isNotEmpty ? country : '';
-                  
-                  // 1. HTTP Request to Google Geocoding API (Most reliable)
-                  if (AppSecrets.googlePlacesApiKey.isNotEmpty) {
-                    final queryAddress = (fallbackCountry.isNotEmpty && !fullAddress.toLowerCase().contains(fallbackCountry.toLowerCase()))
-                        ? '$fullAddress, $fallbackCountry'
-                        : fullAddress;
-                    
-                    final uri = Uri.parse(
-                        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(queryAddress)}&key=${AppSecrets.googlePlacesApiKey}');
-                    final response = await http.get(uri);
-                    if (response.statusCode == 200) {
-                      final jsonMap = jsonDecode(response.body);
-                      if (jsonMap['status'] == 'OK' && (jsonMap['results'] as List).isNotEmpty) {
-                        final loc = jsonMap['results'][0]['geometry']['location'];
-                        eventLat = (loc['lat'] as num).toDouble();
-                        eventLng = (loc['lng'] as num).toDouble();
-                      }
-                    }
-                  }
-
-                  // 2. Native Geocoding Package (If Google API failed or key is missing)
-                  if (eventLat == 0.0 && eventLng == 0.0) {
-                    final locations = await geo.locationFromAddress(fullAddress);
-                    if (locations.isNotEmpty) {
-                      eventLat = locations.first.latitude;
-                      eventLng = locations.first.longitude;
-                    }
-                  }
-                } catch (geoErr) {
-                  // 3. Fallback: Search by city using native geocoder
-                  if (city != 'Bilinmiyor') {
-                    try {
-                      final fallbackCountry = country.isNotEmpty ? country : '';
-                      final query = fallbackCountry.isNotEmpty ? '$city, $fallbackCountry' : city;
-                      final cityLocations = await geo.locationFromAddress(query);
-                      if (cityLocations.isNotEmpty) {
-                        eventLat = cityLocations.first.latitude;
-                        eventLng = cityLocations.first.longitude;
-                      }
-                    } catch (_) {
-                      eventLat = 0.0;
-                      eventLng = 0.0;
-                    }
-                  } else {
-                    eventLat = 0.0;
-                    eventLng = 0.0;
-                  }
-                }
-              } else {
-                eventLat = 0.0;
-                eventLng = 0.0;
-              }
-            }
+            // Skip geocoding in list loading -- it blocks the entire list.
+            // Kermes cards without coordinates will show without distance info.
 
             final event = KermesEvent(
               id: doc.id,

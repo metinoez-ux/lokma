@@ -1,7 +1,11 @@
 import 'dart:ui';
+import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
@@ -15,7 +19,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lokma_app/widgets/lokma_network_image.dart';
 import 'brand_info_sheet.dart';
 import '../../utils/distance_utils.dart';
-import 'package:video_player/video_player.dart';
 import '../../services/video_preload_service.dart';
 
 class KermesCard extends StatefulWidget {
@@ -38,6 +41,7 @@ class _KermesCardState extends State<KermesCard> {
   bool _isFavorite = false;
 
   List<KermesBadge> _activeBadges = [];
+  Stream<Uint8List>? _thumbnailStream;
 
   // Colors
   static const Color cardLight = Colors.white;
@@ -47,6 +51,76 @@ class _KermesCardState extends State<KermesCard> {
     super.initState();
     _checkFavorite();
     _loadBadges();
+    _initThumbnail();
+  }
+
+  void _initThumbnail() {
+    final imagePath = _getImagePath();
+    if (imagePath != null && _isVideoUrl(imagePath)) {
+      _thumbnailStream = _getThumbnailStream(imagePath);
+      // Arka planda videoyu (kullanici daha detaya girmeden) indirmeye basla!
+      try {
+        VideoPreloadService.getController(imagePath);
+      } catch (_) {}
+    } else {
+      _thumbnailStream = null;
+    }
+  }
+
+  Stream<Uint8List> _getThumbnailStream(String videoUrl) async* {
+    try {
+      final hash = videoUrl.hashCode;
+      final tempDir = await getTemporaryDirectory();
+      final lowFile = File('${tempDir.path}/thumb_low_$hash.jpg');
+      final highFile = File('${tempDir.path}/thumb_high_$hash.jpg');
+
+      // 1. Eger High Res varsa, direk onu gonder ve bitir. (En hizli senaryo)
+      if (await highFile.exists()) {
+        final bytes = await highFile.readAsBytes();
+        if (bytes.isNotEmpty) {
+          yield bytes;
+          return;
+        }
+      }
+
+      // 2. High Res yoksa ama Low Res varsa, Low Res'i aninda goster. (Orta senaryo)
+      bool hasLowRes = false;
+      if (await lowFile.exists()) {
+        final bytes = await lowFile.readAsBytes();
+        if (bytes.isNotEmpty) {
+          yield bytes;
+          hasLowRes = true;
+        }
+      }
+
+      // 3. Eger ikisi de yoksa, Low Res uretip goster. (Ilk acilis, hizli gosterim)
+      if (!hasLowRes) {
+        final lowBytes = await VideoThumbnail.thumbnailData(
+          video: videoUrl,
+          imageFormat: ImageFormat.JPEG,
+          maxWidth: 400,
+          quality: 40,
+        );
+        if (lowBytes != null && lowBytes.isNotEmpty) {
+          await lowFile.writeAsBytes(lowBytes);
+          yield lowBytes;
+        }
+      }
+
+      // 4. Eger buraya geldiysek High Res yoktur. Arka planda High Res uret. (YouTube tarzi kalite yukseltme)
+      final highBytes = await VideoThumbnail.thumbnailData(
+        video: videoUrl,
+        imageFormat: ImageFormat.JPEG,
+        maxWidth: 800,
+        quality: 75,
+      );
+      if (highBytes != null && highBytes.isNotEmpty) {
+        await highFile.writeAsBytes(highBytes);
+        yield highBytes;
+      }
+    } catch (e) {
+      debugPrint('Error generating stream thumbnail: $e');
+    }
   }
 
   @override
@@ -131,6 +205,10 @@ class _KermesCardState extends State<KermesCard> {
 
     if (locationChanged || badgesChanged) {
       _loadBadges();
+    }
+
+    if (oldWidget.event.id != widget.event.id) {
+      _initThumbnail();
     }
   }
 
@@ -258,6 +336,8 @@ class _KermesCardState extends State<KermesCard> {
     );
   }
 
+  /// Returns the best available image/video path for the card.
+  /// Priority: headerImage > first flyer > first menu item image.
   String? _getImagePath() {
     if (widget.event.headerImage != null &&
         widget.event.headerImage!.isNotEmpty) {
@@ -272,6 +352,14 @@ class _KermesCardState extends State<KermesCard> {
       return item.imageUrls.isNotEmpty ? item.imageUrls.first : item.imageUrl;
     }
     return null;
+  }
+
+  /// Helper: is this URL a video?
+  bool _isVideoUrl(String url) {
+    final lower = url.toLowerCase();
+    return lower.contains('.mp4') ||
+        lower.contains('.mov') ||
+        lower.contains('video%2F');
   }
 
   @override
@@ -473,57 +561,26 @@ class _KermesCardState extends State<KermesCard> {
                         AspectRatio(
                           aspectRatio: 16 / 9,
                           child: imagePath != null
-                              ? ((imagePath.toLowerCase().contains('.mp4') || imagePath.toLowerCase().contains('.mov') || imagePath.toLowerCase().contains('video%2F'))
-                                  ? Builder(
-                                      builder: (context) {
-                                        final controller = VideoPreloadService.getController(imagePath);
-                                        return ValueListenableBuilder(
-                                          valueListenable: controller,
-                                          builder: (context, VideoPlayerValue value, child) {
-                                          if (!value.isInitialized) {
-                                            return Container(color: Colors.grey[200]);
-                                          }
-                                          // Tasmayı onlemek icin ClipRect ve guzel bir gecis icin AnimatedSwitcher
-                                          // Dikey (9:16) formatindaki videolari yatay kartta cok sik gostermek icin
-                                          // Arka plana bulanik kaplama, one ise daraltilmis ana videoyu koyuyoruz.
-                                          return ClipRect(
-                                            child: AnimatedSwitcher(
-                                              duration: const Duration(milliseconds: 500),
-                                              child: Stack(
-                                                key: const ValueKey('video_frame'),
-                                                fit: StackFit.expand,
-                                                children: [
-                                                  // 1. Katman: Arka plan (Tasan ve bulanik)
-                                                  FittedBox(
-                                                    fit: BoxFit.cover,
-                                                    child: SizedBox(
-                                                      width: value.size.width > 0 ? value.size.width : 1600,
-                                                      height: value.size.height > 0 ? value.size.height : 900,
-                                                      child: VideoPlayer(controller),
-                                                    ),
-                                                  ),
-                                                  // 1.5 Katman: Film tadinda karanlik ve bulanik filtre
-                                                  BackdropFilter(
-                                                    filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                                                    child: Container(color: Colors.black.withValues(alpha: 0.4)),
-                                                  ),
-                                                  // 2. Katman: On plan (Videonun tamami)
-                                                  FittedBox(
-                                                    fit: BoxFit.contain,
-                                                    child: SizedBox(
-                                                      width: value.size.width > 0 ? value.size.width : 1600,
-                                                      height: value.size.height > 0 ? value.size.height : 900,
-                                                      child: VideoPlayer(controller),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                              ? (_isVideoUrl(imagePath)
+                                  ? StreamBuilder<Uint8List>(
+                                      stream: _thumbnailStream,
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          return Image.memory(
+                                            snapshot.data!,
+                                            fit: BoxFit.cover,
+                                            width: double.infinity,
+                                            height: double.infinity,
+                                            gaplessPlayback: true,
                                           );
-                                        },
-                                      );
-                                    },
-                                  )
+                                        }
+                                        return Container(
+                                          color: theme.brightness == Brightness.dark
+                                              ? const Color(0xFF1E1E1E)
+                                              : const Color(0xFFF0F0F0),
+                                        );
+                                      },
+                                    )
                                 : isNetworkImage
                                     ? LokmaNetworkImage(
                                         imageUrl: imagePath,
@@ -532,7 +589,11 @@ class _KermesCardState extends State<KermesCard> {
                                         fadeOutDuration: Duration.zero,
                                         useOldImageOnUrlChange: true,
                                         placeholder: (context, url) =>
-                                            Container(color: Colors.grey[200]),
+                                            Container(
+                                          color: theme.brightness == Brightness.dark
+                                              ? const Color(0xFF1E1E1E)
+                                              : const Color(0xFFF0F0F0),
+                                        ),
                                         errorWidget: (context, url, error) =>
                                             Container(
                                           color: Colors.grey[200],
@@ -573,6 +634,7 @@ class _KermesCardState extends State<KermesCard> {
                                       imageUrl: widget.event.logoUrl!,
                                       fit: BoxFit.contain, // Allow entire logo to fit natively
                                       fadeInDuration: const Duration(milliseconds: 200),
+                                      placeholder: (context, url) => const SizedBox(), // Yüklenirken beyaz kare cikmasini engeller
                                     )
                                   : ClipRRect(
                                       borderRadius: BorderRadius.circular(50),
@@ -580,6 +642,7 @@ class _KermesCardState extends State<KermesCard> {
                                         imageUrl: widget.event.logoUrl!,
                                         fit: BoxFit.contain, // Allows logo to dictate width without cropping
                                         fadeInDuration: const Duration(milliseconds: 200),
+                                        placeholder: (context, url) => const SizedBox(), // Yüklenirken beyaz kare cikmasini engeller
                                       ),
                                     ),
                               ),

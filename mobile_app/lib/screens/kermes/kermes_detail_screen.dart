@@ -322,12 +322,56 @@ String _getLocalizedCountry(String rawCountry) {
   }
 
   Future<void> _openMaps() async {
+    final lat = _currentEvent.latitude;
+    final lng = _currentEvent.longitude;
     final addressStr = Uri.encodeComponent(_currentEvent.address);
-    final uri = (_currentEvent.latitude == 0.0 && _currentEvent.longitude == 0.0 && _currentEvent.address.isNotEmpty)
+    
+    if (lat != 0.0 && lng != 0.0) {
+      if (Platform.isAndroid) {
+        final uri = Uri.parse('geo:0,0?q=$lat,$lng');
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } else if (Platform.isIOS) {
+        final appleUrl = Uri.parse('http://maps.apple.com/?daddr=$lat,$lng');
+        if (await canLaunchUrl(appleUrl)) {
+          await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+        final googleUrl = Uri.parse('comgooglemaps://?daddr=$lat,$lng&directionsmode=driving');
+        if (await canLaunchUrl(googleUrl)) {
+          await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+      }
+    } else if (_currentEvent.address.isNotEmpty) {
+      if (Platform.isAndroid) {
+        final uri = Uri.parse('geo:0,0?q=$addressStr');
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } else if (Platform.isIOS) {
+        final appleUrl = Uri.parse('http://maps.apple.com/?daddr=$addressStr');
+        if (await canLaunchUrl(appleUrl)) {
+          await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+        final googleUrl = Uri.parse('comgooglemaps://?daddr=$addressStr&directionsmode=driving');
+        if (await canLaunchUrl(googleUrl)) {
+          await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
+          return;
+        }
+      }
+    }
+    
+    final fallbackUrl = (lat == 0.0 && lng == 0.0 && _currentEvent.address.isNotEmpty)
         ? Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$addressStr')
-        : Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${_currentEvent.latitude},${_currentEvent.longitude}');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+        : Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+        
+    if (await canLaunchUrl(fallbackUrl)) {
+      await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -2411,54 +2455,65 @@ String _getLocalizedCountry(String rawCountry) {
             ),
           ),
 
-          // Kermes Custom Logo (Always visible if exists)
-          if (_currentEvent.logoUrl != null && _currentEvent.logoUrl!.isNotEmpty)
-            Builder(
-              builder: (context) {
-                final bool isPng = _currentEvent.logoUrl!.toLowerCase().contains('.png');
-                return Positioned(
-                  top: 56, // Replaced the previous Tuna Logo position
-                  left: 16,
-                  child: Container(
-                    height: 60,
-                    constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
-                    decoration: isPng ? null : BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(50), // Pill shape
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
+          // Top Badges Row (Tuna on Left, Kermes Logo on Right)
+          Positioned(
+            top: 56,
+            left: 16,
+            right: 24,
+            child: SizedBox(
+              height: 60, // Sabit yükseklik ile dikeyde tam merkezleme
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Sol: Dynamic Sponsor / Certificate Badges (Tuna vs.)
+                  if (_currentEvent.activeBadgeIds.isNotEmpty && _activeBadges != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: _buildDynamicBadges(context, alignment: CrossAxisAlignment.start),
                     ),
-                    child: isPng
-                      ? LokmaNetworkImage(
-                          imageUrl: _currentEvent.logoUrl!,
-                          fit: BoxFit.contain, // Fit entire logo natively
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(50),
-                          child: LokmaNetworkImage(
-                            imageUrl: _currentEvent.logoUrl!,
-                            fit: BoxFit.contain, // Fit entire logo securely
-                          ),
-                        ),
-                  ),
-                );
-              }
+                  
+                  // Sağ: Kermes Custom Logo
+                  if (_currentEvent.logoUrl != null && _currentEvent.logoUrl!.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Builder(
+                        builder: (context) {
+                          final bool isPng = _currentEvent.logoUrl!.toLowerCase().contains('.png');
+                          return Container(
+                            height: 60,
+                            constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
+                            decoration: isPng ? null : BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(50), // Pill shape
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                            ),
+                            child: isPng
+                              ? LokmaNetworkImage(
+                                  imageUrl: _currentEvent.logoUrl!,
+                                  fit: BoxFit.contain, // Fit entire logo natively
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(50),
+                                  child: LokmaNetworkImage(
+                                    imageUrl: _currentEvent.logoUrl!,
+                                    fit: BoxFit.contain, // Fit entire logo securely
+                                  ),
+                                ),
+                          );
+                        }
+                      ),
+                    ),
+                ],
+              ),
             ),
-
-
-          // Bottom Right: Dynamic Sponsor / Certificate Badges (Tuna)
-          if (_currentEvent.activeBadgeIds.isNotEmpty && _activeBadges != null)
-            Positioned(
-              bottom: 110,
-              right: 24,
-              child: _buildDynamicBadges(context, alignment: CrossAxisAlignment.end),
-            ),
+          ),
           // Top Action Buttons
           if (!isForShare)
             Positioned(
@@ -3403,6 +3458,9 @@ String _getLocalizedCountry(String rawCountry) {
                           'assets/icons/telephone-call_74451.svg',
                           width: 24,
                           height: 24,
+                          colorFilter: isDark 
+                              ? const ColorFilter.mode(Colors.white, BlendMode.srcIn) 
+                              : null,
                         ),
                       ),
                     ),
