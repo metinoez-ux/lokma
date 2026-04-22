@@ -6,9 +6,9 @@ flutter_native_splash:
 
   android_12:
     color: "#F61028"
-    image: "assets/images/lokma_logo_splash_opt.png"
+    image: "assets/images/lokma_logo_android12.png"
     color_dark: "#F61028"
-    image_dark: "assets/images/lokma_logo_splash_opt.png"
+    image_dark: "assets/images/lokma_logo_android12.png"
     
   android: true
   ios: true
