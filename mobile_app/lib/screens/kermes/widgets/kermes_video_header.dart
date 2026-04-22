@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:video_player/video_player.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
-import 'dart:typed_data';
 import '../../../services/video_preload_service.dart';
+import '../../../widgets/lokma_network_image.dart'; // Make sure to import this if it's not already
 
 class KermesVideoHeader extends StatefulWidget {
   final String videoUrl;
@@ -33,73 +30,22 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
   bool _hasError = false;
   String? _errorMessage;
   bool _wasCollapsed = false;
-  Stream<Uint8List>? _thumbnailStream;
-
+  
   @override
   void initState() {
     super.initState();
-    _thumbnailStream = _getThumbnailStream(widget.videoUrl);
+    // Senkron olarak _controller'i atiyoruz, boylece build icinde erisilebilir
+    _controller = VideoPreloadService.getController(widget.videoUrl);
     _initializeVideo();
     widget.scrollController?.addListener(_scrollListener);
   }
 
-  Stream<Uint8List> _getThumbnailStream(String videoUrl) async* {
-    try {
-      final hash = videoUrl.hashCode;
-      final tempDir = await getTemporaryDirectory();
-      final lowFile = File('${tempDir.path}/thumb_low_$hash.jpg');
-      final highFile = File('${tempDir.path}/thumb_high_$hash.jpg');
-
-      if (await highFile.exists()) {
-        final bytes = await highFile.readAsBytes();
-        if (bytes.isNotEmpty) {
-          yield bytes;
-          return;
-        }
-      }
-
-      bool hasLowRes = false;
-      if (await lowFile.exists()) {
-        final bytes = await lowFile.readAsBytes();
-        if (bytes.isNotEmpty) {
-          yield bytes;
-          hasLowRes = true;
-        }
-      }
-
-      // Android'de ağdan video thumbnail çekmek aşırı yavaş (3-10 saniye) ve UI kitliyor!
-      // Eğer videoUrl HTTP ise ve dosya yoksa Android'de bunu atlıyoruz, video frame gelene kadar siyah kalması kitlenmekten iyidir.
-      // iOS'ta bu işlem hızlı olduğu için çalışmaya devam edebilir.
-      if (Platform.isAndroid && videoUrl.startsWith('http')) {
-         return; // Thumbnail üretme, direkt videonun yüklenmesini bekle.
-      }
-
-      if (!hasLowRes) {
-        final lowBytes = await VideoThumbnail.thumbnailData(
-          video: videoUrl,
-          imageFormat: ImageFormat.JPEG,
-          maxWidth: 400,
-          quality: 40,
-        );
-        if (lowBytes != null && lowBytes.isNotEmpty) {
-          await lowFile.writeAsBytes(lowBytes);
-          yield lowBytes;
-        }
-      }
-
-      final highBytes = await VideoThumbnail.thumbnailData(
-        video: videoUrl,
-        imageFormat: ImageFormat.JPEG,
-        maxWidth: 800,
-        quality: 75,
-      );
-      if (highBytes != null && highBytes.isNotEmpty) {
-        await highFile.writeAsBytes(highBytes);
-        yield highBytes;
-      }
-    } catch (e) {
-      debugPrint('Error generating header thumbnail: $e');
+  String get _thumbnailUrl {
+    if (widget.videoUrl.contains('?')) {
+      final parts = widget.videoUrl.split('?');
+      return '${parts[0]}_thumb.jpg?${parts[1]}';
     }
+    return '${widget.videoUrl}_thumb.jpg';
   }
 
   void _scrollListener() {
@@ -129,13 +75,11 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
 
   Future<void> _initializeVideo() async {
     try {
-      _controller = VideoPreloadService.getController(widget.videoUrl);
       _controller.addListener(_videoListener);
 
       await VideoPreloadService.waitForInitialization(widget.videoUrl);
 
       // Eger yukleme sirasinda hata olduysa veya hala initialize olamadiysa devam etme!
-      // Diger turlu setVolume veya play() metodlari platform kanalini cokertebilir (StateError firlatir).
       if (_controller.value.hasError) {
         throw Exception(_controller.value.errorDescription ?? 'Video yüklenemedi (Bağlantı hatası)');
       }
@@ -143,17 +87,27 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
         throw Exception('Video başlatılamadı. Lütfen internet bağlantınızı kontrol edin.');
       }
 
+      await _controller.setLooping(false);
+      await _controller.setVolume(0);
+      
+      // Videonun her zaman baştan başlamasını garanti et
+      if (_controller.value.position != Duration.zero) {
+        await _controller.seekTo(Duration.zero);
+      }
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
-        await _controller.setLooping(false);
-        await _controller.setVolume(0);
-        await _controller.seekTo(Duration.zero);
-        await _controller.play(); // Ilk baslangicta oynat!
+        
+        // Frame'in ekrana yansıması için ufak bir gecikme veriyoruz ki "eski kare" zıplaması olmasın
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted && _isInitialized && !_wasCollapsed) {
+            _controller.play();
+          }
+        });
       }
     } catch (e) {
-      // Hata firlatildiginda catch et!
       if (mounted) {
         setState(() {
           _hasError = true;
@@ -171,8 +125,12 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
   void dispose() {
     widget.scrollController?.removeListener(_scrollListener);
     _controller.removeListener(_videoListener);
+    
     // NOT: _controller.dispose() ISLEMINI BURADA YAPMIYORUZ! 
-    // VideoPreloadService on bellegi yonettigi icin, temizligi o yapacak.
+    // Ancak arka planda calismaya devam etmemesi icin videoyu durdurup basa sariyoruz.
+    _controller.pause();
+    _controller.seekTo(Duration.zero);
+    
     super.dispose();
   }
 
@@ -215,8 +173,6 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     }
 
     // Video is ready or initializing. Show thumbnail behind the video player.
-    // If _hasError, it's already handled above.
-
     return GestureDetector(
       onTap: _replayVideo,
       child: SizedBox(
@@ -226,32 +182,33 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
           fit: StackFit.expand,
           children: [
             // 1. Static Image (Always behind, prevents flicker during transition)
-            StreamBuilder<Uint8List>(
-              stream: _thumbnailStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Image.memory(
-                    snapshot.data!,
-                    fit: widget.fit,
-                    width: widget.width,
-                    height: widget.height,
-                    gaplessPlayback: true,
-                  );
-                }
-                return Container(color: const Color(0xFF1E1E1E));
-              },
+            LokmaNetworkImage(
+              imageUrl: _thumbnailUrl,
+              fit: widget.fit,
+              width: widget.width,
+              height: widget.height,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              useOldImageOnUrlChange: true,
+              placeholder: (_, __) => Container(color: const Color(0xFF1E1E1E)), // Koyu arkaplan, beyaz flash'ı engeller
+              errorWidget: (_, __, ___) => Container(color: const Color(0xFF1E1E1E)),
             ),
             
-            // 2. Video Player (renders on top once initialized)
-            if (_isInitialized)
-              FittedBox(
-                fit: widget.fit,
-                child: SizedBox(
-                  width: _controller.value.size.width > 0 ? _controller.value.size.width : 1600,
-                  height: _controller.value.size.height > 0 ? _controller.value.size.height : 900,
-                  child: VideoPlayer(_controller),
-                ),
-              ),
+            // 2. Video Player (renders on top once initialized with a smooth fade)
+            AnimatedOpacity(
+              opacity: _isInitialized ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: _controller.value.isInitialized
+                  ? FittedBox(
+                      fit: widget.fit,
+                      child: SizedBox(
+                        width: _controller.value.size.width > 0 ? _controller.value.size.width : 1600,
+                        height: _controller.value.size.height > 0 ? _controller.value.size.height : 900,
+                        child: VideoPlayer(_controller),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
       ),

@@ -2516,18 +2516,25 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.volunteer_activism, color: Colors.green[400], size: 14),
-                          const SizedBox(width: 4),
-                          Text(
-                            _donationTarget == 'fund' && widget.event.selectedDonationFundName != null
-                                ? widget.event.selectedDonationFundName!
-                                : widget.event.title,
-                            style: TextStyle(color: Colors.green[400], fontSize: 13, fontStyle: FontStyle.italic),
-                          ),
-                        ],
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.volunteer_activism, color: Colors.green[400], size: 14),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _donationTarget == 'fund' && widget.event.selectedDonationFundName != null
+                                    ? widget.event.selectedDonationFundName!
+                                    : widget.event.title,
+                                style: TextStyle(color: Colors.green[400], fontSize: 13, fontStyle: FontStyle.italic),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         '+${_donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                         style: TextStyle(color: Colors.green[400], fontSize: 14, fontWeight: FontWeight.w600),

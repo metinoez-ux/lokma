@@ -1,5 +1,7 @@
 mobile_app/
-.git/
-scripts/
-*.apk
-*.aab
+.agents/
+.gemini/
+admin_portal/node_modules/
+admin_portal/.next/
+admin_portal/.firebase/
+backups/

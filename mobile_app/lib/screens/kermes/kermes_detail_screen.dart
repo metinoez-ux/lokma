@@ -2599,6 +2599,8 @@ String _getLocalizedCountry(String rawCountry) {
                     height: 1.1,
                     letterSpacing: -0.5,
                   ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 16),
 

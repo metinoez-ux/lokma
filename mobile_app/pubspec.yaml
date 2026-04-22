@@ -74,7 +74,6 @@ dependencies:
   screen_protector: ^1.5.1
   shimmer: ^3.0.0
   flutter_native_splash: ^2.4.7
-  video_thumbnail: ^0.5.6
 
 dev_dependencies:
   flutter_test:

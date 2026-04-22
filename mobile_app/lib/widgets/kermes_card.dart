@@ -1,11 +1,7 @@
 import 'dart:ui';
-import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
-import 'package:video_thumbnail/video_thumbnail.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
@@ -41,7 +37,6 @@ class _KermesCardState extends State<KermesCard> {
   bool _isFavorite = false;
 
   List<KermesBadge> _activeBadges = [];
-  Stream<Uint8List>? _thumbnailStream;
 
   // Colors
   static const Color cardLight = Colors.white;
@@ -51,75 +46,14 @@ class _KermesCardState extends State<KermesCard> {
     super.initState();
     _checkFavorite();
     _loadBadges();
-    _initThumbnail();
   }
 
-  void _initThumbnail() {
-    final imagePath = _getImagePath();
-    if (imagePath != null && _isVideoUrl(imagePath)) {
-      _thumbnailStream = _getThumbnailStream(imagePath);
-      // Arka planda videoyu (kullanici daha detaya girmeden) indirmeye basla!
-      try {
-        VideoPreloadService.getController(imagePath);
-      } catch (_) {}
+  String _getVideoThumbnailUrl(String videoUrl) {
+    if (videoUrl.contains('?')) {
+      final parts = videoUrl.split('?');
+      return '${parts[0]}_thumb.jpg?${parts[1]}';
     } else {
-      _thumbnailStream = null;
-    }
-  }
-
-  Stream<Uint8List> _getThumbnailStream(String videoUrl) async* {
-    try {
-      final hash = videoUrl.hashCode;
-      final tempDir = await getTemporaryDirectory();
-      final lowFile = File('${tempDir.path}/thumb_low_$hash.jpg');
-      final highFile = File('${tempDir.path}/thumb_high_$hash.jpg');
-
-      // 1. Eger High Res varsa, direk onu gonder ve bitir. (En hizli senaryo)
-      if (await highFile.exists()) {
-        final bytes = await highFile.readAsBytes();
-        if (bytes.isNotEmpty) {
-          yield bytes;
-          return;
-        }
-      }
-
-      // 2. High Res yoksa ama Low Res varsa, Low Res'i aninda goster. (Orta senaryo)
-      bool hasLowRes = false;
-      if (await lowFile.exists()) {
-        final bytes = await lowFile.readAsBytes();
-        if (bytes.isNotEmpty) {
-          yield bytes;
-          hasLowRes = true;
-        }
-      }
-
-      // 3. Eger ikisi de yoksa, Low Res uretip goster. (Ilk acilis, hizli gosterim)
-      if (!hasLowRes) {
-        final lowBytes = await VideoThumbnail.thumbnailData(
-          video: videoUrl,
-          imageFormat: ImageFormat.JPEG,
-          maxWidth: 400,
-          quality: 40,
-        );
-        if (lowBytes != null && lowBytes.isNotEmpty) {
-          await lowFile.writeAsBytes(lowBytes);
-          yield lowBytes;
-        }
-      }
-
-      // 4. Eger buraya geldiysek High Res yoktur. Arka planda High Res uret. (YouTube tarzi kalite yukseltme)
-      final highBytes = await VideoThumbnail.thumbnailData(
-        video: videoUrl,
-        imageFormat: ImageFormat.JPEG,
-        maxWidth: 800,
-        quality: 75,
-      );
-      if (highBytes != null && highBytes.isNotEmpty) {
-        await highFile.writeAsBytes(highBytes);
-        yield highBytes;
-      }
-    } catch (e) {
-      debugPrint('Error generating stream thumbnail: $e');
+      return '${videoUrl}_thumb.jpg';
     }
   }
 
@@ -205,10 +139,6 @@ class _KermesCardState extends State<KermesCard> {
 
     if (locationChanged || badgesChanged) {
       _loadBadges();
-    }
-
-    if (oldWidget.event.id != widget.event.id) {
-      _initThumbnail();
     }
   }
 
@@ -446,6 +376,9 @@ class _KermesCardState extends State<KermesCard> {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
+        if (imagePath != null && _isVideoUrl(imagePath)) {
+          VideoPreloadService.getController(imagePath);
+        }
         Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             builder: (context) => KermesDetailScreen(
@@ -562,24 +495,23 @@ class _KermesCardState extends State<KermesCard> {
                           aspectRatio: 16 / 9,
                           child: imagePath != null
                               ? (_isVideoUrl(imagePath)
-                                  ? StreamBuilder<Uint8List>(
-                                      stream: _thumbnailStream,
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasData) {
-                                          return Image.memory(
-                                            snapshot.data!,
-                                            fit: BoxFit.cover,
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            gaplessPlayback: true,
-                                          );
-                                        }
-                                        return Container(
-                                          color: theme.brightness == Brightness.dark
-                                              ? const Color(0xFF1E1E1E)
-                                              : const Color(0xFFF0F0F0),
-                                        );
-                                      },
+                                  ? LokmaNetworkImage(
+                                      imageUrl: _getVideoThumbnailUrl(imagePath),
+                                      fit: BoxFit.cover,
+                                      fadeInDuration: Duration.zero,
+                                      fadeOutDuration: Duration.zero,
+                                      useOldImageOnUrlChange: true,
+                                      placeholder: (context, url) => Container(
+                                        color: theme.brightness == Brightness.dark
+                                            ? const Color(0xFF1E1E1E)
+                                            : const Color(0xFFF0F0F0),
+                                      ),
+                                      errorWidget: (context, url, error) => Container(
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                            child: Icon(Icons.image_not_supported,
+                                                color: Colors.grey)),
+                                      ),
                                     )
                                 : isNetworkImage
                                     ? LokmaNetworkImage(

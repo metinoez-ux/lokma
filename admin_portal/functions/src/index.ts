@@ -3716,3 +3716,4 @@ export * from './kermesSupplyFunctions';
 
 // Image Resizer System
 export { optimizeLokmaImages } from "./imageOptimizer";
+export { optimizeLokmaVideos } from "./videoOptimizer";

@@ -118,6 +118,8 @@ class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
               widget.kermesName,
               style:
                   const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
