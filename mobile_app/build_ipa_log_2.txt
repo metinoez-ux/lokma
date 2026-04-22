@@ -1,0 +1,96 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 91.0.0 (99.0.0 available)
+  _flutterfire_internals 1.3.68 (1.3.69 available)
+  analyzer 8.4.1 (12.1.0 available)
+  async 2.13.0 (2.13.1 available)
+  cli_util 0.4.2 (0.5.0 available)
+  cloud_firestore 6.2.0 (6.3.0 available)
+  cloud_firestore_platform_interface 7.1.0 (7.2.0 available)
+  cloud_firestore_web 5.2.0 (5.3.0 available)
+  cupertino_icons 1.0.8 (1.0.9 available)
+  firebase_auth 6.3.0 (6.4.0 available)
+  firebase_auth_platform_interface 8.1.8 (8.1.9 available)
+  firebase_auth_web 6.1.4 (6.1.5 available)
+  firebase_core 4.6.0 (4.7.0 available)
+  firebase_core_web 3.5.1 (3.6.0 available)
+  firebase_messaging 16.1.3 (16.2.0 available)
+  firebase_messaging_platform_interface 4.7.8 (4.7.9 available)
+  firebase_messaging_web 4.1.4 (4.1.5 available)
+  firebase_storage 13.2.0 (13.3.0 available)
+  firebase_storage_platform_interface 5.2.19 (5.2.20 available)
+  firebase_storage_web 3.11.4 (3.11.5 available)
+! flutter_launcher_icons 0.14.4 (overridden)
+  flutter_lints 5.0.0 (6.0.0 available)
+  flutter_local_notifications 19.5.0 (21.0.0 available)
+  flutter_local_notifications_linux 6.0.0 (8.0.0 available)
+  flutter_local_notifications_platform_interface 9.1.0 (11.0.0 available)
+  flutter_local_notifications_windows 1.0.3 (3.0.0 available)
+  flutter_map 8.2.2 (8.3.0 available)
+  flutter_plugin_android_lifecycle 2.0.33 (2.0.34 available)
+  flutter_stripe 11.5.0 (12.6.0 available)
+  font_awesome_flutter 10.12.0 (11.0.0 available)
+  freezed_annotation 2.4.4 (3.1.0 available)
+  geocoding_android 4.0.1 (5.0.1 available)
+  geocoding_platform_interface 3.2.0 (5.0.0 available)
+  go_router 17.1.0 (17.2.2 available)
+  google_sign_in 6.3.0 (7.2.0 available)
+  google_sign_in_android 6.2.1 (7.2.10 available)
+  google_sign_in_ios 5.9.0 (6.3.0 available)
+  google_sign_in_platform_interface 2.5.0 (3.1.0 available)
+  google_sign_in_web 0.12.4+4 (1.1.3 available)
+  hooks 1.0.2 (1.0.3 available)
+  image_picker_android 0.8.13+14 (0.8.13+16 available)
+  lints 5.1.1 (6.1.0 available)
+  meta 1.17.0 (1.18.2 available)
+  mgrs_dart 2.0.0 (3.0.0 available)
+  native_toolchain_c 0.17.6 (0.18.0 available)
+  package_info_plus 9.0.0 (10.1.0 available)
+  package_info_plus_platform_interface 3.2.1 (4.1.0 available)
+  path_provider_android 2.2.22 (2.3.1 available)
+  proj4dart 2.1.0 (3.0.0 available)
+  share_plus 12.0.1 (13.1.0 available)
+  share_plus_platform_interface 6.1.0 (7.1.0 available)
+  shared_preferences 2.5.4 (2.5.5 available)
+  shared_preferences_android 2.4.21 (2.4.23 available)
+  shared_preferences_platform_interface 2.4.1 (2.4.2 available)
+  stripe_android 11.5.0 (12.6.0 available)
+  stripe_ios 11.5.0 (12.6.0 available)
+  stripe_platform_interface 11.5.0 (12.6.0 available)
+  synchronized 3.4.0 (3.4.0+1 available)
+  test 1.30.0 (1.31.0 available)
+  test_api 0.7.10 (0.7.11 available)
+  test_core 0.6.16 (0.6.17 available)
+! timezone 0.10.1 (overridden) (0.11.0 available)
+  unicode 0.3.1 (1.1.9 available)
+  url_launcher_android 6.3.28 (6.3.29 available)
+  vector_graphics 1.1.20 (1.1.21 available)
+  vector_math 2.2.0 (2.3.0 available)
+  vm_service 15.0.2 (15.1.0 available)
+  win32 5.15.0 (6.0.1 available)
+Got dependencies!
+67 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Archiving shop.lokma.app...
+To ensure your app continues to launch on upcoming iOS versions, UIScene lifecycle support will soon be required. Please see https://flutter.dev/to/uiscene-migration for the migration guide.
+
+Automatically signing iOS for device deployment using specified development team in Xcode project: Y834B2NJY9
+Running Xcode build...                                          
+Xcode archive done.                                         410,1s
+✓ Built build/ios/archive/Runner.xcarchive (604.2MB)
+
+[✓] App Settings Validation
+    • Version Number: 1.0.0
+    • Build Number: 531
+    • Display Name: Lokma
+    • Deployment Target: 15.0
+    • Bundle Identifier: shop.lokma.app
+
+To update the settings, please refer to https://flutter.dev/to/ios-deploy
+
+Building App Store IPA...                                         160,1s
+Encountered error while creating the IPA:
+error: exportArchive Invalid Signature. Code object is not signed at all. The file at path “Runner.app/Frameworks/App.framework/flutter_assets/assets/images/clean_splash.py” is not properly signed. Make sure you have signed your application with a distribution certificate, not an ad hoc certificate or a development certificate. Verify that the code signing settings in Xcode are correct at the target level (which override any values at the project level). Additionally, make sure the bundle you are uploading was built using a Release target in Xcode, not a Simulator target. If you are certain your code signing settings are correct, choose “Clean All” in Xcode, delete the “build” directory in the Finder, and rebuild your release target. For more information, please consult https://developer.apple.com/support/code-signing. The server’s response was: ‘{
+
+Try distributing the app in Xcode:
+  open /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/build/ios/archive/Runner.xcarchive

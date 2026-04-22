@@ -1017,7 +1017,8 @@ String _getLocalizedCountry(String rawCountry) {
                     fontSize: 15)),
             const SizedBox(height: 12),
             Text(
-                '${_currentEvent.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.',
+                'marketplace.clear_cart_warning_desc'
+                    .tr(args: [_currentEvent.city]),
                 style: TextStyle(
                     color: Theme.of(dialogContext).brightness == Brightness.dark
                         ? Colors.white54

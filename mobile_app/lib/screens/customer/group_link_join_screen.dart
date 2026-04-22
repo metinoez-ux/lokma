@@ -326,7 +326,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
             _buildStep(
               isDark: isDark,
               cardBg: cardBg,
-              icon: Icons.shopping_cart_checkout,
+              icon: Icons.shopping_bag_rounded,
               text: tr('group_order.guest_step_2'),
             ),
             const SizedBox(height: 10),
@@ -413,7 +413,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
                               AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Icon(Icons.add_shopping_cart, size: 22),
+                    : const Icon(Icons.shopping_bag_rounded, size: 22),
                 label: Text(
                   _isJoining
                       ? tr('group_order.joining')

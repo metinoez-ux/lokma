@@ -641,7 +641,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                           ),
                                           child: Icon(
                                             widget.activeSegment == 'markt'
-                                                ? Icons.shopping_cart
+                                                ? Icons.shopping_bag_rounded
                                                 : Icons.restaurant,
                                             color: isDark
                                                 ? const Color(0xFF1E293B)

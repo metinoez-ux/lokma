@@ -438,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 14),
+                      const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 14),
                       const SizedBox(width: 4),
                       Text(
                         'home.repeat'.tr(),

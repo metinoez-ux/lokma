@@ -11,7 +11,7 @@ Herhangi bir büyük audit veya bug fix raporundan sonra bu işlemi TAMAMLA.
 3. E-mail göndermek için admin portal API'sini çağır (aşağıdaki cURL'ü kullan)
 
 ```bash
-curl -X POST "https://admin.lokma.app/api/admin/send-email" \
+curl -X POST "https://admin.lokma.shop/api/admin/send-email" \
   -H "Content-Type: application/json" \
   -d '{
     "to": "metin.oez@gmail.com",

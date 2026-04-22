@@ -32,7 +32,7 @@ class KahveShopScreen extends ConsumerWidget {
               return Stack(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.shopping_cart,
+                    icon: Icon(Icons.shopping_bag_rounded,
                       color: isDark ? Colors.white : Colors.black87,
                       size: 22,
                     ),

@@ -1417,6 +1417,11 @@
         "farkli_sepet_desc": "Your cart contains items from a different business or event. Your current cart must be cleared to add new items.",
         "onayliyor_musunuz": "To add items from the {} menu, your cart will be cleared. Do you agree?",
         "cart_cleared_and_added": "Cart cleared and item from {} added.",
+        "clear_cart_warning": "Your cart contains items from {}.",
+        "clear_cart_warning_desc": "Your current cart will be cleared to add items from the {} kermes.",
+        "cart_updated_for_city": "Cart cleared and item from {} kermes added.",
+        "search_for_products": "Search for products...",
+        "no_results": "No results",
         "brand_disclaimer": "This safety certificate and logo are issued directly by {brandName} to the businesses and are regularly audited by them. As soon as a business stops selling {brandName} products, this logo will be immediately removed from the business's profile on the LOKMA platform. In short, this safety standard is not issued by LOKMA; full control and responsibility lie exclusively with {brandName}.",
         "sold_out": "Sold Out"
     },

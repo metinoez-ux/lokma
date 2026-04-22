@@ -1,0 +1,103 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 91.0.0 (99.0.0 available)
+  _flutterfire_internals 1.3.68 (1.3.69 available)
+  analyzer 8.4.1 (12.1.0 available)
+  async 2.13.0 (2.13.1 available)
+  cli_util 0.4.2 (0.5.0 available)
+  cloud_firestore 6.2.0 (6.3.0 available)
+  cloud_firestore_platform_interface 7.1.0 (7.2.0 available)
+  cloud_firestore_web 5.2.0 (5.3.0 available)
+  cupertino_icons 1.0.8 (1.0.9 available)
+  firebase_auth 6.3.0 (6.4.0 available)
+  firebase_auth_platform_interface 8.1.8 (8.1.9 available)
+  firebase_auth_web 6.1.4 (6.1.5 available)
+  firebase_core 4.6.0 (4.7.0 available)
+  firebase_core_web 3.5.1 (3.6.0 available)
+  firebase_messaging 16.1.3 (16.2.0 available)
+  firebase_messaging_platform_interface 4.7.8 (4.7.9 available)
+  firebase_messaging_web 4.1.4 (4.1.5 available)
+  firebase_storage 13.2.0 (13.3.0 available)
+  firebase_storage_platform_interface 5.2.19 (5.2.20 available)
+  firebase_storage_web 3.11.4 (3.11.5 available)
+! flutter_launcher_icons 0.14.4 (overridden)
+  flutter_lints 5.0.0 (6.0.0 available)
+  flutter_local_notifications 19.5.0 (21.0.0 available)
+  flutter_local_notifications_linux 6.0.0 (8.0.0 available)
+  flutter_local_notifications_platform_interface 9.1.0 (11.0.0 available)
+  flutter_local_notifications_windows 1.0.3 (3.0.0 available)
+  flutter_map 8.2.2 (8.3.0 available)
+  flutter_plugin_android_lifecycle 2.0.33 (2.0.34 available)
+  flutter_stripe 11.5.0 (12.6.0 available)
+  font_awesome_flutter 10.12.0 (11.0.0 available)
+  freezed_annotation 2.4.4 (3.1.0 available)
+  geocoding_android 4.0.1 (5.0.1 available)
+  geocoding_platform_interface 3.2.0 (5.0.0 available)
+  go_router 17.1.0 (17.2.2 available)
+  google_sign_in 6.3.0 (7.2.0 available)
+  google_sign_in_android 6.2.1 (7.2.10 available)
+  google_sign_in_ios 5.9.0 (6.3.0 available)
+  google_sign_in_platform_interface 2.5.0 (3.1.0 available)
+  google_sign_in_web 0.12.4+4 (1.1.3 available)
+  hooks 1.0.2 (1.0.3 available)
+  image_picker_android 0.8.13+14 (0.8.13+16 available)
+  lints 5.1.1 (6.1.0 available)
+  meta 1.17.0 (1.18.2 available)
+  mgrs_dart 2.0.0 (3.0.0 available)
+  native_toolchain_c 0.17.6 (0.18.0 available)
+  package_info_plus 9.0.0 (10.1.0 available)
+  package_info_plus_platform_interface 3.2.1 (4.1.0 available)
+  path_provider_android 2.2.22 (2.3.1 available)
+  proj4dart 2.1.0 (3.0.0 available)
+  share_plus 12.0.1 (13.1.0 available)
+  share_plus_platform_interface 6.1.0 (7.1.0 available)
+  shared_preferences 2.5.4 (2.5.5 available)
+  shared_preferences_android 2.4.21 (2.4.23 available)
+  shared_preferences_platform_interface 2.4.1 (2.4.2 available)
+  stripe_android 11.5.0 (12.6.0 available)
+  stripe_ios 11.5.0 (12.6.0 available)
+  stripe_platform_interface 11.5.0 (12.6.0 available)
+  synchronized 3.4.0 (3.4.0+1 available)
+  test 1.30.0 (1.31.0 available)
+  test_api 0.7.10 (0.7.11 available)
+  test_core 0.6.16 (0.6.17 available)
+! timezone 0.10.1 (overridden) (0.11.0 available)
+  unicode 0.3.1 (1.1.9 available)
+  url_launcher_android 6.3.28 (6.3.29 available)
+  vector_graphics 1.1.20 (1.1.21 available)
+  vector_math 2.2.0 (2.3.0 available)
+  vm_service 15.0.2 (15.1.0 available)
+  win32 5.15.0 (6.0.1 available)
+Got dependencies!
+67 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Archiving shop.lokma.app...
+To ensure your app continues to launch on upcoming iOS versions, UIScene lifecycle support will soon be required. Please see https://flutter.dev/to/uiscene-migration for the migration guide.
+
+Automatically signing iOS for device deployment using specified development team in Xcode project: Y834B2NJY9
+Running Xcode build...                                          
+Xcode archive done.                                         329,2s
+✓ Built build/ios/archive/Runner.xcarchive (604.2MB)
+
+[✓] App Settings Validation
+    • Version Number: 1.0.0
+    • Build Number: 531
+    • Display Name: Lokma
+    • Deployment Target: 15.0
+    • Bundle Identifier: shop.lokma.app
+
+To update the settings, please refer to https://flutter.dev/to/ios-deploy
+
+Building App Store IPA...                                         146,0s
+
+Oops; flutter has exited unexpectedly: "PathNotFoundException: Directory listing failed, path = '/Users/metinoz/Developer/LOKMA_MASTER/mobile_app/build/ios/ipa/' (OS Error: No such file or directory, errno = 2)".
+A crash report has been written to /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/flutter_05.log
+This crash may already be reported. Check GitHub for similar crashes.
+https://github.com/flutter/flutter/issues?q=is%3Aissue+PathNotFoundException%3A+Directory+listing+failed%2C+path+%3D+%27%2FUsers%2Fmetinoz%2FDeveloper%2FLOKMA_MASTER%2Fmobile_app%2Fbuild%2Fios%2Fipa%2F%27+%28OS+Error%3A+No+such+file+or+directory%2C+errno+%3D+2%29
+
+To report your crash to the Flutter team, first read the guide to filing a bug.
+https://flutter.dev/to/report-bugs
+
+Create a new GitHub issue by pasting this link into your browser and completing the issue template. Thank you!
+https://github.com/flutter/flutter/issues/new?title=%5Btool_crash%5D+FileSystemException%3A+Directory+listing+failed%2C+OS+Error%3A+No+such+file+or+directory%2C+errno+%3D+2&body=%23%23+Command%0A%60%60%60sh%0Aflutter+build+ipa+--no-tree-shake-icons+--export-options-plist%3Dios%2FExportOptions.plist%0A%60%60%60%0A%0A%23%23+Steps+to+Reproduce%0A1.+...%0A2.+...%0A3.+...%0A%0A%23%23+Logs%0AFileSystemException%3A+Directory+listing+failed%2C+OS+Error%3A+No+such+file+or+directory%2C+errno+%3D+2%0A%60%60%60console%0A%230++++++_Directory._fillWithDirectoryListing+%28dart%3Aio-patch%2Fdirectory_patch.dart%3A49%3A4%29%0A%231++++++_Directory.listSync+%28dart%3Aio%2Fdirectory_impl.dart%3A259%3A5%29%0A%232++++++ForwardingDirectory.listSync+%28package%3Afile%2Fsrc%2Fforwarding%2Fforwarding_directory.dart%3A43%3A12%29%0A%233++++++ForwardingDirectory.listSync+%28package%3Afile%2Fsrc%2Fforwarding%2Fforwarding_directory.dart%3A43%3A12%29%0A%234++++++OperatingSystemUtils.getDirectorySize+%28package%3Aflutter_tools%2Fsrc%2Fbase%2Fos.dart%3A108%3A53%29%0A%235++++++BuildIOSArchiveCommand.runCommand+%28package%3Aflutter_tools%2Fsrc%2Fcommands%2Fbuild_ios.dart%3A613%3A43%29%0A%3Casynchronous+suspension%3E%0A%236++++++FlutterCommand.run.%3Canonymous+closure%3E+%28package%3Aflutter_tools%2Fsrc%2Frunner%2Fflutter_command.dart%3A1590%3A27%29%0A%3Casynchronous+suspension%3E%0A%237++++++AppContext.run.%3Canonymous+closure%3E+%28package%3Aflutter_tools%2Fsrc%2Fbase%2Fcontext.dart%3A154%3A19%29%0A%3Casynchronous+suspension%3E%0A%238++++++CommandRunner.runCommand+%28package%3Aargs%2Fcommand_runner.dart%3A212%3A13%29%0A%3Casynchronous+suspension%3E%0A%239++++++FlutterCommandRunner.runCommand.%3Canonymous+closure%3E+%28package%3Aflutter_tools%2Fsrc%2Frunner%2Fflutter_command_runner.dart%3A496%3A9%29%0A%3Casynchronous+suspension%3E%0A%2310+++++AppContext.run.%3Canonymous+closure%3E+%28package%3Aflutter_tools%2Fsrc%2Fbase%2Fcontext.dart%3A154%3A19%29%0A%3Casynchronous+suspension%3E%0A%2311+++++FlutterCommandRunner.runCommand+%28package%3Aflutter_tools%2Fsrc%2Frunner%2Fflutter_command_runner.dart%3A431%3A5%29%0A%3Casynchronous+suspension%3E%0A%2312+++++FlutterCommandRunner.run.%3Canonymous+closure%3E+%28package%3Aflutter_tools%2Fsrc%2Frunner%2Fflutter_command_runner.dart%3A307%3A33%29%0A%3Casynchronous+suspension%3E%0A%2313+++++run.%3Canonymous+closure%3E.%3Canonymous+closure%3E+%28package%3Aflutter_tools%2Frunner.dart%3A104%3A11%29%0A%3Casynchronous+suspension%3E%0A%2314+++++AppContext.run.%3Canonymous+closure%3E+%28package%3Aflutter_tools%2Fsrc%2Fbase%2Fcontext.dart%3A154%3A19%29%0A%3Casynchronous+suspension%3E%0A%60%60%60%0A%60%60%60console%0A%5B%E2%9C%93%5D+Flutter+%28Channel+stable%2C+3.41.7%2C+on+macOS+26.4.1+25E253+darwin-arm64%2C+locale+de-DE%29+%5B1.513ms%5D%0A++++%E2%80%A2+Flutter+version+3.41.7+on+channel+stable+at+%2Fopt%2Fhomebrew%2Fshare%2Fflutter%0A++++%E2%80%A2+Upstream+repository+https%3A%2F%2Fgithub.com%2Fflutter%2Fflutter.git%0A++++%E2%80%A2+Framework+revision+cc0734ac71+%286+days+ago%29%2C+2026-04-15+21%3A21%3A08+-0700%0A++++%E2%80%A2+Engine+revision+59aa584fdf%0A++++%E2%80%A2+Dart+version+3.11.5%0A++++%E2%80%A2+DevTools+version+2.54.2%0A++++%E2%80%A2+Feature+flags%3A+enable-web%2C+enable-linux-desktop%2C+enable-macos-desktop%2C+enable-windows-desktop%2C+enable-android%2C+enable-ios%2C+cli-animations%2C+enable-native-assets%2C+omit-legacy-version-file%2C+enable-lldb-debugging%2C+enable-uiscene-migration%0A%0A%5B%E2%9C%93%5D+Android+toolchain+-+develop+for+Android+devices+%28Android+SDK+version+36.1.0%29+%5B2%2C3s%5D%0A++++%E2%80%A2+Android+SDK+at+%2FUsers%2Fmetinoz%2FLibrary%2FAndroid%2Fsdk%0A++++%E2%80%A2+Emulator+version+36.4.10.0+%28build_id+15004761%29+%28CL%3AN%2FA%29%0A++++%E2%80%A2+Platform+android-36.1%2C+build-tools+36.1.0%0A++++%E2%80%A2+Java+binary+at%3A+%2FApplications%2FAndroid+Studio.app%2FContents%2Fjbr%2FContents%2FHome%2Fbin%2Fjava%0A++++++This+is+the+JDK+bundled+with+the+latest+Android+Studio+installation+on+this+machine.%0A++++++To+manually+set+the+JDK+path%2C+use%3A+%60flutter+config+--jdk-dir%3D%22path%2Fto%2Fjdk%22%60.%0A++++%E2%80%A2+Java+version+OpenJDK+Runtime+Environment+%28build+21.0.9%2B-14787801-b1163.94%29%0A++++%E2%80%A2+All+Android+licenses+accepted.%0A%0A%5B%E2%9C%93%5D+Xcode+-+develop+for+iOS+and+macOS+%28Xcode+26.4.1%29+%5B2%2C7s%5D%0A++++%E2%80%A2+Xcode+at+%2FApplications%2FXcode.app%2FContents%2FDeveloper%0A++++%E2%80%A2+Build+17E202%0A++++%E2%80%A2+CocoaPods+version+1.16.2%0A%0A%5B%E2%9C%93%5D+Chrome+-+develop+for+the+web+%5B7ms%5D%0A++++%E2%80%A2+Chrome+at+%2FApplications%2FGoogle+Chrome.app%2FContents%2FMacOS%2FGoogle+Chrome%0A%0A%5B%E2%9C%93%5D+Connected+device+%285+available%29+%5B12%2C3s%5D%0A++++%E2%80%A2+Pixel+10+%28mobile%29+++++++++++++++++++%E2%80%A2+57301FDCR00BZT++++++++++++%E2%80%A2+android-arm64++%E2%80%A2+Android+16+%28API+36%29%0A++++%E2%80%A2+iPhone+11+Metin+%28wireless%29+%28mobile%29+%E2%80%A2+00008030-000655243A88802E+%E2%80%A2+ios++++++++++++%E2%80%A2+iOS+26.4.1+23E254%0A++++%E2%80%A2+iPhone+17+Pro+Metin+%28mobile%29++++++++%E2%80%A2+00008150-000808603C52401C+%E2%80%A2+ios++++++++++++%E2%80%A2+iOS+26.4.1+23E254%0A++++%E2%80%A2+macOS+%28desktop%29+++++++++++++++++++++%E2%80%A2+macos+++++++++++++++++++++%E2%80%A2+darwin-arm64+++%E2%80%A2+macOS+26.4.1+25E253+darwin-arm64%0A++++%E2%80%A2+Chrome+%28web%29++++++++++++++++++++++++%E2%80%A2+chrome++++++++++++++++++++%E2%80%A2+web-javascript+%E2%80%A2+Google+Chrome+147.0.7727.102%0A%0A%5B%E2%9C%93%5D+Network+resources+%5B299ms%5D%0A++++%E2%80%A2+All+expected+network+resources+are+available.%0A%0A%E2%80%A2+No+issues+found%21%0A%0A%60%60%60%0A%0A%23%23+Flutter+Application+Metadata%0A%2A%2AType%2A%2A%3A+app%0A%2A%2AVersion%2A%2A%3A+1.0.0%2B531%0A%2A%2AMaterial%2A%2A%3A+true%0A%2A%2AAndroid+X%2A%2A%3A+false%0A%2A%2AModule%2A%2A%3A+false%0A%2A%2APlugin%2A%2A%3A+false%0A%2A%2AAndroid+package%2A%2A%3A+null%0A%2A%2AiOS+bundle+identifier%2A%2A%3A+null%0A%2A%2ACreation+channel%2A%2A%3A+stable%0A%2A%2ACreation+framework+version%2A%2A%3A+19074d12f7eaf6a8180cd4036a430c1d76de904e%0A%23%23%23+Plugins%0Aaudioplayers_darwin-6.4.0%0Acloud_firestore-6.2.0%0Adevice_calendar-4.3.3%0Afirebase_auth-6.3.0%0Afirebase_core-4.6.0%0Afirebase_messaging-16.1.3%0Afirebase_storage-13.2.0%0Aflutter_local_notifications-19.5.0%0Aflutter_native_splash-2.4.7%0Ageocoding_ios-3.1.0%0Ageolocator_apple-2.3.13%0Agoogle_sign_in_ios-5.9.0%0Aimage_picker_ios-0.8.13%2B6%0Amek_stripe_terminal-4.6.3%0Amobile_scanner-7.2.0%0Apackage_info_plus-9.0.0%0Apath_provider_foundation-2.6.0%0Apermission_handler_apple-9.4.7%0Ascreen_brightness_ios-2.1.2%0Ascreen_protector-1.5.1%0Ashare_plus-12.0.1%0Ashared_preferences_foundation-2.5.6%0Asign_in_with_apple-7.0.1%0Asqflite_darwin-2.4.2%0Astripe_ios-11.5.0%0Aurl_launcher_ios-6.4.1%0Avideo_player_avfoundation-2.9.4%0Avideo_thumbnail-0.5.6%0Aaudioplayers_android-5.2.1%0Aflutter_plugin_android_lifecycle-2.0.33%0Ageocoding_android-4.0.1%0Ageolocator_android-5.0.2%0Agoogle_sign_in_android-6.2.1%0Aimage_picker_android-0.8.13%2B14%0Apath_provider_android-2.2.22%0Apermission_handler_android-13.0.1%0Ascreen_brightness_android-2.1.3%0Ashared_preferences_android-2.4.21%0Asqflite_android-2.4.2%2B3%0Astripe_android-11.5.0%0Aurl_launcher_android-6.3.28%0Avideo_player_android-2.9.5%0Afile_selector_macos-0.9.5%0Aimage_picker_macos-0.2.2%2B1%0Ascreen_brightness_macos-2.1.1%0Aurl_launcher_macos-3.2.5%0Aaudioplayers_linux-4.2.1%0Afile_selector_linux-0.9.4%0Aflutter_local_notifications_linux-6.0.0%0Ageolocator_linux-0.2.4%0Aimage_picker_linux-0.2.2%0Apath_provider_linux-2.2.1%0Ashared_preferences_linux-2.4.1%0Aurl_launcher_linux-3.2.2%0Aaudioplayers_windows-4.3.0%0Afile_selector_windows-0.9.3%2B5%0Aflutter_local_notifications_windows-1.0.3%0Ageolocator_windows-0.2.5%0Aimage_picker_windows-0.2.2%0Apath_provider_windows-2.3.0%0Apermission_handler_windows-0.2.1%0Ascreen_brightness_windows-2.1.0%0Ashared_preferences_windows-2.4.1%0Aurl_launcher_windows-3.1.5%0Aaudioplayers_web-5.2.0%0Acloud_firestore_web-5.2.0%0Afirebase_auth_web-6.1.4%0Afirebase_core_web-3.5.1%0Afirebase_messaging_web-4.1.4%0Afirebase_storage_web-3.11.4%0Ageolocator_web-4.1.3%0Agoogle_sign_in_web-0.12.4%2B4%0Aimage_picker_for_web-3.1.1%0Apermission_handler_html-0.1.3%2B5%0Ashared_preferences_web-2.4.3%0Asign_in_with_apple_web-3.0.0%0Aurl_launcher_web-2.4.2%0Avideo_player_web-2.4.0%0A%0A&labels=tool%2Csevere%3A+crash
+

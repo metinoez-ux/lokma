@@ -1196,7 +1196,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.shopping_cart,
+              Icon(Icons.shopping_bag_rounded,
                   color: lokmaPink, size: 22),
               const SizedBox(width: 8),
               Text(
@@ -1227,7 +1227,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.shopping_cart_outlined,
+                      Icon(Icons.shopping_bag_rounded,
                           size: 48,
                           color: isDark ? Colors.white24 : Colors.grey.shade300),
                       const SizedBox(height: 12),

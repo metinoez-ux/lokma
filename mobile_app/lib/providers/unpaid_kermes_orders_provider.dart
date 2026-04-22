@@ -20,7 +20,7 @@ final unpaidKermesOrdersProvider = StreamProvider<List<KermesOrder>>((ref) {
       .map((snapshot) {
         return snapshot.docs
             .map((doc) => KermesOrder.fromDocument(doc))
-            .where((order) => order.paymentMethod == PaymentMethodType.cash && !order.isPaid)
+            .where((order) => order.paymentMethod == PaymentMethodType.cash && !order.isPaid && order.status != KermesOrderStatus.cancelled)
             .toList();
       });
 });

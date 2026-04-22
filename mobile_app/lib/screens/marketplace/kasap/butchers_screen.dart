@@ -301,7 +301,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                             color: Colors.black.withOpacity(0.4),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.shopping_cart, color: Colors.white, size: 20),
+                          child: const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 20),
                         ),
                         onPressed: () => context.push('/cart'),
                       ),

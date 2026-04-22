@@ -3835,7 +3835,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                Stack(
                  clipBehavior: Clip.none,
                  children: [
-                   const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
+                   const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 24),
                    Positioned(
                      top: -6,
                      right: -8,
@@ -4234,7 +4234,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       SnackBar(
                         content: Row(
                           children: [
-                            Icon(Icons.remove_shopping_cart_outlined, color: Colors.white, size: 18),
+                            Icon(Icons.remove_circle_outline, color: Colors.white, size: 18),
                             const SizedBox(width: 10),
                             Text(
                               product.outOfStock ? 'marketplace.product_out_of_stock_desc'.tr() : 'marketplace.product_not_available_desc'.tr(),
@@ -4671,7 +4671,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   SnackBar(
                     content: Row(
                       children: [
-                        Icon(Icons.remove_shopping_cart_outlined, color: Colors.white, size: 18),
+                        Icon(Icons.remove_circle_outline, color: Colors.white, size: 18),
                         const SizedBox(width: 10),
                         Text(
                           product.outOfStock ? 'marketplace.product_out_of_stock_desc'.tr() : 'marketplace.product_not_available_desc'.tr(),

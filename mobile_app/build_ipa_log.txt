@@ -75,13 +75,1198 @@ Archiving shop.lokma.app...
 To ensure your app continues to launch on upcoming iOS versions, UIScene lifecycle support will soon be required. Please see https://flutter.dev/to/uiscene-migration for the migration guide.
 
 Automatically signing iOS for device deployment using specified development team in Xcode project: Y834B2NJY9
+Running pod install...                                             21,6s
 Running Xcode build...                                          
-Xcode archive done.                                         39,7s
+Xcode archive done.                                         297,0s
 Failed to build iOS app
-Error (Xcode): umbrella header 'mek_stripe_terminal-umbrella.h' not found
-/Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/mek_stripe_terminal/mek_stripe_terminal.framework/Modules/module.modulemap:1:18
+Error output from Xcode build:
+↳
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeFinancialConnections/StripeFinancialConnections/StripeFinancialConnections/Source/Native/Shared/UIViewController+KeyboardAvoiding.swift:135:18: warning: 'TARGET_OS_*' preprocessor macros are not available in Swift; use 'targetEnvironment(macCatalyst)' instead
+                #if !TARGET_OS_MACCATALYST
+                     ^~~~~~~~~~~~~~~~~~~~~
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeFinancialConnections/StripeFinancialConnections/StripeFinancialConnections/Source/Native/Shared/UIViewController+KeyboardAvoiding.swift:135:18: note: replace with 'targetEnvironment(macCatalyst)'
+                #if !TARGET_OS_MACCATALYST
+                     ^~~~~~~~~~~~~~~~~~~~~
+                     targetEnvironment(macCatalyst)
+    ** ARCHIVE FAILED **
 
-Error (Xcode): failed to emit precompiled module '/Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/IntermediateBuildFilesPath/SwiftExplicitPrecompiledModules/mek_stripe_terminal-6EBI9JQ62U430KE63NJ1BGQIK.pcm' for module map '/Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/mek_stripe_terminal/mek_stripe_terminal.framework/Modules/module.modulemap'
-/Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/%3Cunknown%3E:0:0
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/3m/_vsz9j7512jdbkyjyt7bqj9m0000gn/T/flutter_tools.TmTjRE/flutter_ios_build_temp_dirhB9ZLz/temporary_xcresult_bundle
+
+    /Users/metinoz/.pub-cache/hosted/pub.dev/sign_in_with_apple-7.0.1/ios/Classes/SignInWithAppleError.swift:99:13: warning: switch must be exhaustive
+                switch code {
+                ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/sign_in_with_apple-7.0.1/ios/Classes/SignInWithAppleError.swift:99:13: note: add missing case: '.preferSignInWithApple'
+                switch code {
+                ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/sign_in_with_apple-7.0.1/ios/Classes/SignInWithAppleError.swift:99:13: note: add missing case: '.deviceNotConfiguredForPasskeyCreation'
+                switch code {
+                ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/sign_in_with_apple-7.0.1/ios/Classes/SignInWithAppleError.swift:99:13: note: add missing cases
+                switch code {
+                ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mobile_scanner-7.2.0/darwin/mobile_scanner/Sources/mobile_scanner/BarcodeTypeDetector.swift:80:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+            } catch {
+              ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mobile_scanner-7.2.0/darwin/mobile_scanner/Sources/mobile_scanner/MobileScannerCameraSelector.swift:101:41: warning: 'devices(for:)' was deprecated in iOS 10.0: Use AVCaptureDeviceDiscoverySession instead.
+            if let device = AVCaptureDevice.devices(for: .video).filter({ $0.position == position }).first {
+                                            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mobile_scanner-7.2.0/darwin/mobile_scanner/Sources/mobile_scanner/MobileScannerPlugin.swift:981:20: warning: immutable value 'device' was never used; consider replacing with '_' or removing it
+                   let device = object as? AVCaptureDevice {
+                   ~~~~^~~~~~
+                   _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/permission_handler_apple-9.4.7/ios/Classes/strategies/PhonePermissionStrategy.m:49:35: warning: 'subscriberCellularProvider' is deprecated: first deprecated in iOS 12.0 [-Wdeprecated-declarations]
+       49 |     CTCarrier *carrier = [netInfo subscriberCellularProvider];
+          |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                                   serviceSubscriberCellularProviders
+    In module 'CoreTelephony' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/permission_handler_apple-9.4.7/ios/Classes/strategies/PhonePermissionStrategy.m:8:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/CoreTelephony.framework/Headers/CTTelephonyNetworkInfo.h:114:50: note: property 'subscriberCellularProvider' is declared deprecated here
+      114 | @property(readonly, retain, nullable) CTCarrier *subscriberCellularProvider API_DEPRECATED_WITH_REPLACEMENT("serviceSubscriberCellularProviders", ios(4.0, 12.0)) API_UNAVAILABLE(macos);
+          |                                                  ^
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/CoreTelephony.framework/Headers/CTTelephonyNetworkInfo.h:114:50: note: 'subscriberCellularProvider' has been explicitly marked deprecated here
+    1 warning generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/share_plus-12.0.1/ios/share_plus/Sources/share_plus/FPPSharePlusPlugin.m:25:46: warning: 'keyWindow' is deprecated: first deprecated in iOS 13.0 - Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes [-Wdeprecated-declarations]
+       25 |     return [UIApplication sharedApplication].keyWindow.rootViewController;
+          |                                              ^
+    In module 'UIKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Target Support Files/share_plus/share_plus-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:108:51: note: 'keyWindow' has been explicitly marked deprecated here
+      108 | @property(nullable, nonatomic,readonly) UIWindow *keyWindow API_DEPRECATED("Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes", ios(2.0, 13.0)) API_UNAVAILABLE(visionos, watchos);
+          |                                                   ^
+    1 warning generated.
+    libtool: warning: 'SqfliteDarwinDatabaseAdditions.o' has no symbols
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1467:38: warning: variable 'sum_left' may be uninitialized when used here [-Wconditional-uninitialized]
+     1467 |     const uint16x8_t sum = vaddq_u16(sum_left, sum_top);
+          |                                      ^~~~~~~~
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1432:3: note: variable 'sum_left' is declared here
+     1432 |   uint16x8_t sum_left;
+          |   ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1467:48: warning: variable 'sum_top' may be uninitialized when used here [-Wconditional-uninitialized]
+     1467 |     const uint16x8_t sum = vaddq_u16(sum_left, sum_top);
+          |                                                ^~~~~~~
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1431:3: note: variable 'sum_top' is declared here
+     1431 |   uint16x8_t sum_top;
+          |   ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1556:38: warning: variable 'sum_left' may be uninitialized when used here [-Wconditional-uninitialized]
+     1556 |     const uint16x8_t sum = vaddq_u16(sum_left, sum_top);
+          |                                      ^~~~~~~~
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1515:3: note: variable 'sum_left' is declared here
+     1515 |   uint16x8_t sum_left;
+          |   ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1556:48: warning: variable 'sum_top' may be uninitialized when used here [-Wconditional-uninitialized]
+     1556 |     const uint16x8_t sum = vaddq_u16(sum_left, sum_top);
+          |                                                ^~~~~~~
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/dsp/dec_neon.c:1514:3: note: variable 'sum_top' is declared here
+     1514 |   uint16x8_t sum_top;
+          |   ^
+    4 warnings generated.
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/enc/backward_references_enc.c:720:12: warning: variable 'best_offset' may be uninitialized when used here [-Wconditional-uninitialized]
+      720 |           (best_offset << MAX_LENGTH_BITS) | (uint32_t)best_length;
+          |            ^~~~~~~~~~~
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/libwebp/src/enc/backward_references_enc.c:652:20: note: initialize the variable 'best_offset' to silence this warning
+      652 |     int best_offset;
+          |                    ^
+          |                     = 0
+    1 warning generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ConnectionConfigurationMappings.swift:13:18: warning: immutable value 'config' was never used; consider replacing with '_' or removing it
+            case let config as HandoffConnectionConfigurationApi:
+                     ^~~~~~
+                     _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: warning: switch must be exhaustive
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.surchargeConsentRequiresAmountSurcharge'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.surchargeConsentNoticeRequiresAmountSurchargeAndCollectConsent'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.surchargeConsentRequestedForUnsupportedReader'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.surchargeConsentDeclined'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.surchargeConsentTimeout'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.readerConnectedToAnotherDevice'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.readerTampered'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing case: '.displaySurchargeConsentApplicationError'
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Mappings/ExceptionMappings.swift:33:9: note: add missing cases
+            switch error.code {
+            ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Extensions.swift:5:30: warning: result of call to function returning 'Any?' is unused
+            if let this = self { callback(this) }
+                                 ^       ~~~~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:306:21: warning: constant 'res' inferred to have type 'Void', which may be unexpected
+                    let res = try hostApi.onClearCachedCredentials()
+                        ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:306:21: note: add an explicit type annotation to silence this warning
+                    let res = try hostApi.onClearCachedCredentials()
+                        ^
+                           : Void
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:333:21: warning: constant 'res' inferred to have type 'Void', which may be unexpected
+                    let res = try hostApi.onInstallAvailableUpdate()
+                        ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:333:21: note: add an explicit type annotation to silence this warning
+                    let res = try hostApi.onInstallAvailableUpdate()
+                        ^
+                           : Void
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:351:21: warning: constant 'res' inferred to have type 'Void', which may be unexpected
+                    let res = try hostApi.onSetSimulatorConfiguration(SimulatorConfigurationApi.deserialize(args[0] as! [Any?]))
+                        ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:351:21: note: add an explicit type annotation to silence this warning
+                    let res = try hostApi.onSetSimulatorConfiguration(SimulatorConfigurationApi.deserialize(args[0] as! [Any?]))
+                        ^
+                           : Void
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:445:21: warning: constant 'res' inferred to have type 'Void', which may be unexpected
+                    let res = try hostApi.onSetTapToPayUXConfiguration(TapToPayUxConfigurationApi.deserialize(args[0] as! [Any?]))
+                        ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:445:21: note: add an explicit type annotation to silence this warning
+                    let res = try hostApi.onSetTapToPayUXConfiguration(TapToPayUxConfigurationApi.deserialize(args[0] as! [Any?]))
+                        ^
+                           : Void
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:306:21: warning: initialization of immutable value 'res' was never used; consider replacing with assignment to '_' or removing it
+                    let res = try hostApi.onClearCachedCredentials()
+                    ~~~~^~~
+                    _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:333:21: warning: initialization of immutable value 'res' was never used; consider replacing with assignment to '_' or removing it
+                    let res = try hostApi.onInstallAvailableUpdate()
+                    ~~~~^~~
+                    _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:351:21: warning: initialization of immutable value 'res' was never used; consider replacing with assignment to '_' or removing it
+                    let res = try hostApi.onSetSimulatorConfiguration(SimulatorConfigurationApi.deserialize(args[0] as! [Any?]))
+                    ~~~~^~~
+                    _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:445:21: warning: initialization of immutable value 'res' was never used; consider replacing with assignment to '_' or removing it
+                    let res = try hostApi.onSetTapToPayUXConfiguration(TapToPayUxConfigurationApi.deserialize(args[0] as! [Any?]))
+                    ~~~~^~~
+                    _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:477:17: warning: capture of 'self' with non-Sendable type 'TerminalHandlersApi' in a '@Sendable' closure
+                    self.channel.invokeMethod("_onRequestConnectionToken", arguments: []) { result in
+                    ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:462:7: note: class 'TerminalHandlersApi' does not conform to the 'Sendable' protocol
+    class TerminalHandlersApi {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:567:87: warning: expression implicitly coerced from 'Int?' to 'Any'
+            channel.invokeMethod("_onReaderBatteryLevelUpdate", arguments: [batteryLevel, batteryStatus?.rawValue, isCharging])
+                                                                                          ^~~~~~~~~~~~~~~~~~~~~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:567:102: note: provide a default value to avoid this warning
+            channel.invokeMethod("_onReaderBatteryLevelUpdate", arguments: [batteryLevel, batteryStatus?.rawValue, isCharging])
+                                                                                          ~~~~~~~~~~~~~~~^~~~~~~~
+                                                                                          ?? <#default value#>
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:567:102: note: force-unwrap the value to avoid this warning
+            channel.invokeMethod("_onReaderBatteryLevelUpdate", arguments: [batteryLevel, batteryStatus?.rawValue, isCharging])
+                                                                                          ~~~~~~~~~~~~~~~^~~~~~~~
+                                                                                          !
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:567:102: note: explicitly cast to 'Any' with 'as Any' to silence this warning
+            channel.invokeMethod("_onReaderBatteryLevelUpdate", arguments: [batteryLevel, batteryStatus?.rawValue, isCharging])
+                                                                                          ~~~~~~~~~~~~~~~^~~~~~~~
+                                                                                          as Any
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:795:22: warning: comparing non-optional value of type '[String : String]' to 'nil' always returns true
+                metadata != nil ? Dictionary(uniqueKeysWithValues: metadata.map { k, v in (k, v) }) : nil,
+                ~~~~~~~~ ^  ~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:1073:22: warning: comparing non-optional value of type '[String : String]' to 'nil' always returns true
+                metadata != nil ? Dictionary(uniqueKeysWithValues: metadata.map { k, v in (k, v) }) : nil,
+                ~~~~~~~~ ^  ~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:1141:22: warning: comparing non-optional value of type '[String : String]' to 'nil' always returns true
+                metadata != nil ? Dictionary(uniqueKeysWithValues: metadata.map { k, v in (k, v) }) : nil,
+                ~~~~~~~~ ^  ~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:1228:22: warning: comparing non-optional value of type '[String : String]' to 'nil' always returns true
+                metadata != nil ? Dictionary(uniqueKeysWithValues: metadata.map { k, v in (k, v) }) : nil,
+                ~~~~~~~~ ^  ~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:1452:22: warning: comparing non-optional value of type '[String : String]' to 'nil' always returns true
+                metadata != nil ? Dictionary(uniqueKeysWithValues: metadata.map { k, v in (k, v) }) : nil,
+                ~~~~~~~~ ^  ~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/mek_stripe_terminal-4.6.3/ios/Classes/Api/TerminalApi.swift:1540:22: warning: comparing non-optional value of type '[String : String]' to 'nil' always returns true
+                metadata != nil ? Dictionary(uniqueKeysWithValues: metadata.map { k, v in (k, v) }) : nil,
+                ~~~~~~~~ ^  ~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerImageUtil.m:125:37: warning: 'kUTTypeGIF' is deprecated: first deprecated in iOS 15.0 - Use UTTypeGIF or UTType.gif (swift) instead. [-Wdeprecated-declarations]
+      125 |     gifTypeIdentifier = (NSString *)kUTTypeGIF;
+          |                                     ^
+    In module 'MobileCoreServices' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerImageUtil.m:6:
+    In module 'CoreServices' imported from /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/MobileCoreServices.framework/Headers/MobileCoreServices.h:9:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreServices.framework/Headers/UTCoreTypes.h:729:26: note: 'kUTTypeGIF' has been explicitly marked deprecated here
+      729 | extern const CFStringRef kUTTypeGIF                                  API_DEPRECATED("Use UTTypeGIF or UTType.gif (swift) instead.", ios(3.0, 15.0), macos(10.4, 12.0), tvos(9.0, 15.0), watchos(1.0, 8.0));
+          |                          ^
+    1 warning generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/LocationServiceStreamHandler.m:36:1: warning: implementing deprecated method [-Wdeprecated-implementations]
+       36 | - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status{
+          | ^
+    In module 'CoreLocation' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/LocationServiceStreamHandler.m:9:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManagerDelegate.h:164:1: note: method 'locationManager:didChangeAuthorizationStatus:' declared here
+      164 | - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status API_DEPRECATED_WITH_REPLACEMENT("-locationManagerDidChangeAuthorization:", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0)) API_UNAVAILABLE(visionos);
+          | ^
+    1 warning generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/PermissionHandler.m:40:31: warning: 'authorizationStatus' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+       40 |     return [CLLocationManager authorizationStatus];
+          |                               ^~~~~~~~~~~~~~~~~~~
+          |                               authorizationStatus
+    In module 'CoreLocation' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/../include/geolocator_apple/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManager.h:224:1: note: 'authorizationStatus' has been explicitly marked deprecated here
+      224 | + (CLAuthorizationStatus)authorizationStatus API_DEPRECATED_WITH_REPLACEMENT("-authorizationStatus", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+          | ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/PermissionHandler.m:47:65: warning: 'authorizationStatus' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+       47 |   CLAuthorizationStatus authorizationStatus = CLLocationManager.authorizationStatus;
+          |                                                                 ^~~~~~~~~~~~~~~~~~~
+          |                                                                 authorizationStatus
+    In module 'CoreLocation' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/../include/geolocator_apple/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManager.h:224:1: note: 'authorizationStatus' has been explicitly marked deprecated here
+      224 | + (CLAuthorizationStatus)authorizationStatus API_DEPRECATED_WITH_REPLACEMENT("-authorizationStatus", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+          | ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/PermissionHandler.m:47:65: warning: 'authorizationStatus' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+       47 |   CLAuthorizationStatus authorizationStatus = CLLocationManager.authorizationStatus;
+          |                                                                 ^~~~~~~~~~~~~~~~~~~
+          |                                                                 authorizationStatus
+    In module 'CoreLocation' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/../include/geolocator_apple/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManager.h:224:1: note: 'authorizationStatus' has been explicitly marked deprecated here
+      224 | + (CLAuthorizationStatus)authorizationStatus API_DEPRECATED_WITH_REPLACEMENT("-authorizationStatus", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+          | ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/PermissionHandler.m:107:1: warning: implementing deprecated method [-Wdeprecated-implementations]
+      107 | - (void) locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+          | ^
+    In module 'CoreLocation' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/darwin/geolocator_apple/Sources/geolocator_apple/Handlers/../include/geolocator_apple/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManagerDelegate.h:164:1: note: method 'locationManager:didChangeAuthorizationStatus:' declared here
+      164 | - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status API_DEPRECATED_WITH_REPLACEMENT("-locationManagerDidChangeAuthorization:", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0)) API_UNAVAILABLE(visionos);
+          | ^
+    4 warnings generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerPlugin.m:130:39: warning: 'kUTTypeImage' is deprecated: first deprecated in iOS 15.0 - Use UTTypeImage or UTType.image (swift) instead. [-Wdeprecated-declarations]
+      130 |     [mediaTypes addObject:(NSString *)kUTTypeImage];
+          |                                       ^
+    In module 'MobileCoreServices' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerPlugin.m:9:
+    In module 'CoreServices' imported from /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/MobileCoreServices.framework/Headers/MobileCoreServices.h:9:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreServices.framework/Headers/UTCoreTypes.h:725:26: note: 'kUTTypeImage' has been explicitly marked deprecated here
+      725 | extern const CFStringRef kUTTypeImage                                API_DEPRECATED("Use UTTypeImage or UTType.image (swift) instead.", ios(3.0, 15.0), macos(10.4, 12.0), tvos(9.0, 15.0), watchos(1.0, 8.0));
+          |                          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerPlugin.m:133:39: warning: 'kUTTypeMovie' is deprecated: first deprecated in iOS 15.0 - Use UTTypeMovie or UTType.movie (swift) instead. [-Wdeprecated-declarations]
+      133 |     [mediaTypes addObject:(NSString *)kUTTypeMovie];
+          |                                       ^
+    In module 'MobileCoreServices' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerPlugin.m:9:
+    In module 'CoreServices' imported from /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/MobileCoreServices.framework/Headers/MobileCoreServices.h:9:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreServices.framework/Headers/UTCoreTypes.h:880:26: note: 'kUTTypeMovie' has been explicitly marked deprecated here
+      880 | extern const CFStringRef kUTTypeMovie                                API_DEPRECATED("Use UTTypeMovie or UTType.movie (swift) instead.", ios(3.0, 15.0), macos(10.4, 12.0), tvos(9.0, 15.0), watchos(1.0, 8.0));
+          |                          ^
+    2 warnings generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerPhotoAssetUtil.m:106:17: warning: 'kUTTypeGIF' is deprecated: first deprecated in iOS 15.0 - Use UTTypeGIF or UTType.gif (swift) instead. [-Wdeprecated-declarations]
+      106 |     imageType = kUTTypeGIF;
+          |                 ^
+    In module 'MobileCoreServices' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.13+6/ios/image_picker_ios/Sources/image_picker_ios/FLTImagePickerPhotoAssetUtil.m:9:
+    In module 'CoreServices' imported from /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/MobileCoreServices.framework/Headers/MobileCoreServices.h:9:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreServices.framework/Headers/UTCoreTypes.h:729:26: note: 'kUTTypeGIF' has been explicitly marked deprecated here
+      729 | extern const CFStringRef kUTTypeGIF                                  API_DEPRECATED("Use UTTypeGIF or UTType.gif (swift) instead.", ios(3.0, 15.0), macos(10.4, 12.0), tvos(9.0, 15.0), watchos(1.0, 8.0));
+          |                          ^
+    1 warning generated.
+    libtool: warning: 'CLPlacemarkExtensions.o' has no symbols
+    /Users/metinoz/.pub-cache/hosted/pub.dev/flutter_local_notifications-19.5.0/ios/flutter_local_notifications/Sources/flutter_local_notifications/FlutterLocalNotificationsPlugin.m:972:30: warning: 'UNNotificationPresentationOptionAlert' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+      972 |       presentationOptions |= UNNotificationPresentationOptionAlert;
+          |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                              UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner
+    In module 'UserNotifications' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/flutter_local_notifications-19.5.0/ios/flutter_local_notifications/Sources/flutter_local_notifications/./include/flutter_local_notifications/FlutterLocalNotificationsPlugin.h:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UserNotifications.framework/Headers/UNUserNotificationCenter.h:84:5: note: 'UNNotificationPresentationOptionAlert' has been explicitly marked deprecated here
+       84 |     UNNotificationPresentationOptionAlert API_DEPRECATED_WITH_REPLACEMENT("UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner", macos(10.14, 11.0), ios(10.0, 14.0), watchos(3.0, 7.0), tvos(10.0, 14.0)) = (1 << 2),
+          |     ^
+    1 warning generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/device_calendar-4.3.3/ios/Classes/SwiftDeviceCalendarPlugin.swift:868:70: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+             var topController: UIViewController? = UIApplication.shared.keyWindow?.rootViewController
+                                                                         ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/AudioContext.swift:88:17: warning: 'allowBluetooth' was deprecated in iOS 8.0: renamed to 'AVAudioSession.CategoryOptions.allowBluetoothHFP'
+            return .allowBluetooth
+                    ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/AudioContext.swift:88:17: note: use 'AVAudioSession.CategoryOptions.allowBluetoothHFP' instead
+            return .allowBluetooth
+                    ^~~~~~~~~~~~~~
+                    AVAudioSession.CategoryOptions.allowBluetoothHFP
+    /Users/metinoz/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/WrappedMediaPlayer.swift:205:14: warning: main actor-isolated property 'eventHandler' can not be referenced from a Sendable closure
+            self.eventHandler.onLog(message: "player status: \(status), change: \(change)")
+                 ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/WrappedMediaPlayer.swift:20:20: note: property declared here
+      private(set) var eventHandler: AudioPlayersStreamHandler
+                       ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/WrappedMediaPlayer.swift:211:16: warning: call to main actor-isolated instance method 'reset()' in a synchronous nonisolated context
+              self.reset()
+                   ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/WrappedMediaPlayer.swift:250:16: note: calls to instance method 'reset()' from outside of its actor context are implicitly asynchronous
+      private func reset() {
+                   ^
+    libtool: warning: 'placeholder.o' has no symbols
+    libtool: warning: 'crc_memcpy_x86_arm_combined.o' has no symbols
+    libtool: warning: 'elf_mem_image.o' has no symbols
+    libtool: warning: 'futex_waiter.o' has no symbols
+    libtool: warning: 'sem_waiter.o' has no symbols
+    libtool: warning: 'unscaledcycleclock.o' has no symbols
+    libtool: warning: 'vdso_support.o' has no symbols
+    libtool: warning: 'win32_waiter.o' has no symbols
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeApplePay/StripeApplePay/StripeApplePay/Source/ApplePayContext/STPApplePayContext.swift:167:43: warning: 'windows' was deprecated in iOS 15.0: Use UIWindowScene.windows on a relevant window scene instead
+            let window = UIApplication.shared.windows.first { $0.isKeyWindow }
+                                              ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/Captcha/HCaptchaWebViewManager.swift:318:43: warning: 'windows' was deprecated in iOS 15.0: Use UIWindowScene.windows on a relevant window scene instead
+            let window = UIApplication.shared.windows.first { $0.isKeyWindow }
+                                              ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/PaymentHandler/STPPaymentHandler.swift:202:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/PaymentHandler/STPPaymentHandler.swift:376:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/PaymentHandler/STPPaymentHandler.swift:474:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/PaymentHandler/STPPaymentHandler.swift:634:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/PaymentHandler/STPPaymentHandler.swift:770:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/PaymentHandler/STPPaymentHandler.swift:807:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/StripePayments/StripePayments/Source/API Bindings/STPRedirectContext.swift:211:22: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+                weak var weakSelf = self
+                     ~~~ ^
+                     let
+    /Users/metinoz/.pub-cache/hosted/pub.dev/screen_protector-1.5.1/ios/Classes/SwiftScreenProtectorPlugin.swift:214:37: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+            return UIApplication.shared.keyWindow
+                                        ^
+    libtool: warning: 'GTMSessionFetcherLogging.o' has no symbols
+    libtool: warning: 'dummy.o' has no symbols
+    libtool: warning: 'dummy.o' has no symbols
+    libtool: warning: 'GACAppCheckStoredToken+GACAppCheckToken.o' has no symbols
+    libtool: warning: 'GACAppCheckToken+APIResponse.o' has no symbols
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOSCustomBrowser.m:151:44: warning: 'openURL:' is deprecated: first deprecated in iOS 10.0 [-Wdeprecated-declarations]
+      151 |         [[UIApplication sharedApplication] openURL:_appStoreURL];
+          |                                            ^~~~~~~
+          |                                            openURL:options:completionHandler:
+    In module 'UIKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Target Support Files/AppAuth/AppAuth-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:97:1: note: 'openURL:' has been explicitly marked deprecated here
+       97 | - (BOOL)openURL:(NSURL*)url API_DEPRECATED_WITH_REPLACEMENT("openURL:options:completionHandler:", ios(2.0, 10.0)) API_UNAVAILABLE(visionos, watchos);
+          | ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOSCustomBrowser.m:165:63: warning: 'openURL:' is deprecated: first deprecated in iOS 10.0 [-Wdeprecated-declarations]
+      165 |     BOOL openedInBrowser = [[UIApplication sharedApplication] openURL:requestURL];
+          |                                                               ^~~~~~~
+          |                                                               openURL:options:completionHandler:
+    In module 'UIKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Target Support Files/AppAuth/AppAuth-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:97:1: note: 'openURL:' has been explicitly marked deprecated here
+       97 | - (BOOL)openURL:(NSURL*)url API_DEPRECATED_WITH_REPLACEMENT("openURL:options:completionHandler:", ios(2.0, 10.0)) API_UNAVAILABLE(visionos, watchos);
+          | ^
+    2 warnings generated.
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:53:3: warning: 'SFAuthenticationSession' is deprecated: first deprecated in iOS 12.0 [-Wdeprecated-declarations]
+       53 |   SFAuthenticationSession *_authenticationVC;
+          |   ^~~~~~~~~~~~~~~~~~~~~~~
+          |   ASWebAuthenticationSession
+    In module 'SafariServices' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:25:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/SafariServices.framework/Headers/SFAuthenticationSession.h:63:12: note: 'SFAuthenticationSession' has been explicitly marked deprecated here
+       63 | @interface SFAuthenticationSession : NSObject
+          |            ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:143:7: warning: 'SFAuthenticationSession' is deprecated: first deprecated in iOS 12.0 [-Wdeprecated-declarations]
+      143 |       SFAuthenticationSession *authenticationVC =
+          |       ^~~~~~~~~~~~~~~~~~~~~~~
+          |       ASWebAuthenticationSession
+    In module 'SafariServices' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:25:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/SafariServices.framework/Headers/SFAuthenticationSession.h:63:12: note: 'SFAuthenticationSession' has been explicitly marked deprecated here
+       63 | @interface SFAuthenticationSession : NSObject
+          |            ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:144:37: warning: 'SFAuthenticationSession' is deprecated: first deprecated in iOS 12.0 [-Wdeprecated-declarations]
+      144 |           [[SFAuthenticationSession alloc] initWithURL:requestURL
+          |                                     ^~~~~
+          |                                     ASWebAuthenticationSession
+    In module 'SafariServices' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:25:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/SafariServices.framework/Headers/SFAuthenticationSession.h:63:12: note: 'SFAuthenticationSession' has been explicitly marked deprecated here
+       63 | @interface SFAuthenticationSession : NSObject
+          |            ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:180:58: warning: 'openURL:' is deprecated: first deprecated in iOS 10.0 [-Wdeprecated-declarations]
+      180 |     openedUserAgent = [[UIApplication sharedApplication] openURL:requestURL];
+          |                                                          ^~~~~~~
+          |                                                          openURL:options:completionHandler:
+    In module 'UIKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Target Support Files/AppAuth/AppAuth-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:97:1: note: 'openURL:' has been explicitly marked deprecated here
+       97 | - (BOOL)openURL:(NSURL*)url API_DEPRECATED_WITH_REPLACEMENT("openURL:options:completionHandler:", ios(2.0, 10.0)) API_UNAVAILABLE(visionos, watchos);
+          | ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:203:3: warning: 'SFAuthenticationSession' is deprecated: first deprecated in iOS 12.0 [-Wdeprecated-declarations]
+      203 |   SFAuthenticationSession *authenticationVC = _authenticationVC;
+          |   ^~~~~~~~~~~~~~~~~~~~~~~
+          |   ASWebAuthenticationSession
+    In module 'SafariServices' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.m:25:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/SafariServices.framework/Headers/SFAuthenticationSession.h:63:12: note: 'SFAuthenticationSession' has been explicitly marked deprecated here
+       63 | @interface SFAuthenticationSession : NSObject
+          |            ^
+    5 warnings generated.
+    libtool: warning: 'OIDAuthorizationService+IOS.o' has no symbols
+    libtool: warning: 'OIDAuthState+IOS.o' has no symbols
+    libtool: warning: 'OIDExternalUserAgentCatalyst.o' has no symbols
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/GoogleSignIn/GoogleSignIn/Sources/GIDAppCheck/UI/GIDActivityIndicatorViewController.m:34:13: warning: 'UIActivityIndicatorViewStyleGray' is deprecated: first deprecated in iOS 13.0 [-Wdeprecated-declarations]
+       34 |     style = UIActivityIndicatorViewStyleGray;
+          |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |             UIActivityIndicatorViewStyleMedium
+    In module 'UIKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/GoogleSignIn/GoogleSignIn/Sources/GIDAppCheck/UI/GIDActivityIndicatorViewController.h:21:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIActivityIndicatorView.h:20:5: note: 'UIActivityIndicatorViewStyleGray' has been explicitly marked deprecated here
+       20 |     UIActivityIndicatorViewStyleGray API_DEPRECATED_WITH_REPLACEMENT("UIActivityIndicatorViewStyleMedium", ios(2.0, 13.0)) API_UNAVAILABLE(tvos, visionos, watchos) = 2,
+          |     ^
+    1 warning generated.
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeFinancialConnections/StripeFinancialConnections/StripeFinancialConnections/Source/Native/Shared/UIViewController+KeyboardAvoiding.swift:135:18: warning: 'TARGET_OS_*' preprocessor macros are not available in Swift; use 'targetEnvironment(macCatalyst)' instead
+                #if !TARGET_OS_MACCATALYST
+                     ^~~~~~~~~~~~~~~~~~~~~ (in target 'StripeFinancialConnections' from project 'Pods')
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeFinancialConnections/StripeFinancialConnections/StripeFinancialConnections/Source/Native/Shared/UIViewController+KeyboardAvoiding.swift:135:18: note: Replace with 'targetEnvironment(macCatalyst)'
+                #if !TARGET_OS_MACCATALYST
+                     ^~~~~~~~~~~~~~~~~~~~~
+                     targetEnvironment(macCatalyst) (in target 'StripeFinancialConnections' from project 'Pods')
+    libtool: warning: 'dummy.o' has no symbols
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeFinancialConnections/StripeFinancialConnections/StripeFinancialConnections/Source/Native/Shared/UIViewController+KeyboardAvoiding.swift:135:18: warning: 'TARGET_OS_*' preprocessor macros are not available in Swift; use 'targetEnvironment(macCatalyst)' instead
+                #if !TARGET_OS_MACCATALYST
+                     ^~~~~~~~~~~~~~~~~~~~~
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeFinancialConnections/StripeFinancialConnections/StripeFinancialConnections/Source/Native/Shared/UIViewController+KeyboardAvoiding.swift:135:18: note: replace with 'targetEnvironment(macCatalyst)'
+                #if !TARGET_OS_MACCATALYST
+                     ^~~~~~~~~~~~~~~~~~~~~
+                     targetEnvironment(macCatalyst)
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripeFinancialConnections/StripeFinancialConnections/StripeFinancialConnections/Source/Native/Shared/PaneLayoutView.swift:32:49: warning: 'windows' was deprecated in iOS 15.0: Use UIWindowScene.windows on a relevant window scene instead
+            guard let window = UIApplication.shared.windows.filter({ $0.isKeyWindow }).first else { return false }
+                                                    ^
+    libtool: warning: 'cpu_aarch64_fuchsia.o' has no symbols
+    libtool: warning: 'cpu_aarch64_linux.o' has no symbols
+    libtool: warning: 'cpu_aarch64_openbsd.o' has no symbols
+    libtool: warning: 'cpu_aarch64_sysreg.o' has no symbols
+    libtool: warning: 'cpu_aarch64_win.o' has no symbols
+    libtool: warning: 'cpu_arm_freebsd.o' has no symbols
+    libtool: warning: 'cpu_arm_linux.o' has no symbols
+    libtool: warning: 'cpu_intel.o' has no symbols
+    libtool: warning: 'curve25519_64_adx.o' has no symbols
+    libtool: warning: 'deterministic.o' has no symbols
+    libtool: warning: 'fips_shared_support.o' has no symbols
+    libtool: warning: 'getentropy.o' has no symbols
+    libtool: warning: 'passive.o' has no symbols
+    libtool: warning: 'poly1305_arm.o' has no symbols
+    libtool: warning: 'poly1305_vec.o' has no symbols
+    libtool: warning: 'thread_none.o' has no symbols
+    libtool: warning: 'thread_win.o' has no symbols
+    libtool: warning: 'trusty.o' has no symbols
+    libtool: warning: 'urandom.o' has no symbols
+    libtool: warning: 'windows.o' has no symbols
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/trees.c:37:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/deflate.h:16:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.c:8:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/inftrees.c:6:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/inflate.c:83:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/inffast.c:6:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/infback.c:13:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/deflate.c:52:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/deflate.h:16:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/crc32.c:30:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/adler32.c:8:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:170:11: warning: 'OS_CODE' macro redefined [-Wmacro-redefined]
+      170 | #  define OS_CODE 19
+          |           ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/gRPC-Core/third_party/zlib/zutil.h:141:11: note: previous definition is here
+      141 | #  define OS_CODE  7
+          |           ^
+    1 warning generated.
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/Stripe3DS2/Stripe3DS2/UIButton+CustomInitialization.m:24:12: warning: 'contentEdgeInsets' is deprecated: first deprecated in iOS 15.0 - This property is ignored when using UIButtonConfiguration [-Wdeprecated-declarations]
+       24 |     button.contentEdgeInsets = UIEdgeInsetsMake(kDefaultButtonContentInset, 0, kDefaultButtonContentInset, 0);
+          |            ^
+    In module 'UIKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Target Support Files/StripePayments/StripePayments-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIButton.h:162:35: note: 'contentEdgeInsets' has been explicitly marked deprecated here
+      162 | @property(nonatomic) UIEdgeInsets contentEdgeInsets API_DEPRECATED("This property is ignored when using UIButtonConfiguration", ios(2.0,15.0), tvos(2.0,15.0), visionos(1.0, 1.0)) UI_APPEARANCE_SELECTOR API_UNAVAILABLE(watchos); // default is UIEdgeInsetsZero. On tvOS 10 or later, default is nonzero except for custom buttons.
+          |                                   ^
+    1 warning generated.
+    libtool: warning: 'address_sorting_windows.o' has no symbols
+    libtool: warning: 'check_gcp_environment_linux.o' has no symbols
+    libtool: warning: 'check_gcp_environment_windows.o' has no symbols
+    libtool: warning: 'cpu-f2e9c3df219864d140459e638b27691b.o' has no symbols
+    libtool: warning: 'cpu-15c9b8e7d2683570482daf2d001c29d4.o' has no symbols
+    libtool: warning: 'cpu-4c4b8ff68011a1acc5eb648c50e8c56e.o' has no symbols
+    libtool: warning: 'decode_fast.o' has no symbols
+    libtool: warning: 'directory_reader-f6a20302caaa0e23030407ed3b7f60ae.o' has no symbols
+    libtool: warning: 'endpoint_pair_windows.o' has no symbols
+    libtool: warning: 'env-369128fd1f502f3d47e36c1fb7d664f3.o' has no symbols
+    libtool: warning: 'env-f679cd915453ea87e374563bf8f70d44.o' has no symbols
+    libtool: warning: 'fork_windows.o' has no symbols
+    libtool: warning: 'gethostname_fallback.o' has no symbols
+    libtool: warning: 'gethostname_host_name_max.o' has no symbols
+    libtool: warning: 'grpc_ares_ev_driver_posix.o' has no symbols
+    libtool: warning: 'grpc_ares_ev_driver_windows.o' has no symbols
+    libtool: warning: 'grpc_ares_wrapper.o' has no symbols
+    libtool: warning: 'grpc_ares_wrapper_posix.o' has no symbols
+    libtool: warning: 'grpc_ares_wrapper_windows.o' has no symbols
+    libtool: warning: 'grpc_if_nametoindex_unsupported.o' has no symbols
+    libtool: warning: 'grpc_polled_fd_windows.o' has no symbols
+    libtool: warning: 'iocp.o' has no symbols
+    libtool: warning: 'iocp_windows.o' has no symbols
+    libtool: warning: 'iomgr_posix.o' has no symbols
+    libtool: warning: 'iomgr_windows.o' has no symbols
+    libtool: warning: 'latent_see.o' has no symbols
+    libtool: warning: 'load_system_roots_fallback.o' has no symbols
+    libtool: warning: 'load_system_roots_windows.o' has no symbols
+    libtool: warning: 'native_windows_dns_resolver.o' has no symbols
+    libtool: warning: 'pollset_set_windows.o' has no symbols
+    libtool: warning: 'pollset_windows.o' has no symbols
+    libtool: warning: 'resolve_address_windows.o' has no symbols
+    libtool: warning: 'socket_utils_linux.o' has no symbols
+    libtool: warning: 'socket_utils_windows.o' has no symbols
+    libtool: warning: 'socket_windows.o' has no symbols
+    libtool: warning: 'ssl_session_openssl.o' has no symbols
+    libtool: warning: 'stat-3fb0b71284d50829fe0b23b35989359d.o' has no symbols
+    libtool: warning: 'string-adce42c0233ee6175c4a1605b914249e.o' has no symbols
+    libtool: warning: 'string_util.o' has no symbols
+    libtool: warning: 'sync-d34b71a5bf3fd0b285fbbc435d9e7c63.o' has no symbols
+    libtool: warning: 'sync_abseil.o' has no symbols
+    libtool: warning: 'tchar.o' has no symbols
+    libtool: warning: 'tcp_client_windows.o' has no symbols
+    libtool: warning: 'tcp_server_utils_posix_noifaddrs.o' has no symbols
+    libtool: warning: 'tcp_server_windows.o' has no symbols
+    libtool: warning: 'tcp_windows.o' has no symbols
+    libtool: warning: 'thd-8d12ba3ec7ec89e43f54f3f8eff1a98a.o' has no symbols
+    libtool: warning: 'time-7ae97e9ca9a1755693d2c720c223071f.o' has no symbols
+    libtool: warning: 'tmpfile-9bfd46dc727c0a8cf73b734eb66d6b01.o' has no symbols
+    libtool: warning: 'tmpfile-6a52a315d0a98a632508ba7fe23b6906.o' has no symbols
+    libtool: warning: 'unix_sockets_posix_noop.o' has no symbols
+    libtool: warning: 'wakeup_fd_eventfd-e1e72849807ba114c698a9e6bc8e43b6.o' has no symbols
+    libtool: warning: 'win_socket.o' has no symbols
+    libtool: warning: 'windows_endpoint.o' has no symbols
+    libtool: warning: 'windows_engine.o' has no symbols
+    libtool: warning: 'windows_listener.o' has no symbols
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/Stripe3DS2/Stripe3DS2/STDSSynchronousLocationManager.m:52:68: warning: 'authorizationStatus' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+       52 |     CLAuthorizationStatus authorizationStatus = [CLLocationManager authorizationStatus];
+          |                                                                    ^~~~~~~~~~~~~~~~~~~
+          |                                                                    authorizationStatus
+    In module 'CoreLocation' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/Stripe3DS2/Stripe3DS2/STDSSynchronousLocationManager.m:12:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManager.h:224:1: note: 'authorizationStatus' has been explicitly marked deprecated here
+      224 | + (CLAuthorizationStatus)authorizationStatus API_DEPRECATED_WITH_REPLACEMENT("-authorizationStatus", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+          | ^
+    1 warning generated.
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/Stripe3DS2/Stripe3DS2/STDSWebView.m:17:31: warning: 'javaScriptEnabled' is deprecated: first deprecated in iOS 14.0 - Use WKWebpagePreferences.allowsContentJavaScript to disable content JavaScript on a per-navigation basis [-Wdeprecated-declarations]
+       17 |     configuration.preferences.javaScriptEnabled = NO;
+          |                               ^
+    In module 'WebKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePayments/Stripe3DS2/Stripe3DS2/STDSWebView.h:9:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/WebKit.framework/Headers/WKPreferences.h:115:28: note: 'javaScriptEnabled' has been explicitly marked deprecated here
+      115 | @property (nonatomic) BOOL javaScriptEnabled API_DEPRECATED("Use WKWebpagePreferences.allowsContentJavaScript to disable content JavaScript on a per-navigation basis", macos(10.10, 11.0), ios(8.0, 14.0));
+          |                            ^
+    1 warning generated.
+    libtool: warning: 'NSData+JWEHelpers.o' has no symbols
+    libtool: warning: 'NSError+Stripe3DS2.o' has no symbols
+    libtool: warning: 'NSLayoutConstraint+LayoutSupport.o' has no symbols
+    libtool: warning: 'NSString+EmptyChecking.o' has no symbols
+    libtool: warning: 'NSString+JWEHelpers.o' has no symbols
+    libtool: warning: 'STDSErrorMessage+Internal.o' has no symbols
+    libtool: warning: 'UIButton+CustomInitialization.o' has no symbols
+    libtool: warning: 'UIColor+ThirteenSupport.o' has no symbols
+    libtool: warning: 'UIFont+DefaultFonts.o' has no symbols
+    libtool: warning: 'UIView+LayoutSupport.o' has no symbols
+    libtool: warning: 'UIViewController+Stripe3DS2.o' has no symbols
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPFormTextField.swift:125:26: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+                    weak var weakSelf = self
+                         ~~~ ^
+                         let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPFormTextField.swift:143:26: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+                    weak var weakSelf = self
+                         ~~~ ^
+                         let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/UI Components/STPPaymentCardTextField.swift:612:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/Helpers/STPPromise.swift:72:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/Internal/Categories/UIButton+Stripe.swift:28:18: warning: 'imageEdgeInsets' was deprecated in iOS 15.0: This property is ignored when using UIButtonConfiguration
+                self.imageEdgeInsets = UIEdgeInsets(top: 0, left: -spacing, bottom: 0, right: spacing)
+                     ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/Internal/Categories/UIButton+Stripe.swift:29:18: warning: 'contentEdgeInsets' was deprecated in iOS 15.0: This property is ignored when using UIButtonConfiguration
+                self.contentEdgeInsets = UIEdgeInsets(
+                     ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/Internal/Categories/UIButton+Stripe.swift:36:18: warning: 'imageEdgeInsets' was deprecated in iOS 15.0: This property is ignored when using UIButtonConfiguration
+                self.imageEdgeInsets = UIEdgeInsets(top: 0, left: spacing, bottom: 0, right: -spacing)
+                     ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentsUI/StripePaymentsUI/StripePaymentsUI/Source/Internal/Categories/UIButton+Stripe.swift:37:18: warning: 'contentEdgeInsets' was deprecated in iOS 15.0: This property is ignored when using UIButtonConfiguration
+                self.contentEdgeInsets = UIEdgeInsets(
+                     ^
+    libtool: warning: 'create_channel_posix.o' has no symbols
+    libtool: warning: 'rpc_method.o' has no symbols
+    libtool: warning: 'server_posix.o' has no symbols
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/write_batch.cc:24:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/view.cc:17:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/view.h:23:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/pipeline_util.h:24:
+    In file included from /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/abseil/absl.framework/Headers/types/optional.h:68:
+    /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/abseil/absl.framework/Headers/types/internal/optional.h:125:49: warning: implicit conversion loses integer precision: 'long long' to 'int' [-Wshorten-64-to-32]
+      125 |     ::new (static_cast<void*>(&this->dummy_)) T(std::forward<Args>(args)...);
+          |     ~~                                          ^~~~~~~~~~~~~~~~~~~~~~~~
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/view.cc:17:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/view.h:23:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/pipeline_util.h:24:
+    /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/abseil/absl.framework/Headers/types/optional.h:241:13: note: in instantiation of function template specialization 'absl::optional_internal::optional_data_base<int>::construct<long long>' requested here
+      241 |       this->construct(std::move(*rhs));
+          |             ^
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/view.cc:72:39: note: in instantiation of function template specialization 'absl::optional<int>::optional<long long, false>' requested here
+       72 |   absl::optional<int32_t> limit_opt = GetLimit(query);
+          |                                       ^
+    1 warning generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/sync_engine.cc:17:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/sync_engine.h:31:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_reader.h:25:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/snapshots_in_sync_listener_registration.cc:22:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/query_listener_registration.cc:22:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/query_core.cc:33:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/pipeline.cc:22:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/persistent_cache_index_manager.cc:21:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/local/leveldb_index_manager.cc:49:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.cc:17:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.cc:17:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/firestore.cc:30:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/event_manager.cc:22:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/sync_engine.h:31:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_reader.h:25:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/document_reference.cc:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.cc:17:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_reader.cc:17:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_reader.h:25:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/api/aggregate_query.cc:23:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/Source/API/FIRQuery.mm:51:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/Source/API/FIRPipelineBridge.mm:52:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.h:27:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/bundle/bundle_serializer.h:34:
+    In file included from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/core/src/util/json_reader.h:24:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25253:35: warning: identifier '_json' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25253 | inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+           |                       ~~~~~~~~~~~~^~~~~
+           |                       operator""_json
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/third_party/nlohmann_json/json.hpp:25272:49: warning: identifier '_json_pointer' preceded by whitespace in a literal operator declaration is deprecated [-Wdeprecated-literal-operator]
+     25272 | inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+           |                                     ~~~~~~~~~~~~^~~~~~~~~~~~~
+           |                                     operator""_json_pointer
+    2 warnings generated.
+    <module-includes>:2:9: note: in file included from <module-includes>:2:
+    1 | #import "Headers/StripePaymentsUI-umbrella.h"
+    2 | #import "Headers/StripePaymentsUI-Swift.h"
+      |         `- note: in file included from <module-includes>:2:
+    3 | 
+
+    1 warning generated.
+    /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/StripePaymentsUI/StripePaymentsUI.framework/Headers/StripePaymentsUI-Swift.h:474:139: warning: 'UITextItemInteraction' is deprecated: first deprecated in iOS 17.0 - UITextItemInteraction has been replaced by text item methods on UITextViewDelegate
+     472 | /// :nodoc:
+     473 | - (CGSize)systemLayoutSizeFittingSize:(CGSize)targetSize withHorizontalFittingPriority:(UILayoutPriority)horizontalFittingPriority verticalFittingPriority:(UILayoutPriority)verticalFittingPriority SWIFT_WARN_UNUSED_RESULT;
+     474 | - (BOOL)textView:(UITextView * _Nonnull)textView shouldInteractWithURL:(NSURL * _Nonnull)URL inRange:(NSRange)characterRange interaction:(UITextItemInteraction)interaction SWIFT_WARN_UNUSED_RESULT;
+         |                                                                                                                                           `- warning: 'UITextItemInteraction' is deprecated: first deprecated in iOS 17.0 - UITextItemInteraction has been replaced by text item methods on UITextViewDelegate
+     475 | /// :nodoc:
+     476 | @property (nonatomic, strong) UIFont * _Nonnull formFont;
+
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UITextItemInteraction.h:9:28: note: 'UITextItemInteraction' has been explicitly marked deprecated here
+     7 | //
+     8 | 
+     9 | typedef NS_ENUM(NSInteger, UITextItemInteraction) {
+       |                            `- note: 'UITextItemInteraction' has been explicitly marked deprecated here
+    10 |     UITextItemInteractionInvokeDefaultAction,
+    11 |     UITextItemInteractionPresentActions,
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Stripe/Stripe/StripeiOS/Source/STPEphemeralKeyManager.swift:163:22: warning: weak variable 'provider' was never mutated; consider changing to 'let' constant
+                weak var provider = keyProvider as? STPCustomerEphemeralKeyProvider
+                     ~~~ ^
+                     let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Stripe/Stripe/StripeiOS/Source/STPEphemeralKeyManager.swift:169:22: warning: weak variable 'provider' was never mutated; consider changing to 'let' constant
+                weak var provider = keyProvider as? STPIssuingCardEphemeralKeyProvider
+                     ~~~ ^
+                     let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentSheet/StripePaymentSheet/StripePaymentSheet/Source/Helpers/STPCardScanner.swift:188:18: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+            weak var weakSelf = self
+                 ~~~ ^
+                 let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentSheet/StripePaymentSheet/StripePaymentSheet/Source/Helpers/STPCardScanner.swift:379:22: warning: weak variable 'weakSelf' was never mutated; consider changing to 'let' constant
+                weak var weakSelf = self
+                     ~~~ ^
+                     let
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/StripePaymentSheet/StripePaymentSheet/StripePaymentSheet/Source/Categories/UIApplication+StripePaymentSheet.swift:21:16: warning: 'windows' was deprecated in iOS 15.0: Use UIWindowScene.windows on a relevant window scene instead
+            return windows.first { $0.isKeyWindow }
+                   ^
+    libtool: warning: 'annotations.nanopb.o' has no symbols
+    libtool: warning: 'status_win.o' has no symbols
+    libtool: warning: 'string_win.o' has no symbols
+    libtool: warning: 'dummy.o' has no symbols
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:20:1: warning: extension declares a conformance of imported type 'FlutterError' to imported protocol 'Error'; this will not behave correctly if the owners of 'Flutter' introduce this conformance in the future
+    extension FlutterError: Error {}
+    ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:20:1: note: add '@retroactive' to silence this warning
+    extension FlutterError: Error {}
+    ^                       ~~~~~
+                            @retroactive Error
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: warning: switch must be exhaustive
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: note: add missing case: '.unknown'
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: note: add missing case: '.nonMatchingChecksum'
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: note: add missing case: '.invalidArgument'
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: note: add missing case: '.bucketMismatch'
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: note: add missing case: '.internalError'
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: note: add missing case: '.pathError'
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/FLTFirebaseStoragePlugin.swift:374:7: note: add missing cases
+          switch code {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: warning: switch must be exhaustive
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: note: add missing case: '.unknown'
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: note: add missing case: '.nonMatchingChecksum'
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: note: add missing case: '.invalidArgument'
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: note: add missing case: '.bucketMismatch'
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: note: add missing case: '.internalError'
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: note: add missing case: '.pathError'
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_storage-13.2.0/ios/firebase_storage/Sources/firebase_storage/TaskStateChannelStreamHandler.swift:109:7: note: add missing cases
+          switch storageCode {
+          ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_core-4.6.0/ios/firebase_core/Sources/firebase_core/FLTFirebaseCorePlugin.m:92:35: warning: incompatible pointer types assigning to 'NSString * _Nullable' from 'NSNull * _Nonnull' [-Wincompatible-pointer-types]
+       92 |   pigeonOptions.deepLinkURLScheme = [NSNull null];
+          |                                   ^ ~~~~~~~~~~~~~
+    1 warning generated.
+    libtool: warning: 'dummy.o' has no symbols
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_messaging-16.1.3/ios/firebase_messaging/Sources/firebase_messaging/FLTFirebaseMessagingPlugin.m:417:32: warning: 'UNNotificationPresentationOptionAlert' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+      417 |         presentationOptions |= UNNotificationPresentationOptionAlert;
+          |                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                                UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner
+    In module 'UserNotifications' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_messaging-16.1.3/ios/firebase_messaging/Sources/firebase_messaging/include/FLTFirebaseMessagingPlugin.h:15:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UserNotifications.framework/Headers/UNUserNotificationCenter.h:84:5: note: 'UNNotificationPresentationOptionAlert' has been explicitly marked deprecated here
+       84 |     UNNotificationPresentationOptionAlert API_DEPRECATED_WITH_REPLACEMENT("UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner", macos(10.14, 11.0), ios(10.0, 14.0), watchos(3.0, 7.0), tvos(10.0, 14.0)) = (1 << 2),
+          |     ^
+    1 warning generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:130:72: warning: sending 'FLTFirebaseAuthPlugin *__strong' to parameter of incompatible type 'id<FLTFirebasePlugin> _Nonnull'
+      130 |     [[FLTFirebasePluginRegistry sharedInstance] registerFirebasePlugin:self];
+          |                                                                        ^~~~
+    In module 'firebase_core' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:9:
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_core-4.6.0/ios/firebase_core/Sources/firebase_core/include/firebase_core/FLTFirebasePluginRegistry.h:23:64: note: passing argument to parameter 'firebasePlugin' here
+       23 | - (void)registerFirebasePlugin:(id<FLTFirebasePlugin> _Nonnull)firebasePlugin;
+          |                                                                ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:345:11: warning: unused variable 'errorCode' [-Wunused-variable]
+      345 |       int errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random);
+          |           ^~~~~~~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:431:14: warning: unused variable 'capturedCompletion' [-Wunused-variable]
+      431 |       void (^capturedCompletion)(PigeonUserCredential *_Nullable, FlutterError *_Nullable) =
+          |              ^~~~~~~~~~~~~~~~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:442:14: warning: unused variable 'capturedCompletion' [-Wunused-variable]
+      442 |       void (^capturedCompletion)(PigeonUserCredential *_Nullable, FlutterError *_Nullable) =
+          |              ^~~~~~~~~~~~~~~~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:453:14: warning: unused variable 'capturedCompletion' [-Wunused-variable]
+      453 |       void (^capturedCompletion)(PigeonUserCredential *_Nullable, FlutterError *_Nullable) =
+          |              ^~~~~~~~~~~~~~~~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:882:45: warning: 'keyWindow' is deprecated: first deprecated in iOS 13.0 - Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes [-Wdeprecated-declarations]
+      882 |   return [[UIApplication sharedApplication] keyWindow];
+          |                                             ^
+    In module 'UIKit' imported from /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/Target Support Files/firebase_auth/firebase_auth-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:108:51: note: property 'keyWindow' is declared deprecated here
+      108 | @property(nullable, nonatomic,readonly) UIWindow *keyWindow API_DEPRECATED("Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes", ios(2.0, 13.0)) API_UNAVAILABLE(visionos, watchos);
+          |                                                   ^
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:108:51: note: 'keyWindow' has been explicitly marked deprecated here
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:1312:9: warning: 'fetchSignInMethodsForEmail:completion:' is deprecated: `fetchSignInMethods` is deprecated and will be removed in a future release. This method returns an empty list when Email Enumeration Protection is enabled. [-Wdeprecated-declarations]
+     1312 |   [auth fetchSignInMethodsForEmail:email
+          |         ^
+    In module 'FirebaseAuth' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:5:
+    /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/FirebaseAuth/FirebaseAuth.framework/Headers/FirebaseAuth-Swift.h:566:159: note: 'fetchSignInMethodsForEmail:completion:' has been explicitly marked deprecated here
+      566 | - (void)fetchSignInMethodsForEmail:(NSString * _Nonnull)email completion:(void (^ _Nullable)(NSArray<NSString *> * _Nullable, NSError * _Nullable))completion SWIFT_DEPRECATED_MSG("`fetchSignInMethods` is deprecated and will be removed in a future release. This method returns an empty list when Email Enumeration Protection is enabled.");
+          |                                                                                                                                                               ^
+    /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/FirebaseAuth/FirebaseAuth.framework/Headers/FirebaseAuth-Swift.h:243:51: note: expanded from macro 'SWIFT_DEPRECATED_MSG'
+      243 | # define SWIFT_DEPRECATED_MSG(...) __attribute__((deprecated(__VA_ARGS__)))
+          |                                                   ^
+    /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:2120:16: warning: 'updateEmail:completion:' is deprecated: `updateEmail` is deprecated and will be removed in a future release. Use sendEmailVerification(beforeUpdatingEmail:) instead. [-Wdeprecated-declarations]
+     2120 |   [currentUser updateEmail:newEmail
+          |                ^
+    In module 'FirebaseAuth' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/firebase_auth-6.3.0/ios/firebase_auth/Sources/firebase_auth/FLTFirebaseAuthPlugin.m:5:
+    /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/FirebaseAuth/FirebaseAuth.framework/Headers/FirebaseAuth-Swift.h:2140:111: note: 'updateEmail:completion:' has been explicitly marked deprecated here
+     2140 | - (void)updateEmail:(NSString * _Nonnull)email completion:(void (^ _Nullable)(NSError * _Nullable))completion SWIFT_DEPRECATED_MSG("`updateEmail` is deprecated and will be removed in a future release. Use sendEmailVerification(beforeUpdatingEmail:) instead.");
+          |                                                                                                               ^
+    /Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-biwbohnmskhuekcmhewidktzvqud/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/FirebaseAuth/FirebaseAuth.framework/Headers/FirebaseAuth-Swift.h:243:51: note: expanded from macro 'SWIFT_DEPRECATED_MSG'
+      243 | # define SWIFT_DEPRECATED_MSG(...) __attribute__((deprecated(__VA_ARGS__)))
+          |                                                   ^
+    8 warnings generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/cloud_firestore-6.2.0/ios/cloud_firestore/Sources/cloud_firestore/FLTFirebaseFirestorePlugin.m:571:14: warning: 'setIndexConfigurationFromJSON:completion:' is deprecated: Instead of creating cache indexes manually, consider using `PersistentCacheIndexManager.enableIndexAutoCreation()` to let the SDK decide whether to create cache indexes for queries running locally. [-Wdeprecated-declarations]
+      571 |   [firestore setIndexConfigurationFromJSON:indexConfiguration
+          |              ^
+    In module 'FirebaseFirestoreInternal' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/cloud_firestore-6.2.0/ios/cloud_firestore/Sources/cloud_firestore/FLTFirebaseFirestorePlugin.m:13:
+    /Users/metinoz/Developer/LOKMA_MASTER/mobile_app/ios/Pods/FirebaseFirestoreInternal/Firestore/Source/Public/FirebaseFirestore/FIRFirestore.h:134:57: note: 'setIndexConfigurationFromJSON:completion:' has been explicitly marked deprecated here
+      134 |     NS_SWIFT_NAME(setIndexConfiguration(_:completion:)) DEPRECATED_MSG_ATTRIBUTE(
+          |                                                         ^
+    In module '_DarwinFoundation1' imported from /Users/metinoz/.pub-cache/hosted/pub.dev/cloud_firestore-6.2.0/ios/cloud_firestore/Sources/cloud_firestore/FLTFirebaseFirestorePlugin.m:12:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/AvailabilityMacros.h:152:64: note: expanded from macro 'DEPRECATED_MSG_ATTRIBUTE'
+      152 |             #define DEPRECATED_MSG_ATTRIBUTE(s) __attribute__((deprecated(s)))
+          |                                                                ^
+    1 warning generated.
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/CustomerSheet/ReactNativeCustomerAdapter.swift:156:125: warning: expression implicitly coerced from 'String?' to 'Any'
+                self.stripeSdk.sendEvent(withName: "onCustomerAdapterSetSelectedPaymentOptionCallback", body: ["paymentOption": paymentOption?.value])
+                                                                                          ^~~~~~~~~~~~~~~~~~~~
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/CustomerSheet/ReactNativeCustomerAdapter.swift:156:140: note: provide a default value to avoid this warning
+                self.stripeSdk.sendEvent(withName: "onCustomerAdapterSetSelectedPaymentOptionCallback", body: ["paymentOption": paymentOption?.value])
+                                                                                          ~~~~~~~~~~~~~~~^~~~~
+                                                                                          ?? <#default value#>
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/CustomerSheet/ReactNativeCustomerAdapter.swift:156:140: note: force-unwrap the value to avoid this warning
+                self.stripeSdk.sendEvent(withName: "onCustomerAdapterSetSelectedPaymentOptionCallback", body: ["paymentOption": paymentOption?.value])
+                                                                                          ~~~~~~~~~~~~~~~^~~~~
+                                                                                          !
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/CustomerSheet/ReactNativeCustomerAdapter.swift:156:140: note: explicitly cast to 'Any' with 'as Any' to silence this warning
+                self.stripeSdk.sendEvent(withName: "onCustomerAdapterSetSelectedPaymentOptionCallback", body: ["paymentOption": paymentOption?.value])
+                                                                                          ~~~~~~~~~~~~~~~^~~~~
+                                                                                          as Any
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/StripePlugin.swift:300:20: warning: value 'resultList' was defined but never used; consider replacing with boolean test
+                if let resultList = paymentResult as? [Any] {
+                   ~~~~^~~~~~~~~~~~~              ~~~
+                                                  is
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/StripeSdk+PaymentSheet.swift:97:17: warning: variable 'customerEphemeralKeySecret' was never mutated; consider changing to 'let' constant
+                var customerEphemeralKeySecret = params["customerEphemeralKeySecret"] as? String
+                ~~~ ^
+                let
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/StripeSdk+PaymentSheet.swift:98:17: warning: variable 'customerClientSecret' was never mutated; consider changing to 'let' constant
+                var customerClientSecret = params["customerSessionClientSecret"] as? String
+                ~~~ ^
+                let
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/StripeSdk+PaymentSheet.swift:99:20: warning: immutable value 'customerEphemeralKeySecret' was never used; consider replacing with '_' or removing it
+                if let customerEphemeralKeySecret, let customerClientSecret {
+                   ~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+                   _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_ios/Stripe Sdk/StripeSdk+PaymentSheet.swift:99:52: warning: immutable value 'customerClientSecret' was never used; consider replacing with '_' or removing it
+                if let customerEphemeralKeySecret, let customerClientSecret {
+                                                   ~~~~^~~~~~~~~~~~~~~~~~~~
+                                                   _
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_objc/RCTBridge.m:30:17: warning: property 'requiresMainQueueSetup' requires method 'requiresMainQueueSetup' to be defined - use @dynamic or provide a method implementation in this category [-Wobjc-property-implementation]
+       30 | @implementation NSObject (React)
+          |                 ^
+    In file included from /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_objc/RCTBridge.m:4:
+    /Users/metinoz/.pub-cache/hosted/pub.dev/stripe_ios-11.5.0/ios/stripe_ios/Sources/stripe_objc/include/stripe_objc/RCTBridge.h:59:46: note: property declared here
+       59 | @property (nonatomic, assign, readonly) BOOL requiresMainQueueSetup NS_SWIFT_NAME(requiresMainQueueSetup);
+          |                                              ^
+    1 warning generated.
+    libtool: warning: 'RCTBridge-239c4e42558ce16c386fee7ad4fbf19c.o' has no symbols
+    Target release_ios_bundle_flutter_assets failed: IconTreeShakerException: ConstFinder failure: Could not find a command named "/opt/homebrew/share/flutter/bin/cache/artifacts/engine/darwin-x64/const_finder.dart.snapshot".
+
+    Usage: dart <command|dart-file> [arguments]
+
+    Global options:
+    -v, --verbose               Show additional command output.
+        --version               Print the Dart SDK version.
+        --enable-analytics      Enable analytics.
+        --disable-analytics     Disable analytics.
+        --suppress-analytics    Disallow analytics for this `dart *` run without changing the analytics configuration.
+    -h, --help                  Print this usage information.
+
+    Available commands:
+
+    Global
+      install     Install or upgrade a Dart CLI tool for global use.
+      installed   List globally installed Dart CLI tools.
+      uninstall   Remove a globally installed Dart CLI tool.
+
+    Project
+      build       Build a Dart application including code assets.
+      compile     Compile Dart to various formats.
+      create      Create a new Dart project.
+      pub         Work with packages.
+      run         Run a Dart program from a file or a local package.
+      test        Run tests for a project.
+
+    Source code
+      analyze     Analyze Dart code in a directory.
+      doc         Generate API documentation for Dart projects.
+      fix         Apply automated fixes to Dart source code.
+      format      Idiomatically format Dart source code.
+
+    Tools
+      devtools    Open DevTools (optionally connecting to an existing application).
+      info        Show diagnostic information about the installed tooling.
+
+    Run "dart help <command>" for more information about a command.
+    See https://dart.dev/tools/dart-tool for detailed documentation.
+
+
+    To disable icon tree shaking, pass --no-tree-shake-icons to the requested flutter build command
+    Failed to package /Users/metinoz/Developer/LOKMA_MASTER/mobile_app.
+    Command PhaseScriptExecution failed with a nonzero exit code
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    warning: no rule to process file '/Users/metinoz/.pub-cache/hosted/pub.dev/geocoding_ios-3.1.0/ios/geocoding_ios/Sources/geocoding_ios/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'geocoding_ios' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-Core' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-C++' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'abseil' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'BoringSSL-GRPC' from project 'Pods')
 
 Encountered error while archiving for device.

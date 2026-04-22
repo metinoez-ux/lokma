@@ -343,7 +343,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.shopping_cart_outlined,
+                                const Icon(Icons.shopping_bag_rounded,
                                     size: 18),
                                 const SizedBox(width: 8),
                                 Text(

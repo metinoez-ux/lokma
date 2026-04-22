@@ -734,7 +734,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                                       .withOpacity(0.7),
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w900)),
-                                          Icon(Icons.shopping_basket_outlined,
+                                          Icon(Icons.shopping_bag_rounded,
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface

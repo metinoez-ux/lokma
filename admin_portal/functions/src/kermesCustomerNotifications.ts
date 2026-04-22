@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getPushTranslations, getUserLanguage } from "./utils/translation";
 
 export const onKermesOrderCreatedNotif = onDocumentCreated(
@@ -332,3 +333,108 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
     }
   }
 );
+
+/**
+ * Scheduled job to cancel Kermes cash orders that are older than 2 hours and unpaid.
+ */
+export const cancelStaleCashOrders = onSchedule({
+  schedule: "every 15 minutes",
+  region: "europe-west1",
+}, async (event) => {
+  const db = admin.firestore();
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  
+  try {
+    // Fetch all unpaid cash orders. We filter date locally to avoid composite index requirements.
+    const ordersSnapshot = await db.collection("kermes_orders")
+      .where("paymentMethod", "==", "cash")
+      .where("isPaid", "==", false)
+      .get();
+      
+    if (ordersSnapshot.empty) {
+      console.log("[CancelStaleCashOrders] No unpaid cash orders found.");
+      return;
+    }
+    
+    let cancelledCount = 0;
+    const batch = db.batch();
+    
+    for (const doc of ordersSnapshot.docs) {
+      const data = doc.data();
+      
+      // Skip already cancelled or completed/delivered orders
+      if (data.status === "cancelled" || data.status === "delivered") continue;
+      
+      const createdAt = data.createdAt?.toDate();
+      if (!createdAt || createdAt.getTime() > twoHoursAgo.getTime()) continue;
+      
+      const orderId = doc.id;
+      const orderNumber = data.orderNumber;
+      const userId = data.userId;
+      
+      const updateData = {
+        status: "cancelled",
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        notes: data.notes 
+          ? `${data.notes}\n(Otomatik iptal: 2 saat içinde ödeme yapılmadı)`
+          : "(Otomatik iptal: 2 saat içinde ödeme yapılmadı)"
+      };
+      
+      batch.update(doc.ref, updateData);
+      cancelledCount++;
+      
+      // Notify customer if applicable
+      if (userId && !userId.startsWith("guest_")) {
+        try {
+          const userLang = await getUserLanguage(userId);
+          const trans = await getPushTranslations(userLang);
+          
+          const title = trans.orderCancelledTitle || "Sipariş İptal Edildi";
+          const body = (trans.kermesOrderCancelledDueToPaymentTimeoutBody || "#{{orderNumber}} numaralı siparişiniz, 2 saat içinde ödeme yapılmadığı için iptal edilmiştir.")
+            .replace("{{orderNumber}}", orderNumber);
+          
+          // In-app notification
+          const notifRef = db.collection("users").doc(userId).collection("notifications").doc();
+          batch.set(notifRef, {
+            title,
+            body,
+            type: "kermes_order_cancelled",
+            orderId,
+            orderNumber,
+            status: "cancelled",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            read: false,
+          });
+          
+          // FCM Push
+          const userDoc = await db.collection("users").doc(userId).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            const fcmToken = userData?.fcmToken;
+            if (fcmToken) {
+              await admin.messaging().send({
+                token: fcmToken,
+                notification: { title, body },
+                data: { type: "kermes_order_cancelled", orderId, orderNumber },
+                android: { priority: "high", notification: { channelId: "kermes_orders", sound: "default" } },
+                apns: { payload: { aps: { sound: "default", badge: 1 } } },
+              });
+            }
+          }
+        } catch (err) {
+          console.error(`[CancelStaleCashOrders] Failed to notify user ${userId} for order ${orderId}`, err);
+        }
+      }
+    }
+    
+    if (cancelledCount > 0) {
+      await batch.commit();
+      console.log(`[CancelStaleCashOrders] Successfully cancelled ${cancelledCount} stale cash orders.`);
+    } else {
+      console.log("[CancelStaleCashOrders] No cash orders were older than 2 hours.");
+    }
+    
+  } catch (err) {
+    console.error("[CancelStaleCashOrders] Error fetching or updating orders", err);
+  }
+});

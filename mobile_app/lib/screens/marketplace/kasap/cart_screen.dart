@@ -5897,7 +5897,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[400]),
+          Icon(Icons.shopping_bag_rounded, size: 80, color: Colors.grey[400]),
           SizedBox(height: 16),
           Text(
             'marketplace.your_cart_is_empty'.tr(),

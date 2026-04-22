@@ -644,7 +644,7 @@ class _BusinessCard extends StatelessWidget {
                               clipBehavior: Clip.none,
                               children: [
                                 Icon(
-                                  Icons.shopping_cart_outlined,
+                                  Icons.shopping_bag_rounded,
                                   color: Colors.amber.shade700,
                                   size: 24,
                                 ),
