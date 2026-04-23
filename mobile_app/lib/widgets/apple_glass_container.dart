@@ -74,7 +74,6 @@ class AppleGlassContainer extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            padding: padding,
             decoration: BoxDecoration(
               color: finalTintColor,
               borderRadius: BorderRadius.circular(borderRadius),
@@ -82,21 +81,27 @@ class AppleGlassContainer extends StatelessWidget {
                 color: finalBorderColor,
                 width: 0.5,
               ),
-              // Subtle gradient for realistic reflection (brighter top-left)
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.white.withOpacity(0.15),
-                  isDark
-                      ? Colors.transparent
-                      : Colors.white.withOpacity(0.05),
-                ],
-              ),
             ),
-            child: child,
+            child: Container(
+              padding: padding,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(borderRadius),
+                // Subtle gradient for realistic reflection (brighter top-left)
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.white.withOpacity(0.15),
+                    isDark
+                        ? Colors.transparent
+                        : Colors.white.withOpacity(0.05),
+                  ],
+                ),
+              ),
+              child: child,
+            ),
           ),
         ),
       ),

@@ -388,11 +388,11 @@ class GlassBottomBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Dynamic glassmorphism properties based on scroll
-    // Reduced base opacity so it's clearer (more transparent) when unscrolled
-    final double blurSigma = isScrolled ? 15.0 : 6.0;
+    // Increased blur and opacity to ensure icon visibility against complex/dark backgrounds
+    final double blurSigma = isScrolled ? 30.0 : 20.0;
     final Color tintColor = isDark 
-        ? Colors.black.withOpacity(isScrolled ? 0.35 : 0.1) 
-        : Colors.white.withOpacity(isScrolled ? 0.45 : 0.15);
+        ? Colors.black.withOpacity(isScrolled ? 0.20 : 0.15) 
+        : Colors.white.withOpacity(isScrolled ? 0.30 : 0.20);
 
     return SafeArea(
       top: false,
@@ -418,15 +418,16 @@ class GlassBottomBar extends StatelessWidget {
                       final item = items[index];
                       final isActive = index == currentIndex;
 
-                      return InkResponse(
-                        onTap: () => onTap(index),
-                        radius: 32,
-                        child: SizedBox(
-                          width: 60,
-                          height: 60,
-                          child: Center(
-                            child: _buildItemContent(
-                                item, isActive, context, isDark),
+                      return Expanded(
+                        child: InkResponse(
+                          onTap: () => onTap(index),
+                          radius: 32,
+                          child: SizedBox(
+                            height: 60,
+                            child: Center(
+                              child: _buildItemContent(
+                                  item, isActive, context, isDark),
+                            ),
                           ),
                         ),
                       );
@@ -442,10 +443,10 @@ class GlassBottomBar extends StatelessWidget {
 
   Widget _buildItemContent(
       NavItemData item, bool isActive, BuildContext context, bool isDark) {
-    // Dynamically adjust colors based on the theme to match iOS Apple Glass logic
-    final accent = Theme.of(context).colorScheme.primary;
-    final Color activeColor = accent; // Brand color when clicked
-    final Color inactiveColor = isDark ? Colors.white : Colors.grey.shade800; // White in dark mode, dark grey in light mode
+    // Explicitly use the LOKMA brand color for active icons
+    const Color activeColor = Color(0xFFEA184A); // Lokma Pink
+    // Changed light mode inactive color to a balanced dark grey for better aesthetics while keeping high contrast
+    final Color inactiveColor = isDark ? Colors.white : const Color(0xFF48484A);
     
     final color = isActive ? activeColor : inactiveColor;
     const iconSize = 24.0;
@@ -534,11 +535,14 @@ class GlassBottomBar extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           item.label,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.visible,
           style: GoogleFonts.inter(
             color: color,
-            fontSize: 11.5,
+            fontSize: 10.5,
             fontWeight: isActive ? FontWeight.w800 : FontWeight.w700,
-            letterSpacing: -0.2,
+            letterSpacing: -0.3,
           ),
         ),
       ],
