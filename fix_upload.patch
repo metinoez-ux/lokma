@@ -1,0 +1,41 @@
+--- admin_portal/src/app/[locale]/admin/benutzerverwaltung/page.tsx
++++ admin_portal/src/app/[locale]/admin/benutzerverwaltung/page.tsx
+@@ -893,24 +893,12 @@
+     }
+   };
+ 
+-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
++  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+     if (e.target.files && e.target.files.length > 0) {
+       const file = e.target.files[0];
+-      
+-      try {
+-        // Ön sıkıştırma ile EXIF rotasyonunu düzelt ve cropper'a optimize bir resim ver
+-        // Bu adım, iOS/Android'den gelen fotoğrafların yanlış kırpılmasını (random bölge) engeller.
+-        const options = {
+-          maxSizeMB: 2, 
+-          maxWidthOrHeight: 1920,
+-          useWebWorker: true,
+-        };
+-        const compressedFile = await imageCompression(file, options);
+-        
+-        const reader = new FileReader();
+-        reader.addEventListener('load', () => setImageToCrop(reader.result?.toString() || null));
+-        reader.readAsDataURL(compressedFile);
+-        setShowCropperModal(true);
+-      } catch (error) {
+-        console.error("Resim ön işleme hatası:", error);
+-        alert("Resim yüklenemedi. Lütfen başka bir resim deneyin.");
+-      }
++      const target = e.target;
++      const reader = new FileReader();
++      reader.addEventListener('load', () => {
++        setImageToCrop(reader.result?.toString() || null);
++        setShowCropperModal(true);
++      });
++      reader.readAsDataURL(file);
+ 
+-      if (e.target) e.target.value = ''; // Reset input
++      if (target) target.value = ''; // Reset input
+     }
+   };

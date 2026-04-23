@@ -18,7 +18,8 @@ import 'package:lokma_app/screens/kermes/kermes_detail_screen.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:lokma_app/services/kermes_badge_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:lokma_app/providers/kermes_favorites_provider.dart';
+import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/utils/time_utils.dart' as time_utils;
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
@@ -49,7 +50,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   String _sortBy = 'distance_asc';
   bool _onlyActive = false; // Sadece su an aktif/acik kermesleri goster
   double _maxDistance = 50; // default: 50km
-  Set<String> _favoriteKermesIds = {};
   List<KermesEvent> _cachedFilteredEvents = [];
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -136,7 +136,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadFavorites();
     _loadKermesEvents();
     _loadBadges();
     _loadFeatures();
@@ -160,6 +159,16 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         _updateFilteredEvents();
       });
     }
+  }
+
+  void _loadFavorites() {
+    ref.read(kermesFavoritesProvider.notifier).refresh().then((_) {
+      if (mounted) {
+        setState(() {
+          _updateFilteredEvents();
+        });
+      }
+    });
   }
 
   @override
@@ -207,16 +216,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       );
       _userCountryCode = location.countryCode.toUpperCase();
       _updateFilteredEvents();
-    }
-  }
-
-  Future<void> _loadFavorites() async {
-    final favorites = await KermesFavoriteService.instance.getFavoriteIds();
-    if (mounted) {
-      setState(() {
-        _favoriteKermesIds = favorites.toSet();
-        _updateFilteredEvents();
-      });
     }
   }
 
@@ -642,8 +641,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
     // Favorites filter
     if (_sortBy == 'favorites') {
+      final favoriteKermesIds = ref.read(kermesFavoritesProvider);
       events = events
-          .where((event) => _favoriteKermesIds.contains(event.id))
+          .where((event) => favoriteKermesIds.contains(event.id))
           .toList();
     }
 
@@ -1518,6 +1518,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   // ============== BUILD ==============
   @override
   Widget build(BuildContext context) {
+    ref.listen<List<String>>(kermesFavoritesProvider, (previous, next) {
+      if (mounted) {
+        setState(() {
+          _updateFilteredEvents();
+        });
+      }
+    });
+
     // Watch location from cached provider
     final locationAsync = ref.watch(userLocationProvider);
     if (locationAsync.value != null && locationAsync.value!.latitude != 0.0) {
@@ -1998,16 +2006,18 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             builder: (context) {
               final isDark =
                   Theme.of(context).brightness == Brightness.dark;
-              int favCount = _favoriteKermesIds.length;
+              final butcherFavorites = ref.watch(butcherFavoritesProvider);
+              final kermesFavorites = ref.watch(kermesFavoritesProvider);
+              final totalFavorites = butcherFavorites.length + kermesFavorites.length;
 
               return LokmaBadgeIcon(
-                icon: favCount > 0
+                icon: totalFavorites > 0
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                iconColor: favCount > 0
+                iconColor: totalFavorites > 0
                     ? lokmaPink
                     : (isDark ? Colors.white70 : Colors.grey[800]),
-                badgeCount: favCount,
+                badgeCount: totalFavorites,
                 onTap: () => context.push('/favorites'),
               );
             },

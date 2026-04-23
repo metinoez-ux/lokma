@@ -81,6 +81,27 @@ export async function POST(request: NextRequest) {
  );
  }
 
+ const updatedAt = new Date();
+
+ // If this is just a photo update
+ if (source.action === 'updatePhotoOnly') {
+    if (photoURL !== undefined) {
+      // Update Auth Profile
+      try {
+        await auth.updateUser(userId, { photoURL });
+      } catch (authError: any) {
+        console.warn('⚠️ Could not update Auth profile photoURL:', authError.message);
+      }
+      
+      const pUpdate = { photoURL, updatedAt, updatedBy: updatedBy || 'system' };
+      await db.collection('users').doc(userId).set(pUpdate, { merge: true });
+      await db.collection('admins').doc(userId).set(pUpdate, { merge: true }).catch(() => null);
+      await db.collection('user_profiles').doc(userId).set(pUpdate, { merge: true }).catch(() => null);
+      return NextResponse.json({ success: true, message: 'Photo updated successfully' });
+    }
+   return NextResponse.json({ error: 'No photoURL provided' }, { status: 400 });
+ }
+
  // Calculate final business ID from assignments if empty
  let finalBusinessId = butcherId;
  let finalBusinessName = butcherName;
@@ -122,8 +143,6 @@ export async function POST(request: NextRequest) {
  }
  }
 
- const updatedAt = new Date();
-
  // Fetch old user data to detect assignment changes
  const userRef = db.collection('users').doc(userId);
  const userDocSnapshot = await userRef.get();
@@ -131,41 +150,50 @@ export async function POST(request: NextRequest) {
 
  // 2. Update Firestore `users` Document
  const userUpdateData: any = {
- firstName: firstName !== undefined ? firstName : null,
- lastName: lastName !== undefined ? lastName : null,
- displayName: displayName !== undefined ? displayName : null,
- email: email !== undefined ? email : null,
- phoneNumber: phoneNumber !== undefined ? phoneNumber : null,
-      phone: phoneNumber !== undefined ? phoneNumber : null,
- dialCode: dialCode !== undefined ? dialCode : '+49',
- address: address !== undefined ? address : null,
- houseNumber: houseNumber !== undefined ? houseNumber : null,
- addressLine2: addressLine2 !== undefined ? addressLine2 : null,
- city: city !== undefined ? city : null,
- country: country !== undefined ? country : null,
- postalCode: postalCode !== undefined ? postalCode : null,
- latitude: latitude !== undefined ? latitude : null,
- longitude: longitude !== undefined ? longitude : null,
- photoURL: photoURL !== undefined ? photoURL : null,
- butcherId: finalBusinessId !== undefined ? finalBusinessId : null,
- butcherName: finalBusinessName !== undefined ? finalBusinessName : null,
- businessId: finalBusinessId !== undefined ? finalBusinessId : null,
- businessName: finalBusinessName !== undefined ? finalBusinessName : null,
- isAdmin: isAdmin !== undefined ? isAdmin : false,
- adminType: isAdmin ? (adminType !== undefined ? adminType : null) : null,
- assignments: assignments !== undefined ? assignments : [],
- kermesAllowedSections: kermesAllowedSections !== undefined ? kermesAllowedSections : [],
- gender: gender !== undefined ? gender : null,
  isActive: isActive !== false, // default true
+ isAdmin: isAdmin !== undefined ? isAdmin : false,
  updatedAt,
  updatedBy: updatedBy || 'system'
  };
+
+ if (firstName !== undefined) userUpdateData.firstName = firstName;
+ if (lastName !== undefined) userUpdateData.lastName = lastName;
+ if (displayName !== undefined) userUpdateData.displayName = displayName;
+ if (email !== undefined) userUpdateData.email = email;
+ if (phoneNumber !== undefined) {
+   userUpdateData.phoneNumber = phoneNumber;
+   userUpdateData.phone = phoneNumber;
+ }
+ if (dialCode !== undefined) userUpdateData.dialCode = dialCode;
+ if (address !== undefined) userUpdateData.address = address;
+ if (houseNumber !== undefined) userUpdateData.houseNumber = houseNumber;
+ if (addressLine2 !== undefined) userUpdateData.addressLine2 = addressLine2;
+ if (city !== undefined) userUpdateData.city = city;
+ if (country !== undefined) userUpdateData.country = country;
+ if (postalCode !== undefined) userUpdateData.postalCode = postalCode;
+ if (latitude !== undefined) userUpdateData.latitude = latitude;
+ if (longitude !== undefined) userUpdateData.longitude = longitude;
+ if (photoURL !== undefined) userUpdateData.photoURL = photoURL;
+ if (finalBusinessId !== undefined) {
+   userUpdateData.butcherId = finalBusinessId;
+   userUpdateData.businessId = finalBusinessId;
+ }
+ if (finalBusinessName !== undefined) {
+   userUpdateData.butcherName = finalBusinessName;
+   userUpdateData.businessName = finalBusinessName;
+ }
+ if (isAdmin !== undefined) {
+   userUpdateData.adminType = isAdmin ? (adminType !== undefined ? adminType : null) : null;
+ }
+ if (assignments !== undefined) userUpdateData.assignments = assignments;
+ if (kermesAllowedSections !== undefined) userUpdateData.kermesAllowedSections = kermesAllowedSections;
+ if (gender !== undefined) userUpdateData.gender = gender;
 
  if (isActive === false) {
  userUpdateData.deactivatedBy = deactivatedBy || 'system';
  userUpdateData.deactivatedAt = deactivatedAt ? new Date(deactivatedAt) : updatedAt;
  userUpdateData.deactivationReason = deactivationReason || null;
- } else {
+ } else if (isActive === true) {
  userUpdateData.deactivatedBy = null;
  userUpdateData.deactivatedAt = null;
  userUpdateData.deactivationReason = null;
@@ -249,26 +277,35 @@ export async function POST(request: NextRequest) {
  const adminDoc = await adminRef.get();
  
  const adminUpdateData: any = {
- adminType: adminType,
- type: adminType, // For backward compatibility
- displayName: displayName !== undefined ? displayName : null,
- firstName: firstName !== undefined ? firstName : null,
- lastName: lastName !== undefined ? lastName : null,
- email: email !== undefined ? email : null,
- phoneNumber: phoneNumber !== undefined ? phoneNumber : null,
-      phone: phoneNumber !== undefined ? phoneNumber : null,
- butcherId: finalBusinessId !== undefined ? finalBusinessId : null,
- butcherName: finalBusinessName !== undefined ? finalBusinessName : null,
- businessId: finalBusinessId !== undefined ? finalBusinessId : null,
- businessName: finalBusinessName !== undefined ? finalBusinessName : null,
- organizationId: organizationId !== undefined ? organizationId : null,
- organizationName: organizationName !== undefined ? organizationName : null,
- photoURL: photoURL !== undefined ? photoURL : null,
- gender: gender !== undefined ? gender : null,
  isActive: isActive !== false,
  updatedAt,
  updatedBy: updatedBy || 'system'
  };
+
+ if (adminType !== undefined) {
+   adminUpdateData.adminType = adminType;
+   adminUpdateData.type = adminType; // For backward compatibility
+ }
+ if (displayName !== undefined) adminUpdateData.displayName = displayName;
+ if (firstName !== undefined) adminUpdateData.firstName = firstName;
+ if (lastName !== undefined) adminUpdateData.lastName = lastName;
+ if (email !== undefined) adminUpdateData.email = email;
+ if (phoneNumber !== undefined) {
+   adminUpdateData.phoneNumber = phoneNumber;
+   adminUpdateData.phone = phoneNumber;
+ }
+ if (finalBusinessId !== undefined) {
+   adminUpdateData.butcherId = finalBusinessId;
+   adminUpdateData.businessId = finalBusinessId;
+ }
+ if (finalBusinessName !== undefined) {
+   adminUpdateData.butcherName = finalBusinessName;
+   adminUpdateData.businessName = finalBusinessName;
+ }
+ if (organizationId !== undefined) adminUpdateData.organizationId = organizationId;
+ if (organizationName !== undefined) adminUpdateData.organizationName = organizationName;
+ if (photoURL !== undefined) adminUpdateData.photoURL = photoURL;
+ if (gender !== undefined) adminUpdateData.gender = gender;
 
  if (roles !== undefined) {
  adminUpdateData.roles = roles;

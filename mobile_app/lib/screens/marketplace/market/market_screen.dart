@@ -12,6 +12,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
+import 'package:lokma_app/providers/kermes_favorites_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/platform_brands_provider.dart';
@@ -1362,13 +1363,15 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           // Favoriler (kalp ikonu)
           Builder(
             builder: (context) {
-              final favorites = ref.watch(butcherFavoritesProvider);
-              final hasAny = favorites.isNotEmpty;
+              final butcherFavorites = ref.watch(butcherFavoritesProvider);
+              final kermesFavorites = ref.watch(kermesFavoritesProvider);
+              final totalFavorites = butcherFavorites.length + kermesFavorites.length;
+              final hasAny = totalFavorites > 0;
 
               return LokmaBadgeIcon(
                 icon: hasAny ? Icons.favorite : Icons.favorite_border,
                 iconColor: lokmaPink,
-                badgeCount: favorites.length,
+                badgeCount: totalFavorites,
                 onTap: () => context.push('/favorites'),
               );
             },

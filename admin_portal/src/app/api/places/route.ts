@@ -1,10 +1,26 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
-
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
+import { decryptApiKey } from '@/lib/crypto';
 
 // Google Places Autocomplete Proxy - bypasses CORS restrictions
 export async function GET(request: NextRequest) {
+  let GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+  // Try to fetch the secure key from the Firestore vault
+  try {
+    const { db } = getFirebaseAdmin();
+    const configDoc = await db.doc('config/apiKeys').get();
+    const configData = configDoc.data();
+    const googleMapsEntry = configData?.['google_maps'];
+    
+    if (googleMapsEntry?.encryptedValue) {
+      GOOGLE_MAPS_API_KEY = decryptApiKey(googleMapsEntry.encryptedValue);
+    }
+  } catch (vaultError) {
+    console.warn("Failed to fetch Google Maps API key from vault, falling back to env var.", vaultError);
+  }
+
  const searchParams = request.nextUrl.searchParams;
  const input = searchParams.get('input');
  const type = searchParams.get('type') || 'autocomplete'; // autocomplete or details

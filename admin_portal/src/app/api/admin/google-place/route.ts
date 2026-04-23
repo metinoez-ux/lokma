@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeTimeString } from "@/utils/timeUtils";
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
+import { decryptApiKey } from '@/lib/crypto';
 
 /**
  * Google Places weekday_text satirindaki saatleri 24h formatina donusturur.
@@ -41,7 +43,22 @@ export async function GET(request: NextRequest) {
  const placeId = searchParams.get("placeId");
  const query = searchParams.get("query");
 
- const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+ let apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
+
+ // Try to fetch the secure key from the Firestore vault
+ try {
+   const { db } = getFirebaseAdmin();
+   const configDoc = await db.doc('config/apiKeys').get();
+   const configData = configDoc.data();
+   const googleMapsEntry = configData?.['google_maps'];
+   
+   if (googleMapsEntry?.encryptedValue) {
+     apiKey = decryptApiKey(googleMapsEntry.encryptedValue);
+   }
+ } catch (vaultError) {
+   console.warn("Failed to fetch Google Maps API key from vault, falling back to env var.", vaultError);
+ }
+
  if (!apiKey) {
  return NextResponse.json({ error: "Server API Key configuration error" }, { status: 500 });
  }

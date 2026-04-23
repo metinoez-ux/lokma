@@ -200,6 +200,14 @@ interface KermesEvent {
  contactLastName?: string;
  contactPhone?: string;
  phoneCountryCode?: string;
+ // Impressum / Rechtliche Angaben
+ legalForm?: string;
+ managingDirector?: string;
+ authorizedRepresentative?: string;
+ registerCourt?: string;
+ registerNumber?: string;
+ vatNumber?: string;
+ customerId?: string;
  features?: string[];
  customCategories?: string[];
  // Nakliyat/Kurye
@@ -689,6 +697,14 @@ export default function KermesDetailPage() {
  contactLastName: data.contactLastName || '',
  contactPhone: data.contactPhone || '',
  phoneCountryCode: data.phoneCountryCode || '+49',
+ // Impressum / Rechtliche Angaben
+ legalForm: data.legalForm || '',
+ managingDirector: data.managingDirector || '',
+ authorizedRepresentative: data.authorizedRepresentative || '',
+ registerCourt: data.registerCourt || '',
+ registerNumber: data.registerNumber || '',
+ vatNumber: data.vatNumber || '',
+ customerId: data.customerId || '',
  // Sipariş Yöntemleri ve Nakliyat
  isMenuOnly: data.isMenuOnly || false,
  hasTakeaway: data.hasTakeaway !== false,

@@ -4,11 +4,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, limit, getDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { db, storage } from '@/lib/firebase';
+import { collection, getDocs, query, where, limit, getDoc, doc, updateDoc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import { getModuleBusinessTypes } from '@/lib/business-types';
 import { WorkspaceAssignmentsList, Assignment } from './components/WorkspaceAssignmentsList';
+import imageCompression from 'browser-image-compression';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '@/lib/cropImage';
 
 const COUNTRY_CODES = [
  { code: 'DE', dial: '+49', flag: '🇩🇪' },
@@ -81,11 +85,14 @@ export default function BenutzerverwaltungPage() {
  const [businessSearch, setBusinessSearch] = useState('');
  const [kermesSearch, setKermesSearch] = useState('');
  const [savingModal, setSavingModal] = useState(false);
+ const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
  
  // Add User / Partner Modal State
- const [showAddUserModal, setShowAddUserModal] = useState(false);
- const [addingUser, setAddingUser] = useState(false);
- const [newUserData, setNewUserData] = useState({
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [addingUser, setAddingUser] = useState(false);
+  const [newUserPhotoFile, setNewUserPhotoFile] = useState<File | null>(null);
+  const [newUserPhotoPreview, setNewUserPhotoPreview] = useState<string | null>(null);
+  const [newUserData, setNewUserData] = useState({
  firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
  address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
  country: 'Almanya', role: 'staff', sector: '', password: '', businessId: '', gender: ''
@@ -119,6 +126,14 @@ export default function BenutzerverwaltungPage() {
  const [editAssignments, setEditAssignments] = useState<Assignment[]>([]);
  const [editKermesAllowedSections, setEditKermesAllowedSections] = useState<string[]>([]);
  const [availableKermesSections, setAvailableKermesSections] = useState<{name: string, genderRestriction?: string}[]>([]);
+
+ // Cropper State
+ const [showCropperModal, setShowCropperModal] = useState(false);
+ const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+ const [crop, setCrop] = useState({ x: 0, y: 0 });
+ const [zoom, setZoom] = useState(1);
+ const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+ const [isCropping, setIsCropping] = useState(false);
 
  // Permission check
  const isSuperAdmin = admin?.adminType === 'super';
@@ -652,9 +667,53 @@ export default function BenutzerverwaltungPage() {
  successMsg += `\n⚠️ SMS GÖNDERİLEMEDİ: ${sms.error || 'Bilinmeyen hata'}`;
  }
  }
- alert(successMsg);
- setShowAddUserModal(false);
- setNewUserData({
+
+  // Upload photo if present
+  if (newUserPhotoFile && data.user?.uid) {
+    try {
+      const options = {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+        initialQuality: 0.8,
+      };
+      const compressedFile = await imageCompression(newUserPhotoFile, options);
+      const ext = compressedFile.name.split('.').pop() || 'jpg';
+      const filename = `profile_pictures/${data.user.uid}_${Date.now()}.${ext}`;
+      const storageRef = ref(storage, filename);
+      const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+      
+      // Update DB via backend API to bypass client security rules
+      const photoUpdateRes = await fetch('/api/admin/update-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          updateData: {
+            userId: data.user.uid,
+            photoURL: downloadURL,
+            action: 'updatePhotoOnly',
+            adminEmail: admin?.email
+          }
+        })
+      });
+      
+      if (!photoUpdateRes.ok) {
+        console.warn("New user photo update via API returned an error");
+      }
+      
+      successMsg += "\n📸 Profil resmi eklendi.";
+    } catch (photoErr) {
+      console.error("New user photo upload failed:", photoErr);
+      successMsg += `\n⚠️ Profil resmi yüklenemedi: ${String(photoErr)}`;
+    }
+  }
+
+  alert(successMsg);
+  setShowAddUserModal(false);
+  setNewUserPhotoFile(null);
+  setNewUserPhotoPreview(null);
+  setNewUserData({
  firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
  address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
  country: 'Almanya', role: 'staff', sector: '', password: '', businessId: '', gender: ''
@@ -834,6 +893,111 @@ const handleSaveUser = async () => {
  }
  };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const target = e.target;
+      
+      try {
+        // Ön sıkıştırma: EXIF rotasyonunu düzeltir (iPhone'da resmin yan veya ters görünmesi sorununu ve yanlış bölge kırpılmasını çözer)
+        const options = {
+          maxSizeMB: 2, 
+          maxWidthOrHeight: 1920,
+          useWebWorker: false, // Web worker bazen takılmalara neden olabilir, bu yüzden false yapıyoruz
+        };
+        const compressedFile = await imageCompression(file, options);
+        
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+          setImageToCrop(reader.result?.toString() || null);
+          setShowCropperModal(true);
+        });
+        reader.readAsDataURL(compressedFile);
+      } catch (err) {
+        console.error("Ön sıkıştırma hatası:", err);
+        // Fallback: Sıkıştırma başarısız olursa orijinal dosyayı yükle
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+          setImageToCrop(reader.result?.toString() || null);
+          setShowCropperModal(true);
+        });
+        reader.readAsDataURL(file);
+      }
+
+      if (target) target.value = ''; // Reset input
+    }
+  };
+
+  const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleSaveCroppedImage = async () => {
+    if (!imageToCrop || !croppedAreaPixels || !selectedUser) return;
+    setIsCropping(true);
+    
+    try {
+      // 1. Get Cropped Image
+      const croppedFile = await getCroppedImg(imageToCrop, croppedAreaPixels);
+      if (!croppedFile) throw new Error("Kırpma başarısız oldu.");
+
+      setIsUploadingPhoto(true);
+      
+      // Resim Sıkıştırma (Image Compression)
+      const options = {
+        maxSizeMB: 0.5, // Max 500 KB
+        maxWidthOrHeight: 800, // En veya boy maksimum 800px
+        useWebWorker: true,
+        initialQuality: 0.8,
+      };
+      
+      const compressedFile = await imageCompression(croppedFile, options);
+      
+      const ext = compressedFile.name.split('.').pop() || 'jpg';
+      const filename = `profile_pictures/${selectedUser.id}_${Date.now()}.${ext}`;
+      const storageRef = ref(storage, filename);
+      
+      const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+      
+      // Update local state to show immediately
+      setSelectedUser(prev => prev ? { ...prev, photoURL: downloadURL } : null);
+      
+      // Update in DB right away via backend API
+      if (selectedUser.source === 'users' || selectedUser.source === 'admins' || !selectedUser.source) {
+        const photoUpdateRes = await fetch('/api/admin/update-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            updateData: {
+              userId: selectedUser.id,
+              photoURL: downloadURL,
+              action: 'updatePhotoOnly',
+              adminEmail: admin?.email
+            }
+          })
+        });
+        
+        if (!photoUpdateRes.ok) {
+          const errData = await photoUpdateRes.json();
+          console.error("API Photo Update Error:", errData);
+          alert(`Profil resmi güncellenirken sunucu hatası: ${errData.error || 'Bilinmeyen Hata'}`);
+        }
+      }
+      
+      fetchData(); // reload list in background
+      
+      setShowCropperModal(false);
+      setImageToCrop(null);
+    } catch (err) {
+      console.error('Photo upload failed:', err);
+      alert('Profil resmi yüklenirken bir hata oluştu: ' + String(err));
+    } finally {
+      setIsUploadingPhoto(false);
+      setIsCropping(false);
+    }
+  };
+
 const getRoleBadgeInfo = (role: string) => {
  switch (role) {
  case 'super': return { bg: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', label: 'Super Admin' };
@@ -990,13 +1154,16 @@ const getKermesBadgeInfo = (role: string) => {
  <td className="px-6 py-4">
  <div className="flex items-center gap-3">
  <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
- {isSuperAdmin && user.photoURL ? (
- <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" />
- ) : (
- <span className="text-muted-foreground font-medium text-sm">
- {user.displayName?.charAt(0)?.toUpperCase() || '?'}
- </span>
- )}
+ {(() => {
+   const photo = user.photoURL || authPhotoUrlMap[user.id];
+   return photo ? (
+     <img src={photo} alt={user.displayName} className="h-full w-full object-cover" />
+   ) : (
+     <span className="text-muted-foreground font-medium text-sm">
+       {user.displayName?.charAt(0)?.toUpperCase() || '?'}
+     </span>
+   );
+ })()}
  </div>
  <div>
  <div className="font-medium text-foreground">{user.displayName}</div>
@@ -1141,16 +1308,39 @@ const getKermesBadgeInfo = (role: string) => {
  <div className="bg-card w-full max-w-2xl max-h-[95vh] flex flex-col rounded-2xl overflow-hidden border border-border shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
  
  <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20 rounded-t-2xl">
- <div className="flex items-center gap-3">
- <div className="h-12 w-12 rounded-full overflow-hidden bg-muted border border-border">
- {isSuperAdmin && selectedUser.photoURL ? (
- <img src={selectedUser.photoURL} alt={selectedUser.displayName} className="h-full w-full object-cover" />
- ) : (
- <div className="h-full w-full flex items-center justify-center font-bold text-xl text-muted-foreground">
- {selectedUser.displayName.charAt(0).toUpperCase()}
- </div>
- )}
- </div>
+ <div className="flex items-center gap-4">
+  <div 
+    className="relative group h-14 w-14 shrink-0 rounded-full overflow-hidden bg-muted border border-border cursor-pointer shadow-sm transition-transform hover:scale-105" 
+    onClick={() => document.getElementById('profileImageUpload')?.click()}
+    title="Profil resmini değiştir"
+  >
+    {isUploadingPhoto ? (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+        <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      </div>
+    ) : (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <span className="material-symbols-outlined text-white text-lg">upload</span>
+      </div>
+    )}
+    {(() => {
+      const photo = selectedUser.photoURL || authPhotoUrlMap[selectedUser.id];
+      return photo ? (
+        <img src={photo} alt={selectedUser.displayName} className="h-full w-full object-cover" />
+      ) : (
+        <div className="h-full w-full flex items-center justify-center font-bold text-xl text-muted-foreground bg-muted">
+          {selectedUser.displayName.charAt(0).toUpperCase()}
+        </div>
+      );
+    })()}
+    <input 
+      type="file" 
+      id="profileImageUpload" 
+      accept="image/*" 
+      className="hidden" 
+      onChange={handlePhotoUpload} 
+    />
+  </div>
  <div>
  <h2 className="text-xl font-bold text-foreground">{selectedUser.displayName}</h2>
  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
@@ -1559,11 +1749,44 @@ const getKermesBadgeInfo = (role: string) => {
  <div className="bg-card w-full max-w-2xl max-h-[95vh] flex flex-col rounded-2xl overflow-hidden border border-border shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
  
  <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20 rounded-t-2xl">
+ <div className="flex items-center gap-4">
+ <div 
+ className="relative group h-14 w-14 shrink-0 rounded-full overflow-hidden bg-muted border border-border cursor-pointer shadow-sm transition-transform hover:scale-105" 
+ onClick={() => document.getElementById('newProfileImageUpload')?.click()}
+ title="Profil resmi ekle"
+ >
+ <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+ <span className="material-symbols-outlined text-white text-lg">upload</span>
+ </div>
+ {newUserPhotoPreview ? (
+ <img src={newUserPhotoPreview} alt="Preview" className="h-full w-full object-cover" />
+ ) : (
+ <div className="h-full w-full flex items-center justify-center font-bold text-xl text-muted-foreground bg-muted">
+ +
+ </div>
+ )}
+ <input 
+ type="file" 
+ id="newProfileImageUpload" 
+ accept="image/*" 
+ className="hidden" 
+ onChange={(e) => {
+ const file = e.target.files?.[0];
+ if (file) {
+ setNewUserPhotoFile(file);
+ const reader = new FileReader();
+ reader.onloadend = () => setNewUserPhotoPreview(reader.result as string);
+ reader.readAsDataURL(file);
+ }
+ }} 
+ />
+ </div>
  <div className="flex flex-col">
  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
  {t('yeni_kullanici_ekle') || "Yeni Kullanıcı Ekle"}
  </h2>
  <p className="text-sm text-muted-foreground">Platforma anında yetkili hesabı oluşturun</p>
+ </div>
  </div>
  <button onClick={() => setShowAddUserModal(false)} className="text-muted-foreground hover:text-foreground text-xl leading-none">&times;</button>
  </div>
@@ -1935,6 +2158,80 @@ const getKermesBadgeInfo = (role: string) => {
  </div>
  </div>
  )}
+
+    {/* Cropper Modal */}
+    {showCropperModal && imageToCrop && (
+      <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4">
+        <div className="bg-card w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+          <div className="p-4 border-b border-border bg-muted/20 flex items-center justify-between">
+            <h2 className="font-bold text-lg">{t('profil_resmini_kirp') || 'Profil Resmini Kırp'}</h2>
+            <button 
+              onClick={() => {
+                setShowCropperModal(false);
+                setImageToCrop(null);
+              }}
+              className="p-2 hover:bg-muted rounded-full transition"
+            >
+              <span className="material-symbols-outlined text-muted-foreground">close</span>
+            </button>
+          </div>
+          
+          <div className="relative w-full h-[400px] bg-black/5">
+            <Cropper
+              image={imageToCrop}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onCropComplete={onCropComplete}
+              onZoomChange={setZoom}
+            />
+          </div>
+          
+          <div className="p-4 border-t border-border flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <span className="material-symbols-outlined text-muted-foreground text-sm">zoom_out</span>
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full accent-pink-600"
+              />
+              <span className="material-symbols-outlined text-muted-foreground text-sm">zoom_in</span>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCropperModal(false);
+                  setImageToCrop(null);
+                }}
+                className="flex-1 py-2 bg-background border border-border text-foreground hover:bg-muted font-medium rounded-xl transition"
+              >
+                {t('iptal') || 'İptal'}
+              </button>
+              <button
+                onClick={handleSaveCroppedImage}
+                disabled={isCropping}
+                className="flex-1 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-xl transition flex justify-center items-center shadow-md shadow-pink-600/20"
+              >
+                {isCropping ? (
+                  <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  t('kaydet') || 'Kaydet'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
  </div>
  );
 }

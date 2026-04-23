@@ -245,6 +245,12 @@ export async function POST(request: NextRequest) {
  createdBy: createdBy || 'system',
  firebaseUid: userRecord.uid, // Link to Firebase Auth user
  requirePasswordChange: true, // 🔒 Shared flag in admin doc
+ address: address || null,
+ houseNumber: houseNumber || null,
+ addressLine2: addressLine2 || null,
+ city: city || null,
+ country: country || null,
+ postalCode: postalCode || null,
  };
 
  // 🔑 UNIVERSAL BUSINESS ASSIGNMENT (Sector-agnostic)
@@ -314,6 +320,12 @@ export async function POST(request: NextRequest) {
  createdBy: createdBy || 'system',
  firebaseUid: userRecord.uid,
  requirePasswordChange: true, // 🔒 Shared flag in admin doc
+ address: address || null,
+ houseNumber: houseNumber || null,
+ addressLine2: addressLine2 || null,
+ city: city || null,
+ country: country || null,
+ postalCode: postalCode || null,
  };
 
  if (businessId) {

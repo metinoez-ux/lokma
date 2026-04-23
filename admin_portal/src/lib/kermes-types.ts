@@ -120,6 +120,15 @@ export interface Kermes {
  // İletişim
  contact: KermesContact;
 
+ // Impressum / Rechtliche Angaben
+ legalForm?: string;
+ managingDirector?: string;
+ authorizedRepresentative?: string;
+ registerCourt?: string;
+ registerNumber?: string;
+ vatNumber?: string;
+ customerId?: string;
+
  // Adres
  address: KermesAddress;
 
@@ -149,6 +158,14 @@ export interface CreateKermesInput {
  endDate: string;
  dailyHours: DailyHours;
  contact: KermesContact;
+ // Impressum / Rechtliche Angaben
+ legalForm?: string;
+ managingDirector?: string;
+ authorizedRepresentative?: string;
+ registerCourt?: string;
+ registerNumber?: string;
+ vatNumber?: string;
+ customerId?: string;
  address: KermesAddress;
  parking: ParkingInfo;
  features: KermesFeature[];

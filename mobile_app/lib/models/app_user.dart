@@ -83,10 +83,14 @@ class AppUser {
       email: map['email'] ?? '',
       displayName: map['displayName'],
       createdAt: map['createdAt'] != null 
-          ? (map['createdAt'] as Timestamp).toDate() 
+          ? (map['createdAt'] is Timestamp 
+              ? (map['createdAt'] as Timestamp).toDate() 
+              : DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now())
           : DateTime.now(),
       birthDate: map['birthDate'] != null 
-          ? (map['birthDate'] as Timestamp).toDate() 
+          ? (map['birthDate'] is Timestamp 
+              ? (map['birthDate'] as Timestamp).toDate() 
+              : DateTime.tryParse(map['birthDate'].toString()))
           : null,
       country: map['country'],
       state: map['state'],

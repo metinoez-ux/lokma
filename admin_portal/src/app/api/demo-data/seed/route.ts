@@ -82,7 +82,22 @@ export async function POST(req: NextRequest) {
  return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
  }
 
- const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+ let apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
+
+ // Try to fetch the secure key from the Firestore vault
+ try {
+   const configDoc = await adminDb.doc('config/apiKeys').get();
+   const configData = configDoc.data();
+   const googleMapsEntry = configData?.['google_maps'];
+   
+   if (googleMapsEntry?.encryptedValue) {
+     const { decryptApiKey } = await import('@/lib/crypto');
+     apiKey = decryptApiKey(googleMapsEntry.encryptedValue);
+   }
+ } catch (vaultError) {
+   console.warn("Failed to fetch Google Maps API key from vault, falling back to env var.", vaultError);
+ }
+
  if (!apiKey) {
  return NextResponse.json({ error: 'Missing Google API Key' }, { status: 500 });
  }
