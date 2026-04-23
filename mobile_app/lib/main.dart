@@ -25,6 +25,11 @@ void main() async {
     WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     
+    // Increase ImageCache size to prevent flickering and reloading when scrolling
+    // Default is 100 MB / 1000 items, which fills up quickly with list images.
+    PaintingBinding.instance.imageCache.maximumSizeBytes = 1024 * 1024 * 300; // 300 MB
+    PaintingBinding.instance.imageCache.maximumSize = 2000; // 2000 items
+    
     // ---------------------------------------------------------------
     // CRITICAL PATH: Only await what is absolutely required before
     // runApp(). Everything else runs in parallel or is deferred.

@@ -181,8 +181,12 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                           style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w400),
                           textInputAction: TextInputAction.search,
                           decoration: InputDecoration(
-                            hintText: tr('discovery.search_food_restaurant_cuisine'),
-                            hintStyle: TextStyle(color: hintColor, fontSize: 14, fontWeight: FontWeight.w400),
+                            hintText: widget.segment == 'market'
+                                ? tr('discovery.search_hint_market')
+                                : widget.segment == 'kermes'
+                                    ? tr('discovery.search_hint_kermes')
+                                    : tr('discovery.search_hint_food'),
+                            hintStyle: TextStyle(color: hintColor, fontSize: 13, fontWeight: FontWeight.w400),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
                             isDense: true,

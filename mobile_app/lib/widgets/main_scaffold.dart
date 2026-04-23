@@ -16,6 +16,7 @@ import '../providers/unpaid_kermes_orders_provider.dart';
 import '../widgets/kermes/order_qr_dialog.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../widgets/apple_glass_container.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
   final Widget child;
@@ -364,76 +365,20 @@ class GlassBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // ═══════════════════════════════════════════════════════════════════
-    // Apple iOS 26 "Liquid Glass" — frosted translucent floating bar
-    // ═══════════════════════════════════════════════════════════════════
-    const blurSigma = 28.0;
-
-    // Glass fill — truly translucent
-    final glassColor = isDark
-        ? Colors.black.withOpacity(0.25)
-        : Colors.white.withOpacity(0.35);
-
-    // Luminous edge border
-    final borderColor = isDark
-        ? Colors.white.withOpacity(0.12)
-        : Colors.white.withOpacity(0.45);
-
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.only(bottom: 24),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-            child: Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: glassColor,
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(
-                  color: borderColor,
-                  width: 0.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                    spreadRadius: -4,
-                  ),
-                ],
-              ),
-              // Specular highlight layer + nav items
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Specular highlight — glass refraction simulation
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(40),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: isDark
-                              ? [
-                                  Colors.white.withOpacity(0.06),
-                                  Colors.transparent
-                                ]
-                              : [
-                                  Colors.white.withOpacity(0.50),
-                                  Colors.white.withOpacity(0.0)
-                                ],
-                          stops: const [0.0, 0.6],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Nav items — centered in Stack
+        child: AppleGlassContainer(
+          height: 70,
+          borderRadius: 40,
+          blurSigmaX: 6.0, // Reduced from 12.0 for a more transparent effect
+          blurSigmaY: 6.0,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Nav items — centered in Stack
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(items.length, (index) {
@@ -457,18 +402,14 @@ class GlassBottomBar extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        ),
       ),
     );
   }
 
   Widget _buildItemContent(
       NavItemData item, bool isActive, BuildContext context, bool isDark) {
-    const activeColor = Color(0xFFEA184A);
-    final inactiveColor = isDark
-        ? Colors.white.withOpacity(0.55)
-        : Colors.black.withOpacity(0.55);
+    const activeColor = Colors.white; // Seçili olan tam beyaz
+    final inactiveColor = Colors.white.withOpacity(0.5); // Seçili olmayanlar yarı saydam beyaz
     final color = isActive ? activeColor : inactiveColor;
     const iconSize = 24.0;
 
@@ -558,8 +499,8 @@ class GlassBottomBar extends StatelessWidget {
           item.label,
           style: GoogleFonts.inter(
             color: color,
-            fontSize: 9.5,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 10.5,
+            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
             letterSpacing: -0.2,
           ),
         ),

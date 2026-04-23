@@ -3527,7 +3527,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
               const SizedBox(height: 12),
               Text(
-                'Unsere Fleischprodukte werden in speziellen Schutzboxen geliefert, ohne die Kühlkette zu unterbrechen.\n\nWährend der Lieferung bleiben Ihre Produkte gekühlt und frisch.',
+                'marketplace.cold_chain_full_desc'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isDark ? Colors.grey[300] : Colors.grey[700],
@@ -3696,7 +3696,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                'SOĞUK ZİNCİR TESLİMATI', // buyuk bas harf ve hepsi buyuk? User said "büyük baş harfleri ile yazsın". Like "Soğuk Zincir Teslimatı" it was already. Or they meant all caps? "büyük baş harfleri ile" means "SOĞUK ZİNCİR TESLİMATI". Let's do all caps.
+                'marketplace.cold_chain_delivery'.tr().toUpperCase(),
                 style: TextStyle(
                   color: isDark ? const Color(0xFF81D4FA) : const Color(0xFF0277BD),
                   fontSize: 15,

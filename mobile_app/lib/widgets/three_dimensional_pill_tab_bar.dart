@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'apple_glass_container.dart';
 
 class TabItem {
   final String title;
@@ -111,34 +112,18 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final trackColor =
-        isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF2EEE9);
     final unselTextColor = isDark ? Colors.grey[300]! : const Color(0xFF3E3E40);
 
     return LayoutBuilder(builder: (ctx, constraints) {
       final hMargin = _margin.horizontal;
       _containerWidth = constraints.maxWidth - hMargin;
 
-      return Container(
+      return AppleGlassContainer(
         height: _height,
         margin: _margin,
-        decoration: BoxDecoration(
-          color: trackColor,
-          borderRadius: BorderRadius.circular(_borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.4)
-                  : Colors.black.withOpacity(0.10),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          border: isDark
-              ? Border.all(
-                  color: Colors.white.withOpacity(0.06), width: 0.5)
-              : null,
-        ),
+        borderRadius: _borderRadius,
+        blurSigmaX: 20.0,
+        blurSigmaY: 20.0,
         child: Padding(
           padding: const EdgeInsets.all(3),
           child: AnimatedBuilder(

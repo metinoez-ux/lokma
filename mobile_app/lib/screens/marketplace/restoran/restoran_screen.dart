@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:lokma_app/widgets/lokma_badge_icon.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +31,7 @@ import 'package:lokma_app/widgets/group_order_setup_sheet.dart';
 import 'package:lokma_app/widgets/marketplace_group_share_sheet.dart';
 import 'package:lokma_app/models/table_group_session_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lokma_app/widgets/animated_search_hint.dart';
 import 'reservation_discovery_screen.dart';
 
 /// Business type labels for display
@@ -816,11 +818,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 if (!_isLoading && _filteredBusinesses.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 6, 20, 4),
                       child: Text(
                         tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                           letterSpacing: -0.2,
@@ -843,11 +845,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 if (!_isLoading && _filteredBusinesses.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 9, 20, 4),
                       child: Text(
                         tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                           letterSpacing: -0.2,
@@ -865,11 +867,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             if (_deliveryMode != 'masa' && !_isLoading && _filteredBusinesses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 3),
+                  padding: const EdgeInsets.fromLTRB(20, 13, 20, 0),
                   child: Text(
                     tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                       letterSpacing: -0.2,
@@ -1068,160 +1070,45 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           const SizedBox(width: 4),
 
           // Bildirim zili (notification bell)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/notification-history');
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseAuth.instance.currentUser != null
-                    ? FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(FirebaseAuth.instance.currentUser!.uid)
-                        .collection('notifications')
-                        .where('read', isEqualTo: false)
-                        .snapshots()
-                    : null,
-                builder: (context, snapshot) {
-                  final unreadCount = snapshot.data?.docs.length ?? 0;
-                  final isDark = Theme.of(context).brightness == Brightness.dark;
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseAuth.instance.currentUser != null
+                ? FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('notifications')
+                    .where('read', isEqualTo: false)
+                    .snapshots()
+                : null,
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data?.docs.length ?? 0;
+              final isDark = Theme.of(context).brightness == Brightness.dark;
 
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Bell icon - always dark grey, consistent circle bg
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.08)
-                              : Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          unreadCount > 0
-                              ? Icons.notifications_rounded
-                              : Icons.notifications_outlined,
-                          color: isDark ? Colors.white70 : Colors.grey[700],
-                          size: 22,
-                        ),
-                      ),
-                      // Badge - red to match other badges
-                      if (unreadCount > 0)
-                        Positioned(
-                          top: -2,
-                          right: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Theme.of(context).scaffoldBackgroundColor,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF3B30).withOpacity(0.4),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              unreadCount > 99 ? '99+' : '$unreadCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
+              return LokmaBadgeIcon(
+                icon: unreadCount > 0
+                    ? Icons.notifications_rounded
+                    : Icons.notifications_outlined,
+                iconColor: isDark ? Colors.white70 : Colors.grey[700],
+                badgeCount: unreadCount,
+                onTap: () => context.push('/notification-history'),
+              );
+            },
           ),
 
           const SizedBox(width: 2),
 
           // Favoriler (kalp ikonu) - favoriler sayfasina git
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/favorites');
+          Builder(
+            builder: (context) {
+              final favorites = ref.watch(butcherFavoritesProvider);
+              final hasAny = favorites.isNotEmpty;
+
+              return LokmaBadgeIcon(
+                icon: hasAny ? Icons.favorite : Icons.favorite_border,
+                iconColor: lokmaPink,
+                badgeCount: favorites.length,
+                onTap: () => context.push('/favorites'),
+              );
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              child: Builder(
-                builder: (context) {
-                  final favorites = ref.watch(butcherFavoritesProvider);
-                  final hasAny = favorites.isNotEmpty;
-                  final isDarkFav = Theme.of(context).brightness == Brightness.dark;
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Heart icon - same circle bg as bell
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: isDarkFav
-                              ? Colors.white.withOpacity(0.08)
-                              : Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          hasAny ? Icons.favorite : Icons.favorite_border,
-                          color: lokmaPink,
-                          size: 22,
-                        ),
-                      ),
-                      if (hasAny)
-                        Positioned(
-                          top: -2,
-                          right: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Theme.of(context).scaffoldBackgroundColor,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF3B30).withOpacity(0.4),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              '${favorites.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
           ),
         ],
       ),
@@ -1257,15 +1144,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             children: [
               Icon(Icons.search, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], size: 22),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  tr('discovery.search_food_restaurant_cuisine'),
-                  style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[500], 
-                    fontSize: 15, 
-                    fontWeight: FontWeight.w500
-                  ),
-                ),
+              const Expanded(
+                child: AnimatedSearchHint(segment: 'yemek'),
               ),
               const SizedBox(width: 8),
               // Integrated Filter Button

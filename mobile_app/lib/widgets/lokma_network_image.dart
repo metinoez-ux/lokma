@@ -74,7 +74,34 @@ class LokmaNetworkImage extends StatelessWidget {
             ? placeholder(context, imageUrl) 
             : _buildShimmerPlaceholder(),
       );
+      
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: imageWidget,
+      );
     } else {
+      int? finalMemCacheWidth = memCacheWidth;
+      int? finalMemCacheHeight = memCacheHeight;
+
+      if (finalMemCacheWidth == null && finalMemCacheHeight == null) {
+        // Safe multiplier to ensure crisp images while avoiding OOM
+        // We use a fixed scale (like 2.0) if devicePixelRatio isn't easily accessible
+        // without LayoutBuilder. Since we have context, we can use MediaQuery if available,
+        // but to avoid depending on layout rebuilds or context availability issues,
+        // a static multiplier of 2.0 works perfectly for most modern devices.
+        const double dpr = 2.0;
+
+        if (width != null && width! > 0 && width! < double.infinity) {
+          finalMemCacheWidth = (width! * dpr).toInt();
+        } else if (height != null && height! > 0 && height! < double.infinity) {
+          finalMemCacheHeight = (height! * dpr).toInt();
+        } else {
+          // Fallback for list items without explicit size. 
+          // 800 is a safe upper bound for most cards without explicit dimensions.
+          finalMemCacheHeight = 800;
+        }
+      }
+
       imageWidget = CachedNetworkImage(
         imageUrl: imageUrl,
         width: width,
@@ -84,21 +111,20 @@ class LokmaNetworkImage extends StatelessWidget {
         colorBlendMode: colorBlendMode,
         alignment: alignment,
         filterQuality: filterQuality,
-        // Removed dynamic memory scaling defaults which force heavy software resizing on old Android CPUs (causing 30s lags)
-        memCacheHeight: memCacheHeight,
-        memCacheWidth: memCacheWidth,
+        memCacheHeight: finalMemCacheHeight,
+        memCacheWidth: finalMemCacheWidth,
         fadeInDuration: fadeInDuration ?? const Duration(milliseconds: 200),
         fadeOutDuration: fadeOutDuration ?? const Duration(milliseconds: 200),
         useOldImageOnUrlChange: useOldImageOnUrlChange ?? true,
         placeholder: (context, url) => placeholder != null ? placeholder(context, url) : _buildShimmerPlaceholder(),
         errorWidget: (context, url, error) => errorWidget != null ? errorWidget(context, url, error) : _buildErrorPlaceholder(),
       );
-    }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: imageWidget,
-    );
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: imageWidget,
+      );
+    }
   }
 
   Widget _buildShimmerPlaceholder() {

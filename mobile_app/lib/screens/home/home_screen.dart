@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'dart:async';
 import '../../utils/currency_utils.dart';
+
+import '../../widgets/animated_search_hint.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -101,11 +104,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 16),
                       Icon(Icons.search_rounded, color: Colors.grey[600], size: 26),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'home.search_hint'.tr(),
-                          style: TextStyle(color: Colors.grey[400], fontSize: 17),
-                        ),
+                      const Expanded(
+                        child: AnimatedSearchHint(),
                       ),
                       Container(
                         margin: const EdgeInsets.all(8),

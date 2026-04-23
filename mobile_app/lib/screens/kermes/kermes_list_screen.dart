@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:lokma_app/widgets/lokma_badge_icon.dart';
 import 'dart:math' as math;
 
 import 'package:flutter_map/flutter_map.dart';
@@ -25,6 +26,7 @@ import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokma_app/services/kermes_feature_service.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:lokma_app/widgets/animated_search_hint.dart';
 
 /// Kermes Listesi - Yemek segmenti ile ayni UI yapisi
 /// Theme-aware, smart search, toggle switches, filter bottom sheet
@@ -1629,14 +1631,14 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               if (!_isLoading && _cachedFilteredEvents.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
                     child: Row(
                       children: [
                         Text(
                           'kermes.events_found_count'
                               .tr(args: [_cachedFilteredEvents.length.toString()]),
                           style: TextStyle(
-                            fontSize: 17,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: Theme.of(context)
                                 .colorScheme
@@ -1962,155 +1964,53 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           const SizedBox(width: 4),
 
           // Bildirim zili (notification bell)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/notification-history');
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseAuth.instance.currentUser != null
-                    ? FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(FirebaseAuth.instance.currentUser!.uid)
-                        .collection('notifications')
-                        .where('read', isEqualTo: false)
-                        .snapshots()
-                    : null,
-                builder: (context, snapshot) {
-                  final unreadCount = snapshot.data?.docs.length ?? 0;
-                  final isDark =
-                      Theme.of(context).brightness == Brightness.dark;
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseAuth.instance.currentUser != null
+                ? FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('notifications')
+                    .where('read', isEqualTo: false)
+                    .snapshots()
+                : null,
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data?.docs.length ?? 0;
+              final isDark =
+                  Theme.of(context).brightness == Brightness.dark;
 
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Bell icon - white outline style for contrast
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.08)
-                              : Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          unreadCount > 0
-                              ? Icons.notifications_rounded
-                              : Icons.notifications_outlined,
-                          color: unreadCount > 0
-                              ? lokmaPink
-                              : (isDark ? Colors.white70 : Colors.grey[800]),
-                          size: 24,
-                        ),
-                      ),
-                      // Badge - red to match other badges
-                      if (unreadCount > 0)
-                        Positioned(
-                          top: -2,
-                          right: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color:
-                                    Theme.of(context).scaffoldBackgroundColor,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Text(
-                              unreadCount > 9 ? '9+' : unreadCount.toString(),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
+              return LokmaBadgeIcon(
+                icon: unreadCount > 0
+                    ? Icons.notifications_rounded
+                    : Icons.notifications_outlined,
+                iconColor: unreadCount > 0
+                    ? lokmaPink
+                    : (isDark ? Colors.white70 : Colors.grey[800]),
+                badgeCount: unreadCount,
+                onTap: () => context.push('/notification-history'),
+              );
+            },
           ),
 
           const SizedBox(width: 4),
 
           // Favoriler (kalp butonu)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/favorites');
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              child: Builder(
-                builder: (context) {
-                  final isDark =
-                      Theme.of(context).brightness == Brightness.dark;
-                  int favCount = _favoriteKermesIds.length;
+          Builder(
+            builder: (context) {
+              final isDark =
+                  Theme.of(context).brightness == Brightness.dark;
+              int favCount = _favoriteKermesIds.length;
 
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Heart icon
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.08)
-                              : Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          favCount > 0
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          color: favCount > 0
-                              ? lokmaPink
-                              : (isDark ? Colors.white70 : Colors.grey[800]),
-                          size: 24,
-                        ),
-                      ),
-                      // Badge
-                      if (favCount > 0)
-                        Positioned(
-                          top: -2,
-                          right: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color:
-                                    Theme.of(context).scaffoldBackgroundColor,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Text(
-                              favCount > 9 ? '9+' : favCount.toString(),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
+              return LokmaBadgeIcon(
+                icon: favCount > 0
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                iconColor: favCount > 0
+                    ? lokmaPink
+                    : (isDark ? Colors.white70 : Colors.grey[800]),
+                badgeCount: favCount,
+                onTap: () => context.push('/favorites'),
+              );
+            },
           ),
           const SizedBox(width: 14),
         ],
@@ -2178,14 +2078,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                     size: 22),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    'kermes.kermes_search_hint'.tr(),
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[300] : Colors.grey[600],
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  child: AnimatedSearchHint(segment: 'kermes'),
                 ),
                 const SizedBox(width: 8),
                 // Filter Button within search

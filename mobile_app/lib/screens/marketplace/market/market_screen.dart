@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:lokma_app/widgets/lokma_badge_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,6 +23,7 @@ import 'package:lokma_app/widgets/lokma_network_image.dart';
 import '../widgets/wallet_business_card.dart';
 import '../../../utils/currency_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lokma_app/widgets/animated_search_hint.dart';
 
 /// Business type labels for display
 const Map<String, String> MARKET_TYPE_LABELS = {
@@ -1199,11 +1201,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             if (!_isLoading && _filteredBusinesses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 15, 20, 3),
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                   child: Text(
                     tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                       letterSpacing: -0.2,
@@ -1329,149 +1331,47 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           const SizedBox(width: 4),
 
           // Bildirim zili (notification bell)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/notification-history');
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseAuth.instance.currentUser != null
-                    ? FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(FirebaseAuth.instance.currentUser!.uid)
-                        .collection('notifications')
-                        .where('read', isEqualTo: false)
-                        .snapshots()
-                    : null,
-                builder: (context, snapshot) {
-                  final unreadCount = snapshot.data?.docs.length ?? 0;
-                  final isDark = Theme.of(context).brightness == Brightness.dark;
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseAuth.instance.currentUser != null
+                ? FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('notifications')
+                    .where('read', isEqualTo: false)
+                    .snapshots()
+                : null,
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data?.docs.length ?? 0;
+              final isDark = Theme.of(context).brightness == Brightness.dark;
 
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.08)
-                              : Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          unreadCount > 0
-                              ? Icons.notifications_rounded
-                              : Icons.notifications_outlined,
-                          color: unreadCount > 0
-                              ? lokmaPink
-                              : (isDark ? Colors.white70 : Colors.grey[800]),
-                          size: 24,
-                        ),
-                      ),
-                      if (unreadCount > 0)
-                        Positioned(
-                          top: -2,
-                          right: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Theme.of(context).scaffoldBackgroundColor,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF3B30).withOpacity(0.4),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              unreadCount > 99 ? '99+' : '$unreadCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
+              return LokmaBadgeIcon(
+                icon: unreadCount > 0
+                    ? Icons.notifications_rounded
+                    : Icons.notifications_outlined,
+                iconColor: unreadCount > 0
+                    ? lokmaPink
+                    : (isDark ? Colors.white70 : Colors.grey[800]),
+                badgeCount: unreadCount,
+                onTap: () => context.push('/notification-history'),
+              );
+            },
           ),
 
           const SizedBox(width: 2),
           
           // Favoriler (kalp ikonu)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/favorites');
+          Builder(
+            builder: (context) {
+              final favorites = ref.watch(butcherFavoritesProvider);
+              final hasAny = favorites.isNotEmpty;
+
+              return LokmaBadgeIcon(
+                icon: hasAny ? Icons.favorite : Icons.favorite_border,
+                iconColor: lokmaPink,
+                badgeCount: favorites.length,
+                onTap: () => context.push('/favorites'),
+              );
             },
-            child: Container(
-              padding: const EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 6),
-              child: Builder(
-                builder: (context) {
-                  final favorites = ref.watch(butcherFavoritesProvider);
-                  final hasAny = favorites.isNotEmpty;
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Icon(
-                        hasAny ? Icons.favorite : Icons.favorite_border,
-                        color: lokmaPink,
-                        size: 26,
-                      ),
-                      if (hasAny)
-                        Positioned(
-                          top: -2,
-                          right: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Theme.of(context).scaffoldBackgroundColor,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF3B30).withOpacity(0.4),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              '${favorites.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
           ),
         ],
       ),
@@ -1506,15 +1406,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             children: [
               Icon(Icons.search, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], size: 22),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Market, ürün veya şehir ara...',
-                  style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[500], 
-                    fontSize: 15, 
-                    fontWeight: FontWeight.w500
-                  ),
-                ),
+              const Expanded(
+                child: AnimatedSearchHint(segment: 'market'),
               ),
               const SizedBox(width: 8),
               // Integrated Filter Button
