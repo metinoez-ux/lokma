@@ -29,6 +29,110 @@ interface BusinessStats {
  byType: Record<string, number>;
 }
 
+interface SearchOption {
+  id: string;
+  name: string;
+  city: string;
+  postalCode: string;
+  extraSearchData?: string;
+}
+
+const SearchSelectDropdown = ({ 
+  options, 
+  value, 
+  onChange,
+  defaultLabel,
+  searchPlaceholder
+}: { 
+  options: SearchOption[]; 
+  value: string; 
+  onChange: (id: string) => void;
+  defaultLabel: string;
+  searchPlaceholder: string;
+}) => {
+  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
+  const selectedOption = value === 'all' ? null : options.find(o => o.id === value);
+  const displayValue = selectedOption ? selectedOption.name : defaultLabel;
+  
+  const filtered = options.filter(o => {
+    const q = query.toLowerCase();
+    return o.name.toLowerCase().includes(q) || 
+           o.city.toLowerCase().includes(q) || 
+           o.postalCode.toLowerCase().includes(q) ||
+           (o.extraSearchData && o.extraSearchData.toLowerCase().includes(q));
+  });
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <button 
+        onClick={() => { setIsOpen(!isOpen); setQuery(''); }}
+        className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg border border-emerald-500 text-sm cursor-pointer flex justify-between items-center min-w-[200px]"
+      >
+        <span className="truncate max-w-[200px]">{displayValue}</span>
+        <span className="ml-2 text-[10px]">▼</span>
+      </button>
+      
+      {isOpen && (
+        <div className="absolute top-full mt-1 left-0 w-[300px] bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+          <div className="p-2 border-b border-border bg-muted/30">
+            <input 
+              type="text" 
+              autoFocus
+              className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              placeholder={searchPlaceholder}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Escape') setIsOpen(false);
+              }}
+            />
+          </div>
+          <div className="max-h-60 overflow-y-auto">
+            <div 
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-muted ${value === 'all' ? 'bg-emerald-600/20 text-emerald-500 font-bold' : 'text-foreground'}`}
+              onClick={() => { onChange('all'); setIsOpen(false); setQuery(''); }}
+            >
+              {defaultLabel}
+            </div>
+            {filtered.map(o => (
+              <div 
+                key={o.id} 
+                className={`px-3 py-2 text-sm cursor-pointer hover:bg-muted border-t border-border/50 ${value === o.id ? 'bg-emerald-600/20' : ''}`}
+                onClick={() => { onChange(o.id); setIsOpen(false); setQuery(''); }}
+              >
+                <div className={`font-medium ${value === o.id ? 'text-emerald-500 font-bold' : 'text-foreground'}`}>
+                  {o.name}
+                </div>
+                {(o.city || o.postalCode || o.extraSearchData) && (
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {o.postalCode} {o.city} {o.extraSearchData && `(${o.extraSearchData})`}
+                  </div>
+                )}
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="px-3 py-4 text-sm text-muted-foreground text-center">Sonuç bulunamadı</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function UnifiedAnalyticsPage() {
 
  const t = useTranslations('AdminAnalytics');
@@ -38,12 +142,15 @@ export default function UnifiedAnalyticsPage() {
  // Filters
  const [dateFilter, setDateFilter] = useState<DateFilter>('month');
  const [businessFilter, setBusinessFilter] = useState<string>('all');
+ const [kermesFilter, setKermesFilter] = useState<string>('all');
 
  // Orders from unified hook (single Firestore listener)
  const { orders, loading: ordersLoading } = useOrdersStandalone({ initialDateFilter: 'all' });
 
  // Data
  const [businesses, setBusinesses] = useState<Record<string, string>>({});
+ const [businessDetails, setBusinessDetails] = useState<SearchOption[]>([]);
+ const [kermesDetails, setKermesDetails] = useState<SearchOption[]>([]);
  const [userStats, setUserStats] = useState<UserStats | null>(null);
  const [businessStats, setBusinessStats] = useState<BusinessStats | null>(null);
  const [masterProductCount, setMasterProductCount] = useState(0);
@@ -104,25 +211,66 @@ export default function UnifiedAnalyticsPage() {
  const loadBusinesses = async () => {
  const snapshot = await getDocs(collection(db, 'businesses'));
  const map: Record<string, string> = {};
+ const detailsList: SearchOption[] = [];
  const statsMap: Record<string, number> = {};
  let activeCount = 0;
 
  snapshot.docs.forEach(doc => {
  const data = doc.data();
- map[doc.id] = data.companyName || doc.id;
+ const name = data.companyName || data.brand || doc.id;
+ map[doc.id] = name;
+ 
+ detailsList.push({
+   id: doc.id,
+   name,
+   city: data.address?.city || data.city || '',
+   postalCode: data.address?.postalCode || data.postalCode || ''
+ });
  const type = data.businessType || data.type || 'other';
  statsMap[type] = (statsMap[type] || 0) + 1;
  if (data.isActive !== false) activeCount++;
  });
 
  setBusinesses(map);
+ setBusinessDetails(detailsList.sort((a, b) => a.name.localeCompare(b.name)));
  setBusinessStats({
  total: snapshot.size,
  active: activeCount,
  byType: statsMap
  });
  };
+
+ const loadKermeses = async () => {
+ const snap = await getDocs(collection(db, 'kermes_events'));
+ const orgSnap = await getDocs(collection(db, 'organizations'));
+ 
+ const orgs: Record<string, any> = {};
+ orgSnap.docs.forEach(d => { orgs[d.id] = d.data(); });
+ 
+ const detailsList: SearchOption[] = [];
+ snap.docs.forEach(doc => {
+ const data = doc.data();
+ const orgId = data.organizationId;
+ const org = orgId ? orgs[orgId] : null;
+ 
+ const name = data.title || data.name || doc.id;
+ const city = data.city || data.location || org?.city || '';
+ const postalCode = data.postalCode || org?.postalCode || '';
+ const orgName = org?.name || org?.shortName || data.organizationName || '';
+ 
+ detailsList.push({
+   id: doc.id,
+   name,
+   city,
+   postalCode,
+   extraSearchData: orgName
+ });
+ });
+ setKermesDetails(detailsList.sort((a, b) => a.name.localeCompare(b.name)));
+ };
+
  loadBusinesses();
+ loadKermeses();
  }, []);
 
  // Load users & admins
@@ -177,7 +325,7 @@ export default function UnifiedAnalyticsPage() {
  }
  }, [ordersLoading]);
 
- // Filter orders by date and business
+ // Filter orders by date and business/kermes
  const { start: currentStart, end: currentEnd } = getDateRange(dateFilter);
  const filteredOrders = useMemo(() => {
  let filtered = orders.filter(o => {
@@ -188,8 +336,11 @@ export default function UnifiedAnalyticsPage() {
  if (businessFilter !== 'all') {
  filtered = filtered.filter(o => o.businessId === businessFilter);
  }
+ if (kermesFilter !== 'all') {
+ filtered = filtered.filter(o => o.businessId === kermesFilter);
+ }
  return filtered;
- }, [orders, currentStart, currentEnd, businessFilter]);
+ }, [orders, currentStart, currentEnd, businessFilter, kermesFilter]);
 
  // Calculate stats
  const stats = useMemo(() => {
@@ -348,16 +499,22 @@ export default function UnifiedAnalyticsPage() {
  </div>
 
  {/* Business Filter */}
- <select
- value={businessFilter}
- onChange={(e) => setBusinessFilter(e.target.value)}
- className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg border border-emerald-500 text-sm"
- >
- <option value="all">{t('tum_i_sletmeler')}</option>
- {Object.entries(businesses).map(([id, name]) => (
- <option key={id} value={id}>{name}</option>
- ))}
- </select>
+ <SearchSelectDropdown 
+   options={businessDetails} 
+   value={businessFilter} 
+   onChange={(val) => { setBusinessFilter(val); setKermesFilter('all'); }} 
+   defaultLabel={t('tum_i_sletmeler')}
+   searchPlaceholder="İşletme adı, şehir, posta kodu..."
+ />
+
+ {/* Kermes Filter */}
+ <SearchSelectDropdown 
+   options={kermesDetails} 
+   value={kermesFilter} 
+   onChange={(val) => { setKermesFilter(val); setBusinessFilter('all'); }} 
+   defaultLabel="Tüm Kermesler"
+   searchPlaceholder="Kermes adı, şehir, dernek..."
+ />
  </div>
  </div>
 
