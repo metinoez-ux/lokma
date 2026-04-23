@@ -440,19 +440,19 @@ export default function AdminHeader() {
  )}
  </div>
  <div className="hidden sm:flex flex-col items-start ml-1">
- <span className="text-white text-xs font-medium max-w-[110px] truncate leading-tight">
- {admin.displayName || 'Super Admin'}
- </span>
- <span className="text-red-400 font-bold text-[10px] leading-tight uppercase tracking-wider">
- {t('superAdmin')}
- </span>
- </div>
+  <span className="text-white text-xs font-medium max-w-[110px] truncate leading-tight">
+    {admin.displayName || 'Metin Öz'} (SA)
+  </span>
+  <span className="text-slate-400 text-[10px] leading-tight uppercase tracking-wider mt-0.5">
+    Einstellungen
+  </span>
+</div>
  <span className="text-slate-400 text-[10px] ml-1">{`\u25BC`}</span>
  </button>
  {tabletProfileOpen && (
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border z-50 min-w-[200px]">
  <div className="px-4 py-3 border-b border-border bg-muted/20">
- <p className="text-foreground text-sm font-bold truncate">{admin.displayName || 'Super Admin'}</p>
+ <p className="text-foreground text-sm font-bold truncate">{admin.displayName || 'Metin Öz'} (SA)</p>
  <p className="text-muted-foreground text-xs truncate opacity-70">{admin.email || admin.phone || ''}</p>
  </div>
  
@@ -539,7 +539,7 @@ export default function AdminHeader() {
   <Link
   href="/admin/business"
   className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/business') || isActiveNav('/admin/kermes') || isActiveNav('/admin/benutzerverwaltung') || isActiveNav('/admin/customers') || isActiveNav('/admin/partners') || isActiveNav('/admin/drivers') || isActiveNav('/admin/volunteers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/superadmins') || isActiveNav('/admin/sponsored-ads')
-  ? 'bg-background/10 border border-[var(--header-border)] text-white shadow-inner'
+  ? 'bg-background/10 text-white shadow-inner'
   : 'text-slate-300 hover:text-white hover:bg-background/10'
   }`}
   >
@@ -673,15 +673,15 @@ export default function AdminHeader() {
  {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
  </span>
  )}
- </div>
- <div className="hidden md:flex flex-col items-start ml-2">
- <span className="text-foreground text-sm font-bold max-w-[120px] truncate leading-tight">
- {admin.displayName || 'Metin Öz'}
- </span>
- <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 mt-0.5 rounded text-[10px] font-bold leading-tight uppercase tracking-wider border border-red-500/20">
- {t('superAdmin')}
- </span>
- </div>
+  </div>
+  <div className="hidden md:flex flex-col items-start ml-2">
+    <span className="text-foreground text-sm font-bold max-w-[120px] truncate leading-tight">
+      {admin.displayName || 'Metin Öz'} (SA)
+    </span>
+    <span className="text-muted-foreground text-[10px] leading-tight uppercase tracking-wider mt-0.5">
+      Einstellungen
+    </span>
+  </div>
  <span className="text-slate-400 text-[10px] ml-1">▼</span>
  </button>
 
@@ -689,7 +689,7 @@ export default function AdminHeader() {
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
  <div className="px-4 py-3 border-b border-border bg-muted/20">
  <p className="text-foreground text-sm font-bold truncate">
- {admin.displayName || 'Super Admin'}
+ {admin.displayName || 'Metin Öz'} (SA)
  </p>
  <p className="text-muted-foreground text-xs truncate opacity-70">
  {admin.email || admin.phone || ''}
