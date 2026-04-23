@@ -107,6 +107,8 @@ export default function BenutzerverwaltungPage() {
  const [editName, setEditName] = useState('');
  const [editPhone, setEditPhone] = useState('');
  const [editRoles, setEditRoles] = useState<string[]>([]);
+ const [editIsActive, setEditIsActive] = useState(true);
+ const [isResettingPassword, setIsResettingPassword] = useState(false);
  
  // Additional Detailed Edit State
  const [editFirstName, setEditFirstName] = useState('');
@@ -155,6 +157,9 @@ export default function BenutzerverwaltungPage() {
  const businessesSnap = await getDocs(collection(db, 'businesses'));
  businessesSnap.docs.forEach(docSnap => {
  const data = docSnap.data();
+ // Silinmiş işletmeleri atla
+ if (data.status === 'deleted' || data.isDeleted === true || data.isActive === false) return;
+ 
  allBusinesses.push({
  id: docSnap.id,
  name: data.companyName || data.name || t('businessLabel'),
@@ -448,6 +453,7 @@ export default function BenutzerverwaltungPage() {
  setEditName(namePart);
  setEditPhone(user.phone || '');
  setEditRoles([...user.roles]);
+ setEditIsActive(user.isActive !== false);
 
  let pr = 'staff';
  if (user.roles.includes('super')) pr = 'super';
@@ -494,7 +500,40 @@ export default function BenutzerverwaltungPage() {
  setSelectedKermesIds(data.assignedKermesEvents || []);
  setEditSector(data.sector || data.businessType || '');
  setEditBusinessId(data.businessId || data.butcherId || '');
- setEditAssignments(data.assignments || []);
+ 
+ // Eski atama alanlarını yeni assignments listesine dahil et (Eğer yoksa)
+ const initialAssignments = data.assignments ? [...data.assignments] : [];
+ 
+ if (data.businessId && data.businessId !== 'NONE' && !initialAssignments.some((a: any) => a.id === data.businessId)) {
+   initialAssignments.push({
+     id: data.businessId,
+     entityType: 'business',
+     role: 'staff'
+   });
+ }
+ 
+ if (data.kermesId && data.kermesId !== 'NONE' && !initialAssignments.some((a: any) => a.id === data.kermesId)) {
+   initialAssignments.push({
+     id: data.kermesId,
+     entityType: 'kermes',
+     role: 'staff'
+   });
+ }
+
+ if (data.kermesAssignments && data.kermesAssignments.length > 0) {
+   data.kermesAssignments.forEach((ka: any) => {
+     const kId = ka.kermesId || ka;
+     if (!initialAssignments.some((a: any) => a.id === kId)) {
+       initialAssignments.push({
+         id: kId,
+         entityType: 'kermes',
+         role: ka.role || 'staff'
+       });
+     }
+   });
+ }
+
+ setEditAssignments(initialAssignments);
  setEditKermesAllowedSections(data.kermesAllowedSections || []);
 
  // Kermes bolumleri cek (kermesId varsa)
@@ -536,8 +575,37 @@ export default function BenutzerverwaltungPage() {
  } catch (e) {
  console.error("Error fetching user details", e);
  }
- setShowUserModal(true);
- };
+  setShowUserModal(true);
+  };
+
+  const handleGenerateNewPassport = async () => {
+    if (!selectedUser || !selectedUser.email) return;
+    if (!confirm(`DIKKAT: ${selectedUser.displayName} adli kullanicinin mevcut sifresi sifirlanacak ve e-posta adresine (${selectedUser.email}) yeni bir gecici sifre gonderilecektir. Onayliyor musunuz?`)) return;
+
+    setIsResettingPassword(true);
+    try {
+      const response = await fetch('/api/admin/reset-user-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: selectedUser.id,
+          email: selectedUser.email,
+          displayName: selectedUser.displayName,
+          sendEmail: true
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Sifre sifirlama basarisiz oldu');
+
+      alert(`Basarili! Yeni sifre olusturuldu: ${result.tempPassword}\n\n${result.emailSent ? 'Kullaniciya e-posta olarak gonderildi.' : 'E-posta GONDERILEMEDI! Sifreyi manuel olarak iletin.'}`);
+    } catch (e: any) {
+      console.error(e);
+      alert(`Hata: ${e.message}`);
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
 
  const handleDeleteUser = async () => {
  if (!selectedUser) return;
@@ -814,6 +882,7 @@ const handleSaveUser = async () => {
  adminEmail: admin?.email,
  assignments: editAssignments,
  kermesAllowedSections: editKermesAllowedSections,
+ isActive: editIsActive,
  };
 
  if (editBusinessId) {
@@ -1122,17 +1191,16 @@ const getKermesBadgeInfo = (role: string) => {
  <table className="w-full text-left border-collapse min-w-max">
  <thead>
  <tr className="bg-muted/50 border-b border-border">
- <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Benutzer</th>
- <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kontakt</th>
- <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rolle (RBAC)</th>
- <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
- <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Aktionen</th>
+ <th className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Benutzer</th>
+ <th className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kontakt</th>
+ <th className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rolle (RBAC)</th>
+ <th className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Zuweisungen</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
  {loading ? (
  <tr>
- <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+ <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
  <div className="flex flex-col items-center justify-center gap-3">
  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pink-500"></div>
  <p>Kullanıcılar yükleniyor...</p>
@@ -1141,18 +1209,19 @@ const getKermesBadgeInfo = (role: string) => {
  </tr>
  ) : filteredUsers.length === 0 ? (
  <tr>
- <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
- <div className="text-4xl mb-3">👻</div>
+ <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
+ <div className="text-4xl mb-3 hidden"></div>
  <p>Suche ergab keine Treffer.</p>
  </td>
  </tr>
  ) : (
  filteredUsers.map(user => {
  return (
- <tr key={user.id} className="hover:bg-muted/30 transition-colors group">
+ <tr key={user.id} onClick={() => handleEditUser(user)} className="hover:bg-muted/30 transition-colors group cursor-pointer">
  {/* User Identity Column */}
- <td className="px-6 py-4">
+ <td className="px-3 py-2.5">
  <div className="flex items-center gap-3">
+ <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${user.displayName.startsWith('📧') ? 'bg-orange-500 animate-pulse' : (user.isActive ? 'bg-green-500' : 'bg-red-500')}`} title={user.displayName.startsWith('📧') ? 'Davet Bekleniyor' : (user.isActive ? 'Aktiv' : 'Inaktiv')} />
  <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
  {(() => {
    const photo = user.photoURL || authPhotoUrlMap[user.id];
@@ -1167,118 +1236,138 @@ const getKermesBadgeInfo = (role: string) => {
  </div>
  <div>
  <div className="font-medium text-foreground">{user.displayName}</div>
- <div className="text-xs text-muted-foreground font-mono">ID: {user.id.slice(0, 8)}...</div>
  </div>
  </div>
  </td>
 
  {/* Contact Details */}
- <td className="px-6 py-4">
+ <td className="px-3 py-2.5">
  <div className="text-sm text-foreground/80">{user.email || '—'}</div>
  <div className="text-xs text-muted-foreground mt-0.5">{user.phone || '—'}</div>
  </td>
 
  {/* RBAC Role Tag */}
- <td className="px-6 py-4">
- <div className="flex flex-wrap gap-1.5 items-start max-w-[200px]">
+ <td className="px-3 py-2.5 align-top">
+ <div className="flex flex-col gap-2 max-w-[200px]">
+ <div className="flex flex-wrap gap-1.5 items-start">
  {user.roles.map(r => {
  const roleInfo = getRoleBadgeInfo(r);
  return (
- <span key={r} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${roleInfo.bg} border border-current/20`}>
+ <span key={r} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${roleInfo.bg}`}>
  {roleInfo.label}
  </span>
  );
  })}
- {user.businessId && user.businessId !== 'NONE' && (
- <span className="text-[10px] w-full text-muted-foreground flex items-center gap-1 mt-1">
- 🏪 Lokma #{user.businessId.slice(0,4)}
- </span>
+ </div>
+ {/* Auth Provider Tags */}
+ {authProviderMap[user.id] && (
+ <div className="flex flex-wrap gap-1 mt-0.5 w-full">
+ {authProviderMap[user.id].includes('google.com') && (
+  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" title="Google ile giriş">
+  Google
+  </span>
  )}
-        {(() => {
-          const kermesRolesAndNames = new Map<string, Set<string>>();
-          
-          if (user.kermesId && user.kermesId !== 'NONE') {
-            const kName = kermesEvents.find(k => k.id === user.kermesId)?.name || 'Kermes';
-            if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
-            kermesRolesAndNames.get('staff')!.add(kName);
-          }
-          
-          if (user.kermesAssignments && user.kermesAssignments.length > 0) {
-            if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
-            user.kermesAssignments.forEach((ka: any) => {
-              const kName = ka.kermesTitle || ka.name || kermesEvents.find(k => k.id === (ka.kermesId || ka))?.name || 'Kermes';
-              kermesRolesAndNames.get('staff')!.add(kName);
-            });
-          }
-          
-          if (user.assignments) {
-            user.assignments.filter((a: any) => a.entityType === 'kermes').forEach((a: any) => {
-              if (!kermesRolesAndNames.has(a.role)) kermesRolesAndNames.set(a.role, new Set());
-              const kName = a.entityName || kermesEvents.find(k => k.id === a.id)?.name || 'Kermes';
-              kermesRolesAndNames.get(a.role)!.add(kName);
-            });
-          }
-          
-          if (kermesRolesAndNames.size === 0) return null;
-
-          return Array.from(kermesRolesAndNames.entries()).map(([role, namesSet], idx) => {
-            const roleInfo = getKermesBadgeInfo(role);
-            const kermesNamesText = Array.from(namesSet).join(', ');
-            return (
-             <span key={`kermes-${role}-${idx}`} className={`inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded-full text-[10px] sm:text-xs font-semibold ${roleInfo.bg} border border-[current]/20 max-w-full`} title={`${roleInfo.label} - ${kermesNamesText}`}>
-              <span className="shrink-0">🎪 {roleInfo.label}</span>
-              <span className="truncate opacity-80 max-w-[140px] font-normal leading-tight hidden sm:inline-block">({kermesNamesText})</span>
-             </span>
-            );
-          });
-        })()}
-  {/* Auth Provider Tags */}
-  {authProviderMap[user.id] && (
-  <div className="flex flex-wrap gap-1 mt-1">
-  {authProviderMap[user.id].includes('google.com') && (
-   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
-   <svg width="10" height="10" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-   Google
-   </span>
-  )}
-  {authProviderMap[user.id].includes('password') && (
-   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-gray-50 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400 border border-gray-200 dark:border-gray-500/20">
-   Email
-   </span>
-  )}
-  {authProviderMap[user.id].includes('phone') && (
-   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20">
-   SMS
-   </span>
-  )}
-  </div>
-  )}
+ {authProviderMap[user.id].includes('password') && (
+  <span className="inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-medium bg-gray-50 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400" title="Email ile giriş">
+  Email
+  </span>
+ )}
+ {authProviderMap[user.id].includes('phone') && (
+  <span className="inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-medium bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400" title="Telefon ile giriş">
+  Tel
+  </span>
+ )}
+ </div>
+ )}
  </div>
  </td>
 
- {/* Status Tag */}
- <td className="px-6 py-4">
- {user.displayName.startsWith('📧') ? (
- <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-500 dark:border-orange-500/20">
- <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse"></span>
- Davet Bekleniyor
- </span>
- ) : (
- <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${user.isActive ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-500 dark:border-green-500/20' : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20'}`}>
- <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
- {user.isActive ? 'Aktiv' : 'Inaktiv'}
- </span>
- )}
- </td>
+ {/* Zuweisungen (Business / Kermes) */}
+ <td className="px-3 py-2.5 align-top">
+ <div className="flex flex-col gap-1.5 max-w-[280px]">
+ {(() => {
+    const businessRolesAndNames = new Map<string, Set<string>>();
+    
+    if (user.businessId && user.businessId !== 'NONE') {
+      const b = businesses.find(b => b.id === user.businessId);
+      if (b) {
+        if (!businessRolesAndNames.has('staff')) businessRolesAndNames.set('staff', new Set());
+        businessRolesAndNames.get('staff')!.add(b.name);
+      }
+    }
+    
+    if (user.assignments) {
+      user.assignments.filter((a: any) => a.entityType === 'business').forEach((a: any) => {
+        const b = businesses.find(b => b.id === a.id);
+        if (b) {
+          const role = a.role || 'staff';
+          if (!businessRolesAndNames.has(role)) businessRolesAndNames.set(role, new Set());
+          businessRolesAndNames.get(role)!.add(b.name);
+        }
+      });
+    }
 
- {/* Actions */}
- <td className="px-6 py-4 text-right">
- <button 
- onClick={() => handleEditUser(user)}
- className="inline-flex items-center justify-center px-3 py-1.5 bg-background hover:bg-muted border border-border text-sm font-medium rounded-lg transition-colors text-foreground"
- >
- Details ➔
- </button>
+    if (businessRolesAndNames.size === 0) return null;
+
+    return Array.from(businessRolesAndNames.entries()).map(([role, namesSet], idx) => {
+      const businessNamesText = Array.from(namesSet).join(', ');
+      return (
+        <span key={`business-${role}-${idx}`} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 border border-orange-100 dark:border-orange-500/20">
+          <span className="truncate">Şube: {businessNamesText}</span>
+        </span>
+      );
+    });
+  })()}
+ {(() => {
+   const kermesRolesAndNames = new Map<string, Set<string>>();
+   
+   if (user.kermesId && user.kermesId !== 'NONE') {
+     const k = kermesEvents.find(k => k.id === user.kermesId);
+     if (k) {
+       const kName = k.city ? `${k.name} (${k.city})` : k.name;
+       if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
+       kermesRolesAndNames.get('staff')!.add(kName);
+     }
+   }
+   
+   if (user.kermesAssignments && user.kermesAssignments.length > 0) {
+     user.kermesAssignments.forEach((ka: any) => {
+       const kId = ka.kermesId || ka;
+       const k = kermesEvents.find(k => k.id === kId);
+       if (k) {
+         const kName = k.city ? `${k.name} (${k.city})` : k.name;
+         if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
+         kermesRolesAndNames.get('staff')!.add(kName);
+       }
+     });
+   }
+   
+   if (user.assignments) {
+     user.assignments.filter((a: any) => a.entityType === 'kermes').forEach((a: any) => {
+       const k = kermesEvents.find(k => k.id === a.id);
+       if (k) {
+         if (!kermesRolesAndNames.has(a.role)) kermesRolesAndNames.set(a.role, new Set());
+         const kName = k.city ? `${k.name} (${k.city})` : k.name;
+         kermesRolesAndNames.get(a.role)!.add(kName);
+       }
+     });
+   }
+   
+   if (kermesRolesAndNames.size === 0) return null;
+
+   return Array.from(kermesRolesAndNames.entries()).map(([role, namesSet], idx) => {
+     const roleInfo = getKermesBadgeInfo(role);
+     const kermesNamesText = Array.from(namesSet).join(', ');
+     return (
+      <span key={`kermes-${role}-${idx}`} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20" title={`${roleInfo.label} - ${kermesNamesText}`}>
+      
+       <span className="truncate max-w-[170px]">{kermesNamesText}</span>
+       <span className="text-[9px] opacity-70 ml-auto border-l border-blue-200 dark:border-blue-500/30 pl-1.5">{roleInfo.label}</span>
+      </span>
+     );
+   });
+ })()}
+ </div>
  </td>
  </tr>
  );
@@ -1293,7 +1382,7 @@ const getKermesBadgeInfo = (role: string) => {
  <div>Toplam <b>{filteredUsers.length}</b> kullanıcı listelendi (Filtre: {roleFilter.toUpperCase()})</div>
  {isSuperAdmin && roleFilter === 'customer' && (
  <div className="text-xs text-yellow-600 dark:text-yellow-500/80">
- 💡 Performans için son 500 müşteri gösterilmektedir.
+ Performans için son 500 müşteri gösterilmektedir.
  </div>
  )}
  </div>
@@ -1342,8 +1431,13 @@ const getKermesBadgeInfo = (role: string) => {
     />
   </div>
  <div>
- <h2 className="text-xl font-bold text-foreground">{selectedUser.displayName}</h2>
- <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+ <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+   {selectedUser.displayName}
+ </h2>
+ <div className="flex flex-col gap-0.5 mt-0.5">
+   <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+   <p className="text-[10px] text-muted-foreground font-mono bg-muted/50 border border-border px-1.5 py-0.5 rounded w-fit">ID: {selectedUser.id}</p>
+ </div>
  </div>
  </div>
  <button onClick={() => setShowUserModal(false)} className="text-muted-foreground hover:text-foreground text-xl leading-none">&times;</button>
@@ -1490,8 +1584,9 @@ const getKermesBadgeInfo = (role: string) => {
  onChange={(e) => {
     const val = e.target.value;
     setEditRole(val); 
-    // We intentionally removed setEditAssignments([]) here so changing to Customer 
-    // does not clear the Kermes staff assignments!
+    if (val === 'customer') {
+      setEditAssignments([]);
+    }
    }}
  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
  disabled={!isSuperAdmin && editRole === 'super'}
@@ -1503,13 +1598,14 @@ const getKermesBadgeInfo = (role: string) => {
  </select>
  </div>
 
- {isSuperAdmin && (
+ {isSuperAdmin && editRole !== 'customer' && (
  <WorkspaceAssignmentsList
  assignments={editAssignments}
  onChange={setEditAssignments}
  businesses={businesses}
  kermesEvents={kermesEvents}
  isSuperAdmin={isSuperAdmin}
+ globalRole={editRole}
  />
  )}
  </div>
@@ -1532,178 +1628,52 @@ const getKermesBadgeInfo = (role: string) => {
  </div>
  )}
 
-  {/* Kermes Masa Bolum Yetkilendirme */}
-  {availableKermesSections.length > 0 && (
-  <>
-  <hr className="border-border" />
-  <div className="space-y-3">
-  <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">Kermes Masa Bolum Yetkilendirmesi</h3>
-  <p className="text-xs text-muted-foreground leading-relaxed">
-  Bu personelin hangi masa bolumlerinden gelen siparisleri gorup servis edebilecegini belirler. Hicbir bolum secilmezse tum bolumleri gorur (admin yetki).
-  </p>
-  <div className="space-y-2">
-  {availableKermesSections.map(section => {
-    const isChecked = editKermesAllowedSections.includes(section.name);
-    const genderLabel = section.genderRestriction === 'women_only' ? 'K' : section.genderRestriction === 'men_only' ? 'E' : 'A';
-    const genderColor = section.genderRestriction === 'women_only' ? 'text-pink-600' : section.genderRestriction === 'men_only' ? 'text-blue-600' : 'text-green-600';
-    return (
-    <label key={section.name} className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/30 cursor-pointer transition">
-    <input
-      type="checkbox"
-      className="w-4 h-4 text-pink-600 rounded border-border focus:ring-pink-500"
-      checked={isChecked}
-      onChange={(e) => {
-        if (e.target.checked) setEditKermesAllowedSections(prev => [...prev, section.name]);
-        else setEditKermesAllowedSections(prev => prev.filter(s => s !== section.name));
-      }}
-    />
-    <span className="text-sm font-medium text-foreground">{section.name}</span>
-    <span className={`text-xs font-bold ${genderColor}`}>[{genderLabel}]</span>
-    </label>
-    );
-  })}
-  </div>
-  {editKermesAllowedSections.length === 0 && (
-    <p className="text-xs text-amber-600 dark:text-amber-500">Hicbir bolum secilmedi - personel admin yetki ile tum bolumleri gorecek.</p>
-  )}
-  </div>
-  </>
-  )}
 
   <hr className="border-border" />
 
- {/* Driver Privileges Toggle Block */}
- <div>
- <h3 className="text-lg font-bold text-foreground mb-2">🚗 Sürücü Yönetimi (Fahrerverwaltung)</h3>
- <p className="text-sm text-muted-foreground mb-4">Bu kullanıcının sistemde "Sürücü" (Driver) olarak görev yapıp yapamayacağını belirleyin.</p>
- 
- <label className="flex items-center gap-3 p-4 bg-muted/30 border border-border rounded-xl cursor-pointer hover:bg-muted/50 transition">
- <div className="relative">
- <input 
- type="checkbox" 
- className="sr-only peer"
- checked={isDriver}
- onChange={(e) => setIsDriver(e.target.checked)}
- />
- <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
- </div>
- <span className="text-sm font-semibold text-foreground">Sürücü Yetkisine Sahip (Aktif Sürücü)</span>
- </label>
- </div>
+  {/* Security & Access */}
+  <div className="space-y-4">
+    <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">Güvenlik & Erişim</h3>
+    
+    {/* Access Toggle */}
+    <div className="bg-muted/30 border border-border rounded-xl p-4 flex items-center justify-between">
+      <div>
+        <h4 className="font-semibold text-sm text-foreground">Sisteme Giriş İzni (Aktif)</h4>
+        <p className="text-xs text-muted-foreground mt-1">Kullanıcının sisteme (Admin Portal ve Mobil Uygulama) giriş yapmasını sağlar veya engeller.</p>
+      </div>
+      <label className="relative inline-flex items-center cursor-pointer ml-4">
+        <input 
+          type="checkbox" 
+          className="sr-only peer"
+          checked={editIsActive}
+          onChange={(e) => setEditIsActive(e.target.checked)}
+        />
+        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
+      </label>
+    </div>
 
- {/* Businesses Assignment Block if isDriver is true */}
- {isDriver && (
- <div className="space-y-6 animate-in fade-in slide-in-from-top-2 mt-2">
- {/* Sürücü tipi artık Atanan İşletmelerin varlığına göre kaydedilir. (İşletme varsa İşletme Sürücüsü, yoksa LOKMA Sürücüsü) */}
+    {/* Passport Generation */}
+    <div className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h4 className="font-semibold text-sm text-amber-800 dark:text-amber-400">Pasaport (Şifre) Yenileme</h4>
+        <p className="text-xs text-amber-700/80 dark:text-amber-500/80 mt-1 max-w-sm">Kullanıcı şifresini unuttuysa yeni bir geçici şifre oluşturur ve kayıtlı e-posta adresine gönderir.</p>
+      </div>
+      <button
+        onClick={handleGenerateNewPassport}
+        disabled={isResettingPassword || !selectedUser.email}
+        className="shrink-0 flex items-center justify-center gap-2 bg-white dark:bg-background border border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isResettingPassword ? (
+          <div className="h-4 w-4 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin"></div>
+        ) : (
+          <span className="material-symbols-outlined text-sm">key</span>
+        )}
+        Yeni Pasaport Gönder
+      </button>
+    </div>
+  </div>
 
- {/* Atanan İşletmeler */}
- <div className="space-y-3">
- <div className="flex items-center justify-between">
- <h4 className="font-semibold text-sm text-foreground">Atanan İşletmeler (Zugeordnete Betriebe)</h4>
- <span className="text-xs text-muted-foreground">{selectedBusinessIds.length} Seçili</span>
- </div>
- <input 
- type="text"
- placeholder="İşletme ara (İsim, Şehir, Posta Kodu)..."
- className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 transition outline-none"
- value={businessSearch}
- onChange={(e) => setBusinessSearch(e.target.value)}
- />
- 
- <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
- {businesses
- .filter(biz => {
- const searchTerms = businessSearch.toLowerCase().split(' ').filter(Boolean);
- if (searchTerms.length === 0) return true;
- const fullText = `${biz.name || ''} ${biz.plz || ''} ${biz.city || ''} ${biz.address || ''} ${biz.street || ''}`.toLowerCase();
- return searchTerms.every(term => fullText.includes(term));
- })
- .map(b => (
- <label key={b.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
- <input 
- type="checkbox"
- className="w-4 h-4 text-pink-600 rounded border-border focus:ring-pink-500"
- checked={selectedBusinessIds.includes(b.id)}
- onChange={(e) => {
- if (e.target.checked) setSelectedBusinessIds(prev => [...prev, b.id]);
- else setSelectedBusinessIds(prev => prev.filter(id => id !== b.id));
- }}
- />
- <div>
- <div className="text-sm font-medium text-foreground flex items-center gap-2">
- {b.name}
- {b.type === 'lokma' && <span className="text-[10px] text-muted-foreground bg-muted px-1.5 rounded">Lokma</span>}
- {b.type === 'kermes' && <span className="text-[10px] text-muted-foreground bg-muted px-1.5 rounded">Kermes</span>}
- </div>
- {(b.plz || b.city) && <div className="text-[11px] text-muted-foreground mt-0.5">{b.plz} {b.city}</div>}
- </div>
- </label>
- ))}
- {businesses.length > 0 && businesses.filter(biz => {
- const searchTerms = businessSearch.toLowerCase().split(' ').filter(Boolean);
- if (searchTerms.length === 0) return true;
- const fullText = `${biz.name || ''} ${biz.plz || ''} ${biz.city || ''} ${biz.address || ''} ${biz.street || ''}`.toLowerCase();
- return searchTerms.every(term => fullText.includes(term));
- }).length === 0 && (
- <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
- )}
- </div>
- {selectedBusinessIds.length === 0 && (
- <p className="text-xs text-amber-600 dark:text-amber-500">⚠️ İşletme seçilmezse sürücü hiçbir siparişi göremeyecek.</p>
- )}
- </div>
 
- {/* Atanan Kermesler */}
- <div className="space-y-3">
- <div className="flex items-center justify-between">
- <h4 className="font-semibold text-sm text-foreground">Atanan Kermesler</h4>
- <span className="text-xs text-muted-foreground">{selectedKermesIds.length} Seçili</span>
- </div>
- <input 
- type="text"
- placeholder="Kermes ara (İsim, Dernek, Şehir, Posta Kodu)..."
- className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 transition outline-none"
- value={kermesSearch}
- onChange={(e) => setKermesSearch(e.target.value)}
- />
- 
- <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
- {kermesEvents
- .filter(k => {
- const searchTerms = kermesSearch.toLowerCase().split(' ').filter(Boolean);
- if (searchTerms.length === 0) return true;
- const fullText = `${k.name || ''} ${k.dernekIsmi || ''} ${k.plz || ''} ${k.city || ''} ${k.address || ''} ${k.street || ''}`.toLowerCase();
- return searchTerms.every(term => fullText.includes(term));
- })
- .map(k => (
- <label key={k.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
- <input 
- type="checkbox"
- className="w-4 h-4 text-pink-600 rounded border-border focus:ring-pink-500"
- checked={selectedKermesIds.includes(k.id)}
- onChange={(e) => {
- if (e.target.checked) setSelectedKermesIds(prev => [...prev, k.id]);
- else setSelectedKermesIds(prev => prev.filter(id => id !== k.id));
- }}
- />
- <div>
- <div className="text-sm font-medium text-foreground">{k.name}</div>
- {(k.plz || k.city) && <div className="text-[11px] text-muted-foreground mt-0.5">{k.plz} {k.city}</div>}
- </div>
- </label>
- ))}
- {kermesEvents.length > 0 && kermesEvents.filter(k => {
- const searchTerms = kermesSearch.toLowerCase().split(' ').filter(Boolean);
- if (searchTerms.length === 0) return true;
- const fullText = `${k.name || ''} ${k.dernekIsmi || ''} ${k.plz || ''} ${k.city || ''} ${k.address || ''} ${k.street || ''}`.toLowerCase();
- return searchTerms.every(term => fullText.includes(term));
- }).length === 0 && (
- <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
- )}
- </div>
- </div>
- </div>
- )}
 
  </div>
 
@@ -1957,17 +1927,19 @@ const getKermesBadgeInfo = (role: string) => {
  </select>
  </div>
 
- {isSuperAdmin && (
+ {isSuperAdmin && newUserData.role !== 'customer' && (
  <WorkspaceAssignmentsList
  assignments={newUserAssignments}
  onChange={setNewUserAssignments}
  businesses={businesses}
  kermesEvents={kermesEvents}
  isSuperAdmin={isSuperAdmin}
+ globalRole={newUserData.role}
  />
  )}
 
  {/* Driver Assignment Block for Add User */}
+ {newUserData.role !== 'customer' && (
  <div className="pt-2">
  <label className="flex items-center gap-3 cursor-pointer mt-2 bg-muted/30 p-3 rounded-lg border border-border/50 hover:bg-muted dark:hover:bg-slate-800 transition-colors">
  <div className="relative">
@@ -1982,6 +1954,7 @@ const getKermesBadgeInfo = (role: string) => {
  <span className="text-sm font-semibold text-foreground">Sürücü Yetkisine Sahip (Aktif Sürücü)</span>
  </label>
  </div>
+ )}
 
  {/* Businesses Assignment Block if newUserIsDriver is true */}
  {newUserIsDriver && (

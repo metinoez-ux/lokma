@@ -214,6 +214,9 @@ function GlobalProductsPageContent() {
  // Validation errors
  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
+ // 🆕 PLATFORM BRANDS STATE
+ const [platformBrands, setPlatformBrands] = useState<any[]>([]);
+
  // 🆕 KERMES MODU STATE'LERİ
  const [pageMode, setPageMode] = useState<PageMode>('products');
  const [organizations, setOrganizations] = useState<any[]>([]);
@@ -355,6 +358,21 @@ function GlobalProductsPageContent() {
  }
  setLoadingBusinessProducts(false);
  };
+
+ useEffect(() => {
+ // Load platform brands
+ const loadPlatformBrands = async () => {
+ try {
+ const brandsQuery = query(collection(db, 'platform_brands'), where('isActive', '==', true));
+ const snapshot = await getDocs(brandsQuery);
+ const loadedBrands = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+ setPlatformBrands(loadedBrands);
+ } catch (error) {
+ console.error('Error loading platform brands:', error);
+ }
+ };
+ loadPlatformBrands();
+ }, []);
 
  useEffect(() => {
  // Load business info if in business context
@@ -672,7 +690,20 @@ function GlobalProductsPageContent() {
  // Validation - Only truly essential fields
  const nameStr = getLocalizedText(formData.name);
  const errors: ValidationErrors = {};
- if (!formData.id?.trim()) errors.id = 'SKU (ID) zorunludur';
+ 
+ let productId = formData.id?.trim() || "";
+ if (!productId) {
+ const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
+ productId = `M-${randomPart}`;
+ }
+ 
+ let sku = (formData as any).sku?.trim() || "";
+ if (!sku) {
+ // Generate new SKU if missing, default to M-xxxxx format
+ const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
+ sku = `M-${randomPart}`;
+ }
+ 
  if (!nameStr.trim()) errors.name = t('urunAdiZorunludur');
 
  if (Object.keys(errors).length > 0) {
@@ -682,11 +713,11 @@ function GlobalProductsPageContent() {
  setValidationErrors({});
 
  try {
- const productId = formData.id!.trim();
  const productRef = doc(db, "master_products", productId);
 
  const productData = {
  id: productId,
+ sku: sku,
  name: formData.name, // Localized map OR string
  category: formData.category,
  categories: (formData as any).categories || [],
@@ -2724,19 +2755,30 @@ function GlobalProductsPageContent() {
  {/* Temel Bilgiler */}
  <div className="border-b border-border pb-4">
  <h3 className="text-sm font-medium text-blue-800 dark:text-blue-400 mb-3">📋 Temel Bilgiler</h3>
- <div className="grid grid-cols-2 gap-4">
+ <div className="grid grid-cols-3 gap-4">
  <div>
  <label className="block text-sm text-muted-foreground mb-1">
- SKU (ID) <span className="text-red-500">*</span>
+ ID <span className="text-red-500">*</span>
  </label>
  <input
  type="text"
- value={formData.id}
- onChange={e => { const v = e.target.value; setFormData(prev => ({ ...prev, id: v })); setValidationErrors(prev => { const next = { ...prev }; delete next.id; return next; }); }}
- className={`w-full bg-background border rounded-lg px-4 py-2 font-mono text-sm ${validationErrors.id ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
- placeholder="MIRA-MEAT-..."
+ value={formData.id || ''}
+ disabled={true}
+ className={`w-full bg-secondary text-muted-foreground border rounded-lg px-4 py-2 font-mono text-sm border-gray-600 cursor-not-allowed`}
+ placeholder="Oto (M-xxxxx)"
  />
- {validationErrors.id && <p className="text-red-800 dark:text-red-400 text-xs mt-1">{validationErrors.id}</p>}
+ </div>
+ <div>
+ <label className="block text-sm text-muted-foreground mb-1">
+ SKU <span className="text-red-500">*</span>
+ </label>
+ <input
+ type="text"
+ value={(formData as any).sku || ''}
+ disabled={true}
+ className={`w-full bg-secondary text-muted-foreground border rounded-lg px-4 py-2 font-mono text-sm border-gray-600 cursor-not-allowed`}
+ placeholder="Oto (M-xxxxx)"
+ />
  </div>
  <div>
  <label className="block text-sm text-muted-foreground mb-1">Barkod</label>
@@ -3110,8 +3152,16 @@ function GlobalProductsPageContent() {
  </h4>
  <div className="flex flex-wrap gap-2">
  {[
- { key: 'cert_tuna', label: 'TUNA', emoji: '🐟', color: 'blue' },
- { key: 'cert_akdeniz', label: 'Akdeniz', emoji: '🌊', color: 'cyan' },
+ ...platformBrands.map(brand => ({
+ key: `cert_${brand.id}`,
+ label: brand.name,
+ emoji: '',
+ color: 'gray',
+ image: brand.iconUrl,
+ isDynamicBrand: true,
+ brandColor: brand.colorHex,
+ brandTextColor: brand.textColorHex,
+ })),
  { key: 'cert_halal', label: 'Halal', emoji: '☪️', color: 'green' },
  { key: 'cert_bio', label: 'Bio / Organic', emoji: '🌿', color: 'green' },
  { key: 'cert_vegan', label: 'Vegan', emoji: '🌱', color: 'green' },
@@ -3123,7 +3173,7 @@ function GlobalProductsPageContent() {
  { key: 'cert_msc', label: 'MSC', emoji: '🔵', color: 'blue' },
  { key: 'cert_fairtrade', label: 'Fairtrade', emoji: '🟢', color: 'green' },
  { key: 'cert_eigenmarke', label: 'Eigenmarke', emoji: '🇩🇪', color: 'gray' },
- ].map(cert => {
+ ].map((cert: any) => {
  const selected = ((formData as any).certifications || []).includes(cert.key);
  return (
  <button
@@ -3139,11 +3189,22 @@ function GlobalProductsPageContent() {
  } as any);
  }}
  className={`px-3 py-2 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${selected
- ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-sm shadow-purple-500/10'
- : 'bg-card/50 border-border text-muted-foreground hover:border-gray-500'
+ ? 'shadow-sm'
+ : 'opacity-70 hover:opacity-100'
  }`}
+ style={{
+ backgroundColor: selected ? (cert.isDynamicBrand ? cert.brandColor : 'var(--purple-500-20)') : 'var(--card-muted)',
+ color: selected ? (cert.isDynamicBrand ? cert.brandTextColor : 'var(--purple-300)') : 'var(--muted-foreground)',
+ borderColor: selected ? (cert.isDynamicBrand ? cert.brandColor : 'var(--purple-500)') : 'var(--border)',
+ }}
  >
+ {cert.image ? (
+ <div className="relative w-4 h-4 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white/20">
+ <img src={cert.image} alt={cert.label} className="object-contain w-full h-full" />
+ </div>
+ ) : (
  <span>{cert.emoji}</span>
+ )}
  <span>{selected ? '✓ ' : ''}{cert.label}</span>
  </button>
  );

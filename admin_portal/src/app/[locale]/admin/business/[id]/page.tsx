@@ -26,6 +26,8 @@ import {
  onSnapshot,
  writeBatch,
  Timestamp,
+ arrayUnion,
+ arrayRemove,
 } from "firebase/firestore";
 import {
  ref,
@@ -50,6 +52,7 @@ import OrderDetailsModal from "@/components/admin/OrderDetailsModal";
 import { mapFirestoreOrder } from '@/lib/utils/orderMapper';
 import ReservationsPanel from "./ReservationsPanel";
 import ReservationCapacityConfig from "@/components/ReservationCapacityConfig";
+import PromotionsPage from "../../promotions/page";
 
 
 
@@ -1485,6 +1488,7 @@ export default function BusinessDetailsPage() {
  await deleteDoc(doc(db, `businesses/${businessId}/products`, productId));
  showToast(t('urunSilindi'), "success");
  loadProducts();
+ loadInlineProducts();
  } catch (error) {
  console.error("Error deleting product:", error);
  showToast(t('urunSilinirkenHataOlustu'), "error");
@@ -1730,7 +1734,31 @@ export default function BusinessDetailsPage() {
  if (ef.packung !== undefined) updateData.packung = ef.packung;
  if (ef.artikelnummer !== undefined) updateData.artikelnummer = ef.artikelnummer;
  if (ef.storageTemp !== undefined) updateData.storageTemp = ef.storageTemp;
- if (ef.isFeatured !== undefined) updateData.isFeatured = ef.isFeatured;
+ if (ef.isFeatured !== undefined) {
+  updateData.isFeatured = ef.isFeatured;
+  // Sync with business document's sponsoredProducts array
+  try {
+   if (ef.isFeatured) {
+    await updateDoc(doc(db, 'businesses', businessId), {
+     sponsoredProducts: arrayUnion(editingInlineProduct.id)
+    });
+    setBusiness((prev: any) => prev ? {
+     ...prev,
+     sponsoredProducts: [...new Set([...(prev.sponsoredProducts || []), editingInlineProduct.id])]
+    } : prev);
+   } else {
+    await updateDoc(doc(db, 'businesses', businessId), {
+     sponsoredProducts: arrayRemove(editingInlineProduct.id)
+    });
+    setBusiness((prev: any) => prev ? {
+     ...prev,
+     sponsoredProducts: (prev.sponsoredProducts || []).filter((id: string) => id !== editingInlineProduct.id)
+    } : prev);
+   }
+  } catch (err) {
+   console.error('Error syncing sponsoredProducts array on business document:', err);
+  }
+ }
  if (ef.brandLabels !== undefined) updateData.brandLabels = ef.brandLabels;
  await updateDoc(doc(db, `businesses/${businessId}/products`, editingInlineProduct.id), updateData);
  showToast(t('product_updated'), 'success');
@@ -1740,6 +1768,7 @@ export default function BusinessDetailsPage() {
  setEditInlineTab('general');
  setCustomProductForm({ name: { tr: '' }, price: '', unit: 'kg', imageFile: null });
  loadProducts();
+ loadInlineProducts();
  return;
  }
 
@@ -1770,11 +1799,21 @@ export default function BusinessDetailsPage() {
  productData.unit = customProductForm.unit || 'kg';
  productData.isCustom = true;
  productData.approvalStatus = 'pending';
+ // Auto generate B-SKU for custom products
+ const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
+ productData.sku = `B-${randomPart}`;
 
  // Handle image upload if provided
  if (customProductForm.imageFile) {
- // TODO: Upload image to storage
- // For now, just skip image
+ try {
+ const storageRef = ref(storage, `business_products/${businessId}/${Date.now()}_${customProductForm.imageFile.name}`);
+ const uploadSnapshot = await uploadBytesResumable(storageRef, customProductForm.imageFile);
+ const downloadUrl = await getDownloadURL(uploadSnapshot.ref);
+ productData.imageUrl = downloadUrl;
+ } catch (uploadError) {
+ console.error("Error uploading image:", uploadError);
+ showToast(t('image_upload_error') || "Resim yüklenirken hata oluştu", "error");
+ }
  }
  }
 
@@ -1784,6 +1823,7 @@ export default function BusinessDetailsPage() {
  setSelectedMasterId('');
  setCustomProductForm({ name: { tr: '' }, price: '', unit: 'kg', imageFile: null });
  loadProducts();
+ loadInlineProducts();
  } catch (error) {
  console.error("Error adding product:", error);
  showToast(t('urunEklenirkenHataOlustu'), "error");
@@ -3745,7 +3785,7 @@ export default function BusinessDetailsPage() {
  {([
  { key: "isletme", label: t('isletme'), icon: <Store className="w-5 h-5"/> },
  { key: "menu", label: t('menuUrunler'), icon: <Utensils className="w-5 h-5"/> },
- // { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/>, featureKey: "staffShiftTracking" },
+ { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/>, featureKey: "staffShiftTracking", superAdminOnly: true },
  // "masa" (Table Mgmt) was moved to Reservations tab
  { key: "abonelik", label: t('abonelikPlani'), icon: <Star className="w-5 h-5"/> },
  { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
@@ -5193,6 +5233,7 @@ export default function BusinessDetailsPage() {
  <div className="divide-y divide-border/50">
  {paginatedProducts.map((product: any) => {
  const isSelected = selectedInlineProducts.has(product.id);
+ const isMasterProduct = !!product.masterId || product.isCustom === false;
  const productName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
  const imageUrl = product.imageUrl || (product.images && product.images[0]) || null;
  const basePrice = product.sellingPrice || product.price || null;
@@ -5242,7 +5283,14 @@ export default function BusinessDetailsPage() {
  </div>
  {/* Name + Description */}
  <div className="min-w-0">
- <p className="text-foreground text-sm font-medium truncate">{productName}</p>
+   <div className="flex items-center gap-2">
+     <p className="text-foreground text-sm font-medium truncate">{productName}</p>
+     {product.masterId || product.isCustom === false ? (
+       <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-400 font-semibold uppercase tracking-wider" title="Master Product (Global)">MASTER</span>
+     ) : (
+       <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-400 font-semibold uppercase tracking-wider" title="Business Product (Custom)">CUSTOM</span>
+     )}
+   </div>
  <p className="text-muted-foreground text-xs truncate">
  {getLocalizedText(product.description) || ''}
  </p>
@@ -5401,11 +5449,11 @@ export default function BusinessDetailsPage() {
  </div>
  <div>
  <label className="text-xs text-muted-foreground mb-1 block">{t('barkod')}</label>
- <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ <input disabled={isMasterProduct} value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
  </div>
  <div>
  <label className="text-xs text-muted-foreground mb-1 block">{t('kategori_label')}</label>
- <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none">
+ <select disabled={isMasterProduct} value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none">
  <option value="">{t('kategori_secin')}</option>
  {inlineCategories.map((cat: any) => (
  <option key={cat.id || cat.name} value={typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}>{typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}</option>
@@ -5414,16 +5462,16 @@ export default function BusinessDetailsPage() {
  </div>
  <div className="md:col-span-2">
  <label className="text-xs text-muted-foreground mb-1 block">{t('urun_adi')}</label>
- <MultiLanguageInput label={t('urun_adi_label')} value={editFormFull.name || customProductForm.name} onChange={(v: any) => { setEditFormFull((p: any) => ({ ...p, name: v })); setCustomProductForm((prev: any) => ({ ...prev, name: v })); }} />
+ <MultiLanguageInput disabled={isMasterProduct} label={t('urun_adi_label')} value={editFormFull.name || customProductForm.name} onChange={(v: any) => { setEditFormFull((p: any) => ({ ...p, name: v })); setCustomProductForm((prev: any) => ({ ...prev, name: v })); }} />
  </div>
  <div>
  <label className="text-xs text-muted-foreground mb-1 block">{t('marka')}</label>
- <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+ <input disabled={isMasterProduct} value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
  </div>
  <div className="flex gap-2">
  <div className="flex-1">
  <label className="text-xs text-muted-foreground mb-1 block">{t('birim')}</label>
- <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <select disabled={isMasterProduct} value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
  <option value="kg">{t('kg') || "Kg"}</option><option value="adet">{t('adet')}</option><option value="litre">{t('litre')}</option><option value="paket">{t('paket')}</option>
  </select>
  </div>
@@ -5435,14 +5483,14 @@ export default function BusinessDetailsPage() {
  </div>
  <div className="flex-1">
  <label className="text-xs text-muted-foreground mb-1 block">{t('tax_vat') || "KDV"}</label>
- <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
+ <select disabled={isMasterProduct} value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
  <option value="7">%7</option><option value="19">%19</option><option value="0">%0</option>
  </select>
  </div>
  </div>
  <div className="md:col-span-2 lg:col-span-3">
  <label className="text-xs text-muted-foreground mb-1 block">{t('aciklama')}</label>
- <MultiLanguageInput label="Açıklama" value={editFormFull.description || { tr: '' }} onChange={(v: any) => setEditFormFull((p: any) => ({ ...p, description: v }))} isTextArea />
+ <MultiLanguageInput disabled={isMasterProduct} label="Açıklama" value={editFormFull.description || { tr: '' }} onChange={(v: any) => setEditFormFull((p: any) => ({ ...p, description: v }))} isTextArea />
  </div>
  </div>
  )}
@@ -6527,11 +6575,11 @@ export default function BusinessDetailsPage() {
  </div>
  </td>
  <td className="py-4">
- <span className={`px-2 py-1 rounded text-xs ${staff.adminType?.includes('Admin') || staff.adminType?.includes('_admin')
+ <span className={`px-2 py-1 rounded text-xs ${staff.adminType?.toLowerCase().includes('admin') || staff.adminType === 'super'
  ? 'bg-purple-600'
  : 'bg-blue-600'
  }`}>
- {staff.adminType || t('personel_rol')}
+ {staff.adminType?.toLowerCase().includes('admin') ? 'İşletme Admini' : (staff.adminType || t('personel_rol'))}
  </span>
  </td>
  <td className="py-4">
@@ -6540,6 +6588,7 @@ export default function BusinessDetailsPage() {
  </span>
  </td>
  <td className="py-4">
+ {(admin?.adminType === 'super' || (staff.id !== admin?.id && !staff.adminType?.toLowerCase().includes('admin') && staff.adminType !== 'super')) && (
  <div className="flex flex-wrap gap-2">
  {/* Arşivle / Aktifleştir toggle */}
  <button
@@ -6622,6 +6671,7 @@ export default function BusinessDetailsPage() {
  {t('yetkiyiKaldir1')}
  </button>
  </div>
+ )}
  </td>
  </tr>
  ))}

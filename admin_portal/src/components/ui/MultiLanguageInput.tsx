@@ -20,6 +20,7 @@ interface MultiLanguageInputProps {
  required?: boolean;
  error?: string;
  isTextArea?: boolean;
+ disabled?: boolean;
 }
 
 export default function MultiLanguageInput({
@@ -29,7 +30,8 @@ export default function MultiLanguageInput({
  placeholder,
  required,
  error,
- isTextArea = false
+ isTextArea = false,
+ disabled = false
 }: MultiLanguageInputProps) {
  const [activeTab, setActiveTab] = useState('tr');
 
@@ -92,9 +94,11 @@ export default function MultiLanguageInput({
  <textarea
  value={currentValueMap[activeTab] || ''}
  onChange={handleTextChange}
+ disabled={disabled}
  placeholder={placeholder || `${LANGUAGES.find(l => l.code === activeTab)?.name} olarak girin...`}
  className={`w-full bg-gray-900 border-x border-b rounded-b-lg px-4 py-3 min-h-[100px] focus:outline-none focus:ring-1 focus:ring-blue-500
- ${error && activeTab === 'tr' ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
+ ${error && activeTab === 'tr' ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}
+ ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
  />
  ) : (
  <input

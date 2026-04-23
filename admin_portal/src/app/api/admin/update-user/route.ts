@@ -129,18 +129,21 @@ export async function POST(request: NextRequest) {
  const cleanedPhone = phoneNumber.replace(/[^0-9+]/g, '');
  authUpdatePayload.phoneNumber = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
  }
+ if (isActive !== undefined) {
+   authUpdatePayload.disabled = !isActive;
+ }
  
  if (Object.keys(authUpdatePayload).length > 0) {
  try {
  await auth.updateUser(userId, authUpdatePayload);
- } catch (authError: any) {
- console.error('Failed to update auth user:', authError);
- if (authError.message?.includes('Could not load the default credentials')) {
-  console.warn('⚠️ Bypassing Firebase Auth Google Application Default Credentials error to allow Firestore update.');
- } else {
-  console.warn('⚠️ Firebase Auth update failed, but proceeding with Firestore updates. Error:', authError.message);
- }
- }
+  } catch (authError: any) {
+  console.error(`[UPDATE_USER] ❌ Failed to update Firebase Auth user (${userId}):`, authError);
+  if (authError.message?.includes('Could not load the default credentials')) {
+   console.warn(`[UPDATE_USER] ⚠️ Bypassing Auth Application Default Credentials error for user ${userId} to allow Firestore update.`);
+  } else {
+   console.warn(`[UPDATE_USER] ⚠️ Partial Success: Firebase Auth update failed for ${userId}, but proceeding with Firestore updates. Auth Error: ${authError.message}`);
+  }
+  }
  }
 
  // Fetch old user data to detect assignment changes
@@ -185,7 +188,14 @@ export async function POST(request: NextRequest) {
  if (isAdmin !== undefined) {
    userUpdateData.adminType = isAdmin ? (adminType !== undefined ? adminType : null) : null;
  }
- if (assignments !== undefined) userUpdateData.assignments = assignments;
+  if (assignments !== undefined) {
+    userUpdateData.assignments = assignments;
+    userUpdateData.kermesAssignments = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+      kermesId: a.id,
+      role: a.role,
+      assignedAt: a.assignedAt || new Date().toISOString()
+    }));
+  }
  if (kermesAllowedSections !== undefined) userUpdateData.kermesAllowedSections = kermesAllowedSections;
  if (gender !== undefined) userUpdateData.gender = gender;
 
@@ -337,9 +347,14 @@ export async function POST(request: NextRequest) {
  adminUpdateData.assignedKermesNames = assignedKermesNames;
  }
 
- if (assignments !== undefined) {
- adminUpdateData.assignments = assignments;
- }
+  if (assignments !== undefined) {
+    adminUpdateData.assignments = assignments;
+    adminUpdateData.kermesAssignments = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+      kermesId: a.id,
+      role: a.role,
+      assignedAt: a.assignedAt || new Date().toISOString()
+    }));
+  }
 
  if (kermesAllowedSections !== undefined) {
  adminUpdateData.kermesAllowedSections = kermesAllowedSections;
@@ -377,7 +392,14 @@ export async function POST(request: NextRequest) {
  
  if (assignedBusinesses !== undefined) driverUpdateData.assignedBusinesses = assignedBusinesses;
  if (assignedKermesEvents !== undefined) driverUpdateData.assignedKermesEvents = assignedKermesEvents;
- if (assignments !== undefined) driverUpdateData.assignments = assignments;
+  if (assignments !== undefined) {
+    driverUpdateData.assignments = assignments;
+    driverUpdateData.kermesAssignments = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+      kermesId: a.id,
+      role: a.role,
+      assignedAt: a.assignedAt || new Date().toISOString()
+    }));
+  }
  if (kermesAllowedSections !== undefined) driverUpdateData.kermesAllowedSections = kermesAllowedSections;
  
  if (adminDoc.exists) {

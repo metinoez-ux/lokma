@@ -317,11 +317,43 @@ export default function AdminHeader() {
 
  // Stats counts and lists removed (handled in Analytics page)
 
- // Load pending invitations - TEMPORARILY DISABLED to fix page loading
+ // Load pending invitations
  useEffect(() => {
- // Query disabled until Firestore index is created
- // TODO: Create composite index for admin_invitations then re-enable
- setPendingInvitations([]);
+ if (!admin) return;
+
+ let q;
+ if (admin.adminType === 'super') {
+ q = query(
+ collection(db, 'admin_invitations'),
+ where('status', 'in', ['pending', 'registered']),
+ orderBy('createdAt', 'desc')
+ );
+ } else {
+ q = query(
+ collection(db, 'admin_invitations'),
+ where('invitedBy', '==', admin.id),
+ where('status', 'in', ['pending', 'registered']),
+ orderBy('createdAt', 'desc')
+ );
+ }
+
+ const unsubscribe = onSnapshot(q, (snapshot) => {
+ const invites: PendingInvitation[] = [];
+ snapshot.forEach((docSnap) => {
+ const data = docSnap.data();
+ invites.push({
+ id: docSnap.id,
+ ...data,
+ createdAt: data.createdAt?.toDate() || new Date(),
+ expiresAt: data.expiresAt?.toDate() || new Date(),
+ } as unknown as PendingInvitation);
+ });
+ setPendingInvitations(invites);
+ }, (error) => {
+ console.error('Error fetching admin invitations:', error);
+ });
+
+ return () => unsubscribe();
  }, [admin]);
 
  // Load business info for non-super admins

@@ -56,8 +56,8 @@ function mapDocToOrder(docId: string, d: any): Order {
  return {
  id: docId,
  orderNumber: d.orderNumber || docId.slice(0, 6).toUpperCase(),
- // BusinessId: use businessId first, fallback to butcherId
- businessId: d.businessId || d.butcherId || '',
+ // BusinessId: use businessId first, fallback to butcherId or kermesId
+ businessId: d.businessId || d.butcherId || d.kermesId || '',
  businessName: d.businessName || d.butcherName || '',
  customerId: d.userId || d.customerId || '',
  customerName: d.customerName || d.userDisplayName || d.userName || '',
@@ -125,7 +125,7 @@ export function mapReservationToOrder(docId: string, d: any, businessIdFallback?
  return {
  id: docId,
  orderNumber: `R-${docId.slice(0, 5).toUpperCase()}`,
- businessId: d.businessId || businessIdFallback || '',
+ businessId: d.businessId || d.kermesId || businessIdFallback || '',
  businessName: d.businessName || '',
  customerId: d.userId || '',
  customerName: d.userName || '',
@@ -338,7 +338,7 @@ export function OrdersProvider({
  return false;
  });
 
- let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
+ let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data(), doc.ref.parent.parent?.id));
  
  // Keep safety filter
  if (fixedBusinessId) {
@@ -496,7 +496,7 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  return false;
  });
 
- let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
+ let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data(), doc.ref.parent.parent?.id));
  if (businessId) {
  mapped = mapped.filter(o => o.businessId === businessId);
  } else {

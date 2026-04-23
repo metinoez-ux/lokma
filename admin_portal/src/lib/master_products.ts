@@ -1,5 +1,6 @@
 export interface MasterProduct {
  id: string; // SKU Matching Mobile App
+ sku?: string; // Standardized SKU (M-xxxxx or B-xxxxx)
  name: Record<string, string> | string;
  category: string;
  defaultUnit: 'kg' | 'ad' | string;

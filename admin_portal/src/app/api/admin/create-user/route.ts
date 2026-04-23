@@ -217,8 +217,13 @@ export async function POST(request: NextRequest) {
  country: country || null,
  postalCode: postalCode || null,
  photoURL: null,
- // Assignments
- assignments: assignments || [],
+    // Assignments
+    assignments: assignments || [],
+    kermesAssignments: (assignments || []).filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+      kermesId: a.id,
+      role: a.role,
+      assignedAt: a.assignedAt || new Date().toISOString()
+    })),
  // Audit tracking
  createdBy: createdBy || 'system',
  createdBySource: body.createdBySource || 'super_admin',
@@ -297,6 +302,11 @@ export async function POST(request: NextRequest) {
 
  if (assignments !== undefined) {
  adminData.assignments = assignments;
+ adminData.kermesAssignments = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+   kermesId: a.id,
+   role: a.role,
+   assignedAt: a.assignedAt || new Date().toISOString()
+ }));
  }
 
  await db.collection('admins').doc(userRecord.uid).set(adminData);
@@ -334,9 +344,14 @@ export async function POST(request: NextRequest) {
  driverAdminData.businessType = businessType || null;
  }
 
- if (assignments !== undefined) {
- driverAdminData.assignments = assignments;
- }
+    if (assignments !== undefined) {
+      driverAdminData.assignments = assignments;
+      driverAdminData.kermesAssignments = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+        kermesId: a.id,
+        role: a.role,
+        assignedAt: a.assignedAt || new Date().toISOString()
+      }));
+    }
 
  if (assignerName) {
  driverAdminData.assignedBy = {

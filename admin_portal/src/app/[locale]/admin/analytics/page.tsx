@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -68,11 +68,12 @@ const SearchSelectDropdown = ({
   const displayValue = selectedOption ? selectedOption.name : defaultLabel;
   
   const filtered = options.filter(o => {
-    const q = query.toLowerCase();
-    return o.name.toLowerCase().includes(q) || 
-           o.city.toLowerCase().includes(q) || 
-           o.postalCode.toLowerCase().includes(q) ||
-           (o.extraSearchData && o.extraSearchData.toLowerCase().includes(q));
+    const qTokens = query.toLowerCase().trim().split(/\s+/);
+    if (qTokens.length === 0 || (qTokens.length === 1 && qTokens[0] === '')) return true;
+    
+    const combinedSearchString = `${o.name} ${o.city} ${o.postalCode} ${o.extraSearchData || ''}`.toLowerCase();
+    
+    return qTokens.every(token => combinedSearchString.includes(token));
   });
 
   return (
@@ -156,6 +157,29 @@ export default function UnifiedAnalyticsPage() {
  const [masterProductCount, setMasterProductCount] = useState(0);
  const [loading, setLoading] = useState(true);
  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+ // Refresh Controls
+ const [refreshTrigger, setRefreshTrigger] = useState(0);
+ const [isRefreshing, setIsRefreshing] = useState(false);
+
+ // 15-minute Auto Refresh
+ useEffect(() => {
+ const interval = setInterval(() => {
+ setRefreshTrigger(prev => prev + 1);
+ // Orders will update automatically through their own listener
+ // but static data requires fetching again.
+ }, 15 * 60 * 1000);
+ return () => clearInterval(interval);
+ }, []);
+
+ const handleManualRefresh = () => {
+ setIsRefreshing(true);
+ setRefreshTrigger(prev => prev + 1);
+ setTimeout(() => {
+ setIsRefreshing(false);
+ setLastUpdate(new Date());
+ }, 800);
+ };
 
  // Get date range based on filter
  const getDateRange = (filter: DateFilter) => {
@@ -271,7 +295,7 @@ export default function UnifiedAnalyticsPage() {
 
  loadBusinesses();
  loadKermeses();
- }, []);
+ }, [refreshTrigger]);
 
  // Load users & admins
  useEffect(() => {
@@ -305,7 +329,7 @@ export default function UnifiedAnalyticsPage() {
  });
  };
  loadUsers();
- }, [dateFilter]);
+ }, [dateFilter, refreshTrigger]);
 
  // Load master products count
  useEffect(() => {
@@ -314,7 +338,7 @@ export default function UnifiedAnalyticsPage() {
  setMasterProductCount(snap.size);
  };
  loadProducts();
- }, []);
+ }, [refreshTrigger]);
 
  // Orders are now provided by useOrdersStandalone hook (canonical field mapping)
  // Update loading/lastUpdate based on hook state
@@ -462,10 +486,11 @@ export default function UnifiedAnalyticsPage() {
  </p>
  </div>
  <button
- onClick={() => setLastUpdate(new Date())}
- className="px-4 py-2 bg-card border border-border rounded-lg text-muted-foreground hover:text-white hover:bg-gray-700 transition flex items-center gap-2 text-sm"
+ onClick={handleManualRefresh}
+ disabled={isRefreshing}
+ className="px-4 py-2 bg-card border border-border rounded-lg text-muted-foreground hover:text-white hover:bg-gray-700 transition flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
  >
- <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+ <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
  </svg>
  {t('yenile') || 'Yenile'}

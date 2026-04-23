@@ -15,6 +15,7 @@ interface WorkspaceAssignmentsListProps {
  businesses: any[];
  kermesEvents: any[];
  isSuperAdmin: boolean;
+ globalRole?: string;
 }
 
 const KERMES_ROLES = [
@@ -29,7 +30,7 @@ const BUSINESS_ROLES = [
  { value: 'staff', label: 'Personel (Standart)', icon: '👥', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' },
 ];
 
-export function WorkspaceAssignmentsList({ assignments, onChange, businesses, kermesEvents, isSuperAdmin }: WorkspaceAssignmentsListProps) {
+export function WorkspaceAssignmentsList({ assignments, onChange, businesses, kermesEvents, isSuperAdmin, globalRole }: WorkspaceAssignmentsListProps) {
  const t = useTranslations('AdminNav');
  const [showAdd, setShowAdd] = useState(false);
  const [selectedEntityId, setSelectedEntityId] = useState('');
@@ -48,46 +49,54 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
  };
 
  const handleAdd = () => {
-  if (!selectedEntityId || selectedRoles.length === 0) return;
+  if (!selectedEntityId) return;
   
   // Determine entity type and name
-  let entityName = '';
-  let entityType: 'business' | 'kermes' = 'business';
-  
-  const b = businesses.find(x => x.id === selectedEntityId);
-  if (b) {
-   entityName = b.name;
-   entityType = 'business';
-  } else {
-   const k = kermesEvents.find(x => x.id === selectedEntityId);
-   if (k) {
-    entityName = k.name;
-    entityType = 'kermes';
+   let entityName = '';
+   let entityType: 'business' | 'kermes' = 'business';
+   
+   const b = businesses.find(x => x.id === selectedEntityId);
+   if (b) {
+    entityName = b.name;
+    entityType = 'business';
+   } else {
+    const k = kermesEvents.find(x => x.id === selectedEntityId);
+    if (k) {
+     entityName = k.name;
+     entityType = 'kermes';
+    }
    }
-  }
 
-  if (!entityName) return;
+   if (!entityName) return;
 
-  // Add one assignment per selected role
-  const newAssignments = [...assignments];
-  for (const role of selectedRoles) {
-   if (newAssignments.find(a => a.id === selectedEntityId && a.role === role)) {
-    continue; // Skip duplicates
+   let rolesToAdd = selectedRoles;
+   
+   // If it's a business, auto-determine the role based on globalRole to avoid redundancy
+   if (entityType === 'business') {
+     const isBusinessAdmin = ['business_admin', 'lokma_admin', 'super'].includes(globalRole || '');
+     rolesToAdd = [isBusinessAdmin ? 'admin' : 'staff'];
    }
-   newAssignments.push({
-    id: selectedEntityId,
-    entityName,
-    role,
-    entityType,
-    assignedAt: new Date().toISOString()
-   });
-  }
 
-  onChange(newAssignments);
-  setSelectedEntityId('');
-  setSelectedRoles(['staff']);
-  setShowAdd(false);
- };
+   // Add one assignment per selected role
+   const newAssignments = [...assignments];
+   for (const role of rolesToAdd) {
+    if (newAssignments.find(a => a.id === selectedEntityId && a.role === role)) {
+     continue; // Skip duplicates
+    }
+    newAssignments.push({
+     id: selectedEntityId,
+     entityName,
+     role,
+     entityType,
+     assignedAt: new Date().toISOString()
+    });
+   }
+
+   onChange(newAssignments);
+   setSelectedEntityId('');
+   setSelectedRoles(['staff']);
+   setShowAdd(false);
+  };
 
  const handleRemove = (index: number) => {
   const arr = [...assignments];
@@ -246,59 +255,47 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
        </div>
       </div>
 
-      {/* Role selection - multi-select for kermes, single for business */}
-      {selectedEntityId && (
+      {/* Role selection - multi-select for kermes, auto-determined for business */}
+      {selectedEntityId && isSelectedKermes && (
        <div>
         <label className="block text-xs font-medium text-muted-foreground mb-2">
-         {isSelectedKermes ? 'Kermes Rolleri (birden fazla secilebilir)' : 'Isletme Rolu'}
+         Kermes Rolleri (birden fazla secilebilir)
         </label>
-        {isSelectedKermes ? (
-         <div className="grid grid-cols-2 gap-2">
-          {roleOptions.map(ro => {
-           const isActive = selectedRoles.includes(ro.value);
-           return (
-            <button
-             key={ro.value}
-             type="button"
-             onClick={() => toggleRole(ro.value)}
-             className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all ${
-              isActive
-               ? 'border-pink-500 bg-pink-50 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-500 shadow-sm'
-               : 'border-border bg-background text-muted-foreground hover:border-pink-300 hover:bg-pink-50/50 dark:hover:bg-pink-900/10'
-             }`}
-            >
-             <span className="text-lg">{ro.icon}</span>
-             <span>{ro.label}</span>
-             {isActive && <span className="ml-auto text-pink-500 font-bold">&#10003;</span>}
-            </button>
-           );
-          })}
-         </div>
-        ) : (
-         <select 
-          value={selectedRoles[0] || 'staff'}
-          onChange={e => setSelectedRoles([e.target.value])}
-          className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm"
-         >
-          {roleOptions.map(ro => (
-           <option key={ro.value} value={ro.value}>{ro.icon} {ro.label}</option>
-          ))}
-         </select>
-        )}
+        <div className="grid grid-cols-2 gap-2">
+         {roleOptions.map(ro => {
+          const isActive = selectedRoles.includes(ro.value);
+          return (
+           <button
+            key={ro.value}
+            type="button"
+            onClick={() => toggleRole(ro.value)}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all ${
+             isActive
+              ? 'border-pink-500 bg-pink-50 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-500 shadow-sm'
+              : 'border-border bg-background text-muted-foreground hover:border-pink-300 hover:bg-pink-50/50 dark:hover:bg-pink-900/10'
+            }`}
+           >
+            <span className="text-lg">{ro.icon}</span>
+            <span>{ro.label}</span>
+            {isActive && <span className="ml-auto text-pink-500 font-bold">&#10003;</span>}
+           </button>
+          );
+         })}
+        </div>
        </div>
       )}
 
       <button 
        type="button" 
        onClick={handleAdd}
-       disabled={!selectedEntityId || selectedRoles.length === 0}
+       disabled={!selectedEntityId || (isSelectedKermes && selectedRoles.length === 0)}
        className={`w-full py-2.5 rounded-lg text-sm font-medium transition ${
-        selectedEntityId && selectedRoles.length > 0
+        selectedEntityId && (!isSelectedKermes || selectedRoles.length > 0)
          ? 'bg-pink-600 text-white shadow-md hover:bg-pink-700' 
          : 'bg-muted text-muted-foreground cursor-not-allowed'
        }`}
       >
-       {selectedRoles.length > 1 
+       {selectedRoles.length > 1 && isSelectedKermes
         ? `${selectedRoles.length} Rol ile Ata`
         : 'Listeye Ekle'
        }

@@ -12,7 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' hide Path;
 import 'legal_report_sheet.dart';
 import 'package:lokma_app/services/business_deals_service.dart';
 
@@ -4461,6 +4461,33 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 child: buildKasapProductMedia(product.imageUrl!, BoxFit.cover, isDark),
                               ),
                             ),
+                            // 🆕 Brand Triangle Badge (Top Left)
+                            if (product.certifications.contains('cert_tuna') || product.certifications.contains('cert_akdeniz'))
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                child: ClipPath(
+                                  clipper: _BadgeTriangleClipper(),
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    color: const Color(0xFFEA184A), // Lokma/Tuna Red
+                                    alignment: Alignment.topLeft,
+                                    padding: const EdgeInsets.only(left: 3, top: 3),
+                                    child: Transform.rotate(
+                                      angle: -0.15, // slight rotation for visual pop in the triangle
+                                      child: Image.asset(
+                                        product.certifications.contains('cert_tuna')
+                                            ? 'assets/images/tuna_logo_pill.png'
+                                            : 'assets/images/akdeniz_toros_logo_pill.png',
+                                        width: 22,
+                                        height: 22,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             // + button overlay: bottom-right corner
                             if (isAvailable)
                               Positioned(
@@ -4723,6 +4750,35 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               color: isDark ? Colors.grey[900] : Colors.grey[100],
                               child: Icon(Icons.restaurant_menu, color: textSecondary, size: 40),
                             ),
+                      
+                      // 🆕 Brand Triangle Badge (Top Left)
+                      if (product.certifications.contains('cert_tuna') || product.certifications.contains('cert_akdeniz'))
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: ClipPath(
+                            clipper: _BadgeTriangleClipper(),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              color: const Color(0xFFEA184A), // Lokma/Tuna Red
+                              alignment: Alignment.topLeft,
+                              padding: const EdgeInsets.only(left: 3, top: 3),
+                              child: Transform.rotate(
+                                angle: -0.15, // slight rotation for visual pop in the triangle
+                                child: Image.asset(
+                                  product.certifications.contains('cert_tuna')
+                                      ? 'assets/images/tuna_logo_pill.png'
+                                      : 'assets/images/akdeniz_toros_logo_pill.png',
+                                  width: 22,
+                                  height: 22,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
                       // Out of Stock Badge (top right)
                       if (!isAvailable)
                         Positioned(
@@ -5497,6 +5553,34 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         ),
                       ),
 
+                    // 🆕 Brand Triangle Badge (Top Left)
+                    if (product.certifications.contains('cert_tuna') || product.certifications.contains('cert_akdeniz'))
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: ClipPath(
+                          clipper: _BadgeTriangleClipper(),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            color: const Color(0xFFEA184A), // Lokma/Tuna Red
+                            alignment: Alignment.topLeft,
+                            padding: const EdgeInsets.only(left: 3, top: 3),
+                            child: Transform.rotate(
+                              angle: -0.15, // slight rotation for visual pop in the triangle
+                              child: Image.asset(
+                                product.certifications.contains('cert_tuna')
+                                    ? 'assets/images/tuna_logo_pill.png'
+                                    : 'assets/images/akdeniz_toros_logo_pill.png',
+                                width: 18,
+                                height: 18,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
                     // Floating + button (bottom-right, overlapping image)
                     if (isAvailable)
                       Positioned(
@@ -5608,4 +5692,18 @@ class _FavoriteHeartAnimationState extends State<_FavoriteHeartAnimation>
       ),
     );
   }
+}
+
+class _BadgeTriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(size.width, 0);
+    path.lineTo(0, size.height);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

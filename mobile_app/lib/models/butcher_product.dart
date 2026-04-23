@@ -24,6 +24,7 @@ class ButcherProduct {
   final List<OptionGroup> optionGroups;
   final List<String> allergens;
   final List<String> additives;
+  final List<String> certifications;
   final bool outOfStock;
   final double? appSellingPrice;
   final double? inStorePrice;
@@ -57,6 +58,7 @@ class ButcherProduct {
     this.optionGroups = const [],
     this.allergens = const [],
     this.additives = const [],
+    this.certifications = const [],
     this.outOfStock = false,
     this.appSellingPrice,
     this.inStorePrice,
@@ -104,6 +106,7 @@ class ButcherProduct {
       optionGroups: _parseOptionGroups(data['optionGroups']),
       allergens: _parseList(data['allergens'] ?? masterData?['allergens']),
       additives: _parseList(data['additives'] ?? masterData?['additives']),
+      certifications: _parseList(data['certifications'] ?? masterData?['certifications']),
       outOfStock: data['outOfStock'] ?? false,
       appSellingPrice: (data['appSellingPrice'] ?? masterData?['appSellingPrice']) != null
           ? (data['appSellingPrice'] ?? masterData?['appSellingPrice']).toDouble()
@@ -168,6 +171,7 @@ class ButcherProduct {
       'optionGroups': optionGroups.map((g) => g.toMap()).toList(),
       'allergens': allergens,
       'additives': additives,
+      'certifications': certifications,
       'outOfStock': outOfStock,
       'appSellingPrice': appSellingPrice,
       'inStorePrice': inStorePrice,
@@ -204,6 +208,7 @@ class ButcherProduct {
           .toList() ?? [],
       allergens: List<String>.from(map['allergens'] ?? []),
       additives: List<String>.from(map['additives'] ?? []),
+      certifications: List<String>.from(map['certifications'] ?? []),
       outOfStock: map['outOfStock'] ?? false,
       appSellingPrice: map['appSellingPrice'] != null
           ? (map['appSellingPrice']).toDouble()
