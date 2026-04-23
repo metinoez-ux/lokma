@@ -61,6 +61,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   // Active delivery stream
   Stream<List<LokmaOrder>>? _activeOrdersStream;
 
+  // Scroll state for dynamic glassmorphism
+  bool _isScrolled = false;
+
   @override
   void initState() {
     super.initState();
@@ -164,9 +167,23 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
 
     return Scaffold(
       extendBody: true,
-      body: Stack(
-        children: [
-          widget.child,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification notification) {
+          // Check if scrolling is happening on the primary scroll view (usually axis == vertical)
+          if (notification.depth == 0 || notification.metrics.axis == Axis.vertical) {
+            final isScrolled = notification.metrics.pixels > 20;
+            if (isScrolled != _isScrolled) {
+              // Use addPostFrameCallback or setState if safe
+              setState(() {
+                _isScrolled = isScrolled;
+              });
+            }
+          }
+          return false;
+        },
+        child: Stack(
+          children: [
+            widget.child,
           // Floating active delivery button (only when logged in)
           if (_activeOrdersStream != null &&
               !isCartPage &&
@@ -198,12 +215,14 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
               },
             ),
         ],
+        ),
       ),
       bottomNavigationBar: (!isBottomNavVisible)
           ? null
           : GlassBottomBar(
               currentIndex: selectedIndex,
               cartItemCount: cartItemCount,
+              isScrolled: _isScrolled,
               onTap: (index) {
                 HapticFeedback.lightImpact();
                 context.go(MainScaffold.items[index].path);
@@ -351,6 +370,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
 class GlassBottomBar extends StatelessWidget {
   final int currentIndex;
   final int cartItemCount;
+  final bool isScrolled;
   final ValueChanged<int> onTap;
   final List<NavItemData> items;
 
@@ -358,6 +378,7 @@ class GlassBottomBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.cartItemCount,
+    this.isScrolled = false,
     required this.onTap,
     required this.items,
   });
@@ -365,17 +386,29 @@ class GlassBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Dynamic glassmorphism properties based on scroll
+    // Reduced base opacity so it's clearer (more transparent) when unscrolled
+    final double blurSigma = isScrolled ? 15.0 : 6.0;
+    final Color tintColor = isDark 
+        ? Colors.black.withOpacity(isScrolled ? 0.35 : 0.1) 
+        : Colors.white.withOpacity(isScrolled ? 0.45 : 0.15);
+
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.only(bottom: 24),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: AppleGlassContainer(
-          height: 70,
-          borderRadius: 40,
-          blurSigmaX: 6.0, // Reduced from 12.0 for a more transparent effect
-          blurSigmaY: 6.0,
-          child: Stack(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: AppleGlassContainer(
+            height: 70,
+            borderRadius: 40,
+            blurSigmaX: blurSigma,
+            blurSigmaY: blurSigma,
+            tintColor: tintColor,
+            child: Stack(
             alignment: Alignment.center,
             children: [
               // Nav items — centered in Stack
@@ -402,14 +435,18 @@ class GlassBottomBar extends StatelessWidget {
                 ],
               ),
             ),
+          ),
       ),
     );
   }
 
   Widget _buildItemContent(
       NavItemData item, bool isActive, BuildContext context, bool isDark) {
-    const activeColor = Colors.white; // Seçili olan tam beyaz
-    final inactiveColor = Colors.white.withOpacity(0.5); // Seçili olmayanlar yarı saydam beyaz
+    // Dynamically adjust colors based on the theme to match iOS Apple Glass logic
+    final accent = Theme.of(context).colorScheme.primary;
+    final Color activeColor = accent; // Brand color when clicked
+    final Color inactiveColor = isDark ? Colors.white : Colors.grey.shade800; // White in dark mode, dark grey in light mode
+    
     final color = isActive ? activeColor : inactiveColor;
     const iconSize = 24.0;
 
@@ -499,8 +536,8 @@ class GlassBottomBar extends StatelessWidget {
           item.label,
           style: GoogleFonts.inter(
             color: color,
-            fontSize: 10.5,
-            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+            fontSize: 11.5,
+            fontWeight: isActive ? FontWeight.w800 : FontWeight.w700,
             letterSpacing: -0.2,
           ),
         ),

@@ -12,6 +12,8 @@ class AppleGlassContainer extends StatelessWidget {
   final double blurSigmaY;
   final double? width;
   final double? height;
+  final Color? tintColor;
+  final Color? borderColor;
 
   const AppleGlassContainer({
     super.key,
@@ -23,6 +25,8 @@ class AppleGlassContainer extends StatelessWidget {
     this.blurSigmaY = 35.0,
     this.width,
     this.height,
+    this.tintColor,
+    this.borderColor,
   });
 
   @override
@@ -30,16 +34,14 @@ class AppleGlassContainer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Subtle edge highlight mimicking iOS reflections
-    final borderColor = isDark
+    final finalBorderColor = borderColor ?? (isDark
         ? Colors.white.withOpacity(0.10)
-        : Colors.white.withOpacity(0.30);
+        : Colors.white.withOpacity(0.30));
 
     // Main translucent tint color
-    // A slight white/dark tint that acts like iOS systemMaterial.
-    // It appears opaque over white, and transparent over black.
-    final tintColor = isDark
+    final finalTintColor = tintColor ?? (isDark
         ? const Color(0xFF1C1C1E).withOpacity(0.25)
-        : Colors.white.withOpacity(0.20);
+        : Colors.white.withOpacity(0.20));
 
     return Container(
       margin: margin,
@@ -59,15 +61,25 @@ class AppleGlassContainer extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurSigmaX, sigmaY: blurSigmaY),
-          child: Container(
+        child: TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          tween: Tween<double>(begin: blurSigmaX, end: blurSigmaX),
+          builder: (context, blurValue, childWidget) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blurValue, sigmaY: blurValue),
+              child: childWidget,
+            );
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
             padding: padding,
             decoration: BoxDecoration(
-              color: tintColor,
+              color: finalTintColor,
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
-                color: borderColor,
+                color: finalBorderColor,
                 width: 0.5,
               ),
               // Subtle gradient for realistic reflection (brighter top-left)
@@ -76,11 +88,11 @@ class AppleGlassContainer extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.white.withOpacity(0.4),
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.white.withOpacity(0.15),
                   isDark
                       ? Colors.transparent
-                      : Colors.white.withOpacity(0.1),
+                      : Colors.white.withOpacity(0.05),
                 ],
               ),
             ),

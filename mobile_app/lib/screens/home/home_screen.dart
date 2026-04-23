@@ -29,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
+        bottom: false, // Let content flow behind the glass bottom nav bar
         child: Column(
           children: [
             // ===== HEADER (Compact) =====
@@ -126,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // ===== RECENT ORDERS - QUICK REORDER =====
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
