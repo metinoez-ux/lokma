@@ -6584,7 +6584,7 @@ export default function BusinessDetailsPage() {
  : '—'}
  </td>
  <td className="py-2.5">
- <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${isPaused
+ <span className={`px-2.5 py-1 rounded-full text-xs font-semibold text-white ${isPaused
  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
  : 'bg-green-500/20 text-green-300 border border-green-500/30'
  }`}>
@@ -6606,19 +6606,19 @@ export default function BusinessDetailsPage() {
  onClick={() => setStaffStatusFilter('active')}
  className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'active'
  ? 'bg-green-600 text-white'
- : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'
+ : 'bg-muted text-muted-foreground hover:bg-muted border border-border'
  }`}
  >
- {t('aktif')}{staffList.filter(s => s.isActive !== false).length})
+ {t('aktif')} ({staffList.filter(s => s.isActive !== false).length})
  </button>
  <button
  onClick={() => setStaffStatusFilter('archived')}
  className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'archived'
  ? 'bg-amber-600 text-white'
- : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'
+ : 'bg-muted text-muted-foreground hover:bg-muted border border-border'
  }`}
  >
- {t('arsivlenmis')}{staffList.filter(s => s.isActive === false).length})
+ {t('arsivlenmis')} ({staffList.filter(s => s.isActive === false).length})
  </button>
  </div>
 
@@ -6922,41 +6922,6 @@ export default function BusinessDetailsPage() {
   }`}
   >
   {editingStaff?.isActive !== false ? (t('arsivle1') || 'Archivieren') : (t('aktiflestir') || 'Aktivieren')}
-  </button>
-  <button
-  onClick={() => {
-  if (!editingStaff) return;
-  setConfirmModal({
-  show: true,
-  title: t('yetkiyiKaldir') || 'Berechtigung entfernen',
-  message: `${editingStaff.displayName} — Berechtigung wirklich entfernen?`,
-  confirmText: t('evetKaldir') || 'Ja, entfernen',
-  confirmColor: 'bg-red-600 hover:bg-red-500',
-  onConfirm: async () => {
-  setConfirmModal(prev => ({ ...prev, show: false }));
-  setEditingStaff(null);
-  try {
-  const adminRef = doc(db, 'admins', editingStaff.id);
-  await updateDoc(adminRef, {
-  isActive: false,
-  adminType: null,
-  butcherId: null,
-  butcherName: null,
-  deactivatedAt: new Date(),
-  deactivationReason: 'Berechtigung entfernt',
-  });
-  showToast(`${editingStaff.displayName} — Berechtigung entfernt`, 'success');
-  loadStaff();
-  } catch (error) {
-  console.error('Remove permission error:', error);
-  showToast(t('islemBasarisiz'), 'error');
-  }
-  },
-  });
-  }}
-  className="flex-1 text-xs py-2 rounded-lg border border-red-700 text-red-500 hover:bg-red-600 hover:text-white transition"
-  >
-  {t('yetkiyiKaldir1') || 'Berechtigung Entfernen'}
   </button>
   </div>
   </div>
