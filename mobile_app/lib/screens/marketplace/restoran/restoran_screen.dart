@@ -2196,7 +2196,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           return;
         }
         // No conflict -- proceed with normal flow
-        if (!isAvailable) {
+        if (!isAvailable && _deliveryMode != 'masa') {
           _currentBusinessIdForDialog = id;
           _showClosedBusinessDialog(context, name, unavailableReason ?? tr('marketplace.currently_closed'), data, onContinue: () {
             final hasReservation = data['hasReservation'] == true;

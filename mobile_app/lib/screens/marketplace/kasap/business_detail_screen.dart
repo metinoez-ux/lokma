@@ -156,6 +156,59 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     });
   }
 
+  void _handleAddProduct(ButcherProduct product) {
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    if (data == null) return;
+    
+    // Evaluate open state
+    bool isOpen = false;
+    if (data['openingHours'] != null) {
+      isOpen = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
+    }
+    if (!isOpen && data['deliveryHours'] != null) {
+      isOpen = OpeningHoursHelper(data['deliveryHours']).isOpenAt(DateTime.now());
+    }
+    if (!isOpen && data['pickupHours'] != null) {
+      isOpen = OpeningHoursHelper(data['pickupHours']).isOpenAt(DateTime.now());
+    }
+    if (data['openingHours'] == null && data['deliveryHours'] == null && data['pickupHours'] == null) {
+      isOpen = true;
+    }
+
+    // QR Code / Pre-order logic precedence
+    if (_isMasaMode && widget.initialTableNumber == null && !_masaPreOrderPromptShown) {
+      _showMasaPreOrderPrompt(product);
+      return;
+    }
+
+    // Closed logic
+    if (!isOpen) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('marketplace.currently_closed'.tr()),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Proceed to add
+    if (product.optionGroups.isNotEmpty) {
+      _showProductBottomSheet(product);
+    } else {
+      final butcherName = data['companyName'] ?? data['name'] ?? 'common.butcher'.tr();
+      HapticFeedback.mediumImpact();
+      _quickAddToCart(
+        product,
+        product.unitType.toLowerCase() == 'kg' ? product.minQuantity : 1,
+        widget.businessId,
+        butcherName,
+        onSuccess: () => setState(() {}),
+      );
+    }
+  }
+
   void _quickAddToCart(ButcherProduct product, double quantity, String businessId, String? butcherName, {VoidCallback? onSuccess}) {
     if (CartWarningUtils.checkConflictForNormalCart(ref, businessId)) {
       CartWarningUtils.showDifferentCartWarning(
@@ -559,7 +612,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         }
         final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
         
-        if (!isOpen && !_closedDialogShown && !widget.closedAcknowledged) {
+        final skipClosedPopup = _isMasaMode && widget.initialTableNumber == null;
+        if (!isOpen && !_closedDialogShown && !widget.closedAcknowledged && !skipClosedPopup) {
           _closedDialogShown = true;
           _showClosedBusinessDialog(preOrderEnabled: preOrderEnabled);
         }
@@ -3213,31 +3267,24 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    ),
                                  );
                                },
-                               child: Row(
-                                 mainAxisSize: MainAxisSize.min,
-                                 children: [
-                                   SvgPicture.asset(
-                                     "assets/images/icon_masa_rezervasyon.svg",
-                                     width: 16,
-                                     height: 16,
-                                     colorFilter: ColorFilter.mode(
-                                       Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                       BlendMode.srcIn,
-                                     ),
+                               child: Container(
+                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                 decoration: BoxDecoration(
+                                   color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+                                   borderRadius: BorderRadius.circular(20),
+                                 ),
+                                 child: Text(
+                                   tr('marketplace.table_reservation'),
+                                   style: TextStyle(
+                                     fontSize: 12,
+                                     fontWeight: FontWeight.w700,
+                                     color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
                                    ),
-                                   const SizedBox(width: 4),
-                                   Text(
-                                      tr('marketplace.table_reservation'),
-                                     style: TextStyle(
-                                       fontSize: 14,
-                                       fontWeight: FontWeight.w600,
-                                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                     ),
-                                   ),
-                                 ],
+                                 ),
                                ),
                              ),
-                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                             if (((data?['cuisineType']?.toString() ?? '').isNotEmpty || (data?['type']?.toString() ?? '').isNotEmpty) || ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab)))
+                               const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                            ],
 
                            // Business / Cuisine Type
@@ -3250,7 +3297,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  fontWeight: FontWeight.w500,
                                ),
                              ),
-                              if (_isMasaMode || !isOpen || isPausedForCurrentTab)
+                              if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
                                 const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                             ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
                              Text(
@@ -3261,12 +3308,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  fontWeight: FontWeight.w500,
                                ),
                              ),
-                              if (_isMasaMode || !isOpen || isPausedForCurrentTab)
+                              if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
                                 const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                             ],
                             
                             // Open/Closed Status
-                            if (_isMasaMode || !isOpen || isPausedForCurrentTab)
+                            if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
                               InkWell(
                              onTap: _showWeeklyHours,
                              child: Row(
@@ -4494,26 +4541,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 right: -4,
                                 bottom: -4,
                                 child: GestureDetector(
-                                  onTap: () {
-                                    if (_isMasaMode && !_masaPreOrderPromptShown) {
-                                      _showMasaPreOrderPrompt(product);
-                                      return;
-                                    }
-                                    if (product.optionGroups.isNotEmpty) {
-                                      _showProductBottomSheet(product);
-                                    } else {
-                                      final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                      final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                                      HapticFeedback.mediumImpact();
-                                      _quickAddToCart(
-                                        product,
-                                        isByWeight ? product.minQuantity : 1,
-                                        widget.businessId,
-                                        butcherName,
-                                        onSuccess: () => setState(() {}),
-                                      );
-                                    }
-                                  },
+                                  onTap: () => _handleAddProduct(product),
                                   child: inCart && product.optionGroups.isEmpty
                                     ? Container(
                                         width: 36,
@@ -4570,26 +4598,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       else if (isAvailable)
                         // No image: standalone + button below text
                         GestureDetector(
-                          onTap: () {
-                            if (_isMasaMode && !_masaPreOrderPromptShown) {
-                              _showMasaPreOrderPrompt(product);
-                              return;
-                            }
-                            if (product.optionGroups.isNotEmpty) {
-                              _showProductBottomSheet(product);
-                            } else {
-                              final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                              final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                              HapticFeedback.mediumImpact();
-                              _quickAddToCart(
-                                product,
-                                isByWeight ? product.minQuantity : 1,
-                                widget.businessId,
-                                butcherName,
-                                onSuccess: () => setState(() {}),
-                              );
-                            }
-                          },
+                          onTap: () => _handleAddProduct(product),
                           child: inCart && product.optionGroups.isEmpty
                             ? Container(
                                 width: 44,
