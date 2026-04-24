@@ -6714,102 +6714,32 @@ export default function BusinessDetailsPage() {
  <td className="py-4">
  {(admin?.adminType === 'super' || (staff.id !== admin?.id && !staff.adminType?.toLowerCase().includes('admin') && staff.adminType !== 'super')) && (
  <div className="flex flex-wrap gap-2">
- {/* Arşivle / Aktifleştir toggle */}
- <button
- onClick={() => {
- const isActive = staff.isActive !== false;
- setConfirmModal({
- show: true,
- title: isActive ? t('personelArsivle') : t('personelAktiflestir'),
- message: isActive
- ? `${staff.displayName} ${t('adliPersoneliArsivlemekIstediginizeEminMisiniz')}`
- : `${staff.displayName} ${t('adliPersoneliTekrarAktiflestirmekIstediginizeEmin')}`,
- confirmText: isActive ? t('evetArsivle') : t('evetAktiflestir'),
- confirmColor: isActive ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500',
- onConfirm: async () => {
- setConfirmModal(prev => ({ ...prev, show: false }));
- try {
- const adminRef = doc(db, 'admins', staff.id);
- const now = new Date();
- if (isActive) {
- await updateDoc(adminRef, {
- isActive: false,
- deactivatedAt: now,
- deactivationReason: t('isletmePanelindenArsivlendi'),
- });
- showToast(`${staff.displayName} ${t('arsivlendi')}`, 'success');
- } else {
- await updateDoc(adminRef, {
- isActive: true,
- deactivatedAt: null,
- deactivationReason: null,
- });
- showToast(`${staff.displayName} ${t('tekrarAktiflestirildi')}`, 'success');
- }
- loadStaff();
- } catch (error) {
- console.error('Archive error:', error);
- showToast(t('islemBasarisiz'), 'error');
- }
- },
- });
- }}
- className={`text-xs px-2 py-1 rounded ${staff.isActive !== false
- ? 'bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white'
- : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600 hover:text-white'}`}
- >
- {staff.isActive !== false ? t('arsivle1') : t('aktiflestir')}
- </button>
+  {/* Archived staff: show Aktivieren directly in row */}
+  {staff.isActive === false && (
+  <button
+  onClick={() => handleToggleStaffActive(staff)}
+  className="text-xs px-2 py-1 rounded bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white transition"
+  >
+  {t('aktiflestir') || 'Aktivieren'}
+  </button>
+  )}
   {/* Düzenle */}
   <button
   onClick={() => handleEditStaff(staff)}
-  className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-800 dark:text-blue-400 hover:bg-blue-600 hover:text-white"
+  className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white"
   >
-  {t('duzenle') || 'Düzenle'}
+  {t('duzenle') || 'Bearbeiten'}
   </button>
   {/* Yeni Şifre */}
   <button
   onClick={() => handleResetStaffPassword(staff)}
   disabled={resetPasswordLoading}
-  className="text-xs px-2 py-1 rounded bg-violet-600/20 text-violet-800 dark:text-violet-400 hover:bg-violet-600 hover:text-white disabled:opacity-50"
+  className="text-xs px-2 py-1 rounded bg-violet-600/20 text-violet-400 hover:bg-violet-600 hover:text-white disabled:opacity-50"
   >
   Yeni Sifre
   </button>
- {/* Yetkiyi Kaldır */}
- <button
- onClick={() => {
- setConfirmModal({
- show: true,
- title: t('yetkiyiKaldir'),
- message: `${staff.displayName} ${t('adliPersonelinYetkisiniKaldirmakIstediginizeEmin')}`,
- confirmText: t('evetKaldir'),
- confirmColor: 'bg-red-600 hover:bg-red-500',
- onConfirm: async () => {
- setConfirmModal(prev => ({ ...prev, show: false }));
- try {
- const adminRef = doc(db, 'admins', staff.id);
- await updateDoc(adminRef, {
- isActive: false,
- adminType: null,
- butcherId: null,
- butcherName: null,
- deactivatedAt: new Date(),
- deactivationReason: t('yetkiKaldirildi'),
- });
- showToast(`${staff.displayName} ${t('yetkisiKaldirildi')}`, 'success');
- loadStaff();
- } catch (error) {
- console.error('Remove permission error:', error);
- showToast(t('islemBasarisiz'), 'error');
- }
- },
- });
- }}
- className="text-xs px-2 py-1 rounded bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white"
- >
- {t('yetkiyiKaldir1')}
- </button>
  </div>
+
  )}
  </td>
  </tr>
@@ -6949,7 +6879,89 @@ export default function BusinessDetailsPage() {
   <option value="Niederlande">Niederlande</option>
   </select>
   </div>
-  <div className="flex gap-3 pt-2">
+  {/* Tehlikeli Aksiyonlar */}
+  <div className="border-t border-border pt-4 mt-2">
+  <p className="text-xs font-bold uppercase tracking-wider text-red-500 mb-3">Aktionen</p>
+  <div className="flex gap-2">
+  <button
+  onClick={() => {
+  if (!editingStaff) return;
+  const isActive = editingStaff.isActive !== false;
+  setConfirmModal({
+  show: true,
+  title: isActive ? (t('personelArsivle') || 'Archivieren') : (t('personelAktiflestir') || 'Aktivieren'),
+  message: isActive
+  ? `${editingStaff.displayName} wirklich archivieren?`
+  : `${editingStaff.displayName} wieder aktivieren?`,
+  confirmText: isActive ? (t('evetArsivle') || 'Ja, archivieren') : (t('evetAktiflestir') || 'Ja, aktivieren'),
+  confirmColor: isActive ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500',
+  onConfirm: async () => {
+  setConfirmModal(prev => ({ ...prev, show: false }));
+  setEditingStaff(null);
+  try {
+  const adminRef = doc(db, 'admins', editingStaff.id);
+  if (isActive) {
+  await updateDoc(adminRef, { isActive: false, deactivatedAt: new Date(), deactivationReason: 'Archiviert' });
+  showToast(`${editingStaff.displayName} archiviert`, 'success');
+  } else {
+  await updateDoc(adminRef, { isActive: true, deactivatedAt: null, deactivationReason: null });
+  showToast(`${editingStaff.displayName} aktiviert`, 'success');
+  }
+  loadStaff();
+  } catch (error) {
+  console.error('Archive error:', error);
+  showToast(t('islemBasarisiz'), 'error');
+  }
+  },
+  });
+  }}
+  className={`flex-1 text-xs py-2 rounded-lg border transition ${
+  editingStaff?.isActive !== false
+  ? 'border-amber-600 text-amber-500 hover:bg-amber-600 hover:text-white'
+  : 'border-green-600 text-green-500 hover:bg-green-600 hover:text-white'
+  }`}
+  >
+  {editingStaff?.isActive !== false ? (t('arsivle1') || 'Archivieren') : (t('aktiflestir') || 'Aktivieren')}
+  </button>
+  <button
+  onClick={() => {
+  if (!editingStaff) return;
+  setConfirmModal({
+  show: true,
+  title: t('yetkiyiKaldir') || 'Berechtigung entfernen',
+  message: `${editingStaff.displayName} — Berechtigung wirklich entfernen?`,
+  confirmText: t('evetKaldir') || 'Ja, entfernen',
+  confirmColor: 'bg-red-600 hover:bg-red-500',
+  onConfirm: async () => {
+  setConfirmModal(prev => ({ ...prev, show: false }));
+  setEditingStaff(null);
+  try {
+  const adminRef = doc(db, 'admins', editingStaff.id);
+  await updateDoc(adminRef, {
+  isActive: false,
+  adminType: null,
+  butcherId: null,
+  butcherName: null,
+  deactivatedAt: new Date(),
+  deactivationReason: 'Berechtigung entfernt',
+  });
+  showToast(`${editingStaff.displayName} — Berechtigung entfernt`, 'success');
+  loadStaff();
+  } catch (error) {
+  console.error('Remove permission error:', error);
+  showToast(t('islemBasarisiz'), 'error');
+  }
+  },
+  });
+  }}
+  className="flex-1 text-xs py-2 rounded-lg border border-red-700 text-red-500 hover:bg-red-600 hover:text-white transition"
+  >
+  {t('yetkiyiKaldir1') || 'Berechtigung Entfernen'}
+  </button>
+  </div>
+  </div>
+  {/* Kaydet / Iptal */}
+  <div className="flex gap-3 pt-3">
   <button onClick={() => setEditingStaff(null)} className="flex-1 py-3 rounded-lg border border-border text-foreground hover:bg-muted transition text-sm font-medium">{t('iptal') || 'Abbrechen'}</button>
   <button onClick={handleSaveEditStaff} disabled={editStaffLoading} className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
   {editStaffLoading ? 'Kaydediliyor...' : (t('kaydet') || 'Speichern')}
