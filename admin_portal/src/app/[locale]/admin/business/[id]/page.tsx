@@ -2665,27 +2665,43 @@ export default function BusinessDetailsPage() {
   const handleResetStaffPassword = async (staffMember: typeof staffList[0]) => {
   setResetPasswordLoading(true);
   try {
-  const newPassword = `LOKMA${Math.floor(1000 + Math.random() * 9000)}`;
-  const response = await fetch('/api/admin/reset-staff-password', {
+  // Use existing reset-user-password route which generates password server-side
+  const response = await fetch('/api/admin/reset-user-password', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-  staffId: staffMember.id,
-  phone: staffMember.phoneNumber,
-  email: staffMember.email,
+  uid: staffMember.id,
+  sendEmail: !!(staffMember.email),
+  email: staffMember.email || null,
   displayName: staffMember.displayName,
-  newPassword,
-  businessName: business?.companyName,
-  adminName: admin?.displayName,
   }),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Sifre sifirlanamadi');
-  showToast("Yeni sifre: " + newPassword + " — " + staffMember.displayName + "'e gonderildi", 'success');
+  const msg = data.tempPassword
+  ? `Yeni sifre: ${data.tempPassword} — ${staffMember.displayName}${ data.emailSent ? ' (Email gonderildi)' : '' }`
+  : `${staffMember.displayName} icin sifre sifirlandi`;
+  showToast(msg, 'success');
   } catch (error: any) {
   showToast(error?.message || 'Sifre sifirlanamadi', 'error');
   }
   setResetPasswordLoading(false);
+  };
+
+  const handleToggleStaffActive = async (staffMember: typeof staffList[0]) => {
+  try {
+  const adminRef = doc(db, 'admins', staffMember.id);
+  const newActive = staffMember.isActive === false ? true : false;
+  await updateDoc(adminRef, { isActive: newActive, updatedAt: new Date() });
+  showToast(
+  `${staffMember.displayName} — ${ newActive ? (t('aktif') || 'Aktif') : (t('arsivlendi') || 'Deaktif') }`,
+  newActive ? 'success' : 'error'
+  );
+  loadStaff();
+  } catch (error) {
+  console.error('Toggle active error:', error);
+  showToast(t('islemBasarisiz') || 'Islem basarisiz', 'error');
+  }
   };
 
 
@@ -6687,9 +6703,13 @@ export default function BusinessDetailsPage() {
  </span>
  </td>
  <td className="py-4">
- <span className={`px-2 py-1 rounded text-xs ${staff.isActive !== false ? 'bg-green-600' : 'bg-red-600'}`}>
- {staff.isActive !== false ? t('aktif') : t('pasif')}
- </span>
+ <button
+  onClick={() => handleToggleStaffActive(staff)}
+  title={staff.isActive !== false ? 'Deaktif et' : 'Aktifleştir'}
+  className={`px-2 py-1 rounded text-xs cursor-pointer transition-opacity hover:opacity-80 ${staff.isActive !== false ? 'bg-green-600' : 'bg-red-700'}`}
+ >
+  {staff.isActive !== false ? t('aktif') : t('pasif')}
+ </button>
  </td>
  <td className="py-4">
  {(admin?.adminType === 'super' || (staff.id !== admin?.id && !staff.adminType?.toLowerCase().includes('admin') && staff.adminType !== 'super')) && (
