@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import {
- collection, getDocs, query, where, orderBy, Timestamp, onSnapshot, limit as fbLimit
+ collection, getDocs, doc, updateDoc, query, where, orderBy, Timestamp, onSnapshot, limit as fbLimit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -63,18 +63,31 @@ interface StaffOrder {
 
 function getRoleLabel(role: string, t: (key: string) => string): string {
  if (!role) return t('belirsiz_rol');
- if (role.includes('admin')) return t('yonetici_rol');
- if (role.includes('staff')) return t('personel_rol');
- if (role.includes('waiter')) return t('garson_rol');
- if (role === 'driver') return t('surucu_rol');
+ const lv = role.toLowerCase().trim();
+ if (lv === 'super') return 'LOKMA Admin';
+ // Tüm admin varyantları → İşletme Admini
+ if (lv === 'admin' || lv === 'isletme_admin' || lv === 'lokma_admin' ||
+     lv === 'kermes_admin' || lv === 'business_admin' || lv.endsWith('_admin'))
+   return t('yonetici_rol');
+ if (lv === 'driver' || lv === 'teslimat' || lv.startsWith('driver_')) return t('surucu_rol');
+ if (lv.includes('waiter') || lv === 'garson') return t('garson_rol');
+ if (lv === 'mutfak') return 'Mutfak Personeli';
+ if (lv === 'staff' || lv === 'isletme_staff' || lv.endsWith('_staff') || lv === 'personel')
+   return t('personel_rol');
  return role;
 }
 
 function getRoleBadgeClass(role: string): string {
- if (role.includes('admin')) return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
- if (role.includes('staff')) return 'bg-green-500/20 text-green-300 border-green-500/30';
- if (role.includes('waiter')) return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
- if (role === 'driver') return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+ const lv = (role || '').toLowerCase().trim();
+ if (lv === 'super') return 'bg-red-600/30 text-red-300 border-red-500/40';
+ if (lv.includes('admin') || lv === 'kasap' || lv === 'restoran' || lv === 'market')
+   return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+ if (lv === 'driver' || lv === 'teslimat' || lv.startsWith('driver_'))
+   return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+ if (lv.includes('waiter') || lv === 'garson')
+   return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+ if (lv.includes('staff') || lv === 'personel')
+   return 'bg-green-500/20 text-green-300 border-green-500/30';
  return 'bg-gray-500/20 text-foreground border-gray-500/30';
 }
 
@@ -149,11 +162,33 @@ const { admin, loading: adminLoading } = useAdmin();
  const [createPassword, setCreatePassword] = useState('');
  const [createPasswordConfirm, setCreatePasswordConfirm] = useState('');
  const [createRole, setCreateRole] = useState('staff');
+ const [createAddress, setCreateAddress] = useState('');
+ const [createHouseNumber, setCreateHouseNumber] = useState('');
+ const [createAddressLine2, setCreateAddressLine2] = useState('');
+ const [createPostalCode, setCreatePostalCode] = useState('');
+ const [createCity, setCreateCity] = useState('');
+ const [createCountry, setCreateCountry] = useState('DE');
 
  const [creating, setCreating] = useState(false);
  const [createError, setCreateError] = useState('');
  const [showPassword, setShowPassword] = useState(false);
  const [personnelQuota, setPersonnelQuota] = useState<LimitCheckResult | null>(null);
+
+ // Edit Staff Modal State
+ const [editStaff, setEditStaff] = useState<StaffMember | null>(null);
+ const [editFirstName, setEditFirstName] = useState('');
+ const [editLastName, setEditLastName] = useState('');
+ const [editEmail, setEditEmail] = useState('');
+ const [editPhone, setEditPhone] = useState('');
+ const [editRole, setEditRole] = useState('');
+ const [editAddress, setEditAddress] = useState('');
+ const [editHouseNumber, setEditHouseNumber] = useState('');
+ const [editAddressLine2, setEditAddressLine2] = useState('');
+ const [editPostalCode, setEditPostalCode] = useState('');
+ const [editCity, setEditCity] = useState('');
+ const [editCountry, setEditCountry] = useState('DE');
+ const [editSaving, setEditSaving] = useState(false);
+ const [editError, setEditError] = useState('');
 
  // Resolve business ID via shared hook
  const businessId = useAdminBusinessId();
@@ -267,6 +302,12 @@ const { admin, loading: adminLoading } = useAdmin();
  assignerPhone: admin?.phone || '',
  assignerRole: admin?.adminType || 'admin',
  locale: locale || 'de',
+ address: createAddress || undefined,
+ houseNumber: createHouseNumber || undefined,
+ addressLine2: createAddressLine2 || undefined,
+ postalCode: createPostalCode || undefined,
+ city: createCity || undefined,
+ country: createCountry || undefined,
  }),
  });
 
@@ -308,7 +349,12 @@ const { admin, loading: adminLoading } = useAdmin();
  setCreatePassword('');
  setCreatePasswordConfirm('');
  setCreateRole('staff');
-
+ setCreateAddress('');
+ setCreateHouseNumber('');
+ setCreateAddressLine2('');
+ setCreatePostalCode('');
+ setCreateCity('');
+ setCreateCountry('DE');
  setCreateError('');
 
  // Refresh staff list
@@ -348,12 +394,77 @@ const { admin, loading: adminLoading } = useAdmin();
  setCreateError(t('olusturma_hatasi'));
  }
  setCreating(false);
- }, [createName, createEmail, createPhone, createPassword, createPasswordConfirm, createRole, businessId, admin, personnelQuota, t]);
+ }, [createName, createEmail, createPhone, createPassword, createPasswordConfirm, createRole, createAddress, createHouseNumber, createAddressLine2, createPostalCode, createCity, createCountry, businessId, admin, personnelQuota, t]);
+
+
+ // ─── Edit Staff Handler ──────────────────────────────────────────────
+ const openEditStaff = useCallback((member: StaffMember) => {
+   const parts = member.displayName?.split(' ') || [];
+   setEditFirstName(member.firstName || parts[0] || '');
+   setEditLastName(member.lastName || parts.slice(1).join(' ') || '');
+   setEditEmail(member.email || '');
+   setEditPhone(member.phone || member.phoneNumber || '');
+   setEditRole(member.adminType || member.role || 'staff');
+   setEditAddress('');
+   setEditHouseNumber('');
+   setEditAddressLine2('');
+   setEditPostalCode('');
+   setEditCity('');
+   setEditCountry('DE');
+   setEditError('');
+   setEditStaff(member);
+ }, []);
+
+ const handleSaveEdit = useCallback(async () => {
+   if (!editStaff || !businessId) return;
+   if (!editFirstName.trim()) { setEditError('Ad zorunludur.'); return; }
+   setEditSaving(true);
+   setEditError('');
+   try {
+     const staffDoc = doc(db, 'admins', editStaff.id);
+     const fullName = `${editFirstName.trim()} ${editLastName.trim()}`.trim();
+     const updateData: Record<string, any> = {
+       firstName: editFirstName.trim(),
+       lastName: editLastName.trim(),
+       displayName: fullName,
+       email: editEmail.trim() || null,
+       phone: editPhone.trim() || null,
+       phoneNumber: editPhone.trim() || null,
+       adminType: editRole,
+       role: editRole,
+       isDriver: editRole === 'driver' || editRole === 'teslimat',
+     };
+     if (editAddress) updateData.address = editAddress;
+     if (editHouseNumber) updateData.houseNumber = editHouseNumber;
+     if (editAddressLine2) updateData.addressLine2 = editAddressLine2;
+     if (editPostalCode) updateData.postalCode = editPostalCode;
+     if (editCity) updateData.city = editCity;
+     if (editCountry) updateData.country = editCountry;
+     await updateDoc(staffDoc, updateData);
+     setStaff(prev => prev.map(m => m.id === editStaff.id ? {
+       ...m,
+       firstName: editFirstName.trim(),
+       lastName: editLastName.trim(),
+       displayName: fullName,
+       email: editEmail.trim() || m.email,
+       phone: editPhone.trim() || m.phone,
+       adminType: editRole,
+       role: editRole,
+       isDriver: editRole === 'driver' || editRole === 'teslimat',
+     } : m));
+     setEditStaff(null);
+   } catch (err) {
+     console.error('Save edit error:', err);
+     setEditError('Kaydetme hatası. Tekrar deneyin.');
+   }
+   setEditSaving(false);
+ }, [editStaff, editFirstName, editLastName, editEmail, editPhone, editRole, editAddress, editHouseNumber, editAddressLine2, editPostalCode, editCity, editCountry, businessId]);
 
  // ─── Available Roles for Staff Creation ────────────────────────────────
  const availableRoles = useMemo(() => {
  return [
  { value: 'staff', label: t('isletme_personeli', { defaultValue: 'İşletme Personeli' }) },
+ { value: 'admin', label: 'İşletme Admini' },
  { value: 'driver', label: t('teslimat_rolu', { defaultValue: 'Kurye / Sürücü' }) },
  ];
  }, [t]);
@@ -902,6 +1013,20 @@ const { admin, loading: adminLoading } = useAdmin();
  {member.activityStatus === 'paused' && (
  <div>
  <div className="text-yellow-800 dark:text-yellow-400 font-bold text-sm">{t('mola')}</div>
+ {(() => {
+      const at = (admin?.adminType || '').toLowerCase();
+      const canEdit = (admin as any)?.isPrimaryAdmin ||
+        at === 'admin' || at === 'isletme_admin' || at === 'lokma_admin' ||
+        at.endsWith('_admin') || at.includes('admin');
+      return canEdit ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); openEditStaff(member); }}
+          className="px-2.5 py-1 text-xs font-medium bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+        >
+          Düzenle
+        </button>
+      ) : null;
+    })()}
  {member.shiftStartedAt && (
  <ShiftTimer startedAt={member.shiftStartedAt} />
  )}
@@ -943,10 +1068,26 @@ const { admin, loading: adminLoading } = useAdmin();
  )}
  </div>
 
- {/* Expand Arrow */}
- <span className={`text-muted-foreground/80 text-sm transition-transform ${expandedStaff === member.id ? 'rotate-180' : ''}`}>
- ▼
- </span>
+ {/* Expand Arrow + Edit Button */}
+ <div className="flex items-center gap-2">
+   {(() => {
+      const at = (admin?.adminType || '').toLowerCase();
+      const canEdit = (admin as any)?.isPrimaryAdmin ||
+        at === 'admin' || at === 'isletme_admin' || at === 'lokma_admin' ||
+        at.endsWith('_admin') || at.includes('admin');
+      return canEdit ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); openEditStaff(member); }}
+          className="px-2.5 py-1 text-xs font-medium bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+        >
+          Düzenle
+        </button>
+      ) : null;
+    })()}
+   <span className={`text-muted-foreground/80 text-sm transition-transform ${expandedStaff === member.id ? 'rotate-180' : ''}`}>
+   ▼
+   </span>
+ </div>
  </div>
 
  {/* Quick Stats Row */}
@@ -1224,6 +1365,81 @@ const { admin, loading: adminLoading } = useAdmin();
  </select>
  </div>
 
+ {/* Address Section */}
+ <div className="space-y-3 pt-1 border-t border-border">
+   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-1">Adres Bilgileri <span className="font-normal text-muted-foreground/60">(opsiyonel)</span></p>
+   <div className="grid grid-cols-3 gap-2">
+     <div className="col-span-2">
+       <label className="text-muted-foreground text-xs block mb-1">Straße</label>
+       <input
+         type="text"
+         value={createAddress}
+         onChange={(e) => setCreateAddress(e.target.value)}
+         className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+         placeholder="Musterstraße"
+       />
+     </div>
+     <div>
+       <label className="text-muted-foreground text-xs block mb-1">Nr.</label>
+       <input
+         type="text"
+         value={createHouseNumber}
+         onChange={(e) => setCreateHouseNumber(e.target.value)}
+         className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+         placeholder="12a"
+       />
+     </div>
+   </div>
+   <div>
+     <label className="text-muted-foreground text-xs block mb-1">Adresszusatz</label>
+     <input
+       type="text"
+       value={createAddressLine2}
+       onChange={(e) => setCreateAddressLine2(e.target.value)}
+       className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+       placeholder="Wohnung 3, 2. OG"
+     />
+   </div>
+   <div className="grid grid-cols-3 gap-2">
+     <div>
+       <label className="text-muted-foreground text-xs block mb-1">PLZ</label>
+       <input
+         type="text"
+         value={createPostalCode}
+         onChange={(e) => setCreatePostalCode(e.target.value)}
+         className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+         placeholder="52062"
+       />
+     </div>
+     <div className="col-span-2">
+       <label className="text-muted-foreground text-xs block mb-1">Stadt</label>
+       <input
+         type="text"
+         value={createCity}
+         onChange={(e) => setCreateCity(e.target.value)}
+         className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+         placeholder="Aachen"
+       />
+     </div>
+   </div>
+   <div>
+     <label className="text-muted-foreground text-xs block mb-1">Land</label>
+     <select
+       value={createCountry}
+       onChange={(e) => setCreateCountry(e.target.value)}
+       className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+     >
+       <option value="DE">🇩🇪 Deutschland</option>
+       <option value="TR">🇹🇷 Türkiye</option>
+       <option value="AT">🇦🇹 Österreich</option>
+       <option value="CH">🇨🇭 Schweiz</option>
+       <option value="NL">🇳🇱 Niederlande</option>
+       <option value="BE">🇧🇪 Belgien</option>
+       <option value="FR">🇫🇷 Frankreich</option>
+     </select>
+   </div>
+ </div>
+
  {/* Driver info - auto-detected from role */}
  {(createRole === 'teslimat' || createRole === 'driver') && (
  <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/30 rounded-lg px-4 py-3">
@@ -1262,6 +1478,188 @@ const { admin, loading: adminLoading } = useAdmin();
  </div>
  </div>
  )}
+
+ {/* ═══ Edit Staff Modal ═══ */}
+ {editStaff && (
+   <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setEditStaff(null)}>
+     <div className="bg-background border border-border rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+       {/* Header */}
+       <div className="p-6 border-b border-border flex items-center justify-between">
+         <h2 className="text-xl font-bold text-foreground">Personel Düzenle</h2>
+         <button onClick={() => setEditStaff(null)} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
+       </div>
+
+       {/* Body */}
+       <div className="p-6 space-y-4">
+         {/* Name */}
+         <div className="grid grid-cols-2 gap-3">
+           <div>
+             <label className="text-muted-foreground text-xs block mb-1">Ad *</label>
+             <input
+               type="text"
+               value={editFirstName}
+               onChange={(e) => setEditFirstName(e.target.value)}
+               className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+               placeholder="Max"
+             />
+           </div>
+           <div>
+             <label className="text-muted-foreground text-xs block mb-1">Soyad</label>
+             <input
+               type="text"
+               value={editLastName}
+               onChange={(e) => setEditLastName(e.target.value)}
+               className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+               placeholder="Mustermann"
+             />
+           </div>
+         </div>
+
+         {/* Email */}
+         <div>
+           <label className="text-muted-foreground text-xs block mb-1">E-Mail</label>
+           <input
+             type="email"
+             value={editEmail}
+             onChange={(e) => setEditEmail(e.target.value)}
+             className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+             placeholder="staff@example.com"
+           />
+         </div>
+
+         {/* Phone */}
+         <div>
+           <label className="text-muted-foreground text-xs block mb-1">Telefon</label>
+           <input
+             type="tel"
+             value={editPhone}
+             onChange={(e) => setEditPhone(e.target.value)}
+             className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+             placeholder="+49 170 1234567"
+           />
+         </div>
+
+         {/* Role */}
+         {!editStaff.isPrimaryAdmin && (
+           <div>
+             <label className="text-muted-foreground text-xs block mb-1">Rol *</label>
+             <select
+               value={editRole}
+               onChange={(e) => setEditRole(e.target.value)}
+               className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+             >
+               <option value="staff">İşletme Personeli</option>
+               <option value="admin">İşletme Admini</option>
+               <option value="driver">Kurye / Sürücü</option>
+             </select>
+           </div>
+         )}
+
+         {/* Address Section */}
+         <div className="space-y-3 pt-1 border-t border-border">
+           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-1">
+             Adres Bilgileri <span className="font-normal text-muted-foreground/60">(opsiyonel)</span>
+           </p>
+           <div className="grid grid-cols-3 gap-2">
+             <div className="col-span-2">
+               <label className="text-muted-foreground text-xs block mb-1">Straße</label>
+               <input
+                 type="text"
+                 value={editAddress}
+                 onChange={(e) => setEditAddress(e.target.value)}
+                 className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+                 placeholder="Musterstraße"
+               />
+             </div>
+             <div>
+               <label className="text-muted-foreground text-xs block mb-1">Nr.</label>
+               <input
+                 type="text"
+                 value={editHouseNumber}
+                 onChange={(e) => setEditHouseNumber(e.target.value)}
+                 className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+                 placeholder="12a"
+               />
+             </div>
+           </div>
+           <div>
+             <label className="text-muted-foreground text-xs block mb-1">Adresszusatz</label>
+             <input
+               type="text"
+               value={editAddressLine2}
+               onChange={(e) => setEditAddressLine2(e.target.value)}
+               className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+               placeholder="Wohnung 3, 2. OG"
+             />
+           </div>
+           <div className="grid grid-cols-3 gap-2">
+             <div>
+               <label className="text-muted-foreground text-xs block mb-1">PLZ</label>
+               <input
+                 type="text"
+                 value={editPostalCode}
+                 onChange={(e) => setEditPostalCode(e.target.value)}
+                 className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+                 placeholder="52062"
+               />
+             </div>
+             <div className="col-span-2">
+               <label className="text-muted-foreground text-xs block mb-1">Stadt</label>
+               <input
+                 type="text"
+                 value={editCity}
+                 onChange={(e) => setEditCity(e.target.value)}
+                 className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+                 placeholder="Aachen"
+               />
+             </div>
+           </div>
+           <div>
+             <label className="text-muted-foreground text-xs block mb-1">Land</label>
+             <select
+               value={editCountry}
+               onChange={(e) => setEditCountry(e.target.value)}
+               className="w-full bg-card border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
+             >
+               <option value="DE">🇩🇪 Deutschland</option>
+               <option value="TR">🇹🇷 Türkiye</option>
+               <option value="AT">🇦🇹 Österreich</option>
+               <option value="CH">🇨🇭 Schweiz</option>
+               <option value="NL">🇳🇱 Niederlande</option>
+               <option value="BE">🇧🇪 Belgien</option>
+               <option value="FR">🇫🇷 Frankreich</option>
+             </select>
+           </div>
+         </div>
+
+         {/* Error */}
+         {editError && (
+           <div className="bg-red-900/30 border border-red-700/30 text-red-300 text-sm px-4 py-3 rounded-lg">
+             {editError}
+           </div>
+         )}
+       </div>
+
+       {/* Footer */}
+       <div className="p-6 border-t border-border flex gap-3">
+         <button
+           onClick={() => setEditStaff(null)}
+           className="flex-1 px-4 py-2.5 bg-card border border-gray-600 text-foreground rounded-lg text-sm font-medium hover:bg-gray-700 transition"
+         >
+           İptal
+         </button>
+         <button
+           onClick={handleSaveEdit}
+           disabled={editSaving}
+           className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition ${editSaving ? 'bg-gray-700 text-muted-foreground cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
+         >
+           {editSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+         </button>
+       </div>
+     </div>
+   </div>
+ )}
+
  </div>
  );
 }

@@ -215,16 +215,16 @@ export const generateRolesForBusinessType = (businessType: string): RoleConfig[]
  return [
  {
  value: 'admin',
- label: 'Yönetici (Admin)',
+ label: 'İşletme Admini',
  icon: `👑`,
  isAdmin: true,
  businessType,
  },
  {
  value: 'staff',
- label: 'Personel',
- icon: `👤`,
- isAdmin: false,
+ label: 'İşletme Personeli',
+    icon: `👤`,
+    isAdmin: false,
  businessType,
  },
  ];
@@ -236,8 +236,8 @@ export const getAllRoles = (): RoleConfig[] => {
  { value: 'user', label: 'Müşteri (Admin Degil)', icon: '👤', isAdmin: false },
  { value: 'super', label: 'Super Admin', icon: '🌟', isAdmin: true },
  // Genel isletme & kermes rolleri
- { value: 'admin', label: 'Yönetici (Admin)', icon: '🏪', isAdmin: true },
- { value: 'staff', label: 'Personel', icon: '👤', isAdmin: false },
+ { value: 'admin', label: 'İşletme Admini', icon: '🏪', isAdmin: true },
+ { value: 'staff', label: 'İşletme Personeli', icon: '👤', isAdmin: false },
  ];
 };
 
@@ -257,19 +257,39 @@ export const getRoleConfig = (roleValue: string): RoleConfig | undefined => {
  return getAllRoles().find(r => r.value === roleValue);
 };
 
-/** Rol degerinden label getir - eski ve yeni rolleri destekler */
+/** Rol degerinden label getir - STANDART: İşletme Admini / Personeli / Kurye */
 export const getRoleLabel = (roleValue: string | undefined | null): string => {
- if (!roleValue || typeof roleValue !== 'string') return String(roleValue || 'Bilinmiyor');
+ if (!roleValue || typeof roleValue !== 'string') return 'Bilinmiyor';
+ const lv = roleValue.toLowerCase().trim();
 
- const config = getRoleConfig(roleValue);
- if (config) return config.label;
+ // Super admin - ayrı tut
+ if (lv === 'super') return 'LOKMA Admin';
 
- // Eski isletme rolleri icin geriye uyumluluk
- if (roleValue === 'teslimat' || roleValue.startsWith('driver_')) return 'Kurye';
- if (roleValue.endsWith('_staff') || roleValue === 'mutfak' || roleValue === 'garson') return 'Personel';
- if (Object.keys(BUSINESS_TYPES).includes(roleValue) || roleValue.endsWith('_admin')) return 'Yönetici';
+ // Tüm admin varyantları → İşletme Admini
+ if (
+   lv === 'admin' || lv === 'isletme_admin' || lv === 'lokma_admin' ||
+   lv === 'kermes_admin' || lv === 'business_admin' ||
+   lv.endsWith('_admin') || lv === 'kasap' || lv === 'restoran' ||
+   lv === 'market' || lv === 'kermes' || Object.keys(BUSINESS_TYPES).includes(lv)
+ ) return 'İşletme Admini';
 
- return String(roleValue);
+ // Kurye / Sürücü
+ if (lv === 'driver' || lv === 'teslimat' || lv.startsWith('driver_') ||
+     lv === 'transfer_surucu' || lv === 'hali_surucu') return 'Kurye / Sürücü';
+
+ // Garson
+ if (lv.includes('waiter') || lv === 'garson') return 'Garson';
+
+ // Mutfak
+ if (lv === 'mutfak') return 'Mutfak Personeli';
+
+ // Tüm staff varyantları → İşletme Personeli
+ if (
+   lv === 'staff' || lv === 'isletme_staff' || lv === 'kermes_staff' ||
+   lv.endsWith('_staff') || lv === 'personel'
+ ) return 'İşletme Personeli';
+
+ return roleValue;
 };
 
 /** Rol değerinden ikon getir */

@@ -780,6 +780,7 @@ export interface Admin {
  adminType: AdminType;
  parentAdminId?: string; // For sub-admins
  currency?: string;
+ locale?: string;
 
  // 🔑 UNIVERSAL BUSINESS ASSIGNMENT (Sector-agnostic)
  // This is the PRIMARY field for linking admin to their business

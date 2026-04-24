@@ -1069,11 +1069,13 @@ const handleSaveUser = async () => {
 
 const getRoleBadgeInfo = (role: string) => {
  switch (role) {
- case 'super': return { bg: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', label: 'Super Admin' };
- case 'lokma_admin': return { bg: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400', label: 'Lokma Partner' };
- case 'kermes_admin': return { bg: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400', label: 'Kermes Admin' };
- case 'driver': return { bg: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400', label: 'Sürücü (Fahrer)' };
- case 'staff': return { bg: 'bg-muted text-foreground/80 dark:bg-gray-500/30 dark:text-gray-300', label: 'Personel (Staff)' };
+ case 'super': return { bg: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', label: 'LOKMA Admin' };
+ case 'lokma_admin': return { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300', label: 'İşletme Admini' };
+ case 'kermes_admin': return { bg: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400', label: 'İşletme Admini' };
+ case 'admin': return { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300', label: 'İşletme Admini' };
+ case 'isletme_admin': return { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300', label: 'İşletme Admini' };
+ case 'driver': return { bg: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400', label: 'Kurye / Sürücü' };
+ case 'staff': return { bg: 'bg-muted text-foreground/80 dark:bg-gray-500/30 dark:text-gray-300', label: 'İşletme Personeli' };
  case 'customer': return { bg: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400', label: 'Müşteri (Kunde)' };
  default: return { bg: 'bg-muted text-muted-foreground/80 dark:bg-gray-800 dark:text-gray-400', label: 'Bilinmiyor' };
  }

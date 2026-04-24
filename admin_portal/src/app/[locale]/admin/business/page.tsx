@@ -1926,7 +1926,7 @@ export default function BusinessesPage() {
  </select>
  </div>
  <div>
- <label className="block text-muted-foreground/80 text-xs mb-1">{t('aylikUcret')}</label>
+ <label className="block text-muted-foreground/80 text-xs mb-1">{t('aylik_ucret')}</label>
  <input
  type="number"
  step="0.01"

@@ -5,25 +5,86 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/utils/currency';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { subscriptionService } from '@/services/subscriptionService';
+import { ButcherSubscriptionPlan } from '@/types';
+import { BUSINESS_TYPES } from '@/lib/business-types';
 
 export default function SubscriptionPage() {
 
  const t = useTranslations('AdminSubscription');
- const { admin, loading } = useAdmin();
+ const { admin, loading: adminLoading } = useAdmin();
 
- if (loading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
+ const [business, setBusiness] = useState<any>(null);
+ const [plan, setPlan] = useState<ButcherSubscriptionPlan | null>(null);
+ const [loading, setLoading] = useState(true);
+
+ useEffect(() => {
+ const loadData = async () => {
+ if (!admin?.butcherId) {
+ setLoading(false);
+ return;
+ }
+ 
+ try {
+ const businessDoc = await getDoc(doc(db, 'businesses', admin.butcherId));
+ if (businessDoc.exists()) {
+ const bData = businessDoc.data();
+ setBusiness(bData);
+ 
+ const rawType = bData.types?.[0] || bData.type || '';
+ const sectorCategory = rawType ? (BUSINESS_TYPES[rawType as keyof typeof BUSINESS_TYPES]?.category || rawType) : '';
+ 
+ // Fetch plans. Pass sectorCategory, but the service should handle fallbacks
+ let plans = await subscriptionService.getAllPlans(sectorCategory || undefined);
+ 
+ // Fallback if no plans found for the specific sector (e.g. 'retail')
+ if (plans.length === 0) {
+ plans = await subscriptionService.getAllPlans('butcher'); // Default seeded plans
+ }
+ 
+ // Handle legacy plan codes
+ const legacyMap: Record<string, string> = {
+ 'planFree': 'free',
+ 'planBasic': 'basic',
+ 'planPro': 'pro',
+ 'planUltra': 'ultra'
+ };
+ 
+ let currentPlanCode = bData.subscriptionPlan || 'free';
+ if (legacyMap[currentPlanCode]) {
+ currentPlanCode = legacyMap[currentPlanCode];
+ }
+ 
+ const currentPlan = plans.find(p => p.code === currentPlanCode || p.id === currentPlanCode);
+ setPlan(currentPlan || null);
+ }
+ } catch (error) {
+ console.error('Error loading subscription data:', error);
+ } finally {
+ setLoading(false);
+ }
+ };
+ 
+ if (!adminLoading) {
+ loadData();
+ }
+ }, [admin, adminLoading]);
+
+ if (adminLoading || loading) return <div className="p-8 text-white">{t('yukleniyor') || 'Yükleniyor...'}</div>;
 
  if (!admin?.butcherId) {
  return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
  }
 
- // Mock Data (In production, fetch from /api/subscription/status)
- const currentPlan = (admin.adminType as string) === 'super_admin' ? 'ULTRA' : 'PRO'; // Mock
- const nextBillingDate = t('01_subat_2026');
- const monthlyFee = currentPlan === 'ULTRA' ? 99 : 49;
+ const currentPlanName = plan ? plan.name : (business?.subscriptionPlan || 'Free').toUpperCase();
+ const monthlyFee = (business?.monthlyFee && business.monthlyFee > 0) ? business.monthlyFee : (plan ? plan.monthlyFee : 0);
+ const planColor = plan?.color || 'bg-gray-600';
+ const colorClass = planColor.includes('text-') ? planColor : planColor + ' text-white';
 
  // ESL Mock Data (Rent-to-Own)
- const eslEnabled = true;
+ const eslEnabled = plan?.features?.eslIntegration || false;
  const eslCount = 150;
  const eslUnitCost = 0.50;
  const eslTotal = eslCount * eslUnitCost;
@@ -37,15 +98,16 @@ export default function SubscriptionPage() {
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
  {/* CURRENT PLAN CARD */}
- <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-8 shadow-xl">
- <div className="flex justify-between items-start mb-6">
+ <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-8 shadow-xl relative overflow-hidden">
+ <div className={`absolute top-0 left-0 w-full h-2 ${planColor}`}></div>
+ <div className="flex justify-between items-start mb-6 mt-2">
  <div>
  <p className="text-sm text-muted-foreground uppercase font-bold tracking-wider">MEVCUT PLAN</p>
  <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mt-2">
- {currentPlan}
+ {currentPlanName}
  </h2>
  </div>
- <span className="bg-green-500/20 text-green-800 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">AKTİF</span>
+ <span className={`px-3 py-1 rounded-full text-xs font-bold border ${colorClass}`}>AKTİF</span>
  </div>
 
  <div className="flex items-baseline gap-1 mb-6">
@@ -54,25 +116,40 @@ export default function SubscriptionPage() {
  </div>
 
  <div className="space-y-3 mb-8">
+ {plan?.description && (
+ <div className="mb-4 text-sm font-medium text-muted-foreground">
+ {plan.description}
+ </div>
+ )}
  <div className="flex items-center gap-3 text-sm text-foreground">
- <span className="text-green-800 dark:text-green-400">✓</span> {t('sinirsiz_siparis')}
+ <span className={plan?.orderLimit === null ? "text-green-800 dark:text-green-400" : "text-amber-500"}>✓</span> 
+ {plan?.orderLimit === null ? t('sinirsiz_siparis') : `Aylık ${plan?.orderLimit} Sipariş`}
  </div>
  <div className="flex items-center gap-3 text-sm text-foreground">
- <span className="text-green-800 dark:text-green-400">✓</span> {t('b2b_toptanci_modulu')}
+ <span className={plan?.productLimit === null ? "text-green-800 dark:text-green-400" : "text-amber-500"}>✓</span> 
+ {plan?.productLimit === null ? 'Sınırsız Ürün Ekleme' : `Maksimum ${plan?.productLimit} Ürün`}
  </div>
  <div className="flex items-center gap-3 text-sm text-foreground">
- <span className="text-green-800 dark:text-green-400">✓</span> 7/24 Destek
+ <span className={plan?.features?.delivery ? "text-green-800 dark:text-green-400" : "text-gray-500"}>
+ {plan?.features?.delivery ? '✓' : '✕'}
+ </span> 
+ Kurye ile Teslimat {plan?.features?.delivery ? 'Aktif' : 'Yok'}
  </div>
- {currentPlan === 'ULTRA' && (
+ {plan?.features?.posIntegration && (
  <div className="flex items-center gap-3 text-sm text-foreground">
- <span className="text-purple-800 dark:text-purple-400">★</span> {t('ai_tahminleme')}
+ <span className="text-purple-800 dark:text-purple-400">★</span> POS & Terazi Entegrasyonu
+ </div>
+ )}
+ {plan?.features?.marketing && (
+ <div className="flex items-center gap-3 text-sm text-foreground">
+ <span className="text-purple-800 dark:text-purple-400">★</span> Gelişmiş Pazarlama (Marketing)
  </div>
  )}
  </div>
 
- <button className="w-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white py-3 rounded-xl font-bold transition">
+ <Link href={`/${admin?.locale || 'tr'}/admin/business/${admin?.butcherId}?tab=settings&settingsSubTab=abonelik`} className="block w-full text-center bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white py-3 rounded-xl font-bold transition">
  {t('plani_degistir')}
- </button>
+ </Link>
  </div>
 
  {/* ESL HARDWARE RENTAL CARD */}
@@ -115,7 +192,7 @@ export default function SubscriptionPage() {
  </>
  ) : (
  <div className="text-center py-8">
- <p className="text-muted-foreground mb-4">{t('henuz_elektronik_etiket_kullanmiyorsunuz')}</p>
+ <p className="text-muted-foreground mb-4">{t('henuz_elektronik_etiket_kullanmiyorsunuz') || 'Bu plan Elektronik Etiket (ESL) içermemektedir.'}</p>
  <button className="text-green-800 dark:text-green-400 underline">ESL Paketlerini İncele</button>
  </div>
  )}
@@ -150,7 +227,7 @@ export default function SubscriptionPage() {
  </div>
  </div>
  <div className="text-right">
- <p className="font-bold text-sm">{formatCurrency(monthlyFee + eslTotal, admin?.currency)}</p>
+ <p className="font-bold text-sm">{formatCurrency(monthlyFee + (eslEnabled ? eslTotal : 0), admin?.currency)}</p>
  <p className="text-xs text-green-800 dark:text-green-400">{t('odendi')}</p>
  </div>
  </div>
@@ -164,3 +241,4 @@ export default function SubscriptionPage() {
  </div>
  );
 }
+
