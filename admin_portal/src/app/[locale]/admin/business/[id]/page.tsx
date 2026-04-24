@@ -92,6 +92,34 @@ function normalizeOrderStatus(rawStatus: string | undefined): Order['status'] {
  }
 }
 
+function getRoleLabel(role: string, t: (key: string) => string): string {
+  if (!role) return t('belirsiz_rol') || 'Belirsiz Rol';
+  const lv = role.toLowerCase().trim();
+  if (lv === 'super' || lv === 'lokma_admin') return 'LOKMA Admin';
+  if (lv === 'admin' || lv === 'isletme_admin' || 
+      lv === 'kermes_admin' || lv === 'business_admin' || (lv.endsWith('_admin') && lv !== 'lokma_admin'))
+    return t('yonetici_rol') || 'İşletme Admini';
+  if (lv === 'driver' || lv === 'teslimat' || lv.startsWith('driver_')) return t('surucu_rol') || 'Kurye';
+  if (lv.includes('waiter') || lv === 'garson') return t('garson_rol') || 'Garson';
+  if (lv === 'mutfak') return 'Mutfak Personeli';
+  if (lv === 'staff' || lv === 'isletme_staff' || lv.endsWith('_staff') || lv === 'personel')
+    return t('personel_rol') || 'Personel';
+  return role;
+}
+
+function getRoleBadgeClass(role: string): string {
+  const lv = (role || '').toLowerCase().trim();
+  if (lv === 'super' || lv === 'lokma_admin') return 'bg-red-600/30 text-red-300 border-red-500/40';
+  if (lv.includes('admin') || lv === 'kasap' || lv === 'restoran' || lv === 'market')
+    return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+  if (lv === 'driver' || lv === 'teslimat' || lv.startsWith('driver_'))
+    return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+  if (lv.includes('waiter') || lv === 'garson')
+    return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+  if (lv.includes('staff') || lv === 'personel' || lv === 'isletme_staff')
+    return 'bg-green-500/20 text-green-300 border-green-500/30';
+  return 'bg-gray-500/20 text-foreground border-gray-500/30';
+}
 
 // Add global declaration for Google Maps
 declare global {
@@ -586,7 +614,7 @@ export default function BusinessDetailsPage() {
   adminType: string; isActive?: boolean;
   } | null>(null);
   const [editStaffForm, setEditStaffForm] = useState({
-  displayName: '', email: '', phone: '', adminType: '',
+  displayName: '', email: '', phone: '', dialCode: '+49', adminType: '',
   street: '', houseNumber: '', addressLine2: '', postalCode: '', city: '', country: 'Deutschland',
   });
   const [editStaffLoading, setEditStaffLoading] = useState(false);
@@ -716,7 +744,7 @@ export default function BusinessDetailsPage() {
  // Reusable overlay for plan-gated modules -- always visible (teaser) but locked if not in plan
  // Super Admin bypass: Super admins can always access all features regardless of plan
  const LockedModuleOverlay = ({ featureKey, children }: { featureKey: string; children: React.ReactNode }) => {
- const isAvailable = planFeatures[featureKey] || admin?.adminType === 'super';
+ const isAvailable = planFeatures[featureKey] || (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin');
  if (isAvailable) return <>{children}</>;
  return (
  <div className="relative">
@@ -2548,9 +2576,10 @@ export default function BusinessDetailsPage() {
  const tempPassword = `LOKMA${Math.floor(1000 + Math.random() * 9000)}`;
 
  // 🆕 KONSOLİDE: Tüm işletme türleri için genel rol değerleri kullan
- const adminType = inviteRole === 'Admin'
- ? 'isletme_admin'
- : 'isletme_staff';
+ let adminType = 'isletme_staff';
+ if (inviteRole === 'Admin') adminType = 'isletme_admin';
+ if (inviteRole === 'LokmaAdmin') adminType = 'lokma_admin';
+ if (inviteRole === 'Lieferfahrer') adminType = 'driver';
 
  // Use the proper create-user API (Firebase Auth + users + admins + notifications)
  const response = await fetch('/api/admin/create-user', {
@@ -2620,10 +2649,32 @@ export default function BusinessDetailsPage() {
 
   const handleEditStaff = (staff: typeof staffList[0]) => {
   setEditingStaff(staff as any);
+  let rawPhone = staff.phoneNumber || '';
+  let foundDialCode = '+49';
+  const staffDialCode = (staff as any).dialCode;
+  const knownDialCodes = [
+    '+49', '+90', '+43', '+31', '+41', '+33', '+39', '+34', 
+    '+351', '+46', '+47', '+381', '+355', '+52', '+507', '+1'
+  ];
+  
+  if (staffDialCode && rawPhone.startsWith(staffDialCode)) {
+    foundDialCode = staffDialCode;
+    rawPhone = rawPhone.substring(staffDialCode.length);
+  } else {
+    const matchedCode = knownDialCodes.find(code => rawPhone.startsWith(code));
+    if (matchedCode) {
+      foundDialCode = matchedCode;
+      rawPhone = rawPhone.substring(matchedCode.length);
+    } else if (staffDialCode) {
+      foundDialCode = staffDialCode;
+    }
+  }
+
   setEditStaffForm({
   displayName: staff.displayName || '',
   email: staff.email || '',
-  phone: staff.phoneNumber || '',
+  dialCode: foundDialCode,
+  phone: rawPhone,
   adminType: staff.adminType || '',
   street: (staff as any).street || '',
   houseNumber: (staff as any).houseNumber || '',
@@ -2638,11 +2689,13 @@ export default function BusinessDetailsPage() {
   if (!editingStaff) return;
   setEditStaffLoading(true);
   try {
+  const finalPhone = editStaffForm.phone ? (editStaffForm.dialCode + editStaffForm.phone.replace(/\\D/g, "")) : null;
   const adminRef = doc(db, 'admins', editingStaff.id);
   await updateDoc(adminRef, {
   displayName: editStaffForm.displayName,
   email: editStaffForm.email || null,
-  phoneNumber: editStaffForm.phone || null,
+  phoneNumber: finalPhone,
+  dialCode: editStaffForm.dialCode,
   adminType: editStaffForm.adminType,
   street: editStaffForm.street || null,
   houseNumber: editStaffForm.houseNumber || null,
@@ -2749,7 +2802,7 @@ export default function BusinessDetailsPage() {
  )}
 
  {/* Header - Only Super Admin needs to navigate these tabs globally from here */}
- {admin?.adminType === 'super' && (
+ {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
  <header className="bg-card border-b border-border sticky top-0 z-30">
  <div className="max-w-6xl mx-auto px-4 py-3">
  <div className="flex items-center justify-between">
@@ -2795,7 +2848,7 @@ export default function BusinessDetailsPage() {
  >
  {t('dashboard')}
  </button>
- {admin?.adminType === 'super' && (
+ {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
  <Link
  href={`/admin/business/${businessId}/performance`}
  className="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-purple-600 text-white hover:bg-purple-500"
@@ -2879,10 +2932,8 @@ export default function BusinessDetailsPage() {
  {staff.displayName}
  </span>
  </div>
- <span
- className={`text-xs px-2 py-0.5 rounded ${staff.adminType?.includes('admin') || (!staff.adminType?.includes('staff') && staff.adminType !== 'user') ? "bg-purple-600/50 text-purple-300" : "bg-blue-600/50 text-blue-300"}`}
- >
- {staff.adminType}
+ <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeClass(staff.adminType)}`}>
+ {getRoleLabel(staff.adminType, t)}
  </span>
  </div>
  ))
@@ -3949,7 +4000,7 @@ export default function BusinessDetailsPage() {
  </h3>
  <div className="flex items-center gap-3">
  {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
- {settingsSubTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || admin?.adminType === 'super') && (
+ {settingsSubTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
  <button
  onClick={async () => {
  const newValue = !formData.temporaryDeliveryPaused;
@@ -3980,7 +4031,7 @@ export default function BusinessDetailsPage() {
  🛵 {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
  </button>
  )}
- {settingsSubTab === "teslimat" && (planFeatures.pickup || admin?.adminType === 'super') && (
+ {settingsSubTab === "teslimat" && (planFeatures.pickup || (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
  <button
  onClick={async () => {
  const newValue = !formData.temporaryPickupPaused;
@@ -4010,7 +4061,7 @@ export default function BusinessDetailsPage() {
  </button>
  )}
  {/* İşletme Faaliyetlerini Durdur — Super Admin Only */}
- {business && settingsSubTab === "isletme" && admin?.adminType === 'super' && (
+ {business && settingsSubTab === "isletme" && (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin') && (
  <button
  onClick={toggleActiveStatus}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${business.isActive
@@ -4240,7 +4291,7 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  </div>
- {admin?.adminType === 'super' && (
+ {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
  <div className="space-y-4 pt-4 border-t border-border mt-4">
  {/* Google Place */}
  <h4 className="text-foreground font-medium pb-2">🗺️ Google Place</h4>
@@ -4316,7 +4367,7 @@ export default function BusinessDetailsPage() {
  {/* ═══════ Tab 3: Zertifikalar ═══════ */}
  {isletmeInternalTab === "zertifikalar" && (
  <div className="space-y-6">
- {admin?.adminType === 'super' ? (
+ {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) ? (
  <>
  <div>
  <h4 className="text-foreground font-medium mb-4">LOKMA Platform Markaları & Rozetleri</h4>
@@ -6532,6 +6583,25 @@ export default function BusinessDetailsPage() {
  <LockedModuleOverlay featureKey="staffShiftTracking">
  <div className="space-y-6">
 
+ {/* ═══════ Personel Tabı Header ═══════ */}
+ <div className="flex justify-between items-center mb-6">
+   <h2 className="text-xl font-bold text-foreground">{t('personelYonetimi') || 'Personalverwaltung'}</h2>
+   <button
+     onClick={() => {
+       setInviteFirstName('');
+       setInviteLastName('');
+       setInvitePhone('');
+       setInviteEmail('');
+       setInviteRole('Personel');
+       setInviteResult(null);
+       setShowInviteModal(true);
+     }}
+     className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
+   >
+     + {t('yeni_personel_ekle') || 'Neues Personal'}
+   </button>
+ </div>
+
  {/* ═══════ Aktif Vardiyalar Panel ═══════ */}
  {activeShifts.length > 0 && (
  <div className="bg-gradient-to-br from-green-100 dark:from-green-900/40 to-green-50 dark:to-green-800/20 border border-green-600/30 rounded-xl p-5">
@@ -6695,11 +6765,8 @@ export default function BusinessDetailsPage() {
  </div>
  </td>
  <td className="py-4">
- <span className={`px-2 py-1 rounded text-xs ${staff.adminType?.toLowerCase().includes('admin') || staff.adminType === 'super'
- ? 'bg-purple-600'
- : 'bg-blue-600'
- }`}>
- {staff.adminType?.toLowerCase().includes('admin') ? 'İşletme Admini' : (staff.adminType || t('personel_rol'))}
+ <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeClass(staff.adminType)}`}>
+ {getRoleLabel(staff.adminType, t)}
  </span>
  </td>
  <td className="py-4">
@@ -6712,7 +6779,7 @@ export default function BusinessDetailsPage() {
  </button>
  </td>
  <td className="py-4">
- {(admin?.adminType === 'super' || (staff.id !== admin?.id && !staff.adminType?.toLowerCase().includes('admin') && staff.adminType !== 'super')) && (
+ {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin') || (staff.id !== admin?.id && !staff.adminType?.toLowerCase().includes('admin') && staff.adminType !== 'super' && staff.adminType !== 'lokma_admin')) && (
  <div className="flex flex-wrap gap-2">
   {/* Archived staff: show Aktivieren directly in row */}
   {staff.isActive === false && (
@@ -6749,30 +6816,7 @@ export default function BusinessDetailsPage() {
  )}
  </div>
 
-  {/* Personel ekle - modal trigger */}
-  <div className="flex justify-end mb-4">
-  <button
-  onClick={() => setShowInviteModal(true)}
-  className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
-  >
-  + {t('yeni_personel_ekle') || 'Neues Personal'}
-  </button>
-  </div>
-
-  {inviteResult && inviteResult.success && (
-  <div className="mb-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-2">
-  <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
-  <div className="bg-card p-3 rounded text-sm">
-  <p className="text-muted-foreground text-xs">{t('geciciSifre')}</p>
-  <p className="text-foreground font-mono text-base">{inviteResult.tempPassword}</p>
-  </div>
-  <button onClick={() => setInviteResult(null)} className="text-xs text-muted-foreground hover:text-white">
-  {t('kapat')}
-  </button>
-  </div>
-  )}
-
-  </div>
+ </div>
  </LockedModuleOverlay>
 
   {/* ══ INVITE MODAL ══ */}
@@ -6784,6 +6828,15 @@ export default function BusinessDetailsPage() {
   <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground hover:text-foreground text-2xl leading-none">&times;</button>
   </div>
   <div className="p-6 space-y-4">
+  {inviteResult && inviteResult.success && (
+  <div className="p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-2">
+  <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
+  <div className="bg-card p-3 rounded text-sm">
+  <p className="text-muted-foreground text-xs">{t('geciciSifre')}</p>
+  <p className="text-foreground font-mono text-base">{inviteResult.tempPassword}</p>
+  </div>
+  </div>
+  )}
   <div className="grid grid-cols-2 gap-3">
   <input type="text" placeholder={(t('isim') || 'Vorname') + " *"} value={inviteFirstName} onChange={(e) => setInviteFirstName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
   <input type="text" placeholder={t('soyisim_opsiyonel') || 'Nachname'} value={inviteLastName} onChange={(e) => setInviteLastName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
@@ -6794,6 +6847,18 @@ export default function BusinessDetailsPage() {
   <option value="+90">TR +90</option>
   <option value="+43">AT +43</option>
   <option value="+31">NL +31</option>
+  <option value="+41">CH +41</option>
+  <option value="+33">FR +33</option>
+  <option value="+39">IT +39</option>
+  <option value="+34">ES +34</option>
+  <option value="+351">PT +351</option>
+  <option value="+46">SE +46</option>
+  <option value="+47">NO +47</option>
+  <option value="+381">RS +381</option>
+  <option value="+355">AL +355</option>
+  <option value="+1">US/CA +1</option>
+  <option value="+52">MX +52</option>
+  <option value="+507">PA +507</option>
   </select>
   <input type="tel" placeholder={(t('telefonNumarasi') || 'Telefon') + " *"} value={invitePhone} onChange={(e) => setInvitePhone(e.target.value.replace(/\D/g, ""))} className="flex-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
   </div>
@@ -6801,9 +6866,10 @@ export default function BusinessDetailsPage() {
   <div>
   <label className="text-muted-foreground text-sm">{t('rol')}</label>
   <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="w-full mt-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
-  <option value="Personel">{t('personel_rol') || 'Geschaeftspersonal'}</option>
-  <option value="Admin">{t('isletmeAdmin') || 'Betriebsadmin'}</option>
-  <option value="Lieferfahrer">Lieferfahrer</option>
+  <option value="Personel">{t('personel_rol') || 'Personel'}</option>
+  <option value="Admin">{t('isletmeAdmin') || 'İşletme Admini'}</option>
+  <option value="LokmaAdmin">LOKMA Admin</option>
+  <option value="Lieferfahrer">{t('kurye') || 'Kurye'}</option>
   </select>
   {inviteRole === 'Lieferfahrer' && (
   <p className="text-xs text-violet-400 mt-1">Diese Rolle wird automatisch als Fahrer erkannt.</p>
@@ -6852,13 +6918,34 @@ export default function BusinessDetailsPage() {
   <div className="p-6 space-y-4">
   <input type="text" placeholder="Ad Soyad *" value={editStaffForm.displayName} onChange={(e) => setEditStaffForm(p => ({...p, displayName: e.target.value}))} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
   <input type="email" placeholder="E-Mail" value={editStaffForm.email} onChange={(e) => setEditStaffForm(p => ({...p, email: e.target.value}))} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
-  <input type="tel" placeholder="Telefon" value={editStaffForm.phone} onChange={(e) => setEditStaffForm(p => ({...p, phone: e.target.value}))} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  <div className="flex gap-2">
+    <select value={editStaffForm.dialCode} onChange={(e) => setEditStaffForm(p => ({...p, dialCode: e.target.value}))} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg w-28">
+      <option value="+49">DE +49</option>
+      <option value="+90">TR +90</option>
+      <option value="+43">AT +43</option>
+      <option value="+31">NL +31</option>
+      <option value="+1">US +1</option>
+      <option value="+52">MX +52</option>
+      <option value="+355">AL +355</option>
+      <option value="+381">RS +381</option>
+      <option value="+39">IT +39</option>
+      <option value="+34">ES +34</option>
+      <option value="+33">FR +33</option>
+      <option value="+351">PT +351</option>
+      <option value="+507">PA +507</option>
+      <option value="+47">NO +47</option>
+      <option value="+46">SE +46</option>
+      <option value="+41">CH +41</option>
+    </select>
+    <input type="tel" placeholder="Telefon" value={editStaffForm.phone} onChange={(e) => setEditStaffForm(p => ({...p, phone: e.target.value.replace(/\\D/g, "")}))} className="flex-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  </div>
   <div>
   <label className="text-muted-foreground text-sm">{t('rol')}</label>
   <select value={editStaffForm.adminType} onChange={(e) => setEditStaffForm(p => ({...p, adminType: e.target.value}))} className="w-full mt-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
-  <option value="isletme_staff">Geschaeftspersonal</option>
-  <option value="isletme_admin">Betriebsadmin</option>
-  <option value="driver">Lieferfahrer</option>
+  <option value="isletme_staff">{t('personel_rol') || 'Personel'}</option>
+  <option value="isletme_admin">{t('isletmeAdmin') || 'İşletme Admini'}</option>
+  <option value="lokma_admin">LOKMA Admin</option>
+  <option value="driver">{t('kurye') || 'Kurye'}</option>
   </select>
   </div>
   <div className="pt-2 border-t border-border">
@@ -7214,7 +7301,7 @@ export default function BusinessDetailsPage() {
  <LockedModuleOverlay featureKey="promotions">
  {(() => {
  // Promosyon sekmesi açılınca direkt promotions sayfasına git — only if feature available
- if ((planFeatures.promotions || admin?.adminType === 'super') && typeof window !== 'undefined') {
+ if ((planFeatures.promotions || (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && typeof window !== 'undefined') {
  window.location.href = `/${params.locale}/admin/promotions?businessId=${businessId}`;
  }
  return (

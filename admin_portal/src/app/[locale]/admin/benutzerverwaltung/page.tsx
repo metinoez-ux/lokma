@@ -19,6 +19,21 @@ const COUNTRY_CODES = [
  { code: 'AT', dial: '+43', flag: '🇦🇹' },
  { code: 'CH', dial: '+41', flag: '🇨🇭' },
  { code: 'TR', dial: '+90', flag: '🇹🇷' },
+ { code: 'NL', dial: '+31', flag: '🇳🇱' },
+ { code: 'BE', dial: '+32', flag: '🇧🇪' },
+ { code: 'FR', dial: '+33', flag: '🇫🇷' },
+ { code: 'IT', dial: '+39', flag: '🇮🇹' },
+ { code: 'ES', dial: '+34', flag: '🇪🇸' },
+ { code: 'PT', dial: '+351', flag: '🇵🇹' },
+ { code: 'GB', dial: '+44', flag: '🇬🇧' },
+ { code: 'NO', dial: '+47', flag: '🇳🇴' },
+ { code: 'SE', dial: '+46', flag: '🇸🇪' },
+ { code: 'DK', dial: '+45', flag: '🇩🇰' },
+ { code: 'AL', dial: '+355', flag: '🇦🇱' },
+ { code: 'RS', dial: '+381', flag: '🇷🇸' },
+ { code: 'US', dial: '+1', flag: '🇺🇸' },
+ { code: 'MX', dial: '+52', flag: '🇲🇽' },
+ { code: 'PA', dial: '+507', flag: '🇵🇦' },
 ];
 
 export interface UnifiedUser {
@@ -105,6 +120,7 @@ export default function BenutzerverwaltungPage() {
 
  // Edit Modal State
  const [editName, setEditName] = useState('');
+ const [editDialCode, setEditDialCode] = useState('+49');
  const [editPhone, setEditPhone] = useState('');
  const [editRoles, setEditRoles] = useState<string[]>([]);
  const [editIsActive, setEditIsActive] = useState(true);
@@ -451,7 +467,18 @@ export default function BenutzerverwaltungPage() {
  const nameChunks = namePart.split(' ');
  
  setEditName(namePart);
- setEditPhone(user.phone || '');
+ 
+ let foundDialCode = '+49';
+ let purePhone = user.phone || '';
+ for (const cc of COUNTRY_CODES) {
+   if (purePhone.startsWith(cc.dial)) {
+     foundDialCode = cc.dial;
+     purePhone = purePhone.substring(cc.dial.length).trim();
+     break;
+   }
+ }
+ setEditDialCode(foundDialCode);
+ setEditPhone(purePhone);
  setEditRoles([...user.roles]);
  setEditIsActive(user.isActive !== false);
 
@@ -860,7 +887,7 @@ const handleSaveUser = async () => {
  lastName: editLastName,
  gender: editGender,
  displayName: `${editFirstName} ${editLastName}`.trim() || editName,
- phoneNumber: editPhone,
+ phoneNumber: `${editDialCode}${editPhone}`,
  address: editAddress,
  houseNumber: editHouseNumber,
  addressLine2: editAddressLine2,
@@ -1070,12 +1097,13 @@ const handleSaveUser = async () => {
 const getRoleBadgeInfo = (role: string) => {
  switch (role) {
  case 'super': return { bg: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', label: 'LOKMA Admin' };
- case 'lokma_admin': return { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300', label: 'İşletme Admini' };
+ case 'lokma_admin': return { bg: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', label: 'LOKMA Admin' };
  case 'kermes_admin': return { bg: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400', label: 'İşletme Admini' };
  case 'admin': return { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300', label: 'İşletme Admini' };
  case 'isletme_admin': return { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300', label: 'İşletme Admini' };
  case 'driver': return { bg: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400', label: 'Kurye / Sürücü' };
  case 'staff': return { bg: 'bg-muted text-foreground/80 dark:bg-gray-500/30 dark:text-gray-300', label: 'İşletme Personeli' };
+ case 'isletme_staff': return { bg: 'bg-muted text-foreground/80 dark:bg-gray-500/30 dark:text-gray-300', label: 'İşletme Personeli' };
  case 'customer': return { bg: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400', label: 'Müşteri (Kunde)' };
  default: return { bg: 'bg-muted text-muted-foreground/80 dark:bg-gray-800 dark:text-gray-400', label: 'Bilinmiyor' };
  }
@@ -1499,13 +1527,24 @@ const getKermesBadgeInfo = (role: string) => {
 
  <div>
  <label className="block text-sm font-medium text-foreground mb-1">{t('telefon') || 'Telefon'}</label>
+ <div className="flex gap-2">
+ <select
+ value={editDialCode}
+ onChange={(e) => setEditDialCode(e.target.value)}
+ className="w-24 px-2 py-2 bg-background border border-border rounded-lg text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+ >
+ {COUNTRY_CODES.map((cc) => (
+ <option key={cc.code} value={cc.dial}>{cc.flag} {cc.dial}</option>
+ ))}
+ </select>
  <input
  type="tel"
  value={editPhone}
- onChange={(e) => setEditPhone(e.target.value)}
- className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
- placeholder="+49 177 1234567"
+ onChange={(e) => setEditPhone(e.target.value.replace(/[^0-9]/g, ''))}
+ className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+ placeholder="1771234567"
  />
+ </div>
  </div>
  </div>
 

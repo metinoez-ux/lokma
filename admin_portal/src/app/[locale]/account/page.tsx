@@ -11,6 +11,7 @@ import { invoiceService } from '@/services/invoiceService';
 import { subscriptionService } from '@/services/subscriptionService';
 import { ButcherSubscriptionPlan } from '@/types';
 import { formatCurrency } from '@/utils/currency';
+import SubscriptionChangeModal from '@/components/admin/SubscriptionChangeModal';
 
 // Helper: Generate display features list from a Firestore plan
 function getPlanFeatures(plan: ButcherSubscriptionPlan): string[] {
@@ -67,6 +68,8 @@ export default function AccountPage() {
  });
  const [showBankModal, setShowBankModal] = useState(false);
  const [showPlanModal, setShowPlanModal] = useState(false);
+ const [showConfirmModal, setShowConfirmModal] = useState(false);
+ const [targetPlan, setTargetPlan] = useState<ButcherSubscriptionPlan | null>(null);
  const [bankForm, setBankForm] = useState({
  iban: '',
  bic: '',
@@ -267,6 +270,39 @@ export default function AccountPage() {
  };
 
  // ═══════════════════════════════════════════════════════════════════
+ // PLAN DEĞİŞİMİ (GELECEK AYIN 1'İ)
+ // ═══════════════════════════════════════════════════════════════════
+ const handleConfirmPlanChange = async (planCode: string) => {
+ if (!business?.id) return;
+ setSaving(true);
+ try {
+ const date = new Date();
+ date.setMonth(date.getMonth() + 1);
+ date.setDate(1);
+ date.setHours(0, 0, 0, 0);
+
+ const pendingPlanData = {
+ planCode,
+ effectiveDate: date
+ };
+
+ await updateDoc(doc(db, 'businesses', business.id), {
+ pendingPlanChange: pendingPlanData,
+ updatedAt: new Date()
+ });
+
+ setBusiness({ ...business, pendingPlanChange: pendingPlanData });
+ setShowConfirmModal(false);
+ setTargetPlan(null);
+ alert(`Geçiş onaylandı. Yeni planınız ${date.toLocaleDateString('tr-TR')} tarihinde aktif olacak.`);
+ } catch (error) {
+ console.error('Plan geçişi hatası:', error);
+ alert('Plan geçişi sırasında bir hata oluştu.');
+ }
+ setSaving(false);
+ };
+
+ // ═══════════════════════════════════════════════════════════════════
  // RENDER
  // ═══════════════════════════════════════════════════════════════════
  if (loading) {
@@ -341,6 +377,24 @@ export default function AccountPage() {
  </button>
  </div>
  </div>
+
+ {business?.pendingPlanChange && (
+ <div className="mt-4 px-4 py-3 bg-amber-500/20 border border-amber-500/30 rounded-lg flex items-center gap-3">
+ <span className="text-xl">⏳</span>
+ <div>
+ <p className="text-amber-200 font-semibold text-sm">Bekleyen Plan Değişikliği</p>
+ <p className="text-amber-200/80 text-xs mt-0.5">
+ <strong className="text-amber-100">
+ {allPlans.find(p => p.code === business.pendingPlanChange.planCode)?.name || business.pendingPlanChange.planCode}
+ </strong> planına geçişiniz <strong>
+ {business.pendingPlanChange.effectiveDate?.toDate 
+ ? business.pendingPlanChange.effectiveDate.toDate().toLocaleDateString('tr-TR')
+ : new Date(business.pendingPlanChange.effectiveDate).toLocaleDateString('tr-TR')}
+ </strong> tarihinde aktif olacaktır.
+ </p>
+ </div>
+ </div>
+ )}
 
  {/* Kullanım Barları */}
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-white/10">
@@ -795,7 +849,14 @@ export default function AccountPage() {
  ✓ Mevcut Plan
  </div>
  ) : (
- <button className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium">
+ <button 
+ onClick={() => {
+ setTargetPlan(plan);
+ setShowPlanModal(false);
+ setShowConfirmModal(true);
+ }}
+ className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium"
+ >
  Seç
  </button>
  )}

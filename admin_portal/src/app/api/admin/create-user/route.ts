@@ -409,6 +409,8 @@ export async function POST(request: NextRequest) {
  adminType === 'market_staff' ? 'Market Personel' :
  adminType === 'cicekci' ? 'Cicekci Admin' :
  adminType === 'super' ? 'Super Admin' :
+ adminType === 'isletme_admin' ? 'İşletme Yöneticisi' :
+ adminType === 'isletme_staff' ? 'İşletme Personeli' :
  adminType?.includes('_staff') ? 'Personel' :
  adminType || 'Personel';
 

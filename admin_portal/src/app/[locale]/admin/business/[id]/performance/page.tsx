@@ -276,7 +276,7 @@ const params = useParams();
  {/* Tamamlanan */}
  <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
  <div className="text-3xl font-bold text-green-800 dark:text-green-400">{orderStats.completedOrders}</div>
- <div className="text-sm text-green-300">Tamamlanan</div>
+ <div className="text-sm text-green-300">{t('tamamlanan')}</div>
  </div>
  {/* Ortalama Hazırlama */}
  <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
@@ -286,7 +286,7 @@ const params = useParams();
  {/* 🆕 Ortalama Teslim Süresi */}
  <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
  <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{orderStats.avgDeliveryTime}<span className="text-lg">dk</span></div>
- <div className="text-sm text-purple-300">Ort. Teslim</div>
+ <div className="text-sm text-purple-300">{t('ort_teslim')}</div>
  </div>
  {/* Kurye Duraklama */}
  <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
@@ -307,7 +307,7 @@ const params = useParams();
  <div className="bg-card rounded-lg p-4">
  <div className="flex items-center gap-2 mb-2">
  <span className="text-xl">▶️</span>
- <span className="text-muted-foreground">Devam Ettirme</span>
+ <span className="text-muted-foreground">{t('devam_ettirme')}</span>
  </div>
  <div className="text-2xl font-bold text-green-800 dark:text-green-400">{pauseStats.resumeCount}</div>
  </div>
@@ -352,11 +352,11 @@ const params = useParams();
  <td className="px-4 py-3">
  {log.action === 'paused' ? (
  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-600 text-white text-xs font-medium">
- ⏸️ Durduruldu
+ ⏸️ {t('durduruldu')}
  </span>
  ) : (
  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
- ▶️ Devam Etti
+ ▶️ {t('devam_etti')}
  </span>
  )}
  </td>

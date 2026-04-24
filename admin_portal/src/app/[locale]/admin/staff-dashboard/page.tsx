@@ -64,10 +64,10 @@ interface StaffOrder {
 function getRoleLabel(role: string, t: (key: string) => string): string {
  if (!role) return t('belirsiz_rol');
  const lv = role.toLowerCase().trim();
- if (lv === 'super') return 'LOKMA Admin';
+ if (lv === 'super' || lv === 'lokma_admin') return 'LOKMA Admin';
  // Tüm admin varyantları → İşletme Admini
- if (lv === 'admin' || lv === 'isletme_admin' || lv === 'lokma_admin' ||
-     lv === 'kermes_admin' || lv === 'business_admin' || lv.endsWith('_admin'))
+ if (lv === 'admin' || lv === 'isletme_admin' || 
+     lv === 'kermes_admin' || lv === 'business_admin' || (lv.endsWith('_admin') && lv !== 'lokma_admin'))
    return t('yonetici_rol');
  if (lv === 'driver' || lv === 'teslimat' || lv.startsWith('driver_')) return t('surucu_rol');
  if (lv.includes('waiter') || lv === 'garson') return t('garson_rol');
@@ -79,14 +79,14 @@ function getRoleLabel(role: string, t: (key: string) => string): string {
 
 function getRoleBadgeClass(role: string): string {
  const lv = (role || '').toLowerCase().trim();
- if (lv === 'super') return 'bg-red-600/30 text-red-300 border-red-500/40';
+ if (lv === 'super' || lv === 'lokma_admin') return 'bg-red-600/30 text-red-300 border-red-500/40';
  if (lv.includes('admin') || lv === 'kasap' || lv === 'restoran' || lv === 'market')
    return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
  if (lv === 'driver' || lv === 'teslimat' || lv.startsWith('driver_'))
    return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
  if (lv.includes('waiter') || lv === 'garson')
    return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
- if (lv.includes('staff') || lv === 'personel')
+ if (lv.includes('staff') || lv === 'personel' || lv === 'isletme_staff')
    return 'bg-green-500/20 text-green-300 border-green-500/30';
  return 'bg-gray-500/20 text-foreground border-gray-500/30';
 }
@@ -224,7 +224,7 @@ const { admin, loading: adminLoading } = useAdmin();
  email: d.email,
  phone: d.phone || d.phoneNumber,
  phoneNumber: d.phoneNumber,
- role: d.role || d.adminType || '',
+ role: d.adminType || d.role || '',
  adminType: d.adminType,
  isDriver: d.isDriver === true,
  isActive: d.isActive !== false,
@@ -371,7 +371,7 @@ const { admin, loading: adminLoading } = useAdmin();
  displayName: d.displayName || d.firstName ? `${d.firstName || ''} ${d.lastName || ''}`.trim() : d.email?.split('@')[0] || '',
  firstName: d.firstName, lastName: d.lastName, email: d.email,
  phone: d.phone || d.phoneNumber, phoneNumber: d.phoneNumber,
- role: d.role || d.adminType || '', adminType: d.adminType,
+ role: d.adminType || d.role || '', adminType: d.adminType,
  isDriver: d.isDriver === true, isActive: d.isActive !== false,
  isPrimaryAdmin: d.isPrimaryAdmin === true, photoURL: d.photoURL,
  businessId: d.businessId || d.butcherId, businessName: d.businessName || d.butcherName,
@@ -789,6 +789,27 @@ const { admin, loading: adminLoading } = useAdmin();
 
  // ─── Render ─────────────────────────────────────────────────────────
 
+  const canEditStaff = (member: StaffMember) => {
+    const at = (admin?.adminType || '').toLowerCase();
+    const isSuperAdmin = at === 'lokma_admin' || at === 'super';
+    
+    // Check if the current user is a business admin (primary or just admin type)
+    const isBusinessAdmin = (admin as any)?.isPrimaryAdmin || 
+      at === 'admin' || 
+      at === 'isletme_admin' || 
+      at.endsWith('_admin') || 
+      at.includes('admin');
+      
+    if (isSuperAdmin) return true;
+    
+    // Check if the target member is a super admin
+    const memberRole = (member.adminType || member.role || '').toLowerCase();
+    const isMemberSuperAdmin = memberRole === 'lokma_admin' || memberRole === 'super';
+    
+    // Business admin can edit anyone in their business except super admins.
+    return isBusinessAdmin && !isMemberSuperAdmin;
+  };
+
  return (
  <div className="min-h-screen bg-background p-4 md:p-6">
  <div className="max-w-7xl mx-auto">
@@ -1013,20 +1034,14 @@ const { admin, loading: adminLoading } = useAdmin();
  {member.activityStatus === 'paused' && (
  <div>
  <div className="text-yellow-800 dark:text-yellow-400 font-bold text-sm">{t('mola')}</div>
- {(() => {
-      const at = (admin?.adminType || '').toLowerCase();
-      const canEdit = (admin as any)?.isPrimaryAdmin ||
-        at === 'admin' || at === 'isletme_admin' || at === 'lokma_admin' ||
-        at.endsWith('_admin') || at.includes('admin');
-      return canEdit ? (
-        <button
-          onClick={(e) => { e.stopPropagation(); openEditStaff(member); }}
-          className="px-2.5 py-1 text-xs font-medium bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
-        >
-          Düzenle
-        </button>
-      ) : null;
-    })()}
+        {canEditStaff(member) && (
+          <button
+            onClick={(e) => { e.stopPropagation(); openEditStaff(member); }}
+            className="px-2.5 py-1 text-xs font-medium bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+          >
+            {t('duzenle', { defaultValue: 'Düzenle' })}
+          </button>
+        )}
  {member.shiftStartedAt && (
  <ShiftTimer startedAt={member.shiftStartedAt} />
  )}
@@ -1070,20 +1085,14 @@ const { admin, loading: adminLoading } = useAdmin();
 
  {/* Expand Arrow + Edit Button */}
  <div className="flex items-center gap-2">
-   {(() => {
-      const at = (admin?.adminType || '').toLowerCase();
-      const canEdit = (admin as any)?.isPrimaryAdmin ||
-        at === 'admin' || at === 'isletme_admin' || at === 'lokma_admin' ||
-        at.endsWith('_admin') || at.includes('admin');
-      return canEdit ? (
-        <button
-          onClick={(e) => { e.stopPropagation(); openEditStaff(member); }}
-          className="px-2.5 py-1 text-xs font-medium bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
-        >
-          Düzenle
-        </button>
-      ) : null;
-    })()}
+    {canEditStaff(member) && (
+      <button
+        onClick={(e) => { e.stopPropagation(); openEditStaff(member); }}
+        className="px-2.5 py-1 text-xs font-medium bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+      >
+        {t('duzenle', { defaultValue: 'Düzenle' })}
+      </button>
+    )}
    <span className={`text-muted-foreground/80 text-sm transition-transform ${expandedStaff === member.id ? 'rotate-180' : ''}`}>
    ▼
    </span>
