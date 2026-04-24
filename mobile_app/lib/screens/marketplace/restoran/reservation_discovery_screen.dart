@@ -276,7 +276,7 @@ class _ReservationDiscoveryScreenState
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
-                                      tr('home.table_reservation'),
+                                      tr('marketplace.table_reservation'),
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,

@@ -386,12 +386,30 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     return false;
   }
 
-  // Filter businesses based on current filters
-  List<DocumentSnapshot> get _filteredBusinesses {
+  List<DocumentSnapshot> _cachedFilteredBusinesses = [];
+  String _lastFilterHash = '';
+
+  List<DocumentSnapshot> get _filteredBusinesses => _cachedFilteredBusinesses;
+
+  void _updateFilteredBusinessesIfNeeded() {
+    final brandsHash = ref.read(platformBrandsProvider).value?.hashCode ?? 0;
+    final currentHash = '${_allBusinesses.hashCode}_${brandsHash}_${_deliveryMode}_${_categoryFilter}_${_onlyTuna}_${_maxDistance}_${_filterDiscounts}_${_filterCash}_${_filterFreeDelivery}_${_filterMealCards}_${_filterHighRating}_${_filterOpenNow}_${_filterTunaApproved}_${_filterVegetarian}_${_sortOption}_${_userLat}_${_userLng}';
+    
+    if (_lastFilterHash == currentHash) return;
+    _lastFilterHash = currentHash;
+
     debugPrint(
         '🔍 Filtering: deliveryMode=$_deliveryMode, categoryFilter=$_categoryFilter, onlyTuna=$_onlyTuna, maxDistance=$_maxDistance');
     debugPrint('🔍 User location: lat=$_userLat, lng=$_userLng');
     debugPrint('🔍 Total businesses before filter: ${_allBusinesses.length}');
+
+    final platformBrandsAsync = ref.read(platformBrandsProvider);
+    final platformBrandsMap = <String, dynamic>{};
+    if (platformBrandsAsync.value != null) {
+      for (final b in platformBrandsAsync.value!) {
+        platformBrandsMap[b.id] = b;
+      }
+    }
 
     final filtered = _allBusinesses.where((doc) {
       final data = doc.data() as Map<String, dynamic>;
@@ -399,19 +417,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       final isActive = data['isActive'] as bool? ?? true;
       bool hasDynamicBrand = false;
       final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
-      if (activeBrandIds.isNotEmpty) {
-        final platformBrandsAsync = ref.read(platformBrandsProvider);
-        if (platformBrandsAsync.value != null) {
-          for (final brandId in activeBrandIds) {
-            try {
-              final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-              final name = brand.name.toString().toLowerCase();
-              if (name.contains('tuna') || name.contains('toros')) {
-                hasDynamicBrand = true;
-                break;
-              }
-            } catch (e) {
-              // firstWhere throws if not found
+      if (activeBrandIds.isNotEmpty && platformBrandsMap.isNotEmpty) {
+        for (final brandId in activeBrandIds) {
+          final brand = platformBrandsMap[brandId];
+          if (brand != null) {
+            final name = brand.name.toString().toLowerCase();
+            if (name.contains('tuna') || name.contains('toros')) {
+              hasDynamicBrand = true;
+              break;
             }
           }
         }
@@ -426,15 +439,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       final isTunaPartner = (data['isTunaPartner'] as bool? ?? false) ||
           (brandLabel?.toLowerCase() == 'tuna') ||
           (brand?.toLowerCase() == 'tuna') ||
-          
           hasDynamicBrand;
 
       // Skip inactive
       if (!isActive) return false;
-
-      // DEBUG: Log each business
-      debugPrint(
-          '📋 Business: ${data['companyName']} | type: $businessType | tuna: $isTunaPartner');
 
       // SECTOR FILTER: Only show businesses in Yemek sector (ID-based matching)
       if (!_hasYemekSector(data)) return false;
@@ -512,8 +520,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             final double deliveryRadius =
                 (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
             if (distanceKm > deliveryRadius) {
-              debugPrint(
-                  '🛑 ${data['companyName']} out of delivery radius: ${distanceKm.toStringAsFixed(1)}km > ${deliveryRadius}km');
               return false;
             }
           } else {
@@ -521,7 +527,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           }
         } else {
           // No lat/lng - HIDE this business when distance filter is active
-          debugPrint('⚠️ ${data['companyName']}: No lat/lng found - HIDING');
           return false;
         }
       }
@@ -595,18 +600,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         case 'tuna': // Tuna Sıralaması (Premium Tuna marks first)
           bool hasDynamicBrandA = false;
           final activeBrandIdsA = List<String>.from(dataA['activeBrandIds'] ?? []);
-          if (activeBrandIdsA.isNotEmpty) {
-            final platformBrandsAsync = ref.read(platformBrandsProvider);
-            if (platformBrandsAsync.value != null) {
-              for (final brandId in activeBrandIdsA) {
-                try {
-                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-                  final name = brand.name.toString().toLowerCase();
-                  if (name.contains('tuna') || name.contains('toros')) {
-                    hasDynamicBrandA = true;
-                    break;
-                  }
-                } catch (e) { }
+          if (activeBrandIdsA.isNotEmpty && platformBrandsMap.isNotEmpty) {
+            for (final brandId in activeBrandIdsA) {
+              final brand = platformBrandsMap[brandId];
+              if (brand != null) {
+                final name = brand.name.toString().toLowerCase();
+                if (name.contains('tuna') || name.contains('toros')) {
+                  hasDynamicBrandA = true;
+                  break;
+                }
               }
             }
           }
@@ -623,18 +625,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
           bool hasDynamicBrandB = false;
           final activeBrandIdsB = List<String>.from(dataB['activeBrandIds'] ?? []);
-          if (activeBrandIdsB.isNotEmpty) {
-            final platformBrandsAsync = ref.read(platformBrandsProvider);
-            if (platformBrandsAsync.value != null) {
-              for (final brandId in activeBrandIdsB) {
-                try {
-                  final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-                  final name = brand.name.toString().toLowerCase();
-                  if (name.contains('tuna') || name.contains('toros')) {
-                    hasDynamicBrandB = true;
-                    break;
-                  }
-                } catch (e) { }
+          if (activeBrandIdsB.isNotEmpty && platformBrandsMap.isNotEmpty) {
+            for (final brandId in activeBrandIdsB) {
+              final brand = platformBrandsMap[brandId];
+              if (brand != null) {
+                final name = brand.name.toString().toLowerCase();
+                if (name.contains('tuna') || name.contains('toros')) {
+                  hasDynamicBrandB = true;
+                  break;
+                }
               }
             }
           }
@@ -718,7 +717,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     debugPrint(
         '🍽️ Filtered & Sorted result: ${result.length} businesses (Sort: $_sortOption)');
-    return result;
+    _cachedFilteredBusinesses = result;
   }
 
   @override
@@ -726,6 +725,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     // Watch platform brands to ensure dynamic badges trigger a rebuild when loaded
     ref.watch(platformBrandsProvider);
     final cartState = ref.watch(cartProvider);
+
+    // Call our memoized filtering logic
+    _updateFilteredBusinessesIfNeeded();
+
     return Stack(
       children: [
         Container(
@@ -3340,7 +3343,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    tr('home.table_reservation'),
+                    tr('marketplace.table_reservation'),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -3377,7 +3380,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          tr('home.table_reservation'),
+                          tr('marketplace.table_reservation'),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -3541,7 +3544,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 const Color(0xFFEF6C00),
               ),
               child: cardContent(
-                'home.table_reservation',
+                'marketplace.table_reservation',
                 'marketplace.reserve_table_discover',
                 SvgPicture.asset(
                   'assets/images/icon_masa_reservation.svg',

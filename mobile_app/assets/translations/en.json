@@ -100,7 +100,25 @@
         "verifying_code": "Verifying code...",
         "orn_abc123": "Örn: ABC123",
         "email_veya_telefon": "Email or Phone",
-        "sms_ile_sifresiz_giris": "No password? Login with SMS Code"
+        "sms_ile_sifresiz_giris": "No password? Login with SMS Code",
+        "continue_with_google": "Continue with Google",
+        "continue_with_apple": "Continue with Apple",
+        "hesap_bulunamadi": "Account Not Found",
+        "hesap_bulunamadi_desc": "There is no account registered with this {} in the LOKMA system.\n\nWould you like to create a new Customer profile using this {}?",
+        "baska_hesap_deneyecegim": "I'll try another account",
+        "evet_profil_olustur": "Yes, Create Profile",
+        "hesap_zaten_var": "Account Already Exists",
+        "hesap_zaten_var_desc": "An account is already registered with this {}.\n\nWould you like to login instead of creating a new account?",
+        "vazgec": "Cancel",
+        "evet_giris_yap": "Yes, Login",
+        "login_or_register": "Login or Create Account",
+        "continue_with_phone": "Continue with Phone Number",
+        "register_with_email_desc": "Register with E-Mail",
+        "login_with_email_desc": "Login with E-Mail",
+        "gender": "Gender",
+        "female": "Female",
+        "male": "Male",
+        "terms_agreement": "By continuing, you agree to our Terms and Conditions."
     },
     "business_details": {
         "about_us": "About us",
@@ -1235,6 +1253,7 @@
         "free_delivery_label": "Free Delivery",
         "reservation_available": "Create Reservation",
         "online_table_reservation_badge": "Online Table Reservation",
+        "table_reservation": "Reserve Table Now",
         "filter_open_now": "Currently open businesses",
         "filter_open_now_title": "Open Now",
         "filter_tuna_verified": "Tuna verified businesses",
@@ -2219,5 +2238,11 @@
     "supply_status_completed": "Tamamlandı",
     "supply_already_requested": "zaten az önce istendi!",
     "supply_request_sent": "Talebiniz iletildi:",
-    "supply_btn_title": "Malzeme Belirt / Alarm Ver"
+    "supply_btn_title": "Malzeme Belirt / Alarm Ver",
+    "masa": {
+        "preorder_title": "Closed",
+        "preorder_desc": "The business is currently closed. Would you like to place a preorder for later?",
+        "preorder_yes": "Yes, Preorder",
+        "preorder_no": "Cancel"
+    }
 }

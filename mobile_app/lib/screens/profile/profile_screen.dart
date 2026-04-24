@@ -849,7 +849,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   'Designed & Developed by',
                   style: GoogleFonts.inter(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w400,
                     letterSpacing: 0.3,
                     color: isDark
@@ -860,7 +860,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 4),
                 SvgPicture.asset(
                   'assets/images/ozsoft_app_fusslogo_blau.svg',
-                  height: 60,
+                  height: 36,
                   colorFilter: ColorFilter.mode(
                     isDark
                         ? Colors.white.withOpacity(0.55)
@@ -872,7 +872,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   'www.ozsoft.net',
                   style: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
                     color: isDark 
                         ? Colors.white.withOpacity(0.45) 

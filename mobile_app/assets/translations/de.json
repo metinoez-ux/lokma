@@ -100,7 +100,25 @@
         "phone_check_failed": "Nummer konnte nicht überprüft werden. Bitte überprüfe deine Internetverbindung.",
         "orn_abc123": "Örn: ABC123",
         "email_veya_telefon": "E-Mail oder Telefon",
-        "sms_ile_sifresiz_giris": "Kein Passwort? Mit SMS-Code einloggen"
+        "sms_ile_sifresiz_giris": "Kein Passwort? Mit SMS-Code einloggen",
+        "continue_with_google": "Mit Google fortfahren",
+        "continue_with_apple": "Mit Apple fortfahren",
+        "hesap_bulunamadi": "Konto nicht gefunden",
+        "hesap_bulunamadi_desc": "Mit dieser {} ist kein Konto bei LOKMA registriert.\n\nMöchten Sie ein neues Kundenprofil mit dieser {} erstellen?",
+        "baska_hesap_deneyecegim": "Ein anderes Konto versuchen",
+        "evet_profil_olustur": "Ja, Profil erstellen",
+        "hesap_zaten_var": "Konto existiert bereits",
+        "hesap_zaten_var_desc": "Es gibt bereits ein registriertes Konto mit dieser {}.\n\nMöchten Sie sich stattdessen einloggen?",
+        "vazgec": "Abbrechen",
+        "evet_giris_yap": "Ja, Einloggen",
+        "login_or_register": "Einloggen oder Konto erstellen",
+        "continue_with_phone": "Mit Handynummer fortfahren",
+        "register_with_email_desc": "Mit E-Mail-Adresse registrieren",
+        "login_with_email_desc": "Mit E-Mail-Adresse einloggen",
+        "gender": "Geschlecht",
+        "female": "Weiblich",
+        "male": "Männlich",
+        "terms_agreement": "Wenn Sie fortfahren, erklären Sie sich mit unseren Allgemeinen Geschäftsbedingungen einverstanden."
     },
     "business_details": {
         "about_us": "Über uns",
@@ -1232,6 +1250,7 @@
         "free_delivery_label": "Kostenlose Lieferung",
         "reservation_available": "Reservierung erstellen",
         "online_table_reservation_badge": "Online Tisch reservieren",
+        "table_reservation": "Jetzt Tisch reservieren",
         "filter_open_now": "Jetzt geöffnete Geschäfte",
         "filter_open_now_title": "Jetzt geöffnet",
         "filter_tuna_verified": "Von Tuna verifizierte Geschäfte",
@@ -1439,10 +1458,10 @@
         "sold_out": "Ausverkauft"
     },
     "masa": {
-        "preorder_title": "Vorbestellung aufgeben?",
-        "preorder_desc": "Sie können Ihr Essen vorab bestellen, damit es pünktlich zu Ihrem Restaurantbesuch zubereitet wird. So vermeiden Sie Wartezeiten -- auch in Stoßzeiten wird Ihr Essen rechtzeitig serviert.",
+        "preorder_title": "Geschlossen",
+        "preorder_desc": "Das Restaurant ist derzeit geschlossen. Möchten Sie für später vorbestellen?",
         "preorder_yes": "Ja, vorbestellen",
-        "preorder_no": "Nur Menü ansehen"
+        "preorder_no": "Abbrechen"
     },
     "navigation": {
         "food": "Essen",

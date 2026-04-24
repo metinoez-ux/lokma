@@ -802,8 +802,33 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       },
     );
   }
-  
-  List<DocumentSnapshot> get _filteredBusinesses {
+
+  List<DocumentSnapshot> _cachedFilteredBusinesses = [];
+  Map<String, int> _cachedFilteredTypeCounts = {};
+  String _lastFilterHash = '';
+
+  List<DocumentSnapshot> get _filteredBusinesses => _cachedFilteredBusinesses;
+  Map<String, int> get _filteredTypeCounts => _cachedFilteredTypeCounts;
+
+  void _updateFilteredBusinessesIfNeeded() {
+    final brandsHash = ref.read(platformBrandsProvider).value?.hashCode ?? 0;
+    final currentHash = '${_allBusinesses.hashCode}_${brandsHash}_${_deliveryMode}_${_categoryFilter}_${_onlyTuna}_${_maxDistance}_${_filterDiscounts}_${_filterCash}_${_filterFreeDelivery}_${_filterHighRating}_${_filterOpenNow}_${_filterBrandButchers}_${_filterBrandProducts}_${_sortOption}_${_userLat}_${_userLng}';
+    
+    if (_lastFilterHash == currentHash) return;
+    _lastFilterHash = currentHash;
+
+    final platformBrandsAsync = ref.read(platformBrandsProvider);
+    final platformBrandsMap = <String, dynamic>{};
+    if (platformBrandsAsync.value != null) {
+      for (final b in platformBrandsAsync.value!) {
+        platformBrandsMap[b.id] = b;
+      }
+    }
+
+    final userLocation = ref.read(userLocationProvider).value;
+    final isTurkeyRegion = userLocation?.isTurkeyRegion == true;
+
+    // 1. Calculate _cachedFilteredBusinesses
     final filtered = _allBusinesses.where((doc) {
       final data = doc.data() as Map<String, dynamic>;
       final businessType = _extractBusinessType(data);
@@ -812,19 +837,14 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       // TUNA Partner check - use correct field names
       bool hasDynamicBrand = false;
       final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
-      if (activeBrandIds.isNotEmpty) {
-        final platformBrandsAsync = ref.read(platformBrandsProvider);
-        if (platformBrandsAsync.value != null) {
-          for (final brandId in activeBrandIds) {
-            try {
-              final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-              final name = brand.name.toString().toLowerCase();
-              if (name.contains('tuna') || name.contains('toros')) {
-                hasDynamicBrand = true;
-                break;
-              }
-            } catch (e) {
-              // firstWhere throws if not found, ignore
+      if (activeBrandIds.isNotEmpty && platformBrandsMap.isNotEmpty) {
+        for (final brandId in activeBrandIds) {
+          final brand = platformBrandsMap[brandId];
+          if (brand != null) {
+            final name = brand.name.toString().toLowerCase();
+            if (name.contains('tuna') || name.contains('toros')) {
+              hasDynamicBrand = true;
+              break;
             }
           }
         }
@@ -846,21 +866,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       // Delivery mode filter
       if (_deliveryMode == 'teslimat') {
         final offersDelivery = data['offersDelivery'] as bool? ?? true;
-        if (!offersDelivery) {
-          return false;
-        }
+        if (!offersDelivery) return false;
       } else if (_deliveryMode == 'gelal') {
         final offersPickup = data['offersPickup'] as bool? ?? true;
-        if (!offersPickup) {
-          return false;
-        }
+        if (!offersPickup) return false;
       }
       
       // Category filter
       if (_categoryFilter != 'all' && businessType != _categoryFilter.toLowerCase()) return false;
       
       // Distance filter
-      debugPrint('🔍 Distance check: _userLat=$_userLat, _userLng=$_userLng, _maxDistance=$_maxDistance');
       if (_userLat != null && _userLng != null) {
         double? lat;
         double? lng;
@@ -891,27 +906,17 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         if (lat != null && lng != null) {
           final distanceMeters = Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng);
           final distanceKm = distanceMeters / 1000;
-          debugPrint('📏 ${data['companyName']}: lat=$lat, lng=$lng, dist=${distanceKm.toStringAsFixed(1)}km, max=$_maxDistance');
           
           if (_deliveryMode == 'teslimat') {
             final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
-            if (distanceKm > deliveryRadius) {
-              debugPrint('🛑 ${data['companyName']} out of delivery radius: ${distanceKm.toStringAsFixed(1)}km > ${deliveryRadius}km');
-              return false;
-            }
+            if (distanceKm > deliveryRadius) return false;
           } else {
             if (distanceKm > _maxDistance) return false;
           }
         } else {
-          // No lat/lng
-          debugPrint('⚠️ ${data['companyName']}: No lat/lng found, HIDING');
           return false;
         }
-      } else {
-        debugPrint('⏭️ Distance filter skipped: userLat=$_userLat, maxDist=$_maxDistance');
       }
-      
-      // 🆕 HIZLI FİLTRELER
       
       // İndirimler filtresi
       if (_filterDiscounts) {
@@ -931,22 +936,17 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         if (deliveryFee > 0) return false;
       }
       
-
-      
       // 4+ Yıldız filtresi
-  if (_filterHighRating) {
-    final rating = (data['rating'] as num?)?.toDouble() ?? 0.0;
-    if (rating < 4.0) return false;
-  }
-  
-  // Şimdi Açık filtresi
-  if (_filterOpenNow) {
-    if (!_isBusinessOpenNow(data)) return false;
-  }
+      if (_filterHighRating) {
+        final rating = (data['rating'] as num?)?.toDouble() ?? 0.0;
+        if (rating < 4.0) return false;
+      }
       
-      final userLocation = ref.read(userLocationProvider).value;
-      final isTurkeyRegion = userLocation?.isTurkeyRegion == true;
-
+      // Şimdi Açık filtresi
+      if (_filterOpenNow) {
+        if (!_isBusinessOpenNow(data)) return false;
+      }
+      
       // 🔴 Marka Rozetli İşletmeler (TUNA veya Toros Kasapları)
       if (_filterBrandButchers) {
         bool hasBrand = false;
@@ -956,17 +956,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             hasBrand = true;
         } else {
             final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
-            if (activeBrandIds.isNotEmpty) {
-                final platformBrandsAsync = ref.read(platformBrandsProvider);
-                if (platformBrandsAsync.value != null) {
-                    for (final brandId in activeBrandIds) {
-                        try {
-                            final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-                            if (brand.name.toString().toLowerCase().contains(targetKeyword)) {
-                                hasBrand = true;
-                                break;
-                            }
-                        } catch (_) {}
+            if (activeBrandIds.isNotEmpty && platformBrandsMap.isNotEmpty) {
+                for (final brandId in activeBrandIds) {
+                    final brand = platformBrandsMap[brandId];
+                    if (brand != null && brand.name.toString().toLowerCase().contains(targetKeyword)) {
+                        hasBrand = true;
+                        break;
                     }
                 }
             }
@@ -1001,7 +996,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           final ratingB = (dataB['rating'] as num?)?.toDouble() ?? 0.0;
           return ratingB.compareTo(ratingA);
           
-
         case 'nearest':
         default:
           // Distance sort
@@ -1037,14 +1031,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       }
     });
 
-    debugPrint('✅ Filtered & Sorted result: ${result.length} businesses (Sort: $_sortOption)');
-    return result;
-  }
+    _cachedFilteredBusinesses = result;
 
-  // Calculate dynamic chip counts
-  Map<String, int> get _filteredTypeCounts {
+    // 2. Calculate _cachedFilteredTypeCounts
     final typeCounts = <String, int>{};
-    
     for (final doc in _allBusinesses) {
       final data = doc.data() as Map<String, dynamic>;
       final businessType = _extractBusinessType(data);
@@ -1057,18 +1047,15 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         bool hasDynamicBrand = false;
         final activeBrandIds = List<String>.from(data['activeBrandIds'] ?? []);
         
-        if (activeBrandIds.isNotEmpty) {
-          final platformBrandsAsync = ref.read(platformBrandsProvider);
-          if (platformBrandsAsync.value != null) {
-            for (final brandId in activeBrandIds) {
-              try {
-                final brand = platformBrandsAsync.value!.firstWhere((b) => b.id == brandId);
-                final name = brand.name.toString().toLowerCase();
-                if (name.contains('tuna') || name.contains('toros')) {
-                  hasDynamicBrand = true;
-                  break;
-                }
-              } catch (e) { }
+        if (activeBrandIds.isNotEmpty && platformBrandsMap.isNotEmpty) {
+          for (final brandId in activeBrandIds) {
+            final brand = platformBrandsMap[brandId];
+            if (brand != null) {
+              final name = brand.name.toString().toLowerCase();
+              if (name.contains('tuna') || name.contains('toros')) {
+                hasDynamicBrand = true;
+                break;
+              }
             }
           }
         }
@@ -1117,17 +1104,19 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           continue;
         }
       }
-      
       typeCounts[businessType] = (typeCounts[businessType] ?? 0) + 1;
     }
     
-    return typeCounts;
+    _cachedFilteredTypeCounts = typeCounts;
   }
 
   @override
   Widget build(BuildContext context) {
     // Watch platform brands to ensure dynamic badges trigger a rebuild when loaded
     ref.watch(platformBrandsProvider);
+
+    _updateFilteredBusinessesIfNeeded();
+
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(

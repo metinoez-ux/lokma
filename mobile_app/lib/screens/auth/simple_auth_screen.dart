@@ -48,18 +48,12 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
 
       if (email.isEmpty || password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lütfen tüm alanları doldurun'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('auth.email_pass_required')), backgroundColor: Colors.red),
         );
         return;
       }
       if (_isRegister) {
-        if (_selectedGender == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Lütfen cinsiyetinizi seçin.'), backgroundColor: Colors.red),
-          );
-          return;
-        }
-        auth.registerWithEmail(email, password, gender: _selectedGender);
+        auth.registerWithEmail(email, password);
       } else {
         auth.loginWithEmail(email, password);
       }
@@ -97,11 +91,8 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
             context: context,
             builder: (ctx) => AlertDialog(
               backgroundColor: Theme.of(context).cardColor,
-              title: const Text('Hesap Zaten Var'),
-              content: const Text(
-                'Kullandığınız hesap sistemde zaten kayıtlı. '
-                'Lütfen "Giriş Yap" sekmesini kullanarak devam edin.',
-              ),
+              title: Text(tr('auth.hesap_zaten_var')),
+              content: Text(tr('auth.hesap_zaten_var_desc', args: [''])),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -146,7 +137,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
           },
         ),
         title: Text(
-          'Einloggen oder Konto erstellen', // Giriş yap veya hesap oluştur
+          tr('auth.login_or_register'),
           style: TextStyle(
             color: textColor,
             fontSize: 18,
@@ -227,7 +218,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                                             fontSize: 15,
                                             fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
                                           ),
-                                          child: const Text('Giriş Yap'),
+                                          child: Text(tr('auth.giris_yap')),
                                         ),
                                       ),
                                     ),
@@ -241,7 +232,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                                             fontSize: 15,
                                             fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
                                           ),
-                                          child: const Text('Kayıt Ol'),
+                                          child: Text(tr('auth.kayit_ol')),
                                         ),
                                       ),
                                     ),
@@ -259,7 +250,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                     // Social Login Buttons
                     _buildOutlinedButton(
                       icon: Image.asset('assets/images/google_logo.png', height: 24, errorBuilder: (_,__,___) => const Icon(Icons.g_mobiledata, color: Colors.blue, size: 32)),
-                      text: 'Mit Google fortfahren', // Google ile devam et
+                      text: tr('auth.continue_with_google'),
                       isDark: isDark,
                       textColor: textColor,
                       onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
@@ -268,7 +259,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                       const SizedBox(height: 16),
                       _buildSolidButton(
                         icon: const Icon(Icons.apple, color: Colors.white, size: 28),
-                        text: 'Mit Apple fortfahren', // Apple ile devam et
+                        text: tr('auth.continue_with_apple'),
                         color: isDark ? Colors.grey.shade800 : Colors.black,
                         textColor: Colors.white,
                         onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('YAKINDA!'))),
@@ -280,7 +271,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                     // Phone / SMS Login Option
                     _buildOutlinedButton(
                       icon: Icon(Icons.phone_android_outlined, color: textColor, size: 24),
-                      text: 'Mit Handynummer fortfahren', // Telefon numarası ile devam et
+                      text: tr('auth.continue_with_phone'),
                       isDark: isDark,
                       textColor: textColor,
                       onPressed: () => context.push('/phone-login'),
@@ -295,7 +286,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'oder', // veya
+                            tr('auth.veya'),
                             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
                           ),
                         ),
@@ -306,7 +297,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                     const SizedBox(height: 32),
                     
                     Text(
-                      _isRegister ? 'Mit E-Mail-Adresse registrieren' : 'Mit E-Mail-Adresse einloggen', // E-Posta ile devam et
+                      _isRegister ? tr('auth.register_with_email_desc') : tr('auth.login_with_email_desc'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -314,82 +305,6 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
-                    
-                    if (_isRegister) ...[
-                      Text(
-                        'Geschlecht / Cinsiyet',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _selectedGender = 'female'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: _selectedGender == 'female' 
-                                      ? Theme.of(context).primaryColor.withOpacity(0.1) 
-                                      : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
-                                  border: Border.all(
-                                    color: _selectedGender == 'female' 
-                                        ? Theme.of(context).primaryColor 
-                                        : (isDark ? Colors.white12 : Colors.grey.shade300)
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Kadın',
-                                    style: TextStyle(
-                                      color: _selectedGender == 'female' 
-                                          ? Theme.of(context).primaryColor 
-                                          : textColor,
-                                      fontWeight: _selectedGender == 'female' ? FontWeight.w700 : FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _selectedGender = 'male'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: _selectedGender == 'male' 
-                                      ? Theme.of(context).primaryColor.withOpacity(0.1) 
-                                      : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
-                                  border: Border.all(
-                                    color: _selectedGender == 'male' 
-                                        ? Theme.of(context).primaryColor 
-                                        : (isDark ? Colors.white12 : Colors.grey.shade300)
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Erkek',
-                                    style: TextStyle(
-                                      color: _selectedGender == 'male' 
-                                          ? Theme.of(context).primaryColor 
-                                          : textColor,
-                                      fontWeight: _selectedGender == 'male' ? FontWeight.w700 : FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
                     // Inputs
                     Container(
                       decoration: BoxDecoration(
@@ -404,7 +319,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                             keyboardType: TextInputType.emailAddress,
                             style: TextStyle(color: textColor),
                             decoration: InputDecoration(
-                              hintText: 'E-Mail-Adresse',
+                              hintText: tr('auth.e_posta'),
                               hintStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade500),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -416,7 +331,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                             obscureText: _obscurePassword,
                             style: TextStyle(color: textColor),
                             decoration: InputDecoration(
-                              hintText: 'Passwort', // Şifre
+                              hintText: tr('auth.sifre'), // Şifre
                               hintStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade500),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -450,7 +365,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                           ),
                         ),
                         child: Text(
-                          _isRegister ? 'Konto erstellen' : 'Einloggen', // 'Bestätigungscode abrufen' corresponds to magic link
+                          _isRegister ? tr('auth.kayit_ol') : tr('auth.giris_yap'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -464,7 +379,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                     // Terms
                     Center(
                       child: Text(
-                        'Wenn Sie fortfahren, erklären Sie sich mit unseren\nAllgemeinen Geschäftsbedingungen einverstanden.',
+                        tr('auth.terms_agreement'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.grey.shade600,
@@ -484,7 +399,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                           if (mounted) context.go('/');
                         },
                         child: Text(
-                          'Als Gast fortfahren', // Misafir olarak devam et
+                          tr('auth.misafir_olarak_devam'),
                           style: TextStyle(
                             color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                             fontSize: 14,

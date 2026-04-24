@@ -1341,6 +1341,11 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
               if (cnt > 0) { itemCnt = cnt; break; }
             }
 
+            // Filter out orphaned or broken orders with 0 total amount
+            if (totalAmt == null || totalAmt <= 0) {
+              continue;
+            }
+
             orderGroups.add(_OrderGroup(
               orderId: entry.key,
               rawOrderNumber: rawNum,

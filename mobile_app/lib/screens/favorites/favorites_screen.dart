@@ -178,9 +178,26 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           );
         }
 
-        final docs = snapshot.data?.docs ?? [];
+        final allDocs = snapshot.data?.docs ?? [];
+        
+        // Filter out and clean up orphan orders (e.g. deleted by admin)
+        final validDocs = [];
+        for (var doc in allDocs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final items = data['items'] as List<dynamic>?;
+          final itemCount = items?.length ?? (data['itemCount'] ?? 0);
+          final totalAmount = (data['grandTotal'] ?? data['totalAmount'] ?? data['total'] ?? 0).toDouble();
+          
+          // An order with 0 items and 0.00 total is considered an orphan/deleted order
+          if (itemCount == 0 && totalAmount <= 0.0) {
+            // Clean up from database silently
+            doc.reference.delete().catchError((e) => debugPrint('Error deleting orphan favorite order: $e'));
+          } else {
+            validDocs.add(doc);
+          }
+        }
 
-        if (docs.isEmpty) {
+        if (validDocs.isEmpty) {
           return _buildEmptyState(
             icon: Icons.receipt_long_outlined,
             title: tr('common.favori_siparis_yok'),
@@ -191,9 +208,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: docs.length,
+          itemCount: validDocs.length,
           itemBuilder: (context, index) {
-            final doc = docs[index];
+            final doc = validDocs[index];
             final data = doc.data() as Map<String, dynamic>;
             return _buildFavoriteOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
           },

@@ -100,7 +100,25 @@
         "phone_check_failed": "Numara kontrol edilemedi. Lütfen internet bağlantınızı kontrol edin.",
         "orn_abc123": "Örn: ABC123",
         "email_veya_telefon": "E-Posta veya Telefon",
-        "sms_ile_sifresiz_giris": "Şifreniz yok mu? SMS Kodu ile Giriş"
+        "sms_ile_sifresiz_giris": "Şifreniz yok mu? SMS Kodu ile Giriş",
+        "continue_with_google": "Google ile devam et",
+        "continue_with_apple": "Apple ile devam et",
+        "hesap_bulunamadi": "Hesap Bulunamadı",
+        "hesap_bulunamadi_desc": "Bu {} ile LOKMA sisteminde bir kaydınız bulunmamaktadır.\n\nBu {} kullanarak yeni bir Müşteri profili oluşturmak ister misiniz?",
+        "baska_hesap_deneyecegim": "Başka Hesap Deneyeceğim",
+        "evet_profil_olustur": "Evet, Profil Oluştur",
+        "hesap_zaten_var": "Hesap Zaten Var",
+        "hesap_zaten_var_desc": "Bu {} ile sistemde zaten kayıtlı bir hesabınız bulunmaktadır.\n\nYeni hesap oluşturmak yerine giriş yapmak ister misiniz?",
+        "vazgec": "Vazgeç",
+        "evet_giris_yap": "Evet, Giriş Yap",
+        "login_or_register": "Giriş yap veya hesap oluştur",
+        "continue_with_phone": "Telefon numarası ile devam et",
+        "register_with_email_desc": "E-Posta ile kayıt ol",
+        "login_with_email_desc": "E-Posta ile giriş yap",
+        "gender": "Cinsiyet",
+        "female": "Kadın",
+        "male": "Erkek",
+        "terms_agreement": "Devam ederek Şartlar ve Koşullarımızı kabul etmiş olursunuz."
     },
     "business_details": {
         "about_us": "Hakkımızda",
@@ -1232,6 +1250,7 @@
         "free_delivery_label": "Teslimat Bedava",
         "reservation_available": "Rezervasyon Oluştur",
         "online_table_reservation_badge": "Online Masa Rezervasyonu",
+        "table_reservation": "Şimdi Masa Rezervasyonu Yap",
         "filter_open_now": "Şu anda açık olan işletmeler",
         "filter_open_now_title": "Şimdi Açık",
         "filter_tuna_verified": "Tuna tarafından onaylı işletmeler",
@@ -1437,8 +1456,7 @@
         "cart_updated_for_city": "Sepet temizlendi ve {} kermesinden ürün eklendi.",
         "search_for_products": "Ürün Ara...",
         "no_results": "Sonuç bulunamadı",
-        "brand_disclaimer": "Bu gördüğünüz emniyet sertifikası ve logosu, doğrudan {brandName} tarafından işletmelere verilmekte ve düzenli olarak kendileri tarafından denetlenmektedir. Herhangi bir işletme {brandName} ürünlerinin satışını durdurduğu an, bu logo ve sertifika LOKMA platformu üzerindeki işletme profilinden derhal ve otomatik olarak kaldırılır. Kısacası, bu güvenlik standardının LOKMA platformu ile doğrudan bir bağı yoktur; tüm inisiyatif ve kontrol bizzat {brandName} yetkililerine aittir.",
-        "sold_out": "Tükendi"
+        "brand_disclaimer": "Bu gördüğünüz emniyet sertifikası ve logosu, doğrudan {brandName} tarafından işletmelere verilmekte ve düzenli olarak kendileri tarafından denetlenmektedir. Herhangi bir işletme {brandName} ürünlerinin satışını durdurduğu an, bu logo ve sertifika LOKMA platformu üzerindeki işletme profilinden derhal ve otomatik olarak kaldırılır. Kısacası, bu güvenlik standardının LOKMA platformu ile doğrudan bir bağı yoktur; tüm inisiyatif ve kontrol bizzat {brandName} yetkililerine aittir."
     },
     "navigation": {
         "food": "Yemek",
@@ -1869,10 +1887,10 @@
         "guest_benefit_1": "Teklifler ve indirimler alın",
         "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
         "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
-        "have_questions": "Sorulariniz mi var?",
-        "we_are_here": "Sizin icin buradayiz",
-        "guest_description": "Siparislerinizi takip etmek, sadakat puanlari toplamak ve ozel firsatlardan yararlanmak icin giris yapin.",
-        "login_register": "Giris Yap / Kayit Ol",
+        "have_questions": "Sorularınız mı var?",
+        "we_are_here": "Sizin için buradayız",
+        "guest_description": "Siparişlerinizi takip etmek, sadakat puanları toplamak ve özel fırsatlardan yararlanmak için giriş yapın.",
+        "login_register": "Giriş Yap / Kayıt Ol",
         "update_photo": "Profil Fotoğrafını Güncelle",
         "photo_error": "Fotoğraf güncellenemedi."
     },
@@ -2256,5 +2274,11 @@
     "supply_status_completed": "Tamamlandı",
     "supply_already_requested": "zaten az önce istendi!",
     "supply_request_sent": "Talebiniz iletildi:",
-    "supply_btn_title": "Malzeme Belirt / Alarm Ver"
+    "supply_btn_title": "Malzeme Belirt / Alarm Ver",
+    "masa": {
+        "preorder_title": "İşletme Kapalı",
+        "preorder_desc": "İşletme şu an kapalı. İleri tarihli ön sipariş vermek ister misiniz?",
+        "preorder_yes": "Evet, Ön Sipariş Ver",
+        "preorder_no": "Vazgeç"
+    }
 }

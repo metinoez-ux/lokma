@@ -87,6 +87,7 @@ void main() async {
           path: 'assets/translations',
           assetLoader: const FirestoreAssetLoader(), // Live translations
           fallbackLocale: const Locale('tr'),
+          useOnlyLangCode: true, // IMPORTANT: Allows matching 'de_DE' to 'de'
           // Use device system language automatically (user can change in Profile)
           child: LokmaApp(initError: _initError),
         ),

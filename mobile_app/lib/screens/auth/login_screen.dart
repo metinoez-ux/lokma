@@ -403,11 +403,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               backgroundColor: isDark ? lokmaDark : Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
-              title: Text('Hesap Bulunamadı',
+              title: Text(tr('auth.hesap_bulunamadi'),
                   style:
                       TextStyle(color: textColor, fontWeight: FontWeight.bold)),
               content: Text(
-                'Bu $accountDescription ile LOKMA sisteminde bir kaydınız bulunmamaktadır.\n\nBu $accountDescription kullanarak yeni bir Müşteri profili oluşturmak ister misiniz?',
+                tr('auth.hesap_bulunamadi_desc', args: [accountDescription, accountDescription]),
                 style: TextStyle(
                     color: textColor.withOpacity(0.7),
                     fontSize: 15,
@@ -415,7 +415,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               actions: [
                 TextButton(
-                  child: Text('Başka Hesap Deneyeceğim',
+                  child: Text(tr('auth.baska_hesap_deneyecegim'),
                       style: TextStyle(
                           color: isDark ? Colors.white54 : Colors.black54,
                           fontWeight: FontWeight.w500)),
@@ -428,7 +428,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: Text('Evet, Profil Oluştur',
+                  child: Text(tr('auth.evet_profil_olustur'),
                       style: TextStyle(fontWeight: FontWeight.w600)),
                   onPressed: () => Navigator.of(ctx).pop(true),
                 ),
@@ -450,11 +450,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               backgroundColor: isDark ? lokmaDark : Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
-              title: Text('Hesap Zaten Var',
+              title: Text(tr('auth.hesap_zaten_var'),
                   style:
                       TextStyle(color: textColor, fontWeight: FontWeight.bold)),
               content: Text(
-                'Bu $accountDescription ile sistemde zaten kayıtlı bir hesabınız bulunmaktadır.\n\nYeni hesap oluşturmak yerine giriş yapmak ister misiniz?',
+                tr('auth.hesap_zaten_var_desc', args: [accountDescription]),
                 style: TextStyle(
                     color: textColor.withOpacity(0.7),
                     fontSize: 15,
@@ -462,7 +462,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               actions: [
                 TextButton(
-                  child: Text('Vazgeç',
+                  child: Text(tr('auth.vazgec'),
                       style: TextStyle(
                           color: isDark ? Colors.white54 : Colors.black54,
                           fontWeight: FontWeight.w500)),
@@ -475,7 +475,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: Text('Evet, Giriş Yap',
+                  child: Text(tr('auth.evet_giris_yap'),
                       style: TextStyle(fontWeight: FontWeight.w600)),
                   onPressed: () => Navigator.of(ctx).pop(true),
                 ),
