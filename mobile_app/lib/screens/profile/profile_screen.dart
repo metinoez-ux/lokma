@@ -290,35 +290,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${'profile.greeting'.tr()},',
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                context.push('/my-info');
+                              },
+                              behavior: HitTestBehavior.opaque,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${'profile.greeting'.tr()},',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  firstName.isNotEmpty ? firstName : displayName,
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
+                                  Text(
+                                    firstName.isNotEmpty ? firstName : displayName,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  BuildInfo.buildTime,
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    BuildInfo.buildTime,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
