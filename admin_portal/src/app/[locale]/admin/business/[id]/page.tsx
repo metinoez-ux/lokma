@@ -574,6 +574,23 @@ export default function BusinessDetailsPage() {
  tempPassword?: string;
  notifications?: { email: { sent: boolean }; whatsapp: { sent: boolean }; sms: { sent: boolean } };
  } | null>(null);
+  const [inviteStreet, setInviteStreet] = useState("");
+  const [inviteHouseNumber, setInviteHouseNumber] = useState("");
+  const [inviteAddressLine2, setInviteAddressLine2] = useState("");
+  const [invitePostalCode, setInvitePostalCode] = useState("");
+  const [inviteCity, setInviteCity] = useState("");
+  const [inviteAddressCountry, setInviteAddressCountry] = useState("Deutschland");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<{
+  id: string; displayName: string; email?: string; phoneNumber?: string;
+  adminType: string; isActive?: boolean;
+  } | null>(null);
+  const [editStaffForm, setEditStaffForm] = useState({
+  displayName: '', email: '', phone: '', adminType: '',
+  street: '', houseNumber: '', addressLine2: '', postalCode: '', city: '', country: 'Deutschland',
+  });
+  const [editStaffLoading, setEditStaffLoading] = useState(false);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
 
  // Confirmation modal state
  const [confirmModal, setConfirmModal] = useState<{
@@ -2557,6 +2574,14 @@ export default function BusinessDetailsPage() {
  assignerName: admin?.displayName || 'Admin',
  assignerEmail: admin?.email,
  assignerRole: admin?.adminType || 'super',
+  address: inviteStreet ? {
+    street: inviteStreet,
+    houseNumber: inviteHouseNumber,
+    addressLine2: inviteAddressLine2,
+    postalCode: invitePostalCode,
+    city: inviteCity,
+    country: inviteAddressCountry,
+  } : undefined,
  }),
  });
 
@@ -2577,6 +2602,13 @@ export default function BusinessDetailsPage() {
  setInviteFirstName("");
  setInviteLastName("");
  setInviteEmail("");
+  setInviteStreet("");
+  setInviteHouseNumber("");
+  setInviteAddressLine2("");
+  setInvitePostalCode("");
+  setInviteCity("");
+  setInviteAddressCountry("Deutschland");
+  setShowInviteModal(false);
  loadStaff();
  } catch (error: any) {
  console.error(t('invite_error'), error);
@@ -2585,6 +2617,77 @@ export default function BusinessDetailsPage() {
  }
  setStaffLoading(false);
  };
+
+  const handleEditStaff = (staff: typeof staffList[0]) => {
+  setEditingStaff(staff as any);
+  setEditStaffForm({
+  displayName: staff.displayName || '',
+  email: staff.email || '',
+  phone: staff.phoneNumber || '',
+  adminType: staff.adminType || '',
+  street: (staff as any).street || '',
+  houseNumber: (staff as any).houseNumber || '',
+  addressLine2: (staff as any).addressLine2 || '',
+  postalCode: (staff as any).postalCode || '',
+  city: (staff as any).city || '',
+  country: (staff as any).country || 'Deutschland',
+  });
+  };
+
+  const handleSaveEditStaff = async () => {
+  if (!editingStaff) return;
+  setEditStaffLoading(true);
+  try {
+  const adminRef = doc(db, 'admins', editingStaff.id);
+  await updateDoc(adminRef, {
+  displayName: editStaffForm.displayName,
+  email: editStaffForm.email || null,
+  phoneNumber: editStaffForm.phone || null,
+  adminType: editStaffForm.adminType,
+  street: editStaffForm.street || null,
+  houseNumber: editStaffForm.houseNumber || null,
+  addressLine2: editStaffForm.addressLine2 || null,
+  postalCode: editStaffForm.postalCode || null,
+  city: editStaffForm.city || null,
+  country: editStaffForm.country || null,
+  updatedAt: new Date(),
+  });
+  showToast(editStaffForm.displayName + " guncellendi", 'success');
+  setEditingStaff(null);
+  loadStaff();
+  } catch (error) {
+  console.error('Edit staff error:', error);
+  showToast(t('islemBasarisiz'), 'error');
+  }
+  setEditStaffLoading(false);
+  };
+
+  const handleResetStaffPassword = async (staffMember: typeof staffList[0]) => {
+  setResetPasswordLoading(true);
+  try {
+  const newPassword = `LOKMA${Math.floor(1000 + Math.random() * 9000)}`;
+  const response = await fetch('/api/admin/reset-staff-password', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+  staffId: staffMember.id,
+  phone: staffMember.phoneNumber,
+  email: staffMember.email,
+  displayName: staffMember.displayName,
+  newPassword,
+  businessName: business?.companyName,
+  adminName: admin?.displayName,
+  }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Sifre sifirlanamadi');
+  showToast("Yeni sifre: " + newPassword + " — " + staffMember.displayName + "'e gonderildi", 'success');
+  } catch (error: any) {
+  showToast(error?.message || 'Sifre sifirlanamadi', 'error');
+  }
+  setResetPasswordLoading(false);
+  };
+
 
  if (adminLoading || loading) {
  return (
@@ -6409,6 +6512,7 @@ export default function BusinessDetailsPage() {
  {/* Sub-Tab: Personel */}
  {
  settingsSubTab === "personel" && (
+  <>
  <LockedModuleOverlay featureKey="staffShiftTracking">
  <div className="space-y-6">
 
@@ -6636,6 +6740,21 @@ export default function BusinessDetailsPage() {
  >
  {staff.isActive !== false ? t('arsivle1') : t('aktiflestir')}
  </button>
+  {/* Düzenle */}
+  <button
+  onClick={() => handleEditStaff(staff)}
+  className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-800 dark:text-blue-400 hover:bg-blue-600 hover:text-white"
+  >
+  {t('duzenle') || 'Düzenle'}
+  </button>
+  {/* Yeni Şifre */}
+  <button
+  onClick={() => handleResetStaffPassword(staff)}
+  disabled={resetPasswordLoading}
+  className="text-xs px-2 py-1 rounded bg-violet-600/20 text-violet-800 dark:text-violet-400 hover:bg-violet-600 hover:text-white disabled:opacity-50"
+  >
+  Yeni Sifre
+  </button>
  {/* Yetkiyi Kaldır */}
  <button
  onClick={() => {
@@ -6680,112 +6799,148 @@ export default function BusinessDetailsPage() {
  )}
  </div>
 
- {/* Invite New Staff */}
- <div className="bg-background/50 rounded-xl p-6 border border-border">
- <h3 className="text-foreground font-bold text-lg mb-4">
- {t('yeni_personel_ekle')}
- </h3>
- <div className="grid grid-cols-2 gap-3">
- <input
- type="text"
- placeholder={t('isim')}
- value={inviteFirstName}
- onChange={(e) => setInviteFirstName(e.target.value)}
- className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
- />
- <input
- type="text"
- placeholder={t('soyisim_opsiyonel')}
- value={inviteLastName}
- onChange={(e) => setInviteLastName(e.target.value)}
- className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
- />
- </div>
- <div className="flex gap-2 mt-3">
- <select
- value={inviteCountryCode}
- onChange={(e) => setInviteCountryCode(e.target.value)}
- className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg w-24"
- >
- <option value="+49">🇩🇪 +49</option>
- <option value="+90">🇹🇷 +90</option>
- <option value="+43">🇦🇹 +43</option>
- </select>
- <input
- type="tel"
- placeholder={t('telefonNumarasi')}
- value={invitePhone}
- onChange={(e) =>
- setInvitePhone(e.target.value.replace(/\D/g, ""))
- }
- className="flex-1 bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
- />
- </div>
- <input
- type="email"
- placeholder={t('epostaOpsiyonelBildirimIcin')}
- value={inviteEmail}
- onChange={(e) => setInviteEmail(e.target.value)}
- className="w-full mt-3 bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
- />
- <div className="mt-3">
- <label className="text-muted-foreground text-sm">{t('rol')}</label>
- <select
- value={inviteRole}
- onChange={(e) => setInviteRole(e.target.value)}
- className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1"
- >
- <option value="Personel">{t('personel_rol')}</option>
- <option value="Admin">{t('isletmeAdmin')}</option>
- </select>
- </div>
- <button
- onClick={handleInviteStaff}
- disabled={staffLoading}
- className="w-full mt-3 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium"
- >
- {staffLoading
- ? t('hesapOlusturuluyor')
- : t('hesapOlusturDavetGonder')}
- </button>
+  {/* Personel ekle - modal trigger */}
+  <div className="flex justify-end mb-4">
+  <button
+  onClick={() => setShowInviteModal(true)}
+  className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
+  >
+  + {t('yeni_personel_ekle') || 'Neues Personal'}
+  </button>
+  </div>
 
- {/* Invite Result Feedback */}
- {inviteResult && inviteResult.success && (
- <div className="mt-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
- <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
- <div className="bg-card p-3 rounded text-sm">
- <p className="text-muted-foreground">{t('geciciSifre')}</p>
- <p className="text-foreground font-mono text-lg">{inviteResult.tempPassword}</p>
- </div>
- {inviteResult.notifications && (
- <div className="flex flex-col gap-2 text-xs">
- <div className="flex flex-wrap gap-2">
- <span title={(inviteResult.notifications.email as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
- {inviteResult.notifications.email?.sent ? '✓' : '✗'} Email
- </span>
- <span title={(inviteResult.notifications.whatsapp as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
- {inviteResult.notifications.whatsapp?.sent ? '✓' : '✗'} WhatsApp
- </span>
- <span title={(inviteResult.notifications.sms as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
- {inviteResult.notifications.sms?.sent ? '✓' : '✗'} SMS
- </span>
- </div>
- {(!inviteResult.notifications.email?.sent || !inviteResult.notifications.whatsapp?.sent || !inviteResult.notifications.sms?.sent) && (
- <p className="text-red-400 mt-1">⚠️ Bazı bildirimler gönderilemedi. Hata detayını görmek için üzerlerine gelin.</p>
- )}
- </div>
- )}
- <button
- onClick={() => setInviteResult(null)}
- className="text-xs text-muted-foreground hover:text-white"
- >
- {t('kapat')}
- </button>
- </div>
- )}
- </div>
- </div>
+  {inviteResult && inviteResult.success && (
+  <div className="mb-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-2">
+  <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
+  <div className="bg-card p-3 rounded text-sm">
+  <p className="text-muted-foreground text-xs">{t('geciciSifre')}</p>
+  <p className="text-foreground font-mono text-base">{inviteResult.tempPassword}</p>
+  </div>
+  <button onClick={() => setInviteResult(null)} className="text-xs text-muted-foreground hover:text-white">
+  {t('kapat')}
+  </button>
+  </div>
+  )}
+
+  </div>
  </LockedModuleOverlay>
+
+  {/* ══ INVITE MODAL ══ */}
+  {showInviteModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowInviteModal(false)}>
+  <div className="bg-card rounded-2xl shadow-2xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+  <div className="flex items-center justify-between p-6 border-b border-border">
+  <h2 className="text-lg font-bold text-foreground">{t('yeni_personel_ekle') || 'Neues Personal hinzufuegen'}</h2>
+  <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground hover:text-foreground text-2xl leading-none">&times;</button>
+  </div>
+  <div className="p-6 space-y-4">
+  <div className="grid grid-cols-2 gap-3">
+  <input type="text" placeholder={(t('isim') || 'Vorname') + " *"} value={inviteFirstName} onChange={(e) => setInviteFirstName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  <input type="text" placeholder={t('soyisim_opsiyonel') || 'Nachname'} value={inviteLastName} onChange={(e) => setInviteLastName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  </div>
+  <div className="flex gap-2">
+  <select value={inviteCountryCode} onChange={(e) => setInviteCountryCode(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg w-28">
+  <option value="+49">DE +49</option>
+  <option value="+90">TR +90</option>
+  <option value="+43">AT +43</option>
+  <option value="+31">NL +31</option>
+  </select>
+  <input type="tel" placeholder={(t('telefonNumarasi') || 'Telefon') + " *"} value={invitePhone} onChange={(e) => setInvitePhone(e.target.value.replace(/\D/g, ""))} className="flex-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  </div>
+  <input type="email" placeholder={t('epostaOpsiyonelBildirimIcin') || 'E-Mail (optional)'} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  <div>
+  <label className="text-muted-foreground text-sm">{t('rol')}</label>
+  <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="w-full mt-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+  <option value="Personel">{t('personel_rol') || 'Geschaeftspersonal'}</option>
+  <option value="Admin">{t('isletmeAdmin') || 'Betriebsadmin'}</option>
+  <option value="Lieferfahrer">Lieferfahrer</option>
+  </select>
+  {inviteRole === 'Lieferfahrer' && (
+  <p className="text-xs text-violet-400 mt-1">Diese Rolle wird automatisch als Fahrer erkannt.</p>
+  )}
+  </div>
+  <div className="pt-2 border-t border-border">
+  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">ADRES (OPSIYONEL)</p>
+  <div className="grid grid-cols-3 gap-2 mb-2">
+  <input type="text" placeholder="Strasse" value={inviteStreet} onChange={(e) => setInviteStreet(e.target.value)} className="col-span-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  <input type="text" placeholder="Nr." value={inviteHouseNumber} onChange={(e) => setInviteHouseNumber(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  </div>
+  <input type="text" placeholder="Adresszusatz" value={inviteAddressLine2} onChange={(e) => setInviteAddressLine2(e.target.value)} className="w-full mb-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  <div className="grid grid-cols-2 gap-2 mb-2">
+  <input type="text" placeholder="PLZ" value={invitePostalCode} onChange={(e) => setInvitePostalCode(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  <input type="text" placeholder="Stadt" value={inviteCity} onChange={(e) => setInviteCity(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  </div>
+  <select value={inviteAddressCountry} onChange={(e) => setInviteAddressCountry(e.target.value)} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none">
+  <option value="Deutschland">Deutschland</option>
+  <option value="Tuerkiye">Tuerkiye</option>
+  <option value="Oesterreich">Oesterreich</option>
+  <option value="Niederlande">Niederlande</option>
+  </select>
+  </div>
+  <div className="flex gap-3 pt-2">
+  <button onClick={() => setShowInviteModal(false)} className="flex-1 py-3 rounded-lg border border-border text-foreground hover:bg-muted transition text-sm font-medium">{t('iptal') || 'Abbrechen'}</button>
+  <button onClick={handleInviteStaff} disabled={staffLoading} className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+  {staffLoading ? (t('hesapOlusturuluyor') || 'Erstelle...') : (t('hesapOlusturDavetGonder') || 'Personal erstellen')}
+  </button>
+  </div>
+  </div>
+  </div>
+  </div>
+  )}
+
+  {/* ══ EDIT STAFF MODAL ══ */}
+  {editingStaff && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setEditingStaff(null)}>
+  <div className="bg-card rounded-2xl shadow-2xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+  <div className="flex items-center justify-between p-6 border-b border-border">
+  <div>
+  <h2 className="text-lg font-bold text-foreground">{t('duzenle') || 'Bearbeiten'}</h2>
+  <p className="text-sm text-muted-foreground">{editingStaff.displayName}</p>
+  </div>
+  <button onClick={() => setEditingStaff(null)} className="text-muted-foreground hover:text-foreground text-2xl leading-none">&times;</button>
+  </div>
+  <div className="p-6 space-y-4">
+  <input type="text" placeholder="Ad Soyad *" value={editStaffForm.displayName} onChange={(e) => setEditStaffForm(p => ({...p, displayName: e.target.value}))} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  <input type="email" placeholder="E-Mail" value={editStaffForm.email} onChange={(e) => setEditStaffForm(p => ({...p, email: e.target.value}))} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  <input type="tel" placeholder="Telefon" value={editStaffForm.phone} onChange={(e) => setEditStaffForm(p => ({...p, phone: e.target.value}))} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+  <div>
+  <label className="text-muted-foreground text-sm">{t('rol')}</label>
+  <select value={editStaffForm.adminType} onChange={(e) => setEditStaffForm(p => ({...p, adminType: e.target.value}))} className="w-full mt-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+  <option value="isletme_staff">Geschaeftspersonal</option>
+  <option value="isletme_admin">Betriebsadmin</option>
+  <option value="driver">Lieferfahrer</option>
+  </select>
+  </div>
+  <div className="pt-2 border-t border-border">
+  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">ADRES (OPSIYONEL)</p>
+  <div className="grid grid-cols-3 gap-2 mb-2">
+  <input type="text" placeholder="Strasse" value={editStaffForm.street} onChange={(e) => setEditStaffForm(p => ({...p, street: e.target.value}))} className="col-span-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  <input type="text" placeholder="Nr." value={editStaffForm.houseNumber} onChange={(e) => setEditStaffForm(p => ({...p, houseNumber: e.target.value}))} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  </div>
+  <input type="text" placeholder="Adresszusatz" value={editStaffForm.addressLine2} onChange={(e) => setEditStaffForm(p => ({...p, addressLine2: e.target.value}))} className="w-full mb-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  <div className="grid grid-cols-2 gap-2 mb-2">
+  <input type="text" placeholder="PLZ" value={editStaffForm.postalCode} onChange={(e) => setEditStaffForm(p => ({...p, postalCode: e.target.value}))} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  <input type="text" placeholder="Stadt" value={editStaffForm.city} onChange={(e) => setEditStaffForm(p => ({...p, city: e.target.value}))} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+  </div>
+  <select value={editStaffForm.country} onChange={(e) => setEditStaffForm(p => ({...p, country: e.target.value}))} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none">
+  <option value="Deutschland">Deutschland</option>
+  <option value="Tuerkiye">Tuerkiye</option>
+  <option value="Oesterreich">Oesterreich</option>
+  <option value="Niederlande">Niederlande</option>
+  </select>
+  </div>
+  <div className="flex gap-3 pt-2">
+  <button onClick={() => setEditingStaff(null)} className="flex-1 py-3 rounded-lg border border-border text-foreground hover:bg-muted transition text-sm font-medium">{t('iptal') || 'Abbrechen'}</button>
+  <button onClick={handleSaveEditStaff} disabled={editStaffLoading} className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+  {editStaffLoading ? 'Kaydediliyor...' : (t('kaydet') || 'Speichern')}
+  </button>
+  </div>
+  </div>
+  </div>
+  </div>
+  )}
+
+  </>
  )
  }
 
