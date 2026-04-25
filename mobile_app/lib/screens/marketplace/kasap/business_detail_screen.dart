@@ -1647,7 +1647,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   Expanded(
                     child: ListView(
                       controller: scrollController,
-
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       children: [
                         // ═══ Business Name ═══
                         Text(
@@ -1959,7 +1959,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           
                           // Tab Content
                           SizedBox(
-                            height: 320,
+                            height: 380,
                             child: TabBarView(
                               children: tabViews,
                             ),
@@ -3221,8 +3221,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                        // 2b. Stats Line (Lieferando: ★ 4.5 · Open/Closed · Delivery info)
                        // In masa mode: simplified - only cuisine type + open/closed
                        Wrap(
-                         spacing: 12,
-                         runSpacing: 8,
+                         spacing: 4,
+                         runSpacing: 4,
                          crossAxisAlignment: WrapCrossAlignment.center,
                          children: [
                            // Rating (hidden in masa mode)
@@ -3267,7 +3267,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                              
                              // Separator
-                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                             const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
                            ],
 
                            // Masa Rezervasyon (only shown in masa mode)
@@ -3305,7 +3305,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              if ((data?['cuisineType']?.toString() ?? '').isNotEmpty ||
                                  (data?['type']?.toString() ?? '').isNotEmpty ||
                                  (widget.initialTableNumber != null && (!isOpen || isPausedForCurrentTab)))
-                               const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                               const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
                            ],
 
                            // Business / Cuisine Type
@@ -3320,7 +3320,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ),
                               // Separator before closed badge: only if QR scanned AND closed (masa mode), or always in normal mode
                               if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
-                                const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                                const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
                             ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
                              Text(
                                'marketplace.business_type_${data!['type'].toString().toLowerCase()}'.tr(),
@@ -3331,7 +3331,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                ),
                              ),
                               if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
-                                const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                                const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
                             ],
                             
                             // Open/Closed Status
@@ -3341,16 +3341,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              child: Row(
                                mainAxisSize: MainAxisSize.min,
                                children: [
-                                 Container(
-                                   width: 6, height: 6,
-                                   decoration: BoxDecoration(
-                                     color: isPausedForCurrentTab
-                                         ? Colors.orange
-                                         : (isOpen ? Colors.green : Colors.red),
-                                     shape: BoxShape.circle,
-                                   ),
-                                 ),
-                                 const SizedBox(width: 4),
                                  Container(
                                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.4),
                                    child: Text(
@@ -3390,7 +3380,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            
                            // Delivery Fee (hidden in masa mode)
                            if (!_isMasaMode && data?['deliveryFee'] != null) ...[
-                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                             const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
                              Row(
                                mainAxisSize: MainAxisSize.min,
                                children: [
@@ -3414,7 +3404,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
                            // Min Order (hidden in masa mode)
                            if (!_isMasaMode && parseSafelyDouble(data?['minDeliveryOrder']) > 0) ...[
-                             const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
+                             const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
                              Row(
                                mainAxisSize: MainAxisSize.min,
                                children: [
