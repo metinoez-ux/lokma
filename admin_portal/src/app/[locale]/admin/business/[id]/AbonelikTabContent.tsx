@@ -193,6 +193,12 @@ export default function AbonelikTabContent({
             <strong className="text-white">€{plan.eslSystemMonthlyFee.toFixed(2)}/ay</strong>
           </div>
         )}
+        {(plan.eslSetupFee ?? 199.00) > 0 && (
+          <div className="mb-2 text-[10px] text-indigo-200 bg-indigo-900/30 p-1.5 rounded border border-indigo-500/20 flex justify-between items-center">
+            <span>Donanım Kurulum Ücreti (Bir Seferlik):</span>
+            <strong className="text-white">€{(plan.eslSetupFee ?? 199.00).toFixed(2)}</strong>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           {plan.eslPackages.map((pkg: any, idx: number) => (
@@ -376,6 +382,12 @@ export default function AbonelikTabContent({
                       <span className="text-muted-foreground">Donanım Satın Alma Toplamı (Bir Seferlik):</span>
                       <span className="font-semibold text-foreground">€{totalBuy.toFixed(2)}</span>
                     </div>
+                    {hasEslItems && (newPlan.eslSetupFee ?? 199.00) > 0 && (
+                      <div className="flex justify-between items-center text-sm mb-1">
+                        <span className="text-muted-foreground">Donanım Kurulum Ücreti (Bir Seferlik):</span>
+                        <span className="font-semibold text-foreground">€{(newPlan.eslSetupFee ?? 199.00).toFixed(2)}</span>
+                      </div>
+                    )}
                     {hasEslItems && newPlan.eslSystemMonthlyFee > 0 && (
                       <div className="flex justify-between items-center text-sm mb-1">
                         <span className="text-muted-foreground">ESL Gateway & SaaS Ücreti:</span>

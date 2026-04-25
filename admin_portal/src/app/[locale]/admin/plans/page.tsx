@@ -153,6 +153,7 @@ export default function PlansPage() {
  ...formData,
  stripeProductId: formData.stripeProductId || null,
  eslStripePriceId: formData.eslStripePriceId || null,
+ eslSetupFee: formData.eslSetupFee ?? 199.00,
  yearlyFee: formData.yearlyFee || null,
  campaignLimit: (formData.campaignLimit === undefined || formData.campaignLimit === '') ? null : formData.campaignLimit,
  productLimit: (formData.productLimit === undefined || formData.productLimit === '') ? null : formData.productLimit,
@@ -1129,19 +1130,35 @@ export default function PlansPage() {
 
             {(formData.features as any)?.eslIntegration && (
               <div className="pt-4 border-t border-border/50">
-                <div className="mb-6">
-                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                    Aylık Sistem Ücreti (€ Netto) <span className="text-red-500 ml-1">+ 19% MwSt.</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={(formData as any).eslSystemMonthlyFee ?? 29.90}
-                    onChange={e => setFormData({ ...formData, eslSystemMonthlyFee: e.target.value === '' ? '' : parseFloat(e.target.value) } as any)}
-                    className="w-full md:w-1/3 min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
-                    placeholder="29.90"
-                  />
-                  <p className="text-[10px] text-muted-foreground/70 mt-1">SaaS & Base Station. Tüm fiyatlar Netto üzerinden hesaplanır.</p>
+                <div className="mb-6 flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      Aylık Sistem Ücreti (€ Netto) <span className="text-red-500 ml-1">+ 19% MwSt.</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={(formData as any).eslSystemMonthlyFee ?? 29.90}
+                      onChange={e => setFormData({ ...formData, eslSystemMonthlyFee: e.target.value === '' ? '' : parseFloat(e.target.value) } as any)}
+                      className="w-full min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                      placeholder="29.90"
+                    />
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">SaaS & Base Station.</p>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      Bir Seferlik Kurulum Ücreti (€ Netto) <span className="text-red-500 ml-1">+ 19% MwSt.</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={(formData as any).eslSetupFee ?? 199.00}
+                      onChange={e => setFormData({ ...formData, eslSetupFee: e.target.value === '' ? '' : parseFloat(e.target.value) } as any)}
+                      className="w-full min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                      placeholder="199.00"
+                    />
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">Saha Kurulum / Ağ Geçidi Aktivasyonu.</p>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
