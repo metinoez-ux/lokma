@@ -1284,7 +1284,7 @@ export default function AdminHeader() {
  <span className="text-muted-foreground text-[10px]">▼</span>
  </button>
  <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
- <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-muted/50 transition">
+ <Link href="/admin/account" className="block px-4 py-3 border-b border-border hover:bg-muted/50 transition">
  <p className="text-foreground text-sm font-medium truncate">
  {admin.displayName || 'Admin'}
  </p>

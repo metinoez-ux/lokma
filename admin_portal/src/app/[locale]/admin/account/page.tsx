@@ -6,6 +6,9 @@ import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations, useLocale } from 'next-intl';
 import { formatCurrency } from '@/utils/currency';
+import AbonelikTabContent from '../business/[id]/AbonelikTabContent';
+import { subscriptionService } from '@/services/subscriptionService';
+import { toast } from 'react-hot-toast';
 
 // Types
 interface CommissionRecord {
@@ -31,17 +34,6 @@ interface CommissionRecord {
  orderNumber?: string;
 }
 
-interface BusinessUsage {
- accountBalance: number;
- subscriptionPlan: string;
- monthlyFee: number;
- currency?: string;
- usage?: {
- orders?: Record<string, number>;
- totalCommission?: Record<string, number>;
- };
-}
-
 const statusColors: Record<string, string> = {
  auto_collected: 'bg-green-600',
  pending: 'bg-yellow-600',
@@ -50,8 +42,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function HesabimPage() {
-
  const t = useTranslations('AdminAccount');
+ const tSub = useTranslations('AdminBusiness');
  const locale = useLocale();
 
  const courierLabels: Record<string, string> = {
@@ -66,9 +58,12 @@ export default function HesabimPage() {
  invoiced: t('faturalandi'),
  paid: t('odendi'),
  };
+
  const { admin, loading: adminLoading } = useAdmin();
+ const [activeTab, setActiveTab] = useState<'overview' | 'subscription' | 'billing'>('overview');
  const [records, setRecords] = useState<CommissionRecord[]>([]);
- const [businessData, setBusinessData] = useState<BusinessUsage | null>(null);
+ const [businessDocData, setBusinessDocData] = useState<any | null>(null);
+ const [availablePlans, setAvailablePlans] = useState<any[]>([]);
  const [loading, setLoading] = useState(true);
  const [filterPeriod, setFilterPeriod] = useState<string>('');
  const [showDetail, setShowDetail] = useState(false);
@@ -103,20 +98,20 @@ export default function HesabimPage() {
  }
  }, [businessId]);
 
- // Load business data (balance, plan, usage)
+ // Load full business data & plans
  const loadBusinessData = useCallback(async () => {
  if (!businessId) return;
  try {
  const businessDoc = await getDoc(doc(db, 'businesses', businessId));
  if (businessDoc.exists()) {
  const data = businessDoc.data();
- setBusinessData({
- accountBalance: data.accountBalance || 0,
- subscriptionPlan: data.subscriptionPlan || data.plan || 'free',
- monthlyFee: data.monthlyFee || 0,
- currency: data.currency || 'EUR',
- usage: data.usage || {},
- });
+ setBusinessDocData({ id: businessDoc.id, ...data });
+
+ // Fetch plans for this business category
+ if (data.category) {
+ const plans = await subscriptionService.getAllPlans(data.category);
+ setAvailablePlans(plans);
+ }
  }
  } catch (error) {
  console.error('Business data loading error:', error);
@@ -136,6 +131,11 @@ export default function HesabimPage() {
  const now = new Date();
  setFilterPeriod(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
  }, []);
+
+ const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+ if (type === 'success') toast.success(msg);
+ else toast.error(msg);
+ };
 
  // Filtered records
  const filteredRecords = useMemo(() => {
@@ -176,8 +176,8 @@ export default function HesabimPage() {
 
  // Current month usage from business doc
  const currentMonthKey = new Date().toISOString().slice(0, 7);
- const monthlyOrders = businessData?.usage?.orders?.[currentMonthKey] || 0;
- const monthlyCommission = businessData?.usage?.totalCommission?.[currentMonthKey] || 0;
+ const monthlyOrders = businessDocData?.usage?.orders?.[currentMonthKey] || 0;
+ const monthlyCommission = businessDocData?.usage?.totalCommission?.[currentMonthKey] || 0;
 
  if (adminLoading || loading) {
  return (
@@ -200,7 +200,7 @@ export default function HesabimPage() {
  }
 
  return (
- <div className="min-h-screen bg-background">
+ <div className="min-h-screen bg-background pb-20">
  <div className="max-w-7xl mx-auto px-4 py-6">
  {/* Page Header */}
  <div className="flex justify-between items-center mb-6">
@@ -216,6 +216,36 @@ export default function HesabimPage() {
  </button>
  </div>
 
+ {/* Navigation Tabs */}
+ <div className="flex overflow-x-auto gap-2 mb-6 bg-card/50 p-1.5 rounded-xl border border-border">
+ <button
+ onClick={() => setActiveTab('overview')}
+ className={`px-4 py-2 text-sm font-bold whitespace-nowrap transition-all rounded-lg ${
+ activeTab === 'overview' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-gray-700/50'
+ }`}
+ >
+ 📊 {t('provizyon_ozeti')}
+ </button>
+ <button
+ onClick={() => setActiveTab('subscription')}
+ className={`px-4 py-2 text-sm font-bold whitespace-nowrap transition-all rounded-lg ${
+ activeTab === 'subscription' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-gray-700/50'
+ }`}
+ >
+ 📋 {tSub('uyelikAbonelik') || 'Üyelik & Abonelik'}
+ </button>
+ <button
+ onClick={() => setActiveTab('billing')}
+ className={`px-4 py-2 text-sm font-bold whitespace-nowrap transition-all rounded-lg ${
+ activeTab === 'billing' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-gray-700/50'
+ }`}
+ >
+ {t('fatura_ve_odeme')}
+ </button>
+ </div>
+
+ {activeTab === 'overview' && (
+ <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
  {/* Account Summary Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
  {/* Balance Card */}
@@ -224,13 +254,13 @@ export default function HesabimPage() {
  <span className="text-3xl">💰</span>
  <div>
  <p className="text-muted-foreground text-xs uppercase tracking-wider">{t('acik_bakiye')}</p>
- <p className={`text-3xl font-bold ${(businessData?.accountBalance || 0) > 0 ? 'text-amber-800 dark:text-amber-400' : 'text-green-800 dark:text-green-400'}`}>
- {formatCurrency((businessData?.accountBalance || 0), businessData?.currency)}
+ <p className={`text-3xl font-bold ${(businessDocData?.accountBalance || 0) > 0 ? 'text-amber-800 dark:text-amber-400' : 'text-green-800 dark:text-green-400'}`}>
+ {formatCurrency((businessDocData?.accountBalance || 0), businessDocData?.currency)}
  </p>
  </div>
  </div>
  <p className="text-muted-foreground text-xs">
- {(businessData?.accountBalance || 0) > 0
+ {(businessDocData?.accountBalance || 0) > 0
  ? t('odenmesi_gereken_nakit_provizyon_bakiyen')
  : t('bakiye_temiz')}
  </p>
@@ -243,12 +273,12 @@ export default function HesabimPage() {
  <div>
  <p className="text-muted-foreground text-xs uppercase tracking-wider">{t('mevcut_plan')}</p>
  <p className="text-2xl font-bold text-indigo-800 dark:text-indigo-400 capitalize">
- {businessData?.subscriptionPlan || 'Free'}
+ {businessDocData?.subscriptionPlan || businessDocData?.plan || 'Free'}
  </p>
  </div>
  </div>
  <p className="text-muted-foreground text-xs">
- {t('aylik_ucret')}{formatCurrency(businessData?.monthlyFee || 0, businessData?.currency)}
+ {t('aylik_ucret')}{formatCurrency(businessDocData?.monthlyFee || 0, businessDocData?.currency)}
  </p>
  </div>
 
@@ -264,7 +294,7 @@ export default function HesabimPage() {
  </div>
  </div>
  <p className="text-muted-foreground text-xs">
- {t('toplam_provizyon')}{formatCurrency(monthlyCommission, businessData?.currency)}
+ {t('toplam_provizyon')}{formatCurrency(monthlyCommission, businessDocData?.currency)}
  </p>
  </div>
  </div>
@@ -295,23 +325,23 @@ export default function HesabimPage() {
  <p className="text-muted-foreground text-xs">{t('siparisler')}</p>
  </div>
  <div className="bg-gray-700/50 rounded-xl p-4 text-center">
- <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</p>
+ <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalOrderAmount, businessDocData?.currency)}</p>
  <p className="text-muted-foreground text-xs">{t('toplam_ciro')}</p>
  </div>
  <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
- <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">{formatCurrency(stats.totalCommission, businessData?.currency)}</p>
+ <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">{formatCurrency(stats.totalCommission, businessDocData?.currency)}</p>
  <p className="text-muted-foreground text-xs">{t('provizyon')}</p>
  </div>
  <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
- <p className="text-2xl font-bold text-green-800 dark:text-green-400">{formatCurrency(stats.collectedAmount, businessData?.currency)}</p>
+ <p className="text-2xl font-bold text-green-800 dark:text-green-400">{formatCurrency(stats.collectedAmount, businessDocData?.currency)}</p>
  <p className="text-muted-foreground text-xs">{t('tahsil_edilen')}</p>
  </div>
  <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
- <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{formatCurrency(stats.pendingAmount, businessData?.currency)}</p>
+ <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{formatCurrency(stats.pendingAmount, businessDocData?.currency)}</p>
  <p className="text-muted-foreground text-xs">{t('bekleyen')}</p>
  </div>
  <div className="bg-gray-700/50 rounded-xl p-4 text-center">
- <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.vatTotal, businessData?.currency)}</p>
+ <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.vatTotal, businessDocData?.currency)}</p>
  <p className="text-muted-foreground text-xs">{t('kdv')}</p>
  </div>
  </div>
@@ -321,18 +351,18 @@ export default function HesabimPage() {
  <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-600/20 rounded-lg px-4 py-2">
  <span>💳</span>
  <span className="text-blue-800 dark:text-blue-400 text-sm font-medium">{stats.cardOrders} {t('kart')}</span>
- <span className="text-muted-foreground/80 text-sm">— {formatCurrency(stats.cardCommission, businessData?.currency)}</span>
+ <span className="text-muted-foreground/80 text-sm">— {formatCurrency(stats.cardCommission, businessDocData?.currency)}</span>
  </div>
  <div className="flex items-center gap-2 bg-purple-600/10 border border-purple-600/20 rounded-lg px-4 py-2">
  <span>💵</span>
  <span className="text-purple-800 dark:text-purple-400 text-sm font-medium">{stats.cashOrders} {t('nakit')}</span>
- <span className="text-muted-foreground/80 text-sm">— {formatCurrency(stats.cashCommission, businessData?.currency)}</span>
+ <span className="text-muted-foreground/80 text-sm">— {formatCurrency(stats.cashCommission, businessDocData?.currency)}</span>
  </div>
  </div>
  </div>
 
  {/* Detail Records Toggle */}
- <div className="bg-card rounded-2xl overflow-hidden">
+ <div className="bg-card rounded-2xl overflow-hidden mb-6">
  <button
  onClick={() => setShowDetail(!showDetail)}
  className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-700/50 transition"
@@ -375,14 +405,14 @@ export default function HesabimPage() {
  <td className="px-3 py-2 text-center">
  <span className="text-foreground text-xs">{courierLabels[r.courierType] || r.courierType}</span>
  </td>
- <td className="px-3 py-2 text-right text-white">{formatCurrency(r.orderTotal, businessData?.currency)}</td>
+ <td className="px-3 py-2 text-right text-white">{formatCurrency(r.orderTotal, businessDocData?.currency)}</td>
  <td className="px-3 py-2 text-right text-muted-foreground">%{r.commissionRate}</td>
  <td className="px-3 py-2 text-right">
- <span className="text-amber-800 dark:text-amber-400 font-bold">{formatCurrency(r.totalCommission, businessData?.currency)}</span>
+ <span className="text-amber-800 dark:text-amber-400 font-bold">{formatCurrency(r.totalCommission, businessDocData?.currency)}</span>
  </td>
  <td className="px-3 py-2 text-right">
  <span className="text-foreground text-xs">
- {formatCurrency(r.netCommission, businessData?.currency)} + {formatCurrency(r.vatAmount, businessData?.currency)}
+ {formatCurrency(r.netCommission, businessDocData?.currency)} + {formatCurrency(r.vatAmount, businessDocData?.currency)}
  </span>
  </td>
  <td className="px-3 py-2 text-center">
@@ -410,8 +440,8 @@ export default function HesabimPage() {
  {t('toplam')} {filteredRecords.length} {t('siparis')}
  </span>
  <div className="flex gap-6">
- <span className="text-foreground text-sm">{t('ciro')}: <strong>{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</strong></span>
- <span className="text-amber-800 dark:text-amber-400 text-sm">{t('provizyon')}: <strong>{formatCurrency(stats.totalCommission, businessData?.currency)}</strong></span>
+ <span className="text-foreground text-sm">{t('ciro')}: <strong>{formatCurrency(stats.totalOrderAmount, businessDocData?.currency)}</strong></span>
+ <span className="text-amber-800 dark:text-amber-400 text-sm">{t('provizyon')}: <strong>{formatCurrency(stats.totalCommission, businessDocData?.currency)}</strong></span>
  </div>
  </div>
  )}
@@ -420,11 +450,63 @@ export default function HesabimPage() {
  </div>
 
  {/* Info Note */}
- <div className="mt-6 bg-card/50 border border-border rounded-xl p-4">
+ <div className="bg-card/50 border border-border rounded-xl p-4">
  <p className="text-muted-foreground text-xs leading-relaxed">
  {t('kart_ile_yapilan_odemelerde_provizyon_ot')} <span className="text-blue-800 dark:text-blue-400">info@lokma.shop</span> {t('iletisim_son')}.
  </p>
  </div>
+ </div>
+ )}
+
+ {activeTab === 'subscription' && (
+ <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <AbonelikTabContent
+ business={businessDocData}
+ availablePlans={availablePlans}
+ admin={admin}
+ t={tSub}
+ showToast={showToast}
+ setBusiness={setBusinessDocData}
+ />
+ </div>
+ )}
+
+ {activeTab === 'billing' && (
+ <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+ <div className="bg-card rounded-2xl p-8 mb-6 border border-border text-center flex flex-col items-center">
+ <div className="w-16 h-16 bg-blue-600/20 text-blue-500 rounded-full flex items-center justify-center mb-4">
+ <span className="text-3xl">🏦</span>
+ </div>
+ <h3 className="text-xl font-bold text-foreground mb-2">{t('odeme_alma_stripe')}</h3>
+ <p className="text-muted-foreground text-sm max-w-lg mb-6">
+ {t('stripe_aciklama')}
+ </p>
+ {businessDocData?.stripeAccountId ? (
+ <div className="bg-green-600/10 border border-green-600/30 rounded-xl p-4 w-full max-w-md">
+ <p className="text-green-500 font-bold mb-1 flex items-center justify-center gap-2">
+ <span>✅</span> {t('stripe_bagli')}
+ </p>
+ <p className="text-muted-foreground text-xs mb-3">{t('hesap_id')} {businessDocData.stripeAccountId}</p>
+ <button className="px-4 py-2 bg-muted hover:bg-gray-700 text-foreground font-medium rounded-lg text-sm w-full transition">
+ {t('stripe_panele_git')}
+ </button>
+ </div>
+ ) : (
+ <button className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-500/20">
+ {t('stripe_olustur_bagla')}
+ </button>
+ )}
+ </div>
+
+ <div className="bg-card rounded-2xl p-6 border border-border">
+ <h3 className="text-lg font-bold text-foreground mb-4">{t('aylik_fatura_gecmisi')}</h3>
+ <div className="text-center py-12 bg-background/50 rounded-xl border border-border/50">
+ <span className="text-4xl block mb-3 opacity-50">🧾</span>
+ <p className="text-muted-foreground text-sm">{t('henuz_fatura_yok')}</p>
+ </div>
+ </div>
+ </div>
+ )}
  </div>
  </div>
  );
