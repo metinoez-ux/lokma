@@ -5392,8 +5392,12 @@
         "servedBy": "tarafından servis edildi",
         "table": "Masa",
         "waiter": "Garson",
-        "tableWaiting": "TableWaiting",
-        "customerArrived": "CustomerArrived"
+        "tableWaiting": "Masa Bekleniyor",
+        "customerArrived": "MÜŞTERİ GELDİ",
+        "receivedAt": "Geliş:",
+        "cancelledAt": "İptal Zamanı:",
+        "cancelReason": "Sebep:",
+        "cancelledBy": "İptal Eden:"
       },
       "missingModal": {
         "cancel": "Vazgeç",

@@ -5363,8 +5363,12 @@
         "servedBy": "bedient von",
         "table": "Tisch",
         "waiter": "Kellner",
-        "tableWaiting": "TableWaiting",
-        "customerArrived": "CustomerArrived"
+        "tableWaiting": "Warten auf Tisch",
+        "customerArrived": "KUNDE EINGETROFFEN",
+        "receivedAt": "Eingang:",
+        "cancelledAt": "Storniert am:",
+        "cancelReason": "Grund:",
+        "cancelledBy": "Storniert von:"
       },
       "missingModal": {
         "cancel": "Abbrechen",
