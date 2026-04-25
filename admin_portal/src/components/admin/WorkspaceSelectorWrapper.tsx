@@ -92,21 +92,53 @@ export default function WorkspaceSelectorWrapper({ children }: { children: React
           </div>
 
           <div className="w-full space-y-3">
-            {admin.assignments?.map((assignment) => (
-              <WorkspaceItem
-                key={assignment.id}
-                assignment={assignment}
-                t={t}
-                onClick={() => {
-                  try {
-                    localStorage.setItem('mira_active_assignment_id', assignment.id);
-                    window.location.reload();
-                  } catch (e) {
-                    console.error("Failed to select workspace", e);
+            {(() => {
+              // Group and filter assignments to keep highest privilege per entity
+              const entityMap = new Map();
+              
+              const getRoleWeight = (roleRaw: string) => {
+                const role = roleRaw?.toLowerCase() || '';
+                if (role.includes('super') || role.includes('lokma_admin')) return 100;
+                if (role.includes('admin') || role.includes('manager') || role.includes('yonetici')) return 80;
+                if (role.includes('staff') || role.includes('personel') || role.includes('mutfak') || role.includes('kasa')) return 50;
+                if (role.includes('garson') || role.includes('waiter')) return 40;
+                if (role.includes('driver') || role.includes('teslimat')) return 30;
+                return 10;
+              };
+
+              admin.assignments?.forEach((assignment: any) => {
+                const entityId = assignment.entityId;
+                const key = entityId || assignment.id;
+                
+                if (!entityMap.has(key)) {
+                  entityMap.set(key, assignment);
+                } else {
+                  const existing = entityMap.get(key);
+                  const existingWeight = getRoleWeight(existing.role);
+                  const newWeight = getRoleWeight(assignment.role);
+                  
+                  if (newWeight > existingWeight) {
+                    entityMap.set(key, assignment);
                   }
-                }}
-              />
-            ))}
+                }
+              });
+
+              return Array.from(entityMap.values()).map((assignment: any) => (
+                <WorkspaceItem
+                  key={assignment.id}
+                  assignment={assignment}
+                  t={t}
+                  onClick={() => {
+                    try {
+                      localStorage.setItem('mira_active_assignment_id', assignment.id);
+                      window.location.reload();
+                    } catch (e) {
+                      console.error("Failed to select workspace", e);
+                    }
+                  }}
+                />
+              ));
+            })()}
 
             <button
               onClick={() => forceLogout('manual')}

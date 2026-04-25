@@ -166,6 +166,39 @@ const applyVirtualContext = (admin: Admin): Admin => {
     });
   }
 
+  // Filter down assignments to unique entities, keeping highest privilege
+  if (clonedAdmin.assignments && clonedAdmin.assignments.length > 0) {
+    const entityMap = new Map();
+    const getRoleWeight = (roleRaw: string) => {
+      const role = roleRaw?.toLowerCase() || '';
+      if (role.includes('super') || role.includes('lokma_admin')) return 100;
+      if (role.includes('admin') || role.includes('manager') || role.includes('yonetici')) return 80;
+      if (role.includes('staff') || role.includes('personel') || role.includes('mutfak') || role.includes('kasa')) return 50;
+      if (role.includes('garson') || role.includes('waiter')) return 40;
+      if (role.includes('driver') || role.includes('teslimat')) return 30;
+      return 10;
+    };
+
+    clonedAdmin.assignments.forEach((assignment: any) => {
+      const entityId = assignment.entityId;
+      const key = entityId || assignment.id;
+      
+      if (!entityMap.has(key)) {
+        entityMap.set(key, assignment);
+      } else {
+        const existing = entityMap.get(key);
+        const existingWeight = getRoleWeight(existing.role);
+        const newWeight = getRoleWeight(assignment.role);
+        
+        if (newWeight > existingWeight) {
+          entityMap.set(key, assignment);
+        }
+      }
+    });
+
+    clonedAdmin.assignments = Array.from(entityMap.values());
+  }
+
   let activeAssignmentId: string | null = null;
 
   if (typeof window !== "undefined") {
