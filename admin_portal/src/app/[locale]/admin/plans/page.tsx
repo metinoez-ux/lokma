@@ -567,12 +567,12 @@ export default function PlansPage() {
  onChange={e => setFormData({ ...formData, productLimit: e.target.value ? parseInt(e.target.value) : null })}
  placeholder={t('sinirsiz')}
  disabled={formData.productLimit === null}
- className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50"
+ className="w-full bg-background border border-gray-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
  />
  <button
  type="button"
  onClick={() => setFormData(p => ({ ...p, productLimit: p.productLimit === null ? 30 : null }))}
- className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+ className={`px-4 py-2 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
  >
  ∞
  </button>
@@ -587,48 +587,18 @@ export default function PlansPage() {
  onChange={e => setFormData({ ...formData, orderLimit: e.target.value ? parseInt(e.target.value) : null })}
  placeholder={t('sinirsiz')}
  disabled={formData.orderLimit === null}
- className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50"
+ className="w-full bg-background border border-gray-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
  />
  <button
  type="button"
  onClick={() => setFormData(p => ({ ...p, orderLimit: p.orderLimit === null ? 100 : null }))}
- className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+ className={`px-4 py-2 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
  >
  ∞
  </button>
  </div>
  </div>
- <div>
- <label className="block text-xs font-medium text-muted-foreground mb-1.5">Personel Limiti</label>
- <div className="flex gap-2">
- <input
- type="number"
- value={formData.personnelLimit === null ? '' : formData.personnelLimit}
- onChange={e => setFormData({ ...formData, personnelLimit: e.target.value ? parseInt(e.target.value) : null })}
- placeholder={t('sinirsiz')}
- disabled={formData.personnelLimit === null}
- className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50"
- />
- <button
- type="button"
- onClick={() => setFormData(p => ({ ...p, personnelLimit: p.personnelLimit === null ? 3 : null }))}
- className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.personnelLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
- >
- ∞
- </button>
- </div>
- </div>
- <div>
- <label className="block text-xs font-medium text-muted-foreground mb-1.5">Personel Aşım Ücreti ({globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')})</label>
- <input
- type="number"
- step="0.01"
- value={formData.personnelOverageFee ?? 0}
- onChange={e => setFormData({ ...formData, personnelOverageFee: parseFloat(e.target.value) || 0 })}
- className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
- placeholder="Opsiyonel"
- />
- </div>
+
  {/* Kurye Provizyon Sistemi */}
  <div className="col-span-2">
  <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
@@ -665,26 +635,7 @@ export default function PlansPage() {
  </div>
  </div>
  </div>
- <div>
- <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('ucretsiz_siparis_i_lk_x_adet')}</label>
- <input
- type="number"
- value={(formData as any).freeOrderCount ?? 0}
- onChange={e => setFormData({ ...formData, freeOrderCount: parseInt(e.target.value) || 0 } as any)}
- className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
- placeholder="0"
- />
- </div>
- <div>
- <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('kampanya_push_gonderim_limiti')}</label>
- <input
- type="number"
- value={formData.campaignLimit || ''}
- onChange={e => setFormData({ ...formData, campaignLimit: e.target.value ? parseInt(e.target.value) : null })}
- className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
- placeholder="Opsiyonel"
- />
- </div>
+
 
  {/* Sipariş Başı Ücret */}
  <div className="col-span-2">
@@ -715,82 +666,349 @@ export default function PlansPage() {
  </div>
  </div>
 
- {/* Masa Rezervasyonu */}
- <div className="col-span-2">
- <div className="flex items-center justify-between mb-2">
- <label className="text-xs font-medium text-pink-800 dark:text-pink-400">🍽️ Masa Rezervasyonu</label>
- <label className="flex items-center cursor-pointer">
- <div className="relative">
- <input
- type="checkbox"
- className="sr-only"
- checked={formData.features?.tableReservation || false}
- onChange={e => setFormData({ ...formData, features: { ...formData.features!, tableReservation: e.target.checked } })}
- />
- <div className={`w-9 h-5 rounded-full transition-colors ${formData.features?.tableReservation ? 'bg-pink-600' : 'bg-gray-700'}`}>
- <div className={`absolute top-0.5 w-4 h-4 bg-card rounded-full transition-all ${formData.features?.tableReservation ? 'left-4' : 'left-0.5'}`}></div>
- </div>
- </div>
- <span className="ml-2 text-xs text-muted-foreground">{formData.features?.tableReservation ? t('aktif') : t('kapali')}</span>
- </label>
- </div>
- {formData.features?.tableReservation && (
- <div className="grid grid-cols-2 gap-3 bg-background/50 p-3 rounded-lg border border-pink-900/30">
- <div>
- <label className="block text-xs text-muted-foreground/80 mb-1">{t('dahil_masa_sayisi')}</label>
- <div className="flex gap-2">
- <input
- type="number"
- value={(formData as any).tableReservationLimit === null ? '' : (formData as any).tableReservationLimit}
- onChange={e => setFormData({ ...formData, tableReservationLimit: e.target.value ? parseInt(e.target.value) : null } as any)}
- disabled={(formData as any).tableReservationLimit === null}
- className="flex-1 bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm disabled:opacity-50"
- placeholder="Limit"
- />
- <button
- type="button"
- onClick={() => setFormData(p => ({ ...p, tableReservationLimit: (p as any).tableReservationLimit === null ? 50 : null } as any))}
- className={`px-2 rounded border text-xs font-bold ${(formData as any).tableReservationLimit === null ? 'bg-pink-600 border-pink-500 text-white' : 'bg-card border-gray-600 text-muted-foreground'}`}
- >
- ∞
- </button>
- </div>
- </div>
- <div>
- <label className="block text-xs text-muted-foreground/80 mb-1">{t('asim_ucreti')}</label>
- <input
- type="number"
- step="0.01"
- value={(formData as any).tableReservationOverageFee ?? 0}
- onChange={e => setFormData({ ...formData, tableReservationOverageFee: parseFloat(e.target.value) } as any)}
- className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm"
- placeholder="0.50"
- />
- </div>
- </div>
- )}
- </div>
  </div>
  </div>
 
- {/* Plan Durumu - Basitleştirilmiş */}
+  {/* 3. Personel & Vardiya Yönetimi */}
+  <div className="bg-card/50 p-5 rounded-xl border border-border/50">
+    <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
+      <span className="w-1 h-6 bg-cyan-500 rounded-full"></span>
+      👥 Personel & Vardiya Yönetimi
+    </h3>
+    <div className="grid grid-cols-2 gap-4">
+       <div>
+         <label className="block text-xs font-medium text-muted-foreground mb-1.5">Personel Limiti</label>
+         <div className="flex gap-2">
+            <input
+               type="number"
+               value={formData.personnelLimit === null ? '' : formData.personnelLimit}
+               onChange={e => setFormData({ ...formData, personnelLimit: e.target.value ? parseInt(e.target.value) : null })}
+               placeholder={t('sinirsiz')}
+               disabled={formData.personnelLimit === null}
+               className="w-full bg-background border border-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
+            />
+            <button
+               type="button"
+               onClick={() => setFormData(p => ({ ...p, personnelLimit: p.personnelLimit === null ? 3 : null }))}
+               className={`px-4 py-2 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${formData.personnelLimit === null ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+            >
+               ∞
+            </button>
+         </div>
+       </div>
+       <div>
+         <label className="block text-xs font-medium text-muted-foreground mb-1.5">Personel Aşım Ücreti ({globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')})</label>
+         <input
+            type="number"
+            step="0.01"
+            value={formData.personnelOverageFee ?? 0}
+            onChange={e => setFormData({ ...formData, personnelOverageFee: parseFloat(e.target.value) || 0 })}
+            className="w-full bg-background border border-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+            placeholder="Opsiyonel"
+         />
+       </div>
+       <div className="col-span-2 pt-2 border-t border-border/50 mt-2">
+         <label className="flex items-center cursor-pointer group">
+            <div className="relative flex items-center">
+               <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={(formData.features as any)?.staffShiftTracking || false}
+                  onChange={e => setFormData({ ...formData, features: { ...formData.features!, staffShiftTracking: e.target.checked } })}
+               />
+               <div className="w-10 h-5 bg-gray-700 peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-600"></div>
+            </div>
+            <span className="ml-3 text-sm font-medium text-cyan-800 dark:text-cyan-400 group-hover:text-white transition-colors">⏱️ Vardiya Takibi & Export</span>
+         </label>
+         <p className="text-[10px] text-muted-foreground/70 mt-1 ml-[52px]">İşletmenin kendi personellerinin vardiyalarını oluşturması ve saat bazlı takibini sağlar.</p>
+       </div>
+    </div>
+  </div>
+
+  {/* 4. Masa & Rezervasyon Modülü */}
+  <div className="bg-card/50 p-5 rounded-xl border border-border/50">
+    <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
+      <span className="w-1 h-6 bg-pink-500 rounded-full"></span>
+      🍽️ Masa & Rezervasyon
+    </h3>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-3">
+        {/* Masada Sipariş (QR Kod) */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={(formData.features as any)?.dineInQR || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, dineInQR: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-amber-800 dark:text-amber-400 group-hover:text-white transition-colors">{t('masada_siparis_qr_kod')}</span>
+        </label>
+
+        {/* Garson Siparişi */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={(formData.features as any)?.waiterOrder || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, waiterOrder: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-teal-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-teal-400 group-hover:text-white transition-colors">{t('garson_siparis')}</span>
+        </label>
+
+        {/* Masada Grup Siparişi */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={(formData.features as any)?.groupOrderTable || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, groupOrderTable: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-orange-800 dark:text-orange-400 group-hover:text-white transition-colors">🪑 Masada Grup Siparişi</span>
+        </label>
+
+        {/* Masa Rezervasyonu Sistemi */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={formData.features?.tableReservation || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, tableReservation: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-pink-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-pink-800 dark:text-pink-400 group-hover:text-white transition-colors">Masa Rezervasyonu Sistemi</span>
+        </label>
+      </div>
+
+      {formData.features?.tableReservation && (
+        <div className="bg-background/50 p-4 rounded-xl border border-pink-900/30">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Fiyatlandırma Modeli (Sektör Standardı)</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['free', 'per_cover', 'per_reservation'] as const).map(model => (
+                <button
+                  key={model}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, tableReservationModel: model } as any)}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${(formData as any).tableReservationModel === model || (model === 'free' && !(formData as any).tableReservationModel) ? 'bg-pink-600 text-white shadow-md' : 'bg-card text-muted-foreground border border-border hover:bg-pink-900/20'}`}
+                >
+                  {model === 'free' ? 'Ücretsiz (Sabit)' : model === 'per_cover' ? 'Kişi Başı Ücret' : 'Masa Başı Ücret'}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+              {((formData as any).tableReservationModel || 'free') === 'free' ? 'Rezervasyonlar işletme planına dahildir, ekstra komisyon alınmaz.' : ((formData as any).tableReservationModel === 'per_cover' ? 'OpenTable ve TheFork standardı; rezerve edilen her misafir (cover) başına ücret alınır.' : 'Misafir sayısından bağımsız, oluşturulan her masa rezervasyonu için sabit ücret alınır.')}
+            </p>
+          </div>
+
+          {((formData as any).tableReservationModel === 'per_cover' || (formData as any).tableReservationModel === 'per_reservation') && (
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50 mt-4">
+              <div>
+                <label className="block text-xs text-muted-foreground/80 mb-1.5">Ücret Tutarı ({globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')})</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={(formData as any).tableReservationFee ?? 0.50}
+                  onChange={e => setFormData({ ...formData, tableReservationFee: parseFloat(e.target.value) || 0 } as any)}
+                  className="w-full bg-card border border-pink-900/40 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                  placeholder="0.50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground/80 mb-1.5">Aylık Ücretsiz Kota</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={(formData as any).tableReservationFreeQuota === null ? '' : ((formData as any).tableReservationFreeQuota ?? 0)}
+                    onChange={e => setFormData({ ...formData, tableReservationFreeQuota: e.target.value ? parseInt(e.target.value) : null } as any)}
+                    disabled={(formData as any).tableReservationFreeQuota === null}
+                    className="flex-1 bg-card border border-pink-900/40 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
+                    placeholder="0"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, tableReservationFreeQuota: (p as any).tableReservationFreeQuota === null ? 0 : null } as any))}
+                    className={`px-4 py-2 rounded-lg border text-xs font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${(formData as any).tableReservationFreeQuota === null ? 'bg-pink-600 border-pink-500 text-white' : 'bg-card border-gray-600 text-muted-foreground'}`}
+                  >
+                    ∞
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/70 mt-1">İlk X {(formData as any).tableReservationModel === 'per_cover' ? 'kişi' : 'rezervasyon'} ücretsiz.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+
+
+  {/* 4. Masa & Rezervasyon Modülü */}
+  <div className="bg-card/50 p-5 rounded-xl border border-border/50">
+    <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
+      <span className="w-1 h-6 bg-pink-500 rounded-full"></span>
+      🍽️ Masa & Rezervasyon
+    </h3>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-3">
+        {/* Masada Sipariş (QR Kod) */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={(formData.features as any)?.dineInQR || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, dineInQR: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-amber-800 dark:text-amber-400 group-hover:text-white transition-colors">{t('masada_siparis_qr_kod')}</span>
+        </label>
+
+        {/* Garson Siparişi */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={(formData.features as any)?.waiterOrder || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, waiterOrder: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-teal-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-teal-400 group-hover:text-white transition-colors">{t('garson_siparis')}</span>
+        </label>
+
+        {/* Masada Grup Siparişi */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={(formData.features as any)?.groupOrderTable || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, groupOrderTable: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-orange-800 dark:text-orange-400 group-hover:text-white transition-colors">🪑 Masada Grup Siparişi</span>
+        </label>
+
+        {/* Masa Rezervasyonu Sistemi */}
+        <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 transition-all cursor-pointer group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={formData.features?.tableReservation || false}
+              onChange={e => setFormData({ ...formData, features: { ...formData.features!, tableReservation: e.target.checked } })}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-pink-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-pink-800 dark:text-pink-400 group-hover:text-white transition-colors">Masa Rezervasyonu Sistemi</span>
+        </label>
+      </div>
+
+      {formData.features?.tableReservation && (
+        <div className="bg-background/50 p-4 rounded-xl border border-pink-900/30">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Fiyatlandırma Modeli (Sektör Standardı)</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['free', 'per_cover', 'per_reservation'] as const).map(model => (
+                <button
+                  key={model}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, tableReservationModel: model } as any)}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${(formData as any).tableReservationModel === model || (model === 'free' && !(formData as any).tableReservationModel) ? 'bg-pink-600 text-white shadow-md' : 'bg-card text-muted-foreground border border-border hover:bg-pink-900/20'}`}
+                >
+                  {model === 'free' ? 'Ücretsiz (Sabit)' : model === 'per_cover' ? 'Kişi Başı Ücret' : 'Masa Başı Ücret'}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+              {`${((formData as any).tableReservationModel || 'free') === 'free' ? 'Rezervasyonlar işletme planına dahildir, ekstra komisyon alınmaz.' : ((formData as any).tableReservationModel === 'per_cover' ? 'OpenTable ve TheFork standardı; rezerve edilen her misafir (cover) başına ücret alınır.' : 'Misafir sayısından bağımsız, oluşturulan her masa rezervasyonu için sabit ücret alınır.')}`}
+            </p>
+          </div>
+
+          {((formData as any).tableReservationModel === 'per_cover' || (formData as any).tableReservationModel === 'per_reservation') && (
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50 mt-4">
+              <div>
+                <label className="block text-xs text-muted-foreground/80 mb-1.5">Ücret Tutarı ({globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')})</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={(formData as any).tableReservationFee ?? 0.50}
+                  onChange={e => setFormData({ ...formData, tableReservationFee: parseFloat(e.target.value) || 0 } as any)}
+                  className="w-full bg-card border border-pink-900/40 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                  placeholder="0.50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground/80 mb-1.5">Aylık Ücretsiz Kota</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={(formData as any).tableReservationFreeQuota === null ? '' : ((formData as any).tableReservationFreeQuota ?? 0)}
+                    onChange={e => setFormData({ ...formData, tableReservationFreeQuota: e.target.value ? parseInt(e.target.value) : null } as any)}
+                    disabled={(formData as any).tableReservationFreeQuota === null}
+                    className="flex-1 bg-card border border-pink-900/40 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
+                    placeholder="0"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, tableReservationFreeQuota: (p as any).tableReservationFreeQuota === null ? 0 : null } as any))}
+                    className={`px-4 py-2 rounded-lg border text-xs font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${(formData as any).tableReservationFreeQuota === null ? 'bg-pink-600 border-pink-500 text-white' : 'bg-card border-gray-600 text-muted-foreground'}`}
+                  >
+                    ∞
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/70 mt-1">İlk X {(formData as any).tableReservationModel === 'per_cover' ? 'kişi' : 'rezervasyon'} ücretsiz.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Plan Durumu - Basitleştirilmiş */}
  <div className="bg-card/50 p-4 rounded-xl border border-border/50">
- <label className="flex items-center cursor-pointer p-3 bg-background rounded-lg border border-border hover:border-gray-500 transition-all">
- <div className="mr-3">
- <div className={`w-10 h-5 rounded-full relative transition-colors ${formData.isActive ? 'bg-green-600' : 'bg-gray-600'}`}>
- <div className={`absolute top-1 w-3 h-3 bg-card rounded-full transition-all ${formData.isActive ? 'left-6' : 'left-1'}`}></div>
- </div>
- </div>
- <span className={`text-sm font-medium ${formData.isActive ? 'text-white' : 'text-muted-foreground'}`}>
- {formData.isActive ? t('plan_aktif') : t('plan_pasif')}
- </span>
- <input
- type="checkbox"
- className="hidden"
- checked={formData.isActive}
- onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
- />
- </label>
+ {(() => {
+   const isFreePlan = formData.monthlyFee === 0 || formData.code?.toLowerCase().includes('free') || formData.id?.toLowerCase().includes('free');
+   return (
+     <label className={`flex items-center p-3 bg-background rounded-lg border border-border transition-all ${isFreePlan && formData.isActive ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:border-gray-500'}`}>
+       <div className="mr-3">
+         <div className={`w-10 h-5 rounded-full relative transition-colors ${formData.isActive ? 'bg-green-600' : 'bg-gray-600'} ${isFreePlan && formData.isActive ? 'opacity-50' : ''}`}>
+           <div className={`absolute top-1 w-3 h-3 bg-card rounded-full transition-all ${formData.isActive ? 'left-6' : 'left-1'}`}></div>
+         </div>
+       </div>
+       <div className="flex flex-col">
+         <span className={`text-sm font-medium ${formData.isActive ? 'text-white' : 'text-muted-foreground'}`}>
+           {formData.isActive ? t('plan_aktif') : t('plan_pasif')}
+         </span>
+         {isFreePlan && (
+           <span className="text-[10px] text-amber-500 mt-0.5">Ücretsiz/Temel planlar deaktif edilemez.</span>
+         )}
+       </div>
+       <input
+         type="checkbox"
+         className="hidden"
+         checked={formData.isActive}
+         disabled={isFreePlan && formData.isActive}
+         onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+       />
+     </label>
+   );
+ })()}
  </div>
  </div>
 
@@ -812,11 +1030,7 @@ export default function PlansPage() {
  { key: 'onlinePayment', label: t('online_odeme_kart_apple'), color: 'text-purple-800 dark:text-purple-400' },
  { key: 'marketing', label: 'Marketing (Banner/Vitrin)', color: 'text-purple-800 dark:text-purple-400' },
  { key: 'liveCourierTracking', label: t('canli_kurye_takibi'), color: 'text-purple-800 dark:text-purple-400' },
- { key: 'dineInQR', label: t('masada_siparis_qr_kod'), color: 'text-amber-800 dark:text-amber-400' },
- { key: 'waiterOrder', label: t('garson_siparis'), color: 'text-teal-400' },
  { key: 'groupOrderLink', label: '🔗 Link ile Grup Siparişi', color: 'text-pink-800 dark:text-pink-400' },
- { key: 'groupOrderTable', label: '🪑 Masada Grup Siparişi', color: 'text-orange-800 dark:text-orange-400' },
- { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-800 dark:text-cyan-400' },
  { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-muted-foreground', invert: true },
  ].map((feature) => (
  <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
@@ -866,13 +1080,13 @@ export default function PlansPage() {
  <div className="p-4 bg-background/50 space-y-3">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  {[
- { key: 'campaigns', label: '📢 Kampanya Yönetimi', color: 'text-purple-800 dark:text-purple-400', desc: 'İndirim/fırsat kampanyaları' },
- { key: 'sponsoredProducts', label: '⭐ Sponsorlu Ürünler', color: 'text-yellow-800 dark:text-yellow-400', desc: 'Öne çıkan ürünler', hasSubFields: true },
- { key: 'couponSystem', label: '🎟️ Kupon Sistemi', color: 'text-blue-800 dark:text-blue-400', desc: 'Promo kodları & kuponlar' },
- { key: 'referralSystem', label: '🤝 Referral (Davet Et)', color: 'text-pink-800 dark:text-pink-400', desc: 'Davet et kazan sistemi' },
- { key: 'firstOrderDiscount', label: '🎁 İlk Sipariş İndirimi', color: 'text-green-800 dark:text-green-400', desc: 'Yeni müşteri teşviki' },
- { key: 'freeDrink', label: '🍺 Gratis İçecek', color: 'text-cyan-800 dark:text-cyan-400', desc: 'Ücretsiz içecek modülü' },
- { key: 'donationRoundUp', label: '💚 Bağış Yuvarlama', color: 'text-emerald-800 dark:text-emerald-400', desc: 'Checkout bağış yuvarlama' },
+ { key: 'campaigns', label: 'Kampanya Yönetimi', color: 'text-purple-800 dark:text-purple-400', desc: 'İndirim/fırsat kampanyaları' },
+ { key: 'sponsoredProducts', label: 'Sponsorlu Ürünler', color: 'text-yellow-800 dark:text-yellow-400', desc: 'Öne çıkan ürünler', hasSubFields: true },
+ { key: 'couponSystem', label: 'Kupon Sistemi', color: 'text-blue-800 dark:text-blue-400', desc: 'Promo kodları & kuponlar' },
+ { key: 'referralSystem', label: 'Referral (Davet Et)', color: 'text-pink-800 dark:text-pink-400', desc: 'Davet et kazan sistemi' },
+ { key: 'firstOrderDiscount', label: 'İlk Sipariş İndirimi', color: 'text-green-800 dark:text-green-400', desc: 'Yeni müşteri teşviki' },
+ { key: 'freeDrink', label: 'Gratis İçecek', color: 'text-cyan-800 dark:text-cyan-400', desc: 'Ücretsiz içecek modülü' },
+ { key: 'donationRoundUp', label: 'Bağış Yuvarlama', color: 'text-emerald-800 dark:text-emerald-400', desc: 'Checkout bağış yuvarlama' },
  ].map((promo) => (
  <label key={promo.key} className="flex items-start p-3 rounded-lg bg-card/50 border border-border/50 hover:border-orange-200 dark:border-orange-700/30 hover:bg-card transition-all cursor-pointer group">
  <div className="relative flex items-center mt-0.5">
@@ -895,7 +1109,7 @@ export default function PlansPage() {
  {/* Sponsored Products Sub-Settings — inside promo accordion */}
  {(formData.features as any)?.sponsoredProducts && (
  <div className="bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/30 rounded-xl p-4">
- <h4 className="text-xs font-bold text-yellow-800 dark:text-yellow-400 uppercase tracking-widest mb-3">⭐ {t('one_cikan_urun_ayarlari')}</h4>
+ <h4 className="text-xs font-bold text-yellow-800 dark:text-yellow-400 uppercase tracking-widest mb-3">{t('one_cikan_urun_ayarlari')}</h4>
  <div className="grid grid-cols-2 gap-4">
  <div>
  <label className="block text-xs text-muted-foreground mb-1.5">{t('siparis_basi_ucret')}</label>
@@ -935,6 +1149,40 @@ export default function PlansPage() {
  </div>
  </div>
  )}
+
+ {/* Campaigns Sub-Settings */}
+ {(formData.features as any)?.campaigns && (
+ <div className="bg-purple-900/10 border border-purple-200 dark:border-purple-700/30 rounded-xl p-4 mt-3">
+ <h4 className="text-xs font-bold text-purple-800 dark:text-purple-400 uppercase tracking-widest mb-3">Kampanya Yönetimi Ayarları</h4>
+ <div>
+ <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('kampanya_push_gonderim_limiti')}</label>
+ <input
+ type="number"
+ value={formData.campaignLimit || ''}
+ onChange={e => setFormData({ ...formData, campaignLimit: e.target.value ? parseInt(e.target.value) : null })}
+ className="w-full bg-background border border-purple-200 dark:border-purple-700/40 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+ placeholder="Opsiyonel (Örn: 5)"
+ />
+ <p className="text-xs text-muted-foreground/80 mt-1">Bu işletme ayda en fazla kaç kez push bildirimli kampanya çıkabilir?</p>
+ </div>
+ </div>
+ )}
+
+ {/* Free Orders (First N Orders Commission Free) */}
+ <div className="bg-emerald-900/10 border border-emerald-200 dark:border-emerald-700/30 rounded-xl p-4 mt-3">
+ <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-3">Hoşgeldin Teşviki</h4>
+ <div>
+ <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('ucretsiz_siparis_i_lk_x_adet')}</label>
+ <input
+ type="number"
+ value={(formData as any).freeOrderCount ?? 0}
+ onChange={e => setFormData({ ...formData, freeOrderCount: parseInt(e.target.value) || 0 } as any)}
+ className="w-full bg-background border border-emerald-200 dark:border-emerald-700/40 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+ placeholder="0"
+ />
+ <p className="text-xs text-muted-foreground/80 mt-1">İşletme platforma katıldığında, ilk X adet siparişinden komisyon alınmaz.</p>
+ </div>
+ </div>
  </div>
  )}
  </div>
@@ -974,7 +1222,7 @@ export default function PlansPage() {
  type="text"
  value={formData.stripeProductId || ''}
  onChange={e => setFormData({ ...formData, stripeProductId: e.target.value })}
- className="bg-background border border-border rounded px-2 py-1.5 text-xs font-mono text-muted-foreground focus:text-white focus:border-blue-500 outline-none"
+ className="bg-background border border-border rounded px-2 py-1.5 text-xs font-mono text-muted-foreground focus:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
  placeholder={t('product_id_prod')}
  />
  <input
@@ -984,7 +1232,7 @@ export default function PlansPage() {
  ...formData,
  stripePriceId: { ...formData.stripePriceId, monthly: e.target.value } as any
  })}
- className="bg-background border border-border rounded px-2 py-1.5 text-xs font-mono text-muted-foreground focus:text-white focus:border-blue-500 outline-none"
+ className="bg-background border border-border rounded px-2 py-1.5 text-xs font-mono text-muted-foreground focus:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
  placeholder={t('monthly_price_id')}
  />
  </div>
