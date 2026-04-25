@@ -1061,19 +1061,33 @@ export default function PlansPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
                 { key: 'delivery', label: 'Kurier / Lieferung', color: 'text-purple-800 dark:text-purple-400' },
-                { key: 'liveCourierTracking', label: 'Live-Kurierverfolgung', color: 'text-purple-800 dark:text-purple-400' },
+                { key: 'liveCourierTracking', label: 'Live-Kurierverfolgung', color: 'text-purple-800 dark:text-purple-400', disabled: !(formData.features as any)?.delivery },
               ].map((feature) => (
-                <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
+                <label key={feature.key} className={`flex items-center p-3 rounded-lg border transition-all ${feature.disabled ? 'opacity-50 cursor-not-allowed bg-card/50 border-border/50' : 'bg-background border-border hover:border-gray-600 hover:bg-card cursor-pointer group'}`}>
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
                       className="peer sr-only"
-                      checked={(formData.features as any)?.[feature.key]}
-                      onChange={e => setFormData({ ...formData, features: { ...formData.features!, [feature.key]: e.target.checked } })}
+                      disabled={feature.disabled}
+                      checked={feature.disabled ? false : (formData.features as any)?.[feature.key]}
+                      onChange={e => {
+                        if (feature.key === 'delivery' && !e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            features: {
+                              ...formData.features!,
+                              delivery: false,
+                              liveCourierTracking: false
+                            }
+                          });
+                        } else {
+                          setFormData({ ...formData, features: { ...formData.features!, [feature.key]: e.target.checked } });
+                        }
+                      }}
                     />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${feature.disabled ? 'bg-gray-800' : 'bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 peer-checked:bg-purple-600'}`}></div>
                   </div>
-                  <span className={`ml-3 text-sm font-medium ${feature.color} group-hover:text-white transition-colors`}>{feature.label}</span>
+                  <span className={`ml-3 text-sm font-medium ${feature.color} ${!feature.disabled ? 'group-hover:text-white' : ''} transition-colors`}>{feature.label}</span>
                 </label>
               ))}
             </div>
