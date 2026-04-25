@@ -832,7 +832,7 @@ export default function PlansPage() {
                     value={(formData as any).tableReservationFreeQuota === null ? '' : ((formData as any).tableReservationFreeQuota ?? 0)}
                     onChange={e => setFormData({ ...formData, tableReservationFreeQuota: e.target.value ? parseInt(e.target.value) : null } as any)}
                     disabled={(formData as any).tableReservationFreeQuota === null}
-                    className="flex-1 bg-card border border-pink-900/40 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
+                    className="flex-1 min-w-0 bg-card border border-pink-900/40 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
                     placeholder="0"
                   />
                   <button
