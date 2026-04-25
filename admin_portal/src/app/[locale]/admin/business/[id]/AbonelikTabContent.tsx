@@ -22,10 +22,6 @@ export default function AbonelikTabContent({
   const [successModalData, setSuccessModalData] = useState<{planName: string, date: Date} | null>(null);
   const tBiz = useTranslations('AdminBusiness');
 
-  // Group plans
-  const freePlans = availablePlans.filter((p: any) => p.monthlyFee === 0 || p.code === 'free');
-  const paidPlans = availablePlans.filter((p: any) => p.monthlyFee > 0 && p.code !== 'free');
-
   const currentPlanCode = business?.subscriptionPlan || "free";
   const currentPlan = availablePlans.find((p: any) => p.code === currentPlanCode);
 
@@ -41,6 +37,19 @@ export default function AbonelikTabContent({
   const formatMoney = (amount: number, currency: string) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currency || 'EUR' }).format(amount);
   };
+
+  const calculateTotalMonthlyFee = (plan: any) => {
+    if (!plan) return 0;
+    let total = plan.monthlyFee || 0;
+    if (plan.features?.eslIntegration) {
+      total += plan.eslSystemMonthlyFee ?? 29.90;
+    }
+    return total;
+  };
+
+  // Group plans
+  const freePlans = availablePlans.filter((p: any) => calculateTotalMonthlyFee(p) === 0 || p.code === 'free');
+  const paidPlans = availablePlans.filter((p: any) => calculateTotalMonthlyFee(p) > 0 && p.code !== 'free');
 
   const getNextMonthFirstDay = () => {
     const today = new Date();
@@ -227,7 +236,7 @@ export default function AbonelikTabContent({
             <div className="flex-1 bg-background/50 rounded-lg p-4 border border-border">
               <p className="text-muted-foreground text-xs uppercase font-semibold">{t('mevcut_plan') || 'Mevcut Plan'}</p>
               <p className="text-foreground font-bold text-xl mt-1">{currentPlan?.name || currentPlanCode}</p>
-              <p className="text-muted-foreground text-sm">{currentPlan ? formatMoney(currentPlan.monthlyFee, currentPlan.currency) : '€0,00'} /ay</p>
+              <p className="text-muted-foreground text-sm">{currentPlan ? formatMoney(calculateTotalMonthlyFee(currentPlan), currentPlan.currency) : '€0,00'} /ay</p>
             </div>
             <div className="flex items-center justify-center">
               <span className="text-2xl text-muted-foreground">→</span>
@@ -238,7 +247,7 @@ export default function AbonelikTabContent({
                 {availablePlans.find((p:any) => p.code === selectedPlanCode)?.name}
               </p>
               <p className="text-blue-400/80 text-sm">
-                {formatMoney(availablePlans.find((p:any) => p.code === selectedPlanCode)?.monthlyFee || 0, 'EUR')} /ay
+                {formatMoney(calculateTotalMonthlyFee(availablePlans.find((p:any) => p.code === selectedPlanCode)), 'EUR')} /ay
               </p>
             </div>
           </div>
@@ -289,7 +298,7 @@ export default function AbonelikTabContent({
                   <div className="flex-1">
                     <h3 className="text-3xl font-bold text-foreground mb-2">{plan.name}</h3>
                     <p className="text-3xl font-black text-foreground mb-4">
-                      {formatMoney(plan.monthlyFee, plan.currency)} <span className="text-lg text-muted-foreground font-medium">/ay</span>
+                      {formatMoney(calculateTotalMonthlyFee(plan), plan.currency)} <span className="text-lg text-muted-foreground font-medium">/ay</span>
                     </p>
                     <p className="text-muted-foreground text-sm mb-6 max-w-md">{plan.description}</p>
                     
@@ -351,7 +360,7 @@ export default function AbonelikTabContent({
                   <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
                   <div className="mb-4">
                     <span className="text-3xl font-black text-foreground">
-                      {formatMoney(plan.monthlyFee, plan.currency)}
+                      {formatMoney(calculateTotalMonthlyFee(plan), plan.currency)}
                     </span>
                     <span className="text-muted-foreground text-sm font-medium"> /ay</span>
                   </div>
@@ -432,9 +441,15 @@ export default function AbonelikTabContent({
 
 // Sub-component for features list
 function PlanFeaturesList({ globalKeys, planFeatures, t }: { globalKeys: string[], planFeatures: any, t: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const INITIAL_LIMIT = 8;
+  
+  const displayKeys = expanded ? globalKeys : globalKeys.slice(0, INITIAL_LIMIT);
+  const hasMore = globalKeys.length > INITIAL_LIMIT;
+
   return (
     <div className="space-y-3">
-      {globalKeys.map(key => {
+      {displayKeys.map(key => {
         const hasFeature = planFeatures && planFeatures[key] === true;
         return (
           <div key={key} className={`flex items-center gap-3 ${hasFeature ? '' : 'opacity-40'}`}>
@@ -451,6 +466,15 @@ function PlanFeaturesList({ globalKeys, planFeatures, t }: { globalKeys: string[
           </div>
         );
       })}
+      
+      {hasMore && (
+        <button 
+          onClick={() => setExpanded(!expanded)}
+          className="text-blue-500 hover:text-blue-400 text-xs font-medium pt-2 w-full text-left flex items-center gap-1"
+        >
+          {expanded ? (t('daha_az_goster') || 'Daha Az Göster') : (t('tum_ozellikleri_goster', { count: globalKeys.length - INITIAL_LIMIT }) || `Tüm Özellikleri Göster (${globalKeys.length - INITIAL_LIMIT} daha)`)}
+        </button>
+      )}
     </div>
   );
 }

@@ -551,123 +551,7 @@ export default function PlansPage() {
  </div>
  </div>
 
- {/* 2. Limits & Rules */}
- <div className="bg-card/50 p-5 rounded-xl border border-border/50">
- <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
- <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
- {t('limitler_hizmet_sartlari')}
- </h3>
- <div className="grid grid-cols-2 gap-4">
- <div>
- <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('urun_limiti')}</label>
- <div className="flex gap-2">
- <input
- type="number"
- value={formData.productLimit === null ? '' : formData.productLimit}
- onChange={e => setFormData({ ...formData, productLimit: e.target.value ? parseInt(e.target.value) : null })}
- placeholder={t('sinirsiz')}
- disabled={formData.productLimit === null}
- className="w-full bg-background border border-gray-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
- />
- <button
- type="button"
- onClick={() => setFormData(p => ({ ...p, productLimit: p.productLimit === null ? 30 : null }))}
- className={`px-3 py-2 shrink-0 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
- >
- ∞
- </button>
- </div>
- </div>
- <div>
- <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('siparis_limiti_ay')}</label>
- <div className="flex gap-2">
- <input
- type="number"
- value={formData.orderLimit === null ? '' : formData.orderLimit}
- onChange={e => setFormData({ ...formData, orderLimit: e.target.value ? parseInt(e.target.value) : null })}
- placeholder={t('sinirsiz')}
- disabled={formData.orderLimit === null}
- className="w-full bg-background border border-gray-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
- />
- <button
- type="button"
- onClick={() => setFormData(p => ({ ...p, orderLimit: p.orderLimit === null ? 100 : null }))}
- className={`px-3 py-2 shrink-0 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
- >
- ∞
- </button>
- </div>
- </div>
 
- {/* Kurye Provizyon Sistemi */}
- <div className="col-span-2">
- <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
- <div className="grid grid-cols-3 gap-3">
- <div className="bg-background rounded-lg p-3 border border-green-600/40">
- <label className="block text-xs text-green-800 dark:text-green-400 mb-1">Gel-Al</label>
- <input
- type="number"
- step="0.1"
- value={(formData as any).commissionClickCollect ?? 5}
- onChange={e => setFormData({ ...formData, commissionClickCollect: parseFloat(e.target.value) } as any)}
- className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
- />
- </div>
- <div className="bg-background rounded-lg p-3 border border-blue-600/40">
- <label className="block text-xs text-blue-800 dark:text-blue-400 mb-1">{t('kendi_kurye')}</label>
- <input
- type="number"
- step="0.1"
- value={(formData as any).commissionOwnCourier ?? 4}
- onChange={e => setFormData({ ...formData, commissionOwnCourier: parseFloat(e.target.value) } as any)}
- className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
- />
- </div>
- <div className="bg-background rounded-lg p-3 border border-purple-600/40">
- <label className="block text-xs text-purple-800 dark:text-purple-400 mb-1">{t('lokma_kurye')}</label>
- <input
- type="number"
- step="0.1"
- value={(formData as any).commissionLokmaCourier ?? 7}
- onChange={e => setFormData({ ...formData, commissionLokmaCourier: parseFloat(e.target.value) } as any)}
- className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
- />
- </div>
- </div>
- </div>
-
-
- {/* Sipariş Başı Ücret */}
- <div className="col-span-2">
- <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('siparis_basi_ucret')}</label>
- <div className="flex gap-2">
- <div className="relative flex bg-background rounded-lg border border-border overflow-hidden">
- {(['none', 'percentage', 'fixed'] as const).map(type => (
- <button
- key={type}
- type="button"
- onClick={() => setFormData({ ...formData, perOrderFeeType: type } as any)}
- className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:bg-card'}`}
- >
- {type === 'none' ? t('yok') : type === 'percentage' ? '%' : globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}
- </button>
- ))}
- </div>
- {(formData as any).perOrderFeeType !== 'none' && (
- <input
- type="number"
- step={(formData as any).perOrderFeeType === 'percentage' ? '0.1' : '0.01'}
- value={(formData as any).perOrderFeeAmount ?? 0}
- onChange={e => setFormData({ ...formData, perOrderFeeAmount: parseFloat(e.target.value) } as any)}
- className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
- placeholder={(formData as any).perOrderFeeType === 'percentage' ? '5%' : `1.00 ${globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}`}
- />
- )}
- </div>
- </div>
-
- </div>
- </div>
 
   {/* 3. Personel & Vardiya Yönetimi */}
   <div className="bg-card/50 p-5 rounded-xl border border-border/50">
@@ -891,8 +775,8 @@ export default function PlansPage() {
  {/* RIGHT COLUMN: Features, Stripe, Integrations (7 cols) */}
  <div className="lg:col-span-12 xl:col-span-7 space-y-6">
 
- {/* 3. Features Grid */}
- <div className="bg-card/50 p-6 rounded-xl border border-border/50 h-full">
+ {/* 3. Features & Limits */}
+ <div className="bg-card/50 p-6 rounded-xl border border-border/50">
  <h3 className="text-foreground font-semibold mb-6 flex items-center gap-2 border-b border-border pb-4">
  <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
  {t('ozellikler_moduller')}
@@ -925,7 +809,7 @@ export default function PlansPage() {
  <button
  type="button"
  onClick={() => setFormData({ ...formData, _promoExpanded: !(formData as any)._promoExpanded } as any)}
- className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-100 dark:from-orange-900/20 to-amber-900/10 hover:from-orange-100 dark:from-orange-900/30 transition-all"
+ className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-100 dark:from-orange-900/20 to-amber-900/10 transition-all"
  >
  <div className="flex items-center gap-3">
  <span className="text-sm font-bold text-orange-300 uppercase tracking-wide">Promosyon & Pazarlama</span>
@@ -1091,6 +975,122 @@ export default function PlansPage() {
                 </label>
               ))}
             </div>
+
+          {/* Limits & Rules moved here */}
+ <h3 className="text-foreground font-semibold mb-6 mt-8 pt-6 border-t border-border flex items-center gap-2">
+ <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
+ {t('limitler_hizmet_sartlari')}
+ </h3>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('urun_limiti')}</label>
+ <div className="flex gap-2">
+ <input
+ type="number"
+ value={formData.productLimit === null ? '' : formData.productLimit}
+ onChange={e => setFormData({ ...formData, productLimit: e.target.value ? parseInt(e.target.value) : null })}
+ placeholder={t('sinirsiz')}
+ disabled={formData.productLimit === null}
+ className="w-full bg-background border border-gray-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
+ />
+ <button
+ type="button"
+ onClick={() => setFormData(p => ({ ...p, productLimit: p.productLimit === null ? 30 : null }))}
+ className={`px-3 py-2 shrink-0 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+ >
+ ∞
+ </button>
+ </div>
+ </div>
+ <div>
+ <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('siparis_limiti_ay')}</label>
+ <div className="flex gap-2">
+ <input
+ type="number"
+ value={formData.orderLimit === null ? '' : formData.orderLimit}
+ onChange={e => setFormData({ ...formData, orderLimit: e.target.value ? parseInt(e.target.value) : null })}
+ placeholder={t('sinirsiz')}
+ disabled={formData.orderLimit === null}
+ className="w-full bg-background border border-gray-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50 transition-colors"
+ />
+ <button
+ type="button"
+ onClick={() => setFormData(p => ({ ...p, orderLimit: p.orderLimit === null ? 100 : null }))}
+ className={`px-3 py-2 shrink-0 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+ >
+ ∞
+ </button>
+ </div>
+ </div>
+
+ {/* Kurye Provizyon Sistemi */}
+ <div className="col-span-2">
+ <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
+ <div className="grid grid-cols-3 gap-3">
+ <div className="bg-background rounded-lg p-3 border border-green-600/40">
+ <label className="block text-xs text-green-800 dark:text-green-400 mb-1">Gel-Al</label>
+ <input
+ type="number"
+ step="0.1"
+ value={(formData as any).commissionClickCollect ?? 5}
+ onChange={e => setFormData({ ...formData, commissionClickCollect: parseFloat(e.target.value) } as any)}
+ className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
+ />
+ </div>
+ <div className="bg-background rounded-lg p-3 border border-blue-600/40">
+ <label className="block text-xs text-blue-800 dark:text-blue-400 mb-1">{t('kendi_kurye')}</label>
+ <input
+ type="number"
+ step="0.1"
+ value={(formData as any).commissionOwnCourier ?? 4}
+ onChange={e => setFormData({ ...formData, commissionOwnCourier: parseFloat(e.target.value) } as any)}
+ className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
+ />
+ </div>
+ <div className="bg-background rounded-lg p-3 border border-purple-600/40">
+ <label className="block text-xs text-purple-800 dark:text-purple-400 mb-1">{t('lokma_kurye')}</label>
+ <input
+ type="number"
+ step="0.1"
+ value={(formData as any).commissionLokmaCourier ?? 7}
+ onChange={e => setFormData({ ...formData, commissionLokmaCourier: parseFloat(e.target.value) } as any)}
+ className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
+ />
+ </div>
+ </div>
+ </div>
+
+
+ {/* Sipariş Başı Ücret */}
+ <div className="col-span-2">
+ <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('siparis_basi_ucret')}</label>
+ <div className="flex gap-2">
+ <div className="relative flex bg-background rounded-lg border border-border overflow-hidden">
+ {(['none', 'percentage', 'fixed'] as const).map(type => (
+ <button
+ key={type}
+ type="button"
+ onClick={() => setFormData({ ...formData, perOrderFeeType: type } as any)}
+ className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:bg-card'}`}
+ >
+ {type === 'none' ? t('yok') : type === 'percentage' ? '%' : globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}
+ </button>
+ ))}
+ </div>
+ {(formData as any).perOrderFeeType !== 'none' && (
+ <input
+ type="number"
+ step={(formData as any).perOrderFeeType === 'percentage' ? '0.1' : '0.01'}
+ value={(formData as any).perOrderFeeAmount ?? 0}
+ onChange={e => setFormData({ ...formData, perOrderFeeAmount: parseFloat(e.target.value) } as any)}
+ className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+ placeholder={(formData as any).perOrderFeeType === 'percentage' ? '5%' : `1.00 ${globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}`}
+ />
+ )}
+ </div>
+ </div>
+
+ </div>
           </div>
 
           {/* BUCHHALTUNG (Muhasebe) */}
