@@ -11,7 +11,8 @@ import { invoiceService } from '@/services/invoiceService';
 import { subscriptionService } from '@/services/subscriptionService';
 import { ButcherSubscriptionPlan } from '@/types';
 import { formatCurrency } from '@/utils/currency';
-import SubscriptionChangeModal from '@/components/admin/SubscriptionChangeModal';
+import { useTranslations } from 'next-intl';
+import AbonelikTabContent from '../admin/business/[id]/AbonelikTabContent';
 
 // Helper: Generate display features list from a Firestore plan
 function getPlanFeatures(plan: ButcherSubscriptionPlan): string[] {
@@ -269,39 +270,7 @@ export default function AccountPage() {
  setSaving(false);
  };
 
- // ═══════════════════════════════════════════════════════════════════
- // PLAN DEĞİŞİMİ (GELECEK AYIN 1'İ)
- // ═══════════════════════════════════════════════════════════════════
- const handleConfirmPlanChange = async (planCode: string) => {
- if (!business?.id) return;
- setSaving(true);
- try {
- const date = new Date();
- date.setMonth(date.getMonth() + 1);
- date.setDate(1);
- date.setHours(0, 0, 0, 0);
-
- const pendingPlanData = {
- planCode,
- effectiveDate: date
- };
-
- await updateDoc(doc(db, 'businesses', business.id), {
- pendingPlanChange: pendingPlanData,
- updatedAt: new Date()
- });
-
- setBusiness({ ...business, pendingPlanChange: pendingPlanData });
- setShowConfirmModal(false);
- setTargetPlan(null);
- alert(`Geçiş onaylandı. Yeni planınız ${date.toLocaleDateString('tr-TR')} tarihinde aktif olacak.`);
- } catch (error) {
- console.error('Plan geçişi hatası:', error);
- alert('Plan geçişi sırasında bir hata oluştu.');
- }
- setSaving(false);
- };
-
+ 
  // ═══════════════════════════════════════════════════════════════════
  // RENDER
  // ═══════════════════════════════════════════════════════════════════
@@ -370,7 +339,7 @@ export default function AccountPage() {
  {formatCurrency(planPrice, livePlan?.currency || business?.currency)}
  </p>
  <button
- onClick={() => setShowPlanModal(true)}
+ onClick={() => setActiveTab('subscription')}
  className="mt-3 px-5 py-2 bg-background/20 hover:bg-background/30 text-white rounded-lg font-medium transition"
  >
  🔄 Plan Değiştir
