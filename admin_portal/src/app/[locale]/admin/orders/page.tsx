@@ -200,6 +200,8 @@ export default function OrdersPage() {
 
  // Cancel modal states
  const [showCancelModal, setShowCancelModal] = useState(false);
+ const [showCancelledModal, setShowCancelledModal] = useState(false);
+ const [showCompletedModal, setShowCompletedModal] = useState(false);
  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
  const [cancelReason, setCancelReason] = useState('');
  const [showPrinterPanel, setShowPrinterPanel] = useState(false);
@@ -1013,8 +1015,18 @@ export default function OrdersPage() {
  const readyOrders = filteredOrders.filter(o => o.status === 'ready');
  // Note: 'served' orders (legacy dine-in) are included in completedOrders below
  const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
- const completedOrders = filteredOrders.filter(o => ['delivered', 'served', 'completed'].includes(o.status));
- const cancelledOrders = filteredOrders.filter(o => o.status === 'cancelled');
+  const completedOrders = filteredOrders.filter(o => {
+    if (!['delivered', 'served', 'completed'].includes(o.status)) return false;
+    const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    return createdAt >= startOfToday;
+  });
+  const cancelledOrders = filteredOrders.filter(o => {
+    if (o.status !== 'cancelled') return false;
+    const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return createdAt > sevenDaysAgo;
+  });
 
  // Update order status
  // When status is reset backward (pending/preparing/ready), clear courier assignment
@@ -1034,9 +1046,9 @@ export default function OrdersPage() {
  // Actual status update function
  const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string, unavailableItemsList?: { idx: number; name: string; quantity: number; price: number }[]) => {
  try {
- // Find the order to get info
- const order = allPendingOrders.find(o => o.id === orderId);
- const isReservation = order?.type === 'dine_in_preorder' || order?.type === 'dine_in';
+  // Find the order to get info
+  const order = filteredOrders.find(o => o.id === orderId) || orders.find(o => o.id === orderId);
+  const isReservation = order?.type === 'dine_in_preorder' || order?.type === 'dine_in';
 
  // Statuses that should clear courier assignment when set
  const unclamedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready'];
@@ -1099,7 +1111,7 @@ export default function OrdersPage() {
   ? doc(db, 'businesses', order.businessId, 'reservations', orderId)
   : isKermesAdmin
     ? doc(db, 'kermes_orders', orderId)
-    : doc(db, 'meat_orders', orderId);
+    : doc(db, 'businesses', order?.businessId || adminBusinessId || '', 'orders', orderId);
 
   await updateDoc(orderRef, updateData);
 
@@ -1296,7 +1308,7 @@ export default function OrdersPage() {
  ready: readyOrders.length,
  inTransit: inTransitOrders.length,
  completed: completedOrders.length,
- cancelled: filteredOrders.filter(o => o.status === 'cancelled').length,
+ cancelled: cancelledOrders.length,
  revenue: filteredOrders
  .filter(o => o.status === 'delivered')
  .reduce((sum, o) => sum + (o.total || 0), 0),
@@ -1425,6 +1437,14 @@ return (
  <option key={key} value={key}>{t(value.labelKey)}</option>
  ))}
  </select>
+
+ {/* Cancelled & Completed Modals Buttons */}
+ <button onClick={() => setShowCancelledModal(true)} className="px-3 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 dark:hover:bg-red-900/60 shadow-sm transition-colors flex items-center gap-1.5">
+   <span>İptal ({stats.cancelled})</span>
+ </button>
+ <button onClick={() => setShowCompletedModal(true)} className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-200 dark:hover:bg-emerald-900/60 shadow-sm transition-colors flex items-center gap-1.5">
+   <span>Geçmiş Siparişler</span>
+ </button>
 
  {/* Business Filter - Only show to Super Admins */}
  {admin?.adminType === 'super' && (
@@ -1892,7 +1912,7 @@ return (
  <p className="text-muted-foreground">{t('siparis_bulunamadi')}</p>
  </div>
  ) : (
- <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
  {/* Pending Column */}
  <div className="bg-yellow-50/50 dark:bg-card rounded-xl p-4 border border-yellow-200/50 dark:border-transparent">
  <h3 className="text-yellow-900 dark:text-yellow-400 font-medium mb-4 flex items-center gap-2">
@@ -1977,40 +1997,88 @@ return (
  </div>
  </div>
 
- {/* Completed Column */}
- <div className="bg-emerald-50/50 dark:bg-card rounded-xl p-4 border border-emerald-200/50 dark:border-transparent">
- <h3 className="text-emerald-900 dark:text-emerald-400 font-medium mb-4 flex items-center gap-2">
- <span className="w-3 h-3 bg-emerald-400 rounded-full"></span>
- {t('workflow.completed')} ({completedOrders.length})
- </h3>
- <div className="space-y-3 max-h-[600px] overflow-y-auto">
- {completedOrders.slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
- ))}
- {completedOrders.length > 10 && (
- <p className="text-muted-foreground/80 text-center text-sm">+{completedOrders.length - 10} {t('kanban.more')}</p>
- )}
- </div>
+  {/* Completed Column */}
+  <div className="bg-emerald-50/50 dark:bg-card rounded-xl p-4 border border-emerald-200/50 dark:border-transparent">
+  <h3 className="text-emerald-900 dark:text-emerald-400 font-medium mb-4 flex items-center gap-2">
+  <span className="w-3 h-3 bg-emerald-400 rounded-full"></span>
+  {t('workflow.completed')} ({completedOrders.filter(o => !o._raw?.isArchived).length})
+  </h3>
+  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+  {completedOrders.filter(o => !o._raw?.isArchived).slice(0, 10).map(order => (
+  <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
+  ))}
+  {completedOrders.filter(o => !o._raw?.isArchived).length > 10 && (
+  <p className="text-muted-foreground/80 text-center text-sm">+{completedOrders.filter(o => !o._raw?.isArchived).length - 10} {t('kanban.more')}</p>
+  )}
+  </div>
+  </div>
+
+   </div>
+  )}
  </div>
 
- {/* Cancelled Column */}
- <div className="bg-red-50/50 dark:bg-card rounded-xl p-4 border border-red-200/50 dark:border-transparent">
- <h3 className="text-red-900 dark:text-red-400 font-medium mb-4 flex items-center gap-2">
- <span className="w-3 h-3 bg-red-400 rounded-full"></span>
- İptal ({cancelledOrders.length})
- </h3>
- <div className="space-y-3 max-h-[600px] overflow-y-auto">
- {cancelledOrders.slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
- ))}
- {cancelledOrders.length > 10 && (
- <p className="text-muted-foreground/80 text-center text-sm">+{cancelledOrders.length - 10} {t('kanban.more')}</p>
+ {/* Modals for Cancelled and Completed Orders */}
+ {showCancelledModal && (
+   <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
+     <div className="bg-background rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
+       <div className="p-4 border-b border-border flex items-center justify-between">
+         <h2 className="text-xl font-bold text-red-600 dark:text-red-400">İptal Edilenler (Son 7 Gün)</h2>
+         <button onClick={() => setShowCancelledModal(false)} className="p-2 bg-muted hover:bg-muted/80 rounded-full text-foreground transition-colors">✕</button>
+       </div>
+       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+         {cancelledOrders.length === 0 ? (
+           <p className="text-center text-muted-foreground py-8">İptal edilen sipariş yok.</p>
+         ) : (
+           cancelledOrders
+           .sort((a, b) => {
+             const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+             const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+             return bTime - aTime;
+           })
+           .map(order => (
+             <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => { setSelectedOrder(order); setShowCancelledModal(false); }} t={t} />
+           ))
+         )}
+       </div>
+     </div>
+   </div>
  )}
- </div>
- </div>
- </div>
+
+ {showCompletedModal && (
+   <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
+     <div className="bg-background rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
+       <div className="p-4 border-b border-border flex items-center justify-between">
+         <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">Geçmiş Siparişler (Son 7 Gün)</h2>
+         <button onClick={() => setShowCompletedModal(false)} className="p-2 bg-muted hover:bg-muted/80 rounded-full text-foreground transition-colors">✕</button>
+       </div>
+       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+         {orders.filter(o => {
+           if (!['delivered', 'served', 'completed'].includes(o.status)) return false;
+           const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+           const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+           return createdAt > sevenDaysAgo;
+         }).length === 0 ? (
+           <p className="text-center text-muted-foreground py-8">Geçmiş sipariş bulunmuyor.</p>
+         ) : (
+           orders.filter(o => {
+             if (!['delivered', 'served', 'completed'].includes(o.status)) return false;
+             const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+             const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+             return createdAt > sevenDaysAgo;
+           })
+           .sort((a, b) => {
+             const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+             const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+             return bTime - aTime;
+           })
+           .map(order => (
+             <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => { setSelectedOrder(order); setShowCompletedModal(false); }} t={t} />
+           ))
+         )}
+       </div>
+     </div>
+   </div>
  )}
- </div>
 
  <KermesScannerModal
     isOpen={showKermesScanner}

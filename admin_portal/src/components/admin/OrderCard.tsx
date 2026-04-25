@@ -193,7 +193,34 @@ export default function OrderCard({
     </div>
   )}
 
-  <div className="flex items-center justify-between">
+  {/* Cancellation Details */}
+  {order.status === 'cancelled' && (
+    <div className="mt-2 pt-2 border-t border-red-200/50 dark:border-red-900/30 text-xs space-y-1.5 bg-red-50/50 dark:bg-red-900/10 rounded-lg p-2">
+      <div className="flex justify-between items-center text-muted-foreground">
+        <span className="font-medium">{t('kanban.receivedAt', { defaultValue: 'Geliş:' })}</span>
+        <span>{order.createdAt ? (typeof order.createdAt.toDate === 'function' ? order.createdAt.toDate() : new Date((order.createdAt as any))).toLocaleString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+      </div>
+      {order._raw?.cancelledAt && (
+        <div className="flex justify-between items-center text-red-600 dark:text-red-400">
+          <span className="font-medium">{t('kanban.cancelledAt', { defaultValue: 'İptal Zamanı:' })}</span>
+          <span>{(typeof order._raw.cancelledAt.toDate === 'function' ? order._raw.cancelledAt.toDate() : new Date(order._raw.cancelledAt)).toLocaleString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      )}
+      {order._raw?.cancelReason && (
+        <div className="text-red-700 dark:text-red-300 font-medium bg-red-100 dark:bg-red-900/40 p-1.5 rounded text-[11px]">
+          {t('kanban.cancelReason', { defaultValue: 'Sebep:' })} {order._raw.cancelReason}
+        </div>
+      )}
+      {(order._raw?.cancelledByName || order._raw?.cancelledBy) && (
+        <div className="text-muted-foreground flex justify-between items-center">
+          <span className="font-medium">{t('kanban.cancelledBy', { defaultValue: 'Personel:' })}</span>
+          <span>{order._raw.cancelledByName || order._raw.cancelledBy}</span>
+        </div>
+      )}
+    </div>
+  )}
+
+  <div className="flex items-center justify-between mt-2">
   <span className="text-green-800 dark:text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
   <div className="flex items-center gap-2">
   <span className="text-muted-foreground text-xs">

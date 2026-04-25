@@ -3465,12 +3465,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     // Only show categories that have products (or 'marketplace.category_all'.tr())
                                     final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'marketplace.category_all'.tr() || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
                                     
-                                    // Schedule pill position initialization
-                                    if (!_pillInitialized) {
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                                        if (mounted) _updatePillPosition();
-                                      });
-                                    }
+                                    // Always schedule pill position check to handle dynamic width changes (like cart badges appearing)
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      if (mounted) _updatePillPosition();
+                                    });
                                     
                                     return SingleChildScrollView(
                                       controller: _chipScrollController,
