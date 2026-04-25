@@ -279,28 +279,37 @@ export function OrdersProvider({
  const startDate = getStartDateForFilter(dateFilter);
  
  // 1. Standard Orders Stream
- const constraints: any[] = [
- where('createdAt', '>=', Timestamp.fromDate(startDate)),
- orderBy('createdAt', 'desc'),
- ];
+ let qOrders;
  if (fixedBusinessId) {
- constraints.unshift(where('businessId', '==', fixedBusinessId));
+   // Avoid composite index error by querying only businessId, filtering date in memory
+   qOrders = query(collection(db, 'meat_orders'), where('businessId', '==', fixedBusinessId));
+ } else {
+   qOrders = query(
+     collection(db, 'meat_orders'), 
+     where('createdAt', '>=', Timestamp.fromDate(startDate)), 
+     orderBy('createdAt', 'desc')
+   );
  }
- const qOrders = query(collection(db, 'meat_orders'), ...constraints);
 
  const unsubOrders = onSnapshot(qOrders, (snapshot) => {
- let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
- // Secondary fallback filter for legacy butcherId documents that bypassed query
- if (fixedBusinessId) {
- mapped = mapped.filter(o => 
- o.businessId === fixedBusinessId || o._raw.butcherId === fixedBusinessId
- );
- }
- setMeatOrders(mapped);
- setLoading(false);
+   let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
+   // Secondary fallback filter for legacy butcherId documents that bypassed query
+   if (fixedBusinessId) {
+     mapped = mapped.filter(o => 
+       o.businessId === fixedBusinessId || o._raw.butcherId === fixedBusinessId
+     );
+     // Client-side date filter since we bypassed the query constraint
+     const startMs = startDate.getTime();
+     mapped = mapped.filter(o => {
+       const time = o.createdAt?.toMillis?.() || (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+       return time >= startMs;
+     });
+   }
+   setMeatOrders(mapped);
+   setLoading(false);
  }, (error) => {
- console.error('[useOrders] Error loading orders:', error);
- setLoading(false);
+   console.error('[OrdersProvider] Error:', error);
+   setLoading(false);
  });
 
  // 2. Continuous Tab Reservations Stream
@@ -453,25 +462,34 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  const startDate = getStartDateForFilter(dateFilter);
  
  // 1. Orders
- const constraints: any[] = [
- where('createdAt', '>=', Timestamp.fromDate(startDate)),
- orderBy('createdAt', 'desc'),
- ];
+ let qOrders;
  if (businessId) {
- constraints.unshift(where('businessId', '==', businessId));
+   // Avoid composite index error by querying only businessId, filtering date in memory
+   qOrders = query(collection(db, 'meat_orders'), where('businessId', '==', businessId));
+ } else {
+   qOrders = query(
+     collection(db, 'meat_orders'), 
+     where('createdAt', '>=', Timestamp.fromDate(startDate)), 
+     orderBy('createdAt', 'desc')
+   );
  }
- const qOrders = query(collection(db, 'meat_orders'), ...constraints);
 
  const unsubOrders = onSnapshot(qOrders, (snapshot) => {
- let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
- if (businessId) {
- mapped = mapped.filter(o => o.businessId === businessId || o._raw.butcherId === businessId);
- }
- setMeatOrders(mapped);
- setLoading(false);
+   let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
+   if (businessId) {
+     mapped = mapped.filter(o => o.businessId === businessId || o._raw.butcherId === businessId);
+     // Client-side date filter since we bypassed the query constraint
+     const startMs = startDate.getTime();
+     mapped = mapped.filter(o => {
+       const time = o.createdAt?.toMillis?.() || (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+       return time >= startMs;
+     });
+   }
+   setMeatOrders(mapped);
+   setLoading(false);
  }, (error) => {
- console.error('[useOrdersStandalone] Error:', error);
- setLoading(false);
+   console.error('[useOrdersStandalone] Error:', error);
+   setLoading(false);
  });
 
  // 2. Reservations

@@ -140,16 +140,12 @@ const { admin } = useAdmin();
     ? query(
         collection(db, 'kermes_orders'),
         where('kermesId', '==', businessId),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc'),
-        limit(10)
+        where('status', '==', 'pending')
       )
     : query(
         collection(db, 'meat_orders'),
         where('businessId', '==', businessId),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc'),
-        limit(10)
+        where('status', '==', 'pending')
       );
 
   const unsubOrders = onSnapshot(qOrders, (snapshot) => {
@@ -231,12 +227,10 @@ const { admin } = useAdmin();
  firstLoadTabs.current = true;
 
  // 1. All pending meat_orders
- const qOrders = query(
- collection(db, 'meat_orders'),
- where('status', '==', 'pending'),
- orderBy('createdAt', 'desc'),
- limit(10)
- );
+  const qOrders = query(
+    collection(db, 'meat_orders'),
+    where('status', '==', 'pending')
+  );
 
  const unsubOrders = onSnapshot(qOrders, (snapshot) => {
  if (firstLoad.current) {
