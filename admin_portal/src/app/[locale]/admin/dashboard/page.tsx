@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
@@ -542,7 +543,7 @@ export default function StatisticsPage() {
  <p className="text-xs text-muted-foreground/80">{t('onceki')} {compStats.total}</p>
  )}
  </div>
- <div className="bg-card rounded-xl p-4 text-center">
+ <div className="bg-card rounded-xl p-4 text-center relative group">
  <p className="text-3xl font-bold text-green-800 dark:text-green-400">
  {formatCurrency(stats.revenue)}
  {changes && formatChange(changes.revenue)}
@@ -551,6 +552,17 @@ export default function StatisticsPage() {
  {compStats && (
  <p className="text-xs text-muted-foreground/80">{t('onceki')} {formatCurrency(compStats.revenue)}</p>
  )}
+
+					{/* Orders Link Button */}
+					{(adminBusinessId || (businessFilter !== 'all' ? businessFilter : null)) && (
+						<Link
+							href={`/admin/business/${adminBusinessId || businessFilter}?tab=orders`}
+							className="absolute top-2 right-2 p-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors opacity-0 group-hover:opacity-100"
+							title={t('siparisler') || 'Siparisler'}
+						>
+							<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+						</Link>
+					)}
  </div>
  <div className="bg-card rounded-xl p-4 text-center">
  <p className="text-3xl font-bold text-purple-800 dark:text-purple-400">

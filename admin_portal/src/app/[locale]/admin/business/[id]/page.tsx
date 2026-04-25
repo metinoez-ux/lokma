@@ -229,7 +229,7 @@ export default function BusinessDetailsPage() {
  const router = useRouter();
  const searchParams = useSearchParams();
  const businessId = params.id as string;
- const initialTab = searchParams.get('tab') as 'overview' | 'orders' | 'reservations' | 'settings' || 'overview';
+ const initialTab = searchParams.get('tab') as 'overview' | 'orders' | 'reservations' | 'settings' || 'settings';
 	const initialSubTab = searchParams.get('settingsSubTab') as 'isletme' | 'menu' | 'personel' | 'masa' | 'abonelik' | 'odeme' | 'promosyon' | 'marketing' | 'teslimat' | 'saatler' || 'isletme';
 
  const { admin, loading: adminLoading } = useAdmin();
@@ -2815,7 +2815,7 @@ export default function BusinessDetailsPage() {
  )}
 
  {/* Header - Only Super Admin needs to navigate these tabs globally from here */}
- {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
+ {admin?.adminType === 'super' && (
  <header className="bg-card border-b border-border sticky top-0 z-30">
  <div className="max-w-6xl mx-auto px-4 py-3">
  <div className="flex items-center justify-between">
