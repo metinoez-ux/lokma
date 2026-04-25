@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Check, Info, Clock } from "lucide-react";
@@ -20,6 +20,25 @@ export default function AbonelikTabContent({
   const [agbAccepted, setAgbAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [successModalData, setSuccessModalData] = useState<{planName: string, date: Date} | null>(null);
+  const [eslSelections, setEslSelections] = useState<Record<string, { quantity: number, mode: 'rent' | 'buy' }>>({});
+
+  useEffect(() => {
+    setEslSelections({});
+  }, [selectedPlanCode]);
+
+  const handleEslQuantityChange = (model: string, quantity: number, mode: 'rent' | 'buy') => {
+    if (quantity <= 0) {
+      const newSelections = { ...eslSelections };
+      delete newSelections[model];
+      setEslSelections(newSelections);
+    } else {
+      setEslSelections(prev => ({
+        ...prev,
+        [model]: { quantity, mode }
+      }));
+    }
+  };
+
   const tBiz = useTranslations('AdminBusiness');
 
   const currentPlanCode = business?.subscriptionPlan || "free";
@@ -279,6 +298,106 @@ export default function AbonelikTabContent({
               </p>
             </div>
           </div>
+
+          {availablePlans.find((p:any) => p.code === selectedPlanCode)?.features?.eslIntegration && availablePlans.find((p:any) => p.code === selectedPlanCode)?.eslPackages?.length > 0 && (
+            <div className="bg-indigo-900/10 border border-indigo-500/20 rounded-xl p-4">
+              <h6 className="text-indigo-400 font-bold mb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                ESL Donanım Hesaplayıcı (Opsiyonel)
+              </h6>
+              <p className="text-xs text-muted-foreground mb-4">
+                Yeni planınız ESL Elektronik Fiyat Etiketi entegrasyonu sunmaktadır. İsteğe bağlı olarak donanım ihtiyacınızı hesaplayabilir ve siparişinizi Hardware Store üzerinden tamamlayabilirsiniz.
+              </p>
+
+              <div className="space-y-3">
+                {availablePlans.find((p:any) => p.code === selectedPlanCode).eslPackages.map((pkg: any) => {
+                  const sel = eslSelections[pkg.model] || { quantity: 0, mode: 'buy' };
+                  return (
+                    <div key={pkg.model} className="flex flex-wrap md:flex-nowrap items-center gap-3 bg-background/50 p-3 rounded-lg border border-border">
+                      <div className="flex-1 min-w-[120px]">
+                        <p className="font-semibold text-foreground text-sm">{pkg.model}</p>
+                        <p className="text-[10px] text-muted-foreground">Alış: €{pkg.price}/adet | Kira: €{pkg.monthlyRent}/ay</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 shrink-0">
+                        <select 
+                          value={sel.mode}
+                          onChange={(e) => handleEslQuantityChange(pkg.model, sel.quantity, e.target.value as 'rent' | 'buy')}
+                          className="bg-card border border-border rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-foreground"
+                        >
+                          <option value="buy">Satın Al</option>
+                          <option value="rent">Kirala</option>
+                        </select>
+                        
+                        <div className="flex items-center border border-border rounded bg-card">
+                          <button 
+                            type="button"
+                            onClick={() => handleEslQuantityChange(pkg.model, Math.max(0, sel.quantity - 1), sel.mode)}
+                            className="px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-white/5"
+                          >-</button>
+                          <input 
+                            type="number"
+                            min="0"
+                            value={sel.quantity}
+                            onChange={(e) => handleEslQuantityChange(pkg.model, parseInt(e.target.value) || 0, sel.mode)}
+                            className="w-12 text-center bg-transparent text-sm border-x border-border focus:outline-none"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => handleEslQuantityChange(pkg.model, sel.quantity + 1, sel.mode)}
+                            className="px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-white/5"
+                          >+</button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {Object.keys(eslSelections).length > 0 && (() => {
+                const newPlan = availablePlans.find((p:any) => p.code === selectedPlanCode);
+                const totalBuy = Object.entries(eslSelections).reduce((sum, [model, sel]) => {
+                  if (sel.mode !== 'buy') return sum;
+                  const pkg = newPlan.eslPackages.find((p:any) => p.model === model);
+                  return sum + (pkg ? pkg.price * sel.quantity : 0);
+                }, 0);
+                
+                const totalRent = Object.entries(eslSelections).reduce((sum, [model, sel]) => {
+                  if (sel.mode !== 'rent') return sum;
+                  const pkg = newPlan.eslPackages.find((p:any) => p.model === model);
+                  return sum + (pkg ? pkg.monthlyRent * sel.quantity : 0);
+                }, 0);
+
+                const hasEslItems = totalBuy > 0 || totalRent > 0;
+
+                return (
+                  <div className="mt-4 pt-4 border-t border-indigo-500/20">
+                    <div className="flex justify-between items-center text-sm mb-1">
+                      <span className="text-muted-foreground">Donanım Satın Alma Toplamı (Bir Seferlik):</span>
+                      <span className="font-semibold text-foreground">€{totalBuy.toFixed(2)}</span>
+                    </div>
+                    {hasEslItems && newPlan.eslSystemMonthlyFee > 0 && (
+                      <div className="flex justify-between items-center text-sm mb-1">
+                        <span className="text-muted-foreground">ESL Gateway & SaaS Ücreti:</span>
+                        <span className="font-semibold text-indigo-300">€{newPlan.eslSystemMonthlyFee.toFixed(2)} /ay</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-sm mb-3">
+                      <span className="text-muted-foreground">Donanım Kiralama Toplamı:</span>
+                      <span className="font-semibold text-indigo-300">€{totalRent.toFixed(2)} /ay</span>
+                    </div>
+                    
+                    <div className="bg-indigo-500/20 text-indigo-200 text-xs p-3 rounded flex items-start gap-2">
+                      <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                      <div>
+                        Bu bir hesaplama aracıdır. Donanım siparişinizi tamamlamak için plan onayından sonra <a href="#" onClick={(e) => { e.preventDefault(); showToast("Hardware Store modülü yakında eklenecektir.", "info"); }} className="underline font-bold hover:text-white transition-colors">Donanım Mağazasını (Hardware Store)</a> ziyaret ediniz.
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
 
           <div className="pt-2">
             <label className="flex items-start gap-3 cursor-pointer group">
