@@ -1090,9 +1090,17 @@ export default function OrdersPage() {
  }
  }
 
- // Add cancellation reason if provided
- if (newStatus === 'cancelled' && cancellationReason) {
- updateData.cancellationReason = cancellationReason;
+ // Add cancellation metadata if cancelled
+ if (newStatus === 'cancelled') {
+ if (cancellationReason) {
+ updateData.cancelReason = cancellationReason;
+ }
+ updateData.cancelledAt = new Date();
+ const currentUser = auth.currentUser;
+ if (currentUser) {
+ updateData.cancelledByName = currentUser.displayName || currentUser.email || 'Admin';
+ updateData.cancelledBy = currentUser.uid;
+ }
  }
 
  // Save unavailable items when accepting with missing items
@@ -1111,7 +1119,7 @@ export default function OrdersPage() {
   ? doc(db, 'businesses', order.businessId, 'reservations', orderId)
   : isKermesAdmin
     ? doc(db, 'kermes_orders', orderId)
-    : doc(db, 'businesses', order?.businessId || adminBusinessId || '', 'orders', orderId);
+    : doc(db, 'meat_orders', orderId);
 
   await updateDoc(orderRef, updateData);
 

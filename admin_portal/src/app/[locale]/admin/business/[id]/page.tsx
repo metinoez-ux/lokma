@@ -1681,13 +1681,20 @@ export default function BusinessDetailsPage() {
  updatedAt: new Date(),
  };
  if (reason) {
- updateData.rejectionReason = reason;
+ updateData.cancelReason = reason;
+ }
+ if (newStatus === 'cancelled') {
+ updateData.cancelledAt = new Date();
+ if (admin) {
+ updateData.cancelledByName = admin.displayName || admin.name || admin.email || 'Admin';
+ updateData.cancelledBy = admin.id || '';
+ }
  }
  
  const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat', 'kds', 'kasa', 'vezne', 'volunteer'].includes(admin?.adminType || '');
  const orderRef = isKermesAdmin 
  ? doc(db, 'kermes_orders', orderId) 
- : doc(db, 'businesses', business?.id || businessId || '', 'orders', orderId);
+ : doc(db, 'meat_orders', orderId);
  
  await updateDoc(orderRef, updateData);
  
