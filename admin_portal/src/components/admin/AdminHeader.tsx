@@ -1330,12 +1330,6 @@ export default function AdminHeader() {
  </div>
  </div>
  <Link
- href="/admin/reports"
- className="w-full flex items-center gap-2 px-4 py-3 text-foreground hover:bg-muted/50 transition text-sm border-b border-border font-medium"
- >
- {t('reports')}
- </Link>
- <Link
  href="/account"
  className="w-full flex items-center gap-2 px-4 py-3 text-blue-800 dark:text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 transition text-sm border-b border-border"
  >
