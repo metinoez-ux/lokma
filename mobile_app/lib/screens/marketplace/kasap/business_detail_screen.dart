@@ -291,14 +291,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
 
-  DateTime _lastScrollTime = DateTime.now();
-
   void _onMenuScroll() {
     if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
-
-    final now = DateTime.now();
-    if (now.difference(_lastScrollTime).inMilliseconds < 100) return;
-    _lastScrollTime = now;
 
     // When scrolled to the very top, always select 'marketplace.category_all'.tr()
     if (_scrollController.hasClients && _scrollController.offset < 10) {
