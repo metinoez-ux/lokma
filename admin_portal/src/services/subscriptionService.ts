@@ -5,11 +5,10 @@ import { ButcherSubscriptionPlan } from '@/types';
 const COLLECTION_NAME = 'subscription_plans';
 
 export const subscriptionService = {
- // Get all plans (for admin list)
  getAllPlans: async (businessType?: string): Promise<ButcherSubscriptionPlan[]> => {
  try {
  let q;
- if (businessType) {
+ if (businessType && businessType !== 'all') {
  q = query(
  collection(db, COLLECTION_NAME),
  where('businessType', '==', businessType)
@@ -19,7 +18,7 @@ export const subscriptionService = {
  }
 
  const snapshot = await getDocs(q);
- const plans = snapshot.docs.map(doc => {
+ let plans = snapshot.docs.map(doc => {
  const data = doc.data();
  return {
  ...data,
@@ -27,6 +26,23 @@ export const subscriptionService = {
  updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
  } as ButcherSubscriptionPlan;
  });
+
+      // Auto-seed if there are no ACTIVE plans for this specific sector
+      if (plans.filter(p => p.isActive).length === 0) {
+        const sector = (businessType && businessType !== 'all') ? businessType : 'butcher';
+        await subscriptionService.seedDefaults(sector);
+        
+        // Re-fetch after seeding
+        const refetchSnap = await getDocs(q);
+        plans = refetchSnap.docs.map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+            updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
+          } as ButcherSubscriptionPlan;
+        });
+      }
 
  // Client-side sort to avoid composite index requirement
  return plans.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -36,7 +52,6 @@ export const subscriptionService = {
  }
  },
 
- // Get only active plans (for butcher selection)
  getActivePlans: async (businessType?: string): Promise<ButcherSubscriptionPlan[]> => {
  try {
  let constraints: any[] = [where('isActive', '==', true)];
@@ -47,7 +62,7 @@ export const subscriptionService = {
 
  const q = query(collection(db, COLLECTION_NAME), ...constraints);
  const snapshot = await getDocs(q);
- const plans = snapshot.docs.map(doc => {
+ let plans = snapshot.docs.map(doc => {
  const data = doc.data();
  return {
  ...data,
@@ -55,6 +70,23 @@ export const subscriptionService = {
  updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
  } as ButcherSubscriptionPlan;
  });
+
+      if (plans.length === 0) {
+        // Auto-seed for this sector
+        const sector = (businessType && businessType !== 'all') ? businessType : 'butcher';
+        await subscriptionService.seedDefaults(sector);
+
+        // Re-fetch after seeding
+        const refetchSnap = await getDocs(q);
+        plans = refetchSnap.docs.map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+            updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
+          } as ButcherSubscriptionPlan;
+        });
+      }
 
  return plans.sort((a, b) => (a.order || 0) - (b.order || 0));
  } catch (error) {
@@ -81,18 +113,24 @@ export const subscriptionService = {
  await deleteDoc(doc(db, COLLECTION_NAME, id));
  },
 
- // Seed default plans if collection is empty
- seedDefaults: async (): Promise<void> => {
- const snapshot = await getDocs(collection(db, COLLECTION_NAME));
- if (!snapshot.empty) return; // Already seeded
+ // Seed default plans if collection is empty for a specific business type
+ seedDefaults: async (businessType: string = 'butcher'): Promise<void> => {
+ // Check if plans for THIS businessType already exist
+ const q = query(collection(db, COLLECTION_NAME), where('businessType', '==', businessType));
+ const snapshot = await getDocs(q);
+ if (!snapshot.empty) return; // Already seeded for this type
+
+ // Use prefixes to distinguish plans by sector
+ const pfx = businessType === 'restoran' ? 'Dine' : businessType === 'market' ? 'Shop' : 'Eat';
+ const idSuffix = businessType === 'butcher' ? '' : `_${businessType}`;
 
  const defaults: ButcherSubscriptionPlan[] = [
- // 1. FREE (Deneme / Küçük Esnaf)
+ // 1. FREE
  {
- id: 'free',
- businessType: 'butcher',
- code: 'free',
- name: 'Free',
+ id: `free${idSuffix}`,
+ businessType: businessType,
+ code: `free${idSuffix}`,
+ name: `${pfx} Free`,
  description: 'Ücretsiz başlangıç paketi.',
  monthlyFee: 0,
  yearlyFee: 0,
@@ -153,12 +191,12 @@ export const subscriptionService = {
  },
  // 2. BASIC (Esnaf)
  {
- id: 'basic',
- businessType: 'butcher',
- code: 'basic',
- name: 'Basic',
- description: 'Mahalle kasabı ve küçük işletmeler için.',
- monthlyFee: 29.99,
+    id: `basic${idSuffix}`,
+    businessType: businessType,
+    code: `basic${idSuffix}`,
+    name: `${pfx} Basic`,
+    description: 'Mahalle kasabı ve küçük işletmeler için.',
+    monthlyFee: 29.99,
  yearlyFee: 299.90, // ~10 ay
  currency: 'EUR',
  billingCycle: 'monthly',
@@ -215,14 +253,14 @@ export const subscriptionService = {
  createdAt: new Date(),
  updatedAt: new Date()
  },
- // 3. PRO (Aktif Kasap)
+ // 3. PRO (Orta Ölçekli)
  {
- id: 'pro',
- businessType: 'butcher',
- code: 'pro',
- name: 'Pro',
- description: 'Günlük sipariş alan aktif kasaplar için.',
- monthlyFee: 59.99,
+    id: `pro${idSuffix}`,
+    businessType: businessType,
+    code: `pro${idSuffix}`,
+    name: `${pfx} Pro`,
+    description: 'Büyüyen işletmeler ve çoklu şubeler için.',
+    monthlyFee: 69.99,
  yearlyFee: 599.90, // ~10 ay
  currency: 'EUR',
  billingCycle: 'monthly',
@@ -279,14 +317,14 @@ export const subscriptionService = {
  createdAt: new Date(),
  updatedAt: new Date()
  },
- // 4. ULTRA (Zincir / Lider)
+ // 4. ULTRA (Kurumsal)
  {
- id: 'ultra',
- businessType: 'butcher',
- code: 'ultra',
- name: 'Ultra',
- description: 'En kapsamlı özellik paketi.',
- monthlyFee: 99.99,
+    id: `ultra${idSuffix}`,
+    businessType: businessType,
+    code: `ultra${idSuffix}`,
+    name: `${pfx} Ultra`,
+    description: 'Gelişmiş analitik ve donanım entegrasyonu.',
+    monthlyFee: 129.99,
  yearlyFee: 999.90, // ~10 ay
  currency: 'EUR',
  billingCycle: 'monthly',

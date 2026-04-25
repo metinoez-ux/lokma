@@ -346,7 +346,7 @@ export default function BusinessDetailsPage() {
  }, [showSettingsDropdown]);
  const [products, setProducts] = useState<any[]>([]);
  // 🆕 Dynamically loaded subscription plans from Firestore
- const [availablePlans, setAvailablePlans] = useState<{ code: string; name: string; color: string }[]>([]);
+ const [availablePlans, setAvailablePlans] = useState<any[]>([]);
  const [productModalOpen, setProductModalOpen] = useState(false);
  const [productMode, setProductMode] = useState<'standard' | 'custom'>('standard');
  const [selectedMasterId, setSelectedMasterId] = useState("");
@@ -746,7 +746,7 @@ export default function BusinessDetailsPage() {
  // Reusable overlay for plan-gated modules -- always visible (teaser) but locked if not in plan
  // Super Admin bypass: Super admins can always access all features regardless of plan
  const LockedModuleOverlay = ({ featureKey, children }: { featureKey: string; children: React.ReactNode }) => {
- const isAvailable = planFeatures[featureKey] || (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin');
+ const isAvailable = planFeatures[featureKey] || (admin?.adminType === 'super' || admin?.adminType === 'admin');
  if (isAvailable) return <>{children}</>;
  return (
  <div className="relative">
@@ -1469,7 +1469,7 @@ export default function BusinessDetailsPage() {
  const assignedCategory = templateCategoryMap[p.id] || p.category || 'dana';
  await setDoc(doc(db, `businesses/${businessId}/products`, p.id), {
  masterProductId: p.id,
- name: p.name,
+ ...p,
  description: p.description || { tr: '' },
  category: assignedCategory,
  categories: [assignedCategory],
@@ -1686,7 +1686,7 @@ export default function BusinessDetailsPage() {
  if (newStatus === 'cancelled') {
  updateData.cancelledAt = new Date();
  if (admin) {
- updateData.cancelledByName = admin.displayName || admin.name || admin.email || 'Admin';
+ updateData.cancelledByName = admin.displayName || admin.email || 'Admin';
  updateData.cancelledBy = admin.id || '';
  }
  }
@@ -2013,8 +2013,8 @@ export default function BusinessDetailsPage() {
  const sectorCategory = rawType ? (BUSINESS_TYPES[rawType as keyof typeof BUSINESS_TYPES]?.category || rawType) : '';
  const plans = await subscriptionService.getAllPlans(sectorCategory || undefined);
  setAvailablePlans(plans.map(p => ({
- code: p.code || p.id,
- name: p.name,
+ ...p,
+      code: p.code || p.id,
  color: p.color || 'bg-muted border border-border text-foreground',
  })));
  } catch (error) {
@@ -2861,7 +2861,7 @@ export default function BusinessDetailsPage() {
  >
  {t('dashboard')}
  </button>
- {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
+ {((admin?.adminType === 'super' || admin?.adminType === 'admin')) && (
  <Link
  href={`/admin/business/${businessId}/performance`}
  className="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-purple-600 text-white hover:bg-purple-500"
@@ -3853,7 +3853,7 @@ export default function BusinessDetailsPage() {
  </h3>
  <div className="flex items-center gap-3">
  {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
- {settingsSubTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
+ {settingsSubTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || (admin?.adminType === 'super' || admin?.adminType === 'admin')) && (
  <button
  onClick={async () => {
  const newValue = !formData.temporaryDeliveryPaused;
@@ -3884,7 +3884,7 @@ export default function BusinessDetailsPage() {
  🛵 {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
  </button>
  )}
- {settingsSubTab === "teslimat" && (planFeatures.pickup || (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
+ {settingsSubTab === "teslimat" && (planFeatures.pickup || (admin?.adminType === 'super' || admin?.adminType === 'admin')) && (
  <button
  onClick={async () => {
  const newValue = !formData.temporaryPickupPaused;
@@ -3914,7 +3914,7 @@ export default function BusinessDetailsPage() {
  </button>
  )}
  {/* İşletme Faaliyetlerini Durdur — Super Admin Only */}
- {business && settingsSubTab === "isletme" && (admin?.adminType === 'super' || admin?.adminType === 'lokma_admin') && (
+ {business && settingsSubTab === "isletme" && (admin?.adminType === 'super' || admin?.adminType === 'admin') && (
  <button
  onClick={toggleActiveStatus}
  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${business.isActive
@@ -4144,7 +4144,7 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  </div>
- {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) && (
+ {((admin?.adminType === 'super' || admin?.adminType === 'admin')) && (
  <div className="space-y-4 pt-4 border-t border-border mt-4">
  {/* Google Place */}
  <h4 className="text-foreground font-medium pb-2">🗺️ Google Place</h4>
@@ -4220,7 +4220,7 @@ export default function BusinessDetailsPage() {
  {/* ═══════ Tab 3: Zertifikalar ═══════ */}
  {isletmeInternalTab === "zertifikalar" && (
  <div className="space-y-6">
- {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin')) ? (
+ {((admin?.adminType === 'super' || admin?.adminType === 'admin')) ? (
  <>
  <div>
  <h4 className="text-foreground font-medium mb-4">LOKMA Platform Markaları & Rozetleri</h4>
@@ -6632,7 +6632,7 @@ export default function BusinessDetailsPage() {
  </button>
  </td>
  <td className="py-4">
- {((admin?.adminType === 'super' || admin?.adminType === 'lokma_admin') || (staff.id !== admin?.id && !staff.adminType?.toLowerCase().includes('admin') && staff.adminType !== 'super' && staff.adminType !== 'lokma_admin')) && (
+ {(((admin?.adminType as any) === 'super' || (admin?.adminType as any) === 'lokma_admin') || (staff.id !== admin?.id && !staff.adminType?.toLowerCase().includes('admin') && (staff.adminType as any) !== 'super' && (staff.adminType as any) !== 'lokma_admin')) && (
  <div className="flex flex-wrap gap-2">
   {/* Archived staff: show Aktivieren directly in row */}
   {staff.isActive === false && (

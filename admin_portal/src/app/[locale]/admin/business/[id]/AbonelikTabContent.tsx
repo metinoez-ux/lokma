@@ -4,6 +4,7 @@ import { useState } from "react";
 import { doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Check, Info, Clock } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function AbonelikTabContent({
   business,
@@ -18,6 +19,8 @@ export default function AbonelikTabContent({
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null>(null);
   const [agbAccepted, setAgbAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [successModalData, setSuccessModalData] = useState<{planName: string, date: Date} | null>(null);
+  const tBiz = useTranslations('AdminBusiness');
 
   // Group plans
   const freePlans = availablePlans.filter((p: any) => p.monthlyFee === 0 || p.code === 'free');
@@ -54,7 +57,11 @@ export default function AbonelikTabContent({
         planTransitionDate: Timestamp.fromDate(nextMonth),
       });
       
-      showToast(t('plan_degisikligi_onaylandi') || 'Plan değişikliği başarıyla alındı.', 'success');
+      const newPlan = availablePlans.find((p: any) => p.code === selectedPlanCode);
+      setSuccessModalData({
+        planName: newPlan?.name || selectedPlanCode,
+        date: nextMonth
+      });
       
       setBusiness((prev: any) => prev ? { 
         ...prev, 
@@ -93,17 +100,87 @@ export default function AbonelikTabContent({
       setSaving(false);
     }
   };
+  
+  const MASTER_FEATURE_ORDER = [
+    'posSystem',
+    'courierApp',
+    'liveCourierTracking',
+    'kitchenDisplaySystem',
+    'qrOrdering',
+    'clickAndCollect',
+    'delivery',
+    'onlinePayment',
+    'staffShiftTracking',
+    'smartScale',
+    'scaleIntegration',
+    'posIntegration',
+    'accountingIntegration',
+    'marketing',
+    'marketingTools',
+    'campaigns',
+    'promotions',
+    'couponSystem',
+    'referralSystem',
+    'firstOrderDiscount',
+    'loyaltyProgram',
+    'donationRoundUp',
+    'sponsoredProducts',
+    'advancedAnalytics',
+    'customBranding',
+    'apiAccess',
+    'prioritySupport',
+    'unlimitedProducts',
+    'basicStatsOnly'
+  ];
 
+  const globalFeatureKeys = Array.from(
+    new Set(
+      availablePlans.flatMap((p: any) => 
+        p.features ? Object.keys(p.features).filter(k => p.features[k] === true) : []
+      )
+    )
+  ) as string[];
+
+  globalFeatureKeys.sort((a, b) => {
+    let indexA = MASTER_FEATURE_ORDER.indexOf(a);
+    let indexB = MASTER_FEATURE_ORDER.indexOf(b);
+    if (indexA === -1) indexA = 999;
+    if (indexB === -1) indexB = 999;
+    return indexA - indexB;
+  });
+  
   const renderFeatures = (plan: any) => {
-    if (!plan.features) return null;
-    const featureKeys = Object.keys(plan.features).filter(k => plan.features[k] === true);
-    
-    return <PlanFeaturesList featureKeys={featureKeys} t={t} />;
+    return <PlanFeaturesList globalKeys={globalFeatureKeys} planFeatures={plan?.features || {}} t={tBiz} />;
   };
 
   return (
     <div className="space-y-8 pt-4 border-t border-border mt-4">
       
+      {/* Success Modal */}
+      {successModalData && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-green-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl shadow-green-500/20 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check className="w-8 h-8 text-green-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-foreground text-center mb-3">
+              {t('tebrikler') || 'Tebrikler!'}
+            </h3>
+            <p className="text-muted-foreground text-center mb-8 leading-relaxed text-sm">
+              {t('abonelik_degisikligi_alindi') || 'Abonelik değişikliği talebiniz başarıyla alınmıştır.'} <br/><br/>
+              Yeni <strong className="text-foreground text-base">{successModalData.planName}</strong> planınız <strong className="text-foreground text-base">{successModalData.date.toLocaleDateString('de-DE')}</strong> tarihinde aktif olacaktır. <br/><br/>
+              Bizi tercih ettiğiniz için teşekkür eder, işletmenizde başarılar dileriz!
+            </p>
+            <button
+              onClick={() => setSuccessModalData(null)}
+              className="w-full py-3.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-green-600/30"
+            >
+              {t('tamam') || 'Tamam'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <div className="flex items-center justify-between">
         <h4 className="text-foreground font-bold text-2xl">{t('uyelikAbonelik') || 'Üyelik & Abonelik'}</h4>
@@ -123,7 +200,9 @@ export default function AbonelikTabContent({
             <div>
               <h5 className="text-amber-500 font-bold">{t('bekleyen_plan_degisikligi') || 'Bekleyen Plan Değişikliği'}</h5>
               <p className="text-muted-foreground text-sm mt-1">
-                {t('yeni_plan_gecis_tarihi') || 'Yeni planınız'} <strong className="text-foreground">{pendingPlan.name}</strong>, {planTransitionDate.toLocaleDateString('de-DE')} {t('tarihinde_aktif_olacak') || 'tarihinde aktif olacak.'}
+                {t('yeni_plan_gecis_tarihi') || 'Yeni planınız'} <strong className="text-foreground">{pendingPlan.name}</strong> 
+                <span className="mx-2 text-muted-foreground">—</span>
+                <strong className="text-foreground">{planTransitionDate.toLocaleDateString('de-DE')}</strong>
               </p>
             </div>
           </div>
@@ -351,33 +430,27 @@ export default function AbonelikTabContent({
   );
 }
 
-// Sub-component for features list with "Show More" functionality
-function PlanFeaturesList({ featureKeys, t }: { featureKeys: string[], t: any }) {
-  const [expanded, setExpanded] = useState(false);
-  const INITIAL_LIMIT = 8;
-  
-  const displayKeys = expanded ? featureKeys : featureKeys.slice(0, INITIAL_LIMIT);
-  const hasMore = featureKeys.length > INITIAL_LIMIT;
-
+// Sub-component for features list
+function PlanFeaturesList({ globalKeys, planFeatures, t }: { globalKeys: string[], planFeatures: any, t: any }) {
   return (
-    <div className="space-y-2.5">
-      {displayKeys.map(key => (
-        <div key={key} className="flex items-start gap-2">
-          <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-          <span className="text-sm text-foreground/90">
-            {t(`feature_${key}`) || key}
-          </span>
-        </div>
-      ))}
-      
-      {hasMore && (
-        <button 
-          onClick={() => setExpanded(!expanded)}
-          className="text-blue-500 hover:text-blue-400 text-xs font-medium pt-2 w-full text-left flex items-center gap-1"
-        >
-          {expanded ? (t('daha_az_goster') || 'Daha Az Göster') : (t('tum_ozellikleri_goster', { count: featureKeys.length - INITIAL_LIMIT }) || `Tüm Özellikleri Göster (${featureKeys.length - INITIAL_LIMIT} daha)`)}
-        </button>
-      )}
+    <div className="space-y-3">
+      {globalKeys.map(key => {
+        const hasFeature = planFeatures && planFeatures[key] === true;
+        return (
+          <div key={key} className={`flex items-center gap-3 ${hasFeature ? '' : 'opacity-40'}`}>
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${hasFeature ? 'bg-green-500/20' : 'bg-gray-500/20'}`}>
+              {hasFeature ? (
+                <Check className="w-3.5 h-3.5 text-green-500" />
+              ) : (
+                <div className="w-2 h-[2px] bg-gray-500 rounded-full" />
+              )}
+            </div>
+            <span className={`text-sm ${hasFeature ? 'text-foreground/90 font-medium' : 'text-muted-foreground line-through decoration-muted-foreground/30'}`}>
+              {t(`feature_${key}`) || key}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
