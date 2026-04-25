@@ -125,7 +125,8 @@ export default function AccountPage() {
  // ═══ YENİ: Canlı Servislerden Veri Al ═══
  // Aktif plan bilgisi
  const planId = (businessData as any).subscriptionPlan || (businessData as any).plan || 'free';
- const plans = await subscriptionService.getAllPlans();
+ const businessType = (businessData as any).businessCategories?.[0] || (businessData as any).businessType || (businessData as any).type || 'kasap';
+ const plans = await subscriptionService.getAllPlans(businessType);
  setAllPlans(plans.filter(p => p.isActive));
  const activePlan = plans.find(p => p.id === planId || p.code === planId);
  if (activePlan) setLivePlan(activePlan);
