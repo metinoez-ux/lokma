@@ -40,11 +40,7 @@ export default function AbonelikTabContent({
 
   const calculateTotalMonthlyFee = (plan: any) => {
     if (!plan) return 0;
-    let total = plan.monthlyFee || 0;
-    if (plan.features?.eslIntegration) {
-      total += plan.eslSystemMonthlyFee ?? 29.90;
-    }
-    return total;
+    return plan.monthlyFee || 0;
   };
 
   // Group plans
@@ -171,6 +167,14 @@ export default function AbonelikTabContent({
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
           ESL Donanım Fiyatları (Netto)
         </h5>
+        
+        {plan.eslSystemMonthlyFee > 0 && (
+          <div className="mb-2 text-[10px] text-indigo-200 bg-indigo-900/30 p-1.5 rounded border border-indigo-500/20 flex justify-between items-center">
+            <span>Sistem & Ağ Geçidi (Gateway) Ücreti:</span>
+            <strong className="text-white">€{plan.eslSystemMonthlyFee.toFixed(2)}/ay</strong>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           {plan.eslPackages.map((pkg: any, idx: number) => (
             <div key={idx} className="flex items-center justify-between text-xs bg-indigo-900/10 border border-indigo-500/20 px-2 py-1.5 rounded-md">
