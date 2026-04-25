@@ -337,7 +337,7 @@ export default function PlansPage() {
  ✓ Teslimat
  </span>
  )}
- {/* 🎯 Birleşik Promosyon Chip */}
+ {/* Birleşik Promosyon Chip */}
  {(() => {
  const promoCount = [
  plan.features?.campaigns,
@@ -350,7 +350,7 @@ export default function PlansPage() {
  ].filter(Boolean).length;
  return promoCount > 0 ? (
  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-900/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-700/30">
- 🎯 Promosyon {promoCount}/7
+ Promosyon {promoCount}/7
  </span>
  ) : null;
  })()}
@@ -572,7 +572,7 @@ export default function PlansPage() {
  <button
  type="button"
  onClick={() => setFormData(p => ({ ...p, productLimit: p.productLimit === null ? 30 : null }))}
- className={`px-4 py-2 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+ className={`px-3 py-2 shrink-0 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
  >
  ∞
  </button>
@@ -592,7 +592,7 @@ export default function PlansPage() {
  <button
  type="button"
  onClick={() => setFormData(p => ({ ...p, orderLimit: p.orderLimit === null ? 100 : null }))}
- className={`px-4 py-2 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+ className={`px-3 py-2 shrink-0 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
  >
  ∞
  </button>
@@ -604,7 +604,7 @@ export default function PlansPage() {
  <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
  <div className="grid grid-cols-3 gap-3">
  <div className="bg-background rounded-lg p-3 border border-green-600/40">
- <label className="block text-xs text-green-800 dark:text-green-400 mb-1">🛒 Gel-Al</label>
+ <label className="block text-xs text-green-800 dark:text-green-400 mb-1">Gel-Al</label>
  <input
  type="number"
  step="0.1"
@@ -673,7 +673,7 @@ export default function PlansPage() {
   <div className="bg-card/50 p-5 rounded-xl border border-border/50">
     <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
       <span className="w-1 h-6 bg-cyan-500 rounded-full"></span>
-      👥 Personel & Vardiya Yönetimi
+      Personel & Vardiya Yönetimi
     </h3>
     <div className="grid grid-cols-2 gap-4">
        <div>
@@ -690,7 +690,7 @@ export default function PlansPage() {
             <button
                type="button"
                onClick={() => setFormData(p => ({ ...p, personnelLimit: p.personnelLimit === null ? 3 : null }))}
-               className={`px-4 py-2 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${formData.personnelLimit === null ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
+               className={`px-3 py-2 shrink-0 rounded-lg border text-sm font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${formData.personnelLimit === null ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
             >
                ∞
             </button>
@@ -718,7 +718,7 @@ export default function PlansPage() {
                />
                <div className="w-10 h-5 bg-gray-700 peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-600"></div>
             </div>
-            <span className="ml-3 text-sm font-medium text-cyan-800 dark:text-cyan-400 group-hover:text-white transition-colors">⏱️ Vardiya Takibi & Export</span>
+            <span className="ml-3 text-sm font-medium text-cyan-800 dark:text-cyan-400 group-hover:text-white transition-colors">Vardiya Takibi & Export</span>
          </label>
          <p className="text-[10px] text-muted-foreground/70 mt-1 ml-[52px]">İşletmenin kendi personellerinin vardiyalarını oluşturması ve saat bazlı takibini sağlar.</p>
        </div>
@@ -838,7 +838,7 @@ export default function PlansPage() {
                   <button
                     type="button"
                     onClick={() => setFormData(p => ({ ...p, tableReservationFreeQuota: (p as any).tableReservationFreeQuota === null ? 0 : null } as any))}
-                    className={`px-4 py-2 rounded-lg border text-xs font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${(formData as any).tableReservationFreeQuota === null ? 'bg-pink-600 border-pink-500 text-white' : 'bg-card border-gray-600 text-muted-foreground'}`}
+                    className={`px-3 py-2 shrink-0 rounded-lg border text-xs font-bold transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${(formData as any).tableReservationFreeQuota === null ? 'bg-pink-600 border-pink-500 text-white' : 'bg-card border-gray-600 text-muted-foreground'}`}
                   >
                     ∞
                   </button>
@@ -851,6 +851,8 @@ export default function PlansPage() {
       )}
     </div>
   </div>
+
+
 
 
   {/* Plan Durumu - Basitleştirilmiş */}
@@ -899,23 +901,17 @@ export default function PlansPage() {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {[
  { key: 'clickAndCollect', label: 'Click & Collect (Gel-Al)', color: 'text-purple-800 dark:text-purple-400' },
- { key: 'delivery', label: t('kurye_teslimat'), color: 'text-purple-800 dark:text-purple-400' },
  { key: 'onlinePayment', label: t('online_odeme_kart_apple'), color: 'text-purple-800 dark:text-purple-400' },
  { key: 'marketing', label: 'Marketing (Banner/Vitrin)', color: 'text-purple-800 dark:text-purple-400' },
- { key: 'liveCourierTracking', label: t('canli_kurye_takibi'), color: 'text-purple-800 dark:text-purple-400' },
- { key: 'groupOrderLink', label: '🔗 Link ile Grup Siparişi', color: 'text-pink-800 dark:text-pink-400' },
- { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-muted-foreground', invert: true },
+ { key: 'groupOrderLink', label: 'Link ile Grup Siparişi', color: 'text-pink-800 dark:text-pink-400' },
  ].map((feature) => (
  <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
  <div className="relative flex items-center">
  <input
  type="checkbox"
  className="peer sr-only"
- checked={feature.key === 'basicStatsOnly' ? !formData.features?.basicStatsOnly : (formData.features as any)?.[feature.key]}
- onChange={e => {
- const val = feature.key === 'basicStatsOnly' ? !e.target.checked : e.target.checked;
- setFormData({ ...formData, features: { ...formData.features!, [feature.key]: val } });
- }}
+ checked={(formData.features as any)?.[feature.key]}
+ onChange={e => setFormData({ ...formData, features: { ...formData.features!, [feature.key]: e.target.checked } })}
  />
  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
  </div>
@@ -924,7 +920,7 @@ export default function PlansPage() {
  ))}
  </div>
 
- {/* 🎯 PROMOSYON & PAZARLAMA — Collapsible Section */}
+ {/* PROMOSYON & PAZARLAMA — Collapsible Section */}
  <div className="mt-6 border border-orange-200 dark:border-orange-700/30 rounded-xl overflow-hidden">
  <button
  type="button"
@@ -932,7 +928,6 @@ export default function PlansPage() {
  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-100 dark:from-orange-900/20 to-amber-900/10 hover:from-orange-100 dark:from-orange-900/30 transition-all"
  >
  <div className="flex items-center gap-3">
- <span className="text-lg">🎯</span>
  <span className="text-sm font-bold text-orange-300 uppercase tracking-wide">Promosyon & Pazarlama</span>
  <span className="text-xs px-2 py-0.5 rounded-full bg-orange-600/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-700/30">
  {[
@@ -1060,14 +1055,122 @@ export default function PlansPage() {
  )}
  </div>
 
- <div className="mt-8">
- <h4 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-widest mb-4 ml-1">Gelecek Entegrasyonlar</h4>
+          {/* KURIERLIEFERUNGEN (Kurye Siparişleri) */}
+          <div className="mt-6 border border-purple-200 dark:border-purple-700/30 rounded-xl overflow-hidden p-4 bg-card/50">
+            <h4 className="text-xs font-bold text-purple-800 dark:text-purple-400 uppercase tracking-widest mb-4 ml-1">Kurierlieferungen</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { key: 'delivery', label: 'Kurier / Lieferung', color: 'text-purple-800 dark:text-purple-400' },
+                { key: 'liveCourierTracking', label: 'Live-Kurierverfolgung', color: 'text-purple-800 dark:text-purple-400' },
+              ].map((feature) => (
+                <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={(formData.features as any)?.[feature.key]}
+                      onChange={e => setFormData({ ...formData, features: { ...formData.features!, [feature.key]: e.target.checked } })}
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  </div>
+                  <span className={`ml-3 text-sm font-medium ${feature.color} group-hover:text-white transition-colors`}>{feature.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* BUCHHALTUNG (Muhasebe) */}
+          <div className="mt-6 border border-cyan-200 dark:border-cyan-700/30 rounded-xl overflow-hidden p-4 bg-card/50">
+            <h4 className="text-xs font-bold text-cyan-800 dark:text-cyan-400 uppercase tracking-widest mb-4 ml-1">Buchhaltung</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-cyan-800 dark:text-cyan-400', invert: true },
+                { key: 'accountingIntegration', label: 'Muhasebe (Datev)', color: 'text-cyan-800 dark:text-cyan-400' },
+              ].map((feature) => (
+                <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={feature.invert ? !formData.features?.basicStatsOnly : (formData.features as any)?.[feature.key]}
+                      onChange={e => {
+                        const val = feature.invert ? !e.target.checked : e.target.checked;
+                        setFormData({ ...formData, features: { ...formData.features!, [feature.key]: val } });
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                  </div>
+                  <span className={`ml-3 text-sm font-medium ${feature.color} group-hover:text-white transition-colors`}>{feature.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* ESL TAG ETIKETTEN */}
+          <div className="mt-6 border border-indigo-200 dark:border-indigo-700/30 rounded-xl overflow-hidden p-4 bg-card/50">
+            <h4 className="text-xs font-bold text-indigo-800 dark:text-indigo-400 uppercase tracking-widest mb-4 ml-1">ESL Tag Etiketten</h4>
+            
+            <label className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group mb-4">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={(formData.features as any)?.eslIntegration}
+                  onChange={e => setFormData({ ...formData, features: { ...formData.features!, eslIntegration: e.target.checked } })}
+                />
+                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </div>
+              <span className={`ml-3 text-sm font-medium text-indigo-800 dark:text-indigo-400 group-hover:text-white transition-colors`}>ESL-Tag-Unterstützung</span>
+            </label>
+
+            {(formData.features as any)?.eslIntegration && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border/50">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">ESL Kauf (Satın Alma - €)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={(formData as any).eslPurchasePrice ?? 6.99}
+                    onChange={e => setFormData({ ...formData, eslPurchasePrice: parseFloat(e.target.value) || 0 } as any)}
+                    className="w-full min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                    placeholder="6.99"
+                  />
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">Adet başı satış fiyatı.</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">ESL Miete (Kiralama - €)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={(formData as any).eslRentalPrice ?? 0.35}
+                    onChange={e => setFormData({ ...formData, eslRentalPrice: parseFloat(e.target.value) || 0 } as any)}
+                    className="w-full min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                    placeholder="0.35"
+                  />
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">Adet başı aylık kira.</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">Aylık Sistem Ücreti (€)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={(formData as any).eslSystemMonthlyFee ?? 29.90}
+                    onChange={e => setFormData({ ...formData, eslSystemMonthlyFee: parseFloat(e.target.value) || 0 } as any)}
+                    className="w-full min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                    placeholder="29.90"
+                  />
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">SaaS & Base Station.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+        <div className="mt-8">
+          <h4 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-widest mb-4 ml-1">Gelecek Entegrasyonlar</h4>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {[
- { key: 'eslIntegration', label: t('esl_etiket_destegi'), color: 'text-indigo-300' },
  { key: 'posIntegration', label: 'POS Entegrasyonu', color: 'text-muted-foreground' },
  { key: 'scaleIntegration', label: t('akilli_kantar'), color: 'text-muted-foreground' },
- { key: 'accountingIntegration', label: 'Muhasebe (Datev)', color: 'text-muted-foreground' },
  { key: 'aiSupplierOrdering', label: t('b2b_ai_siparis'), color: 'text-green-800 dark:text-green-400' },
  { key: 'aiBestPrice', label: t('ai_fiyat_onerisi'), color: 'text-amber-800 dark:text-amber-400' },
  ].map((feature) => (
