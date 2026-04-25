@@ -162,6 +162,30 @@ export default function AbonelikTabContent({
     return <PlanFeaturesList globalKeys={globalFeatureKeys} planFeatures={plan?.features || {}} t={tBiz} />;
   };
 
+  const renderHardwarePricing = (plan: any) => {
+    if (!plan.features?.eslIntegration || !plan.eslPackages || plan.eslPackages.length === 0) return null;
+    
+    return (
+      <div className="mb-4 pb-3 border-b border-border/50">
+        <h5 className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+          ESL Donanım Fiyatları (Netto)
+        </h5>
+        <div className="space-y-1.5">
+          {plan.eslPackages.map((pkg: any, idx: number) => (
+            <div key={idx} className="flex items-center justify-between text-xs bg-indigo-900/10 border border-indigo-500/20 px-2 py-1.5 rounded-md">
+              <span className="text-indigo-100 font-medium">{pkg.model}</span>
+              <div className="text-right">
+                <span className="text-muted-foreground mr-2 text-[10px]">Alış: <strong className="text-foreground text-xs">€{pkg.purchasePrice?.toFixed(2)}</strong></span>
+                <span className="text-muted-foreground text-[10px]">Kira: <strong className="text-foreground text-xs">€{pkg.rentalPrice?.toFixed(2)}</strong>/ay</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8 pt-4 border-t border-border mt-4">
       
@@ -325,6 +349,7 @@ export default function AbonelikTabContent({
                     <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2">
                       {t('limitler_ve_ucretler') || 'Limitler ve Ücretler'}
                     </h4>
+                    {renderHardwarePricing(plan)}
                     {renderFeatures(plan)}
                   </div>
                 </div>
@@ -392,6 +417,7 @@ export default function AbonelikTabContent({
                       </div>
                     )}
 
+                    {renderHardwarePricing(plan)}
                     {renderFeatures(plan)}
                   </div>
 
