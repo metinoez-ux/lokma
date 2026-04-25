@@ -1146,19 +1146,19 @@ export default function PlansPage() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h5 className="text-sm font-semibold text-indigo-800 dark:text-indigo-400">ESL Etiket Paketleri (Minewtag Modelleri)</h5>
+                    <h5 className="text-sm font-semibold text-indigo-800 dark:text-indigo-400">ESL Birim Fiyatlandırması (Minewtag Modelleri)</h5>
                     <button
                       type="button"
                       onClick={() => {
                         const currentPackages = (formData as any).eslPackages || [];
                         setFormData({
                           ...formData,
-                          eslPackages: [...currentPackages, { model: 'DS021Q', quantity: 100, purchasePrice: 13.90, rentalPrice: 0.45 }]
+                          eslPackages: [...currentPackages, { model: 'DS021Q', purchasePrice: 13.90, rentalPrice: 0.45 }]
                         } as any);
                       }}
                       className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-md transition-colors flex items-center gap-1"
                     >
-                      + Paket Ekle
+                      + Fiyat Ekle
                     </button>
                   </div>
 
@@ -1177,7 +1177,7 @@ export default function PlansPage() {
                     };
                     
                     return (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 bg-indigo-900/10 border border-indigo-200 dark:border-indigo-700/30 rounded-lg relative">
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-indigo-900/10 border border-indigo-200 dark:border-indigo-700/30 rounded-lg relative">
                       <div className="md:col-span-2">
                         <label className="block text-[10px] font-medium text-muted-foreground mb-1">Model & Ebat</label>
                         <select
@@ -1205,19 +1205,6 @@ export default function PlansPage() {
                           <option value="DS026F">DS026F (2.66") - Soğuk Hava (-25°C)</option>
                           <option value="DS021Q">DS021Q (2.13") - 4 Renk</option>
                         </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-medium text-muted-foreground mb-1">Adet</label>
-                        <input
-                          type="number"
-                          value={pkg.quantity ?? ''}
-                          onChange={e => {
-                            const newPackages = [...((formData as any).eslPackages || [])];
-                            newPackages[index].quantity = e.target.value === '' ? '' : parseInt(e.target.value);
-                            setFormData({ ...formData, eslPackages: newPackages } as any);
-                          }}
-                          className="w-full bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 rounded-md px-2 py-1.5 text-foreground text-xs"
-                        />
                       </div>
                       <div>
                         <label className="block text-[10px] font-medium text-muted-foreground mb-1">
@@ -1268,7 +1255,7 @@ export default function PlansPage() {
                   )})}
                   {((formData as any).eslPackages || []).length === 0 && (
                     <div className="text-center py-6 border border-dashed border-indigo-200 dark:border-indigo-800 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Henüz paket eklenmedi. &quot;Paket Ekle&quot; butonuna tıklayarak modele göre adet belirleyebilirsiniz.</p>
+                      <p className="text-xs text-muted-foreground">Henüz fiyat eklenmedi. &quot;Fiyat Ekle&quot; butonuna tıklayarak abonelik paketi için birim fiyatları tanımlayabilirsiniz.</p>
                     </div>
                   )}
                 </div>
