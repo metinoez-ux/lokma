@@ -3195,7 +3195,7 @@ export default function BusinessDetailsPage() {
 
  {/* Cancelled & Completed Modals Buttons */}
  <button onClick={() => setShowCancelledModal(true)} className="px-3 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 dark:hover:bg-red-900/60 shadow-sm transition-colors flex items-center gap-1.5">
-   <span>İptal ({stats.cancelled})</span>
+   <span>İptal ({orders.filter(o => o.status === 'cancelled' && (o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0)) > Date.now() - 7 * 24 * 60 * 60 * 1000).length})</span>
  </button>
  <button onClick={() => setShowCompletedModal(true)} className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-200 dark:hover:bg-emerald-900/60 shadow-sm transition-colors flex items-center gap-1.5">
    <span>Geçmiş Siparişler</span>
