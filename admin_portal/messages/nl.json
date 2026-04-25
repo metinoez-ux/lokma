@@ -1252,7 +1252,9 @@
     "extraOrder": "Extra Order",
     "personnelLimit": "Staff Limit",
     "extraPersonnel": "Extra Staff",
-    "productLimit": "Product Limit"
+    "productLimit": "Product Limit",
+    "daha_az_goster": "Daha Az Göster",
+    "tum_ozellikleri_goster": "Tüm {count} özelliği göster"
   },
   "AdminCompanySettings": {
     "title": "Company Settings",
@@ -1583,7 +1585,9 @@
     "reduced": "Reduced",
     "standard": "Standard",
     "pdf_create_error": "Fout bij PDF-creatie",
-    "datev_format_title": "DATEV Formaat (Boekhouder)"
+    "datev_format_title": "DATEV Formaat (Boekhouder)",
+    "filtreleri_gizle": "Filtreleri Gizle",
+    "filtreleme_secenekleri": "Filtreleme Seçenekleri"
   },
   "AdminNav": {
     "businessCampaigns": "Bedrijfscampagnes",
@@ -1760,7 +1764,7 @@
     "tum_personeli_goruntule_": "Tüm personeli görüntüle →",
     "_surucu": "🚗 Sürücü",
     "_i̇sletme_sahibi": "👑 İşletme Sahibi",
-    "_masa": "🪑 Masa:",
+    "_masa": "Masa:",
     "cikis": "çıkış",
     "_bosta": "⏸️ Boşta",
     "_bugun": "Bugün:",
@@ -1774,7 +1778,7 @@
     "sure": "Süre",
     "_i̇ptal": "❌ İptal",
     "teslimat_kaydi_yok": "teslimat kaydı yok",
-    "_bugun_servis_edilen_masalar": "🪑 Bugün Servis Edilen Masalar",
+    "_bugun_servis_edilen_masalar": "Bugün Servis Edilen Masalar",
     "masa": "Masa",
     "_kayit": "Kayıt:",
     "_aktif_hesap": "✅ Aktif Hesap",
@@ -2420,7 +2424,8 @@
     "musteriye_verilecek_masa_kartini_secin": "Musteriye verilecek masa kartini secin",
     "secili": "Secili",
     "bos": "Bos",
-    "numara_secin": "Numara secin"
+    "numara_secin": "Numara secin",
+    "guvenlik_notu": "Güvenlik Notu: Hassas ödeme verileri sistemlerimizde saklanmaz."
   },
   "AdminBusinessOrders": {
     "title": "Order Management",
@@ -2846,7 +2851,9 @@
     "oran": "Tarief",
     "net_kdv": "Netto + BTW",
     "ciro": "Omzet",
-    "iletisim_son": "neem contact op"
+    "iletisim_son": "neem contact op",
+    "henuz_fatura_yok": "Bu cari ay için henüz açık bir fatura (işlem) bulunmuyor.",
+    "tahmini_guncel_fatura": "Güncel Tahmini Fatura (Bu Ay)"
   },
   "AdminAdmins": {
     "super_admin": "Super Admin",
@@ -3008,7 +3015,7 @@
     "hali_yikama_talebi": "🧹 Carpet Washing Request",
     "haritada_gor": "See on Map",
     "hazir": "Ready",
-    "hazirlaniyor": "👨‍🍳 Getting Ready",
+    "hazirlaniyor": "Getting Ready",
     "i_sletme": "Business:",
     "id": "ID:",
     "kategori": "Category",
@@ -3557,7 +3564,7 @@
     "faturayiİPtalEtStorno": "Faturayı İptal Et (Storno)",
     "faturaYuklemeHatasi": "Fatura yükleme hatası:",
     "filtreleriDegistirmeyiDeneyin": "Filtreleri değiştirmeyi deneyin",
-    "garsonSiparis": "👨‍🍳 Garson Sipariş",
+    "garsonSiparis": "Garson Sipariş",
     "gatewayHatasi": "❌ Gateway hatası:",
     "gatewayUrlGirilmemis": "❌ Gateway URL girilmemiş!",
     "gecenAyIle": "📊 Geçen Ay ile",
@@ -3716,8 +3723,8 @@
     "lutfenZorunluAlanlariDoldurun": "Lütfen zorunlu alanları doldurun!",
     "manuelFaturaOlustur": "📄 Manuel Fatura Oluştur",
     "marketlerSekmesindeGosterilir": "Marketler sekmesinde gösterilir",
-    "masadaSiparisQrKod": "🪑 Masada Sipariş (QR Kod)",
-    "masaGrupSiparisleri": "🪑 Masa Grup Siparişleri",
+    "masadaSiparisQrKod": "Masada Sipariş (QR Kod)",
+    "masaGrupSiparisleri": "Masa Grup Siparişleri",
     "masaOturumlariVeGruplari": "Masa oturumları ve grupları",
     "masaOturumlariYukleniyor": "Masa oturumları yükleniyor...",
     "maxUrunSayisi": "Max Ürün Sayısı",
