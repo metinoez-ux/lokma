@@ -255,24 +255,41 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final category = cat ?? _selectedCategory;
     final tabKey = _tabKeys[category];
     if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) return;
-    
+
     final RenderBox? chipBox = tabKey!.currentContext!.findRenderObject() as RenderBox?;
     final RenderBox? rowBox = _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
     if (chipBox == null || rowBox == null) return;
-    
-    final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
-    
+    if (!chipBox.hasSize || !rowBox.hasSize) return;
+
+    // Use rowBox.globalToLocal(chipBox.localToGlobal(Offset.zero)) for safer
+    // cross-context coordinate conversion (works correctly when SliverPersistentHeader
+    // is pinned, where ancestor-based localToGlobal can return wrong values)
+    final chipGlobal = chipBox.localToGlobal(Offset.zero);
+    final chipInRow = rowBox.globalToLocal(chipGlobal);
+    final newLeft = chipInRow.dx;
+    final newWidth = chipBox.size.width;
+
+    // Sanity check: reject clearly invalid values (chip outside row bounds)
+    if (newWidth <= 0 || newLeft < -1 || newLeft > rowBox.size.width) {
+      debugPrint('⚠️ [PILL] Skipping invalid pill pos: left=$newLeft, width=$newWidth, rowWidth=${rowBox.size.width}');
+      // Still mark as initialized so text colors work correctly
+      if (!_pillInitialized && mounted) {
+        setState(() => _pillInitialized = true);
+      }
+      return;
+    }
+
     if (mounted) {
-      if ((_pillLeft - chipPos.dx).abs() > 0.5 || (_pillWidth - chipBox.size.width).abs() > 0.5 || !_pillInitialized) {
-        debugPrint('🌀 [LOOP FIX] _updatePillPosition setState: oldLeft=$_pillLeft, newLeft=${chipPos.dx}, oldWidth=$_pillWidth, newWidth=${chipBox.size.width}');
+      if ((_pillLeft - newLeft).abs() > 0.5 || (_pillWidth - newWidth).abs() > 0.5 || !_pillInitialized) {
         setState(() {
-          _pillLeft = chipPos.dx;
-          _pillWidth = chipBox.size.width;
+          _pillLeft = newLeft;
+          _pillWidth = newWidth;
           _pillInitialized = true;
         });
       }
     }
   }
+
 
   DateTime _lastScrollTime = DateTime.now();
 
@@ -288,12 +305,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       if (_selectedCategory != 'marketplace.category_all'.tr()) {
         HapticFeedback.selectionClick();
         setState(() => _selectedCategory = 'marketplace.category_all'.tr());
-        // Delay chip scroll to avoid conflicting with main scroll
+        // Pill moves immediately next frame; chip scroll bar waits to avoid conflicting with main scroll
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _updatePillPosition('marketplace.category_all'.tr());
+        });
         Future.delayed(const Duration(milliseconds: 50), () {
-          if (mounted) {
-            _scrollChipBarToSelected('marketplace.category_all'.tr());
-            _updatePillPosition('marketplace.category_all'.tr());
-          }
+          if (mounted) _scrollChipBarToSelected('marketplace.category_all'.tr());
         });
       }
       return;
@@ -325,12 +342,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       setState(() {
         _selectedCategory = visibleCategory!;
       });
-      // Delay chip scroll to avoid conflicting with main scroll
+      // Pill moves immediately next frame so text color matches pill position instantly
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _updatePillPosition(visibleCategory!);
+      });
+      // Chip scroll bar waits to avoid conflicting with main vertical scroll
       Future.delayed(const Duration(milliseconds: 50), () {
-        if (mounted) {
-          _scrollChipBarToSelected(visibleCategory!);
-          _updatePillPosition(visibleCategory!);
-        }
+        if (mounted) _scrollChipBarToSelected(visibleCategory!);
       });
     }
   }
@@ -1610,9 +1628,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           }
           
           final showTabs = tabs.length > 1;
-          
-          return Container(
-            height: MediaQuery.of(ctx).size.height * 0.75,
+
+          return DraggableScrollableSheet(
+            initialChildSize: 0.75,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (ctx2, scrollController) => Container(
             decoration: BoxDecoration(
               color: sheetBg,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -1627,10 +1649,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     width: 40, height: 4,
                     decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
                   ),
-                  
+
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      controller: scrollController,
+
                       children: [
                         // ═══ Business Name ═══
                         Text(
@@ -1977,29 +2000,33 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ],
                         
                         const SizedBox(height: 30),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+                      ],    // ListView children
+                    ),      // ListView
+                  ),        // Expanded
+                ],          // Column children
+              ),            // Column
+            ),              // DefaultTabController
+          ),               // Container (DSS builder return)
+        );  // DraggableScrollableSheet
         } catch (e) {
           debugPrint('Error building info sheet: $e');
-          return Container(
+          return SizedBox(
             height: MediaQuery.of(context).size.height * 0.4,
-            decoration: BoxDecoration(
-              color: sheetBg,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Center(
-              child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: subtitleColor)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: sheetBg,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Center(
+                child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: subtitleColor)),
+              ),
             ),
           );
         }
       },
     );
   }
+
 
   // ═══ IMPRESSUM SECTION ═══
   Widget _buildImpressumSection(Map<String, dynamic>? data, Color textColor, Color subtitleColor) {
@@ -2290,43 +2317,45 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
       if (!structureMatch) {
         return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             _buildOpenStatusHeader(isOpenNow),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: lines.map((line) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Text(line, style: GoogleFonts.inter(color: textColor, fontSize: 14, fontWeight: FontWeight.w300)),
-                )).toList(),
-              ),
+            ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              children: lines.map((line) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Text(line, style: GoogleFonts.inter(color: textColor, fontSize: 14, fontWeight: FontWeight.w300)),
+              )).toList(),
             ),
           ],
         );
       }
 
       return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildOpenStatusHeader(isOpenNow),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: List.generate(7, (i) {
-                final dayNameTr = dayNamesTr[i];
-                final dayNameDisplay = dayNamesDisplay[i];
-                final isToday = todayIndex == i;
-                
-                final line = lines.firstWhere(
-                  (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
-                  orElse: () => '$dayNameTr: Kapalı'
-                );
-                
-                String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
-                if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
+          ListView(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            children: List.generate(7, (i) {
+              final dayNameTr = dayNamesTr[i];
+              final dayNameDisplay = dayNamesDisplay[i];
+              final isToday = todayIndex == i;
 
-                return _buildDayRow(dayNameDisplay, content, isToday, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
-              }),
-            ),
+              final line = lines.firstWhere(
+                (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
+                orElse: () => '$dayNameTr: Kapalı'
+              );
+
+              String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+              if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
+
+              return _buildDayRow(dayNameDisplay, content, isToday, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+            }),
           ),
         ],
       );
@@ -2385,26 +2414,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
       if (structureMatch) {
         return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             _buildOpenStatusHeader(isOpenNow),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: List.generate(7, (i) {
-                  final dayNameTr = dayNamesTr[i];
-                  final line = standardizedLines.firstWhere(
-                    (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
-                    orElse: () => '$dayNameTr: Kapalı',
-                  );
-                  String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
-                  final isClosed = content.isEmpty ||
-                      content.toLowerCase().contains('kapalı') ||
-                      content.toLowerCase().contains('geschlossen') ||
-                      content.toLowerCase().contains('closed');
-                  if (isClosed) content = 'common.closed'.tr();
-                  return _buildDayRow(dayNamesDisplay[i], content, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
-                }),
-              ),
+            ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              children: List.generate(7, (i) {
+                final dayNameTr = dayNamesTr[i];
+                final line = standardizedLines.firstWhere(
+                  (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
+                  orElse: () => '$dayNameTr: Kapalı',
+                );
+                String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+                final isClosed = content.isEmpty ||
+                    content.toLowerCase().contains('kapalı') ||
+                    content.toLowerCase().contains('geschlossen') ||
+                    content.toLowerCase().contains('closed');
+                if (isClosed) content = 'common.closed'.tr();
+                return _buildDayRow(dayNamesDisplay[i], content, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+              }),
             ),
           ],
         );
@@ -2431,15 +2461,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final isOpenNow = OpeningHoursHelper(null).isOpenWithinTime(startTime, endTime, now);
     
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         _buildOpenStatusHeader(isOpenNow),
-        Expanded(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: List.generate(7, (i) {
-              return _buildDayRow(dayNamesDisplay[i], hoursText, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
-            }),
-          ),
+        ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: List.generate(7, (i) {
+            return _buildDayRow(dayNamesDisplay[i], hoursText, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+          }),
         ),
       ],
     );
@@ -3464,9 +3495,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       child: Stack(
                                         alignment: Alignment.centerLeft,
                                         children: [
-                                          // 1. Sliding pill indicator (painted first = behind)
-                                          if (_pillInitialized)
-                                            AnimatedPositioned(
+                                          // 1. Sliding pill indicator (always rendered, fades in once positioned)
+                                          AnimatedOpacity(
+                                            opacity: _pillInitialized ? 1.0 : 0.0,
+                                            duration: const Duration(milliseconds: 200),
+                                            child: AnimatedPositioned(
                                               duration: const Duration(milliseconds: 400),
                                               curve: Curves.easeOutBack,
                                               left: _pillLeft,
@@ -3475,7 +3508,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               child: AnimatedContainer(
                                                 duration: const Duration(milliseconds: 400),
                                                 curve: Curves.easeOutBack,
-                                                width: _pillWidth,
+                                                width: _pillWidth > 0 ? _pillWidth : 80,
                                                 decoration: BoxDecoration(
                                                   color: isDark ? Colors.white : const Color(0xFF3E3E3F),
                                                   borderRadius: BorderRadius.circular(50),
@@ -3489,6 +3522,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                 ),
                                               ),
                                             ),
+                                          ),
+
                                           // 2. Chip texts row (painted second = on top of pill)
                                           Row(
                                             key: _chipRowKey,
@@ -3517,8 +3552,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                           duration: const Duration(milliseconds: 300),
                                                           curve: Curves.easeOutCubic,
                                                           style: TextStyle(
-                                                            color: isSelected 
-                                                              ? (isDark ? Colors.black : Colors.white) 
+                                                            // Pill fades in via AnimatedOpacity.
+                                                            // Until initialized, show readable fallback for selected chip
+                                                            // so it doesn't appear invisible against the scaffold background.
+                                                            color: isSelected
+                                                              ? (_pillInitialized
+                                                                  ? (isDark ? Colors.black : Colors.white)   // on pill
+                                                                  : (isDark ? Colors.white : Colors.black87)) // pre-pill fallback
                                                               : (isDark ? Colors.white70 : Colors.black54),
                                                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                                             fontSize: 14,
@@ -3527,6 +3567,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                             catName == 'Tümü' ? tr('business_details.all') : _formatCategoryKey(catName),
                                                           ),
                                                         ),
+
                                                         if (catCartCount > 0) ...[
                                                           const SizedBox(width: 6),
                                                           AnimatedContainer(
