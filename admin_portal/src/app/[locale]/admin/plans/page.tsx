@@ -1130,7 +1130,9 @@ export default function PlansPage() {
             {(formData.features as any)?.eslIntegration && (
               <div className="pt-4 border-t border-border/50">
                 <div className="mb-6">
-                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">Aylık Sistem Ücreti (€)</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    Aylık Sistem Ücreti (€ Netto) <span className="text-red-500 ml-1">+ 19% MwSt.</span>
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -1139,7 +1141,7 @@ export default function PlansPage() {
                     className="w-full md:w-1/3 min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
                     placeholder="29.90"
                   />
-                  <p className="text-[10px] text-muted-foreground/70 mt-1">SaaS & Base Station.</p>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">SaaS & Base Station. Tüm fiyatlar Netto üzerinden hesaplanır.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -1151,7 +1153,7 @@ export default function PlansPage() {
                         const currentPackages = (formData as any).eslPackages || [];
                         setFormData({
                           ...formData,
-                          eslPackages: [...currentPackages, { model: 'DS021Q', quantity: 100, purchasePrice: 6.99, rentalPrice: 0.35 }]
+                          eslPackages: [...currentPackages, { model: 'DS021Q', quantity: 100, purchasePrice: 13.90, rentalPrice: 0.45 }]
                         } as any);
                       }}
                       className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-md transition-colors flex items-center gap-1"
@@ -1160,15 +1162,34 @@ export default function PlansPage() {
                     </button>
                   </div>
 
-                  {((formData as any).eslPackages || []).map((pkg: any, index: number) => (
+                  {((formData as any).eslPackages || []).map((pkg: any, index: number) => {
+                    const eslPrices: any = {
+                      DS116: { purchase: 65.90, rental: 2.50 },
+                      DS042Q: { purchase: 28.90, rental: 1.20 },
+                      DS042F: { purchase: 26.90, rental: 1.10 },
+                      DS043Q: { purchase: 29.90, rental: 1.30 },
+                      DS035Q: { purchase: 23.90, rental: 0.90 },
+                      DS035B: { purchase: 21.90, rental: 0.80 },
+                      DS029Q: { purchase: 19.90, rental: 0.70 },
+                      DS027Q: { purchase: 18.90, rental: 0.65 },
+                      DS026F: { purchase: 16.90, rental: 0.55 },
+                      DS021Q: { purchase: 13.90, rental: 0.45 },
+                    };
+                    
+                    return (
                     <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 bg-indigo-900/10 border border-indigo-200 dark:border-indigo-700/30 rounded-lg relative">
                       <div className="md:col-span-2">
                         <label className="block text-[10px] font-medium text-muted-foreground mb-1">Model & Ebat</label>
                         <select
                           value={pkg.model}
                           onChange={e => {
+                            const newModel = e.target.value;
                             const newPackages = [...((formData as any).eslPackages || [])];
-                            newPackages[index].model = e.target.value;
+                            newPackages[index].model = newModel;
+                            if (eslPrices[newModel]) {
+                              newPackages[index].purchasePrice = eslPrices[newModel].purchase;
+                              newPackages[index].rentalPrice = eslPrices[newModel].rental;
+                            }
                             setFormData({ ...formData, eslPackages: newPackages } as any);
                           }}
                           className="w-full bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 rounded-md px-2 py-1.5 text-foreground text-xs"
@@ -1199,7 +1220,9 @@ export default function PlansPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-muted-foreground mb-1">Satın Alma (€)</label>
+                        <label className="block text-[10px] font-medium text-muted-foreground mb-1">
+                          Satın Alma <span className="text-[9px] text-red-500">(Netto)</span>
+                        </label>
                         <input
                           type="number"
                           step="0.01"
@@ -1213,7 +1236,9 @@ export default function PlansPage() {
                         />
                       </div>
                       <div className="relative">
-                        <label className="block text-[10px] font-medium text-muted-foreground mb-1">Kira (€/Ay)</label>
+                        <label className="block text-[10px] font-medium text-muted-foreground mb-1">
+                          Kira/Ay <span className="text-[9px] text-red-500">(Netto)</span>
+                        </label>
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
@@ -1240,7 +1265,7 @@ export default function PlansPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                   {((formData as any).eslPackages || []).length === 0 && (
                     <div className="text-center py-6 border border-dashed border-indigo-200 dark:border-indigo-800 rounded-lg">
                       <p className="text-xs text-muted-foreground">Henüz paket eklenmedi. &quot;Paket Ekle&quot; butonuna tıklayarak modele göre adet belirleyebilirsiniz.</p>
