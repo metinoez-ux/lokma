@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import AbonelikTabContent from '../admin/business/[id]/AbonelikTabContent';
 
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -11,8 +13,7 @@ import { invoiceService } from '@/services/invoiceService';
 import { subscriptionService } from '@/services/subscriptionService';
 import { ButcherSubscriptionPlan } from '@/types';
 import { formatCurrency } from '@/utils/currency';
-import { useTranslations } from 'next-intl';
-import AbonelikTabContent from '../admin/business/[id]/AbonelikTabContent';
+import SubscriptionChangeModal from '@/components/admin/SubscriptionChangeModal';
 
 // Helper: Generate display features list from a Firestore plan
 function getPlanFeatures(plan: ButcherSubscriptionPlan): string[] {
@@ -78,6 +79,9 @@ export default function AccountPage() {
  bankName: '',
  });
  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'subscription' | 'billing'>('overview');
+  const tSub = useTranslations('Subscription');
+  const tAdmin = useTranslations('Admin');
 
  // ═══════════════════════════════════════════════════════════════════
  // AUTH & DATA LOADING
@@ -270,7 +274,39 @@ export default function AccountPage() {
  setSaving(false);
  };
 
- 
+ // ═══════════════════════════════════════════════════════════════════
+ // PLAN DEĞİŞİMİ (GELECEK AYIN 1'İ)
+ // ═══════════════════════════════════════════════════════════════════
+ const handleConfirmPlanChange = async (planCode: string) => {
+ if (!business?.id) return;
+ setSaving(true);
+ try {
+ const date = new Date();
+ date.setMonth(date.getMonth() + 1);
+ date.setDate(1);
+ date.setHours(0, 0, 0, 0);
+
+ const pendingPlanData = {
+ planCode,
+ effectiveDate: date
+ };
+
+ await updateDoc(doc(db, 'businesses', business.id), {
+ pendingPlanChange: pendingPlanData,
+ updatedAt: new Date()
+ });
+
+ setBusiness({ ...business, pendingPlanChange: pendingPlanData });
+ setShowConfirmModal(false);
+ setTargetPlan(null);
+ alert(`Geçiş onaylandı. Yeni planınız ${date.toLocaleDateString('tr-TR')} tarihinde aktif olacak.`);
+ } catch (error) {
+ console.error('Plan geçişi hatası:', error);
+ alert('Plan geçişi sırasında bir hata oluştu.');
+ }
+ setSaving(false);
+ };
+
  // ═══════════════════════════════════════════════════════════════════
  // RENDER
  // ═══════════════════════════════════════════════════════════════════
@@ -314,6 +350,45 @@ export default function AccountPage() {
  </Link>
  </div>
 
+  {/* ═══════════════════════════════════════════════════════════════════
+  TABS NAVIGATION
+  ═══════════════════════════════════════════════════════════════════ */}
+  <div className="flex overflow-x-auto gap-2 mb-6 bg-card/50 p-1.5 rounded-xl border border-border w-fit">
+    <button
+      onClick={() => setActiveTab('overview')}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+        activeTab === 'overview'
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+      }`}
+    >
+      Özet
+    </button>
+    <button
+      onClick={() => setActiveTab('subscription')}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+        activeTab === 'subscription'
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+      }`}
+    >
+      Abonelik
+    </button>
+    <button
+      onClick={() => setActiveTab('billing')}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+        activeTab === 'billing'
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+      }`}
+    >
+      Fatura & Ödeme
+    </button>
+  </div>
+
+  {activeTab === 'overview' && (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+
  {/* ═══════════════════════════════════════════════════════════════════
  AKTİF PLAN KARTI
  ═══════════════════════════════════════════════════════════════════ */}
@@ -338,12 +413,7 @@ export default function AccountPage() {
  <p className="text-4xl font-bold text-white">
  {formatCurrency(planPrice, livePlan?.currency || business?.currency)}
  </p>
- <button
- onClick={() => setActiveTab('subscription')}
- className="mt-3 px-5 py-2 bg-background/20 hover:bg-background/30 text-white rounded-lg font-medium transition"
- >
- 🔄 Plan Değiştir
- </button>
+ 
  </div>
  </div>
 
@@ -535,6 +605,25 @@ export default function AccountPage() {
  </div>
  </div>
 
+  </div>
+  )}
+
+  {activeTab === 'subscription' && (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <AbonelikTabContent
+      business={business}
+      availablePlans={allPlans}
+      admin={admin}
+      t={tSub}
+      showToast={(msg: string) => alert(msg)}
+      setBusiness={setBusiness}
+    />
+  </div>
+  )}
+
+  {activeTab === 'billing' && (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+
  {/* ═══════════════════════════════════════════════════════════════════
  STRIPE CONNECT - BANKA HESABI
  ═══════════════════════════════════════════════════════════════════ */}
@@ -699,6 +788,8 @@ export default function AccountPage() {
  </div>
  )}
  </div>
+  </div>
+  )}
  </div>
 
  {/* ═══════════════════════════════════════════════════════════════════
@@ -771,79 +862,6 @@ export default function AccountPage() {
  </div>
  )}
 
- {/* ═══════════════════════════════════════════════════════════════════
- PLAN DEĞİŞTİRME MODAL
- ═══════════════════════════════════════════════════════════════════ */}
- {showPlanModal && (
- <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
- <div className="bg-gray-800 rounded-xl p-6 w-full max-w-4xl my-8">
- <div className="flex items-center justify-between mb-6">
- <h2 className="text-xl font-bold text-white">🔄 Plan Değiştir</h2>
- <button onClick={() => setShowPlanModal(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- {allPlans.length > 0 ? allPlans.map((plan) => {
- const isCurrentPlan = livePlan?.id === plan.id || currentPlan === plan.id || currentPlan === plan.code;
- const icon = getPlanIcon(plan);
- const features = getPlanFeatures(plan);
- return (
- <div
- key={plan.id}
- className={`rounded-xl p-5 border-2 transition-all ${isCurrentPlan
- ? 'border-green-500 bg-green-900/20'
- : 'border-gray-700 hover:border-gray-500 bg-gray-700/30'
- }`}
- >
- <div className="text-center mb-4">
- <span className="text-3xl">{icon}</span>
- <h3 className="text-xl font-bold text-white mt-2">{plan.name}</h3>
- <p className="text-3xl font-bold text-white mt-2">
- {formatCurrency(plan.monthlyFee, plan.currency || business?.currency)}
- <span className="text-sm text-gray-400">/ay</span>
- </p>
- </div>
- <ul className="space-y-2 mb-4 text-sm">
- {features.map((f, i) => (
- <li key={i} className="text-gray-300 flex items-center gap-2">
- <span className="text-green-400">✓</span> {f}
- </li>
- ))}
- <li className="text-gray-400 flex items-center gap-2">
- <span>💰</span> %{plan.commissionClickCollect} provizyon
- </li>
- </ul>
- {isCurrentPlan ? (
- <div className="text-center py-2 bg-green-600/30 text-green-400 rounded-lg font-medium">
- ✓ Mevcut Plan
- </div>
- ) : (
- <button 
- onClick={() => {
- setTargetPlan(plan);
- setShowPlanModal(false);
- setShowConfirmModal(true);
- }}
- className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium"
- >
- Seç
- </button>
- )}
- </div>
- );
- }) : (
- <div className="col-span-3 text-center text-gray-400 py-8">
- Yükleniyor...
- </div>
- )}
- </div>
-
- <p className="text-muted-foreground/80 text-sm text-center mt-6">
- Plan değişikliği bir sonraki fatura döneminde geçerli olur.
- </p>
- </div>
- </div>
- )}
- </div>
- );
+  </div>
+  );
 }
