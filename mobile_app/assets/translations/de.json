@@ -1418,6 +1418,7 @@
         "reserve_now": "Reservieren",
         "closed_but_preorder_short": "Du kannst die Lieferung oder Abholung für später planen",
         "closed_plan_later": "Du kannst die Lieferung oder Abholung für später planen",
+        "closed_masa_welcome_back": "Wir freuen uns auf deinen Besuch! Ab {time} sind wir wieder für dich da.",
         "distance_all": "Alle",
         "table_selected": "Tisch {tableNum} ausgewählt",
         "table_verified": "Tisch {tableNum} bestätigt",

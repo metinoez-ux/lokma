@@ -1405,6 +1405,7 @@
         "back_to_menu": "Back to Menu",
         "closed_but_preorder_short": "You can schedule delivery or pickup for later",
         "closed_plan_later": "You can schedule delivery or pickup for later",
+        "closed_masa_welcome_back": "We look forward to seeing you! We'll be back open at {time}.",
         "distance_all": "All",
         "table_selected": "Table {tableNum} selected",
         "table_verified": "Table {tableNum} verified",

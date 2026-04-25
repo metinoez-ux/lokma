@@ -1397,6 +1397,7 @@
         "mode_pickup": "Recogida",
         "closed_but_preorder_short": "Puedes programar la entrega o recogida para más tarde",
         "closed_plan_later": "Puedes programar la entrega o recogida para más tarde",
+        "closed_masa_welcome_back": "¡Te esperamos! Volvemos a abrir a las {time}.",
         "distance_all": "Todos",
         "table_selected": "Mesa {tableNum} seleccionada",
         "table_verified": "Mesa {tableNum} verificada",

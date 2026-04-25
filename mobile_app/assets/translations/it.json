@@ -1398,6 +1398,7 @@
         "mode_pickup": "Ritiro",
         "closed_but_preorder_short": "Puoi programmare la consegna o il ritiro per dopo",
         "closed_plan_later": "Puoi programmare la consegna o il ritiro per dopo",
+        "closed_masa_welcome_back": "Non vediamo l’ora di vederti! Riapriamo alle {time}.",
         "distance_all": "Tutti",
         "table_selected": "Tavolo {tableNum} selezionato",
         "table_verified": "Tavolo {tableNum} verificato",

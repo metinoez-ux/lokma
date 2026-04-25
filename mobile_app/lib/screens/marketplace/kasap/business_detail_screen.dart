@@ -159,41 +159,33 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   void _handleAddProduct(ButcherProduct product) {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     if (data == null) return;
-    
-    // Evaluate open state
-    bool isOpen = false;
-    if (data['openingHours'] != null) {
-      isOpen = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
-    }
-    if (!isOpen && data['deliveryHours'] != null) {
-      isOpen = OpeningHoursHelper(data['deliveryHours']).isOpenAt(DateTime.now());
-    }
-    if (!isOpen && data['pickupHours'] != null) {
-      isOpen = OpeningHoursHelper(data['pickupHours']).isOpenAt(DateTime.now());
-    }
-    if (data['openingHours'] == null && data['deliveryHours'] == null && data['pickupHours'] == null) {
-      isOpen = true;
-    }
 
-    // QR Code / Pre-order logic precedence
+    // In masa mode: QR must be scanned first (show prompt if not yet shown)
     if (_isMasaMode && widget.initialTableNumber == null && !_masaPreOrderPromptShown) {
       _showMasaPreOrderPrompt(product);
       return;
     }
 
-    // Closed logic
-    if (!isOpen) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('marketplace.currently_closed'.tr()),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      return;
+    // In masa mode with QR scanned: block if restaurant is closed (no pre-order for dine-in)
+    if (_isMasaMode && widget.initialTableNumber != null) {
+      bool isOpen = false;
+      if (data['openingHours'] != null) {
+        isOpen = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
+      }
+      if (data['openingHours'] == null) isOpen = true;
+      if (!isOpen) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('marketplace.currently_closed'.tr()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
     }
 
-    // Proceed to add
+    // Lieferung / Abholung: always proceed (pre-order allowed even when closed)
     if (product.optionGroups.isNotEmpty) {
       _showProductBottomSheet(product);
     } else {
@@ -208,6 +200,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       );
     }
   }
+
 
   void _quickAddToCart(ButcherProduct product, double quantity, String businessId, String? butcherName, {VoidCallback? onSuccess}) {
     if (CartWarningUtils.checkConflictForNormalCart(ref, businessId)) {
@@ -3268,7 +3261,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  );
                                },
                                child: Container(
-                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                                  decoration: BoxDecoration(
                                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
                                    borderRadius: BorderRadius.circular(20),
@@ -3283,7 +3276,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  ),
                                ),
                              ),
-                             if (((data?['cuisineType']?.toString() ?? '').isNotEmpty || (data?['type']?.toString() ?? '').isNotEmpty) || ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab)))
+                             // Separator after pill: only if cuisine/type exists OR closed badge will be visible (= QR scanned AND closed)
+                             if ((data?['cuisineType']?.toString() ?? '').isNotEmpty ||
+                                 (data?['type']?.toString() ?? '').isNotEmpty ||
+                                 (widget.initialTableNumber != null && (!isOpen || isPausedForCurrentTab)))
                                const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                            ],
 
@@ -3297,6 +3293,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  fontWeight: FontWeight.w500,
                                ),
                              ),
+                              // Separator before closed badge: only if QR scanned AND closed (masa mode), or always in normal mode
                               if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
                                 const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w900))),
                             ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
@@ -4058,11 +4055,200 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     Overlay.of(ctx).insert(overlayEntry);
   }
 
+  // Vor Ort kapalı bottom sheet — ön sipariş seçeneği olmadan, açılış saati + güzel mesaj
+  void _showMasaClosedSheet(Map<String, dynamic> data) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final businessName = data['companyName'] ?? data['businessName'] ?? data['name'] ?? '';
+
+    // Compute next opening time from openingHours
+    String nextOpenText = '';
+    try {
+      final helper = OpeningHoursHelper(data['openingHours']);
+      final now = DateTime.now();
+      final nextOpen = helper.getNextOpenDateTime(now);
+      if (nextOpen != null) {
+        final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+        final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+        final tomorrow = now.add(const Duration(days: 1));
+        final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+        if (isToday) {
+          nextOpenText = timeStr;
+        } else if (isTomorrow) {
+          nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
+        } else {
+          final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+          final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
+          nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+        }
+      }
+    } catch (_) {}
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      enableDrag: true,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[600] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                // Icon
+                Container(
+                  width: 72, height: 72,
+                  decoration: BoxDecoration(
+                    color: (isDark ? Colors.white : const Color(0xFF1C1C1E)).withOpacity(0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.storefront_outlined,
+                    size: 36,
+                    color: isDark ? Colors.white70 : const Color(0xFF1C1C1E),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Business name
+                Text(
+                  businessName,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                // "Currently closed" label
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    tr('business_status.closed'),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Next opening time card
+                if (nextOpenText.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF7F7F7),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.black.withOpacity(0.06),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 20,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            tr('marketplace.opens_today', namedArgs: {'time': nextOpenText}).contains(nextOpenText)
+                                ? tr('marketplace.opens_today', namedArgs: {'time': nextOpenText})
+                                : nextOpenText,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    tr('marketplace.closed_masa_welcome_back', namedArgs: {'time': nextOpenText}),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                // Close button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: TextButton.styleFrom(
+                      backgroundColor: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                    ),
+                    child: Text(
+                      tr('common.close'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // Masa Pre-Order Prompt - shown on first "+" tap in Masa mode
   void _showMasaPreOrderPrompt(ButcherProduct product) {
+
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
+    // Check if restaurant is currently open
+    bool isOpen = false;
+    if (data?['openingHours'] != null) {
+      isOpen = OpeningHoursHelper(data!['openingHours']).isOpenAt(DateTime.now());
+    }
+    if (data?['openingHours'] == null) isOpen = true;
+
+    // If closed in Vor Ort mode: show a friendly closed sheet (no pre-order option)
+    if (!isOpen && data != null) {
+      _showMasaClosedSheet(data);
+      return;
+    }
+
     showModalBottomSheet(
+
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

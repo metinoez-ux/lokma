@@ -1417,6 +1417,7 @@
         "back_to_menu": "Menuye Don",
         "closed_but_preorder_short": "Teslimat veya teslim almayı daha sonra planlayabilirsiniz",
         "closed_plan_later": "Teslimat veya teslim almayı daha sonra planlayabilirsiniz",
+        "closed_masa_welcome_back": "Sizi görmekten mutluluk duyarız! {time} itibarıyla tekrar hizmetinizdeyiz.",
         "distance_all": "Tümü",
         "table_selected": "Masa {tableNum} secildi",
         "table_verified": "Masa {tableNum} dogrulandi",

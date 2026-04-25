@@ -1397,6 +1397,7 @@
         "mode_pickup": "À emporter",
         "closed_but_preorder_short": "Vous pouvez planifier la livraison ou le retrait pour plus tard",
         "closed_plan_later": "Vous pouvez planifier la livraison ou le retrait pour plus tard",
+        "closed_masa_welcome_back": "Nous avons hâte de vous accueillir ! Nous serons de retour à {time}.",
         "distance_all": "Tous",
         "table_selected": "Table {tableNum} selectionnee",
         "table_verified": "Table {tableNum} verifiee",
