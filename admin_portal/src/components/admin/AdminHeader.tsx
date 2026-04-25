@@ -1161,6 +1161,14 @@ export default function AdminHeader() {
   >
   Lieferanten
   </Link>
+  {admin?.butcherId && (
+    <Link
+    href={`/admin/business/${admin.butcherId}?tab=procurement`}
+    className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav(`/admin/business/${admin.butcherId}`) && typeof window !== 'undefined' && window.location.search.includes('tab=procurement') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
+    >
+    Beschaffung
+    </Link>
+  )}
   </div>
   </div>
   </div>
@@ -1376,6 +1384,9 @@ export default function AdminHeader() {
   <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Produkte</Link>
   <Link href="/admin/categories" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Kategorien</Link>
   <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Lieferanten</Link>
+  {admin?.butcherId && (
+    <Link href={`/admin/business/${admin.butcherId}?tab=procurement`} onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Beschaffung</Link>
+  )}
   </div>
   )}
   </div>

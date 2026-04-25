@@ -45,7 +45,7 @@ import { useTranslations } from "next-intl";
 import { useSectors } from "@/hooks/useSectors";
 import { subscriptionService } from "@/services/subscriptionService";
 
-import { Star, History } from "lucide-react";
+import { Star, History, CalendarDays } from "lucide-react";
 import OrderCard from "@/components/admin/OrderCard";
 import { useOrdersStandalone, type Order } from "@/hooks/useOrders";
 import OrderDetailsModal from "@/components/admin/OrderDetailsModal";
@@ -261,7 +261,7 @@ export default function BusinessDetailsPage() {
  "overview" | "orders" | "reservations" | "settings" | "procurement"
  >(initialTab);
  const [settingsSubTab, setSettingsSubTab] = useState<
- "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing" | "teslimat" | "saatler"
+ "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing" | "teslimat" | "saatler" | "procurement" | "reservations"
  >(initialSubTab);
  const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
  const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat" | "saatler">("bilgiler");
@@ -326,7 +326,7 @@ export default function BusinessDetailsPage() {
  setActiveTab(tab as any);
  }
  const subTab = searchParams.get('subTab');
- if (subTab && ['isletme', 'menu', 'personel', 'masa', 'abonelik', 'teslimat', 'odeme', 'promosyon', 'marketing'].includes(subTab)) {
+ if (subTab && ['isletme', 'menu', 'personel', 'masa', 'abonelik', 'teslimat', 'odeme', 'promosyon', 'marketing', 'procurement', 'reservations'].includes(subTab)) {
  setSettingsSubTab(subTab as any);
  setActiveTab('settings');
  }
@@ -2875,19 +2875,6 @@ export default function BusinessDetailsPage() {
  >
  {t('siparisler')}{orders.length})
  </button>
- <button
- onClick={() => { setActiveTab("procurement"); setShowSettingsDropdown(false); }}
- className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
- >
- {t('tedarik')} ({supplierOrders.length})
- </button>
- <button
- onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
- className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
- >
- <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
- {t('masaRezervasyonlari')}
- </button>
 
  {/* Ayarlar Tab (Unified) */}
  <button
@@ -3806,248 +3793,6 @@ export default function BusinessDetailsPage() {
  )
  }
 
- {/* Procurement Tab */}
- {
- activeTab === "procurement" && (
- <LockedModuleOverlay featureKey="supplyChain">
- <div className="space-y-4">
- {/* Sub-tabs */}
- <div className="flex gap-2 mb-4">
- <button
- onClick={() => setProcurementSubTab('orders')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
- >
- {t('procurement_orders')} ({supplierOrders.length})
- </button>
- <button
- onClick={() => setProcurementSubTab('suppliers')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
- >
- {t('procurement_suppliers')} ({suppliers.length})
- </button>
- </div>
-
- {/* ═══ SUPPLIERS LIST ═══ */}
- {procurementSubTab === 'suppliers' && (
- <div className="bg-card rounded-xl overflow-hidden">
- <div className="p-4 border-b border-border flex justify-between items-center">
- <h3 className="text-foreground font-bold">{t('procurement_suppliers')}</h3>
- <button
- onClick={() => {
- setEditingSupplier(null);
- setSupplierForm({ name: '', contactPerson: '', phone: '', email: '', address: '', taxId: '', paymentTerms: '', deliveryDays: '', minOrderValue: '', notes: '', isActive: true });
- setShowSupplierModal(true);
- }}
- className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
- >
- {t('procurement_supplier_add')}
- </button>
- </div>
- {loadingSuppliers ? (
- <div className="text-center py-12 text-muted-foreground">
- <span className="animate-spin inline-block"></span> {t('procurement_loading')}
- </div>
- ) : suppliers.length === 0 ? (
- <div className="text-center py-12 text-muted-foreground">
- <p className="text-4xl mb-4"></p>
- <p>{t('henuz_tedarikci_eklenmemis')}</p>
- <p className="text-sm mt-1">{t('toptancilari_ekleyerek_takip')}</p>
- </div>
- ) : (
- <div className="divide-y divide-border">
- {suppliers.map((supplier: any) => (
- <div key={supplier.id} className="p-4 hover:bg-muted/40 dark:bg-muted/10 border-border flex items-center justify-between">
- <div className="flex-1">
- <div className="flex items-center gap-3">
- <span className="text-lg"></span>
- <div>
- <p className="text-foreground font-semibold">{supplier.name}</p>
- <div className="flex gap-4 text-xs text-muted-foreground mt-1">
- {supplier.contactPerson && <span>{supplier.contactPerson}</span>}
- {supplier.phone && <span>{supplier.phone}</span>}
- {supplier.email && <span>{supplier.email}</span>}
- {supplier.deliveryDays && <span>🚚 {supplier.deliveryDays} gün</span>}
- {supplier.paymentTerms && <span>💳 {supplier.paymentTerms}</span>}
- </div>
- </div>
- </div>
- </div>
- <div className="flex gap-2">
- <button
- onClick={() => {
- setEditingSupplier(supplier);
- setSupplierForm({
- name: supplier.name || '',
- contactPerson: supplier.contactPerson || '',
- phone: supplier.phone || '',
- email: supplier.email || '',
- address: supplier.address || '',
- taxId: supplier.taxId || '',
- paymentTerms: supplier.paymentTerms || '',
- deliveryDays: supplier.deliveryDays || '',
- minOrderValue: supplier.minOrderValue || '',
- notes: supplier.notes || '',
- isActive: supplier.isActive !== false,
- });
- setShowSupplierModal(true);
- }}
- className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
- >
- Düzenle
- </button>
- <button
- onClick={() => deleteSupplier(supplier.id)}
- className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 text-red-300 rounded text-xs"
- >
- 
- </button>
- </div>
- </div>
- ))}
- </div>
- )}
- </div>
- )}
-
- {/* ═══ SUPPLIER ORDERS LIST ═══ */}
- {procurementSubTab === 'orders' && (
- <div className="bg-card rounded-xl overflow-hidden">
- <div className="p-4 border-b border-border flex justify-between items-center">
- <h3 className="text-foreground font-bold">{t('procurement_orders')}</h3>
- <button
- onClick={() => {
- if (suppliers.length === 0) {
- showToast(t('procurement_add_supplier_first'), 'error');
- setProcurementSubTab('suppliers');
- return;
- }
- setEditingOrder(null);
- setOrderForm({
- supplierId: suppliers[0]?.id || '',
- supplierName: suppliers[0]?.name || '',
- status: 'draft',
- expectedDeliveryDate: '',
- notes: '',
- invoiceNumber: '',
- items: [{ productId: '', productName: '', sku: '', orderedQuantity: 1, receivedQuantity: 0, unit: 'kg', purchasePrice: 0, batchNumber: '', productionDate: '', expirationDate: '' }]
- });
- setShowOrderModal(true);
- }}
- className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
- >
- {t('procurement_new_order')}
- </button>
- </div>
- {loadingSupplierOrders ? (
- <div className="text-center py-12 text-muted-foreground">
- <span className="animate-spin inline-block"></span> {t('procurement_loading')}
- </div>
- ) : supplierOrders.length === 0 ? (
- <div className="text-center py-12 text-muted-foreground">
- <p className="text-4xl mb-4"></p>
- <p>{t('henuz_tedarik_siparisi_yok')}</p>
- <p className="text-sm mt-1">{t('toptancilardan_siparisleri_takip')}</p>
- </div>
- ) : (
- <table className="w-full text-left">
- <thead className="bg-muted/40 dark:bg-muted/10 border-border text-muted-foreground text-sm">
- <tr>
- <th className="px-4 py-3">{t('siparis_no')}</th>
- <th className="px-4 py-3">{t('tedarikci')}</th>
- <th className="px-4 py-3">{t('urunler_th')}</th>
- <th className="px-4 py-3">{t('tutar')}</th>
- <th className="px-4 py-3">{t('durum_th')}</th>
- <th className="px-4 py-3">{t('tarih_th')}</th>
- <th className="px-4 py-3">{t('islem_th')}</th>
- </tr>
- </thead>
- <tbody className="text-foreground">
- {supplierOrders.map((order: any) => {
- const statusColors: any = {
- draft: 'bg-muted border border-border text-foreground text-gray-200',
- ordered: 'bg-blue-600 text-blue-100',
- partiallyDelivered: 'bg-yellow-600 text-yellow-100',
- delivered: 'bg-green-600 text-green-100',
- cancelled: 'bg-red-600 text-red-100',
- };
- const statusLabels: any = {
- draft: t('procurement_status_draft'),
- ordered: t('procurement_status_ordered'),
- partiallyDelivered: t('procurement_status_partial'),
- delivered: t('procurement_status_delivered'),
- cancelled: ` ${t('iptal')}`,
- };
- return (
- <tr key={order.id} className="border-t border-border hover:bg-muted/40 dark:bg-muted/10 border-border">
- <td className="px-4 py-3 font-mono text-sm text-blue-800 dark:text-blue-400">{order.orderNumber}</td>
- <td className="px-4 py-3">{order.supplierName}</td>
- <td className="px-4 py-3 text-sm text-muted-foreground">{order.items?.length || 0} {t('procurement_items_count')}</td>
- <td className="px-4 py-3 font-semibold">{formatCurrency(order.totalAmount || 0, order.currency || 'EUR')}</td>
- <td className="px-4 py-3">
- <span className={`px-2 py-1 rounded text-xs ${statusColors[order.status] || 'bg-muted border border-border text-foreground'}`}>
- {statusLabels[order.status] || order.status}
- </span>
- </td>
- <td className="px-4 py-3 text-muted-foreground text-sm">
- {order.orderDate?.toDate?.()?.toLocaleDateString('de-DE') || order.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '—'}
- </td>
- <td className="px-4 py-3">
- <div className="flex gap-1">
- {(order.status === 'ordered' || order.status === 'partiallyDelivered') && (
- <button
- onClick={() => {
- setGoodsReceiptOrder({ ...order, items: order.items.map((it: any) => ({ ...it })) });
- setShowGoodsReceiptModal(true);
- }}
- className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-xs"
- >
- {t('procurement_goods_receipt')}
- </button>
- )}
- {order.status === 'draft' && (
- <button
- onClick={async () => {
- await updateDoc(doc(db, 'businesses', businessId, 'supplierOrders', order.id), { status: 'ordered', updatedAt: serverTimestamp() });
- showToast(t('procurement_order_marked'), 'success');
- loadSupplierOrders();
- }}
- className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
- >
- {t('procurement_place_order')}
- </button>
- )}
- <button
- onClick={() => {
- setEditingOrder(order);
- setOrderForm({
- supplierId: order.supplierId,
- supplierName: order.supplierName,
- status: order.status,
- expectedDeliveryDate: order.expectedDeliveryDate || '',
- notes: order.notes || '',
- invoiceNumber: order.invoiceNumber || '',
- items: order.items?.map((it: any) => ({ ...it })) || [],
- });
- setShowOrderModal(true);
- }}
- className="px-2 py-1 bg-muted border border-border text-foreground hover:bg-gray-500 text-white rounded text-xs"
- >
- 
- </button>
- </div>
- </td>
- </tr>
- );
- })}
- </tbody>
- </table>
- )}
- </div>
- )}
- </div>
- </LockedModuleOverlay>
- )
- }
 
  {/* Settings Tab (Unified Layout) */}
  {
@@ -4069,6 +3814,8 @@ export default function BusinessDetailsPage() {
  { key: "promosyon", label: t('promosyon_label'), icon: <Gift className="w-5 h-5"/>, featureKey: "promotions" },
 									{ key: "teslimat", label: t('teslimatAyarlari'), icon: <Truck className="w-5 h-5"/> },
 									{ key: "saatler", label: t('acilisSaatleri'), icon: <Clock className="w-5 h-5"/> },
+                  { key: "reservations", label: t('masaRezervasyonlari'), icon: <CalendarDays className="w-5 h-5"/> },
+                  { key: "procurement", label: "Produkte & Beschaffung", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
  
  ] as { key: string; label: string; icon: React.ReactNode; featureKey?: string }[]).map((item) => {
  const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
@@ -7983,18 +7730,13 @@ export default function BusinessDetailsPage() {
  </div>
  )
  }
- </div>
- </div>
- </div>
- )
- }
 
 
 
 
  {/* Reservations Tab */}
  {
- activeTab === "reservations" && (
+ activeTab === "settings" && settingsSubTab === "reservations" && (
  <div className="space-y-6">
  {/* Capacity Management Config */}
  <div className="bg-background rounded-2xl p-6 border border-border">
@@ -8014,7 +7756,7 @@ export default function BusinessDetailsPage() {
 
  {/* 🪑 Dine-In content — rendered within reservations tab */}
  {
- activeTab === "reservations" && (
+ activeTab === "settings" && settingsSubTab === "reservations" && (
  <div className="space-y-6">
  {/* ── Header Stats Row ── */}
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -8550,6 +8292,253 @@ export default function BusinessDetailsPage() {
  }
 
 
+ {/* Procurement Tab */}
+ {
+ settingsSubTab === "procurement" && (
+ <LockedModuleOverlay featureKey="supplyChain">
+ <div className="space-y-4">
+ {/* Sub-tabs */}
+ <div className="flex gap-2 mb-4">
+ <button
+ onClick={() => setProcurementSubTab('orders')}
+ className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
+ >
+ {t('procurement_orders')} ({supplierOrders.length})
+ </button>
+ <button
+ onClick={() => setProcurementSubTab('suppliers')}
+ className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
+ >
+ {t('procurement_suppliers')} ({suppliers.length})
+ </button>
+ </div>
+
+ {/* ═══ SUPPLIERS LIST ═══ */}
+ {procurementSubTab === 'suppliers' && (
+ <div className="bg-card rounded-xl overflow-hidden">
+ <div className="p-4 border-b border-border flex justify-between items-center">
+ <h3 className="text-foreground font-bold">{t('procurement_suppliers')}</h3>
+ <button
+ onClick={() => {
+ setEditingSupplier(null);
+ setSupplierForm({ name: '', contactPerson: '', phone: '', email: '', address: '', taxId: '', paymentTerms: '', deliveryDays: '', minOrderValue: '', notes: '', isActive: true });
+ setShowSupplierModal(true);
+ }}
+ className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
+ >
+ {t('procurement_supplier_add')}
+ </button>
+ </div>
+ {loadingSuppliers ? (
+ <div className="text-center py-12 text-muted-foreground">
+ <span className="animate-spin inline-block"></span> {t('procurement_loading')}
+ </div>
+ ) : suppliers.length === 0 ? (
+ <div className="text-center py-12 text-muted-foreground">
+ <p className="text-4xl mb-4"></p>
+ <p>{t('henuz_tedarikci_eklenmemis')}</p>
+ <p className="text-sm mt-1">{t('toptancilari_ekleyerek_takip')}</p>
+ </div>
+ ) : (
+ <div className="divide-y divide-border">
+ {suppliers.map((supplier: any) => (
+ <div key={supplier.id} className="p-4 hover:bg-muted/40 dark:bg-muted/10 border-border flex items-center justify-between">
+ <div className="flex-1">
+ <div className="flex items-center gap-3">
+ <span className="text-lg"></span>
+ <div>
+ <p className="text-foreground font-semibold">{supplier.name}</p>
+ <div className="flex gap-4 text-xs text-muted-foreground mt-1">
+ {supplier.contactPerson && <span>{supplier.contactPerson}</span>}
+ {supplier.phone && <span>{supplier.phone}</span>}
+ {supplier.email && <span>{supplier.email}</span>}
+ {supplier.deliveryDays && <span>🚚 {supplier.deliveryDays} gün</span>}
+ {supplier.paymentTerms && <span>💳 {supplier.paymentTerms}</span>}
+ </div>
+ </div>
+ </div>
+ </div>
+ <div className="flex gap-2">
+ <button
+ onClick={() => {
+ setEditingSupplier(supplier);
+ setSupplierForm({
+ name: supplier.name || '',
+ contactPerson: supplier.contactPerson || '',
+ phone: supplier.phone || '',
+ email: supplier.email || '',
+ address: supplier.address || '',
+ taxId: supplier.taxId || '',
+ paymentTerms: supplier.paymentTerms || '',
+ deliveryDays: supplier.deliveryDays || '',
+ minOrderValue: supplier.minOrderValue || '',
+ notes: supplier.notes || '',
+ isActive: supplier.isActive !== false,
+ });
+ setShowSupplierModal(true);
+ }}
+ className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
+ >
+ Düzenle
+ </button>
+ <button
+ onClick={() => deleteSupplier(supplier.id)}
+ className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 text-red-300 rounded text-xs"
+ >
+ 
+ </button>
+ </div>
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
+ )}
+
+ {/* ═══ SUPPLIER ORDERS LIST ═══ */}
+ {procurementSubTab === 'orders' && (
+ <div className="bg-card rounded-xl overflow-hidden">
+ <div className="p-4 border-b border-border flex justify-between items-center">
+ <h3 className="text-foreground font-bold">{t('procurement_orders')}</h3>
+ <button
+ onClick={() => {
+ if (suppliers.length === 0) {
+ showToast(t('procurement_add_supplier_first'), 'error');
+ setProcurementSubTab('suppliers');
+ return;
+ }
+ setEditingOrder(null);
+ setOrderForm({
+ supplierId: suppliers[0]?.id || '',
+ supplierName: suppliers[0]?.name || '',
+ status: 'draft',
+ expectedDeliveryDate: '',
+ notes: '',
+ invoiceNumber: '',
+ items: [{ productId: '', productName: '', sku: '', orderedQuantity: 1, receivedQuantity: 0, unit: 'kg', purchasePrice: 0, batchNumber: '', productionDate: '', expirationDate: '' }]
+ });
+ setShowOrderModal(true);
+ }}
+ className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
+ >
+ {t('procurement_new_order')}
+ </button>
+ </div>
+ {loadingSupplierOrders ? (
+ <div className="text-center py-12 text-muted-foreground">
+ <span className="animate-spin inline-block"></span> {t('procurement_loading')}
+ </div>
+ ) : supplierOrders.length === 0 ? (
+ <div className="text-center py-12 text-muted-foreground">
+ <p className="text-4xl mb-4"></p>
+ <p>{t('henuz_tedarik_siparisi_yok')}</p>
+ <p className="text-sm mt-1">{t('toptancilardan_siparisleri_takip')}</p>
+ </div>
+ ) : (
+ <table className="w-full text-left">
+ <thead className="bg-muted/40 dark:bg-muted/10 border-border text-muted-foreground text-sm">
+ <tr>
+ <th className="px-4 py-3">{t('siparis_no')}</th>
+ <th className="px-4 py-3">{t('tedarikci')}</th>
+ <th className="px-4 py-3">{t('urunler_th')}</th>
+ <th className="px-4 py-3">{t('tutar')}</th>
+ <th className="px-4 py-3">{t('durum_th')}</th>
+ <th className="px-4 py-3">{t('tarih_th')}</th>
+ <th className="px-4 py-3">{t('islem_th')}</th>
+ </tr>
+ </thead>
+ <tbody className="text-foreground">
+ {supplierOrders.map((order: any) => {
+ const statusColors: any = {
+ draft: 'bg-muted border border-border text-foreground text-gray-200',
+ ordered: 'bg-blue-600 text-blue-100',
+ partiallyDelivered: 'bg-yellow-600 text-yellow-100',
+ delivered: 'bg-green-600 text-green-100',
+ cancelled: 'bg-red-600 text-red-100',
+ };
+ const statusLabels: any = {
+ draft: t('procurement_status_draft'),
+ ordered: t('procurement_status_ordered'),
+ partiallyDelivered: t('procurement_status_partial'),
+ delivered: t('procurement_status_delivered'),
+ cancelled: ` ${t('iptal')}`,
+ };
+ return (
+ <tr key={order.id} className="border-t border-border hover:bg-muted/40 dark:bg-muted/10 border-border">
+ <td className="px-4 py-3 font-mono text-sm text-blue-800 dark:text-blue-400">{order.orderNumber}</td>
+ <td className="px-4 py-3">{order.supplierName}</td>
+ <td className="px-4 py-3 text-sm text-muted-foreground">{order.items?.length || 0} {t('procurement_items_count')}</td>
+ <td className="px-4 py-3 font-semibold">{formatCurrency(order.totalAmount || 0, order.currency || 'EUR')}</td>
+ <td className="px-4 py-3">
+ <span className={`px-2 py-1 rounded text-xs ${statusColors[order.status] || 'bg-muted border border-border text-foreground'}`}>
+ {statusLabels[order.status] || order.status}
+ </span>
+ </td>
+ <td className="px-4 py-3 text-muted-foreground text-sm">
+ {order.orderDate?.toDate?.()?.toLocaleDateString('de-DE') || order.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '—'}
+ </td>
+ <td className="px-4 py-3">
+ <div className="flex gap-1">
+ {(order.status === 'ordered' || order.status === 'partiallyDelivered') && (
+ <button
+ onClick={() => {
+ setGoodsReceiptOrder({ ...order, items: order.items.map((it: any) => ({ ...it })) });
+ setShowGoodsReceiptModal(true);
+ }}
+ className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-xs"
+ >
+ {t('procurement_goods_receipt')}
+ </button>
+ )}
+ {order.status === 'draft' && (
+ <button
+ onClick={async () => {
+ await updateDoc(doc(db, 'businesses', businessId, 'supplierOrders', order.id), { status: 'ordered', updatedAt: serverTimestamp() });
+ showToast(t('procurement_order_marked'), 'success');
+ loadSupplierOrders();
+ }}
+ className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
+ >
+ {t('procurement_place_order')}
+ </button>
+ )}
+ <button
+ onClick={() => {
+ setEditingOrder(order);
+ setOrderForm({
+ supplierId: order.supplierId,
+ supplierName: order.supplierName,
+ status: order.status,
+ expectedDeliveryDate: order.expectedDeliveryDate || '',
+ notes: order.notes || '',
+ invoiceNumber: order.invoiceNumber || '',
+ items: order.items?.map((it: any) => ({ ...it })) || [],
+ });
+ setShowOrderModal(true);
+ }}
+ className="px-2 py-1 bg-muted border border-border text-foreground hover:bg-gray-500 text-white rounded text-xs"
+ >
+ 
+ </button>
+ </div>
+ </td>
+ </tr>
+ );
+ })}
+ </tbody>
+ </table>
+ )}
+ </div>
+ )}
+ </div>
+ </LockedModuleOverlay>
+ )
+ }
+ </div>
+ </div>
+ </div>
+ )
+ }
  </main >
 
  {/* Confirmation Modal */}
