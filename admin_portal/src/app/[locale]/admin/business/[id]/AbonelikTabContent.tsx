@@ -199,6 +199,10 @@ export default function AbonelikTabContent({
             <strong className="text-white">€{(plan.eslSetupFee ?? 199.00).toFixed(2)}</strong>
           </div>
         )}
+        <div className="mb-2 text-[10px] text-indigo-200 bg-indigo-900/30 p-1.5 rounded border border-indigo-500/20 flex justify-between items-center">
+          <span>Minimum Kiralama Taahhüdü:</span>
+          <strong className="text-white">{plan.eslMinimumRentMonths ?? 12} Ay</strong>
+        </div>
 
         <div className="space-y-1.5">
           {plan.eslPackages.map((pkg: any, idx: number) => (
@@ -398,6 +402,15 @@ export default function AbonelikTabContent({
                       <span className="text-muted-foreground">Donanım Kiralama Toplamı:</span>
                       <span className="font-semibold text-indigo-300">€{totalRent.toFixed(2)} /ay</span>
                     </div>
+
+                    {totalRent > 0 && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs p-3 rounded flex items-start gap-2 mb-3">
+                        <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                        <div>
+                          <strong>Minimum Kiralama Süresi: {newPlan.eslMinimumRentMonths ?? 12} Ay.</strong> Donanım kira sözleşmesi, yazılım aboneliğinizden bağımsızdır. Abonelik paketinizi iptal etseniz veya düşürseniz dahi, donanım kiralama taahhüdünüz süresi bitene kadar devam eder.
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="bg-indigo-500/20 text-indigo-200 text-xs p-3 rounded flex items-start gap-2">
                       <Info className="w-4 h-4 shrink-0 mt-0.5" />

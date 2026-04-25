@@ -154,6 +154,7 @@ export default function PlansPage() {
  stripeProductId: formData.stripeProductId || null,
  eslStripePriceId: formData.eslStripePriceId || null,
  eslSetupFee: formData.eslSetupFee ?? 199.00,
+        eslMinimumRentMonths: formData.eslMinimumRentMonths ?? 12,
  yearlyFee: formData.yearlyFee || null,
  campaignLimit: (formData.campaignLimit === undefined || formData.campaignLimit === '') ? null : formData.campaignLimit,
  productLimit: (formData.productLimit === undefined || formData.productLimit === '') ? null : formData.productLimit,
@@ -1158,6 +1159,20 @@ export default function PlansPage() {
                       placeholder="199.00"
                     />
                     <p className="text-[10px] text-muted-foreground/70 mt-1">Saha Kurulum / Ağ Geçidi Aktivasyonu.</p>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      Min. Kiralama Taahhüdü (Ay)
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={(formData as any).eslMinimumRentMonths ?? 12}
+                      onChange={e => setFormData({ ...formData, eslMinimumRentMonths: e.target.value === '' ? '' : parseInt(e.target.value) } as any)}
+                      className="w-full min-w-0 bg-background border border-indigo-900/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
+                      placeholder="12"
+                    />
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">Donanım kiralama sözleşmesinin asgari süresi.</p>
                   </div>
                 </div>
 
