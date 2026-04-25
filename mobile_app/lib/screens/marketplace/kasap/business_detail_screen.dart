@@ -300,7 +300,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     if (now.difference(_lastScrollTime).inMilliseconds < 100) return;
     _lastScrollTime = now;
 
-    // When scrolled to the very top, always select 'Tümü'
+    // When scrolled to the very top, always select 'marketplace.category_all'.tr()
     if (_scrollController.hasClients && _scrollController.offset < 10) {
       if (_selectedCategory != 'marketplace.category_all'.tr()) {
         HapticFeedback.selectionClick();
@@ -1306,17 +1306,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _effectiveCategories.where((c) => c['name'] == 'Tümü' || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).length,
+                itemCount: _effectiveCategories.where((c) => c['name'] == 'marketplace.category_all'.tr() || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).length,
                 itemBuilder: (context, index) {
-                  // Only show categories with products (or 'Tümü'/'all_products')
-                  final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'Tümü' || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
+                  // Only show categories with products (or 'marketplace.category_all'.tr()/'all_products')
+                  final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'marketplace.category_all'.tr() || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
                   final cat = visibleCategories[index];
                   final catName = cat['name'] as String;
                   final isSelected = _selectedCategory == catName;
                   
                   // Get product names for this category
                   String productPreview = '';
-                  if (catName == 'Tümü' || catName == 'marketplace.all_products'.tr()) {
+                  if (catName == 'marketplace.category_all'.tr() || catName == 'marketplace.all_products'.tr()) {
                     productPreview = _allProducts.take(4).map((p) => p.name).join(', ');
                   } else {
                     final catId = cat['id'] as String?;
@@ -2537,7 +2537,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
 
   String _formatCategoryKey(String key) {
-    if (key == 'Tümü' || key == 'Diğer' || key.contains(' ')) return key;
+    if (key == 'marketplace.category_all'.tr() || key == 'Diğer' || key.contains(' ')) return key;
     return key.replaceAll('_', ' ').split(' ').map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1)}' : '').join(' ');
   }
 
@@ -3478,8 +3478,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               Expanded(
                                 child: Builder(
                                   builder: (context) {
-                                    // Only show categories that have products (or 'Tümü')
-                                    final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'Tümü' || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
+                                    // Only show categories that have products (or 'marketplace.category_all'.tr())
+                                    final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'marketplace.category_all'.tr() || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
                                     
                                     // Schedule pill position initialization
                                     if (!_pillInitialized) {
@@ -3496,15 +3496,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         alignment: Alignment.centerLeft,
                                         children: [
                                           // 1. Sliding pill indicator (always rendered, fades in once positioned)
-                                          AnimatedOpacity(
-                                            opacity: _pillInitialized ? 1.0 : 0.0,
-                                            duration: const Duration(milliseconds: 200),
-                                            child: AnimatedPositioned(
-                                              duration: const Duration(milliseconds: 400),
-                                              curve: Curves.easeOutBack,
-                                              left: _pillLeft,
-                                              top: 0,
-                                              bottom: 0,
+                                          AnimatedPositioned(
+                                            duration: const Duration(milliseconds: 400),
+                                            curve: Curves.easeOutBack,
+                                            left: _pillLeft,
+                                            top: 0,
+                                            bottom: 0,
+                                            child: AnimatedOpacity(
+                                              opacity: _pillInitialized ? 1.0 : 0.0,
+                                              duration: const Duration(milliseconds: 200),
                                               child: AnimatedContainer(
                                                 duration: const Duration(milliseconds: 400),
                                                 curve: Curves.easeOutBack,
@@ -3531,7 +3531,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               final catName = cat['name'] as String;
                                               final isSelected = _selectedCategory == catName;
                                               final cartItems = ref.watch(cartProvider).items;
-                                              final catCartCount = catName == 'Tümü'
+                                              final catCartCount = catName == 'marketplace.category_all'.tr()
                                                   ? cartItems.fold<int>(0, (sum, ci) => sum + ci.quantity.toInt())
                                                   : cartItems.where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
                                               return Padding(
@@ -3564,7 +3564,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                             fontSize: 14,
                                                           ),
                                                           child: Text(
-                                                            catName == 'Tümü' ? tr('business_details.all') : _formatCategoryKey(catName),
+                                                            catName == 'marketplace.category_all'.tr() ? tr('business_details.all') : _formatCategoryKey(catName),
                                                           ),
                                                         ),
 
@@ -3694,7 +3694,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ),
               ] else ...[
               // Category Grouped List/Grid
-              ..._effectiveCategories.where((c) => c['name'] != 'Tümü').expand((cat) {
+              ..._effectiveCategories.where((c) => c['name'] != 'marketplace.category_all'.tr()).expand((cat) {
                 final catName = cat['name'] as String;
                 final catId = cat['id'] as String?;
                 final isFallbackAll = catName == 'marketplace.all_products'.tr();
