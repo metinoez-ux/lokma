@@ -145,8 +145,8 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  const currentLangData = languages.find(l => l.code === currentLang) || languages[0];
 
   const headerBg = themeAware
-    ? (scrolled ? 'bg-white dark:bg-[#0f172a]/80 backdrop-blur-xl border-border/50 shadow-sm' : 'bg-white dark:bg-[#0f172a]/80 border-transparent')
-    : (scrolled ? 'bg-white backdrop-blur-xl border-gray-200 shadow-sm' : 'bg-white border-transparent');
+    ? (scrolled ? 'bg-white/95 dark:bg-card/95 backdrop-blur-xl border-border/50 shadow-sm' : 'bg-white dark:bg-card/60 backdrop-blur-md border-b border-border/30')
+    : (scrolled ? 'bg-white/95 backdrop-blur-xl border-gray-200 shadow-sm' : 'bg-white border-b border-gray-100');
   const textColor = themeAware ? 'text-foreground' : 'text-gray-900';
   const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-border/50 text-foreground' : 'bg-white border-gray-200 text-gray-900';
   const itemHover = themeAware ? 'hover:bg-muted dark:hover:bg-white/10' : 'hover:bg-gray-50';
@@ -178,6 +178,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  <Link className="text-sm font-medium hover:text-[#ea184a] transition-colors" href="/about">{t('about')}</Link>
  <Link className="text-sm font-medium hover:text-[#ea184a] transition-colors" href="/vendor">{t('vendorPortal')}</Link>
  <Link className="text-sm font-medium hover:text-[#ea184a] transition-colors" href="/support">{t('support')}</Link>
+ <Link className="text-sm font-bold bg-[#ea184a] text-white px-5 py-2 rounded-full hover:bg-rose-600 transition-colors shadow-sm shadow-[#ea184a]/20 ml-2" href="/login">{t('login')}</Link>
  </nav>
 
  <div className="flex items-center gap-3">
@@ -277,7 +278,8 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  <Link className="text-sm font-medium py-2" href="/about">{t('about')}</Link>
  <Link className="text-sm font-medium py-2" href="/vendor">{t('vendorPortal')}</Link>
  <Link className="text-sm font-medium py-2" href="/support">{t('support')}</Link>
-
+ <div className={`border-t ${themeAware ? 'border-border/50' : 'border-gray-100'} my-2`}></div>
+ <Link className="text-sm font-bold bg-[#ea184a] text-white text-center py-3 rounded-xl hover:bg-rose-600 transition-colors shadow-sm" href="/login">{t('login')}</Link>
  </nav>
  </div>
  )

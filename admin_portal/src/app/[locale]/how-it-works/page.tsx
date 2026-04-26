@@ -131,20 +131,18 @@ export default function HowItWorksPage() {
 
  <div className="mt-16 text-center">
  <h3 className="text-2xl font-bold mb-6">{t('cta')}</h3>
- <div className="flex flex-col sm:flex-row gap-4 justify-center">
+ <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
  <a
  href="https://apps.apple.com/app/lokma"
- className="flex items-center justify-center gap-3 bg-background text-black px-8 py-4 rounded-xl font-bold hover:bg-muted transition-all"
+ className="hover:opacity-80 transition-opacity hover:scale-105 transform duration-200"
  >
- <span className="text-2xl"></span>
- App Store
+ <img src="/apple_store_badge.png" alt="Download on the App Store" className="h-[52px] w-auto object-contain" />
  </a>
  <a
  href="https://play.google.com/store/apps/details?id=com.lokma.app"
- className="flex items-center justify-center gap-3 bg-background text-black px-8 py-4 rounded-xl font-bold hover:bg-muted transition-all"
+ className="hover:opacity-80 transition-opacity hover:scale-105 transform duration-200"
  >
- <span className="text-2xl">▶️</span>
- Google Play
+ <img src="/google_play_badge.png" alt="Get it on Google Play" className="h-[52px] w-auto object-contain" />
  </a>
  </div>
  </div>

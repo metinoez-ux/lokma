@@ -207,7 +207,7 @@ export default function PartnerApplyPage() {
  </div>
  </main>
 
- <PublicFooter />
+ <PublicFooter themeAware={true} />
  </div>
  );
 }

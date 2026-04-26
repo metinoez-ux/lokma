@@ -17,7 +17,7 @@ const languages = [
 export default function PublicFooter({ themeAware = false }: { themeAware?: boolean }) {
  const t = useTranslations('Landing');
 
- const footerBg = themeAware ? 'bg-muted/30 dark:bg-[#0a0505] border-border/50' : 'bg-gray-50 border-gray-200';
+ const footerBg = themeAware ? 'bg-muted/30 dark:bg-card/40 border-border/50' : 'bg-gray-50 border-gray-200';
  const textColor = themeAware ? 'text-muted-foreground/80' : 'text-gray-500';
  const headingColor = themeAware ? 'text-foreground' : 'text-gray-900';
  const linkColor = themeAware ? 'text-muted-foreground/80 hover:text-[#ea184a] dark:hover:text-[#ea184a]' : 'text-gray-600 hover:text-[#ea184a]';

@@ -6776,7 +6776,7 @@
     "kermesDesc": "Nachbarschaftssolidarität",
     "kvkk": "DSGVO",
     "langSupport": "Sprachunterstützung aktiv",
-    "login": "Anmelden",
+    "login": "Partner Login",
     "market": "Supermarkt",
     "marketDesc": "Frische und lokale Produkte",
     "partnerBtn": "Partner werden",
@@ -6815,7 +6815,15 @@
     "appBadge": "Einkaufen in der App",
     "appDownloadTitle": "App herunterladen",
     "appDownloadDesc": "Alle Kategorien, exklusive Angebote und Echtzeit-Lieferverfolgung in unserer App.",
-    "b2bPartnerBadge": "B2B-Partnerplattform"
+    "b2bPartnerBadge": "B2B-Partnerplattform",
+    "manifestoTitle": "Schluss mit der Ausbeutung im Lieferdienst.",
+    "manifestoSubtitle": "Wir beenden das jahrelange System hoher Provisionen und Abhängigkeiten. LOKMA ist eine völlig neue Vision, die nicht in die eigene Tasche wirtschaftet, sondern die Gastronomen und lokalen Helden, die die schwerste Arbeit leisten, in den Mittelpunkt stellt. Faire Bedingungen statt moderne Sklaverei.",
+    "manifestoCard1Title": "Wertschätzung statt Ausbeutung",
+    "manifestoCard1Desc": "Restaurants erhalten das, was sie verdienen, ohne von überzogenen Gebühren erdrückt zu werden.",
+    "manifestoCard2Title": "Das Ende der Abhängigkeit",
+    "manifestoCard2Desc": "Eine freie, transparente Alternative zu den Monopolen, die Gastronomen bisher gefangen halten.",
+    "manifestoCard3Title": "Echter Geschmack, fairer Preis",
+    "manifestoCard3Desc": "Weil der Wirt gewinnt, zahlst du keine versteckten Plattform-Aufschläge auf die Speisekarte."
   },
   "Navigation": {
     "dashboard": "Dashboard"

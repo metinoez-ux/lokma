@@ -118,8 +118,9 @@ export default function ImpressumPage() {
  {/* Kontakt */}
  <h2 className="text-2xl font-bold text-foreground mt-10 mb-4 border-b border-border/50 pb-2">{g('contact', locale)}</h2>
  <p>
- {g('phone', locale)}: <a href="tel:+491784443475" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">+49 178 4443475</a><br />
- {g('email', locale)}: <a href="mailto:kontakt@lokma.shop" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">kontakt@lokma.shop</a>
+ {g('phone', locale)}: <a href="tel:+4924339288014" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">+49 2433 9288014</a><br />
+ WhatsApp: <a href="https://wa.me/491784443475" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">+49 178 4443475</a><br />
+ {g('email', locale)}: <a href="mailto:info@lokma.shop" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors">info@lokma.shop</a>
  </p>
 
  {/* Steuerliche Angaben */}

@@ -284,17 +284,17 @@ export default function SupportPage() {
 
  {/* Contact Cards */}
  <div className="grid md:grid-cols-3 gap-6 mb-16">
- <a href="mailto:destek@lokma.shop" className="bg-muted/30 dark:bg-background/5 border border-border/50 rounded-xl p-6 hover:border-[#ea184a]/50 transition-all text-center">
+ <a href="mailto:info@lokma.shop" className="bg-muted/30 dark:bg-background/5 border border-border/50 rounded-xl p-6 hover:border-[#ea184a]/50 transition-all text-center">
  <span className="material-symbols-outlined text-[#ea184a] text-4xl mb-4 block">mail</span>
  <h3 className="font-bold mb-2">{tx.email}</h3>
- <p className="text-sm text-muted-foreground/80 /50">destek@lokma.shop</p>
+ <p className="text-sm text-muted-foreground/80 /50">info@lokma.shop</p>
  </a>
- <a href="tel:+4917612345678" className="bg-muted/30 dark:bg-background/5 border border-border/50 rounded-xl p-6 hover:border-[#ea184a]/50 transition-all text-center">
+ <a href="tel:+4924339288014" className="bg-muted/30 dark:bg-background/5 border border-border/50 rounded-xl p-6 hover:border-[#ea184a]/50 transition-all text-center">
  <span className="material-symbols-outlined text-[#ea184a] text-4xl mb-4 block">phone</span>
  <h3 className="font-bold mb-2">{tx.phone}</h3>
- <p className="text-sm text-muted-foreground/80 /50">+49 176 123 456 78</p>
+ <p className="text-sm text-muted-foreground/80 /50">+49 2433 9288014</p>
  </a>
- <a href="https://wa.me/4917612345678" className="bg-muted/30 dark:bg-background/5 border border-border/50 rounded-xl p-6 hover:border-[#ea184a]/50 transition-all text-center">
+ <a href="https://wa.me/491784443475" className="bg-muted/30 dark:bg-background/5 border border-border/50 rounded-xl p-6 hover:border-[#ea184a]/50 transition-all text-center">
  <span className="material-symbols-outlined text-[#ea184a] text-4xl mb-4 block">chat</span>
  <h3 className="font-bold mb-2">{tx.whatsapp}</h3>
  <p className="text-sm text-muted-foreground/80 /50">{tx.whatsappDesc}</p>

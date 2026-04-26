@@ -383,7 +383,7 @@ export default function HardwarePage() {
  <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
  <div className="relative bg-background/[0.03] border border-white/10 rounded-3xl overflow-hidden">
  <Image
- src="/esl_manav_hero.png"
+ src="/images/hardware/esl_market_fruits.jpg"
  alt="Elektronik Raf Etiketleri"
  width={600}
  height={500}
@@ -431,7 +431,7 @@ export default function HardwarePage() {
  border: 'border-yellow-500/20',
  },
  {
- icon: 'eco',
+ icon: 'corporate_fare',
  title: t('eslAdv2'),
  desc: t('eslAdv2Desc'),
  color: 'text-emerald-400',
@@ -466,10 +466,10 @@ export default function HardwarePage() {
  border: 'border-cyan-500/20',
  },
  ].map((adv, i) => (
- <div key={i} className={`bg-background/[0.03] border ${adv.border} rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300`}>
- <span className={`material-symbols-outlined ${adv.color} text-3xl mb-4 block`}>{adv.icon}</span>
- <h4 className="font-bold text-lg mb-2">{adv.title}</h4>
- <p className="text-white/50 text-sm leading-relaxed">{adv.desc}</p>
+ <div key={i} className={`bg-background/[0.03] border ${adv.border} rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 flex flex-col min-w-0 break-words overflow-hidden`}>
+ <span className={`material-symbols-outlined ${adv.color} text-3xl mb-4 block shrink-0`}>{adv.icon}</span>
+ <h4 className="font-bold text-lg mb-2 leading-tight">{adv.title}</h4>
+ <p className="text-white/50 text-sm leading-relaxed flex-1">{adv.desc}</p>
  </div>
  ))}
  </div>
@@ -542,13 +542,13 @@ export default function HardwarePage() {
  gradient: 'from-indigo-600/20 to-indigo-800/5',
  },
  ].map((item, i) => (
- <div key={i} className={`bg-gradient-to-br ${item.gradient} border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all`}>
+ <div key={i} className={`bg-gradient-to-br ${item.gradient} border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all flex flex-col min-w-0 break-words overflow-hidden`}>
  <div className="flex items-start gap-4">
  <div className="w-12 h-12 bg-background/10 rounded-xl flex items-center justify-center shrink-0">
  <span className="material-symbols-outlined text-white/80 text-2xl">{item.icon}</span>
  </div>
- <div>
- <h4 className="font-bold text-lg mb-2">{item.title}</h4>
+ <div className="min-w-0 flex-1">
+ <h4 className="font-bold text-lg mb-2 leading-tight">{item.title}</h4>
  <p className="text-white/50 text-sm leading-relaxed">{item.desc}</p>
  </div>
  </div>
@@ -603,14 +603,14 @@ export default function HardwarePage() {
  features: tArr('sector6F'),
  },
  ].map((sector, i) => (
- <div key={i} className="bg-background/[0.03] border border-white/10 rounded-2xl p-6 hover:border-[#ea184a]/30 hover:scale-[1.02] transition-all duration-300">
- <div className="text-4xl mb-4">{sector.emoji}</div>
- <h4 className="font-bold text-xl mb-4">{sector.title}</h4>
- <ul className="space-y-2">
+ <div key={i} className="bg-background/[0.03] border border-white/10 rounded-2xl p-6 hover:border-[#ea184a]/30 hover:scale-[1.02] transition-all duration-300 flex flex-col min-w-0 break-words overflow-hidden">
+ <div className="text-4xl mb-4 shrink-0">{sector.emoji}</div>
+ <h4 className="font-bold text-xl mb-4 leading-tight">{sector.title}</h4>
+ <ul className="space-y-2 flex-1">
  {sector.features.map((f, j) => (
- <li key={j} className="flex items-center gap-2 text-white/60 text-sm">
- <span className="material-symbols-outlined text-[#ea184a] text-sm">check</span>
- {f}
+ <li key={j} className="flex items-start gap-2 text-white/60 text-sm">
+ <span className="material-symbols-outlined text-[#ea184a] text-sm shrink-0 mt-0.5">check</span>
+ <span className="min-w-0 break-words">{f}</span>
  </li>
  ))}
  </ul>

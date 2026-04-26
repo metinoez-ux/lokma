@@ -6807,7 +6807,7 @@
     "kermesDesc": "Mahalleli dayanışması",
     "kvkk": "KVKK Aydınlatma",
     "langSupport": "Dil Desteği Aktif",
-    "login": "Giriş Yap",
+    "login": "Partner Girişi",
     "market": "Market",
     "marketDesc": "Taze ve yerel ürünler",
     "partnerBtn": "Partnerimiz Olun",
@@ -6844,7 +6844,15 @@
     "appBadge": "Alışveriş Uygulamada",
     "appDownloadTitle": "Uygulamayı İndir",
     "appDownloadDesc": "Tüm kategoriler, özel kampanyalar ve anlık teslimat takibi uygulamamızda.",
-    "b2bPartnerBadge": "B2B Partner Platformu"
+    "b2bPartnerBadge": "B2B Partner Platformu",
+    "manifestoTitle": "Sektördeki Köleliğe ve Sömürüye Son.",
+    "manifestoSubtitle": "Yıllardır süregelen yüksek komisyonlar ve tekelleşmiş sömürü düzenini bitiriyoruz. LOKMA; sadece kendi cebini dolduran değil, o eşsiz lezzetleri hazırlarken en ağır yükü taşıyan restoranları ön planda tutan yenilikçi bir vizyondur. Artık adil ve özgür bir ekosistem var.",
+    "manifestoCard1Title": "Sömürüye Değil, Emeğe Değer",
+    "manifestoCard1Desc": "Restoranlar hak ettiklerini kazanır, fahiş komisyon oranlarıyla ezilmek zorunda kalmazlar.",
+    "manifestoCard2Title": "Bağımlılığa ve Tekele Son",
+    "manifestoCard2Desc": "İşletmeleri esir alan ve kendi şartlarını dayatan eski platformlara karşı özgür bir alternatif.",
+    "manifestoCard3Title": "Gerçek Lezzet, Gerçek Fiyat",
+    "manifestoCard3Desc": "Esnaf komisyon yükü altında ezilmediği için sen de şişirilmiş menü fiyatları ödemek zorunda kalmazsın."
   },
   "Navigation": {
     "dashboard": "Yetkili Ekranı"

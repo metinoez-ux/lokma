@@ -6676,7 +6676,7 @@
     "kermesDesc": "Solidarité de quartier",
     "kvkk": "RGPD",
     "langSupport": "Support multilingue actif",
-    "login": "Connexion",
+    "login": "Partner Login",
     "market": "Supermarché",
     "marketDesc": "Produits frais et locaux",
     "partnerBtn": "Devenir Partenaire",
@@ -6710,7 +6710,15 @@
     "regionCountry": "Région / Pays",
     "lokmaRider": "Livreur LOKMA",
     "artisanPartnership": "Partenariat Commerçant",
-    "b2bPartnerBadge": "Plateforme Partenaire B2B"
+    "b2bPartnerBadge": "Plateforme Partenaire B2B",
+    "manifestoTitle": "Ending Exploitation in Food Delivery.",
+    "manifestoSubtitle": "We are putting an end to the era of high commissions and monopolistic dependency. LOKMA is a brand-new vision that doesn't just line its own pockets, but puts the restaurants—who carry the heaviest load—first. Fair conditions over modern slavery.",
+    "manifestoCard1Title": "Value over Exploitation",
+    "manifestoCard1Desc": "Restaurants earn what they deserve without being crushed by unfair platform fees.",
+    "manifestoCard2Title": "The End of Dependency",
+    "manifestoCard2Desc": "A free and transparent alternative to the monopolies that have held local businesses hostage.",
+    "manifestoCard3Title": "Real Taste, Fair Price",
+    "manifestoCard3Desc": "Because the restaurant wins, you don't pay hidden platform markups added to menu prices."
   },
   "Navigation": {
     "dashboard": "Tableau de bord"

@@ -135,71 +135,98 @@ export default function LandingPage() {
  <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-foreground font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#ea184a]/30">
  <PublicHeader themeAware={true} />
 
- {/* Hero Section — Full-width background image with gradient overlay */}
- <section className="relative pt-20 md:pt-0 min-h-[60vh] md:min-h-[75vh] flex items-stretch overflow-hidden">
- {/* Background image */}
- <Image
- src="/images/hero_pizza.png"
- alt="Fresh food on table"
- fill
- className="object-cover"
- priority
- />
+  {/* Modern SaaS Split Hero Section */}
+  <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden bg-background">
+    {/* Subtle Mesh Gradient Background */}
+    <div className="absolute top-0 inset-x-0 h-full w-full overflow-hidden pointer-events-none">
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#ea184a]/5 blur-[120px]" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-500/5 blur-[120px]" />
+    </div>
 
- {/* Gradient overlay — strong on left for text readability, fading to right */}
- <div className="absolute inset-0 bg-gradient-to-r from-[#EE3640] via-[#EE3640]/95 to-[#EE3640]/40 md:to-transparent" />
+    <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+      {/* Left: Text content */}
+      <div className="flex-1 w-full text-center md:text-left">
+        <h1 className="text-5xl md:text-6xl lg:text-[4.5rem] font-black leading-[1.1] tracking-tight mb-8 text-foreground">
+          {t('heroTitle')}<br />
+          <span className="bg-gradient-to-r from-[#ea184a] to-rose-500 bg-clip-text text-transparent">
+            {t('heroTitleEnd')}
+          </span>
+        </h1>
 
- {/* Mobile overlay: stronger for readability */}
- <div className="absolute inset-0 md:hidden bg-[#EE3640]/80" />
+        <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed font-medium">
+          {t('heroSubtitle')}
+        </p>
 
- <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center md:min-h-[75vh]">
- {/* Left: Text content */}
- <div className="flex-1 py-16 md:py-24 text-white max-w-xl">
- <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.15] tracking-tight mb-6 max-w-lg">
- {t('heroTitle')}{' '}
- <span className="text-white/90">
- {t('heroTitleEnd')}
- </span>
- </h1>
+        {/* Trust Badge */}
+        <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 mb-10">
+          <div className="flex -space-x-4">
+            <div className="w-10 h-10 rounded-full border-2 border-background bg-gray-200 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="User" />
+            </div>
+            <div className="w-10 h-10 rounded-full border-2 border-background bg-gray-200 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="User" />
+            </div>
+            <div className="w-10 h-10 rounded-full border-2 border-background bg-[#ea184a] flex items-center justify-center text-xs font-bold text-white">
+              +10k
+            </div>
+          </div>
+          <div className="text-center sm:text-left">
+            <div className="flex justify-center sm:justify-start text-yellow-400 text-sm">★★★★★</div>
+            <div className="text-sm font-bold text-foreground">
+              4.8/5.0 <span className="text-muted-foreground font-normal">({t('heroOrderCount')})</span>
+            </div>
+          </div>
+        </div>
 
- <div className="flex items-center gap-2 mb-5">
- <div className="flex text-yellow-300 text-lg">
- {'★★★★★'}
- </div>
- <span className="text-white/80 text-sm font-medium">4.8 (10,000+ {t('heroOrderCount')})</span>
- </div>
- 
- <p className="text-lg md:text-xl text-white/90 max-w-md mb-8 leading-relaxed font-medium">
- {t('heroSubtitle')}
- </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 mb-12">
+          <Link href="/login" className="inline-flex items-center justify-center gap-3 bg-[#ea184a] hover:bg-rose-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-[#ea184a]/20 transition-transform hover:-translate-y-1 w-full sm:w-auto">
+            {t('exploreBtn')}
+            <span className="material-symbols-outlined text-xl">arrow_forward</span>
+          </Link>
+          <Link href="/vendor" className="inline-flex items-center justify-center gap-3 bg-muted/50 text-foreground px-8 py-4 rounded-xl font-bold text-lg border border-border shadow-sm hover:bg-muted transition-colors w-full sm:w-auto">
+            {t('splitPartnerTitle')}
+          </Link>
+        </div>
 
- <div className="flex flex-col sm:flex-row gap-3 mb-10">
- <Link href="/login" className="inline-flex items-center justify-center gap-2 bg-white text-[#F51736] px-8 py-4 rounded-xl font-bold text-lg hover:bg-muted transition-all shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
- {t('exploreBtn')}
- <span className="material-symbols-outlined text-xl">arrow_forward</span>
- </Link>
- <Link href="/vendor" className="inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/25 transition-all">
- {t('splitPartnerTitle')}
- </Link>
- </div>
+        <div className="flex items-center justify-center md:justify-start gap-4">
+          <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
+            <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" className="h-[40px]" />
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=com.lokma.app" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
+            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Google Play" className="h-[58px] -my-2" />
+          </a>
+        </div>
+      </div>
 
- <div className="flex flex-wrap items-center gap-3">
- <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
- <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" className="h-[40px]" />
- </a>
- <a href="https://play.google.com/store/apps/details?id=com.lokma.app" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
- <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Google Play" className="h-[58px] -my-2" />
- </a>
- </div>
- </div>
-
- {/* Right: spacer for layout balance */}
- <div className="hidden md:block flex-1" />
- </div>
- </section>
+      {/* Right: Image Visual */}
+      <div className="flex-1 w-full relative mt-10 md:mt-0">
+        <div className="relative w-full aspect-square md:aspect-[4/5] lg:aspect-square rounded-[3rem] overflow-hidden shadow-2xl shadow-black/20 border border-border/50 group">
+          <Image
+            src="https://images.unsplash.com/photo-1544025162-8350b5569e5b?w=1000&q=80"
+            alt="Gourmet restaurant food delivery"
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0c1527]/90 via-[#0c1527]/30 to-transparent" />
+          
+          {/* Floating Feature Card */}
+          <div className="absolute bottom-6 left-6 right-6 md:bottom-8 md:left-8 md:right-8 bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex items-center gap-4 shadow-xl">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+              <span className="material-symbols-outlined text-[24px] md:text-[28px]">electric_moped</span>
+            </div>
+            <div>
+              <div className="text-sm md:text-base font-bold text-foreground">Schnelle Lieferung</div>
+              <div className="text-xs md:text-sm text-muted-foreground">in deiner Nachbarschaft</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
  {/* Feature Cards — Lexware style (light background) */}
- <section className="bg-white dark:bg-[#0f172a] py-20 px-4 md:px-8">
+ <section className="bg-background py-20 px-4 md:px-8">
  <div className="max-w-[1200px] mx-auto">
  <div className="mb-14">
  <p className="text-[#F51736] font-bold text-sm tracking-wider uppercase mb-3 flex items-center gap-2">
@@ -219,7 +246,7 @@ export default function LandingPage() {
 
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
  {/* Card 1 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-card">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">bolt</span>
  </div>
@@ -228,7 +255,7 @@ export default function LandingPage() {
  </div>
 
  {/* Card 2 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-card">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">handshake</span>
  </div>
@@ -237,7 +264,7 @@ export default function LandingPage() {
  </div>
 
  {/* Card 3 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-card">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">storefront</span>
  </div>
@@ -246,7 +273,7 @@ export default function LandingPage() {
  </div>
 
  {/* Card 4 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-card">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">eco</span>
  </div>
@@ -258,23 +285,61 @@ export default function LandingPage() {
  </section>
 
 
- {/* Local Support Banner */}
- <section className="bg-[#fff8f8] dark:bg-[#150a0a] py-20 px-4 md:px-8 border-y border-red-50 ">
- <div className="max-w-[1000px] mx-auto text-center">
- <div className="w-16 h-16 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-full mx-auto mb-6">
- <span className="material-symbols-outlined text-3xl">favorite</span>
+ {/* Manifesto Section - Anti-Exploitation */}
+ <section className="bg-muted/20 py-24 px-4 md:px-8 border-y border-border/50 relative overflow-hidden">
+ {/* Abstract background elements */}
+ <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+ <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-[#F51736]/5 blur-[120px]"></div>
+ <div className="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-[#F51736]/5 blur-[120px]"></div>
  </div>
- <h2 className="text-3xl md:text-4xl font-black text-foreground mb-6 leading-tight">
- {t('localSupportTitle')}
+
+ <div className="max-w-[1200px] mx-auto relative z-10">
+ <div className="max-w-3xl mx-auto text-center mb-16">
+ <div className="inline-flex items-center justify-center bg-[#F51736]/10 text-[#F51736] px-4 py-2 rounded-full text-sm font-bold mb-6 uppercase tracking-widest border border-[#F51736]/20">
+ <span className="material-symbols-outlined text-[18px] mr-2">flag</span>
+ Manifesto
+ </div>
+ <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-8 leading-[1.1] tracking-tight">
+ {t('manifestoTitle')}
  </h2>
  <p className="text-lg md:text-xl text-muted-foreground dark:text-gray-400 leading-relaxed font-medium">
- {t('localSupportDesc')}
+ {t('manifestoSubtitle')}
  </p>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+ {/* Card 1 */}
+ <div className="bg-card p-8 rounded-3xl border border-border/50 shadow-xl shadow-black/5 hover:border-[#F51736]/30 transition-colors">
+ <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-6">
+ <span className="material-symbols-outlined text-[28px]">balance</span>
+ </div>
+ <h3 className="text-2xl font-bold text-foreground mb-4">{t('manifestoCard1Title')}</h3>
+ <p className="text-muted-foreground leading-relaxed">{t('manifestoCard1Desc')}</p>
+ </div>
+
+ {/* Card 2 */}
+ <div className="bg-card p-8 rounded-3xl border border-border/50 shadow-xl shadow-black/5 hover:border-[#F51736]/30 transition-colors">
+ <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-6">
+ <span className="material-symbols-outlined text-[28px]">lock_open</span>
+ </div>
+ <h3 className="text-2xl font-bold text-foreground mb-4">{t('manifestoCard2Title')}</h3>
+ <p className="text-muted-foreground leading-relaxed">{t('manifestoCard2Desc')}</p>
+ </div>
+
+ {/* Card 3 */}
+ <div className="bg-card p-8 rounded-3xl border border-border/50 shadow-xl shadow-black/5 hover:border-[#F51736]/30 transition-colors">
+ <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-6">
+ <span className="material-symbols-outlined text-[28px]">receipt_long</span>
+ </div>
+ <h3 className="text-2xl font-bold text-foreground mb-4">{t('manifestoCard3Title')}</h3>
+ <p className="text-muted-foreground leading-relaxed">{t('manifestoCard3Desc')}</p>
+ </div>
+ </div>
  </div>
  </section>
 
  {/* Partner CTA — Lexware-style clean banner */}
- <section className="bg-muted/30 dark:bg-[#0f172a] py-20 px-4 md:px-8">
+ <section className="bg-background py-20 px-4 md:px-8">
  <div className="max-w-[1200px] mx-auto relative bg-gradient-to-br from-[#F51736] to-[#c9183d] rounded-3xl p-10 md:p-16 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
  <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
  <div className="relative z-10 flex-1">
@@ -294,7 +359,7 @@ export default function LandingPage() {
  </section>
 
  {/* FAQ Section */}
- <section className="bg-white dark:bg-[#0f172a] py-20 px-4 md:px-8">
+ <section className="bg-background py-20 px-4 md:px-8">
  <div className="max-w-[1000px] mx-auto">
  <h2 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-12 text-foreground ">{t('faqTitle')}</h2>
  <div className="space-y-4">
