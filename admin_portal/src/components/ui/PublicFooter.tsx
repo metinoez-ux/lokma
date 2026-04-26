@@ -23,7 +23,7 @@ export default function PublicFooter({ themeAware = false }: { themeAware?: bool
  const linkColor = themeAware ? 'text-muted-foreground/80 hover:text-[#ea184a] dark:hover:text-[#ea184a]' : 'text-gray-600 hover:text-[#ea184a]';
 
  return (
- <footer className={`${footerBg} border-t py-12 px-4 md:px-20 lg:px-40`}>
+ <footer className={`${footerBg} mt-auto border-t py-12 px-4 md:px-20 lg:px-40`}>
  <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
  <div className="space-y-6">
  <Link href="/" className="flex items-center gap-2">

@@ -23,10 +23,10 @@ export default function HardwarePage() {
  {/* Background image */}
  <div className="absolute inset-0 z-0">
  <Image
- src="/images/hardware/ecosystem-hero.png"
+ src="/images/hardware/hardware_ecosystem_hero.png"
  alt="LOKMA Donanım Ekosistemi"
  fill
- className="object-cover opacity-40"
+ className="object-cover opacity-70"
  priority
  />
  <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-transparent to-[#0f172a]" />

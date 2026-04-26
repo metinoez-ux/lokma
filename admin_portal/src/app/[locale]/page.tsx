@@ -202,8 +202,8 @@ export default function LandingPage() {
       <div className="flex-1 w-full relative mt-10 md:mt-0">
         <div className="relative w-full aspect-square md:aspect-[4/5] lg:aspect-square rounded-[3rem] overflow-hidden shadow-2xl shadow-black/20 border border-border/50 group">
           <Image
-            src="https://images.unsplash.com/photo-1544025162-8350b5569e5b?w=1000&q=80"
-            alt="Gourmet restaurant food delivery"
+            src="/new_hero_pizza.jpg"
+            alt="LOKMA Premium Food Delivery"
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
             priority
