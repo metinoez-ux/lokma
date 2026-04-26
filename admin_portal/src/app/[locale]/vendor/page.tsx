@@ -22,14 +22,14 @@ export default function VendorPage() {
   ];
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-background text-foreground font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
-      <PublicHeader themeAware={true} />
+    <div className="relative flex min-h-screen flex-col bg-white text-black font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+      <PublicHeader themeAware={false} />
 
-      {/* Hero Section - Aydinlik ve Ferah */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-[#0f172a] dark:to-background">
+      {/* Hero Section - Aydinlik ve Ferah (Karanlik Mod Kapatildi) */}
+      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden bg-white">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#ea184a]/5 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px]" />
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8">
@@ -39,12 +39,12 @@ export default function VendorPage() {
               Sadece Bir Yemek Uygulaması Değil
             </span>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[1.05] tracking-tight mb-8 text-black dark:text-white">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[1.05] tracking-tight mb-8 text-black">
               İşletmenizin Yeni<br />
               <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b6b] bg-clip-text text-transparent">İşletim Sistemi.</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
               LOKMA, sipariş almanın ötesine geçer. Masaüstü kasalardan dijital mutfak ekranlarına, mobil sipariş terminallerinden akıllı terazilere ve dijital fiyat etiketlerine (ESL) kadar tüm restoran donanımlarınızı tek bir bulut ekosisteminde birleştirir.
             </p>
 
@@ -53,7 +53,7 @@ export default function VendorPage() {
                 {tx('ctaApply')}
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
-              <Link href="#ecosystem" className="inline-flex items-center justify-center gap-2 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 px-10 py-4 rounded-2xl font-bold text-lg transition-all shadow-sm hover:shadow-md">
+              <Link href="#ecosystem" className="inline-flex items-center justify-center gap-2 bg-gray-50 border border-gray-200 text-black hover:bg-gray-100 px-10 py-4 rounded-2xl font-bold text-lg transition-all shadow-sm hover:shadow-md">
                 Donanım Ekosistemini Keşfet
                 <span className="material-symbols-outlined text-[18px]">expand_more</span>
               </Link>
@@ -62,42 +62,36 @@ export default function VendorPage() {
         </div>
       </section>
 
-      {/* IMMERSIVE SHOWCASE: T3 PRO (Desktop POS) - Aydinlik Tema */}
-      <section id="ecosystem" className="relative w-full min-h-[80vh] flex items-center overflow-hidden bg-[#f8f9fa] dark:bg-[#0a0a0a]">
-        <div className="absolute top-0 right-0 w-1/2 h-full hidden lg:block">
-           <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-            className="w-full h-full object-cover rounded-l-[4rem] shadow-2xl"
-          >
-            <source src="https://file.cdn.sunmi.com/newebsite/products/t3-pro/lg/tvc-poster.mp4" type="video/mp4" />
-          </video>
-        </div>
+      {/* IMMERSIVE SHOWCASE: T3 PRO (Desktop POS) - Tamamen Görsel Arkaplan */}
+      <section id="ecosystem" className="relative w-full min-h-[90vh] flex items-center overflow-hidden bg-gray-100">
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="https://file.cdn.sunmi.com/newebsite/products/t3-pro/lg/tvc-poster.mp4" type="video/mp4" />
+        </video>
+        {/* Beyaz, seffaf bir perde atarak videonun aydinlik kalmasini sagliyoruz. Simsiyah degil! */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent" />
         <div className="relative z-10 w-full max-w-7xl mx-auto px-8 md:px-16 flex flex-col lg:flex-row items-center">
           <div className="w-full lg:w-1/2 lg:pr-16">
             <span className="text-[#ea184a] font-black tracking-widest uppercase text-sm mb-4 block">LOKMA MASAÜSTÜ KASALARI</span>
-            <h2 className="text-5xl md:text-7xl font-black text-black dark:text-white mb-6 leading-tight">Tezgahın Yeni Hakimi.</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+            <h2 className="text-5xl md:text-7xl font-black text-black mb-6 leading-tight">Tezgahın Yeni<br/>Hakimi.</h2>
+            <p className="text-xl text-gray-700 mb-8 leading-relaxed font-medium">
               Çift ekranlı alüminyum gövdesiyle, siz siparişi mutfağa saniyeler içinde iletirken, müşteriniz kendi ekranından tüm detayları ve QR kodla ödemesini saniyeler içinde tamamlar. LOKMA altyapısıyla sıfır gecikme.
             </p>
             <div className="flex flex-wrap gap-3 mb-8">
-              <span className="px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-black dark:text-white font-semibold text-sm shadow-sm">15.6" Full HD Çift Ekran</span>
-              <span className="px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-black dark:text-white font-semibold text-sm shadow-sm">80mm Hızlı Yazıcı</span>
+              <span className="px-5 py-2.5 bg-white border border-gray-200 rounded-full text-black font-bold text-sm shadow-sm">15.6" Full HD Çift Ekran</span>
+              <span className="px-5 py-2.5 bg-white border border-gray-200 rounded-full text-black font-bold text-sm shadow-sm">80mm Hızlı Yazıcı</span>
             </div>
-          </div>
-          {/* Mobil gorunum icin video */}
-          <div className="w-full lg:hidden mt-10 rounded-3xl overflow-hidden shadow-2xl">
-            <video autoPlay loop muted playsInline className="w-full h-auto">
-              <source src="https://file.cdn.sunmi.com/newebsite/products/t3-pro/lg/tvc-poster.mp4" type="video/mp4" />
-            </video>
           </div>
         </div>
       </section>
 
-      {/* IMMERSIVE SHOWCASE: FLEX 3 (Modular) - Tam Ekran Ferah */}
-      <section className="relative w-full min-h-[90vh] flex items-center overflow-hidden bg-white dark:bg-black">
+      {/* IMMERSIVE SHOWCASE: FLEX 3 (Modular) - Aydinlik ve Genis */}
+      <section className="relative w-full min-h-[90vh] flex items-center overflow-hidden bg-white">
         <video 
           autoPlay 
           loop 
@@ -107,147 +101,146 @@ export default function VendorPage() {
         >
           <source src="https://file.cdn.sunmi.com/newebsite/products/flex-3/lg/tvc-poster.mp4" type="video/mp4" />
         </video>
-        {/* Acik renkli gradient overlays - Karanlik degil! */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-transparent dark:from-black/95 dark:via-black/70" />
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-8 md:px-16 flex items-center">
-          <div className="max-w-xl">
+        <div className="absolute inset-0 bg-gradient-to-l from-white/95 via-white/80 to-transparent" />
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-8 md:px-16 flex justify-end items-center">
+          <div className="max-w-xl text-right">
             <span className="text-blue-600 font-black tracking-widest uppercase text-sm mb-4 block">LOKMA MÜŞTERİ KİOSKLARI & KDS</span>
-            <h2 className="text-6xl md:text-8xl font-black text-black dark:text-white mb-6 leading-none">Sınırsız<br/>Esneklik.</h2>
-            <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 leading-relaxed font-medium">
-              Aynı cihaz mutfakta dev bir KDS (Mutfak Ekranı), kasada bir Self-Checkout kiosku, duvarda ise dijital bir menü panosu olabilir. LOKMA'nın "Tak ve Çalıştır" vizyonunun zirvesi. 13 TOPS NPU destekli yapay zeka kamerasıyla geleceğe hazır.
+            <h2 className="text-6xl md:text-8xl font-black text-black mb-6 leading-none">Sınırsız<br/>Esneklik.</h2>
+            <p className="text-xl text-gray-700 mb-8 leading-relaxed font-medium">
+              Aynı cihaz mutfakta dev bir KDS (Mutfak Ekranı), kasada bir Self-Checkout kiosku, duvarda ise dijital bir menü panosu olabilir. LOKMA'nın "Tak ve Çalıştır" vizyonunun zirvesi.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <span className="px-5 py-2.5 bg-black text-white dark:bg-white dark:text-black rounded-full font-bold text-sm shadow-xl">17mm İnce Profil</span>
-              <span className="px-5 py-2.5 bg-black text-white dark:bg-white dark:text-black rounded-full font-bold text-sm shadow-xl">IP54 Suya Dayanıklı</span>
+            <div className="flex flex-wrap gap-3 justify-end">
+              <span className="px-5 py-2.5 bg-black text-white rounded-full font-bold text-sm shadow-xl">17mm İnce Profil</span>
+              <span className="px-5 py-2.5 bg-black text-white rounded-full font-bold text-sm shadow-xl">IP54 Suya Dayanıklı</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* IMMERSIVE SHOWCASE: V3 Family (Mobile POS) - Contrast Dark Section */}
-      <section className="relative w-full py-32 overflow-hidden bg-[#111]">
+      {/* IMMERSIVE SHOWCASE: V3 Family (Mobile POS) - Temiz, Aydinlik Galeri */}
+      <section className="relative w-full py-32 overflow-hidden bg-gray-50 border-y border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-16 relative z-20">
-            <span className="text-emerald-400 font-bold tracking-widest uppercase text-sm mb-4 block">LOKMA MOBİL SİPARİŞ TERMİNALLERİ</span>
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-6">Masalara Hükmedin.</h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              Müşterinizi kasanın önünde bekletmeyin. Garsonlarınız masada siparişi alsın, saniyeler içinde mutfağa iletsin ve anında karttan veya QR ile ödemeyi çekip fişi masada yazdırsın.
+          <div className="text-center mb-16">
+            <span className="text-emerald-500 font-bold tracking-widest uppercase text-sm mb-4 block">LOKMA MOBİL SİPARİŞ TERMİNALLERİ</span>
+            <h2 className="text-5xl md:text-7xl font-black text-black mb-6">Masalara Hükmedin.</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium">
+              Müşterinizi kasanın önünde bekletmeyin. Garsonlarınız masada siparişi alsın, anında mutfağa iletsin ve ödemeyi çekip fişi masada yazdırsın.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-20">
-            <div className="rounded-[3rem] overflow-hidden bg-black border border-white/10 relative h-[500px]">
-              <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-80">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="rounded-[3rem] overflow-hidden bg-white border border-gray-200 shadow-2xl relative h-[500px]">
+              <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
                 <source src="https://file.cdn.sunmi.com/newebsite/products/v3-family/lg/tvc-poster.mp4" type="video/mp4" />
               </video>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex flex-col justify-end p-10">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-10">
                 <h3 className="text-3xl font-bold text-white mb-2">Avuç İçi Performans</h3>
-                <p className="text-gray-400">Restoranın zorlu ortamı için 1.2 metreden düşmelere dayanıklı endüstriyel polikarbon zırh.</p>
+                <p className="text-white/90 font-medium">Zorlu ortamlar için 1.2 metreden düşmelere dayanıklı zırh.</p>
               </div>
             </div>
             
-            <div className="rounded-[3rem] overflow-hidden bg-black border border-white/10 relative h-[500px]">
-              <img src="https://file.cdn.sunmi.com/newebsite/products/v3-family/lg/p7-2.jpg" alt="V3 Scanner" className="absolute inset-0 w-full h-full object-cover opacity-80" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex flex-col justify-end p-10">
-                <h3 className="text-3xl font-bold text-white mb-2">Işık Hızında Barkod</h3>
-                <p className="text-gray-400">Karanlık gece kulüplerinde veya loş restoranlarda bile QR kodları milisaniyeler içinde okur.</p>
+            <div className="rounded-[3rem] overflow-hidden bg-white border border-gray-200 shadow-2xl relative h-[500px]">
+              <img src="https://file.cdn.sunmi.com/newebsite/products/v3-family/lg/p7-2.jpg" alt="V3 Scanner" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent flex flex-col justify-end p-10">
+                <h3 className="text-3xl font-bold text-black mb-2">Işık Hızında Barkod</h3>
+                <p className="text-gray-800 font-bold">Karanlık gece kulüplerinde veya loş restoranlarda bile QR kodları milisaniyeler içinde okur.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* IMMERSIVE SHOWCASE: ESL (Electronic Shelf Labels) - Aydinlik ve Rengarenk */}
-      <section className="py-24 md:py-40 px-4 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="order-2 lg:order-1 grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl overflow-hidden p-6 aspect-square flex items-center justify-center border border-gray-100 dark:border-white/5">
-                  <img src="https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/5/ESL.png" alt="ESL Digital Labels" className="w-full object-contain hover:scale-110 transition-transform duration-700" />
+      {/* IMMERSIVE SHOWCASE: ESL (Electronic Shelf Labels) - Homojen ve Bembeyaz */}
+      <section className="py-32 px-4 bg-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px]" />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-20">
+            <span className="inline-flex items-center gap-2 text-blue-600 font-black uppercase tracking-widest text-sm mb-6 bg-blue-50 px-4 py-2 rounded-full">
+              <span className="material-symbols-outlined text-[18px]">price_change</span>
+              LOKMA DİJİTAL ETİKET SİSTEMİ (ESL)
+            </span>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-8 text-black leading-tight">
+              Kağıt İsrafına Son Verin.
+            </h2>
+            <p className="text-xl text-gray-600 mb-10 leading-relaxed font-medium max-w-3xl mx-auto">
+              Süpermarket, kasap veya fırın reyonlarınızdaki binlerce fiyatı tek tek kağıda basmaktan kurtulun. LOKMA ESL (Electronic Shelf Labels) ekosistemi sayesinde fiyatlarınız 5 yıla varan pil ömrüyle dijital raflara yansır.
+            </p>
+          </div>
+
+          {/* Homojen Gorsel Grid (Ayni Sunmi ESL Iconunun Farki Boyutlarda Homojen Sergilenmesi) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+            {[
+              { size: '1.54"', desc: 'Kompakt Boyut', scale: 'scale-75' },
+              { size: '2.10"', desc: 'Standart Raf', scale: 'scale-90' },
+              { size: '2.60"', desc: 'Geniş Raf', scale: 'scale-100' },
+              { size: '4.20"', desc: 'Meyve/Sebze', scale: 'scale-110' },
+            ].map((tag, i) => (
+              <div key={i} className="bg-gray-50 border border-gray-100 rounded-3xl p-8 flex flex-col items-center justify-center text-center group hover:bg-white hover:shadow-2xl transition-all duration-500">
+                <div className="h-40 flex items-center justify-center mb-6">
+                  <img 
+                    src="https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/5/ESL.png" 
+                    alt={`LOKMA ESL ${tag.size}`} 
+                    className={`w-full object-contain transition-transform duration-700 group-hover:-translate-y-2 ${tag.scale}`} 
+                  />
                 </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-3xl overflow-hidden p-8 aspect-square flex flex-col justify-center border border-blue-100 dark:border-blue-900/50">
-                  <span className="material-symbols-outlined text-6xl text-blue-500 mb-4">bolt</span>
-                  <h4 className="text-2xl font-bold text-black dark:text-white mb-2">Sıfır Gecikme</h4>
-                  <p className="text-gray-600 dark:text-gray-400">LOKMA panelinden fiyatı değiştirin, raftaki fiyat 3 saniye içinde güncellensin.</p>
-                </div>
+                <div className="text-2xl font-black text-black mb-1">{tag.size}</div>
+                <div className="text-gray-500 font-medium">{tag.desc}</div>
               </div>
-              <div className="space-y-4 pt-12">
-                <div className="bg-[#ea184a]/5 dark:bg-[#ea184a]/10 rounded-3xl overflow-hidden p-8 aspect-square flex flex-col justify-center border border-[#ea184a]/10 dark:border-[#ea184a]/20">
-                  <span className="material-symbols-outlined text-6xl text-[#ea184a] mb-4">palette</span>
-                  <h4 className="text-2xl font-bold text-black dark:text-white mb-2">E-Mürekkep</h4>
-                  <p className="text-gray-600 dark:text-gray-400">Kırmızı, Beyaz ve Siyah renkli dinamik şablonlarla promosyonlarınızı parlatın.</p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl overflow-hidden p-6 aspect-square flex items-center justify-center border border-gray-100 dark:border-white/5">
-                  <img src="https://www.minewtag.com/upload/goodsgallery/2025-08/68956ef03a5a0.jpg" alt="ESL Tag Detail" className="w-full object-contain hover:scale-110 transition-transform duration-700" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="order-1 lg:order-2 lg:pl-10">
-              <span className="inline-flex items-center gap-2 text-blue-600 font-black uppercase tracking-widest text-sm mb-6 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-full">
-                <span className="material-symbols-outlined text-[18px]">price_change</span>
-                LOKMA DİJİTAL ETİKET SİSTEMİ (ESL)
-              </span>
-              <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-8 text-black dark:text-white leading-tight">
-                Kağıt İsrafına <br/>Son Verin.
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400 mb-10 leading-relaxed font-medium">
-                Süpermarket, kasap veya fırın reyonlarınızdaki binlerce fiyatı tek tek kağıda basmaktan kurtulun. LOKMA ESL (Electronic Shelf Labels) ekosistemi sayesinde fiyatlarınız, indirimleriniz ve QR kodlarınız 5 yıla varan pil ömrüyle dijital raflara yansır.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/hardware" className="inline-flex items-center justify-center gap-3 bg-black dark:bg-white text-white dark:text-black px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-transform shadow-xl">
-                  Tüm ESL Modellerini İncele
-                  <span className="material-symbols-outlined">arrow_forward</span>
-                </Link>
-              </div>
-            </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+            <Link href="/hardware" className="inline-flex items-center justify-center gap-3 bg-black text-white px-10 py-5 rounded-2xl font-bold text-xl hover:scale-105 transition-transform shadow-2xl">
+              Tüm Modelleri İncele
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* LOKMA Scale & Integration Ecosystem */}
-      <section className="py-24 px-4 bg-[#f8f9fa] dark:bg-[#152033]">
+      {/* LOKMA Scale & Integration Ecosystem - Aydinlik */}
+      <section className="py-32 px-4 bg-gray-50 border-y border-gray-200">
         <div className="max-w-6xl mx-auto text-center">
           <span className="text-[#ea184a] font-bold tracking-widest uppercase text-sm mb-4 block">Akıllı Tartım Sistemleri</span>
-          <h2 className="text-4xl md:text-6xl font-black mb-12 text-black dark:text-white">Tam Entegre Terazi Altyapısı.</h2>
-          <div className="bg-white dark:bg-black rounded-[3rem] p-12 shadow-2xl border border-gray-100 dark:border-white/10 flex flex-col md:flex-row items-center gap-12 text-left">
+          <h2 className="text-4xl md:text-6xl font-black mb-16 text-black">Tam Entegre Terazi Altyapısı.</h2>
+          <div className="bg-white rounded-[3rem] p-12 shadow-xl border border-gray-100 flex flex-col md:flex-row items-center gap-12 text-left hover:shadow-2xl transition-shadow duration-500">
             <div className="w-full md:w-1/2">
-              <h3 className="text-3xl font-black mb-4 text-black dark:text-white">Milimetrik Hassasiyet. Saniyelik Aktarım.</h3>
-              <p className="text-lg text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+              <h3 className="text-3xl font-black mb-6 text-black">Milimetrik Hassasiyet. Saniyelik Aktarım.</h3>
+              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
                 Kasap veya şarküteri reyonunuzda tarttığınız ürünün gramajı, anında LOKMA POS sistemine ve elektronik etiketlere aktarılır. Stripe Pre-Auth altyapısı sayesinde müşteri uygulamada 1 KG seçer, siz 1.1 KG tarttığınızda sistem ödemeyi otomatik düzeltir.
               </p>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium"><span className="material-symbols-outlined text-emerald-500">check_circle</span> Çift Ekranlı Sunmi S2 Desteği</li>
-                <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium"><span className="material-symbols-outlined text-emerald-500">check_circle</span> Değişken Ağırlıklı (Variable Weight) Ürün Yönetimi</li>
+              <ul className="space-y-4">
+                <li className="flex items-center gap-3 text-gray-800 font-bold text-lg"><span className="material-symbols-outlined text-emerald-500 text-2xl">check_circle</span> Çift Ekranlı Sunmi S2 Desteği</li>
+                <li className="flex items-center gap-3 text-gray-800 font-bold text-lg"><span className="material-symbols-outlined text-emerald-500 text-2xl">check_circle</span> Değişken Ağırlıklı (Variable Weight) Modu</li>
               </ul>
             </div>
             <div className="w-full md:w-1/2 flex justify-center">
-              <img src="https://file.cdn.sunmi.com/newebsite/products/s2/s2-8-en.jpg" alt="Smart Scale" className="w-full max-w-[400px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
+              <img src="https://file.cdn.sunmi.com/newebsite/products/s2/s2-8-en.jpg" alt="Smart Scale" className="w-full max-w-[450px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats Bar */}
-      <section className="relative z-10 py-16 bg-[#ea184a] text-white">
-        <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="relative z-10 py-20 bg-[#ea184a] text-white">
+        <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-12">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
-              <div className="text-4xl md:text-5xl font-black mb-2">{s.value}</div>
-              <div className="text-sm md:text-base text-white/80 font-medium uppercase tracking-wider">{s.label}</div>
+              <div className="text-5xl md:text-6xl font-black mb-4">{s.value}</div>
+              <div className="text-sm md:text-lg text-white/90 font-bold uppercase tracking-wider">{s.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section className="py-32 px-4 md:px-8 bg-white dark:bg-[#0f172a]">
+      {/* Bottom CTA - Bembeyaz ve Cok Ferah */}
+      <section className="py-40 px-4 md:px-8 bg-white">
         <div className="max-w-5xl mx-auto relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#ea184a]/10 to-purple-500/10 rounded-[3rem] blur-xl" />
-          <div className="relative bg-gradient-to-br from-[#ea184a]/5 to-purple-500/5 border border-gray-200 dark:border-white/10 rounded-[3rem] p-16 md:p-24 text-center shadow-xl">
-            <h2 className="text-5xl md:text-7xl font-black mb-8 text-black dark:text-white leading-tight">Yolculuğa <br/>Hazır Mısınız?</h2>
-            <p className="text-gray-600 dark:text-gray-400 text-xl md:text-2xl mb-12 max-w-3xl mx-auto font-light">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#ea184a]/5 to-blue-500/5 rounded-[4rem] blur-3xl" />
+          <div className="relative bg-white border border-gray-100 rounded-[4rem] p-16 md:p-24 text-center shadow-2xl">
+            <h2 className="text-5xl md:text-7xl font-black mb-8 text-black leading-tight">Yolculuğa <br/>Hazır Mısınız?</h2>
+            <p className="text-gray-600 text-xl md:text-2xl mb-12 max-w-3xl mx-auto font-medium">
               Restoranınızı, marketinizi veya kafenizi dijitalleştirin. Donanım, yazılım, teslimat ve kermes altyapısıyla LOKMA ailesine katılın.
             </p>
             <Link href="/partner/apply" className="inline-flex items-center justify-center gap-4 bg-[#ea184a] hover:bg-red-600 text-white px-14 py-6 rounded-full font-black text-2xl shadow-2xl shadow-[#ea184a]/30 transition-all hover:scale-105 active:scale-95">
@@ -258,7 +251,7 @@ export default function VendorPage() {
         </div>
       </section>
 
-      <PublicFooter themeAware={true} />
+      <PublicFooter themeAware={false} />
     </div>
   );
 }
