@@ -143,9 +143,9 @@ export default function LandingPage() {
       <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-500/5 blur-[120px]" />
     </div>
 
-    <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+    <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col-reverse md:flex-row items-center gap-12 lg:gap-20">
       {/* Left: Text content */}
-      <div className="flex-1 w-full text-center md:text-left">
+      <div className="flex-1 w-full text-center md:text-left mt-8 md:mt-0">
         <h1 className="text-5xl md:text-6xl lg:text-[4.5rem] font-black leading-[1.1] tracking-tight mb-8 text-foreground">
           {t('heroTitle')}<br />
           <span className="bg-gradient-to-r from-[#ea184a] to-rose-500 bg-clip-text text-transparent">
@@ -199,7 +199,7 @@ export default function LandingPage() {
       </div>
 
       {/* Right: Premium Floating Visual */}
-      <div className="flex-1 w-full relative mt-16 md:mt-0 flex items-center justify-center">
+      <div className="flex-1 w-full relative mb-12 md:mb-0 flex items-center justify-center">
         
         {/* Cinematic Background Glows */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -212,7 +212,7 @@ export default function LandingPage() {
           {/* Custom continuous slow spin and float animation wrapper */}
           <div className="relative w-full h-full animate-[spin_60s_linear_infinite] drop-shadow-2xl">
             <Image
-              src="/hero_pizza_transparent_v2.png"
+              src="/hero_pizza_transparent.png"
               alt="LOKMA Premium Food Delivery"
               fill
               className="object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-105"
