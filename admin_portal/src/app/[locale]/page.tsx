@@ -204,7 +204,7 @@ export default function LandingPage() {
           {/* Floating Transparent Pizza */}
           <div className="relative w-[110%] md:w-[130%] lg:w-[140%] max-w-[750px] aspect-square flex items-center justify-center z-10 -ml-4 md:-ml-8 lg:-ml-12 drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
             <Image
-              src="/hero_pizza_transparent.png"
+              src="/herp_pizza_3_transparent.png"
               alt="LOKMA Premium Food Delivery"
               fill
               className="object-contain transition-transform duration-700 hover:scale-105"
