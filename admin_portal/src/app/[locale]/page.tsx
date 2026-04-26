@@ -211,28 +211,6 @@ export default function LandingPage() {
               priority
             />
           </div>
-
-          {/* Glassmorphic Floating Element 1 - Delivery (Bottom Left) */}
-          <div className="absolute bottom-[5%] left-[5%] md:-left-4 z-20 bg-[#2a2a2a]/80 backdrop-blur-2xl border border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:-translate-y-2 transition-transform duration-300">
-            <div className="w-12 h-12 rounded-xl bg-[#11cc88] flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#11cc88]/30">
-              <span className="material-symbols-outlined text-[24px]">electric_moped</span>
-            </div>
-            <div className="pr-2">
-              <div className="text-sm font-bold text-white uppercase tracking-wider">Schnelle Lieferung</div>
-              <div className="text-xs text-white/60 font-medium">Unter 30 Minuten</div>
-            </div>
-          </div>
-
-          {/* Glassmorphic Floating Element 2 - Quality (Top Right) */}
-          <div className="absolute top-[15%] right-[0%] md:-right-4 z-20 bg-[#2a2a2a]/80 backdrop-blur-2xl border border-white/5 rounded-2xl p-3 md:p-4 flex items-center gap-3 md:gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:-translate-y-2 transition-transform duration-300">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#ea184a] flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#ea184a]/30">
-              <span className="material-symbols-outlined text-[20px] md:text-[24px]">local_fire_department</span>
-            </div>
-            <div className="pr-2">
-              <div className="text-xs md:text-sm font-bold text-white uppercase tracking-wider">Heiß & Frisch</div>
-              <div className="text-[10px] md:text-xs text-white/60 font-medium">Direkt aus dem Ofen</div>
-            </div>
-          </div>
         </div>
 
       </div>
