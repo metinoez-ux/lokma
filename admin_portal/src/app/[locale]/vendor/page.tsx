@@ -267,7 +267,7 @@ export default function VendorPage() {
               </ul>
             </div>
             <div className="w-full md:w-1/2 flex justify-center">
-              <img src="https://file.cdn.sunmi.com/newebsite/products/s2/s2-8-en.jpg" alt="Smart Scale" className="w-full max-w-[450px] object-contain drop-shadow-2xl" />
+              <img src="/images/hardware/sunmi_s2_1.png" alt="Smart Scale" className="w-full max-w-[450px] object-contain drop-shadow-2xl" />
             </div>
           </div>
         </div>

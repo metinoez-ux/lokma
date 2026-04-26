@@ -17,10 +17,10 @@ const languages = [
 export default function PublicFooter({ themeAware = false }: { themeAware?: boolean }) {
  const t = useTranslations('Landing');
 
- const footerBg = themeAware ? 'bg-muted/30 dark:bg-[#0a0505] border-border/50 ' : 'bg-muted/30 border-border/50';
- const textColor = themeAware ? 'text-muted-foreground /40' : 'text-muted-foreground/80';
- const headingColor = themeAware ? 'text-foreground ' : 'text-foreground';
- const linkColor = themeAware ? 'text-muted-foreground /50 hover:text-[#ea184a] dark:hover:text-[#ea184a]' : 'text-muted-foreground hover:text-[#ea184a]';
+ const footerBg = themeAware ? 'bg-muted/30 dark:bg-[#0a0505] border-border/50' : 'bg-gray-50 border-gray-200';
+ const textColor = themeAware ? 'text-muted-foreground/80' : 'text-gray-500';
+ const headingColor = themeAware ? 'text-foreground' : 'text-gray-900';
+ const linkColor = themeAware ? 'text-muted-foreground/80 hover:text-[#ea184a] dark:hover:text-[#ea184a]' : 'text-gray-600 hover:text-[#ea184a]';
 
  return (
  <footer className={`${footerBg} border-t py-12 px-4 md:px-20 lg:px-40`}>
@@ -72,7 +72,7 @@ export default function PublicFooter({ themeAware = false }: { themeAware?: bool
  </div>
  </div>
 
- <div className={`max-w-[1200px] mx-auto mt-20 pt-8 border-t ${themeAware ? 'border-border/50 ' : 'border-border/50'} flex flex-col md:flex-row items-center justify-between gap-4`}>
+ <div className={`max-w-[1200px] mx-auto mt-20 pt-8 border-t ${themeAware ? 'border-border/50' : 'border-gray-200'} flex flex-col md:flex-row items-center justify-between gap-4`}>
  <p className={`text-xs ${textColor}`}>{t('copyright')}</p>
  <div className={`flex items-center gap-2 text-xs ${textColor}`}>
  <span className="material-symbols-outlined text-[14px]">language</span>

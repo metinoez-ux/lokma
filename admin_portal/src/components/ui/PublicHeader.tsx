@@ -144,13 +144,13 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  const currentCountryData = countries.find(c => c.code === currentCountry) || countries[0];
  const currentLangData = languages.find(l => l.code === currentLang) || languages[0];
 
- const headerBg = themeAware
- ? (scrolled ? 'bg-white dark:bg-[#0f172a]/80 backdrop-blur-xl border-border/50 shadow-sm' : 'bg-white dark:bg-[#0f172a]/80 border-transparent')
- : (scrolled ? 'bg-white backdrop-blur-xl border-border/50 shadow-sm' : 'bg-white border-transparent');
- const textColor = themeAware ? 'text-foreground ' : 'text-foreground';
- const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-border/50 text-foreground ' : 'bg-white border-border/50 text-foreground';
- const itemHover = themeAware ? 'hover:bg-muted dark:hover:bg-white/10' : 'hover:bg-muted';
- const mutedText = themeAware ? 'text-muted-foreground/80 /50' : 'text-muted-foreground/80';
+  const headerBg = themeAware
+    ? (scrolled ? 'bg-white dark:bg-[#0f172a]/80 backdrop-blur-xl border-border/50 shadow-sm' : 'bg-white dark:bg-[#0f172a]/80 border-transparent')
+    : (scrolled ? 'bg-white backdrop-blur-xl border-gray-200 shadow-sm' : 'bg-white border-transparent');
+  const textColor = themeAware ? 'text-foreground' : 'text-gray-900';
+  const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-border/50 text-foreground' : 'bg-white border-gray-200 text-gray-900';
+  const itemHover = themeAware ? 'hover:bg-muted dark:hover:bg-white/10' : 'hover:bg-gray-50';
+  const mutedText = themeAware ? 'text-muted-foreground/80' : 'text-gray-500';
 
  if (isLoading) {
  return (
@@ -206,7 +206,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  key={lang.code}
  className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentLang === lang.code
  ? 'bg-[#ea184a]/10 text-[#ea184a] font-semibold'
- : `${itemHover} ${themeAware ? 'text-foreground dark:text-gray-200' : 'text-foreground'} font-medium`
+ : `${itemHover} ${themeAware ? 'text-foreground dark:text-gray-200' : 'text-gray-900'} font-medium`
  }`}
  onClick={() => handleLangChange(lang.code)}
  >
@@ -221,7 +221,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  </div>
 
  {/* Divider */}
- <div className={`mx-3 border-t ${themeAware ? 'border-border/50 ' : 'border-border/50'}`} />
+ <div className={`mx-3 border-t ${themeAware ? 'border-border/50' : 'border-gray-200'}`} />
 
  {/* Country/Region Section */}
  <div className="px-3 pt-2 pb-3">
@@ -235,7 +235,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  key={country.code}
  className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentCountry === country.code
  ? 'bg-[#ea184a]/10 text-[#ea184a] font-semibold'
- : `${itemHover} ${themeAware ? 'text-foreground dark:text-gray-200' : 'text-foreground'} font-medium`
+ : `${itemHover} ${themeAware ? 'text-foreground dark:text-gray-200' : 'text-gray-900'} font-medium`
  }`}
  onClick={() => handleCountryChange(country.code)}
  >
@@ -250,7 +250,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  </div>
 
  {/* Footer */}
- <div className={`px-3 py-2 border-t ${themeAware ? 'border-border/50 bg-muted/30 dark:bg-white/5' : 'border-border/30 bg-muted/30'}`}>
+ <div className={`px-3 py-2 border-t ${themeAware ? 'border-border/50 bg-muted/30 dark:bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
  <p className={`text-xs ${mutedText} text-center`}>
  {currentCountryData.flag} {currentCountryData.name} • {currentLangData.name}
  </p>
@@ -271,7 +271,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  {/* Mobile Menu */}
  {
  mobileMenuOpen && (
- <div className={`md:hidden absolute top-full left-0 right-0 ${menuBg} border-b ${themeAware ? 'border-border/50 ' : 'border-white/10'} p-4`}>
+ <div className={`md:hidden absolute top-full left-0 right-0 ${menuBg} border-b ${themeAware ? 'border-border/50' : 'border-gray-200'} p-4`}>
  <nav className="flex flex-col gap-4">
  <Link className="text-sm font-medium py-2" href="/">{t('home')}</Link>
  <Link className="text-sm font-medium py-2" href="/about">{t('about')}</Link>
