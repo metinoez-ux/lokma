@@ -143,7 +143,7 @@ export default function LandingPage() {
       <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-500/5 blur-[120px]" />
     </div>
 
-    <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col-reverse md:flex-row items-center gap-12 lg:gap-20">
+    <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
       {/* Left: Text content */}
       <div className="flex-1 w-full text-center md:text-left mt-8 md:mt-0">
         <h1 className="text-5xl md:text-6xl lg:text-[4.5rem] font-black leading-[1.1] tracking-tight mb-8 text-foreground">
