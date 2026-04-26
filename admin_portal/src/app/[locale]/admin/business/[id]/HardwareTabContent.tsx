@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import {  ShoppingCart, CheckCircle, Monitor, Smartphone, Scale, Tag, SlidersHorizontal, Snowflake, Droplets, Nfc, Bluetooth , Info } from 'lucide-react';
+import {  ShoppingCart, CheckCircle, Monitor, Smartphone, Scale, Tag, SlidersHorizontal, Snowflake, Droplets, Nfc, Bluetooth, Info, Settings } from 'lucide-react';
 
 export default function HardwareTabContent({
   business,
