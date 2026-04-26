@@ -198,17 +198,9 @@ export default function LandingPage() {
         </div>
       </div>
 
-        {/* Right: Premium Floating Visual with Red Diamond */}
+        {/* Right: Premium Floating Visual */}
         <div className="flex-1 w-full relative mb-12 md:mb-0 flex items-center justify-center min-h-[400px] md:min-h-[600px]">
           
-          {/* Background Glow */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[100%] h-[100%] bg-gradient-to-br from-[#ea184a]/20 to-transparent blur-[100px] rounded-full mix-blend-screen" />
-          </div>
-
-          {/* The Red Diamond Background */}
-          <div className="absolute w-[70%] aspect-square bg-[#ea184a] rounded-[3rem] rotate-[45deg] shadow-2xl shadow-black/40 transition-transform duration-700 hover:rotate-[40deg] z-0" />
-
           {/* Floating Transparent Pizza */}
           <div className="relative w-[110%] md:w-[130%] lg:w-[140%] max-w-[750px] aspect-square flex items-center justify-center z-10 -ml-4 md:-ml-8 lg:-ml-12 drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
             <Image
