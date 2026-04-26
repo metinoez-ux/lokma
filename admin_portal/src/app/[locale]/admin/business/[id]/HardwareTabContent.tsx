@@ -1473,12 +1473,14 @@ export default function HardwareTabContent({
                     {t('techDetails')}
                   </h3>
                   <div className="space-y-3">
-                    {Object.entries(getDetailedSpecs(selectedProductDetail)).map(([k, v]) => (
+                    {Object.entries(getDetailedSpecs(selectedProductDetail)).map(([k, v]) => {
+                      const isTranslatedKey = ['productSize', 'screenSize', 'productWeight', 'enduranceTime', 'displayColor', 'resolution'].includes(k);
+                      return (
                       <div key={k} className="flex justify-between border-b border-border/30 pb-2 text-sm">
-                        <span className="text-muted-foreground capitalize">{t(k as any)}</span>
+                        <span className="text-muted-foreground capitalize">{isTranslatedKey ? t(k as any) : k}</span>
                         <span className="font-medium text-foreground text-right max-w-[60%]">{v as string}</span>
                       </div>
-                    ))}
+                    )})}
                   </div>
                   
                   {getDetailedSpecs(selectedProductDetail)?.enduranceTime && (
