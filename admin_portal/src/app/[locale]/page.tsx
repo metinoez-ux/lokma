@@ -244,7 +244,6 @@ export default function LandingPage() {
         </div>
 
       </div>
-    </div>
   </section>
 
  {/* Feature Cards — Lexware style (light background) */}
