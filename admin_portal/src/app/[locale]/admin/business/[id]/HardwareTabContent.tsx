@@ -139,7 +139,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_cpad_pay",
       name: "Sunmi CPad PAY",
-      category: "Kasa Sistemleri",
+      category: "KDS & Müşteri Ekranları", series: "CPad Serisi",
       description: "CPad PAY - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/cpad-pay/icon/cpad-pay.png",
@@ -151,7 +151,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_cpad",
       name: "Sunmi CPad",
-      category: "Kasa Sistemleri",
+      category: "KDS & Müşteri Ekranları", series: "CPad Serisi",
       description: "CPad - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/CPad/icon/CPad.png",
@@ -163,7 +163,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_flex_3",
       name: "Sunmi FLEX 3",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "FLEX Serisi",
       description: "FLEX 3 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/flex-3/icon/flex-3.png",
@@ -175,7 +175,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_v3_plus",
       name: "Sunmi V3 PLUS",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "V-Serisi (Mobil POS)",
       description: "V3 PLUS - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/v3-plus/icon/v3-plus.png",
@@ -187,7 +187,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_v3e",
       name: "Sunmi V3e",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "V-Serisi (Mobil POS)",
       description: "V3e - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/v3e/icon/v3e.png",
@@ -199,7 +199,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_v3_family",
       name: "Sunmi V3 Family",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "V-Serisi (Mobil POS)",
       description: "V3 Family - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/v3-family/icon/v3-family.png",
@@ -211,7 +211,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_v3_mix",
       name: "Sunmi V3 MIX",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "V-Serisi (Mobil POS)",
       description: "V3 MIX - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/v3-mix/icon/v3-mix.png",
@@ -223,7 +223,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_v2_pro",
       name: "Sunmi V2 PRO",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "V-Serisi (Mobil POS)",
       description: "V2 PRO - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/1/V2PRO.png",
@@ -235,7 +235,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_v2s_plus",
       name: "Sunmi V2s PLUS",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "V-Serisi (Mobil POS)",
       description: "V2s PLUS - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/1/V2sPLUS.png",
@@ -247,7 +247,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_v2s",
       name: "Sunmi V2s",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "V-Serisi (Mobil POS)",
       description: "V2s - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/1/V2s.png",
@@ -259,7 +259,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_l3",
       name: "Sunmi L3",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "L-Serisi (Endüstriyel)",
       description: "L3 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/l3/icon/l3.png",
@@ -271,7 +271,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_l2s_pro",
       name: "Sunmi L2s PRO",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "L-Serisi (Endüstriyel)",
       description: "L2s PRO - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/l2s-pro/icon/l2s-pro.png",
@@ -283,7 +283,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_l2ks",
       name: "Sunmi L2Ks",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "L-Serisi (Endüstriyel)",
       description: "L2Ks - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/l2ks/icon/l2ks.png",
@@ -295,7 +295,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_l2h",
       name: "Sunmi L2H",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "L-Serisi (Endüstriyel)",
       description: "L2H - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/l2h/icon/l2h.png",
@@ -307,7 +307,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_m3",
       name: "Sunmi M3",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "M-Serisi (Mobil Terminal)",
       description: "M3 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/m3/icon/m3.png",
@@ -319,7 +319,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_m2_max",
       name: "Sunmi M2 MAX",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "M-Serisi (Mobil Terminal)",
       description: "M2 MAX - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/1/M2MAX.png",
@@ -331,7 +331,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_p3_air",
       name: "Sunmi P3 AIR",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "P3 AIR - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/p3-air/icon/p3-air.png",
@@ -343,7 +343,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_p3_family",
       name: "Sunmi P3 Family",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "P3 Family - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/p3-family/icon/p3-family-en.png",
@@ -355,7 +355,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_p3_mix",
       name: "Sunmi P3 MIX",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "P3 MIX - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/p3-mix/icon/p3-mix.png",
@@ -367,7 +367,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_p2_lite_se",
       name: "Sunmi P2 LITE SE",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "P2 LITE SE - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/2/P2LITESE.png",
@@ -379,7 +379,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_p2_se",
       name: "Sunmi P2 SE",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "P2 SE - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/2/p2se.png",
@@ -391,7 +391,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_p2",
       name: "Sunmi P2",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "P2 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/2/P2.png",
@@ -403,7 +403,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_p2_smartpad",
       name: "Sunmi P2 SMARTPAD",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "P2 SMARTPAD - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/2/P2SMARTPAD.png",
@@ -415,7 +415,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_t3_family",
       name: "Sunmi T3 Family",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "T-Serisi (Gelişmiş Kasa)",
       description: "T3 Family - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/t3-family/icon/t3-family.png",
@@ -427,7 +427,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_t3_pro_family",
       name: "Sunmi T3 PRO Family",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "T-Serisi (Gelişmiş Kasa)",
       description: "T3 PRO Family - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/t3-pro/icon/t3-pro-series.png",
@@ -439,7 +439,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_t2s",
       name: "Sunmi T2s",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "T-Serisi (Gelişmiş Kasa)",
       description: "T2s - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/T2.png",
@@ -451,7 +451,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_t2s_lite",
       name: "Sunmi T2s LITE",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "T-Serisi (Gelişmiş Kasa)",
       description: "T2s LITE - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/T2LITE.png",
@@ -463,7 +463,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_t2",
       name: "Sunmi T2",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "T-Serisi (Gelişmiş Kasa)",
       description: "T2 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/T2.png",
@@ -475,7 +475,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_t2_mini",
       name: "Sunmi T2 MINI",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "T-Serisi (Gelişmiş Kasa)",
       description: "T2 MINI - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/T2MINI.png",
@@ -487,7 +487,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d3_family",
       name: "Sunmi D3 Family",
-      category: "Kasa Sistemleri",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D3 Family - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/d3-family/icon/d3-family.png",
@@ -499,7 +499,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d3_pro",
       name: "Sunmi D3 PRO",
-      category: "Kasa Sistemleri",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D3 PRO - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/d3-pro/icon/d3-pro.png",
@@ -511,7 +511,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d3_mini",
       name: "Sunmi D3 MINI",
-      category: "Kasa Sistemleri",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D3 MINI - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/d3-mini/icon/d3-mini.png",
@@ -523,7 +523,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d2s_kds",
       name: "Sunmi D2s KDS",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D2s KDS - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/d2s-kds/icon/product.png",
@@ -535,7 +535,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d2s_plus_combo",
       name: "Sunmi D2s PLUS COMBO",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D2s PLUS COMBO - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/d2s-plus-combo/icon/product.png",
@@ -547,7 +547,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d2s_plus",
       name: "Sunmi D2s PLUS",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D2s PLUS - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/d2s-plus/icon/product.png",
@@ -559,7 +559,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d2s_combo",
       name: "Sunmi D2s COMBO",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D2s COMBO - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/D2SCOMBO.png",
@@ -571,7 +571,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d2s",
       name: "Sunmi D2s",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D2s - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/D2S.png",
@@ -583,7 +583,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d2s_lite",
       name: "Sunmi D2s LITE",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D2s LITE - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/D2SLITE.png",
@@ -595,7 +595,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_d2_mini",
       name: "Sunmi D2 MINI",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "D-Serisi (Kompakt Kasa)",
       description: "D2 MINI - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/D2MINI.png",
@@ -607,7 +607,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_s2",
       name: "Sunmi S2",
-      category: "Tartım & Terazi",
+      category: "Akıllı Tartım", series: "S-Serisi (Terazi)",
       description: "S2 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/S2.png",
@@ -619,7 +619,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_ft2",
       name: "Sunmi FT2",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "FT-Serisi",
       description: "FT2 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/3/ft2.png",
@@ -631,7 +631,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_k2",
       name: "Sunmi K2",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "K-Serisi (Kiosk)",
       description: "K2 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/4/K2.png",
@@ -643,7 +643,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_k2_mini",
       name: "Sunmi K2 MINI",
-      category: "Mobil Cihazlar",
+      category: "Masaüstü Kasa & Kiosk", series: "K-Serisi (Kiosk)",
       description: "K2 MINI - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/4/K2MINI.png",
@@ -655,7 +655,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_80mm_label_printer",
       name: "Sunmi 80MM Label Printer",
-      category: "Kasa Sistemleri",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Yazıcılar",
       description: "80MM Label Printer - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/80-label-printer/icon/80-label-printer.png",
@@ -667,7 +667,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_mini_ap",
       name: "Sunmi MINI AP",
-      category: "Mobil Cihazlar",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Ağ & İletişim",
       description: "MINI AP - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/mini-ap/icon/mini-ap.png",
@@ -679,7 +679,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_4g_wi_fi_base_station",
       name: "Sunmi 4G Wi-Fi Base Station",
-      category: "Mobil Cihazlar",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Ağ & İletişim",
       description: "4G Wi-Fi Base Station - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/5/w1s.png",
@@ -691,7 +691,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_80mm_kitchen_cloud_printer",
       name: "Sunmi 80mm Kitchen Cloud Printer",
-      category: "Kasa Sistemleri",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Yazıcılar",
       description: "80mm Kitchen Cloud Printer - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/80-kitchen-printer/icon/80-printer.png",
@@ -703,7 +703,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_electronic_shelf_label",
       name: "Sunmi Electronic Shelf Label",
-      category: "ESL Etiketleri",
+      category: "ESL Etiketleri", series: "Tümü",
       description: "Electronic Shelf Label - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/5/ESL.png",
@@ -715,7 +715,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_blink2",
       name: "Sunmi Blink2",
-      category: "Mobil Cihazlar",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Tarayıcılar",
       description: "Blink2 - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/blink2/icon/blink2.png",
@@ -727,7 +727,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_sunmi_sound_box",
       name: "Sunmi SUNMI Sound Box",
-      category: "Kasa Sistemleri",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Aksesuarlar",
       description: "SUNMI Sound Box - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/sound-box/icon/sound-box.png",
@@ -739,7 +739,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_max_cash_drawer",
       name: "Sunmi MAX Cash Drawer",
-      category: "Kasa Sistemleri",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Aksesuarlar",
       description: "MAX Cash Drawer - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/max-cash-drawer/icon/max-cash-drawer-v1.png",
@@ -751,7 +751,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_blink_scanbox",
       name: "Sunmi Blink ScanBox",
-      category: "Kasa Sistemleri",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Tarayıcılar",
       description: "Blink ScanBox - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/6/scanner.png",
@@ -763,7 +763,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_2d_handheld_scanner",
       name: "Sunmi 2D Handheld Scanner",
-      category: "Mobil Cihazlar",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Tarayıcılar",
       description: "2D Handheld Scanner - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/6/scannergun.png",
@@ -775,7 +775,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_pos_power_bank",
       name: "Sunmi POS Power Bank",
-      category: "Mobil Cihazlar",
+      category: "Mobil POS & El Terminalleri", series: "P-Serisi (Ödeme POS)",
       description: "POS Power Bank - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/6/charger.png",
@@ -787,7 +787,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_89_key_pos_keyboard",
       name: "Sunmi 89-Key POS Keyboard",
-      category: "Mobil Cihazlar",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Aksesuarlar",
       description: "89-Key POS Keyboard - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/6/keyword.png",
@@ -799,7 +799,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_mini_cash_drawer",
       name: "Sunmi Mini Cash Drawer",
-      category: "Kasa Sistemleri",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Aksesuarlar",
       description: "Mini Cash Drawer - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/list/xl/icons/6/moneybox-v1.png",
@@ -811,7 +811,7 @@ export default function HardwareTabContent({
     {
       id: "sunmi_inquiry",
       name: "Sunmi Inquiry",
-      category: "Mobil Cihazlar",
+      category: "Ağ, Yazıcı & Aksesuarlar", series: "Aksesuarlar",
       description: "Inquiry - Orijinal Sunmi Donanımı.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/floating/inquery.png",
@@ -1536,7 +1536,7 @@ export default function HardwareTabContent({
             <img 
               src={lightboxData.images[lightboxData.index]} 
               alt="Büyütülmüş Görsel" 
-              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" 
+              className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl bg-white p-4 md:p-8" 
             />
 
             {lightboxData.images.length > 1 && (
