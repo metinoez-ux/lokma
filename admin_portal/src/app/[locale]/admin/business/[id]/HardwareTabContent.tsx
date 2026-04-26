@@ -10,7 +10,7 @@ export default function HardwareTabContent({
   admin,
   showToast,
 }: any) {
-  const [hardwareCart, setHardwareCart] = useState<Record<string, { quantity: number, mode: 'rent' | 'buy' | 'installment', duration: 6 | 12 | 24 }>>({});
+  const [hardwareCart, setHardwareCart] = useState<Record<string, { quantity: number, mode: 'rent' | 'buy' | 'installment', duration: 6 | 12 | 24 | 36 }>>({});
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const categories = ['Kasa Sistemleri', 'Mobil Cihazlar', 'Tartım & Terazi', 'ESL Etiketleri', 'Sarf Malzemeleri'];
@@ -33,6 +33,12 @@ export default function HardwareTabContent({
     if (duration === 6) return basePrice * 1.2;
     if (duration === 24) return basePrice * 0.8;
     return basePrice;
+  };
+
+  const getInstallmentPrice = (basePrice: number, duration: 24 | 36) => {
+    // 24 ay için %10 vade farkı, 36 ay için %15 vade farkı ile aylık hesaplama
+    const markup = duration === 24 ? 1.10 : 1.15;
+    return (basePrice * markup) / duration;
   };
 
   const getDetailedSpecs = (product: any) => {
@@ -221,7 +227,7 @@ export default function HardwareTabContent({
     }
   ];
 
-  const handleUpdateCart = (id: string, quantity: number, mode: 'rent' | 'buy' | 'installment', duration: 6 | 12 | 24 = 12) => {
+  const handleUpdateCart = (id: string, quantity: number, mode: 'rent' | 'buy' | 'installment', duration: 6 | 12 | 24 | 36 = 12) => {
     if (quantity <= 0) {
       const newCart = { ...hardwareCart };
       delete newCart[id];
@@ -267,9 +273,14 @@ export default function HardwareTabContent({
   }, 0);
 
   const totalRent = Object.entries(hardwareCart).reduce((acc, [id, data]) => {
-    if (data.mode === 'rent' || data.mode === 'installment') {
+    if (data.mode === 'rent') {
       const product = hardwareList.find(p => p.id === id);
-      const calculatedPrice = getRentPrice(product?.rentPrice || 0, data.duration);
+      const calculatedPrice = getRentPrice(product?.rentPrice || 0, data.duration as 6|12|24);
+      return acc + calculatedPrice * data.quantity;
+    }
+    if (data.mode === 'installment') {
+      const product = hardwareList.find(p => p.id === id);
+      const calculatedPrice = getInstallmentPrice(product?.price || 0, data.duration as 24|36);
       return acc + calculatedPrice * data.quantity;
     }
     return acc;
@@ -582,7 +593,7 @@ export default function HardwareTabContent({
                           <option value="rent">Kiralama Modeli</option>
                           <option value="buy">Satın Alma Modeli</option>
                           {product.category === 'ESL Etiketleri' && (
-                            <option value="installment">Taksit ile Ödeme (24 Ay)</option>
+                            <option value="installment">Taksit ile Ödeme</option>
                           )}
                         </select>
 
@@ -590,8 +601,7 @@ export default function HardwareTabContent({
                           <select 
                             className="bg-indigo-900/20 border border-indigo-500/30 rounded-md px-3 py-2 text-xs text-indigo-200 w-full focus:ring-2 focus:ring-indigo-500/50"
                             value={currentSelection?.duration || (currentSelection?.mode === 'installment' ? 24 : 12)}
-                            onChange={(e) => handleUpdateCart(product.id, currentSelection?.quantity || 1, currentSelection?.mode || 'rent', parseInt(e.target.value) as 6 | 12 | 24)}
-                            disabled={currentSelection?.mode === 'installment'}
+                            onChange={(e) => handleUpdateCart(product.id, currentSelection?.quantity || 1, currentSelection?.mode || 'rent', parseInt(e.target.value) as 6 | 12 | 24 | 36)}
                           >
                             {currentSelection?.mode !== 'installment' && (
                               <>
@@ -603,9 +613,10 @@ export default function HardwareTabContent({
                               </>
                             )}
                             {currentSelection?.mode === 'installment' && (
-                              <option value={24}>
-                                24 Ay Taksit (Süre Sonunda Sizin Olur) (€{getRentPrice(product.rentPrice, 24).toFixed(2)}/ay)
-                              </option>
+                              <>
+                                <option value={24}>24 Ay Taksit (€{getInstallmentPrice(product.price, 24).toFixed(2)}/ay)</option>
+                                <option value={36}>36 Ay Taksit (€{getInstallmentPrice(product.price, 36).toFixed(2)}/ay)</option>
+                              </>
                             )}
                           </select>
                         )}
