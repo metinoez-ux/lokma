@@ -347,7 +347,15 @@ export default function HardwareTabContent({
       description: "NFC, çip ve manyetik kart okuyucuları ile donatılmış, uluslararası ödeme sertifikalarına (PCI PTS) sahip güvenli ve taşınabilir Android ödeme terminalidir.",
       icon: <Monitor className="w-8 h-8 text-blue-400" />,
       image: "https://file.cdn.sunmi.com/newebsite/products/p3-family/icon/p3-family-en.png",
-      images: ["https://file.cdn.sunmi.com/newebsite/products/p3-family/icon/p3-family-en.png"],
+      video: "https://file.cdn.sunmi.com/newebsite/products/p3-family/video/tvc-n.mp4",
+      images: [
+        "https://file.cdn.sunmi.com/newebsite/products/p3-family/icon/p3-family-en.png",
+        "https://file.cdn.sunmi.com/newebsite/products/p3-family/lg/s3-1-1.jpg",
+        "https://file.cdn.sunmi.com/newebsite/products/p3-family/lg/s3-1-2.jpg",
+        "https://file.cdn.sunmi.com/newebsite/products/p3-family/lg/s3-2-1.jpg",
+        "https://file.cdn.sunmi.com/newebsite/products/p3-family/lg/s3-3-1.jpg",
+        "https://file.cdn.sunmi.com/newebsite/products/p3-family/lg/s13-1-1.jpg"
+      ],
       price: 299,
       rentPrice: 19.9,
       minRentMonths: 12
@@ -1449,32 +1457,58 @@ export default function HardwareTabContent({
                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">{selectedProductDetail.description}</p>
              </div>
 
-             <div className="relative z-10 w-full max-w-3xl aspect-[16/9] md:aspect-auto md:h-[500px] flex justify-center items-center animate-in zoom-in-95 duration-1000 delay-200 fill-mode-both">
-                <img 
-                  src={activeModalImage || selectedProductDetail.image} 
-                  alt={selectedProductDetail.name} 
-                  className="max-w-full max-h-full object-contain drop-shadow-2xl"
-                />
+             <div className="relative z-10 w-full max-w-5xl aspect-[16/9] flex justify-center items-center animate-in zoom-in-95 duration-1000 delay-200 fill-mode-both">
+                {(selectedProductDetail as any).video && !activeModalImage ? (
+                  <div className="w-full h-full rounded-3xl overflow-hidden shadow-2xl border border-border/50 bg-black/5">
+                    <video 
+                      src={(selectedProductDetail as any).video} 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <img 
+                    src={activeModalImage || selectedProductDetail.image} 
+                    alt={selectedProductDetail.name} 
+                    className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                  />
+                )}
              </div>
           </div>
 
           {/* Gallery Section */}
-          {selectedProductDetail.images && selectedProductDetail.images.length > 1 && (
+          {(selectedProductDetail.images && selectedProductDetail.images.length > 1) || (selectedProductDetail as any).video ? (
             <div className="w-full max-w-5xl mx-auto px-6 pb-24">
                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8 text-center">Görsel Galerisi</h3>
                <div className="flex gap-6 overflow-x-auto pb-6 hide-scrollbar justify-center">
-                 {selectedProductDetail.images.map((img: string, i: number) => (
+                 
+                 {/* Video Thumbnail */}
+                 {(selectedProductDetail as any).video && (
+                    <button 
+                      onClick={() => setActiveModalImage(null)} 
+                      className={`w-32 h-32 md:w-48 md:h-48 rounded-3xl border-2 overflow-hidden transition-all duration-300 relative bg-black flex flex-col items-center justify-center gap-2 group ${!activeModalImage ? 'border-primary scale-105 shadow-xl shadow-primary/20' : 'border-border/40 hover:border-border hover:scale-105'}`}
+                    >
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10" />
+                      <Monitor className="w-10 h-10 md:w-12 md:h-12 text-white z-20 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                      <span className="text-white text-xs font-bold tracking-widest z-20 opacity-80 group-hover:opacity-100">VİDEO</span>
+                    </button>
+                 )}
+
+                 {selectedProductDetail.images?.map((img: string, i: number) => (
                     <button 
                       key={i} 
                       onClick={() => setActiveModalImage(img)} 
-                      className={`w-32 h-32 md:w-48 md:h-48 rounded-3xl border-2 overflow-hidden transition-all duration-300 ${activeModalImage === img || (!activeModalImage && i === 0) ? 'border-primary scale-105 shadow-xl shadow-primary/20' : 'border-border/40 hover:border-border hover:scale-105'} bg-white`}
+                      className={`w-32 h-32 md:w-48 md:h-48 rounded-3xl border-2 overflow-hidden transition-all duration-300 ${activeModalImage === img || (!activeModalImage && !(selectedProductDetail as any).video && i === 0) ? 'border-primary scale-105 shadow-xl shadow-primary/20' : 'border-border/40 hover:border-border hover:scale-105'} bg-white`}
                     >
                       <img src={img} className="w-full h-full object-contain p-4" />
                     </button>
                  ))}
                </div>
             </div>
-          )}
+          ) : null}
 
           {/* Tech Specs Section - Bento Grid */}
           <div className="w-full bg-muted/30 py-24 border-t border-border/50">
