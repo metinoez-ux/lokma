@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import {  ShoppingCart, CheckCircle, Monitor, Smartphone, Scale, Tag, SlidersHorizontal, Snowflake, Droplets, Nfc, Bluetooth, Info, Settings } from 'lucide-react';
+import {  ShoppingCart, CheckCircle, Monitor, Smartphone, Scale, Tag, SlidersHorizontal, Snowflake, Droplets, Nfc, Bluetooth, Info, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from "next-intl";
 
 export default function HardwareTabContent({
@@ -18,7 +18,8 @@ export default function HardwareTabContent({
   const categories = ['Kasa Sistemleri', 'Mobil Cihazlar', 'Tartım & Terazi', 'ESL Etiketleri', 'Sarf Malzemeleri'];
   const [activeCategory, setActiveCategory] = useState(categories[3]);
   const [activeSeries, setActiveSeries] = useState("Tümü");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [lightboxData, setLightboxData] = useState<{ index: number, images: string[] } | null>(null);
+  const [activeModalImage, setActiveModalImage] = useState<string | null>(null);
   const [selectedProductDetail, setSelectedProductDetail] = useState<any | null>(null);
 
   // Filters State
@@ -505,7 +506,7 @@ export default function HardwareTabContent({
                   {/* Ürün Görseli */}
                   <div 
                     className="p-6 bg-white/5 dark:bg-white flex items-center justify-center h-[200px] cursor-pointer relative"
-                    onClick={() => product.image ? setSelectedImage(product.image) : null}
+                    onClick={() => product.images && product.images.length > 0 ? setLightboxData({ index: 0, images: product.images }) : (product.image ? setLightboxData({ index: 0, images: [product.image] }) : null)}
                   >
                     {product.image ? (
                       <img 
@@ -545,7 +546,7 @@ export default function HardwareTabContent({
                         <div 
                           key={idx} 
                           className="w-12 h-12 shrink-0 rounded border border-border/50 overflow-hidden cursor-pointer hover:border-primary transition-colors"
-                          onClick={() => setSelectedImage(img)}
+                          onClick={(e) => { e.stopPropagation(); setLightboxData({ index: idx, images: product.images }); }}
                         >
                           <img 
                             src={img} 
@@ -561,7 +562,7 @@ export default function HardwareTabContent({
                   <div className="p-5 flex-1 flex flex-col">
                     <div 
                       className="cursor-pointer group/desc"
-                      onClick={() => setSelectedProductDetail(product)}
+                      onClick={() => { setSelectedProductDetail(product); setActiveModalImage(null); }}
                     >
                       <h4 className="font-bold text-foreground text-lg leading-tight group-hover/desc:text-primary transition-colors">{product.name}</h4>
                       <p className="text-xs text-muted-foreground mt-2 mb-4 line-clamp-3">{product.description}</p>
@@ -727,18 +728,27 @@ export default function HardwareTabContent({
           <div className="relative bg-card w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-auto" onClick={e => e.stopPropagation()}>
             <button 
               className="absolute top-4 right-4 bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-foreground w-10 h-10 rounded-full flex items-center justify-center transition-colors z-20"
-              onClick={() => setSelectedProductDetail(null)}
+              onClick={() => { setSelectedProductDetail(null); setActiveModalImage(null); }}
             >
               ✕
             </button>
             
             {/* Left side: Images */}
             <div className="w-full md:w-1/2 bg-white dark:bg-white/5 flex flex-col p-8 items-center justify-center border-b md:border-b-0 md:border-r border-border/50">
-               <img src={selectedImage || selectedProductDetail.image} alt={selectedProductDetail.name} className="max-w-full max-h-[350px] object-contain mb-8" />
+               <img 
+                 src={activeModalImage || selectedProductDetail.image} 
+                 alt={selectedProductDetail.name} 
+                 className="max-w-full max-h-[350px] object-contain mb-8 cursor-pointer"
+                 onClick={() => {
+                   const imgs = selectedProductDetail.images && selectedProductDetail.images.length > 0 ? selectedProductDetail.images : [selectedProductDetail.image];
+                   const idx = imgs.indexOf(activeModalImage || selectedProductDetail.image);
+                   setLightboxData({ index: Math.max(0, idx), images: imgs });
+                 }}
+               />
                {selectedProductDetail.images && selectedProductDetail.images.length > 0 && (
                  <div className="flex gap-3 overflow-x-auto p-2 max-w-full hide-scrollbar">
-                    {[selectedProductDetail.image, ...selectedProductDetail.images].map((img: string, i: number) => (
-                      <div key={i} onClick={() => setSelectedImage(img)} className="w-16 h-16 border border-border/50 rounded-lg cursor-pointer shrink-0 overflow-hidden hover:border-primary transition-colors bg-white">
+                    {selectedProductDetail.images.map((img: string, i: number) => (
+                      <div key={i} onClick={() => setActiveModalImage(img)} className={`w-16 h-16 border ${activeModalImage === img ? 'border-primary' : 'border-border/50'} rounded-lg cursor-pointer shrink-0 overflow-hidden hover:border-primary transition-colors bg-white`}>
                          <img src={img} className="w-full h-full object-cover" />
                       </div>
                     ))}
@@ -798,20 +808,51 @@ export default function HardwareTabContent({
       )}
 
       {/* Image Lightbox Modal */}
-      {selectedImage && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4" onClick={() => setSelectedImage(null)}>
-          <div className="relative max-w-4xl w-full h-[80vh] flex items-center justify-center">
+      {lightboxData && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 backdrop-blur-sm px-4 select-none" onClick={() => setLightboxData(null)}>
+          <div className="relative max-w-5xl w-full h-[85vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
             <button 
-              className="absolute top-4 right-4 bg-black/50 hover:bg-black/80 text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors"
-              onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors z-50 backdrop-blur-md"
+              onClick={() => setLightboxData(null)}
             >
               ✕
             </button>
+            
+            {lightboxData.images.length > 1 && (
+              <button 
+                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-all z-50 backdrop-blur-md border border-white/10 hover:scale-110"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxData({ ...lightboxData, index: (lightboxData.index - 1 + lightboxData.images.length) % lightboxData.images.length });
+                }}
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+            )}
+
             <img 
-              src={selectedImage} 
+              src={lightboxData.images[lightboxData.index]} 
               alt="Büyütülmüş Görsel" 
-              className="max-w-full max-h-full object-contain rounded-xl bg-white p-4 shadow-2xl" 
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" 
             />
+
+            {lightboxData.images.length > 1 && (
+              <button 
+                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-all z-50 backdrop-blur-md border border-white/10 hover:scale-110"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxData({ ...lightboxData, index: (lightboxData.index + 1) % lightboxData.images.length });
+                }}
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            )}
+            
+            {lightboxData.images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white/80 text-sm font-medium tracking-widest border border-white/10">
+                {lightboxData.index + 1} / {lightboxData.images.length}
+              </div>
+            )}
           </div>
         </div>
       )}
