@@ -4,12 +4,14 @@ import { useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {  ShoppingCart, CheckCircle, Monitor, Smartphone, Scale, Tag, SlidersHorizontal, Snowflake, Droplets, Nfc, Bluetooth, Info, Settings } from 'lucide-react';
+import { useTranslations } from "next-intl";
 
 export default function HardwareTabContent({
   business,
   admin,
   showToast,
 }: any) {
+  const t = useTranslations('HardwareTab');
   const [hardwareCart, setHardwareCart] = useState<Record<string, { quantity: number, mode: 'rent' | 'buy' | 'installment', duration: 6 | 12 | 24 | 36 }>>({});
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -49,7 +51,7 @@ export default function HardwareTabContent({
         productSize: size > 10 ? "272 * 196 * 14mm" : size > 5 ? "139 * 110 * 13mm" : "105 * 88 * 13mm",
         screenSize: `${size} inches`,
         productWeight: size > 10 ? "416g" : size > 5 ? "145g" : "65g",
-        enduranceTime: "5 Yıl (Günde 5 güncelleme ile)",
+        enduranceTime: t('enduranceInfo'),
         displayColor: product.filters.colors === 2 ? "Black / White" : product.filters.colors === 3 ? "Black / White / Red" : "Black / White / Red / Yellow",
         resolution: size > 10 ? "960 * 640" : size > 5 ? "648 * 480" : "400 * 300"
       };
@@ -503,7 +505,7 @@ export default function HardwareTabContent({
                   {/* Ürün Görseli */}
                   <div 
                     className="p-6 bg-white/5 dark:bg-white flex items-center justify-center h-[200px] cursor-pointer relative"
-                    onClick={() => product.image ? setSelectedProductDetail(product) : null}
+                    onClick={() => product.image ? setSelectedImage(product.image) : null}
                   >
                     {product.image ? (
                       <img 
@@ -557,16 +559,21 @@ export default function HardwareTabContent({
 
                   {/* Ürün Detayları */}
                   <div className="p-5 flex-1 flex flex-col">
-                    <h4 className="font-bold text-foreground text-lg leading-tight">{product.name}</h4>
-                    <p className="text-xs text-muted-foreground mt-2 mb-4 line-clamp-3">{product.description}</p>
-                    
-                    {product.specs && (
-                      <ul className="text-[11px] text-muted-foreground list-disc pl-4 mb-4 space-y-1 bg-muted/20 border border-border/50 p-2.5 rounded-lg">
-                        {product.specs.map((spec: string, idx: number) => (
-                          <li key={idx} className="text-foreground/80">{spec}</li>
-                        ))}
-                      </ul>
-                    )}
+                    <div 
+                      className="cursor-pointer group/desc"
+                      onClick={() => setSelectedProductDetail(product)}
+                    >
+                      <h4 className="font-bold text-foreground text-lg leading-tight group-hover/desc:text-primary transition-colors">{product.name}</h4>
+                      <p className="text-xs text-muted-foreground mt-2 mb-4 line-clamp-3">{product.description}</p>
+                      
+                      {product.specs && (
+                        <ul className="text-[11px] text-muted-foreground list-disc pl-4 mb-4 space-y-1 bg-muted/20 border border-border/50 p-2.5 rounded-lg group-hover/desc:bg-muted/40 transition-colors">
+                          {product.specs.map((spec: string, idx: number) => (
+                            <li key={idx} className="text-foreground/80">{spec}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                     
                     <div className="mt-auto pt-4 border-t border-border/50">
                       <div className="flex flex-col gap-1 mb-4">
@@ -742,12 +749,12 @@ export default function HardwareTabContent({
                 <div className="mb-8">
                   <h3 className="text-lg font-bold text-foreground mb-4 border-b border-border/50 pb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5" />
-                    Teknik Detaylar
+                    {t('techDetails')}
                   </h3>
                   <div className="space-y-3">
                     {Object.entries(getDetailedSpecs(selectedProductDetail)).map(([k, v]) => (
                       <div key={k} className="flex justify-between border-b border-border/30 pb-2 text-sm">
-                        <span className="text-muted-foreground capitalize">{k.replace(/([A-Z])/g, ' $1')}</span>
+                        <span className="text-muted-foreground capitalize">{t(k as any)}</span>
                         <span className="font-medium text-foreground text-right max-w-[60%]">{v as string}</span>
                       </div>
                     ))}
@@ -757,8 +764,8 @@ export default function HardwareTabContent({
                     <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl text-sm text-foreground flex items-start gap-3">
                       <Info className="w-6 h-6 shrink-0 text-primary mt-0.5" />
                       <div>
-                        <strong className="block mb-1 text-primary">Pil Ömrü (Dayanıklılık) Hakkında Bilgi</strong>
-                        ESL cihazlarında pil bittiğinde cihaz <strong>çöp olmaz veya kullanılamaz hale gelmez.</strong> Bu cihazlar standart Lityum Düğme Pil (genelde CR2450) kullanır. Pil ömrü dolduğunda kapağı açılarak pil çok düşük bir maliyetle saniyeler içinde yenilenir ve cihaz 5 yıl daha sorunsuz çalışmaya devam eder.
+                        <strong className="block mb-1 text-primary">{t('batteryInfoTitle')}</strong>
+                        {t('batteryInfoDesc')}
                       </div>
                     </div>
                   )}
@@ -768,13 +775,13 @@ export default function HardwareTabContent({
               <div className="mt-auto pt-6 border-t border-border/50 flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
                  <div>
                    <div className="text-3xl font-bold text-foreground">€{selectedProductDetail.price.toFixed(2)}</div>
-                   {selectedProductDetail.rentPrice > 0 && <div className="text-sm text-muted-foreground">veya €{selectedProductDetail.rentPrice.toFixed(2)} / ay kiralama</div>}
+                   {selectedProductDetail.rentPrice > 0 && <div className="text-sm text-muted-foreground">{t('rentOr', { price: `€${selectedProductDetail.rentPrice.toFixed(2)}` })}</div>}
                  </div>
                  <button className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20" onClick={() => { 
                    setSelectedProductDetail(null);
                    // Optionally scroll to order section
                  }}>
-                   Siparişe Dön
+                   {t('returnToOrder')}
                  </button>
               </div>
             </div>
