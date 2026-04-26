@@ -199,15 +199,20 @@ export default function LandingPage() {
       </div>
 
         {/* Right: Premium Floating Visual */}
-        <div className="flex-1 w-full relative mb-12 md:mb-0 flex items-center justify-center min-h-[400px] md:min-h-[600px]">
+        <div className="w-full md:flex-1 relative mt-4 md:mt-0 mb-8 md:mb-0 flex items-center justify-center min-h-[300px] md:min-h-[600px]">
           
+          {/* Subtle Mobile Glow to anchor the pizza */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <div className="w-[80%] max-w-[250px] md:max-w-[500px] aspect-square bg-[#ea184a]/20 blur-[60px] md:blur-[100px] rounded-full mix-blend-screen" />
+          </div>
+
           {/* Floating Transparent Pizza */}
-          <div className="relative w-[110%] md:w-[130%] lg:w-[140%] max-w-[750px] aspect-square flex items-center justify-center z-10 -ml-4 md:-ml-8 lg:-ml-12 drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
+          <div className="relative w-[85%] sm:w-[70%] md:w-[130%] lg:w-[140%] max-w-[320px] md:max-w-[750px] aspect-square flex items-center justify-center z-10 mx-auto md:-ml-8 lg:-ml-12 drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)] md:drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
             <Image
               src="/herp_pizza_3_transparent.png"
               alt="LOKMA Premium Food Delivery"
               fill
-              className="object-contain transition-transform duration-700 hover:scale-105"
+              className="object-contain transition-transform duration-700 hover:scale-[1.02] md:hover:scale-105"
               priority
             />
           </div>
