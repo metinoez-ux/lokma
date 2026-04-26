@@ -209,10 +209,9 @@ export default function LandingPage() {
 
         {/* Floating Transparent Pizza */}
         <div className="relative w-[110%] md:w-[130%] lg:w-[140%] max-w-[700px] aspect-square flex items-center justify-center z-10 -ml-4 md:-ml-12 lg:-ml-20">
-          {/* Custom continuous slow spin and float animation wrapper */}
-          <div className="relative w-full h-full animate-[spin_60s_linear_infinite] drop-shadow-2xl">
+          <div className="relative w-full h-full drop-shadow-2xl">
             <Image
-              src="/hero_pizza_transparent.png"
+              src="/herp_pizza_3_transparent.png"
               alt="LOKMA Premium Food Delivery"
               fill
               className="object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-105"
