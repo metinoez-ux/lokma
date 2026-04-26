@@ -1,3 +1,4 @@
+cat << 'INNER_EOF' > src/components/invoices/BusinessInvoiceSection.tsx
 'use client';
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -29,7 +30,7 @@ const statusLabels: Record<string, string> = {
 
 type PeriodPreset = 'current_quarter' | 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'this_year' | 'last_year' | 'q1' | 'q2' | 'q3' | 'q4' | 'custom_range' | 'custom_day' | 'all';
 
-export default function BusinessInvoiceSection({ invoices, basePath = '/account' }: { invoices: Invoice[], basePath?: string }) {
+export default function BusinessInvoiceSection({ invoices }: { invoices: Invoice[] }) {
   const t = useTranslations('AdminInvoices');
   
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -37,7 +38,6 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
   const [singleDay, setSingleDay] = useState<string>('');
-  const [isFiltersOpen, setIsFiltersOpen] = useState<boolean>(false);
 
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
@@ -83,25 +83,47 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
     });
   }, [invoices, filterStatus, periodPreset, dateFrom, dateTo, singleDay]);
 
-
+  const stats = useMemo(() => {
+    const total = filteredInvoices.length;
+    const pending = filteredInvoices.filter(i => i.status === 'pending').length;
+    const paid = filteredInvoices.filter(i => i.status === 'paid').length;
+    const failed = filteredInvoices.filter(i => i.status === 'cancelled' || i.status === 'overdue' || i.status === 'failed').length;
+    const totalAmount = filteredInvoices.reduce((sum, i) => sum + (i.grandTotal || 0), 0);
+    const paidAmount = filteredInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.grandTotal || 0), 0);
+    return { total, pending, paid, failed, totalAmount, paidAmount };
+  }, [filteredInvoices]);
 
   return (
     <div className="space-y-6">
-      <div className="bg-card rounded-xl overflow-hidden">
-        <button 
-          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className="w-full px-4 py-3 flex justify-between items-center bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
-        >
-          <span className="text-sm font-medium text-foreground flex items-center gap-2">
-            <span>⚙️</span>
-            {isFiltersOpen ? t('filtreleri_gizle') || 'Filtreleri Gizle' : t('filtreleme_secenekleri') || 'Filtreleme Seçenekleri'}
-          </span>
-          <span className="text-muted-foreground text-xs">{isFiltersOpen ? '▲' : '▼'}</span>
-        </button>
-        
-        {isFiltersOpen && (
-          <div className="p-4 space-y-4 border-t border-border">
-            <div className="flex flex-wrap gap-3 items-end">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="bg-card rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+          <p className="text-muted-foreground text-sm">{t('toplam') || 'Toplam'}</p>
+        </div>
+        <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-yellow-800 dark:text-yellow-400">{stats.pending}</p>
+          <p className="text-muted-foreground text-sm">{t('bekleyen') || 'Bekleyen'}</p>
+        </div>
+        <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-green-800 dark:text-green-400">{stats.paid}</p>
+          <p className="text-muted-foreground text-sm">{t('odenen') || 'Ödenen'}</p>
+        </div>
+        <div className="bg-red-600/20 border border-red-600/30 rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-red-800 dark:text-red-400">{stats.failed}</p>
+          <p className="text-muted-foreground text-sm">{t('basarisiz') || 'Başarısız'}</p>
+        </div>
+        <div className="bg-card rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalAmount, invoices[0]?.currency)}</p>
+          <p className="text-muted-foreground text-sm">{t('toplam_tutar') || 'Toplam Tutar'}</p>
+        </div>
+        <div className="bg-card rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-green-800 dark:text-green-400">{formatCurrency(stats.paidAmount, invoices[0]?.currency)}</p>
+          <p className="text-muted-foreground text-sm">Tahsil Edilen</p>
+        </div>
+      </div>
+
+      <div className="bg-card rounded-xl p-4 space-y-4">
+        <div className="flex flex-wrap gap-3 items-end">
           <div>
             <label className="block text-muted-foreground text-xs mb-1">{t('durum') || 'Durum'}</label>
             <select
@@ -215,8 +237,6 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
             </div>
           );
         })()}
-          </div>
-        )}
       </div>
 
       <div className="bg-card rounded-xl overflow-hidden">
@@ -244,16 +264,7 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
                   <td className="px-4 py-3">
                     <span className="text-foreground font-mono">{invoice.invoiceNumber || invoice.id.slice(0,8)}</span>
                   </td>
-                  <td className="px-4 py-3 text-foreground">
-                    <div>
-                      <p>{invoice.period || '-'}</p>
-                      {invoice.description && (
-                        <p className="text-xs text-muted-foreground/80 mt-0.5 max-w-[200px] truncate" title={invoice.description}>
-                          {invoice.description}
-                        </p>
-                      )}
-                    </div>
-                  </td>
+                  <td className="px-4 py-3 text-foreground">{invoice.period || '-'}</td>
                   <td className="px-4 py-3 text-right">
                     <span className="text-foreground font-bold">{formatCurrency(invoice.grandTotal || 0, invoice.currency)}</span>
                   </td>
@@ -263,7 +274,7 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center text-foreground text-sm">
-                    {invoice.dueDate ? new Date((invoice.dueDate as any)?.toDate ? (invoice.dueDate as any).toDate() : invoice.dueDate).toLocaleDateString('de-DE') : '-'}
+                    {invoice.dueDate ? new Date(invoice.dueDate.toDate ? invoice.dueDate.toDate() : invoice.dueDate).toLocaleDateString('de-DE') : '-'}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex justify-center gap-2">
@@ -315,8 +326,8 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
                                   grossAmount: invoice.grandTotal,
                                 }],
                                 paymentStatus: (invoice.status === 'paid' ? 'paid' : 'pending') as 'pending' | 'paid',
-                                paymentDueDate: new Date(invoice.dueDate && typeof (invoice.dueDate as any).toDate === 'function' ? (invoice.dueDate as any).toDate() : invoice.dueDate || Date.now()),
-                                issuedAt: new Date(invoice.issueDate && typeof (invoice.issueDate as any).toDate === 'function' ? (invoice.issueDate as any).toDate() : invoice.issueDate || Date.now()),
+                                paymentDueDate: new Date(invoice.dueDate?.toDate ? invoice.dueDate.toDate() : invoice.dueDate || Date.now()),
+                                issuedAt: new Date(invoice.issueDate?.toDate ? invoice.issueDate.toDate() : invoice.issueDate || Date.now()),
                               };
                               const pdfBlob = await generateInvoicePDF(merchantInvoice as any);
                               const url = URL.createObjectURL(pdfBlob);
@@ -383,11 +394,11 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
                               grossTotal: invoice.grandTotal,
                               currency: invoice.currency || 'EUR',
                               paymentStatus: (invoice.status === 'paid' ? 'paid' : 'pending') as 'pending' | 'paid',
-                              paymentDueDate: new Date(invoice.dueDate && typeof (invoice.dueDate as any).toDate === 'function' ? (invoice.dueDate as any).toDate() : invoice.dueDate || Date.now()),
+                              paymentDueDate: new Date(invoice.dueDate?.toDate ? invoice.dueDate.toDate() : invoice.dueDate || Date.now()),
                               businessId: invoice.butcherId || '',
-                              createdAt: new Date(invoice.createdAt && typeof (invoice.createdAt as any).toDate === 'function' ? (invoice.createdAt as any).toDate() : invoice.createdAt || Date.now()),
-                              updatedAt: new Date(invoice.updatedAt && typeof (invoice.updatedAt as any).toDate === 'function' ? (invoice.updatedAt as any).toDate() : invoice.updatedAt || Date.now()),
-                              issuedAt: new Date(invoice.issueDate && typeof (invoice.issueDate as any).toDate === 'function' ? (invoice.issueDate as any).toDate() : invoice.issueDate || Date.now())
+                              createdAt: new Date(invoice.createdAt?.toDate ? invoice.createdAt.toDate() : invoice.createdAt || Date.now()),
+                              updatedAt: new Date(invoice.updatedAt?.toDate ? invoice.updatedAt.toDate() : invoice.updatedAt || Date.now()),
+                              issuedAt: new Date(invoice.issueDate?.toDate ? invoice.issueDate.toDate() : invoice.issueDate || Date.now())
                             };
                             downloadXRechnungXML(merchantInvoice as any);
                           });
@@ -407,7 +418,7 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
                       </button>
 
                       <Link
-                        href={`${basePath}/invoices/${invoice.id}`}
+                        href={`/account/invoices/${invoice.id}`}
                         className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-500"
                       >
                         Detay
@@ -430,3 +441,4 @@ export default function BusinessInvoiceSection({ invoices, basePath = '/account'
     </div>
   );
 }
+INNER_EOF

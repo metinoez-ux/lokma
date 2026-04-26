@@ -1,0 +1,22 @@
+const fs = require('fs');
+const file = '/Users/metinoz/Developer/LOKMA_MASTER/admin_portal/src/components/invoices/BusinessInvoiceSection.tsx';
+let content = fs.readFileSync(file, 'utf8');
+
+// Replace new Date(...) logic for Firebase Timestamps
+content = content.replace(/new Date\(invoice\.dueDate\?\.toDate \? invoice\.dueDate\.toDate\(\) : invoice\.dueDate \|\| Date\.now\(\)\)/g, 
+  "new Date(invoice.dueDate && typeof invoice.dueDate.toDate === 'function' ? invoice.dueDate.toDate() : invoice.dueDate || Date.now())");
+
+content = content.replace(/new Date\(invoice\.createdAt\?\.toDate \? invoice\.createdAt\.toDate\(\) : invoice\.createdAt \|\| Date\.now\(\)\)/g, 
+  "new Date(invoice.createdAt && typeof invoice.createdAt.toDate === 'function' ? invoice.createdAt.toDate() : invoice.createdAt || Date.now())");
+
+content = content.replace(/new Date\(invoice\.updatedAt\?\.toDate \? invoice\.updatedAt\.toDate\(\) : invoice\.updatedAt \|\| Date\.now\(\)\)/g, 
+  "new Date(invoice.updatedAt && typeof invoice.updatedAt.toDate === 'function' ? invoice.updatedAt.toDate() : invoice.updatedAt || Date.now())");
+
+content = content.replace(/new Date\(invoice\.issueDate\?\.toDate \? invoice\.issueDate\.toDate\(\) : invoice\.issueDate \|\| Date\.now\(\)\)/g, 
+  "new Date(invoice.issueDate && typeof invoice.issueDate.toDate === 'function' ? invoice.issueDate.toDate() : invoice.issueDate || Date.now())");
+
+// Also there is one in the HTML
+content = content.replace(/invoice\.dueDate\?\.toDate \? invoice\.dueDate\.toDate\(\) : invoice\.dueDate/g, 
+  "(invoice.dueDate && typeof invoice.dueDate.toDate === 'function' ? invoice.dueDate.toDate() : invoice.dueDate)");
+
+fs.writeFileSync(file, content);

@@ -53,8 +53,7 @@ import { mapFirestoreOrder } from '@/lib/utils/orderMapper';
 import ReservationsPanel from "./ReservationsPanel";
 import ReservationCapacityConfig from "@/components/ReservationCapacityConfig";
 import PromotionsPage from "../../promotions/page";
-
-
+import HardwareTabContent from "./HardwareTabContent";
 
 /** 
  * Normalize order status from Firestore - handles legacy values.
@@ -258,7 +257,7 @@ export default function BusinessDetailsPage() {
  } | null>(null);
 
  const [activeTab, setActiveTab] = useState<
- "overview" | "orders" | "reservations" | "settings" | "procurement"
+ "overview" | "orders" | "reservations" | "settings" | "procurement" | "hardware"
  >(initialTab);
  const [settingsSubTab, setSettingsSubTab] = useState<
  "isletme" | "menu" | "personel" | "masa" | "odeme" | "promosyon" | "marketing" | "teslimat" | "saatler" | "procurement" | "reservations"
@@ -322,7 +321,7 @@ export default function BusinessDetailsPage() {
  // Update tab when URL changes
  useEffect(() => {
  const tab = searchParams.get('tab');
- if (tab && ['overview', 'orders', 'reservations', 'settings'].includes(tab)) {
+ if (tab && ['overview', 'orders', 'reservations', 'settings', 'hardware'].includes(tab)) {
  setActiveTab(tab as any);
  }
  const subTab = searchParams.get('subTab');
@@ -2873,7 +2872,7 @@ export default function BusinessDetailsPage() {
  onClick={() => { setActiveTab("orders"); setShowSettingsDropdown(false); }}
  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
  >
- {t('siparisler')}{orders.length})
+ {t('siparisler')}({orders.length})
  </button>
 
  {/* Ayarlar Tab (Unified) */}

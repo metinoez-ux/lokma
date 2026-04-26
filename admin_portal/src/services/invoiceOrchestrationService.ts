@@ -270,21 +270,57 @@ export async function generateMonthlySubscriptionInvoices(): Promise<{
  }
  }
 
- // Masa Rezervasyon asim hesaplama
- const tableLimit = plan.tableReservationLimit || null;
- if (tableLimit && plan.tableReservationOverageFee) {
- const resQuery = query(
- collection(db, 'reservations'),
- where('businessId', '==', businessId),
- where('reservedAt', '>=', Timestamp.fromDate(periodStart)),
- where('reservedAt', '<=', Timestamp.fromDate(periodEnd))
- );
- const resSnap = await getDocs(resQuery);
- if (resSnap.size > tableLimit) {
- usage.tableReservationOverageCount = resSnap.size - tableLimit;
- usage.tableReservationOverageFee = plan.tableReservationOverageFee;
- }
- }
+  // Masa Rezervasyon hesaplama
+  const resModel = plan.tableReservationModel || 'free';
+  const resQuota = plan.tableReservationFreeQuota || 0;
+  const resFee = plan.tableReservationFee || 0;
+  
+  if ((resModel === 'per_cover' || resModel === 'per_reservation') && resFee > 0) {
+     const resQuery = query(
+         collection(db, 'reservations'),
+         where('businessId', '==', businessId),
+         where('reservedAt', '>=', Timestamp.fromDate(periodStart)),
+         where('reservedAt', '<=', Timestamp.fromDate(periodEnd))
+     );
+     const resSnap = await getDocs(resQuery);
+     let monthlyCovers = 0;
+     let monthlyReservations = 0;
+     resSnap.forEach(doc => {
+         const data = doc.data();
+         if (data.status !== 'cancelled' && data.status !== 'rejected') {
+             monthlyReservations++;
+             monthlyCovers += Number(data.guestCount || data.guests || data.coverCount || 1);
+         }
+     });
+     
+     if (resModel === 'per_cover') {
+         if (monthlyCovers > resQuota) {
+             usage.tableReservationOverageCount = monthlyCovers - resQuota;
+             usage.tableReservationOverageFee = resFee;
+         }
+     } else {
+         if (monthlyReservations > resQuota) {
+             usage.tableReservationOverageCount = monthlyReservations - resQuota;
+             usage.tableReservationOverageFee = resFee;
+         }
+     }
+  } else {
+     // Legacy support
+     const tableLimit = plan.tableReservationLimit || null;
+     if (tableLimit && plan.tableReservationOverageFee) {
+       const resQuery = query(
+           collection(db, 'reservations'),
+           where('businessId', '==', businessId),
+           where('reservedAt', '>=', Timestamp.fromDate(periodStart)),
+           where('reservedAt', '<=', Timestamp.fromDate(periodEnd))
+       );
+       const resSnap = await getDocs(resQuery);
+       if (resSnap.size > tableLimit) {
+           usage.tableReservationOverageCount = resSnap.size - tableLimit;
+           usage.tableReservationOverageFee = plan.tableReservationOverageFee;
+       }
+     }
+  }
 
  // Personel asim hesaplama
  const personnelLimit = plan.personnelLimit || null;

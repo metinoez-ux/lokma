@@ -174,15 +174,18 @@ export const getUsageStats = async (businessId: string): Promise<{
  orders: { used: number; limit: number | null; remaining: number | null };
  push: { used: number; limit: number | null; remaining: number | null };
  tableReservations: { used: number; limit: number | null; remaining: number | null };
+ personnel: { used: number; limit: number | null; remaining: number | null; overageFee: number };
 }> => {
  const orderResult = await checkLimit(businessId, 'orders');
  const pushResult = await checkLimit(businessId, 'push');
  const tableResult = await checkLimit(businessId, 'table_reservation');
+ const personnelResult = await checkLimit(businessId, 'personnel');
 
  return {
  orders: { used: orderResult.currentUsage, limit: orderResult.limit, remaining: orderResult.remaining },
  push: { used: pushResult.currentUsage, limit: pushResult.limit, remaining: pushResult.remaining },
- tableReservations: { used: tableResult.currentUsage, limit: tableResult.limit, remaining: tableResult.remaining }
+ tableReservations: { used: tableResult.currentUsage, limit: tableResult.limit, remaining: tableResult.remaining },
+ personnel: { used: personnelResult.currentUsage, limit: personnelResult.limit, remaining: personnelResult.remaining, overageFee: personnelResult.overageFee }
  };
 };
 

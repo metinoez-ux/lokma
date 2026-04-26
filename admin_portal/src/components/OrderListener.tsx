@@ -159,7 +159,7 @@ const { admin } = useAdmin();
  triggerAlert({ id: change.doc.id, ...change.doc.data() });
  }
  });
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  // 2. Listen for reservation check-ins (tabStatus === 'seated')
  const qTabs = query(
@@ -210,7 +210,7 @@ const { admin } = useAdmin();
  delete tabItemCounts.current[change.doc.id];
  }
  });
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  return () => {
  unsubOrders();
@@ -243,7 +243,7 @@ const { admin } = useAdmin();
  triggerAlert({ id: change.doc.id, ...change.doc.data() });
  }
  });
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  // 2. All seated reservations
  const qTabs = query(
@@ -292,7 +292,7 @@ const { admin } = useAdmin();
  delete tabItemCounts.current[change.doc.id];
  }
  });
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  return () => {
  unsubOrders();

@@ -15,6 +15,7 @@ export default function AbonelikTabContent({
   t,
   showToast,
   setBusiness,
+  onNavigateToHardware,
 }: any) {
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null>(null);
   const [agbAccepted, setAgbAccepted] = useState(false);
@@ -415,7 +416,7 @@ export default function AbonelikTabContent({
                     <div className="bg-indigo-500/20 text-indigo-200 text-xs p-3 rounded flex items-start gap-2">
                       <Info className="w-4 h-4 shrink-0 mt-0.5" />
                       <div>
-                        Bu bir hesaplama aracıdır. Donanım siparişinizi tamamlamak için plan onayından sonra <a href="#" onClick={(e) => { e.preventDefault(); showToast("Hardware Store modülü yakında eklenecektir.", "info"); }} className="underline font-bold hover:text-white transition-colors">Donanım Mağazasını (Hardware Store)</a> ziyaret ediniz.
+                        Bu bir hesaplama aracıdır. Donanım siparişinizi tamamlamak için plan onayından sonra <a href="#" onClick={(e) => { e.preventDefault(); if (onNavigateToHardware) onNavigateToHardware(); else showToast("Hardware Store modülü yakında eklenecektir.", "info"); }} className="underline font-bold hover:text-white transition-colors">Donanım Mağazasını (Hardware Store)</a> ziyaret ediniz.
                       </div>
                     </div>
                   </div>

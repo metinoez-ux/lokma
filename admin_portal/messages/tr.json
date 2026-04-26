@@ -8657,5 +8657,19 @@
     "security": "Güvenlik",
     "atm": "ATM",
     "argaleto_dondurma": "Argaleto Dondurma"
+  },
+  "HardwareTab": {
+    "productSize": "Ürün Boyutu",
+    "screenSize": "Ekran Boyutu",
+    "productWeight": "Ürün Ağırlığı",
+    "enduranceTime": "Pil Ömrü (Dayanıklılık)",
+    "displayColor": "Renk Kapasitesi",
+    "resolution": "Çözünürlük",
+    "enduranceInfo": "5 Yıl (Günde 5 güncelleme ile)",
+    "techDetails": "Teknik Detaylar",
+    "batteryInfoTitle": "Pil Ömrü (Dayanıklılık) Hakkında Bilgi",
+    "batteryInfoDesc": "ESL cihazlarında pil bittiğinde cihaz çöp olmaz veya kullanılamaz hale gelmez. Bu cihazlar standart Lityum Düğme Pil (genelde CR2450) kullanır. Pil ömrü dolduğunda kapağı açılarak pil çok düşük bir maliyetle saniyeler içinde yenilenir ve cihaz 5 yıl daha sorunsuz çalışmaya devam eder.",
+    "returnToOrder": "Siparişe Dön",
+    "rentOr": "veya {price} / ay kiralama"
   }
 }

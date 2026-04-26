@@ -8578,5 +8578,19 @@
   "DIN A6 \\u00b7 105\\u00d7148 mm": "DIN A6 \\u00b7 105\\u00d7148 mm",
   "LOKMA": "LOKMA",
   "App Store": "App Store",
-  "Google Play": "Google Play"
+  "Google Play": "Google Play",
+  "HardwareTab": {
+    "productSize": "Product Size",
+    "screenSize": "Screen Size",
+    "productWeight": "Product Weight",
+    "enduranceTime": "Endurance Time (Battery)",
+    "displayColor": "Display Color",
+    "resolution": "Resolution",
+    "enduranceInfo": "5 Years (with 5 updates/day)",
+    "techDetails": "Technical Details",
+    "batteryInfoTitle": "About Battery Life (Endurance)",
+    "batteryInfoDesc": "ESL devices do not become useless when the battery dies. They use standard Lithium Coin Batteries (usually CR2450). When the battery life ends, the back cover is opened and the battery is replaced in seconds at a very low cost, continuing to work smoothly for another 5 years.",
+    "returnToOrder": "Return to Order",
+    "rentOr": "or {price} / month rent"
+  }
 }

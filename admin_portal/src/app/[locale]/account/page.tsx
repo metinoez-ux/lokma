@@ -1,6 +1,7 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import AbonelikTabContent from '../admin/business/[id]/AbonelikTabContent';
+import HardwareTabContent from '../admin/business/[id]/HardwareTabContent';
 
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -49,9 +50,11 @@ export default function AccountPage() {
  monthlyOrders: 0,
  totalRevenue: 0,
  monthlyRevenue: 0,
- accruedCommission: 0,
+ accruedCommission: 0, monthlyCardCommission: 0, monthlyCashCommission: 0,
  paidCommission: 0,
- pushUsed: 0,
+ pushUsed: 0, activeSponsoredProducts: 0, monthlySponsoredOrders: 0, monthlySponsoredFees: 0,
+ monthlySponsoredRevenueGross: 0, monthlySponsoredRevenueNet: 0,
+ monthlyTableReservations: 0, monthlyTableCovers: 0, monthlyReservationFees: 0,
  });
  const [invoices, setInvoices] = useState<any[]>([]);
  const [commissionRecords, setCommissionRecords] = useState<any[]>([]);
@@ -72,7 +75,7 @@ export default function AccountPage() {
  bankName: '',
  });
  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'subscription' | 'billing'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'subscription' | 'billing' | 'hardware'>('overview');
   const tSub = useTranslations('AdminBusinessDetail');
   const tAdmin = useTranslations('Admin');
   const tNav = useTranslations('AdminNav');
@@ -120,32 +123,40 @@ export default function AccountPage() {
  bankName: bankInfo.bankName || '',
  });
 
- // İstatistikleri yükle
- await loadStats((adminData as any).butcherId, businessData);
+  // Kullanım istatistikleri (limitService)
+  const usage = await limitService.getUsageStats(businessDoc.id);
+  setUsageStats(usage);
 
- // ═══ YENİ: Canlı Servislerden Veri Al ═══
-  // Aktif plan bilgisi
-  const planId = (businessData as any).subscriptionPlan || (businessData as any).plan || 'free';
+  // Plan bilgilerini yükle ve eşleştir
   const rawType = (businessData as any).businessCategories?.[0] || (businessData as any).businessType || (businessData as any).type || '';
   const sectorCategory = rawType ? (BUSINESS_TYPES[rawType as keyof typeof BUSINESS_TYPES]?.category || rawType) : '';
   const plans = await subscriptionService.getAllPlans(sectorCategory || undefined);
+  
+  // Sadece aktif olanları listele (Abonelik tabındaki Modal vs için)
   setAllPlans(plans.filter(p => p.isActive));
-  const activePlan = plans.find(p => p.id === planId || p.code === planId);
-  if (activePlan) setLivePlan(activePlan);
+  
+  let planId = (businessData as any).subscriptionPlan || (businessData as any).plan;
+  let activePlan = plans.find(p => p.id === planId || p.code === planId);
+  
+  // Eğer işletmenin atanan planı yoksa veya silinmişse, fallback olarak uygun "free" planı ata
+  if (!activePlan) {
+    activePlan = plans.find(p => p.monthlyFee === 0 || p.code?.toLowerCase().includes('free') || p.id.toLowerCase().includes('free'));
+  }
+  
+  if (activePlan) {
+    setLivePlan(activePlan);
+  }
 
- // Kullanım istatistikleri (limitService)
- const usage = await limitService.getUsageStats(businessDoc.id);
- setUsageStats(usage);
-
- // Tahmini fatura (invoiceService)
- const estimated = await invoiceService.getEstimatedInvoice(businessDoc.id);
- setEstimatedInvoice(estimated);
- }
+  // İstatistikleri yükle ve tahmini faturayı hesapla
+  await loadStats(businessDoc.id, businessData, activePlan || null, usage);
+  }
  }
 
  // Son faturalar + komisyon kayıtları
+ if ((adminData as any).butcherId) {
  await loadInvoices((adminData as any).butcherId);
  await loadCommissionRecords((adminData as any).butcherId);
+ }
  } catch (error) {
  console.error('Veri yükleme hatası:', error);
  }
@@ -156,49 +167,304 @@ export default function AccountPage() {
  return () => unsubscribe();
  }, [router]);
 
- const loadStats = async (butcherId: string, businessData: any) => {
- try {
- const now = new Date();
- const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const loadStats = async (butcherId: string, businessData: any, currentPlan: any, fetchedUsage?: any) => {
+    try {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
 
- const ordersRef = collection(db, 'meat_orders');
- const ordersQuery = query(ordersRef, where('businessId', '==', butcherId));
- const ordersSnap = await getDocs(ordersQuery);
+      const ordersRef = collection(db, 'meat_orders');
+      const ordersQuery = query(ordersRef, where('butcherId', '==', butcherId));
+      const ordersSnap = await getDocs(ordersQuery);
 
- let totalRevenue = 0;
- let monthlyRevenue = 0;
- let monthlyOrders = 0;
+      let totalRevenue = 0; // Represents YEARLY
+      let monthlyRevenue = 0;
+      let totalOrders = 0; // Represents YEARLY
+      let monthlyOrders = 0;
 
- ordersSnap.forEach(doc => {
- const data = doc.data();
- const orderDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt || 0);
- const orderTotal = data.total || data.grandTotal || 0;
+      let monthlyCommission = 0;
+      let monthlyCardCommission = 0;
+      let monthlyCashCommission = 0;
+      let monthlyPerOrderFees = 0;
+      let monthlySponsoredFees = 0;
+      let monthlySponsoredOrders = 0;
+      let monthlySponsoredRevenueGross = 0;
+      let monthlySponsoredRevenueNet = 0;
 
- totalRevenue += orderTotal;
+      let monthlyTableReservations = 0;
+      let monthlyTableCovers = 0;
+      let monthlyReservationFees = 0;
 
- if (orderDate >= startOfMonth) {
- monthlyOrders++;
- monthlyRevenue += orderTotal;
- }
- });
+      ordersSnap.forEach(doc => {
+        const data = doc.data();
+        const status = data.status || '';
+        // Sadece basariyla tamamlanmis/teslim edilmis siparisler (delivered, picked_up, past, completed)
+        const isCompleted = status === 'delivered' || status === 'picked_up' || status === 'completed' || status === 'past';
+        if (!isCompleted) return;
 
- const plan = businessData?.plan || 'free';
- const commissionRate = livePlan?.commissionClickCollect || 5.0;
- const accruedCommission = totalRevenue * (commissionRate / 100);
+        const orderDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt || 0);
+        const orderTotal = data.total || data.grandTotal || 0;
 
- setStats({
- totalOrders: ordersSnap.size,
- monthlyOrders,
- totalRevenue,
- monthlyRevenue,
- accruedCommission,
- paidCommission: businessData?.paidCommission || 0,
- pushUsed: businessData?.pushUsed || 0,
- });
- } catch (error) {
- console.error('Stats yükleme hatası:', error);
- }
- };
+        // Yıllık istatistikler
+        if (orderDate >= startOfYear) {
+          totalOrders++;
+          totalRevenue += orderTotal;
+        }
+
+        // Aylık istatistikler
+        if (orderDate >= startOfMonth) {
+          monthlyOrders++;
+          monthlyRevenue += orderTotal;
+
+          // Dinamik Komisyon Hesaplama
+          const deliveryType = data.deliveryMethod || data.courierType || 'click_collect';
+          let commRate = currentPlan?.commissionClickCollect || 0;
+          if (deliveryType === 'own_courier') commRate = currentPlan?.commissionOwnCourier || 0;
+          else if (deliveryType === 'lokma_courier') commRate = currentPlan?.commissionLokmaCourier || 0;
+          
+          const orderComm = orderTotal * (commRate / 100);
+          monthlyCommission += orderComm;
+
+          const isCard = data.paymentMethod === 'card' || data.paymentMethod === 'stripe' || data.paymentMethod === 'online';
+          if (isCard) {
+             monthlyCardCommission += orderComm;
+          } else {
+             monthlyCashCommission += orderComm;
+          }
+
+          let perOrderFee = 0;
+          if (currentPlan?.perOrderFeeType === 'fixed') {
+              perOrderFee = currentPlan.perOrderFeeAmount || 0;
+          } else if (currentPlan?.perOrderFeeType === 'percentage') {
+              perOrderFee = orderTotal * ((currentPlan.perOrderFeeAmount || 0) / 100);
+          }
+          if (perOrderFee > 0) monthlyPerOrderFees += perOrderFee;
+
+          // Sponsored Product/Event Fee
+          let sponsoredItemsCount = 0;
+          let tempSponsoredGross = 0;
+          let tempSponsoredNet = 0;
+          
+          if (Array.isArray(data.items)) {
+              data.items.forEach((item: any) => {
+                  let isItemSponsored = false;
+                  
+                  // 1. Historical check (most reliable): Did the mobile app tag this specific product as sponsored?
+                  if (data.hasSponsoredItems && Array.isArray(data.sponsoredItemIds) && item.productId && data.sponsoredItemIds.includes(item.productId)) {
+                      isItemSponsored = true;
+                  } 
+                  // 2. Fallback to current business list (if historical data is missing)
+                  else if (item.productId && businessData?.sponsoredProducts && Array.isArray(businessData.sponsoredProducts) && businessData.sponsoredProducts.includes(item.productId)) {
+                      isItemSponsored = true;
+                  }
+                  
+                  if (isItemSponsored) {
+                      const q = Number(item.quantity || 1);
+                      sponsoredItemsCount += q;
+                      const gross = (Number(item.price) || 0) * q;
+                      tempSponsoredGross += gross;
+                      const taxRate = Number(item.taxRate) || 7;
+                      tempSponsoredNet += gross / (1 + (taxRate / 100));
+                  }
+              });
+          }
+          
+          // 3. Fallback to explicit flags from mobile app if items parsing failed
+          if (sponsoredItemsCount === 0) {
+              if (data.hasSponsoredItems && Array.isArray(data.sponsoredItemIds)) {
+                  sponsoredItemsCount = data.sponsoredItemIds.length;
+              } else if (data.fromSponsored || data.isSponsored || data.hasSponsoredItems) {
+                  sponsoredItemsCount = 1;
+              }
+              // If we reached here, we couldn't match items. Estimate revenue from order total.
+              if (sponsoredItemsCount > 0) {
+                  tempSponsoredGross = Number(data.grandTotal || data.total || data.subTotal || 0);
+                  tempSponsoredNet = tempSponsoredGross / 1.07;
+              }
+          }
+
+          if (sponsoredItemsCount > 0) {
+              const sponsoredFee = currentPlan?.sponsoredFeePerConversion || 0;
+              if (sponsoredFee > 0) {
+                  monthlySponsoredFees += (sponsoredFee * sponsoredItemsCount);
+              }
+              monthlySponsoredOrders += sponsoredItemsCount;
+              monthlySponsoredRevenueGross += tempSponsoredGross;
+              monthlySponsoredRevenueNet += tempSponsoredNet;
+          }
+        }
+      });
+
+      // --- MASA REZERVASYONLARI HESAPLAMASI ---
+      const reservationsRef = collection(db, 'reservations');
+      const reservationsQuery = query(reservationsRef, where('businessId', '==', butcherId));
+      const reservationsSnap = await getDocs(reservationsQuery);
+      
+      reservationsSnap.forEach(doc => {
+          const data = doc.data();
+          const resDate = data.reservedAt?.toDate ? data.reservedAt.toDate() : new Date(data.reservedAt || data.createdAt || 0);
+          
+          if (resDate >= startOfMonth && data.status !== 'cancelled' && data.status !== 'rejected') {
+              monthlyTableReservations++;
+              monthlyTableCovers += Number(data.guestCount || data.guests || data.coverCount || 1);
+          }
+      });
+      
+      // Calculate reservation fees based on currentPlan model
+      let reservationBillableUnits = 0;
+      const resModel = currentPlan?.tableReservationModel || 'free';
+      const resQuota = currentPlan?.tableReservationFreeQuota || 0;
+      const resFee = currentPlan?.tableReservationFee || 0;
+      
+      if (resModel === 'per_cover') {
+          reservationBillableUnits = Math.max(0, monthlyTableCovers - resQuota);
+          monthlyReservationFees = reservationBillableUnits * resFee;
+      } else if (resModel === 'per_reservation') {
+          reservationBillableUnits = Math.max(0, monthlyTableReservations - resQuota);
+          monthlyReservationFees = reservationBillableUnits * resFee;
+      } else if (currentPlan?.tableReservationLimit && currentPlan?.tableReservationOverageFee) {
+          // Legacy support for older plans
+          reservationBillableUnits = Math.max(0, monthlyTableReservations - currentPlan.tableReservationLimit);
+          monthlyReservationFees = reservationBillableUnits * currentPlan.tableReservationOverageFee;
+      }
+
+      // --- TAHMİNİ FATURA OLUŞTURMA (LOCAL) ---
+      const lineItems = [];
+      
+      // 1. Abonelik Ücreti
+      if (currentPlan?.monthlyFee > 0) {
+        lineItems.push({
+          description: `${currentPlan.name} Plan - Aylık Abonelik`,
+          total: currentPlan.monthlyFee,
+          type: 'subscription'
+        });
+      }
+
+      // Eklentiler (Add-ons)
+      if (businessData?.etaAddon) {
+        lineItems.push({
+          description: `Eklenti: ETA Canlı Kurye Takibi`,
+          total: 15,
+          type: 'addon'
+        });
+      }
+      if (businessData?.whatsappAddon) {
+        lineItems.push({
+          description: `Eklenti: WhatsApp Bildirim Paketi`,
+          total: 29,
+          type: 'addon'
+        });
+      }
+
+      // 2. Sipariş Provizyonu (Sadece % Komisyon)
+      if (monthlyCommission > 0) {
+        lineItems.push({
+          description: `Sipariş Provizyonu (${monthlyOrders} sipariş)`,
+          total: monthlyCommission,
+          quantity: monthlyOrders,
+          type: 'commission'
+        });
+      }
+      
+      // 3. Sipariş Başı Ücret
+      if (monthlyPerOrderFees > 0) {
+        lineItems.push({
+          description: `Sipariş Başı Ücret`,
+          total: monthlyPerOrderFees,
+          type: 'perOrder'
+        });
+      }
+
+      // 4. Sponsored Product / Extra Ücretler
+      if (monthlySponsoredFees > 0) {
+        lineItems.push({
+          description: `Sponsored Products Ücreti (${monthlySponsoredOrders} adet)`,
+          total: monthlySponsoredFees,
+          type: 'sponsored'
+        });
+      }
+
+      // 5. Sipariş Aşım Ücreti
+      if (currentPlan?.orderLimit !== null && currentPlan?.orderLimit !== undefined && monthlyOrders > currentPlan.orderLimit) {
+        const overageOrders = monthlyOrders - currentPlan.orderLimit;
+        const overageTotal = overageOrders * (currentPlan.orderOverageFee || 0);
+        if (overageTotal > 0) {
+          lineItems.push({
+            description: `Sipariş Aşım Ücreti (${overageOrders} adet)`,
+            total: overageTotal,
+            type: 'overage'
+          });
+        }
+      }
+
+      // 6. Personel Aşım Ücreti
+      if (fetchedUsage?.personnel?.used > fetchedUsage?.personnel?.limit && fetchedUsage?.personnel?.limit !== null) {
+        const overageCount = fetchedUsage.personnel.used - fetchedUsage.personnel.limit;
+        const overageTotal = overageCount * (currentPlan?.personnelOverageFee || 0);
+        if (overageTotal > 0) {
+          lineItems.push({
+            description: `Personel Aşım Ücreti (${overageCount} kişi)`,
+            total: overageTotal,
+            type: 'overage'
+          });
+        }
+      }
+
+      // 7. Masa Rezervasyon Aşım Ücreti
+      if (fetchedUsage?.tableReservations?.used > fetchedUsage?.tableReservations?.limit && fetchedUsage?.tableReservations?.limit !== null) {
+        const overageCount = fetchedUsage.tableReservations.used - fetchedUsage.tableReservations.limit;
+        const overageTotal = overageCount * (currentPlan?.tableReservationOverageFee || 0);
+        if (overageTotal > 0) {
+          lineItems.push({
+            description: `Masa Rezervasyon Aşım Ücreti (${overageCount} adet)`,
+            total: overageTotal,
+            type: 'overage'
+          });
+        }
+      }
+
+      const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
+      const taxRate = 19; // Almanya KDV
+      const tax = Math.round(subtotal * (taxRate / 100) * 100) / 100;
+      const total = Math.round((subtotal + tax) * 100) / 100;
+
+      const dynamicInvoice = {
+        lineItems,
+        subtotal,
+        tax,
+        taxRate,
+        total,
+        currency: currentPlan?.currency || businessData?.currency || 'EUR'
+      };
+      setEstimatedInvoice(dynamicInvoice);
+      // ------------------------------------------
+
+      const commissionRate = currentPlan?.commissionClickCollect || 5.0;
+      const accruedCommission = totalRevenue * (commissionRate / 100);
+
+      setStats({
+        totalOrders,
+        monthlyOrders,
+        totalRevenue,
+        monthlyRevenue,
+        accruedCommission,
+        monthlyCardCommission,
+        monthlyCashCommission,
+        paidCommission: businessData?.paidCommission || 0,
+        pushUsed: businessData?.pushUsed || 0,
+        activeSponsoredProducts: businessData?.sponsoredProducts?.length || 0,
+        monthlySponsoredOrders,
+        monthlySponsoredFees,
+        monthlySponsoredRevenueGross,
+        monthlySponsoredRevenueNet,
+        monthlyTableReservations,
+        monthlyTableCovers,
+        monthlyReservationFees,
+      });
+    } catch (error) {
+      console.error('Stats yükleme hatası:', error);
+    }
+  };
 
  const loadInvoices = async (butcherId: string) => {
  try {
@@ -312,13 +578,21 @@ export default function AccountPage() {
  // Derive display info from livePlan (Firestore) instead of hardcoded PLANS
  const planName = livePlan?.name || currentPlan;
  const planPrice = livePlan?.monthlyFee ?? 0;
- const planOrderLimit = livePlan?.orderLimit ?? usageStats?.orderLimit ?? 50;
- const planColor = livePlan?.color?.replace('bg-', '').replace('-600', '') || 'gray';
- const planIcon = livePlan ? getPlanIcon(livePlan) : '';
- const planFeatures = livePlan?.features ? Object.keys(livePlan.features).filter(k => livePlan.features[k] === true) : [];
- const pushLimit = usageStats?.pushLimit ?? 0;
- const pushRemaining = pushLimit === 0 ? '∞' : Math.max(0, pushLimit - stats.pushUsed);
- const orderProgress = planOrderLimit === null ? 0 : (stats.monthlyOrders / (planOrderLimit || 1)) * 100;
+  const planOrderLimit = livePlan?.orderLimit !== undefined ? livePlan.orderLimit : (usageStats?.orders?.limit !== undefined ? usageStats.orders.limit : null);
+  const planColor = livePlan?.color?.replace('bg-', '').replace('-600', '') || 'gray';
+  const planIcon = livePlan ? getPlanIcon(livePlan) : '';
+  const planFeatures = livePlan?.features ? Object.keys(livePlan.features).filter(k => livePlan.features[k] === true) : [];
+  const pushLimit = usageStats?.push?.limit !== undefined ? usageStats.push.limit : null;
+  const pushRemaining = pushLimit === null ? '∞' : Math.max(0, pushLimit - stats.pushUsed);
+  const orderProgress = planOrderLimit === null ? 0 : (stats.monthlyOrders / (planOrderLimit || 1)) * 100;
+  
+  const personnelLimit = usageStats?.personnel?.limit !== undefined ? usageStats.personnel.limit : null;
+  const personnelUsed = usageStats?.personnel?.used || 0;
+  const personnelProgress = personnelLimit === null ? 0 : (personnelUsed / (personnelLimit || 1)) * 100;
+  
+  const tableReservationLimit = usageStats?.tableReservations?.limit !== undefined ? usageStats.tableReservations.limit : null;
+  const tableReservationUsed = usageStats?.tableReservations?.used || 0;
+  const tableReservationProgress = tableReservationLimit === null ? 0 : (tableReservationUsed / (tableReservationLimit || 1)) * 100;
 
  return (
  <div className="min-h-screen bg-gray-900">
@@ -374,6 +648,16 @@ export default function AccountPage() {
     >
       {cleanEmoji(tAccount('fatura_ve_odeme') || 'Fatura & Ödeme')}
     </button>
+    <button
+      onClick={() => setActiveTab('hardware')}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+        activeTab === 'hardware'
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+      }`}
+    >
+      Donanım Mağazası
+    </button>
   </div>
 
   {activeTab === 'overview' && (
@@ -389,17 +673,27 @@ export default function AccountPage() {
  <h2 className="text-4xl font-bold text-white flex items-center gap-3">
  {planName}
  </h2>
- <div className="flex flex-wrap gap-2 mt-4">
- {planFeatures.length > 0 ? planFeatures.slice(0, 5).map((f, i) => (
- <span key={i} className="px-3 py-1 bg-background/10 text-white/90 text-sm rounded-full">
- ✓ {tBiz(`feature_${f}`) || f}
- </span>
- )) : (
- <span className="px-3 py-1 bg-background/10 text-white/90 text-sm rounded-full">
- ✓ {tSub('limitler_ve_ucretler') || 'Temel özellikler'}
- </span>
- )}
- </div>
+  <div className="flex flex-wrap gap-2 mt-4">
+  {planFeatures.length > 0 ? planFeatures.map((f, i) => (
+  <span key={i} className="px-3 py-1 bg-background/10 text-white/90 text-sm rounded-full">
+  ✓ {tBiz(`feature_${f}`) || f}
+  </span>
+  )) : (
+  <span className="px-3 py-1 bg-background/10 text-white/90 text-sm rounded-full">
+  ✓ {tSub('limitler_ve_ucretler') || 'Temel özellikler'}
+  </span>
+  )}
+  {business?.etaAddon && (
+  <span className="px-3 py-1 bg-blue-500/20 text-blue-200 text-sm rounded-full border border-blue-500/30">
+  + ETA Canlı Takip
+  </span>
+  )}
+  {business?.whatsappAddon && (
+  <span className="px-3 py-1 bg-green-500/20 text-green-200 text-sm rounded-full border border-green-500/30">
+  + WhatsApp Bildirim
+  </span>
+  )}
+  </div>
  </div>
  <div className="text-right">
  <p className="text-gray-400 text-sm">{tAccount('aylik_ucret')?.split(':')[0] || 'Aylık Ücret'}</p>
@@ -428,7 +722,7 @@ export default function AccountPage() {
  )}
 
  {/* Kullanım Barları */}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-white/10">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/10">
  {/* Sipariş Kullanımı */}
  <div>
  <div className="flex justify-between text-sm mb-1">
@@ -449,13 +743,43 @@ export default function AccountPage() {
  <div className="flex justify-between text-sm mb-1">
  <span className="text-gray-300">Push Bildirim</span>
  <span className="text-white font-bold">
- {stats.pushUsed} / {pushLimit === 0 ? '∞' : pushLimit}
+ {stats.pushUsed} / {pushLimit === null ? '∞' : pushLimit}
  </span>
  </div>
  <div className="w-full bg-gray-700 rounded-full h-3">
  <div
  className="h-3 rounded-full bg-blue-500 transition-all"
- style={{ width: pushLimit === 0 ? '5%' : `${Math.min(100, (stats.pushUsed / pushLimit) * 100)}%` }}
+ style={{ width: pushLimit === null ? '5%' : `${Math.min(100, (stats.pushUsed / pushLimit) * 100)}%` }}
+ />
+ </div>
+ </div>
+ {/* Personel Kullanımı */}
+ <div>
+ <div className="flex justify-between text-sm mb-1">
+ <span className="text-gray-300">Personel Kullanımı</span>
+ <span className="text-white font-bold">
+ {personnelUsed} / {personnelLimit === null ? '∞' : personnelLimit}
+ </span>
+ </div>
+ <div className="w-full bg-gray-700 rounded-full h-3">
+ <div
+ className={`h-3 rounded-full transition-all ${personnelProgress > 90 ? 'bg-red-500' : personnelProgress > 70 ? 'bg-yellow-500' : 'bg-green-500'}`}
+ style={{ width: personnelLimit === null ? '5%' : `${Math.min(100, personnelProgress)}%` }}
+ />
+ </div>
+ </div>
+ {/* Masa Rezervasyon Kullanımı */}
+ <div>
+ <div className="flex justify-between text-sm mb-1">
+ <span className="text-gray-300">Masa Rezervasyonu</span>
+ <span className="text-white font-bold">
+ {tableReservationUsed} / {tableReservationLimit === null ? '∞' : tableReservationLimit}
+ </span>
+ </div>
+ <div className="w-full bg-gray-700 rounded-full h-3">
+ <div
+ className={`h-3 rounded-full transition-all ${tableReservationProgress > 90 ? 'bg-red-500' : tableReservationProgress > 70 ? 'bg-yellow-500' : 'bg-green-500'}`}
+ style={{ width: tableReservationLimit === null ? '5%' : `${Math.min(100, tableReservationProgress)}%` }}
  />
  </div>
  </div>
@@ -471,7 +795,7 @@ export default function AccountPage() {
  <p className="text-3xl font-bold text-white">{stats.monthlyOrders}</p>
  </div>
  <div className="bg-gray-800 rounded-xl p-5">
- <p className="text-gray-400 text-sm">{tAccount('toplam') || 'Toplam'} {tAccount('siparisler') || 'Sipariş'}</p>
+ <p className="text-gray-400 text-sm">{tAccount('bu_yil') || 'Bu Yıl'} {tAccount('siparisler') || 'Sipariş'}</p>
  <p className="text-3xl font-bold text-white">{stats.totalOrders}</p>
  </div>
  <div className="bg-gray-800 rounded-xl p-5">
@@ -479,10 +803,131 @@ export default function AccountPage() {
  <p className="text-3xl font-bold text-green-400">{formatCurrency(stats.monthlyRevenue, business?.currency)}</p>
  </div>
  <div className="bg-gray-800 rounded-xl p-5">
- <p className="text-gray-400 text-sm">{tAccount('toplam_ciro') || 'Toplam Ciro'}</p>
+ <p className="text-gray-400 text-sm">{tAccount('bu_yil_ciro') || 'Bu Yıl Ciro'}</p>
  <p className="text-3xl font-bold text-green-400">{formatCurrency(stats.totalRevenue, business?.currency)}</p>
  </div>
  </div>
+
+  {/* ═══════════════════════════════════════════════════════════════════
+  SPONSORED PRODUCTS İSTATİSTİKLERİ
+  ═══════════════════════════════════════════════════════════════════ */}
+  {(livePlan?.features as any)?.sponsoredProducts && (
+  <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-xl p-6 mb-6">
+  <h3 className="text-lg font-bold text-yellow-500 mb-4 flex items-center gap-2">
+  Sponsored Products
+  </h3>
+  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+  <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
+  <p className="text-gray-400 text-xs mb-1">Aktif Ürünler</p>
+  <p className="text-2xl font-bold text-white">{stats.activeSponsoredProducts} <span className="text-sm font-normal text-gray-500">/ {(livePlan as any).sponsoredMaxProducts || 5}</span></p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
+  <p className="text-gray-400 text-xs mb-1">Satış Değeri (Net/Brüt)</p>
+  <p className="text-2xl font-bold text-green-400">
+    {formatCurrency(stats.monthlySponsoredRevenueNet, livePlan.currency || business?.currency)}
+    <span className="text-sm font-normal text-gray-500 ml-1">/ {formatCurrency(stats.monthlySponsoredRevenueGross, livePlan.currency || business?.currency)}</span>
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
+  <p className="text-gray-400 text-xs mb-1">Sipariş Başı Ücret</p>
+  <p className="text-2xl font-bold text-yellow-400">
+  {((livePlan as any).sponsoredFeePerConversion || 0) > 0 ? formatCurrency((livePlan as any).sponsoredFeePerConversion, livePlan.currency || business?.currency) : 'Ücretsiz'}
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
+  <p className="text-gray-400 text-xs mb-1">Bu Ay Siparişler</p>
+  <p className="text-2xl font-bold text-white">{stats.monthlySponsoredOrders}</p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
+  <p className="text-gray-400 text-xs mb-1">Bu Ay Toplam Ücret</p>
+  <p className="text-2xl font-bold text-red-400">{formatCurrency(stats.monthlySponsoredFees, livePlan.currency || business?.currency)}</p>
+  </div>
+  </div>
+  </div>
+  )}
+
+  {/* ═══════════════════════════════════════════════════════════════════
+  MASA REZERVASYON İSTATİSTİKLERİ
+  ═══════════════════════════════════════════════════════════════════ */}
+  {(livePlan?.features as any)?.tableReservation && (
+  <div className="bg-blue-900/20 border border-blue-600/30 rounded-xl p-6 mb-6">
+  <h3 className="text-lg font-bold text-blue-500 mb-4 flex items-center gap-2">
+  🍽️ Masa Rezervasyonları
+  </h3>
+  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+  <div className="bg-background/50 rounded-lg p-4 border border-blue-600/20">
+  <p className="text-gray-400 text-xs mb-1">Fiyatlandırma Modeli</p>
+  <p className="text-lg font-bold text-white leading-tight">
+  {(livePlan as any).tableReservationModel === 'per_cover' ? 'Kişi Başı Ücret' : ((livePlan as any).tableReservationModel === 'per_reservation' ? 'Masa Başı Ücret' : 'Ücretsiz (Sabit)')}
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-blue-600/20">
+  <p className="text-gray-400 text-xs mb-1">Aylık Ücretsiz Kota</p>
+  <p className="text-2xl font-bold text-white">
+  {(livePlan as any).tableReservationFreeQuota != null ? (livePlan as any).tableReservationFreeQuota : 'Sınırsız'}
+  <span className="text-sm font-normal text-gray-500 ml-1">
+  {(livePlan as any).tableReservationModel === 'per_cover' ? 'Kişi' : 'Masa'}
+  </span>
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-blue-600/20">
+  <p className="text-gray-400 text-xs mb-1">Bu Ay Gerçekleşen</p>
+  <p className="text-2xl font-bold text-blue-400">
+  {stats.monthlyTableReservations} <span className="text-sm font-normal text-gray-500 ml-1">Masa</span>
+  <br/>
+  <span className="text-lg text-white">{stats.monthlyTableCovers}</span> <span className="text-xs text-gray-500">Kişi (Cover)</span>
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-blue-600/20">
+  <p className="text-gray-400 text-xs mb-1">Birim Ücret</p>
+  <p className="text-2xl font-bold text-white">
+  {(livePlan as any).tableReservationFee > 0 ? formatCurrency((livePlan as any).tableReservationFee, livePlan.currency || business?.currency) : '0,00'}
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-blue-600/20">
+  <p className="text-gray-400 text-xs mb-1">Bu Ay Toplam Ücret</p>
+  <p className="text-2xl font-bold text-red-400">{formatCurrency(stats.monthlyReservationFees, livePlan.currency || business?.currency)}</p>
+  </div>
+  </div>
+  </div>
+  )}
+
+
+  {/* ═══════════════════════════════════════════════════════════════════
+  PERSONEL & VARDİYA İSTATİSTİKLERİ
+  ═══════════════════════════════════════════════════════════════════ */}
+  <div className="bg-cyan-900/20 border border-cyan-600/30 rounded-xl p-6 mb-6">
+  <h3 className="text-lg font-bold text-cyan-500 mb-4 flex items-center gap-2">
+  👥 Personel & Vardiya Yönetimi
+  </h3>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
+  <p className="text-gray-400 text-xs mb-1">Vardiya Takibi Modülü</p>
+  <p className="text-lg font-bold text-white leading-tight">
+  {(livePlan?.features as any)?.staffShiftTracking ? 'Aktif' : 'Kapalı'}
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
+  <p className="text-gray-400 text-xs mb-1">Kayıtlı Personel</p>
+  <p className="text-2xl font-bold text-white">
+  {business?.staffCount || 1} <span className="text-sm font-normal text-gray-500 ml-1">/ {livePlan?.personnelLimit != null ? livePlan.personnelLimit : 'Sınırsız'}</span>
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
+  <p className="text-gray-400 text-xs mb-1">Aşım Birim Ücreti</p>
+  <p className="text-2xl font-bold text-white">
+  {livePlan?.personnelOverageFee > 0 ? formatCurrency(livePlan.personnelOverageFee, livePlan.currency || business?.currency) : '0,00'}
+  </p>
+  </div>
+  <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
+  <p className="text-gray-400 text-xs mb-1">Bu Ay Aşım Ücreti</p>
+  <p className="text-2xl font-bold text-red-400">
+  {livePlan?.personnelLimit != null && (business?.staffCount || 1) > livePlan.personnelLimit ? formatCurrency(((business?.staffCount || 1) - livePlan.personnelLimit) * (livePlan.personnelOverageFee || 0), livePlan.currency || business?.currency) : formatCurrency(0, livePlan.currency || business?.currency)}
+  </p>
+  </div>
+  </div>
+  </div>
+
 
  {/* ═══════════════════════════════════════════════════════════════════
  PROVİZYON & TAHMİNİ FATURA
@@ -567,7 +1012,7 @@ export default function AccountPage() {
  {/* Tahmini Fatura Önizleme */}
  <div className="bg-indigo-900/30 border border-indigo-600/40 rounded-xl p-6">
  <h3 className="text-lg font-bold text-indigo-200 mb-4 flex items-center gap-2">
- {tNav('invoices') || 'Faturalar'}
+ {tAccount('tahmini_guncel_fatura') || 'Güncel Tahmini Fatura (Bu Ay)'}
  </h3>
  {estimatedInvoice ? (
  <div className="space-y-2">
@@ -612,6 +1057,24 @@ export default function AccountPage() {
       t={tSub}
       showToast={(msg: string) => alert(msg)}
       setBusiness={setBusiness}
+      onNavigateToHardware={() => setActiveTab('hardware')}
+    />
+  </div>
+  )}
+
+  {activeTab === 'hardware' && (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 mt-6">
+    <HardwareTabContent
+      business={business}
+      admin={admin}
+      showToast={(msg: string, type: 'success' | 'error' | 'info') => {
+        if (type === 'error') {
+          console.error(msg);
+          alert(msg);
+        } else {
+          alert(msg);
+        }
+      }}
     />
   </div>
   )}

@@ -310,7 +310,7 @@ export function OrdersProvider({
  }, (error) => {
    console.error('[OrdersProvider] Error:', error);
    setLoading(false);
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  // 2. Continuous Tab Reservations Stream
  const resConstraints: any[] = [
@@ -364,7 +364,7 @@ export function OrdersProvider({
  setResOrders(mapped);
  }, (error) => {
  console.error('[useOrders] Error loading reservations:', error);
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  return () => {
  unsubOrders();
@@ -490,7 +490,7 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  }, (error) => {
    console.error('[useOrdersStandalone] Error:', error);
    setLoading(false);
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  // 2. Reservations
  const resConstraints: any[] = [
@@ -528,7 +528,7 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  setResOrders(mapped);
  }, (error) => {
  console.error('[useOrdersStandalone] Error loading reservations:', error);
- });
+ }, (err) => { console.error("Firestore onSnapshot Error:", err); });
 
  return () => {
  unsubOrders();

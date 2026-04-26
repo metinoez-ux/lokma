@@ -146,11 +146,11 @@ export default function HardwareTabContent({
 
     // ---- DS SLIM SERIES ----
 
-    { id: "esl_ds_015b", series: "DS Slim Series", name: "LOKMA Smart Tag DS015B", category: "ESL Etiketleri", description: "1.54 inç (3.9 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2025-08/68956ef03a5a0.jpg", price: 11.90, rentPrice: 0.80, minRentMonths: 12, specs: ["1.54 inç (3.9 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 1.54, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
-    { id: "esl_ds_021b", series: "DS Slim Series", name: "LOKMA Smart Tag DS021B", category: "ESL Etiketleri", description: "2.1 inç (5.3 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d1432e239b3.png", price: 11.90, rentPrice: 0.80, minRentMonths: 12, specs: ["2.1 inç (5.3 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 2.1, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
-    { id: "esl_ds_026b", series: "DS Slim Series", name: "LOKMA Smart Tag DS026B", category: "ESL Etiketleri", description: "2.66 inç (6.8 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-06/666188a934068.jpg", price: 15.90, rentPrice: 1.10, minRentMonths: 12, specs: ["2.66 inç (6.8 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 2.66, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
-    { id: "esl_ds_029b", series: "DS Slim Series", name: "LOKMA Smart Tag DS029B", category: "ESL Etiketleri", description: "2.9 inç (7.4 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d142eb62d93.png", price: 16.90, rentPrice: 1.20, minRentMonths: 12, specs: ["2.9 inç (7.4 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 2.9, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
-    { id: "esl_ds_042b", series: "DS Slim Series", name: "LOKMA Smart Tag DS042B", category: "ESL Etiketleri", description: "4.2 inç (10.7 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d142a9c8819.png", price: 29.90, rentPrice: 2.40, minRentMonths: 12, specs: ["4.2 inç (10.7 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 4.2, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
+    { id: "esl_ds_015b", series: "DS Slim Series", name: "LOKMA Smart Tag DS015B", category: "ESL Etiketleri", description: "1.54 inç (3.9 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2025-08/68956ef03a5a0.jpg", images: ["https://www.minewtag.com/upload/goodsgallery/2025-08/68956ef03a5a0.jpg", "https://www.minewtag.com/upload/goodsgallery/2024-08/66d012acb24d4.png", "https://www.minewtag.com/upload/goodsgallery/2025-08/68956ef03a5a0.jpg"], price: 11.90, rentPrice: 0.80, minRentMonths: 12, specs: ["1.54 inç (3.9 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 1.54, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
+    { id: "esl_ds_021b", series: "DS Slim Series", name: "LOKMA Smart Tag DS021B", category: "ESL Etiketleri", description: "2.1 inç (5.3 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d1432e239b3.png", images: ["https://www.minewtag.com/upload/goodsgallery/2024-08/66d1432e239b3.png", "https://www.minewtag.com/upload/goodsgallery/2024-08/66d00ff17648f.png", "https://www.minewtag.com/upload/goodsgallery/2025-08/68956ef03a5a0.jpg"], price: 11.90, rentPrice: 0.80, minRentMonths: 12, specs: ["2.1 inç (5.3 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 2.1, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
+    { id: "esl_ds_026b", series: "DS Slim Series", name: "LOKMA Smart Tag DS026B", category: "ESL Etiketleri", description: "2.66 inç (6.8 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-06/666188a934068.jpg", images: ["https://www.minewtag.com/upload/goodsgallery/2024-06/666188a934068.jpg", "https://www.minewtag.com/upload/goodsgallery/2024-08/66d141cba5662.png", "https://www.minewtag.com/upload/goodsgallery/2025-08/68afbe8f44644.jpg"], price: 15.90, rentPrice: 1.10, minRentMonths: 12, specs: ["2.66 inç (6.8 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 2.66, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
+    { id: "esl_ds_029b", series: "DS Slim Series", name: "LOKMA Smart Tag DS029B", category: "ESL Etiketleri", description: "2.9 inç (7.4 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d142eb62d93.png", images: ["https://www.minewtag.com/upload/goodsgallery/2024-08/66d142eb62d93.png", "https://www.minewtag.com/upload/goodsgallery/2024-08/66d13ea1430ab.png", "https://www.minewtag.com/upload/goodsgallery/2025-09/68c38d8641c11.jpg"], price: 16.90, rentPrice: 1.20, minRentMonths: 12, specs: ["2.9 inç (7.4 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 2.9, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
+    { id: "esl_ds_042b", series: "DS Slim Series", name: "LOKMA Smart Tag DS042B", category: "ESL Etiketleri", description: "4.2 inç (10.7 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d142a9c8819.png", images: ["https://www.minewtag.com/upload/goodsgallery/2024-08/66d142a9c8819.png", "https://www.minewtag.com/upload/goodsgallery/2024-08/66d13e482f6ad.png", "https://www.minewtag.com/upload/goodsgallery/2025-08/68afbfc428d05.jpg"], price: 29.90, rentPrice: 2.40, minRentMonths: 12, specs: ["4.2 inç (10.7 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 4.2, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
     { id: "esl_ds_058b", series: "DS Slim Series", name: "LOKMA Smart Tag DS058B", category: "ESL Etiketleri", description: "5.8 inç (14.7 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d1428acba6a.png", price: 42.90, rentPrice: 3.30, minRentMonths: 12, specs: ["5.8 inç (14.7 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 5.8, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
     { id: "esl_ds_075b", series: "DS Slim Series", name: "LOKMA Smart Tag DS075B", category: "ESL Etiketleri", description: "7.5 inç (19.1 cm) ultra ince siyah beyaz model.", image: "https://www.minewtag.com/upload/goodsgallery/2024-08/66d013891036e.png", price: 62.90, rentPrice: 4.50, minRentMonths: 12, specs: ["7.5 inç (19.1 cm)", "3 Renkli (Siyah-Beyaz-Kırmızı)", "Slim"], filters: { size: 7.5, tech: ["Bluetooth"], colors: 3, cold: false, water: false } },
 
@@ -365,7 +365,7 @@ export default function HardwareTabContent({
 
         {activeCategory === 'ESL Etiketleri' && (
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
-            {['Tümü', 'Slim Series', 'Rainbow Series', 'Multi-Zone Series', 'Supergalaxy Series', 'Mercurius Series', 'Conference Table Series', 'Cold-Chain Series'].map((series) => (
+            {['Tümü', 'DS Slim Series', 'Rainbow Series', 'Multi-Zone Series', 'Supergalaxy Series', 'Mercurius Series', 'Conference Table Series', 'Cold-Chain Series'].map((series) => (
               <button
                 key={series}
                 onClick={() => setActiveSeries(series)}
@@ -577,12 +577,20 @@ export default function HardwareTabContent({
                     
                     <div className="mt-auto pt-4 border-t border-border/50">
                       <div className="flex flex-col gap-1 mb-4">
-                        <span className="text-sm">
-                          <span className="font-semibold text-white">Satın Al:</span> €{product.price.toFixed(2)}
-                        </span>
-                        <span className="text-sm text-indigo-300">
-                          <span className="font-semibold">Kirala:</span> €{product.rentPrice.toFixed(2)} /ay <span className="text-[10px] text-muted-foreground ml-1">({product.minRentMonths} ay taahhüt)</span>
-                        </span>
+                        {currentSelection?.mode === 'installment' ? (
+                          <span className="text-sm text-amber-300">
+                            <span className="font-semibold">Taksit:</span> €{getInstallmentPrice(product.price, currentSelection.duration as 24|36).toFixed(2)} /ay <span className="text-[10px] text-muted-foreground ml-1">({currentSelection.duration} Ay)</span>
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-sm">
+                              <span className="font-semibold text-white">Satın Al:</span> €{product.price.toFixed(2)}
+                            </span>
+                            <span className="text-sm text-indigo-300">
+                              <span className="font-semibold">Kirala:</span> €{getRentPrice(product.rentPrice, (currentSelection?.duration || 12) as 6|12|24).toFixed(2)} /ay <span className="text-[10px] text-muted-foreground ml-1">({currentSelection?.duration || 12} ay taahhüt)</span>
+                            </span>
+                          </>
+                        )}
                       </div>
 
                       <div className="flex flex-col gap-3 w-full">

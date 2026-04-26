@@ -13,6 +13,7 @@ import { WorkspaceAssignmentsList, Assignment } from './components/WorkspaceAssi
 import imageCompression from 'browser-image-compression';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
+import { checkLimit } from '@/services/limitService';
 
 const COUNTRY_CODES = [
  { code: 'DE', dial: '+49', flag: '🇩🇪' },
@@ -683,6 +684,22 @@ export default function BenutzerverwaltungPage() {
  const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
  if (b) assignedBusinessName = b.name;
  else if (k) assignedBusinessName = k.name;
+
+ // Personel limiti kontrolü
+ if (newUserData.role === 'business_admin' || newUserData.role === 'staff' || newUserData.role === 'driver') {
+   const limitResult = await checkLimit(newUserData.businessId, 'personnel');
+   if (!limitResult.allowed) {
+     alert(limitResult.message || 'Personel limitine ulaştınız. Lütfen planınızı yükseltin.');
+     setAddingUser(false);
+     return;
+   } else if (limitResult.overageAction === 'overage_fee' && limitResult.limit !== null && limitResult.currentUsage >= limitResult.limit) {
+     const confirmMsg = `Dikkat: Personel limitinizi (${limitResult.limit}) aştınız. Yeni personel eklemek aylık faturanıza ${limitResult.overageFee}€ ek ücrete mal olacaktır. Onaylıyor musunuz?`;
+     if (!confirm(confirmMsg)) {
+       setAddingUser(false);
+       return;
+     }
+   }
+ }
  }
 
  const payload = {
