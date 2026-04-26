@@ -198,29 +198,51 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Right: Image Visual */}
-      <div className="flex-1 w-full relative mt-10 md:mt-0">
-        <div className="relative w-full aspect-square md:aspect-[4/5] lg:aspect-square rounded-[3rem] overflow-hidden shadow-2xl shadow-black/20 border border-border/50 group">
-          <Image
-            src="/new_hero_pizza.jpg"
-            alt="LOKMA Premium Food Delivery"
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0c1527]/90 via-[#0c1527]/30 to-transparent" />
-          
-          {/* Floating Feature Card */}
-          <div className="absolute bottom-6 left-6 right-6 md:bottom-8 md:left-8 md:right-8 bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex items-center gap-4 shadow-xl">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-              <span className="material-symbols-outlined text-[24px] md:text-[28px]">electric_moped</span>
-            </div>
-            <div>
-              <div className="text-sm md:text-base font-bold text-foreground">Schnelle Lieferung</div>
-              <div className="text-xs md:text-sm text-muted-foreground">in deiner Nachbarschaft</div>
-            </div>
+      {/* Right: Premium Floating Visual */}
+      <div className="flex-1 w-full relative mt-16 md:mt-0 flex items-center justify-center">
+        
+        {/* Cinematic Background Glows */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[120%] h-[120%] max-w-[600px] max-h-[600px] bg-gradient-to-br from-[#ea184a]/30 to-orange-500/10 blur-[100px] rounded-full mix-blend-screen" />
+          <div className="absolute w-[80%] h-[80%] max-w-[400px] max-h-[400px] bg-gradient-to-tr from-rose-500/20 to-blue-500/20 blur-[80px] rounded-full mix-blend-screen" />
+        </div>
+
+        {/* Floating Transparent Pizza */}
+        <div className="relative w-[110%] md:w-[130%] lg:w-[140%] max-w-[700px] aspect-square flex items-center justify-center z-10 -ml-4 md:-ml-12 lg:-ml-20">
+          {/* Custom continuous slow spin and float animation wrapper */}
+          <div className="relative w-full h-full animate-[spin_60s_linear_infinite] drop-shadow-2xl">
+            <Image
+              src="/hero_pizza_transparent_v2.png"
+              alt="LOKMA Premium Food Delivery"
+              fill
+              className="object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-105"
+              priority
+            />
           </div>
         </div>
+
+        {/* Glassmorphic Floating Element 1 - Delivery */}
+        <div className="absolute bottom-[10%] left-0 md:-left-10 z-20 bg-background/60 dark:bg-[#0f172a]/60 backdrop-blur-2xl border border-white/10 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:-translate-y-2 transition-transform duration-300">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-500/30">
+            <span className="material-symbols-outlined text-[24px]">electric_moped</span>
+          </div>
+          <div className="pr-2">
+            <div className="text-sm font-black text-foreground uppercase tracking-wider">Schnelle Lieferung</div>
+            <div className="text-xs text-muted-foreground font-medium">Unter 30 Minuten</div>
+          </div>
+        </div>
+
+        {/* Glassmorphic Floating Element 2 - Quality */}
+        <div className="absolute top-[15%] right-0 md:-right-8 z-20 bg-background/60 dark:bg-[#0f172a]/60 backdrop-blur-2xl border border-white/10 dark:border-white/5 rounded-2xl p-3 md:p-4 flex items-center gap-3 md:gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:-translate-y-2 transition-transform duration-300">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#ea184a] to-rose-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/30">
+            <span className="material-symbols-outlined text-[20px] md:text-[24px]">local_fire_department</span>
+          </div>
+          <div className="pr-2">
+            <div className="text-xs md:text-sm font-black text-foreground uppercase tracking-wider">Heiß & Frisch</div>
+            <div className="text-[10px] md:text-xs text-muted-foreground font-medium">Direkt aus dem Ofen</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
