@@ -6,6 +6,17 @@ import { db } from "@/lib/firebase";
 import {  ShoppingCart, CheckCircle, Monitor, Smartphone, Scale, Tag, SlidersHorizontal, Snowflake, Droplets, Nfc, Bluetooth, Info, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from "next-intl";
 
+
+const CATEGORY_SERIES = {
+  'ESL Etiketleri': ['Tümü', 'DS Slim Series', 'Rainbow Series', 'Multi-Zone Series', 'Supergalaxy Series', 'Mercurius Series', 'Conference Table Series', 'Cold-Chain Series'],
+  'Mobil POS & El Terminalleri': ['Tümü', 'V-Serisi (Mobil POS)', 'P-Serisi (Ödeme POS)', 'L-Serisi (Endüstriyel)', 'M-Serisi (Mobil Terminal)', 'FLEX Serisi'],
+  'Masaüstü Kasa & Kiosk': ['Tümü', 'T-Serisi (Gelişmiş Kasa)', 'D-Serisi (Kompakt Kasa)', 'K-Serisi (Kiosk)', 'FT-Serisi'],
+  'Ağ, Yazıcı & Aksesuarlar': ['Tümü', 'Yazıcılar', 'Ağ & İletişim', 'Tarayıcılar', 'Aksesuarlar'],
+  'KDS & Müşteri Ekranları': ['Tümü', 'CPad Serisi'],
+  'Akıllı Tartım': ['Tümü', 'S-Serisi (Terazi)'],
+  'Sarf Malzemeleri': ['Tümü']
+};
+
 export default function HardwareTabContent({
   business,
   admin,
@@ -15,8 +26,8 @@ export default function HardwareTabContent({
   const [hardwareCart, setHardwareCart] = useState<Record<string, { quantity: number, mode: 'rent' | 'buy' | 'installment', duration: 6 | 12 | 24 | 36 }>>({});
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const categories = ['Kasa Sistemleri', 'Mobil Cihazlar', 'Tartım & Terazi', 'ESL Etiketleri', 'Sarf Malzemeleri'];
-  const [activeCategory, setActiveCategory] = useState(categories[3]);
+  const categories = ['Masaüstü Kasa & Kiosk', 'Mobil POS & El Terminalleri', 'KDS & Müşteri Ekranları', 'Ağ, Yazıcı & Aksesuarlar', 'Akıllı Tartım', 'ESL Etiketleri', 'Sarf Malzemeleri'];
+  const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [activeSeries, setActiveSeries] = useState("Tümü");
   const [lightboxData, setLightboxData] = useState<{ index: number, images: string[] } | null>(null);
   const [activeModalImage, setActiveModalImage] = useState<string | null>(null);
@@ -57,6 +68,42 @@ export default function HardwareTabContent({
         resolution: size > 10 ? "960 * 640" : size > 5 ? "648 * 480" : "400 * 300"
       };
     }
+
+    if (product.series && product.name.includes("Sunmi")) {
+      const specs: any = {
+        Marka: "Sunmi (Orijinal)",
+        Seri: product.series,
+        Kategori: product.category,
+      };
+      
+      if (product.series.includes('Mobil POS') || product.series.includes('Endüstriyel')) {
+         specs['İşletim Sistemi'] = "Android (Sunmi OS)";
+         specs['Bağlantı'] = "4G / Wi-Fi / Bluetooth";
+         if (product.series.includes('Mobil POS')) specs['Yazıcı'] = "Dahili 58mm Termal Yazıcı";
+         if (product.series.includes('Ödeme')) specs['Ödeme'] = "NFC / Temassız / Çip";
+      } else if (product.series.includes('Kasa') || product.series.includes('Kiosk') || product.series.includes('CPad')) {
+         specs['İşletim Sistemi'] = "Android (Sunmi OS)";
+         specs['Bağlantı'] = "Ethernet / Wi-Fi / Bluetooth";
+         specs['Ekran'] = "Dokunmatik HD/FHD Ekran";
+      } else if (product.series.includes('Terazi')) {
+         specs['İşletim Sistemi'] = "Android (Sunmi OS)";
+         specs['Tartım Özelliği'] = "Entegre Akıllı Hassas Terazi";
+         specs['Yazıcı'] = "Dahili Fiş / Etiket Yazıcı";
+      } else if (product.series.includes('Yazıcılar')) {
+         specs['Bağlantı'] = "Ethernet / Wi-Fi / Bluetooth / USB";
+         specs['Baskı Tipi'] = "80mm Termal / Etiket";
+      }
+      return specs;
+    }
+
+    if (product.specs && Array.isArray(product.specs)) {
+      const specsMap: any = {};
+      product.specs.forEach((s: string, i: number) => {
+        specsMap[`Özellik ${i+1}`] = s;
+      });
+      return specsMap;
+    }
+
     return null;
   };
 
@@ -956,8 +1003,9 @@ export default function HardwareTabContent({
   const filteredHardware = hardwareList.filter(p => {
     if (p.category !== activeCategory) return false;
     
+    if (activeSeries !== 'Tümü' && p.series && p.series !== activeSeries) return false;
+    
     if (activeCategory === 'ESL Etiketleri') {
-      if (activeSeries !== 'Tümü' && p.series !== activeSeries) return false;
       
       // Additional Filters
       if (p.filters) {
@@ -997,7 +1045,7 @@ export default function HardwareTabContent({
             {categories.map((category) => (
               <button
                 key={category}
-                onClick={() => setActiveCategory(category)}
+                onClick={() => { setActiveCategory(category); setActiveSeries('Tümü'); }}
                 className={`px-4 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                   activeCategory === category 
                     ? 'bg-primary text-primary-foreground' 
@@ -1019,9 +1067,9 @@ export default function HardwareTabContent({
           )}
         </div>
 
-        {activeCategory === 'ESL Etiketleri' && (
-          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
-            {['Tümü', 'DS Slim Series', 'Rainbow Series', 'Multi-Zone Series', 'Supergalaxy Series', 'Mercurius Series', 'Conference Table Series', 'Cold-Chain Series'].map((series) => (
+        {CATEGORY_SERIES[activeCategory as keyof typeof CATEGORY_SERIES] && CATEGORY_SERIES[activeCategory as keyof typeof CATEGORY_SERIES].length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-2">
+            {CATEGORY_SERIES[activeCategory as keyof typeof CATEGORY_SERIES].map((series) => (
               <button
                 key={series}
                 onClick={() => setActiveSeries(series)}
@@ -1389,7 +1437,7 @@ export default function HardwareTabContent({
             </button>
             
             {/* Left side: Images */}
-            <div className="w-full md:w-1/2 bg-white dark:bg-white/5 flex flex-col p-8 items-center justify-center border-b md:border-b-0 md:border-r border-border/50">
+            <div className="w-full md:w-1/2 bg-white flex flex-col p-8 items-center justify-center border-b md:border-b-0 md:border-r border-border/50">
                <img 
                  src={activeModalImage || selectedProductDetail.image} 
                  alt={selectedProductDetail.name} 
