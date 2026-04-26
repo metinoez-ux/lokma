@@ -1407,88 +1407,112 @@ export default function HardwareTabContent({
       )}
 
       
-      {/* Product Detail Modal */}
+      {/* Immersive Product Detail Page Takeover */}
       {selectedProductDetail && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 overflow-y-auto py-10" onClick={() => setSelectedProductDetail(null)}>
-          <div className="relative bg-card w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-auto" onClick={e => e.stopPropagation()}>
-            <button 
-              className="absolute top-4 right-4 bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-foreground w-10 h-10 rounded-full flex items-center justify-center transition-colors z-20"
-              onClick={() => { setSelectedProductDetail(null); setActiveModalImage(null); }}
-            >
-              ✕
-            </button>
-            
-            {/* Left side: Images */}
-            <div className="w-full md:w-1/2 bg-white flex flex-col p-8 items-center justify-center border-b md:border-b-0 md:border-r border-border/50">
-               <img 
-                 src={activeModalImage || selectedProductDetail.image} 
-                 alt={selectedProductDetail.name} 
-                 className="max-w-full max-h-[350px] object-contain mb-8 cursor-pointer"
-                 onClick={() => {
-                   const imgs = selectedProductDetail.images && selectedProductDetail.images.length > 0 ? selectedProductDetail.images : [selectedProductDetail.image];
-                   const idx = imgs.indexOf(activeModalImage || selectedProductDetail.image);
-                   setLightboxData({ index: Math.max(0, idx), images: imgs });
-                 }}
-               />
-               {selectedProductDetail.images && selectedProductDetail.images.length > 0 && (
-                 <div className="flex gap-3 overflow-x-auto p-2 max-w-full hide-scrollbar">
-                    {selectedProductDetail.images.map((img: string, i: number) => (
-                      <div key={i} onClick={() => setActiveModalImage(img)} className={`w-16 h-16 border ${activeModalImage === img ? 'border-primary' : 'border-border/50'} rounded-lg cursor-pointer shrink-0 overflow-hidden hover:border-primary transition-colors bg-white`}>
-                         <img src={img} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                 </div>
-               )}
+        <div className="fixed inset-0 z-[110] bg-background overflow-y-auto overflow-x-hidden flex flex-col hide-scrollbar animate-in slide-in-from-bottom-10 duration-500">
+          
+          {/* Navigation Bar */}
+          <div className="sticky top-0 w-full bg-background/80 backdrop-blur-xl border-b border-border/50 px-6 py-4 flex items-center justify-between z-50">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => { setSelectedProductDetail(null); setActiveModalImage(null); }}
+                className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <div>
+                <div className="text-xs text-primary font-bold tracking-wider uppercase">{selectedProductDetail.category}</div>
+                <div className="font-bold text-foreground">{selectedProductDetail.name}</div>
+              </div>
             </div>
+            <div className="flex items-center gap-4">
+               <div className="text-right hidden sm:block">
+                  <div className="text-xl font-bold text-foreground">€{selectedProductDetail.price.toFixed(2)}</div>
+                  {selectedProductDetail.rentPrice > 0 && <div className="text-xs text-muted-foreground">{t('rentOr', { price: `€${selectedProductDetail.rentPrice.toFixed(2)}` })}</div>}
+               </div>
+               <button 
+                 className="bg-foreground text-background px-6 py-2.5 rounded-full font-bold hover:scale-105 transition-transform"
+                 onClick={() => { setSelectedProductDetail(null); setActiveModalImage(null); }}
+               >
+                 Geri Dön
+               </button>
+            </div>
+          </div>
 
-            {/* Right side: Specs */}
-            <div className="w-full md:w-1/2 p-8 flex flex-col max-h-[80vh] overflow-y-auto custom-scrollbar">
-              <div className="text-sm text-primary font-medium mb-2">{selectedProductDetail.category}</div>
-              <h2 className="text-3xl font-bold text-foreground mb-4">{selectedProductDetail.name}</h2>
-              <p className="text-muted-foreground mb-8 text-base">{selectedProductDetail.description}</p>
-              
-              {/* Detailed Specs Table */}
+          {/* Hero Section */}
+          <div className="relative w-full min-h-[50vh] md:min-h-[70vh] bg-gradient-to-b from-indigo-900/10 via-background to-background flex flex-col items-center justify-center pt-12 pb-24 px-4 overflow-hidden">
+             {/* Background glow */}
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] bg-primary/20 blur-[120px] rounded-full pointer-events-none opacity-50" />
+             
+             <div className="relative z-10 text-center max-w-4xl mx-auto mb-16 animate-in slide-in-from-bottom-5 duration-700 delay-100 fill-mode-both">
+               <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tight mb-6">{selectedProductDetail.name}</h1>
+               <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">{selectedProductDetail.description}</p>
+             </div>
+
+             <div className="relative z-10 w-full max-w-3xl aspect-[16/9] md:aspect-auto md:h-[500px] flex justify-center items-center animate-in zoom-in-95 duration-1000 delay-200 fill-mode-both">
+                <img 
+                  src={activeModalImage || selectedProductDetail.image} 
+                  alt={selectedProductDetail.name} 
+                  className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                />
+             </div>
+          </div>
+
+          {/* Gallery Section */}
+          {selectedProductDetail.images && selectedProductDetail.images.length > 1 && (
+            <div className="w-full max-w-5xl mx-auto px-6 pb-24">
+               <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8 text-center">Görsel Galerisi</h3>
+               <div className="flex gap-6 overflow-x-auto pb-6 hide-scrollbar justify-center">
+                 {selectedProductDetail.images.map((img: string, i: number) => (
+                    <button 
+                      key={i} 
+                      onClick={() => setActiveModalImage(img)} 
+                      className={`w-32 h-32 md:w-48 md:h-48 rounded-3xl border-2 overflow-hidden transition-all duration-300 ${activeModalImage === img || (!activeModalImage && i === 0) ? 'border-primary scale-105 shadow-xl shadow-primary/20' : 'border-border/40 hover:border-border hover:scale-105'} bg-white`}
+                    >
+                      <img src={img} className="w-full h-full object-contain p-4" />
+                    </button>
+                 ))}
+               </div>
+            </div>
+          )}
+
+          {/* Tech Specs Section - Bento Grid */}
+          <div className="w-full bg-muted/30 py-24 border-t border-border/50">
+            <div className="max-w-6xl mx-auto px-6">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">Üst Düzey Teknoloji.</h2>
+                <p className="text-lg text-muted-foreground">İşletmeniz için tasarlanmış birinci sınıf donanım özellikleri.</p>
+              </div>
+
               {getDetailedSpecs(selectedProductDetail) && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-bold text-foreground mb-4 border-b border-border/50 pb-2 flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    {t('techDetails')}
-                  </h3>
-                  <div className="space-y-3">
-                    {Object.entries(getDetailedSpecs(selectedProductDetail)).map(([k, v]) => {
-                      const isTranslatedKey = ['productSize', 'screenSize', 'productWeight', 'enduranceTime', 'displayColor', 'resolution'].includes(k);
-                      return (
-                      <div key={k} className="flex justify-between border-b border-border/30 pb-2 text-sm">
-                        <span className="text-muted-foreground capitalize">{isTranslatedKey ? t(k as any) : k}</span>
-                        <span className="font-medium text-foreground text-right max-w-[60%]">{v as string}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Object.entries(getDetailedSpecs(selectedProductDetail)).map(([k, v], idx) => {
+                    const isTranslatedKey = ['productSize', 'screenSize', 'productWeight', 'enduranceTime', 'displayColor', 'resolution'].includes(k);
+                    const label = isTranslatedKey ? t(k as any) : k;
+                    return (
+                      <div key={k} className="bg-card border border-border/50 rounded-3xl p-8 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/5 group">
+                        <div className="text-primary mb-6 group-hover:scale-110 transition-transform origin-left">
+                          <Settings className="w-8 h-8 opacity-80" />
+                        </div>
+                        <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">{label}</h4>
+                        <p className="text-xl font-semibold text-foreground leading-snug">{v as string}</p>
                       </div>
-                    )})}
-                  </div>
-                  
-                  {getDetailedSpecs(selectedProductDetail)?.enduranceTime && (
-                    <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl text-sm text-foreground flex items-start gap-3">
-                      <Info className="w-6 h-6 shrink-0 text-primary mt-0.5" />
-                      <div>
-                        <strong className="block mb-1 text-primary">{t('batteryInfoTitle')}</strong>
-                        {t('batteryInfoDesc')}
-                      </div>
-                    </div>
-                  )}
+                    )
+                  })}
                 </div>
               )}
-              
-              <div className="mt-auto pt-6 border-t border-border/50 flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
-                 <div>
-                   <div className="text-3xl font-bold text-foreground">€{selectedProductDetail.price.toFixed(2)}</div>
-                   {selectedProductDetail.rentPrice > 0 && <div className="text-sm text-muted-foreground">{t('rentOr', { price: `€${selectedProductDetail.rentPrice.toFixed(2)}` })}</div>}
-                 </div>
-                 <button className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20" onClick={() => { 
-                   setSelectedProductDetail(null);
-                   // Optionally scroll to order section
-                 }}>
-                   {t('returnToOrder')}
-                 </button>
-              </div>
+
+              {getDetailedSpecs(selectedProductDetail)?.enduranceTime && (
+                <div className="mt-8 p-8 md:p-12 bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 rounded-3xl text-foreground flex flex-col md:flex-row items-start md:items-center gap-8 shadow-2xl shadow-primary/10">
+                  <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                    <Info className="w-10 h-10 text-primary" />
+                  </div>
+                  <div>
+                    <strong className="block mb-3 text-2xl font-bold text-primary">{t('batteryInfoTitle')}</strong>
+                    <p className="text-lg text-muted-foreground leading-relaxed">{t('batteryInfoDesc')}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
