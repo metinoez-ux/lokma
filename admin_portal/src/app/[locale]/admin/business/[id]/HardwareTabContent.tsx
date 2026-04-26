@@ -1209,7 +1209,7 @@ export default function HardwareTabContent({
                   {/* Ürün Görseli */}
                   <div 
                     className="p-6 bg-white/5 dark:bg-white flex items-center justify-center h-[200px] cursor-pointer relative"
-                    onClick={() => product.images && product.images.length > 0 ? setLightboxData({ index: 0, images: product.images }) : (product.image ? setLightboxData({ index: 0, images: [product.image] }) : null)}
+                    onClick={() => { setSelectedProductDetail(product); setActiveModalImage(null); }}
                   >
                     {product.image ? (
                       <img 
@@ -1224,7 +1224,7 @@ export default function HardwareTabContent({
                     )}
                     {product.image && (
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                        <span className="text-white text-sm font-medium bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-auto">Büyüt</span>
+                        <span className="text-white text-sm font-medium bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-auto">İncele</span>
                       </div>
                     )}
                     
