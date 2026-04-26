@@ -16,7 +16,7 @@ export default function HardwareTabContent({
   const categories = ['Kasa Sistemleri', 'Mobil Cihazlar', 'Tartım & Terazi', 'ESL Etiketleri', 'Sarf Malzemeleri'];
   const [activeCategory, setActiveCategory] = useState(categories[3]);
   const [activeSeries, setActiveSeries] = useState("Tümü");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{url: string, grayscale: boolean} | null>(null);
 
   // Filters State
   const [showFilters, setShowFilters] = useState(true);
@@ -475,10 +475,14 @@ export default function HardwareTabContent({
                   {/* Ürün Görseli */}
                   <div 
                     className="p-6 bg-white/5 dark:bg-white flex items-center justify-center h-[200px] cursor-pointer relative"
-                    onClick={() => product.image ? setSelectedImage(product.image) : null}
+                    onClick={() => product.image ? setSelectedImage({ url: product.image, grayscale: product.filters?.colors === 2 }) : null}
                   >
                     {product.image ? (
-                      <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className={`max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500 ${product.filters?.colors === 2 ? 'grayscale contrast-125' : ''}`} 
+                      />
                     ) : (
                       <div className="group-hover:scale-110 transition-transform duration-300">
                         {product.icon}
@@ -511,9 +515,13 @@ export default function HardwareTabContent({
                         <div 
                           key={idx} 
                           className="w-12 h-12 shrink-0 rounded border border-border/50 overflow-hidden cursor-pointer hover:border-primary transition-colors"
-                          onClick={() => setSelectedImage(img)}
+                          onClick={() => setSelectedImage({ url: img, grayscale: product.filters?.colors === 2 })}
                         >
-                          <img src={img} alt={`${product.name} - ${idx}`} className="w-full h-full object-cover" />
+                          <img 
+                            src={img} 
+                            alt={`${product.name} - ${idx}`} 
+                            className={`w-full h-full object-cover ${product.filters?.colors === 2 ? 'grayscale contrast-125' : ''}`} 
+                          />
                         </div>
                       ))}
                     </div>
@@ -679,7 +687,11 @@ export default function HardwareTabContent({
             >
               ✕
             </button>
-            <img src={selectedImage} alt="Preview" className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" />
+            <img 
+              src={selectedImage.url} 
+              alt="Büyütülmüş Görsel" 
+              className={`max-w-full max-h-full object-contain rounded-xl bg-white p-4 shadow-2xl ${selectedImage.grayscale ? 'grayscale contrast-125' : ''}`} 
+            />
           </div>
         </div>
       )}
