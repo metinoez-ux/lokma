@@ -286,7 +286,7 @@ class _KermesGroupOrderScreenState
                       children: [
                         Expanded(
                           child: Text(
-                            widget.event.title ?? widget.event.city,
+                            widget.event?.title ?? widget.event?.city ?? 'Kermes',
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 20,
@@ -763,7 +763,7 @@ class _KermesGroupOrderScreenState
         CartWarningUtils.showDifferentCartWarning(
           context: context,
           ref: ref,
-          targetBusinessName: widget.event.title ?? widget.event.city,
+          targetBusinessName: widget.event?.title ?? widget.event?.city ?? 'Kermes',
           onConfirmClearAndAdd: () => _startGroupAndAdd(item),
         );
         return;
@@ -794,8 +794,8 @@ class _KermesGroupOrderScreenState
     if (name == null || name.isEmpty) return;
 
     final orderId = await ref.read(groupOrderProvider.notifier).createGroupOrder(
-          kermesId: widget.event.id,
-          kermesName: widget.event.title ?? widget.event.city,
+          kermesId: widget.event?.id ?? '',
+          kermesName: widget.event?.title ?? widget.event?.city ?? 'Kermes',
           hostName: name,
           initialItems: [],
         );
