@@ -3688,7 +3688,7 @@ export default function BusinessDetailsPage() {
              onClick={() => setShowAllPauseLogs(!showAllPauseLogs)}
              className="text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors"
            >
-             {showAllPauseLogs ? tStats('s_adece_son_3') : t('AdminStatistics.tumunu_goster', { count: pauseLogs.length })}
+             {showAllPauseLogs ? tStats('s_adece_son_3') : tStats('tumunu_goster', { count: pauseLogs.length })}
            </button>
          </div>
        )}
