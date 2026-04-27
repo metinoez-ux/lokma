@@ -414,67 +414,54 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     setState(() => _loadingFreeDrinks = true);
 
     try {
-      // Fetch all products for this business
-      final productsSnap = await FirebaseFirestore.instance
+      final businessDoc = await FirebaseFirestore.instance
           .collection('businesses')
           .doc(butcherId)
-          .collection('products')
-          .where('isActive', isEqualTo: true)
           .get();
 
-      // Known drink category identifiers (multi-language)
-      const drinkCategories = [
-        'içecek', 'icecek', 'İçecek', 'İçecekler',
-        'getränke', 'Getränke', 'getraenke', 'Getraenke',
-        'drinks', 'Drinks', 'beverage', 'Beverage', 'Beverages',
-        'boissons', 'Boissons',
-        'bebidas', 'Bebidas',
-        'bibite', 'Bibite',
-        'dranken', 'Dranken',
-      ];
+      if (!businessDoc.exists) {
+        if (mounted) setState(() => _loadingFreeDrinks = false);
+        return;
+      }
+
+      final List<dynamic> allowedIds = businessDoc.data()?['freeDrinkProducts'] ?? [];
+      if (allowedIds.isEmpty) {
+        if (mounted) setState(() => _loadingFreeDrinks = false);
+        return;
+      }
 
       final List<Map<String, dynamic>> drinks = [];
-      for (final doc in productsSnap.docs) {
-        final data = doc.data();
+      for (final productId in allowedIds) {
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('businesses')
+              .doc(butcherId)
+              .collection('products')
+              .doc(productId.toString())
+              .get();
 
-        // Skip unavailable or out-of-stock
-        if (data['isAvailable'] == false || data['outOfStock'] == true) continue;
+          if (doc.exists) {
+            final data = doc.data()!;
+            // Skip unavailable or out-of-stock
+            if (data['isAvailable'] == false || data['outOfStock'] == true || data['isActive'] == false) continue;
 
-        // Check category (handle both string and localization map)
-        final categoryRaw = data['category'];
-        String categoryStr = '';
-        if (categoryRaw is String) {
-          categoryStr = categoryRaw;
-        } else if (categoryRaw is Map) {
-          // Try all language keys
-          for (final v in categoryRaw.values) {
-            if (v != null && drinkCategories.any((dc) => v.toString().toLowerCase() == dc.toLowerCase())) {
-              categoryStr = v.toString();
-              break;
-            }
+            drinks.add({
+              'id': doc.id,
+              'name': data['name'] ?? '',
+              'nameData': data['name'],
+              'price': (data['sellingPrice'] ?? data['price'] ?? 0).toDouble(),
+              'unit': data['unit'] ?? 'adet',
+              'imageUrl': data['imageUrl'] ?? '',
+              'category': data['category'] is String ? data['category'] : ((data['category'] as Map?)?.values.first ?? ''),
+              'categoryData': data['category'],
+              'descriptionData': data['description'],
+              'masterProductSku': data['masterProductSku'] ?? doc.id,
+              'masterId': data['masterId'] ?? '',
+            });
           }
-          if (categoryStr.isEmpty) {
-            categoryStr = (categoryRaw['tr'] ?? categoryRaw['de'] ?? categoryRaw.values.first ?? '').toString();
-          }
+        } catch (e) {
+          debugPrint('Error fetching specific free drink $productId: $e');
         }
-
-        // Match against known drink categories
-        final isDrink = drinkCategories.any((dc) => categoryStr.toLowerCase() == dc.toLowerCase());
-        if (!isDrink) continue;
-
-        drinks.add({
-          'id': doc.id,
-          'name': data['name'] ?? '',
-          'nameData': data['name'],
-          'price': (data['sellingPrice'] ?? data['price'] ?? 0).toDouble(),
-          'unit': data['unit'] ?? 'adet',
-          'imageUrl': data['imageUrl'] ?? '',
-          'category': categoryStr,
-          'categoryData': data['category'],
-          'descriptionData': data['description'],
-          'masterProductSku': data['masterProductSku'] ?? doc.id,
-          'masterId': data['masterId'] ?? '',
-        });
       }
 
       // Filter out products already in cart
@@ -3162,8 +3149,24 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 SizedBox(height: 16),
               ],
 
-              // (Free Drink Promotion hidden per user request)
-              const SizedBox.shrink(),
+              // 🥤 Free Drink Promotion
+              if (_butcherData?['freeDrinkEnabled'] == true && _freeDrinkProducts.isNotEmpty) ...[
+                Builder(
+                  builder: (context) {
+                    final minOrder = (_butcherData?['freeDrinkMinimumOrder'] as num?)?.toDouble() ?? 0.0;
+                    if (kasapTotal >= minOrder) {
+                      return Column(
+                        children: [
+                          SizedBox(height: 8),
+                          _buildFreeDrinkSection(),
+                          SizedBox(height: 16),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
               
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kasapTotal, grandTotal),
