@@ -2893,7 +2893,6 @@ export default function BusinessDetailsPage() {
 
 
  
-  const [periodTab, setPeriodTab] = useState<'weekly' | 'monthly' | 'yearly'>('weekly');
   
   const analytics = useMemo(() => {
     const hourlyDistribution = Array(24).fill(0).map((_, hour) => ({
@@ -3205,9 +3204,9 @@ export default function BusinessDetailsPage() {
           
           <div className="p-6 flex-1 min-h-[300px] flex flex-col gap-8">
             {/* Charts Row */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Hourly Distribution */}
-              <div>
+              <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
                 <h3 className="text-foreground font-bold mb-4">{t('saatlik_siparis_dagilimi') || 'Saatlik Sipariş Yoğunluğu'}</h3>
                 {(() => {
                   const hourData = analytics.hourlyDistribution.slice(8, 22);
@@ -3241,8 +3240,31 @@ export default function BusinessDetailsPage() {
                 })()}
               </div>
 
+              {/* Daily Distribution */}
+              <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
+                <h3 className="text-foreground font-bold mb-4">{t('gunluk_siparis_dagilimi') || 'Günlük Sipariş Dağılımı'}</h3>
+                <div className="space-y-3">
+                  {analytics.dailyDistribution.map((d: any) => {
+                    const maxCount = Math.max(...analytics.dailyDistribution.map((d: any) => d.count), 1);
+                    const width = (d.count / maxCount) * 100;
+                    return (
+                      <div key={d.day} className="flex items-center gap-3">
+                        <span className="text-muted-foreground text-sm w-12">{d.day.slice(0, 3)}</span>
+                        <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all"
+                            style={{ width: `${width}%` }}
+                          />
+                        </div>
+                        <span className="text-foreground font-medium w-8 text-right text-sm">{d.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Period Chart (Weekly/Monthly/Yearly) */}
-              <div>
+              <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
                 <h3 className="text-foreground font-bold mb-4">Sipariş & Ciro Trendi</h3>
                 {(() => {
                   const now = new Date();
@@ -3584,43 +3606,33 @@ export default function BusinessDetailsPage() {
        </select>
      </div>
 
-     {/* Performance Stats Grid matching dashboard view */}
-     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-       <div className="bg-background rounded-lg p-4">
-         <div className="text-3xl font-bold text-foreground">{perfOrderStats.totalOrders}</div>
-         <div className="text-sm text-muted-foreground">{tStaff('orders') || 'Gesamtbestellung'}</div>
+     {/* KPI Row */}
+     <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-amber-500">
+         <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pauseStats.pauseCount}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('durdurma_sayisi')}</div>
        </div>
-       <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
-         <div className="text-3xl font-bold text-green-800 dark:text-green-400">{perfOrderStats.completedOrders}</div>
-         <div className="text-sm text-green-300">{tStaff('teslim_edildi') || 'Abgeschlossen'}</div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-emerald-500">
+         <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{pauseStats.resumeCount}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('devam_ettirme')}</div>
        </div>
-       <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
-         <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{perfOrderStats.avgPreparationTime}<span className="text-lg"> Min.</span></div>
-         <div className="text-sm text-blue-300">{t('ort_hazirlama') || 'Durchschn. Vorbereitung'}</div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-yellow-500">
+         <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pauseStats.totalPausedHours} <span className="text-sm">{tStaff('sa_kisaltma')}</span></div>
+         <div className="text-xs text-muted-foreground">{tStaff('toplam_durma_suresi')}</div>
        </div>
-       <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
-         <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{perfOrderStats.avgDeliveryTime}<span className="text-lg"> Min.</span></div>
-         <div className="text-sm text-purple-300">{t('avg_delivery') || 'Durchschn. Lieferung'}</div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-blue-500">
+         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{perfOrderStats.totalOrders}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('orders')}</div>
        </div>
-       <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
-         <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
-         <div className="text-sm text-amber-300">{t('kurye_durdurma') || 'Kurierstopp'}</div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-green-500">
+         <div className="text-2xl font-bold text-green-600 dark:text-green-400">{perfOrderStats.completedOrders}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('teslim_edildi')}</div>
        </div>
-     </div>
-
-     {/* Pause Statistics Row matching dashboard view */}
-     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-       <div className="bg-background rounded-lg p-4">
-         <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-muted-foreground">{tStaff('durdurma_sayisi') || 'Anzahl der Stopps'}</span></div>
-         <div className="text-2xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
-       </div>
-       <div className="bg-background rounded-lg p-4">
-         <div className="flex items-center gap-2 mb-2"><span className="text-muted-foreground">{tStaff('benzersiz_musteri') || 'Kundenbindung'}</span></div>
-         <div className="text-2xl font-bold text-green-800 dark:text-green-400">{new Set(orders.map(o => o.customerId).filter(Boolean)).size}</div>
-       </div>
-       <div className="bg-background rounded-lg p-4">
-         <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-muted-foreground">{tStaff('toplam_durma_suresi') || 'Gesamtstoppzeit'}</span></div>
-         <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">Uhr</span></div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-purple-500">
+         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+           {new Set(orders.map(o => o.customerId).filter(Boolean)).size}
+         </div>
+         <div className="text-xs text-muted-foreground">{tStaff('benzersiz_musteri')}</div>
        </div>
      </div>
 
@@ -3824,7 +3836,7 @@ export default function BusinessDetailsPage() {
          <div className="flex items-center gap-3">
            <h3 className="text-foreground font-bold text-xl flex items-center gap-2">
              <ShoppingBag className="w-6 h-6 text-primary" />
-             {t('bestellzentrum')}
+             KDS
            </h3>
            {/* Compact Upcoming Reservation Chip */}
            {upcomingReservation && (

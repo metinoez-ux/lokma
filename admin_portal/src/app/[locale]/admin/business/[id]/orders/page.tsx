@@ -424,7 +424,7 @@ const params = useParams();
  <span className="text-2xl">📦</span>
  </div>
  <div>
- <h1 className="font-bold">{butcher?.companyName || 'Kasap'} {t('siparisler')}</h1>
+ <h1 className="font-bold">{butcher?.companyName || 'Kasap'} KDS</h1>
  <p className="text-xs text-red-200">
  {butcher?.brand === 'tuna' && <span className="bg-red-600 px-2 py-0.5 rounded text-xs mr-2">TUNA</span>}
  {t('toplam')} {stats.total} {t('siparis')}
