@@ -3239,7 +3239,7 @@ export default function BusinessDetailsPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Hourly Distribution */}
               <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
-                <h3 className="text-foreground font-bold mb-4">{t('saatlik_siparis_dagilimi') || 'Saatlik Sipariş Yoğunluğu'}</h3>
+                <h3 className="text-foreground font-bold mb-4">{tStats('saatlik_siparis_dagilimi') || 'Saatlik Sipariş Yoğunluğu'}</h3>
                 {(() => {
                   const hourData = analytics.hourlyDistribution.slice(8, 22);
                   const maxCount = Math.max(...hourData.map(h => h.count), 1);
@@ -3274,7 +3274,7 @@ export default function BusinessDetailsPage() {
 
               {/* Daily Distribution */}
               <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
-                <h3 className="text-foreground font-bold mb-4">{t('gunluk_siparis_dagilimi') || 'Günlük Sipariş Dağılımı'}</h3>
+                <h3 className="text-foreground font-bold mb-4">{tStats('gunluk_siparis_dagilimi') || 'Günlük Sipariş Dağılımı'}</h3>
                 <div className="space-y-3">
                   {analytics.dailyDistribution.map((d: any) => {
                     const maxCount = Math.max(...analytics.dailyDistribution.map((d: any) => d.count), 1);
@@ -3394,9 +3394,9 @@ export default function BusinessDetailsPage() {
 
             {/* Top Products */}
             <div className="pt-6 border-t border-border">
-              <h3 className="text-foreground font-bold mb-4">{t('en_cok_satan_urunler') || 'Meistverkaufte Produkte'}</h3>
+              <h3 className="text-foreground font-bold mb-4">{tStats('en_cok_satan_urunler') || 'Meistverkaufte Produkte'}</h3>
               {analytics.topProducts.length === 0 ? (
-                <p className="text-muted-foreground/80 text-center py-4">{t('urun_verisi_bulunamadi') || 'Ürün verisi bulunamadı'}</p>
+                <p className="text-muted-foreground/80 text-center py-4">{tStats('urun_verisi_bulunamadi') || 'Ürün verisi bulunamadı'}</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
                   {analytics.topProducts.slice(0, 6).map((p: any, idx: number) => (
@@ -3409,7 +3409,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-green-800 dark:text-green-400 font-bold text-sm">{(p.revenue).toFixed(2)} €</p>
-                        <p className="text-[10px] text-muted-foreground/80">{p.quantity} {t('adet') || 'Menge'}</p>
+                        <p className="text-[10px] text-muted-foreground/80">{p.quantity} {tStats('adet') || 'Menge'}</p>
                       </div>
                     </div>
                   ))}
