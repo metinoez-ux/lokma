@@ -1331,7 +1331,7 @@ String _getLocalizedCountry(String rawCountry) {
           builder: (ctx) => OrderSetupBottomSheet(
             kermesName: _currentEvent.title ?? _currentEvent.city,
             hasDineIn: true,
-            hasTakeaway: false,
+            hasTakeaway: true, // Allow Takeaway as requested by user
             hasDelivery: false,
             preSelectedDelivery: DeliveryType.masada,
             preSelectedTable: widget.initialTableNumber,

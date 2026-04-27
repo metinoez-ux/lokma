@@ -133,7 +133,23 @@ class _KermesGroupOrderScreenState
         .listen((snap) {
       if (!snap.exists || !mounted) return;
       setState(() {
-        _currentEvent = KermesEvent.fromDocument(snap);
+        final d = snap.data() ?? {};
+        _currentEvent = KermesEvent(
+          id: snap.id,
+          title: d['title'] ?? 'Kermes',
+          city: d['city'] ?? '',
+          address: d['address'] ?? '',
+          phoneNumber: d['phoneNumber'] ?? '',
+          startDate: DateTime.now(),
+          endDate: DateTime.now(),
+          latitude: 0,
+          longitude: 0,
+          menu: [],
+          parking: [],
+          weatherForecast: [],
+          openingTime: '',
+          closingTime: '',
+        );
       });
       if (_productsSub == null) _fetchProducts();
     });

@@ -6,7 +6,7 @@ import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import '../models/kermes_group_order_model.dart';
+import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import '../models/kermes_model.dart';
 
 /// Persistence keys
