@@ -922,7 +922,7 @@ export default function AccountPage() {
   <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
   <p className="text-gray-400 text-xs mb-1">Bu Ay Aşım Ücreti</p>
   <p className="text-2xl font-bold text-red-400">
-  {livePlan?.personnelLimit != null && (business?.staffCount || 1) > livePlan.personnelLimit ? formatCurrency(((business?.staffCount || 1) - livePlan.personnelLimit) * (livePlan.personnelOverageFee || 0), livePlan?.currency || business?.currency) : formatCurrency(0, livePlan?.currency || business?.currency)}
+  {livePlan?.personnelLimit != null && personnelUsed > livePlan.personnelLimit ? formatCurrency((personnelUsed - livePlan.personnelLimit) * (livePlan.personnelOverageFee || 0), livePlan?.currency || business?.currency) : formatCurrency(0, livePlan?.currency || business?.currency)}
   </p>
   </div>
   </div>
