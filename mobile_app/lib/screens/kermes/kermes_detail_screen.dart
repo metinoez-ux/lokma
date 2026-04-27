@@ -25,6 +25,7 @@ import 'package:lokma_app/providers/kermes_category_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/utils/distance_utils.dart';
+import 'package:lokma_app/widgets/kermes/order_setup_dialog.dart';
 import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
@@ -842,6 +843,30 @@ String _getLocalizedCountry(String rawCountry) {
     if (_currentEvent.isMenuOnly) {
       _showMenuOnlyDialog();
       return;
+    }
+
+    // Sepet bos ise: once siparis baglami popup'ini goster
+    final cartState = ref.read(kermesCartProvider);
+    if (cartState.isEmpty && cartState.deliveryType == null) {
+      final setupResult = await showDialog<OrderSetupResult>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => OrderSetupDialog(
+          kermesName: _currentEvent.title ?? _currentEvent.city,
+          hasDineIn: _currentEvent.hasDineIn,
+          hasTakeaway: _currentEvent.hasTakeaway,
+          hasDelivery: _currentEvent.hasDelivery,
+        ),
+      );
+
+      // Kullanici vazgecti
+      if (setupResult == null) return;
+
+      // Baglami cart state'e kaydet
+      ref.read(kermesCartProvider.notifier).setOrderContext(
+        deliveryType: setupResult.deliveryType.name,
+        isGroupOrder: setupResult.isGroupOrder,
+      );
     }
 
     // Multi-step: show customization sheet if item has option groups

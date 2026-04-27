@@ -198,8 +198,34 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
       final cartJson = jsonEncode(state.toJson());
       await prefs.setString(_kermesCartKey, cartJson);
     } catch (e) {
-      // Kaydetme hatası - sessizce devam et
+      // Kaydetme hatasi - sessizce devam et
     }
+  }
+
+  /// Siparis baglamini ayarla (ilk urun eklemeden once cagirilir)
+  void setOrderContext({
+    required String deliveryType,
+    required bool isGroupOrder,
+    String? groupName,
+    String? tableNo,
+  }) {
+    state = state.copyWith(
+      deliveryType: deliveryType,
+      isGroupOrder: isGroupOrder,
+      groupName: groupName,
+      tableNo: tableNo,
+    );
+    _saveCartToStorage();
+  }
+
+  /// Siparis baglamini sifirla
+  void clearOrderContext() {
+    state = KermesCartState(
+      eventId: state.eventId,
+      eventName: state.eventName,
+      items: state.items,
+    );
+    _saveCartToStorage();
   }
 
   /// Sepete urun ekle
