@@ -28,6 +28,9 @@ import 'package:go_router/go_router.dart';
 import 'package:lokma_app/services/kermes_feature_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:lokma_app/widgets/animated_search_hint.dart';
+import 'package:lokma_app/widgets/kermes/kermes_qr_scanner_sheet.dart';
+import 'package:lokma_app/providers/group_order_provider.dart';
+import 'package:lokma_app/widgets/kermes/floating_group_order_button.dart';
 
 /// Kermes Listesi - Yemek segmenti ile ayni UI yapisi
 /// Theme-aware, smart search, toggle switches, filter bottom sheet
@@ -140,6 +143,244 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     _loadKermesEvents();
     _loadBadges();
     _loadFeatures();
+  }
+
+  /// QR kod okuyucuyu ac - otomatik algilama
+  /// Grup QR kodu ise PIN dialogu goster
+  /// Masa QR kodu ise masa siparisini baslat
+  Future<void> _openGroupQrScanner() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const KermesQrScannerSheet(),
+    );
+
+    if (result == null || !mounted) return;
+
+    // Grup siparisi QR kodu: /group/{id} iceriyor
+    if (result.contains('/group/')) {
+      String? groupOrderId;
+      final uri = Uri.tryParse(result);
+      if (uri != null) {
+        final segments = uri.pathSegments;
+        final groupIndex = segments.indexOf('group');
+        if (groupIndex >= 0 && groupIndex + 1 < segments.length) {
+          groupOrderId = segments[groupIndex + 1];
+        }
+      }
+      if (groupOrderId != null) {
+        _showGroupPinDialog(groupOrderId);
+        return;
+      }
+    }
+
+    // Masa QR kodu: /table/{kermesId}/{tableNo} veya benzer format
+    if (result.contains('/table/') || result.contains('table_')) {
+      String? kermesId;
+      String? tableNo;
+      final uri = Uri.tryParse(result);
+      if (uri != null) {
+        final segments = uri.pathSegments;
+        final tableIndex = segments.indexOf('table');
+        if (tableIndex >= 0 && tableIndex + 2 < segments.length) {
+          kermesId = segments[tableIndex + 1];
+          tableNo = segments[tableIndex + 2];
+        }
+      }
+      if (kermesId != null && tableNo != null && mounted) {
+        HapticFeedback.mediumImpact();
+        context.push('/kermesler/$kermesId?table=$tableNo');
+        return;
+      }
+    }
+
+    // Kermes QR kodu: /kermesler/{id} veya dogrudan kermes ID
+    if (result.contains('/kermesler/') || result.contains('/kermes/')) {
+      final uri = Uri.tryParse(result);
+      if (uri != null) {
+        final segments = uri.pathSegments;
+        final kermesIndex = segments.indexWhere((s) => s == 'kermesler' || s == 'kermes');
+        if (kermesIndex >= 0 && kermesIndex + 1 < segments.length) {
+          final kermesId = segments[kermesIndex + 1];
+          if (mounted) {
+            context.push('/kermesler/$kermesId');
+          }
+          return;
+        }
+      }
+    }
+
+    // Taninamayan QR kodu
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Taninamayan QR kodu'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  /// 4 haneli PIN giris dialogu (QR ile katilim icin)
+  void _showGroupPinDialog(String groupOrderId) {
+    final pinController = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        bool isVerifying = false;
+        String? errorText;
+
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: lokmaPink.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.lock, color: lokmaPink, size: 28),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Grup PIN Kodu',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Grup sahibinden aldiginiz 4 haneli PIN kodunu girin',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: pinController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 4,
+                    autofocus: true,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 12,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      hintText: '----',
+                      hintStyle: TextStyle(
+                        fontSize: 28,
+                        letterSpacing: 12,
+                        color: Colors.grey[400],
+                      ),
+                      filled: true,
+                      fillColor: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      errorText: errorText,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: isVerifying
+                          ? null
+                          : () async {
+                              final pin = pinController.text.trim();
+                              if (pin.length != 4) {
+                                setDialogState(() => errorText = '4 haneli PIN girin');
+                                return;
+                              }
+
+                              setDialogState(() {
+                                isVerifying = true;
+                                errorText = null;
+                              });
+
+                              HapticFeedback.mediumImpact();
+
+                              final userId = FirebaseAuth.instance.currentUser?.uid ??
+                                  'anon_${DateTime.now().millisecondsSinceEpoch}';
+                              final userName = FirebaseAuth.instance.currentUser?.displayName ?? 'Misafir';
+
+                              final success = await ref.read(groupOrderProvider.notifier).joinGroupOrder(
+                                    orderId: groupOrderId,
+                                    userId: userId,
+                                    userName: userName,
+                                    enteredPin: pin,
+                                    requirePin: true,
+                                  );
+
+                              if (!mounted) return;
+
+                              if (success) {
+                                Navigator.pop(ctx);
+                                // Grup siparisinin ait oldugu kermes'i bul ve yonlendir
+                                final groupState = ref.read(groupOrderProvider);
+                                final kermesId = groupState.currentOrder?.kermesId;
+                                if (kermesId != null) {
+                                  context.push('/kermesler/$kermesId');
+                                }
+                              } else {
+                                setDialogState(() {
+                                  isVerifying = false;
+                                  errorText = ref.read(groupOrderProvider).error ?? 'Yanlis PIN';
+                                });
+                                HapticFeedback.heavyImpact();
+                              }
+                            },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: lokmaPink,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: isVerifying
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'Gruba Katil',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _loadFeatures() async {
@@ -1583,7 +1824,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         color: scaffoldBg,
         child: SafeArea(
           bottom: false,
-          child: CustomScrollView(
+          child: Stack(
+            children: [
+              CustomScrollView(
             physics: const ClampingScrollPhysics(),
             slivers: [
               // ===== COLLAPSING HEADER =====
@@ -1887,6 +2130,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         ),
             ],
           ),
+
+          // Floating grup siparisi butonu
+          const FloatingGroupOrderButton(),
+
+            ],
+          ),
         ),
       ),
     );
@@ -1992,6 +2241,15 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           ),
 
           const SizedBox(width: 4),
+
+          // QR kod okuyucu
+          GestureDetector(
+            onTap: () => _openGroupQrScanner(),
+            child: Icon(Icons.qr_code_scanner_rounded,
+                color: lokmaPink, size: 22),
+          ),
+
+          const SizedBox(width: 8),
 
           // Bildirim zili (notification bell)
           StreamBuilder<QuerySnapshot>(

@@ -7,6 +7,7 @@ import '../../models/kermes_group_order_model.dart';
 import '../../models/kermes_model.dart';
 import '../../providers/group_order_provider.dart';
 import '../../widgets/kermes/group_order_share_sheet.dart';
+import '../../widgets/kermes/kermes_menu_item_tile.dart';
 import '../../widgets/lokma_network_image.dart';
 
 /// Kermes Grup Siparis Ekrani
@@ -291,117 +292,192 @@ class _KermesGroupOrderScreenState
     return me?.totalItems ?? 0;
   }
 
-  // ---- TAB 1: MENU ----
+  // ---- TAB 1: MENU (ayni kermes detail stili) ----
   Widget _buildMenuTab(bool isDark) {
-    return Column(
-      children: [
-        // Search bar
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: TextField(
-            onChanged: (v) => setState(() => _searchQuery = v),
-            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
-            decoration: InputDecoration(
-              hintText: 'Menude ara...',
-              hintStyle: TextStyle(color: Colors.grey[500]),
-              prefixIcon: Icon(Icons.search, color: Colors.grey[500], size: 22),
-              filled: true,
-              fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF0F0F0),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        // Arama cubugu
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: GestureDetector(
+              onTap: () {
+                // Arama odaklanmasi
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => _buildSearchSheet(isDark),
+                );
+              },
+              child: Container(
+                height: 42,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.grey[500], size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      _searchQuery.isNotEmpty ? _searchQuery : 'Menude ara...',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: _searchQuery.isNotEmpty
+                            ? textColor
+                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
 
-        // Category chips
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (_, i) {
-              final cat = _categories[i];
-              final sel = _selectedCategory == cat;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedCategory = cat),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: sel ? _accent : (isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade200),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Text(cat, style: TextStyle(
-                    color: sel ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                    fontSize: 13, fontWeight: FontWeight.w600,
-                  )),
-                ),
-              );
-            },
+        // Kategori chip'leri - sticky
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _GroupCategoryHeaderDelegate(
+            child: Container(
+              color: scaffoldBg,
+              height: 48,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                itemCount: _categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (_, i) {
+                  final cat = _categories[i];
+                  final sel = _selectedCategory == cat;
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _selectedCategory = cat);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: sel
+                            ? (isDark ? Colors.white : const Color(0xFF3E3E3F))
+                            : (isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(50),
+                        boxShadow: sel
+                            ? [BoxShadow(
+                                color: Colors.black.withOpacity(0.12),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              )]
+                            : null,
+                      ),
+                      child: Text(
+                        cat,
+                        style: TextStyle(
+                          color: sel
+                              ? (isDark ? Colors.black : Colors.white)
+                              : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                          fontSize: 13,
+                          fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
 
-        // Product list
-        Expanded(
-          child: _filteredProducts.isEmpty
-              ? Center(child: Text('Urun bulunamadi', style: TextStyle(color: Colors.grey[500])))
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  itemCount: _filteredProducts.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (_, i) => _buildProductCard(_filteredProducts[i], isDark),
-                ),
-        ),
+        // Urun listesi
+        if (_filteredProducts.isEmpty)
+          SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[400]),
+                  const SizedBox(height: 12),
+                  Text('Urun bulunamadi', style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final item = _filteredProducts[i];
+                return KermesMenuItemTile(
+                  item: item,
+                  onAdd: () => _addItemToGroup(item),
+                  onTap: () => _addItemToGroup(item),
+                );
+              },
+              childCount: _filteredProducts.length,
+            ),
+          ),
+
+        // Alt bosluk
+        const SliverToBoxAdapter(child: SizedBox(height: 80)),
       ],
     );
   }
 
-  Widget _buildProductCard(KermesMenuItem item, bool isDark) {
+  Widget _buildSearchSheet(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          if (item.imageUrl != null && item.imageUrl!.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LokmaNetworkImage(imageUrl: item.imageUrl!, width: 56, height: 56, fit: BoxFit.cover),
-            ),
-          if (item.imageUrl != null && item.imageUrl!.isNotEmpty) const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.name, style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 14, fontWeight: FontWeight.w600,
-                )),
-                if (item.description != null && item.description!.isNotEmpty)
-                  Text(item.description!, style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
-                Text('${item.price.toStringAsFixed(2)} EUR', style: TextStyle(
-                  color: _accent, fontSize: 14, fontWeight: FontWeight.w700,
-                )),
-              ],
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 8),
-          Material(
-            color: _accent,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _addItemToGroup(item),
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: Icon(Icons.add, color: Colors.white, size: 20),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              autofocus: true,
+              onChanged: (v) => setState(() => _searchQuery = v),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+              decoration: InputDecoration(
+                hintText: 'Menude ara...',
+                prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                filled: true,
+                fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF0F0F0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(22),
+                  borderSide: BorderSide.none,
+                ),
               ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredProducts.length,
+              itemBuilder: (_, i) {
+                final item = _filteredProducts[i];
+                return KermesMenuItemTile(
+                  item: item,
+                  onAdd: () => _addItemToGroup(item),
+                  onTap: () => _addItemToGroup(item),
+                );
+              },
             ),
           ),
         ],
@@ -651,10 +727,40 @@ class _KermesGroupOrderScreenState
                   ],
                 ),
               ),
-              if (p.isReady)
-                Icon(Icons.check_circle, color: Colors.green, size: 22)
-              else
-                Icon(Icons.hourglass_empty, color: Colors.orange, size: 20),
+              // Hazir durumu badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: p.isReady
+                      ? Colors.green.withOpacity(0.12)
+                      : Colors.orange.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: p.isReady
+                        ? Colors.green.withOpacity(0.3)
+                        : Colors.orange.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      p.isReady ? Icons.check_circle : Icons.hourglass_empty,
+                      color: p.isReady ? Colors.green : Colors.orange,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      p.isReady ? 'Hazir' : 'Bekliyor',
+                      style: TextStyle(
+                        color: p.isReady ? Colors.green : Colors.orange,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           if (p.items.isNotEmpty) ...[
@@ -785,4 +891,22 @@ class _KermesGroupOrderScreenState
       ),
     );
   }
+}
+
+/// Sticky category header delegate for group order menu
+class _GroupCategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  _GroupCategoryHeaderDelegate({required this.child});
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => child;
+
+  @override
+  double get maxExtent => 48;
+
+  @override
+  double get minExtent => 48;
+
+  @override
+  bool shouldRebuild(covariant _GroupCategoryHeaderDelegate oldDelegate) => true;
 }

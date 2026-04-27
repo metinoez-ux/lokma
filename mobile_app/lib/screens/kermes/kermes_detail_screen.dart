@@ -1,4 +1,5 @@
 import '../../utils/currency_utils.dart';
+import '../../widgets/kermes/kermes_menu_item_tile.dart';
 import '../../widgets/brand_info_sheet.dart';
 import 'widgets/kermes_video_header.dart';
 import 'dart:async';
@@ -28,9 +29,10 @@ import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/utils/distance_utils.dart';
 import 'package:lokma_app/widgets/kermes/order_setup_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
-import 'package:lokma_app/widgets/qr_scanner_screen.dart';
+import 'package:lokma_app/widgets/kermes/kermes_qr_scanner_sheet.dart';
 import 'package:lokma_app/providers/group_order_provider.dart';
 import 'package:lokma_app/widgets/kermes/group_order_share_sheet.dart';
+import 'package:lokma_app/widgets/kermes/floating_group_order_button.dart';
 import 'package:lokma_app/screens/kermes/kermes_group_order_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
@@ -248,9 +250,11 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
 
   /// QR kod okuyucuyu ac - grup siparisine katilmak icin
   Future<void> _openQrScanner() async {
-    final result = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(builder: (_) => QRScannerScreen()),
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const KermesQrScannerSheet(),
     );
 
     if (result == null || !mounted) return;
@@ -1349,13 +1353,11 @@ String _getLocalizedCountry(String rawCountry) {
             hasTakeaway: _currentEvent.hasTakeaway,
             hasDelivery: _currentEvent.hasDelivery,
             onScanQR: (scanCtx) async {
-              final result = await Navigator.push<String>(
-                scanCtx,
-                MaterialPageRoute(
-                  builder: (_) => const QRScannerScreen(
-                    prompt: 'Masadaki QR Kodu Okutun',
-                  ),
-                ),
+              final result = await showModalBottomSheet<String>(
+                context: scanCtx,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const KermesQrScannerSheet(),
               );
               return result;
             },
@@ -2293,11 +2295,6 @@ String _getLocalizedCountry(String rawCountry) {
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // Aktif grup siparisi banner'i
-              if (_activeGroupOrderId != null)
-                SliverToBoxAdapter(
-                  child: _buildActiveGroupBanner(isDark),
-                ),
               // SliverAppBar for search and navigation
               SliverAppBar(
                 pinned: true,
@@ -2368,25 +2365,9 @@ String _getLocalizedCountry(String rawCountry) {
                   // QR kod okuyucu (grup siparisi katilimi)
                   GestureDetector(
                     onTap: () => _openQrScanner(),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.08)
-                            : Colors.black.withOpacity(0.04),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.qr_code_scanner,
-                          color: isDark ? Colors.white : Colors.black87,
-                          size: 20),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _shareKermes(),
-                    child: Icon(Icons.share_outlined,
-                        color: isDark ? Colors.white : Colors.black87,
-                        size: 22),
+                    child: Icon(Icons.qr_code_scanner_rounded,
+                        color: lokmaPink,
+                        size: 24),
                   ),
                   const SizedBox(width: 16),
                 ],
@@ -2889,6 +2870,24 @@ String _getLocalizedCountry(String rawCountry) {
                 ),
             ], // slivers end
           ), // CustomScrollView end
+
+          // Floating grup siparisi butonu
+          FloatingGroupOrderButton(
+            onTap: () {
+              if (_activeGroupOrderId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => KermesGroupOrderScreen(
+                      event: _currentEvent,
+                      groupOrderId: _activeGroupOrderId!,
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+
         ], // Stack children end
       ), // Stack end
       bottomNavigationBar: (_totalItems > 0 && !_currentEvent.isMenuOnly)
@@ -4891,283 +4890,24 @@ String _getLocalizedCountry(String rawCountry) {
 
   Widget _buildMenuItem(KermesMenuItem item, int cartQuantity,
       {bool isDark = true}) {
-    final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
-    final isAvailable = item.isAvailable;
-    final isSoldOut = !isAvailable;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
-    final accent = lokmaPink;
-
-    // The ADD button or count badge (business_detail_screen pattern)
-    final bool inCart = cartQuantity > 0;
-
-    // + button with image overlay (36px) or standalone (44px)
-    Widget buildAddButton({required double size}) {
-      if (_currentEvent.isMenuOnly) return const SizedBox.shrink();
-      return GestureDetector(
-        onTap: isAvailable
-            ? () {
-                HapticFeedback.mediumImpact();
-                _addToCart(item);
-              }
-            : null,
-        child: inCart
-            ? Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white : Colors.black87,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$cartQuantity',
-                  style: TextStyle(
-                    color: isDark ? Colors.black : Colors.white,
-                    fontSize: size == 36 ? 14 : 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              )
-            : Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(size == 36 ? 0.1 : 0.05),
-                      blurRadius: size == 36 ? 6 : 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.add,
-                  color: accent,
-                  size: size == 36 ? 20 : 24,
-                ),
-              ),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Opacity(
-          opacity: isAvailable ? 1.0 : 0.55,
-          child: InkWell(
-            onTap: isAvailable
-                ? () {
-                    HapticFeedback.selectionClick();
-                    showKermesProductDetailSheet(
-                      context,
-                      item: item,
-                      cartQuantity: cartQuantity,
-                      eventId: _currentEvent.id,
-                      eventName: _currentEvent.city,
-                      isMenuOnly: _currentEvent.isMenuOnly,
-                      contactName: _currentEvent.contactName,
-                      onAdd: () => _addToCart(item),
-                      onRemove: () => _removeFromCart(item),
-                    );
-                  }
-                : null,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
-              color: Colors.transparent,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product Info (Left)
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        Text(
-                          item.name,
-                          style: TextStyle(
-                            color: isAvailable ? textColor : subtleTextColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (isSoldOut) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'marketplace.sold_out'.tr(),
-                              style: const TextStyle(
-                                color: Colors.orange,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (item.isComboMenu && !isSoldOut) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.tune_rounded,
-                                  size: 13,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600]),
-                              const SizedBox(width: 4),
-                              Text(
-                                'kermes.with_options'.tr(),
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        const SizedBox(height: 6),
-                        // Description
-                        if (item.description != null &&
-                            item.description!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0),
-                            child: Text(
-                              item.description!,
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                height: 1.3,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        const SizedBox(height: 2),
-                        // Price (with discount support)
-                        if (item.isDiscounted) ...[
-                          Row(
-                            children: [
-                              Text(
-                                '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                                style: TextStyle(
-                                  color: subtleTextColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  decoration: TextDecoration.lineThrough,
-                                  decorationColor: subtleTextColor,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${item.discountPrice!.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ] else
-                          Text(
-                            '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                            style: TextStyle(
-                              color: isAvailable ? textColor : subtleTextColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-
-                  // Image & Add Button (Right) - business_detail_screen pattern
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (hasImage)
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                width: 100,
-                                height: 100,
-                                color:
-                                    isDark ? Colors.white10 : Colors.grey[100],
-                                child: LokmaNetworkImage(
-                                  imageUrl: item.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) => Icon(
-                                    _getIconForItem(item.name),
-                                    size: 40,
-                                    color: isDark
-                                        ? Colors.white24
-                                        : Colors.grey[400],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // + button overlay: bottom-right corner
-                            if (isAvailable)
-                              Positioned(
-                                right: -4,
-                                bottom: -4,
-                                child: buildAddButton(size: 36),
-                              ),
-                          ],
-                        )
-                      else if (isAvailable)
-                        buildAddButton(size: 44),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        // Separator Line (business_detail_screen pattern)
-        Divider(
-          height: 1,
-          thickness: 0.5,
-          color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.grey.withOpacity(0.2),
-        ),
-      ],
+    return KermesMenuItemTile(
+      item: item,
+      cartQuantity: cartQuantity,
+      isMenuOnly: _currentEvent.isMenuOnly,
+      onAdd: () => _addToCart(item),
+      onTap: () {
+        showKermesProductDetailSheet(
+          context,
+          item: item,
+          cartQuantity: cartQuantity,
+          eventId: _currentEvent.id,
+          eventName: _currentEvent.city,
+          isMenuOnly: _currentEvent.isMenuOnly,
+          contactName: _currentEvent.contactName,
+          onAdd: () => _addToCart(item),
+          onRemove: () => _removeFromCart(item),
+        );
+      },
     );
   }
 
