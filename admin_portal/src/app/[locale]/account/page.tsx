@@ -910,7 +910,7 @@ export default function AccountPage() {
   <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
   <p className="text-gray-400 text-xs mb-1">Kayıtlı Personel</p>
   <p className="text-2xl font-bold text-white">
-  {business?.staffCount || 1} <span className="text-sm font-normal text-gray-500 ml-1">/ {livePlan?.personnelLimit != null ? livePlan.personnelLimit : 'Sınırsız'}</span>
+  {personnelUsed} <span className="text-sm font-normal text-gray-500 ml-1">/ {livePlan?.personnelLimit != null ? livePlan.personnelLimit : 'Sınırsız'}</span>
   </p>
   </div>
   <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">

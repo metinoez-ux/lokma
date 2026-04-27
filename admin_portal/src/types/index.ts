@@ -929,6 +929,9 @@ export interface ButcherPartner {
  taxNumber?: string; // Vergi No
  customerId: string; // Müşteri No (MK-001)
  imageUrl?: string; // Kasap resmi (opsiyonel)
+ logoUrl?: string;
+ pickupEnabled?: boolean;
+ hasReservation?: boolean;
 
 
  // Marka

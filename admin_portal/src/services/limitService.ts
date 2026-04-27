@@ -95,12 +95,12 @@ export const checkLimit = async (
  case 'personnel': {
  // Count active admins for this business
  const adminsRef = collection(db, 'admins');
- const q1 = query(adminsRef, where('businessId', '==', businessId), where('isActive', '!=', false));
- const q2 = query(adminsRef, where('butcherId', '==', businessId), where('isActive', '!=', false));
+ const q1 = query(adminsRef, where('businessId', '==', businessId));
+ const q2 = query(adminsRef, where('butcherId', '==', businessId));
  const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
  const uniqueIds = new Set<string>();
- snap1.docs.forEach(d => uniqueIds.add(d.id));
- snap2.docs.forEach(d => uniqueIds.add(d.id));
+ snap1.docs.forEach(d => { if (d.data().isActive !== false) uniqueIds.add(d.id); });
+ snap2.docs.forEach(d => { if (d.data().isActive !== false) uniqueIds.add(d.id); });
  currentUsage = uniqueIds.size;
  limit = plan.personnelLimit ?? null;
  overageAction = limit !== null ? (plan.personnelOverageFee ? 'overage_fee' : 'block') : 'none';

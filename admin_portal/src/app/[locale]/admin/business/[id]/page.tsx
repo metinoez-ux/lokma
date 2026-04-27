@@ -262,10 +262,11 @@ export default function BusinessDetailsPage() {
  "overview" | "orders" | "reservations" | "settings" | "hardware"
  >(initialTab);
  const [settingsSubTab, setSettingsSubTab] = useState<
- "isletme" | "menu" | "personel" | "masa" | "promosyon" | "marketing" | "teslimat" | "saatler" | "reservations"
- >(initialSubTab);
- const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored" | "bestellungen" | "lieferanten">("kategoriler");
- const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat" | "odeme">("bilgiler");
+  "isletme" | "menu" | "personel" | "masa" | "promosyon" | "marketing" | "teslimat" | "saatler" | "reservations" | "odeme"
+  >(initialSubTab as any);
+  const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored" | "bestellungen" | "lieferanten">("kategoriler");
+  const [personelInternalTab, setPersonelInternalTab] = useState<"list" | "vardiya">("list");
+  const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat" | "odeme">("bilgiler");
  const [saatlerSubTab, setSaatlerSubTab] = useState<"genel" | "kurye" | "gelal">("genel");
  const [overviewHoursTab, setOverviewHoursTab] = useState<"genel" | "kurye" | "gelal">("genel");
  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
@@ -3101,7 +3102,7 @@ export default function BusinessDetailsPage() {
                       <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-white shadow-sm ${planInfo.color}`}>
                         {planInfo.label}
                       </span>
-                      {business.rating > 0 && (
+                      {(business.rating || 0) > 0 && (
                         <span className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-full text-[11px] font-bold border border-amber-500/20 shadow-sm">
                           <Star className="w-3.5 h-3.5 fill-amber-500" />
                           {business.rating}
