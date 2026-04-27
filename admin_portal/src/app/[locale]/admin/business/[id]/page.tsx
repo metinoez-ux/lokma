@@ -3175,9 +3175,41 @@ export default function BusinessDetailsPage() {
               </div>
             )}
             {/* 📊 Executive Analytics Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-6">
+              
+              {/* Quick Stats Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                    <ShoppingBag className="w-16 h-16 text-blue-600" />
+                  </div>
+                  <p className="text-blue-600 dark:text-blue-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_siparis') || 'Toplam Sipariş'}</p>
+                  <h4 className="text-3xl font-black text-blue-900 dark:text-blue-200 mt-2">{orders.length}</h4>
+                </div>
+
+                <div className="bg-emerald-600/10 border border-emerald-600/20 rounded-2xl p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                    <CreditCard className="w-16 h-16 text-emerald-600" />
+                  </div>
+                  <p className="text-emerald-600 dark:text-emerald-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_ciro') || 'Toplam Ciro'}</p>
+                  <h4 className="text-3xl font-black text-emerald-900 dark:text-emerald-200 mt-2">
+                    {formatCurrency(orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
+                  </h4>
+                </div>
+
+                <div className="bg-rose-600/10 border border-rose-600/20 rounded-2xl p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                    <History className="w-16 h-16 text-rose-600" />
+                  </div>
+                  <p className="text-rose-600 dark:text-rose-400 text-sm font-semibold uppercase tracking-wider">{t('iptal_orani') || 'İptal Oranı'}</p>
+                  <h4 className="text-3xl font-black text-rose-900 dark:text-rose-200 mt-2">
+                    %{Math.round((orders.filter(o => o.status === 'cancelled').length / (orders.length || 1)) * 100)}
+                  </h4>
+                </div>
+              </div>
+
         {/* Main Performance Chart Card */}
-        <div className="lg:col-span-2 bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col">
+        <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col">
           <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
             <div>
               <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
@@ -3385,38 +3417,6 @@ export default function BusinessDetailsPage() {
               )}
             </div>
           </div>
-        </div>
-
-        {/* Quick Stats Column */}
-        <div className="space-y-4">
-          <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-              <ShoppingBag className="w-16 h-16 text-blue-600" />
-            </div>
-            <p className="text-blue-600 dark:text-blue-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_siparis') || 'Toplam Sipariş'}</p>
-            <h4 className="text-3xl font-black text-blue-900 dark:text-blue-200 mt-2">{orders.length}</h4>
-          </div>
-
-          <div className="bg-emerald-600/10 border border-emerald-600/20 rounded-2xl p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-              <CreditCard className="w-16 h-16 text-emerald-600" />
-            </div>
-            <p className="text-emerald-600 dark:text-emerald-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_ciro') || 'Toplam Ciro'}</p>
-            <h4 className="text-3xl font-black text-emerald-900 dark:text-emerald-200 mt-2">
-              {formatCurrency(orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
-            </h4>
-          </div>
-
-          <div className="bg-rose-600/10 border border-rose-600/20 rounded-2xl p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-              <History className="w-16 h-16 text-rose-600" />
-            </div>
-            <p className="text-rose-600 dark:text-rose-400 text-sm font-semibold uppercase tracking-wider">{t('iptal_orani') || 'İptal Oranı'}</p>
-            <h4 className="text-3xl font-black text-rose-900 dark:text-rose-200 mt-2">
-              %{Math.round((orders.filter(o => o.status === 'cancelled').length / (orders.length || 1)) * 100)}
-            </h4>
-          </div>
-        </div>
       </div>
 
       {/* 🚀 Order Status Workflow Section - Super Admin Parity */}
