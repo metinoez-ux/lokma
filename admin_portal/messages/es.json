@@ -1544,7 +1544,11 @@
     "sertifikaGecmisi": "Historial de acciones de certificados",
     "sertifikasini": "certificado",
     "ekledi": "añadido",
-    "kaldirdi": "eliminado"
+    "kaldirdi": "eliminado",
+    "yonetici_rol": "Gerente",
+    "surucu_rol": "Conductor / Mensajero",
+    "garson_rol": "Camarero",
+    "belirsiz_rol": "Rol desconocido"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",

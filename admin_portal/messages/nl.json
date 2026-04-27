@@ -1258,7 +1258,11 @@
     "sertifikaGecmisi": "Geschiedenis van certificaatacties",
     "sertifikasini": "certificaat",
     "ekledi": "toegevoegd",
-    "kaldirdi": "verwijderd"
+    "kaldirdi": "verwijderd",
+    "yonetici_rol": "Manager",
+    "surucu_rol": "Chauffeur / Koerier",
+    "garson_rol": "Ober",
+    "belirsiz_rol": "Onbekende rol"
   },
   "AdminCompanySettings": {
     "title": "Company Settings",

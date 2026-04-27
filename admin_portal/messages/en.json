@@ -1559,7 +1559,11 @@
     "sertifikaGecmisi": "Certificate Action History",
     "sertifikasini": "certificate",
     "ekledi": "added",
-    "kaldirdi": "removed"
+    "kaldirdi": "removed",
+    "yonetici_rol": "Manager",
+    "surucu_rol": "Driver / Courier",
+    "garson_rol": "Waiter",
+    "belirsiz_rol": "Unknown Role"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",

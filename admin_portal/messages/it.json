@@ -1520,7 +1520,11 @@
     "sertifikaGecmisi": "Cronologia delle azioni sui certificati",
     "sertifikasini": "certificato",
     "ekledi": "aggiunto",
-    "kaldirdi": "rimosso"
+    "kaldirdi": "rimosso",
+    "yonetici_rol": "Manager",
+    "surucu_rol": "Autista / Corriere",
+    "garson_rol": "Cameriere",
+    "belirsiz_rol": "Ruolo sconosciuto"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",

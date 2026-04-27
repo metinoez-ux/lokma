@@ -749,7 +749,7 @@ export default function BusinessDetailsPage() {
  const isAvailable = planFeatures[featureKey] || (admin?.adminType === 'super' || admin?.adminType === 'admin');
  if (isAvailable) return <>{children}</>;
  return (
- <div className="relative">
+ <div className="relative min-h-[250px] w-full">
  <div className="opacity-40 pointer-events-none select-none filter blur-[0.5px]">
  {children}
  </div>
@@ -6534,6 +6534,31 @@ export default function BusinessDetailsPage() {
       + {t('yeni_personel_ekle') || 'Neues Personal'}
     </button>
   </div>
+
+  {/* Overage / Quota Warning Banner */}
+  {(() => {
+    const activePlan = availablePlans?.find(p => p.id === business?.subscriptionPlan || p.code === business?.subscriptionPlan);
+    const activeStaffCount = staffList?.filter(s => s.isActive !== false).length || 0;
+    const pLimit = activePlan?.personnelLimit ?? 1; // Fallback to 1 if not defined and we are computing overage
+    
+    // Sadece Super Admin veya işletmenin kendisi görsün (Zaten bu sayfaya adminler girer)
+    if (activeStaffCount > pLimit) {
+      const overage = activeStaffCount - pLimit;
+      return (
+        <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex gap-3 items-start">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <h4 className="text-amber-500 font-bold text-sm mb-1">Personel Limiti Aşıldı</h4>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Mevcut planınız (<strong>{activePlan?.name || business?.subscriptionPlan || 'Free'}</strong>) en fazla <strong>{pLimit}</strong> personel desteklemektedir. 
+              Şu anki <strong>{activeStaffCount}</strong> aktif personeliniz sebebiyle <strong>{overage} ekstra personel</strong> için aylık faturanıza personel aşım ücreti (overage) yansıtılmaktadır.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  })()}
 
   {/* ═══════ Aktif Vardiyalar Panel ═══════ */}
   <LockedModuleOverlay featureKey="staffShiftTracking">

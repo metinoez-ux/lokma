@@ -1548,7 +1548,11 @@
     "sertifikaGecmisi": "Zertifikat-Aktionsverlauf",
     "sertifikasini": "Zertifikat",
     "ekledi": "hinzugefügt",
-    "kaldirdi": "entfernt"
+    "kaldirdi": "entfernt",
+    "yonetici_rol": "Manager",
+    "surucu_rol": "Fahrer / Kurier",
+    "garson_rol": "Kellner",
+    "belirsiz_rol": "Unbekannte Rolle"
   },
   "AdminBusinessDetail": {
     "pending": "Ausstehend",

@@ -1548,7 +1548,11 @@
     "sertifikaGecmisi": "Sertifika İşlem Geçmişi",
     "sertifikasini": "sertifikasını",
     "ekledi": "ekledi",
-    "kaldirdi": "kaldırdı"
+    "kaldirdi": "kaldırdı",
+    "yonetici_rol": "Yönetici",
+    "surucu_rol": "Sürücü / Kurye",
+    "garson_rol": "Garson",
+    "belirsiz_rol": "Belirsiz Rol"
   },
   "AdminBusinessDetail": {
     "pending": "Beklemede",
