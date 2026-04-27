@@ -1205,122 +1205,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   ],
                 ),
               ),
-              
-              // Group order ek icerik (toggle footer'da)
-              if (_isGroupOrder) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _cardBg(isDark),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Isminiz (Grup Yoneticisi)',
-                        style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black54,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _nameController,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                        decoration: InputDecoration(
-                          hintText: 'Orn: Metin',
-                          hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
-                          filled: true,
-                          fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (_activeGroupOrderId == null)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isCreatingGroup ? null : _createAndShareGroupOrder,
-                      icon: _isCreatingGroup
-                          ? const SizedBox(
-                              width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
-                            )
-                          : const Icon(Icons.link, size: 20),
-                      label: Text(_isCreatingGroup ? 'Olusturuluyor...' : 'Link Olustur ve Paylas'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF25D366),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.green[400], size: 24),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Grup siparisi olusturuldu!',
-                                style: TextStyle(color: Colors.green[400], fontSize: 15, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (ctx) => GroupOrderShareSheet(
-                                  orderId: _activeGroupOrderId!,
-                                  kermesName: widget.event.title,
-                                  hostName: _nameController.text.trim(),
-                                  expirationMinutes: 30,
-                                  expiresAt: DateTime.now().add(const Duration(minutes: 30)),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.share, size: 18),
-                            label: const Text('Linki Tekrar Paylas'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.green[400],
-                              side: BorderSide(color: Colors.green.withOpacity(0.4)),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+
               
               const SizedBox(height: 80), // bottom padding for checkout button
             ],
@@ -1406,6 +1291,33 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           
           if (_isGroupOrder) ...[
             const SizedBox(height: 24),
+            // Explanatory info box for group orders
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 20, color: Colors.blue.shade700),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Masadaki arkadaşlarınıza QR kodu okutarak hızlıca gruba katılmalarını sağlayın. Uzaktakilere ise link göndererek aynı siparişe dahil edebilirsiniz.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.blue.shade200 : Colors.blue.shade900,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
             // Name input for group host
             Container(
               padding: const EdgeInsets.all(16),
@@ -1456,7 +1368,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
                         )
                       : const Icon(Icons.link, size: 20),
-                  label: Text(_isCreatingGroup ? 'Olusturuluyor...' : 'Link Olustur ve Paylas'),
+                  label: Text(_isCreatingGroup ? 'Olusturuluyor...' : 'Grup Oluştur (QR & Link)'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF25D366),
                     foregroundColor: Colors.white,
@@ -1760,6 +1672,229 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   : null,
             ),
           ],
+
+          if (_deliveryType != null) ...[
+            const SizedBox(height: 32),
+            Text(
+              'Tek başınıza mı sipariş veriyorsunuz?',
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 48,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _isGroupOrder = false);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: !_isGroupOrder ? lokmaPink : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: !_isGroupOrder ? [
+                            BoxShadow(color: lokmaPink.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
+                          ] : [],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.person, size: 18, color: !_isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
+                            const SizedBox(width: 8),
+                            Text('Bireysel', style: TextStyle(
+                              color: !_isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                              fontWeight: FontWeight.w600, fontSize: 14,
+                            )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _isGroupOrder = true);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: _isGroupOrder ? lokmaPink : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: _isGroupOrder ? [
+                            BoxShadow(color: lokmaPink.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
+                          ] : [],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.group, size: 18, color: _isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
+                            const SizedBox(width: 8),
+                            Text('Grup/Aile', style: TextStyle(
+                              color: _isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                              fontWeight: FontWeight.w600, fontSize: 14,
+                            )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            if (_isGroupOrder) ...[
+              const SizedBox(height: 16),
+              // Explanatory info box for group orders
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: Colors.blue.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Masadaki arkadaşlarınıza QR kodu okutarak hızlıca gruba katılmalarını sağlayın. Uzaktakilere ise link göndererek aynı siparişe dahil edebilirsiniz.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.blue.shade200 : Colors.blue.shade900,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBg(isDark),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'İsminiz (Grup Yöneticisi)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _nameController,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                      decoration: InputDecoration(
+                        hintText: 'Örn: Metin',
+                        hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                        filled: true,
+                        fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (_activeGroupOrderId == null)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isCreatingGroup ? null : _createAndShareGroupOrder,
+                    icon: _isCreatingGroup
+                        ? const SizedBox(
+                            width: 20, height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                          )
+                        : const Icon(Icons.qr_code_2, size: 20),
+                    label: Text(_isCreatingGroup ? 'Olusturuluyor...' : 'Grup Oluştur (QR & Link)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF25D366),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green[400], size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Grup siparişi oluşturuldu!',
+                              style: TextStyle(color: Colors.green[400], fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (ctx) => GroupOrderShareSheet(
+                                orderId: _activeGroupOrderId!,
+                                kermesName: widget.event.title,
+                                hostName: _nameController.text.trim(),
+                                expirationMinutes: 30,
+                                expiresAt: DateTime.now().add(const Duration(minutes: 30)),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.share, size: 18),
+                          label: const Text('QR / Linki Tekrar Paylaş'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.green[400],
+                            side: BorderSide(color: Colors.green.withOpacity(0.4)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ]
         ],
       ),
     );
@@ -3075,90 +3210,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Grup/Aile toggle - sadece cart step'te (step 0) ve NORMAL modda
-          if (_currentStep == 0 && !widget.isPosMode) ...[
-            Container(
-              height: 40,
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _isGroupOrder = false);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        height: double.infinity,
-                        decoration: BoxDecoration(
-                          color: !_isGroupOrder ? lokmaPink : Colors.transparent,
-                          borderRadius: BorderRadius.circular(17),
-                          boxShadow: !_isGroupOrder ? [
-                            BoxShadow(color: lokmaPink.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
-                          ] : [],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.person, size: 16, color: !_isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
-                            const SizedBox(width: 4),
-                            Text('Bireysel', style: TextStyle(
-                              color: !_isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                              fontWeight: FontWeight.w600, fontSize: 13,
-                            )),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _isGroupOrder = true);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        height: double.infinity,
-                        decoration: BoxDecoration(
-                          color: _isGroupOrder ? lokmaPink : Colors.transparent,
-                          borderRadius: BorderRadius.circular(17),
-                          boxShadow: _isGroupOrder ? [
-                            BoxShadow(color: lokmaPink.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
-                          ] : [],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.group, size: 16, color: _isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
-                            const SizedBox(width: 4),
-                            Text('Grup/Aile', style: TextStyle(
-                              color: _isGroupOrder ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                              fontWeight: FontWeight.w600, fontSize: 13,
-                            )),
-                            if (!_isGroupOrder) ...[
-                              const SizedBox(width: 3),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(5)),
-                                child: const Text('YENI', style: TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.w700)),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
+          // Grup/Aile toggle kaldirildi - artik Delivery (Teslimat) adiminda!
           Row(
             children: [
               // Total (only on non-cart steps)
