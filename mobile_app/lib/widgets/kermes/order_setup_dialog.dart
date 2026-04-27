@@ -26,6 +26,10 @@ class OrderSetupBottomSheet extends StatefulWidget {
   final bool hasDelivery;
   /// QR taramayi tetiklemek icin Navigator.push yapacak callback
   final Future<String?> Function(BuildContext context)? onScanQR;
+  /// Deep link / QR'dan onceden bilinen teslimat turu
+  final DeliveryType? preSelectedDelivery;
+  /// Deep link / QR'dan onceden bilinen masa numarasi
+  final String? preSelectedTable;
 
   const OrderSetupBottomSheet({
     super.key,
@@ -34,6 +38,8 @@ class OrderSetupBottomSheet extends StatefulWidget {
     this.hasTakeaway = true,
     this.hasDelivery = true,
     this.onScanQR,
+    this.preSelectedDelivery,
+    this.preSelectedTable,
   });
 
   @override
@@ -47,6 +53,21 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
   String? _scannedSectionId;
   final _manualTableController = TextEditingController();
   bool _showManualInput = false;
+
+  /// QR deep link'ten gelen onceden belirli degerler var mi?
+  bool get _isPreSelected => widget.preSelectedDelivery != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // QR deep link'ten gelen degerler varsa hemen ata
+    if (widget.preSelectedDelivery != null) {
+      _selectedDelivery = widget.preSelectedDelivery;
+    }
+    if (widget.preSelectedTable != null) {
+      _scannedTable = widget.preSelectedTable;
+    }
+  }
 
   @override
   void dispose() {
@@ -94,7 +115,9 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
                 Icon(Icons.restaurant_menu, color: lokmaPink, size: 32),
                 const SizedBox(height: 10),
                 Text(
-                  'Siparisinizi Nasil Vermek Istersiniz?',
+                  _isPreSelected
+                      ? 'Masaniz hazir! Siparis tipini secin.'
+                      : 'Siparisinizi Nasil Vermek Istersiniz?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
@@ -122,6 +145,52 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // QR deep link'ten gelen onceden bilinen degerler varsa:
+                  // Masa onay karti goster, teslimat secimini gizle
+                  if (_isPreSelected && _scannedTable != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44, height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.table_restaurant, color: Colors.green, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Masaya Servis', style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                  fontSize: 15, fontWeight: FontWeight.w600,
+                                )),
+                                const SizedBox(height: 2),
+                                Text('Masa $_scannedTable', style: TextStyle(
+                                  color: Colors.green[700],
+                                  fontSize: 13, fontWeight: FontWeight.w500,
+                                )),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Normal akis: teslimat turu secimi
+                  if (!_isPreSelected) ...[
                   // -- ADIM 1: Teslimat Turu --
                   Text(
                     'TESLIMAT TURU',
@@ -276,6 +345,7 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
                       isDark: isDark,
                       lokmaPink: lokmaPink,
                     ),
+                  ], // !_isPreSelected sonu
 
                   const SizedBox(height: 20),
 

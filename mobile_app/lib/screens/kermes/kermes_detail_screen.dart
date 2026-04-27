@@ -26,6 +26,7 @@ import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/utils/distance_utils.dart';
 import 'package:lokma_app/widgets/kermes/order_setup_dialog.dart';
+import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import 'package:lokma_app/widgets/qr_scanner_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
@@ -46,11 +47,15 @@ const Color lightText = Color(0xFFF3F4F6);
 class KermesDetailScreen extends ConsumerStatefulWidget {
   final KermesEvent event;
   final Position? currentPosition;
+  final String? initialTableNumber;
+  final String? initialSectionId;
 
   const KermesDetailScreen({
     super.key,
     required this.event,
     this.currentPosition,
+    this.initialTableNumber,
+    this.initialSectionId,
   });
 
   @override
@@ -849,38 +854,62 @@ String _getLocalizedCountry(String rawCountry) {
     // Sepet bos ise: once siparis baglami popup'ini goster
     final cartState = ref.read(kermesCartProvider);
     if (cartState.isEmpty && cartState.deliveryType == null) {
-      final setupResult = await showModalBottomSheet<OrderSetupResult>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (ctx) => OrderSetupBottomSheet(
-          kermesName: _currentEvent.title ?? _currentEvent.city,
-          hasDineIn: _currentEvent.hasDineIn,
-          hasTakeaway: _currentEvent.hasTakeaway,
-          hasDelivery: _currentEvent.hasDelivery,
-          onScanQR: (scanCtx) async {
-            final result = await Navigator.push<String>(
-              scanCtx,
-              MaterialPageRoute(
-                builder: (_) => const QRScannerScreen(
-                  prompt: 'Masadaki QR Kodu Okutun',
+      // Deep link'ten gelen masa bilgisi varsa (QR'dan gelen kullanici)
+      // Teslimat turu ve masa zaten belli, sadece Bireysel/Grup sor
+      if (widget.initialTableNumber != null) {
+        final setupResult = await showModalBottomSheet<OrderSetupResult>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => OrderSetupBottomSheet(
+            kermesName: _currentEvent.title ?? _currentEvent.city,
+            hasDineIn: true,
+            hasTakeaway: false,
+            hasDelivery: false,
+            preSelectedDelivery: DeliveryType.masada,
+            preSelectedTable: widget.initialTableNumber,
+          ),
+        );
+
+        if (setupResult == null) return;
+
+        ref.read(kermesCartProvider.notifier).setOrderContext(
+          deliveryType: 'masada',
+          isGroupOrder: setupResult.isGroupOrder,
+          tableNo: widget.initialTableNumber,
+        );
+      } else {
+        final setupResult = await showModalBottomSheet<OrderSetupResult>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => OrderSetupBottomSheet(
+            kermesName: _currentEvent.title ?? _currentEvent.city,
+            hasDineIn: _currentEvent.hasDineIn,
+            hasTakeaway: _currentEvent.hasTakeaway,
+            hasDelivery: _currentEvent.hasDelivery,
+            onScanQR: (scanCtx) async {
+              final result = await Navigator.push<String>(
+                scanCtx,
+                MaterialPageRoute(
+                  builder: (_) => const QRScannerScreen(
+                    prompt: 'Masadaki QR Kodu Okutun',
+                  ),
                 ),
-              ),
-            );
-            return result;
-          },
-        ),
-      );
+              );
+              return result;
+            },
+          ),
+        );
 
-      // Kullanici vazgecti
-      if (setupResult == null) return;
+        if (setupResult == null) return;
 
-      // Baglami cart state'e kaydet
-      ref.read(kermesCartProvider.notifier).setOrderContext(
-        deliveryType: setupResult.deliveryType.name,
-        isGroupOrder: setupResult.isGroupOrder,
-        tableNo: setupResult.tableNo,
-      );
+        ref.read(kermesCartProvider.notifier).setOrderContext(
+          deliveryType: setupResult.deliveryType.name,
+          isGroupOrder: setupResult.isGroupOrder,
+          tableNo: setupResult.tableNo,
+        );
+      }
     }
 
     // Multi-step: show customization sheet if item has option groups

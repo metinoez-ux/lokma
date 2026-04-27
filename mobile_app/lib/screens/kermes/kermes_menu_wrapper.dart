@@ -5,10 +5,14 @@ import 'package:lokma_app/screens/kermes/kermes_detail_screen.dart';
 
 class KermesMenuWrapper extends StatefulWidget {
   final String kermesId;
+  final String? initialTableNumber;
+  final String? initialSectionId;
 
   const KermesMenuWrapper({
     super.key,
     required this.kermesId,
+    this.initialTableNumber,
+    this.initialSectionId,
   });
 
   @override
@@ -170,6 +174,8 @@ class _KermesMenuWrapperState extends State<KermesMenuWrapper> {
 
     return KermesDetailScreen(
       event: _event!,
+      initialTableNumber: widget.initialTableNumber,
+      initialSectionId: widget.initialSectionId,
     );
   }
 }

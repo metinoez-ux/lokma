@@ -111,17 +111,21 @@ class AppRouter {
               builder: (context, state) {
                 final kermesId = state.pathParameters['id']!;
                 final tableNumber = state.uri.queryParameters['table'];
-                final deliveryMode = tableNumber != null ? 2 : 0;
+                final sectionId = state.uri.queryParameters['section'];
                 final event = state.extra;
 
                 if (event != null && event is KermesEvent) {
                   return KermesDetailScreen(
                     event: event,
+                    initialTableNumber: tableNumber,
+                    initialSectionId: sectionId,
                   );
                 }
 
                 return KermesMenuWrapper(
                   kermesId: kermesId,
+                  initialTableNumber: tableNumber,
+                  initialSectionId: sectionId,
                 );
               },
             ),
