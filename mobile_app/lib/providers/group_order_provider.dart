@@ -1,8 +1,14 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/kermes_group_order_model.dart';
 import '../models/kermes_model.dart';
+
+/// Persistence keys
+const _kActiveGroupOrderId = 'active_kermes_group_order_id';
+const _kActiveParticipantId = 'active_kermes_participant_id';
 
 /// Firestore collection referansı
 final _groupOrdersCollection = FirebaseFirestore.instance.collection('kermes_group_orders');
@@ -45,6 +51,61 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
     return GroupOrderState();
   }
 
+  /// Aktif oturumu SharedPreferences'e kaydet
+  Future<void> _persistSession(String orderId, String participantId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kActiveGroupOrderId, orderId);
+    await prefs.setString(_kActiveParticipantId, participantId);
+  }
+
+  /// Kaydedilmis oturum bilgisini sil
+  Future<void> _clearPersistedSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kActiveGroupOrderId);
+    await prefs.remove(_kActiveParticipantId);
+  }
+
+  /// Daha once kaydedilmis aktif oturumu geri yukle
+  /// Basarili olursa orderId doner, yoksa null
+  Future<String?> restoreSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final orderId = prefs.getString(_kActiveGroupOrderId);
+    final participantId = prefs.getString(_kActiveParticipantId);
+
+    if (orderId == null || participantId == null) return null;
+
+    try {
+      final doc = await _groupOrdersCollection.doc(orderId).get();
+      if (!doc.exists) {
+        await _clearPersistedSession();
+        return null;
+      }
+
+      final order = KermesGroupOrder.fromDocument(doc);
+
+      // Suresi dolmus veya tamamlanmis oturumlari temizle
+      if (order.status == GroupOrderStatus.ordered ||
+          order.status == GroupOrderStatus.cancelled ||
+          (order.expiresAt != null && DateTime.now().isAfter(order.expiresAt!))) {
+        await _clearPersistedSession();
+        return null;
+      }
+
+      state = state.copyWith(
+        currentOrder: order,
+        currentParticipantId: participantId,
+      );
+
+      // Realtime listener baslat
+      startListening(orderId);
+
+      return orderId;
+    } catch (_) {
+      await _clearPersistedSession();
+      return null;
+    }
+  }
+
   /// Yeni grup siparişi oluştur (Host olarak)
   Future<String?> createGroupOrder({
     required String kermesId,
@@ -57,10 +118,14 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final orderId = _uuid.v4().substring(0, 8).toUpperCase(); // Kısa ID: ABC12345
+      final orderId = _uuid.v4().substring(0, 8).toUpperCase(); // Kisa ID: ABC12345
       final participantId = _uuid.v4();
       final now = DateTime.now();
       final generatedHostUserId = hostUserId ?? 'anon_${_uuid.v4().substring(0, 8)}';
+
+      // 4 haneli guvenlik PIN'i uret
+      final random = Random();
+      final pin = (1000 + random.nextInt(9000)).toString(); // 1000-9999
 
       final order = KermesGroupOrder(
         id: orderId,
@@ -71,6 +136,7 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
         status: GroupOrderStatus.collecting,
         createdAt: now,
         expiresAt: now.add(Duration(minutes: expirationMinutes)),
+        groupPin: pin,
         participants: [
           GroupOrderParticipant(
             oderId: participantId,
@@ -92,6 +158,9 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
         currentParticipantId: participantId,
       );
 
+      // Oturumu persist et
+      await _persistSession(orderId, participantId);
+
       return orderId;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -99,11 +168,15 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
     }
   }
 
-  /// Mevcut grup siparişine katıl
+  /// Mevcut grup siparisine katil
+  /// [requirePin] true ise (QR ile katilim), PIN dogrulamasi yapilir
+  /// Link ile katilimda PIN gerekmez
   Future<bool> joinGroupOrder({
     required String orderId,
     required String userId,
     required String userName,
+    String? enteredPin, // QR katilimda girilecek PIN
+    bool requirePin = false, // QR = true, Link = false
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -111,16 +184,24 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       final doc = await _groupOrdersCollection.doc(orderId).get();
       
       if (!doc.exists) {
-        state = state.copyWith(isLoading: false, error: 'Sipariş bulunamadı');
+        state = state.copyWith(isLoading: false, error: 'Siparis bulunamadi');
         return false;
       }
 
       final order = KermesGroupOrder.fromDocument(doc);
 
-      // Süre dolmuş mu kontrol et
+      // Sure dolmus mu kontrol et
       if (order.expiresAt != null && DateTime.now().isAfter(order.expiresAt!)) {
-        state = state.copyWith(isLoading: false, error: 'Sipariş süresi dolmuş');
+        state = state.copyWith(isLoading: false, error: 'Siparis suresi dolmus');
         return false;
+      }
+
+      // PIN dogrulamasi (sadece QR ile katilimda)
+      if (requirePin && order.groupPin != null && order.groupPin!.isNotEmpty) {
+        if (enteredPin == null || enteredPin != order.groupPin) {
+          state = state.copyWith(isLoading: false, error: 'Yanlis PIN kodu');
+          return false;
+        }
       }
 
       // Zaten katılmış mı kontrol et
@@ -159,6 +240,9 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
         isLoading: false,
         currentParticipantId: participantId,
       );
+
+      // Oturumu persist et
+      await _persistSession(orderId, participantId);
 
       return true;
     } catch (e) {
@@ -332,6 +416,7 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       });
 
       state = state.copyWith(currentOrder: updatedOrder);
+      await _clearPersistedSession();
       return true;
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -370,6 +455,7 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
 
   /// Mevcut siparişi temizle
   void clearOrder() {
+    _clearPersistedSession();
     state = GroupOrderState();
   }
 }

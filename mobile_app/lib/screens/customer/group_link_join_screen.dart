@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/table_group_session_model.dart';
 import '../../providers/table_group_provider.dart';
+import '../../providers/group_order_provider.dart';
 
 /// Deep link'ten gelen /group/:sessionId URL'ini karsilayan ekran.
 /// Lieferando tarzi: Guest hesap acmadan katilabilir.
@@ -58,40 +60,100 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
   }
 
   /// Session bilgisini yukle, duruma gore onboarding veya direk katilim
+  /// Once table_group_sessions'ta arar, bulamazsa kermes_group_orders'a bakar
   Future<void> _loadSession() async {
     try {
+      // Once restoran grup oturumlarinda ara
       final doc = await FirebaseFirestore.instance
           .collection('table_group_sessions')
           .doc(widget.sessionId)
           .get();
 
-      if (!doc.exists) {
-        _setError('group_order.session_not_found');
+      if (doc.exists) {
+        // Restoran grup oturumu bulundu
+        final session = TableGroupSession.fromFirestore(doc);
+
+        if (session.status != GroupSessionStatus.active) {
+          _setError('group_order.session_closed');
+          return;
+        }
+
+        if (session.isDeadlineExpired) {
+          _setError('group_order.session_expired');
+          return;
+        }
+
+        if (!mounted) return;
+
+        setState(() {
+          _session = session;
+          _loading = false;
+          _showOnboarding = true;
+        });
+        _fadeController.forward();
         return;
       }
 
-      final session = TableGroupSession.fromFirestore(doc);
+      // Restoranda bulunamadi, kermes grup siparislerinde ara
+      final kermesDoc = await FirebaseFirestore.instance
+          .collection('kermes_group_orders')
+          .doc(widget.sessionId)
+          .get();
 
-      // Session aktif mi kontrol et
-      if (session.status != GroupSessionStatus.active) {
+      if (kermesDoc.exists) {
+        // Kermes grup siparisi bulundu - PIN gerekmez (link ile katilim)
+        if (!mounted) return;
+        _handleKermesGroupJoin(kermesDoc);
+        return;
+      }
+
+      // Hicbir yerde bulunamadi
+      _setError('group_order.session_not_found');
+    } catch (e) {
+      _setError('group_order.session_not_found');
+    }
+  }
+
+  /// Kermes grup siparisine link ile katilim (PIN gerekmez)
+  Future<void> _handleKermesGroupJoin(DocumentSnapshot kermesDoc) async {
+    try {
+      final data = kermesDoc.data() as Map<String, dynamic>;
+      final status = data['status'] ?? '';
+      final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
+
+      if (status == 'ordered' || status == 'cancelled' || status == 'completed') {
         _setError('group_order.session_closed');
         return;
       }
 
-      // Deadline gecmis mi
-      if (session.isDeadlineExpired) {
+      if (expiresAt != null && DateTime.now().isAfter(expiresAt)) {
         _setError('group_order.session_expired');
         return;
       }
 
+      // Kullanici bilgilerini al
+      final userId = FirebaseAuth.instance.currentUser?.uid ??
+          'anon_${DateTime.now().millisecondsSinceEpoch}';
+      final userName = FirebaseAuth.instance.currentUser?.displayName ?? 'Misafir';
+
+      // Kermes grubuna katil (PIN gerekmez - link ile katilim)
+      final groupNotifier = ref.read(groupOrderProvider.notifier);
+      final success = await groupNotifier.joinGroupOrder(
+        orderId: widget.sessionId,
+        userId: userId,
+        userName: userName,
+        requirePin: false, // Link ile katilim - PIN gerekmez
+      );
+
       if (!mounted) return;
 
-      setState(() {
-        _session = session;
-        _loading = false;
-        _showOnboarding = true;
-      });
-      _fadeController.forward();
+      if (success) {
+        // Kermes event bilgisini bul ve yonlendir
+        final kermesId = data['kermesId'] ?? '';
+        context.go('/kermesler/$kermesId');
+      } else {
+        _setError('group_order.session_not_found');
+      }
     } catch (e) {
       _setError('group_order.session_not_found');
     }

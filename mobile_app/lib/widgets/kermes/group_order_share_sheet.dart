@@ -11,6 +11,7 @@ class GroupOrderShareSheet extends StatefulWidget {
   final String hostName;
   final int expirationMinutes;
   final DateTime expiresAt;
+  final String? groupPin;
 
   const GroupOrderShareSheet({
     super.key,
@@ -19,6 +20,7 @@ class GroupOrderShareSheet extends StatefulWidget {
     required this.hostName,
     required this.expirationMinutes,
     required this.expiresAt,
+    this.groupPin,
   });
 
   @override
@@ -31,10 +33,11 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
 
   String get shareLink => 'https://lokma.shop/group/${widget.orderId}';
 
-  String get shareMessage => '🍽️ Ailecek Sipariş - ${widget.kermesName}\n\n'
-      '${widget.hostName} sizi grup siparişine davet ediyor!\n\n'
-      '⏰ Süre: ${widget.expirationMinutes} dakika\n'
-      '📱 Katıl: $shareLink';
+  String get shareMessage => '${widget.kermesName}\n\n'
+      '${widget.hostName} sizi grup siparisine davet ediyor!\n\n'
+      '${widget.groupPin != null ? "PIN: ${widget.groupPin}\n" : ""}'
+      'Sure: ${widget.expirationMinutes} dakika\n'
+      'Katil: $shareLink';
 
   @override
   void initState() {
@@ -220,13 +223,40 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Masadakiler bu kodu okutarak katılabilir',
+                    'Masadakiler bu kodu okutarak katilabilir',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                   ),
+                  if (widget.groupPin != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEA184A).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFEA184A).withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock, size: 16, color: const Color(0xFFEA184A)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'PIN: ${widget.groupPin}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 6,
+                              color: Color(0xFFEA184A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

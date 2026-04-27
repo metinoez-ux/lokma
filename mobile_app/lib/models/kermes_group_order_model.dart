@@ -166,6 +166,7 @@ class KermesGroupOrder {
   final DateTime createdAt;
   final DateTime? expiresAt; // Geçerlilik süresi (varsayılan: 60 dakika)
   final List<GroupOrderParticipant> participants;
+  final String? groupPin; // 4 haneli guvenlik PIN'i
   final GroupOrderDelivery? delivery;
   final PaymentMethod? paymentMethod;
 
@@ -178,6 +179,7 @@ class KermesGroupOrder {
     required this.status,
     required this.createdAt,
     this.expiresAt,
+    this.groupPin,
     required this.participants,
     this.delivery,
     this.paymentMethod,
@@ -209,6 +211,7 @@ class KermesGroupOrder {
       'status': status.name,
       'createdAt': Timestamp.fromDate(createdAt),
       'expiresAt': expiresAt != null ? Timestamp.fromDate(expiresAt!) : null,
+      if (groupPin != null) 'groupPin': groupPin,
       'participants': participants.map((p) => p.toMap()).toList(),
       'delivery': delivery?.toMap(),
       'paymentMethod': paymentMethod?.name,
@@ -229,6 +232,7 @@ class KermesGroupOrder {
       ),
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       expiresAt: (map['expiresAt'] as Timestamp?)?.toDate(),
+      groupPin: map['groupPin'],
       participants: (map['participants'] as List<dynamic>?)
               ?.map((p) => GroupOrderParticipant.fromMap(p as Map<String, dynamic>))
               .toList() ??
@@ -260,6 +264,7 @@ class KermesGroupOrder {
     GroupOrderStatus? status,
     DateTime? createdAt,
     DateTime? expiresAt,
+    String? groupPin,
     List<GroupOrderParticipant>? participants,
     GroupOrderDelivery? delivery,
     PaymentMethod? paymentMethod,
@@ -273,6 +278,7 @@ class KermesGroupOrder {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       expiresAt: expiresAt ?? this.expiresAt,
+      groupPin: groupPin ?? this.groupPin,
       participants: participants ?? this.participants,
       delivery: delivery ?? this.delivery,
       paymentMethod: paymentMethod ?? this.paymentMethod,
