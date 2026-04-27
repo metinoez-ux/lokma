@@ -1516,7 +1516,11 @@
     "extraPersonnel": "Extra Staff",
     "productLimit": "Product Limit",
     "daha_az_goster": "Daha Az Göster",
-    "tum_ozellikleri_goster": "Tüm {count} özelliği göster"
+    "tum_ozellikleri_goster": "Tüm {count} özelliği göster",
+    "sertifikaGecmisi": "Cronologia delle azioni sui certificati",
+    "sertifikasini": "certificato",
+    "ekledi": "aggiunto",
+    "kaldirdi": "rimosso"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",

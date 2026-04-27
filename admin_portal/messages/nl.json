@@ -1254,7 +1254,11 @@
     "extraPersonnel": "Extra Staff",
     "productLimit": "Product Limit",
     "daha_az_goster": "Daha Az Göster",
-    "tum_ozellikleri_goster": "Tüm {count} özelliği göster"
+    "tum_ozellikleri_goster": "Tüm {count} özelliği göster",
+    "sertifikaGecmisi": "Geschiedenis van certificaatacties",
+    "sertifikasini": "certificaat",
+    "ekledi": "toegevoegd",
+    "kaldirdi": "verwijderd"
   },
   "AdminCompanySettings": {
     "title": "Company Settings",

@@ -376,6 +376,7 @@
   },
   "AdminBusiness": {
     "_abonelik_bilgileri": "Abonelik Bilgileri",
+    "certificates_title": "Sertifikalar & Etiketler (Zertifikate)",
     "_adres_bilgileri": "Adres Bilgileri",
     "_akdeniz_toros": "Akdeniz Toros",
     "_aktif": "Aktif",
@@ -1338,7 +1339,6 @@
     "allergens_title": "Alerjenler - EU 1169/2011 Annex II (14 Pflichtallergen)",
     "nutrition_title": "Besin Degerleri - Nahrwerte pro 100g (Big 7 + Ek)",
     "eu_big7_note": "* EU Big 7 - zorunlu beyan alanlari",
-    "certificates_title": "Sertifikalar & Etiketler (Zertifikate)",
     "internal_notes_title": "Dahili Notlar & Etiketler",
     "internal_notes_placeholder": "Sadece admin panelinde gorunur notlar...",
     "audit_trail_title": "Denetim Izi",
@@ -1544,7 +1544,11 @@
     "feature_donationRoundUp": "Bağış & Küsürat Yuvarlama",
     "feature_basicStatsOnly": "Temel İstatistikler",
     "daha_az_goster": "Daha Az Göster",
-    "tum_ozellikleri_goster": "Tüm {count} özelliği göster"
+    "tum_ozellikleri_goster": "Tüm {count} özelliği göster",
+    "sertifikaGecmisi": "Sertifika İşlem Geçmişi",
+    "sertifikasini": "sertifikasını",
+    "ekledi": "ekledi",
+    "kaldirdi": "kaldırdı"
   },
   "AdminBusinessDetail": {
     "pending": "Beklemede",

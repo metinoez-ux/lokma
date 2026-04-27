@@ -610,6 +610,7 @@ export default function BusinessDetailsPage() {
   const [inviteCity, setInviteCity] = useState("");
   const [inviteAddressCountry, setInviteAddressCountry] = useState("Deutschland");
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   const [editingStaff, setEditingStaff] = useState<{
   id: string; displayName: string; email?: string; phoneNumber?: string;
   adminType: string; isActive?: boolean;
@@ -1910,6 +1911,24 @@ export default function BusinessDetailsPage() {
  }
  }, [admin, loadBusiness, loadStaff, loadProducts, loadSuppliers, loadSupplierOrders, loadPlatformBrands]);
 
+ // 🔴 Real-time sync for activeBrandIds
+ // This ensures that when a Super Admin revokes a badge, it instantly disappears from other open sessions (e.g., standard business admin's screen)
+ useEffect(() => {
+ if (!businessId || businessId === 'new') return;
+ const unsub = onSnapshot(doc(db, "businesses", businessId), (docSnap) => {
+ if (docSnap.exists()) {
+ const data = docSnap.data();
+ if (data.activeBrandIds !== undefined) {
+ setFormData(prev => ({
+ ...prev,
+ activeBrandIds: data.activeBrandIds || []
+ }));
+ }
+ }
+ });
+ return () => unsub();
+ }, [businessId]);
+
  // 🔴 Real-time active shifts listener
  // Mobile writes shiftBusinessId (not businessId) — query both fields + merge
  useEffect(() => {
@@ -2276,18 +2295,22 @@ export default function BusinessDetailsPage() {
  setUploading(false);
  }
 
+ const isSuperAdmin = admin?.adminType === 'super' || admin?.role === 'super';
+
  const updatedData: Record<string, any> = {
  companyName: formData.companyName || "",
  customerId: formData.customerId || "",
- brand: formData.brand || null,
- activeBrandIds: formData.activeBrandIds || [],
- brandLabelActive: formData.brandLabelActive !== false,
- // 🔴 TUNA senkronizasyon: brand'den türet — mobile badge'i doğru syncler
- isTunaPartner: formData.brand === 'tuna',
- brandLabel: formData.brand || null, // legacy field - mobile da okuyor
- // 🔴 TUNA/Toros ürünleri satışı (Filtreleme için)
- sellsTunaProducts: formData.sellsTunaProducts ?? false,
- sellsTorosProducts: formData.sellsTorosProducts ?? false,
+ ...(isSuperAdmin && {
+   brand: formData.brand || null,
+   activeBrandIds: formData.activeBrandIds || [],
+   brandLabelActive: formData.brandLabelActive !== false,
+   // 🔴 TUNA senkronizasyon: brand'den türet — mobile badge'i doğru syncler
+   isTunaPartner: formData.brand === 'tuna',
+   brandLabel: formData.brand || null, // legacy field - mobile da okuyor
+   // 🔴 TUNA/Toros ürünleri satışı (Filtreleme için)
+   sellsTunaProducts: formData.sellsTunaProducts ?? false,
+   sellsTorosProducts: formData.sellsTorosProducts ?? false,
+ }),
  // 🆕 Multi-type support: types array + legacy type field
  types: formData.types || [],
  type: formData.types?.[0] || "", // Legacy: ilk tür backward compat için
@@ -3806,7 +3829,7 @@ export default function BusinessDetailsPage() {
  {([
  { key: "isletme", label: t('isletme'), icon: <Store className="w-5 h-5"/> },
  { key: "menu", label: t('menuUrunler'), icon: <Utensils className="w-5 h-5"/> },
- { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/>, featureKey: "staffShiftTracking", superAdminOnly: true },
+ { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/> },
  // "masa" (Table Mgmt) was moved to Reservations tab
  
  { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
@@ -3965,9 +3988,8 @@ export default function BusinessDetailsPage() {
  {[
  { id: "bilgiler" as const, label: t('isletmeBilgileri') },
  { id: "fatura" as const, label: t('fatura_adresi') },
- 
+ { id: "zertifikalar" as const, label: t('certificates_title') || t('sertifikalar') || "Rozetler & Sertifikalar" },
  { id: "gorseller" as const, label: t('gorseller') },
- 
  ].map((tab) => (
  <button
  key={tab.id}
@@ -4219,117 +4241,169 @@ export default function BusinessDetailsPage() {
  {/* ═══════ Tab 3: Zertifikalar ═══════ */}
  {isletmeInternalTab === "zertifikalar" && (
  <div className="space-y-6">
- {((admin?.adminType === 'super' || admin?.adminType === 'admin')) ? (
- <>
- <div>
- <h4 className="text-foreground font-medium mb-4">LOKMA Platform Markaları & Rozetleri</h4>
- <p className="text-xs text-muted-foreground mb-4">Bu işletmenin listeleme sayfasında ve detaylarında görünmesini istediğiniz logoları seçin.</p>
- {platformBrands.length === 0 ? (
- <div className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500 rounded p-4">
- Henüz sistemde aktif marka / logo bulunmuyor. Lütfen önce MIRA Yönetim Merkezi üzerinden Platform Markaları ekleyin.
- </div>
- ) : (
- <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
- {platformBrands.map(badge => {
- const isSelected = formData.activeBrandIds?.includes(badge.id);
- return (
- <label 
- key={badge.id}
- className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
- isSelected 
- ? 'bg-blue-600/10 border-blue-500 ring-1 ring-blue-500 shadow-sm' 
- : 'bg-muted/50 border-border hover:bg-muted'
- } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
- >
- <input 
- type="checkbox" 
- checked={isSelected}
- onChange={async (e) => {
- if (!isEditing) return;
- const newIds = e.target.checked 
- ? [...(formData.activeBrandIds || []), badge.id]
- : (formData.activeBrandIds || []).filter(id => id !== badge.id);
- 
- setFormData({ 
-  ...formData, 
-  activeBrandIds: newIds
- });
+ {(() => {
+   const isSuperAdmin = admin?.adminType === 'super' || admin?.role === 'super';
+   const visibleBrands = isSuperAdmin ? platformBrands : platformBrands.filter(b => formData.activeBrandIds?.includes(b.id));
 
- if (businessId && businessId !== 'new') {
-    try {
-       await updateDoc(doc(db, "businesses", businessId), {
-           activeBrandIds: newIds
-       });
-       showToast(e.target.checked ? "Rozet eklendi (Anlık Yansıtıldı)" : "Rozet kaldırıldı (Anlık Yansıtıldı)", "success");
-    } catch (error) {}
- }
- }}
- disabled={!isEditing}
- className="w-4 h-4 accent-blue-600"
- />
- <div className="flex items-center gap-2 overflow-hidden">
- {badge.iconUrl && (
- <img src={badge.iconUrl} alt={badge.name} className="w-8 h-8 object-contain rounded-md bg-white p-0.5 shrink-0 border border-border" />
- )}
- <span className="font-medium text-sm truncate text-foreground" title={badge.name}>
- {badge.name}
- </span>
- </div>
- </label>
- );
- })}
- </div>
- )}
- <p className="text-xs text-green-800 dark:text-green-400 mt-4 border-t border-border pt-4">
- Seçilen markalar, mobil uygulamada işletme detaylarında ve kartında gösterilecektir.
- </p>
- </div>
- 
- 
-  {/* Hazır Ürün Filtreleri - SADECE MARKET & KASAPLARDA GÖRÜNSÜN */}
-  {isKasapType && (
-    <div className="mt-6">
-    <h4 className="text-foreground font-medium mb-2">🛍️ Hazır Paket Ürün Satışı (Mobil Filtreleme)</h4>
-    <p className="text-xs text-muted-foreground mb-4">
-    Marketler veya bu ürünleri paketli satan işletmeler için işaretleyin. Bu sayede kasap/restoran (sertifikalı TUNA kullananlar) dışında da aramalarda çıkacaktır.
-    </p>
-    <div className="flex flex-wrap gap-4">
-    <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTunaProducts ? 'bg-red-600/10 border-red-600/50' : 'bg-background border-border hover:bg-muted'}`}>
-    <input type="checkbox" checked={formData.sellsTunaProducts} onChange={async (e) => {
-      const isChecked = e.target.checked;
-      setFormData({ ...formData, sellsTunaProducts: isChecked });
-      if (businessId && businessId !== 'new') {
-          try {
-              await updateDoc(doc(db, "businesses", businessId), { sellsTunaProducts: isChecked });
-              showToast("Tuna Hazır Paket durumu güncellendi", "success");
-          } catch(e){}
-      }
-    }} disabled={!isEditing} className="w-5 h-5 accent-red-600" />
-    <span className="font-medium text-foreground">🔴 TUNA Ürünleri Satıyor</span>
-    </label>
-    <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTorosProducts ? 'bg-green-600/10 border-green-600/50' : 'bg-background border-border hover:bg-muted'}`}>
-    <input type="checkbox" checked={formData.sellsTorosProducts} onChange={async (e) => {
-      const isChecked = e.target.checked;
-      setFormData({ ...formData, sellsTorosProducts: isChecked });
-      if (businessId && businessId !== 'new') {
-          try {
-              await updateDoc(doc(db, "businesses", businessId), { sellsTorosProducts: isChecked });
-              showToast("Toros Hazır Paket durumu güncellendi", "success");
-          } catch(e){}
-      }
-    }} disabled={!isEditing} className="w-5 h-5 accent-green-600" />
-    <span className="font-medium text-foreground">🟢 Akdeniz Toros Ürünleri Satıyor</span>
-    </label>
-    </div>
-    </div>
-  )}
+   return (
+     <>
+       <div>
+         <h4 className="text-foreground font-medium mb-4">LOKMA Platform Markaları & Rozetleri</h4>
+         
+         {isSuperAdmin && (
+           <p className="text-xs text-muted-foreground mb-4">Bu işletmenin listeleme sayfasında ve detaylarında görünmesini istediğiniz logoları seçin.</p>
+         )}
 
-  </>
- ) : (
- <div className="text-center">
- <p className="text-muted-foreground">{t('zertifikaAyarlariSadeceSuperAdminTarafindan')}</p>
- </div>
- )}
+         {visibleBrands.length === 0 ? (
+           <div className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500 rounded p-4">
+             {isSuperAdmin ? 'Henüz sistemde aktif marka / logo bulunmuyor. Lütfen önce MIRA Yönetim Merkezi üzerinden Platform Markaları ekleyin.' : 'Bu işletmeye henüz atanmış bir sertifika/logo bulunmuyor.'}
+           </div>
+         ) : (
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+             {visibleBrands.map(badge => {
+               const isSelected = formData.activeBrandIds?.includes(badge.id);
+               
+               if (!isSuperAdmin) {
+                 // Static view for business admins
+                 return (
+                   <div key={badge.id} className="flex items-center gap-3 p-3 rounded-xl border bg-muted/30 border-border">
+                     {badge.iconUrl && (
+                       <img src={badge.iconUrl} alt={badge.name} className="w-8 h-8 object-contain rounded-md bg-white p-0.5 shrink-0 border border-border" />
+                     )}
+                     <span className="font-medium text-sm truncate text-foreground" title={badge.name}>
+                       {badge.name}
+                     </span>
+                   </div>
+                 );
+               }
+
+               // Interactive view for Super Admins
+               return (
+                 <label 
+                   key={badge.id}
+                   className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                     isSelected 
+                       ? 'bg-blue-600/10 border-blue-500 ring-1 ring-blue-500 shadow-sm' 
+                       : 'bg-muted/50 border-border hover:bg-muted'
+                   } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                 >
+                   <input 
+                     type="checkbox" 
+                     checked={isSelected}
+                     onChange={async (e) => {
+                       if (!isEditing) return;
+                       const newIds = e.target.checked 
+                         ? [...(formData.activeBrandIds || []), badge.id]
+                         : (formData.activeBrandIds || []).filter(id => id !== badge.id);
+                       
+                       setFormData({ 
+                         ...formData, 
+                         activeBrandIds: newIds
+                       });
+
+                       if (businessId && businessId !== 'new') {
+                         try {
+                           const historyEntry = {
+                               brandId: badge.id,
+                               brandName: badge.name,
+                               action: e.target.checked ? 'added' : 'removed',
+                               timestamp: new Date().toISOString(),
+                               adminId: admin?.id || 'unknown',
+                               adminName: admin?.displayName || 'Unknown'
+                           };
+                           const newHistory = [...((business as any)?.brandHistory || []), historyEntry];
+                           await updateDoc(doc(db, "businesses", businessId), {
+                               activeBrandIds: newIds,
+                               brandHistory: newHistory
+                           });
+                           showToast(e.target.checked ? "Rozet eklendi (Anlık Yansıtıldı)" : "Rozet kaldırıldı (Anlık Yansıtıldı)", "success");
+                         } catch (error) {}
+                       }
+                     }}
+                     disabled={!isEditing}
+                     className="w-4 h-4 accent-blue-600"
+                   />
+                   <div className="flex items-center gap-2 overflow-hidden">
+                     {badge.iconUrl && (
+                       <img src={badge.iconUrl} alt={badge.name} className="w-8 h-8 object-contain rounded-md bg-white p-0.5 shrink-0 border border-border" />
+                     )}
+                     <span className="font-medium text-sm truncate text-foreground" title={badge.name}>
+                       {badge.name}
+                     </span>
+                   </div>
+                 </label>
+               );
+             })}
+           </div>
+         )}
+         
+         {isSuperAdmin && (
+           <p className="text-xs text-green-800 dark:text-green-400 mt-4 border-t border-border pt-4">
+             Seçilen markalar, mobil uygulamada işletme detaylarında ve kartında gösterilecektir.
+           </p>
+         )}
+
+         {/* Sertifika Geçmişi Logları */}
+         {isSuperAdmin && (business as any)?.brandHistory && (business as any).brandHistory.length > 0 && (
+             <div className="mt-6 border-t border-border pt-4">
+                 <h5 className="text-sm font-medium text-foreground mb-3">{t('sertifikaGecmisi') || 'Sertifika İşlem Geçmişi'}</h5>
+                 <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                     {[...(business as any).brandHistory].reverse().map((log: any, idx: number) => (
+                         <div key={idx} className="flex items-start gap-2 text-xs bg-muted/50 p-2 rounded border border-border">
+                             <span className="text-muted-foreground whitespace-nowrap">
+                                 {new Date(log.timestamp).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' })}
+                             </span>
+                             <span className="font-medium">{log.adminName}</span>
+                             <span className="text-muted-foreground">
+                                 <strong className="text-foreground">{log.brandName}</strong> {t('sertifikasini') || 'sertifikasını'} {log.action === 'added' ? <span className="text-green-600">{t('ekledi') || 'ekledi'}</span> : <span className="text-red-600">{t('kaldirdi') || 'kaldırdı'}</span>}.
+                             </span>
+                         </div>
+                     ))}
+                 </div>
+             </div>
+         )}
+       </div>
+
+       {/* Hazır Ürün Filtreleri - SADECE MARKET & KASAPLARDA GÖRÜNSÜN */}
+       {isSuperAdmin && isKasapType && (
+         <div className="mt-6">
+           <h4 className="text-foreground font-medium mb-2">🛍️ Hazır Paket Ürün Satışı (Mobil Filtreleme)</h4>
+           <p className="text-xs text-muted-foreground mb-4">
+             Marketler veya bu ürünleri paketli satan işletmeler için işaretleyin. Bu sayede kasap/restoran (sertifikalı TUNA kullananlar) dışında da aramalarda çıkacaktır.
+           </p>
+           <div className="flex flex-wrap gap-4">
+             <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTunaProducts ? 'bg-red-600/10 border-red-600/50' : 'bg-background border-border hover:bg-muted'}`}>
+               <input type="checkbox" checked={formData.sellsTunaProducts} onChange={async (e) => {
+                 const isChecked = e.target.checked;
+                 setFormData({ ...formData, sellsTunaProducts: isChecked });
+                 if (businessId && businessId !== 'new') {
+                     try {
+                         await updateDoc(doc(db, "businesses", businessId), { sellsTunaProducts: isChecked });
+                         showToast("Tuna Hazır Paket durumu güncellendi", "success");
+                     } catch(e){}
+                 }
+               }} disabled={!isEditing} className="w-5 h-5 accent-red-600" />
+               <span className="font-medium text-foreground">🔴 TUNA Ürünleri Satıyor</span>
+             </label>
+             <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border ${formData.sellsTorosProducts ? 'bg-green-600/10 border-green-600/50' : 'bg-background border-border hover:bg-muted'}`}>
+               <input type="checkbox" checked={formData.sellsTorosProducts} onChange={async (e) => {
+                 const isChecked = e.target.checked;
+                 setFormData({ ...formData, sellsTorosProducts: isChecked });
+                 if (businessId && businessId !== 'new') {
+                     try {
+                         await updateDoc(doc(db, "businesses", businessId), { sellsTorosProducts: isChecked });
+                         showToast("Toros Hazır Paket durumu güncellendi", "success");
+                     } catch(e){}
+                 }
+               }} disabled={!isEditing} className="w-5 h-5 accent-green-600" />
+               <span className="font-medium text-foreground">🟢 Akdeniz Toros Ürünleri Satıyor</span>
+             </label>
+           </div>
+         </div>
+       )}
+     </>
+   );
+ })()}
  </div>
  )}
 
@@ -6432,31 +6506,39 @@ export default function BusinessDetailsPage() {
  {
  settingsSubTab === "personel" && (
   <>
- <LockedModuleOverlay featureKey="staffShiftTracking">
- <div className="space-y-6">
+  <div className="space-y-6">
 
- {/* ═══════ Personel Tabı Header ═══════ */}
- <div className="flex justify-between items-center mb-6">
-   <h2 className="text-xl font-bold text-foreground">{t('personelYonetimi') || 'Personalverwaltung'}</h2>
-   <button
-     onClick={() => {
-       setInviteFirstName('');
-       setInviteLastName('');
-       setInvitePhone('');
-       setInviteEmail('');
-       setInviteRole('Personel');
-       setInviteResult(null);
-       setShowInviteModal(true);
-     }}
-     className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
-   >
-     + {t('yeni_personel_ekle') || 'Neues Personal'}
-   </button>
- </div>
+  {/* ═══════ Personel Tabı Header ═══════ */}
+  <div className="flex justify-between items-center mb-6">
+    <h2 className="text-xl font-bold text-foreground">{t('personelYonetimi') || 'Personalverwaltung'}</h2>
+    <button
+      onClick={() => {
+        setInviteFirstName('');
+        setInviteLastName('');
+        setInvitePhone('');
+        setInviteEmail('');
+        setInviteRole('Personel');
+        setInviteResult(null);
+        
+        const currentActivePlan = availablePlans?.find(p => p.id === business?.subscriptionPlan || p.code === business?.subscriptionPlan);
+        const currentActiveStaffCount = staffList?.filter(s => s.isActive !== false).length || 0;
+        if (currentActivePlan?.personnelLimit != null && currentActiveStaffCount >= currentActivePlan.personnelLimit) {
+            setShowQuotaWarning(true);
+        } else {
+            setShowQuotaWarning(false);
+        }
+        setShowInviteModal(true);
+      }}
+      className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
+    >
+      + {t('yeni_personel_ekle') || 'Neues Personal'}
+    </button>
+  </div>
 
- {/* ═══════ Aktif Vardiyalar Panel ═══════ */}
- {activeShifts.length > 0 && (
- <div className="bg-gradient-to-br from-green-100 dark:from-green-900/40 to-green-50 dark:to-green-800/20 border border-green-600/30 rounded-xl p-5">
+  {/* ═══════ Aktif Vardiyalar Panel ═══════ */}
+  <LockedModuleOverlay featureKey="staffShiftTracking">
+  {activeShifts.length > 0 && (
+  <div className="bg-gradient-to-br from-green-100 dark:from-green-900/40 to-green-50 dark:to-green-800/20 border border-green-600/30 rounded-xl p-5">
  <div className="flex items-center gap-2 mb-4">
  <span className="text-2xl">🟢</span>
  <h3 className="text-lg font-bold text-green-300">
@@ -6521,6 +6603,7 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  )}
+ </LockedModuleOverlay>
 
  {/* Aktif / Arşivlenmiş Tabs */}
  <div className="flex gap-2 mb-4">
@@ -6667,9 +6750,7 @@ export default function BusinessDetailsPage() {
  </table>
  )}
  </div>
-
  </div>
- </LockedModuleOverlay>
 
   {/* ══ INVITE MODAL ══ */}
   {showInviteModal && (
@@ -6689,68 +6770,87 @@ export default function BusinessDetailsPage() {
   </div>
   </div>
   )}
-  <div className="grid grid-cols-2 gap-3">
-  <input type="text" placeholder={(t('isim') || 'Vorname') + " *"} value={inviteFirstName} onChange={(e) => setInviteFirstName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
-  <input type="text" placeholder={t('soyisim_opsiyonel') || 'Nachname'} value={inviteLastName} onChange={(e) => setInviteLastName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
-  </div>
-  <div className="flex gap-2">
-  <select value={inviteCountryCode} onChange={(e) => setInviteCountryCode(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg w-28">
-  <option value="+49">DE +49</option>
-  <option value="+90">TR +90</option>
-  <option value="+43">AT +43</option>
-  <option value="+31">NL +31</option>
-  <option value="+41">CH +41</option>
-  <option value="+33">FR +33</option>
-  <option value="+39">IT +39</option>
-  <option value="+34">ES +34</option>
-  <option value="+351">PT +351</option>
-  <option value="+46">SE +46</option>
-  <option value="+47">NO +47</option>
-  <option value="+381">RS +381</option>
-  <option value="+355">AL +355</option>
-  <option value="+1">US/CA +1</option>
-  <option value="+52">MX +52</option>
-  <option value="+507">PA +507</option>
-  </select>
-  <input type="tel" placeholder={(t('telefonNumarasi') || 'Telefon') + " *"} value={invitePhone} onChange={(e) => setInvitePhone(e.target.value.replace(/\D/g, ""))} className="flex-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
-  </div>
-  <input type="email" placeholder={t('epostaOpsiyonelBildirimIcin') || 'E-Mail (optional)'} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
-  <div>
-  <label className="text-muted-foreground text-sm">{t('rol')}</label>
-  <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="w-full mt-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
-  <option value="Personel">{t('personel_rol') || 'Personel'}</option>
-  <option value="Admin">{t('isletmeAdmin') || 'İşletme Admini'}</option>
-  <option value="LokmaAdmin">LOKMA Admin</option>
-  <option value="Lieferfahrer">{t('kurye') || 'Kurye'}</option>
-  </select>
-  {inviteRole === 'Lieferfahrer' && (
-  <p className="text-xs text-violet-400 mt-1">Diese Rolle wird automatisch als Fahrer erkannt.</p>
+
+  {showQuotaWarning ? (
+    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-5 space-y-4">
+       <div className="flex items-center gap-3">
+         <span className="text-2xl">⚠️</span>
+         <h3 className="text-amber-500 font-bold text-lg">Personel Kotası Aşıldı</h3>
+       </div>
+       <p className="text-muted-foreground text-sm">
+         Mevcut abonelik planınızın personel limitini doldurdunuz. Ekleyeceğiniz her yeni personel için faturanıza ek ücret yansıtılacaktır. Onaylıyor musunuz?
+       </p>
+       <div className="flex gap-3 pt-4">
+         <button onClick={() => setShowInviteModal(false)} className="flex-1 py-2.5 rounded-lg border border-border text-foreground hover:bg-muted transition text-sm font-medium">{t('iptal') || 'İptal'}</button>
+         <button onClick={() => setShowQuotaWarning(false)} className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium">Onayla ve Devam Et</button>
+       </div>
+    </div>
+  ) : (
+    <>
+      <div className="grid grid-cols-2 gap-3">
+      <input type="text" placeholder={(t('isim') || 'Vorname') + " *"} value={inviteFirstName} onChange={(e) => setInviteFirstName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+      <input type="text" placeholder={t('soyisim_opsiyonel') || 'Nachname'} value={inviteLastName} onChange={(e) => setInviteLastName(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+      </div>
+      <div className="flex gap-2">
+      <select value={inviteCountryCode} onChange={(e) => setInviteCountryCode(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg w-28">
+      <option value="+49">DE +49</option>
+      <option value="+90">TR +90</option>
+      <option value="+43">AT +43</option>
+      <option value="+31">NL +31</option>
+      <option value="+41">CH +41</option>
+      <option value="+33">FR +33</option>
+      <option value="+39">IT +39</option>
+      <option value="+34">ES +34</option>
+      <option value="+351">PT +351</option>
+      <option value="+46">SE +46</option>
+      <option value="+47">NO +47</option>
+      <option value="+381">RS +381</option>
+      <option value="+355">AL +355</option>
+      <option value="+1">US/CA +1</option>
+      <option value="+52">MX +52</option>
+      <option value="+507">PA +507</option>
+      </select>
+      <input type="tel" placeholder={(t('telefonNumarasi') || 'Telefon') + " *"} value={invitePhone} onChange={(e) => setInvitePhone(e.target.value.replace(/\D/g, ""))} className="flex-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+      </div>
+      <input type="email" placeholder={t('epostaOpsiyonelBildirimIcin') || 'E-Mail (optional)'} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+      <div>
+      <label className="text-muted-foreground text-sm">{t('rol')}</label>
+      <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="w-full mt-1 bg-muted text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+      <option value="Personel">{t('personel_rol') || 'Personel'}</option>
+      <option value="Admin">{t('isletmeAdmin') || 'İşletme Admini'}</option>
+      <option value="LokmaAdmin">LOKMA Admin</option>
+      <option value="Lieferfahrer">{t('kurye') || 'Kurye'}</option>
+      </select>
+      {inviteRole === 'Lieferfahrer' && (
+      <p className="text-xs text-violet-400 mt-1">Diese Rolle wird automatisch als Fahrer erkannt.</p>
+      )}
+      </div>
+      <div className="pt-2 border-t border-border">
+      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">ADRES (OPSIYONEL)</p>
+      <div className="grid grid-cols-3 gap-2 mb-2">
+      <input type="text" placeholder="Strasse" value={inviteStreet} onChange={(e) => setInviteStreet(e.target.value)} className="col-span-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+      <input type="text" placeholder="Nr." value={inviteHouseNumber} onChange={(e) => setInviteHouseNumber(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+      </div>
+      <input type="text" placeholder="Adresszusatz" value={inviteAddressLine2} onChange={(e) => setInviteAddressLine2(e.target.value)} className="w-full mb-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+      <div className="grid grid-cols-2 gap-2 mb-2">
+      <input type="text" placeholder="PLZ" value={invitePostalCode} onChange={(e) => setInvitePostalCode(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+      <input type="text" placeholder="Stadt" value={inviteCity} onChange={(e) => setInviteCity(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
+      </div>
+      <select value={inviteAddressCountry} onChange={(e) => setInviteAddressCountry(e.target.value)} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none">
+      <option value="Deutschland">Deutschland</option>
+      <option value="Tuerkiye">Tuerkiye</option>
+      <option value="Oesterreich">Oesterreich</option>
+      <option value="Niederlande">Niederlande</option>
+      </select>
+      </div>
+      <div className="flex gap-3 pt-2">
+      <button onClick={() => setShowInviteModal(false)} className="flex-1 py-3 rounded-lg border border-border text-foreground hover:bg-muted transition text-sm font-medium">{t('iptal') || 'Abbrechen'}</button>
+      <button onClick={handleInviteStaff} disabled={staffLoading} className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+      {staffLoading ? (t('hesapOlusturuluyor') || 'Erstelle...') : (t('hesapOlusturDavetGonder') || 'Personal erstellen')}
+      </button>
+      </div>
+    </>
   )}
-  </div>
-  <div className="pt-2 border-t border-border">
-  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">ADRES (OPSIYONEL)</p>
-  <div className="grid grid-cols-3 gap-2 mb-2">
-  <input type="text" placeholder="Strasse" value={inviteStreet} onChange={(e) => setInviteStreet(e.target.value)} className="col-span-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
-  <input type="text" placeholder="Nr." value={inviteHouseNumber} onChange={(e) => setInviteHouseNumber(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
-  </div>
-  <input type="text" placeholder="Adresszusatz" value={inviteAddressLine2} onChange={(e) => setInviteAddressLine2(e.target.value)} className="w-full mb-2 bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
-  <div className="grid grid-cols-2 gap-2 mb-2">
-  <input type="text" placeholder="PLZ" value={invitePostalCode} onChange={(e) => setInvitePostalCode(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
-  <input type="text" placeholder="Stadt" value={inviteCity} onChange={(e) => setInviteCity(e.target.value)} className="bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none" />
-  </div>
-  <select value={inviteAddressCountry} onChange={(e) => setInviteAddressCountry(e.target.value)} className="w-full bg-muted text-foreground border border-border px-3 py-2 rounded-lg text-sm outline-none">
-  <option value="Deutschland">Deutschland</option>
-  <option value="Tuerkiye">Tuerkiye</option>
-  <option value="Oesterreich">Oesterreich</option>
-  <option value="Niederlande">Niederlande</option>
-  </select>
-  </div>
-  <div className="flex gap-3 pt-2">
-  <button onClick={() => setShowInviteModal(false)} className="flex-1 py-3 rounded-lg border border-border text-foreground hover:bg-muted transition text-sm font-medium">{t('iptal') || 'Abbrechen'}</button>
-  <button onClick={handleInviteStaff} disabled={staffLoading} className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-  {staffLoading ? (t('hesapOlusturuluyor') || 'Erstelle...') : (t('hesapOlusturDavetGonder') || 'Personal erstellen')}
-  </button>
-  </div>
   </div>
   </div>
   </div>
