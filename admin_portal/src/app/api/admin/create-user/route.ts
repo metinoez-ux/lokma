@@ -171,7 +171,14 @@ export async function POST(request: NextRequest) {
  if (dialCode) {
  // Combine dialCode with local number: +49 + 1775710057 = +491775710057
  const cleanDialCode = dialCode.startsWith('+') ? dialCode : `+${dialCode}`;
- formattedPhone = `${cleanDialCode}${localNumber}`;
+ const dialCodeDigits = cleanDialCode.replace(/\D/g, '');
+ 
+ if (localNumber.startsWith(dialCodeDigits)) {
+     // The phone number already contains the dial code, don't duplicate it
+     formattedPhone = `+${localNumber}`;
+ } else {
+     formattedPhone = `${cleanDialCode}${localNumber}`;
+ }
  } else {
  // No dialCode provided, assume the number already includes country code
  formattedPhone = `+${localNumber}`;

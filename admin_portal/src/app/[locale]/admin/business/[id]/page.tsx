@@ -4111,7 +4111,7 @@ export default function BusinessDetailsPage() {
  </button>
  )}
  {/* Tüm isletme tab'ları: Düzenle / İptal / Kaydet */}
- {settingsSubTab === 'isletme' && (
+ {(settingsSubTab === 'isletme' || settingsSubTab === 'teslimat' || settingsSubTab === 'saatler') && (
  <>
  {!isEditing ? (
  <button
