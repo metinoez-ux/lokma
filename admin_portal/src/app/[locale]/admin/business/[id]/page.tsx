@@ -5053,6 +5053,24 @@ export default function BusinessDetailsPage() {
  >
  {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}Sponsored Products ({sponsoredProducts.length})
  </button>
+ <button
+ onClick={() => setMenuInternalTab("bestellungen")}
+ className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "bestellungen"
+ ? "bg-red-600 text-white"
+ : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
+ }`}
+ >
+ {!planFeatures.supplyChain && admin?.adminType !== 'super' && '🔒 '}{t('procurement_orders') || 'Bestellungen'}
+ </button>
+ <button
+ onClick={() => setMenuInternalTab("lieferanten")}
+ className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "lieferanten"
+ ? "bg-red-600 text-white"
+ : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
+ }`}
+ >
+ {!planFeatures.supplyChain && admin?.adminType !== 'super' && '🔒 '}{t('procurement_suppliers') || 'Lieferanten'}
+ </button>
  </div>
 
  {/* ==================== KATEGORİLER ==================== */}
