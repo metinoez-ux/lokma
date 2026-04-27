@@ -175,27 +175,31 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       }
     }
 
-    // Masa QR kodu: /table/{kermesId}/{tableNo} veya benzer format
-    if (result.contains('/table/') || result.contains('table_')) {
-      String? kermesId;
-      String? tableNo;
+    // Masa QR kodu: /kermes-dinein/{kermesId}/table/{tableNo}
+    if (result.contains('/kermes-dinein/')) {
       final uri = Uri.tryParse(result);
       if (uri != null) {
         final segments = uri.pathSegments;
+        final kermesIndex = segments.indexOf('kermes-dinein');
         final tableIndex = segments.indexOf('table');
-        if (tableIndex >= 0 && tableIndex + 2 < segments.length) {
-          kermesId = segments[tableIndex + 1];
-          tableNo = segments[tableIndex + 2];
+        if (kermesIndex >= 0 && kermesIndex + 1 < segments.length && tableIndex >= 0 && tableIndex + 1 < segments.length) {
+          final kermesId = segments[kermesIndex + 1];
+          final tableNo = segments[tableIndex + 1];
+          final sectionId = uri.queryParameters['section'];
+          if (mounted) {
+            HapticFeedback.mediumImpact();
+            String redirectUrl = '/kermesler/$kermesId?table=$tableNo';
+            if (sectionId != null && sectionId.isNotEmpty) {
+              redirectUrl += '&section=$sectionId';
+            }
+            context.push(redirectUrl);
+            return;
+          }
         }
-      }
-      if (kermesId != null && tableNo != null && mounted) {
-        HapticFeedback.mediumImpact();
-        context.push('/kermesler/$kermesId?table=$tableNo');
-        return;
       }
     }
 
-    // Kermes QR kodu: /kermesler/{id} veya dogrudan kermes ID
+    // Kermes QR kodu: /kermesler/{id} veya dogrudan kermes ID (Masa parametresi icerebilir)
     if (result.contains('/kermesler/') || result.contains('/kermes/')) {
       final uri = Uri.tryParse(result);
       if (uri != null) {
@@ -203,10 +207,55 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         final kermesIndex = segments.indexWhere((s) => s == 'kermesler' || s == 'kermes');
         if (kermesIndex >= 0 && kermesIndex + 1 < segments.length) {
           final kermesId = segments[kermesIndex + 1];
+          final tableNo = uri.queryParameters['table'];
+          final sectionId = uri.queryParameters['section'];
+          
           if (mounted) {
-            context.push('/kermesler/$kermesId');
+            HapticFeedback.mediumImpact();
+            if (tableNo != null) {
+              String redirectUrl = '/kermesler/$kermesId?table=$tableNo';
+              if (sectionId != null && sectionId.isNotEmpty) {
+                redirectUrl += '&section=$sectionId';
+              }
+              context.push(redirectUrl);
+            } else {
+              context.push('/kermesler/$kermesId');
+            }
+            return;
           }
-          return;
+        }
+      }
+    }
+
+    // Eski Masa QR kodu: /table/{kermesId}/{tableNo} veya benzer format
+    if (result.contains('/table/') || result.contains('table_')) {
+      String? kermesId;
+      String? tableNo;
+
+      
+      // Keep old buggy logic but add section if possible just in case
+      final parsedUri = Uri.tryParse(result);
+      if (parsedUri != null) {
+        final segments = parsedUri.pathSegments;
+        final tableIndex = segments.indexOf('table');
+        if (tableIndex >= 0 && tableIndex + 2 < segments.length) {
+          kermesId = segments[tableIndex + 1];
+          tableNo = segments[tableIndex + 2];
+        } else if (tableIndex >= 0 && tableIndex + 1 < segments.length) {
+           tableNo = segments[tableIndex + 1];
+        } else {
+           tableNo = result.replaceAll('table_', '').trim();
+        }
+        
+        final sectionId = parsedUri.queryParameters['section'];
+        if (tableNo != null && mounted) {
+           HapticFeedback.mediumImpact();
+           String redirectUrl = kermesId != null ? '/kermesler/$kermesId?table=$tableNo' : '/kermesler?table=$tableNo';
+           if (sectionId != null && sectionId.isNotEmpty) {
+             redirectUrl += '&section=$sectionId';
+           }
+           context.push(redirectUrl);
+           return;
         }
       }
     }
@@ -2904,7 +2953,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             color: disabled
                 ? (isDark ? Colors.grey[600] : Colors.grey[400])
                 : isSelected
-                    ? lokmaPink
+                    ? _KermesListScreenState.lokmaPink
                     : (isDark ? Colors.grey[300] : Colors.grey[700]),
           ),
           const SizedBox(width: 12),
@@ -2936,7 +2985,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               ],
             ),
           ),
-          if (isSelected) Icon(Icons.check_circle, size: 18, color: lokmaPink),
+          if (isSelected) Icon(Icons.check_circle, size: 18, color: _KermesListScreenState.lokmaPink),
         ],
       ),
     );

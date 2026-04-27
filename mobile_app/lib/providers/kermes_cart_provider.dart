@@ -96,6 +96,7 @@ class KermesCartState {
   final bool isGroupOrder;
   final String? groupName;
   final String? tableNo;
+  final String? sectionId;
 
   KermesCartState({
     this.eventId,
@@ -105,6 +106,7 @@ class KermesCartState {
     this.isGroupOrder = false,
     this.groupName,
     this.tableNo,
+    this.sectionId,
   });
 
   int get totalItems => items.fold(0, (sum, item) => sum + item.quantity);
@@ -121,6 +123,7 @@ class KermesCartState {
     bool? isGroupOrder,
     String? groupName,
     String? tableNo,
+    String? sectionId,
   }) {
     return KermesCartState(
       eventId: eventId ?? this.eventId,
@@ -130,6 +133,7 @@ class KermesCartState {
       isGroupOrder: isGroupOrder ?? this.isGroupOrder,
       groupName: groupName ?? this.groupName,
       tableNo: tableNo ?? this.tableNo,
+      sectionId: sectionId ?? this.sectionId,
     );
   }
 
@@ -143,6 +147,7 @@ class KermesCartState {
       'isGroupOrder': isGroupOrder,
       'groupName': groupName,
       'tableNo': tableNo,
+      'sectionId': sectionId,
     };
   }
 
@@ -160,6 +165,7 @@ class KermesCartState {
       isGroupOrder: json['isGroupOrder'] ?? false,
       groupName: json['groupName'],
       tableNo: json['tableNo'],
+      sectionId: json['sectionId'],
     );
   }
 }
@@ -208,12 +214,14 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
     required bool isGroupOrder,
     String? groupName,
     String? tableNo,
+    String? sectionId,
   }) {
     state = state.copyWith(
       deliveryType: deliveryType,
       isGroupOrder: isGroupOrder,
       groupName: groupName,
       tableNo: tableNo,
+      sectionId: sectionId,
     );
     _saveCartToStorage();
   }

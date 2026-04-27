@@ -30,6 +30,8 @@ class OrderSetupBottomSheet extends StatefulWidget {
   final DeliveryType? preSelectedDelivery;
   /// Deep link / QR'dan onceden bilinen masa numarasi
   final String? preSelectedTable;
+  /// Deep link / QR'dan onceden bilinen section id
+  final String? preSelectedSectionId;
 
   const OrderSetupBottomSheet({
     super.key,
@@ -40,6 +42,7 @@ class OrderSetupBottomSheet extends StatefulWidget {
     this.onScanQR,
     this.preSelectedDelivery,
     this.preSelectedTable,
+    this.preSelectedSectionId,
   });
 
   @override
@@ -51,6 +54,8 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
   bool _isGroupOrder = false;
   String? _scannedTable;
   String? _scannedSectionId;
+  String? _lastScannedTable; // Hafizada tutmak icin (degistirince silinmemesi icin)
+  String? _lastScannedSectionId;
   final _manualTableController = TextEditingController();
   bool _showManualInput = false;
 
@@ -66,6 +71,13 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
     }
     if (widget.preSelectedTable != null) {
       _scannedTable = widget.preSelectedTable;
+      _scannedSectionId = widget.preSelectedSectionId;
+      _lastScannedTable = widget.preSelectedTable;
+      _lastScannedSectionId = widget.preSelectedSectionId;
+      // If a table is scanned, auto-select Dine-In so they don't have to click it manually
+      if (_selectedDelivery == null) {
+        _selectedDelivery = DeliveryType.masada;
+      }
     }
   }
 
@@ -545,21 +557,37 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
           final section = uri.queryParameters['section'];
           setState(() {
             _scannedTable = tableLabel;
+            _lastScannedTable = tableLabel;
             if (section != null && section.isNotEmpty) {
               _scannedSectionId = section;
+              _lastScannedSectionId = section;
             }
           });
         }
+      } else if (uri.queryParameters.containsKey('table')) {
+        // Yeni format desteği: ?table=M7&section=erkekler_bolumu
+        final tableLabel = uri.queryParameters['table']!;
+        final section = uri.queryParameters['section'];
+        setState(() {
+          _scannedTable = tableLabel;
+          _lastScannedTable = tableLabel;
+          if (section != null && section.isNotEmpty) {
+            _scannedSectionId = section;
+            _lastScannedSectionId = section;
+          }
+        });
       } else {
         // Basit QR: duz metin olarak masa numarasi
         setState(() {
           _scannedTable = result.trim();
+          _lastScannedTable = result.trim();
         });
       }
     } catch (e) {
       // Parse hatasinsa duz metin olarak al
       setState(() {
         _scannedTable = result.trim();
+        _lastScannedTable = result.trim();
       });
     }
   }
@@ -586,6 +614,12 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
             _scannedSectionId = null;
             _manualTableController.clear();
             _showManualInput = false;
+          } else {
+            // Masaya Servise geri donuldugunde, eger onceden QR okutularak gelindiyse geri yukle
+            if (_lastScannedTable != null && _scannedTable == null) {
+              _scannedTable = _lastScannedTable;
+              _scannedSectionId = _lastScannedSectionId;
+            }
           }
         });
       },

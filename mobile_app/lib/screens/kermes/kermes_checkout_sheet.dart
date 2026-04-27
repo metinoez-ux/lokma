@@ -28,6 +28,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 class KermesCheckoutSheet extends ConsumerStatefulWidget {
   final KermesEvent event;
   final String? initialTableNumber;
+  final String? initialSectionId;
   final int? initialDeliveryMode;
   final bool isPosMode;
   
@@ -35,6 +36,7 @@ class KermesCheckoutSheet extends ConsumerStatefulWidget {
     super.key, 
     required this.event,
     this.initialTableNumber,
+    this.initialSectionId,
     this.initialDeliveryMode,
     this.isPosMode = false,
   });
@@ -71,33 +73,61 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     
     if (widget.initialTableNumber != null) {
       _tableController.text = widget.initialTableNumber!;
-      // QR masadan gelen siparis: masanin bolumunu otomatik ata
-      final section = widget.event.findSectionForTable(widget.initialTableNumber!);
-      if (section != null) {
-        _selectedSectionId = section.id;
+      if (widget.initialSectionId != null) {
+        _selectedSectionId = widget.initialSectionId;
+      } else {
+        // QR masadan gelen siparis: masanin bolumunu otomatik ata
+        final section = widget.event.findSectionForTable(widget.initialTableNumber!);
+        if (section != null) {
+          _selectedSectionId = section.id;
+        }
       }
+    }
+    
+    // Eger section secilmediyse ve kermes'in bolumleri varsa, ilk bolumu varsayilan yap
+    if (_selectedSectionId == null && widget.event.sectionDefs.isNotEmpty) {
+      _selectedSectionId = widget.event.sectionDefs.first.id;
     }
 
     // Siparis baglami popup'tan gelen degerleri oku
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final cartState = ref.read(kermesCartProvider);
+      
+      bool needsUpdate = false;
+      
       if (cartState.deliveryType != null && _deliveryType == null) {
-        setState(() {
-          switch (cartState.deliveryType) {
-            case 'gelAl':
-              _deliveryType = DeliveryType.gelAl;
-              break;
-            case 'masada':
-              _deliveryType = DeliveryType.masada;
-              break;
-            case 'kurye':
-              _deliveryType = DeliveryType.kurye;
-              break;
-          }
-          _isGroupOrder = cartState.isGroupOrder;
-        });
+        switch (cartState.deliveryType) {
+          case 'gelAl':
+            _deliveryType = DeliveryType.gelAl;
+            break;
+          case 'masada':
+            _deliveryType = DeliveryType.masada;
+            break;
+          case 'kurye':
+            _deliveryType = DeliveryType.kurye;
+            break;
+        }
+        _isGroupOrder = cartState.isGroupOrder;
+        needsUpdate = true;
       }
+      
+      // Masa bilgisi eger daha once secildiyse ve controller bossa doldur
+      if (cartState.tableNo != null && _tableController.text.isEmpty) {
+        _tableController.text = cartState.tableNo!;
+        
+        if (cartState.sectionId != null) {
+          _selectedSectionId = cartState.sectionId;
+        } else {
+          final section = widget.event.findSectionForTable(cartState.tableNo!);
+          if (section != null) {
+            _selectedSectionId = section.id;
+          }
+        }
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) setState(() {});
     });
 
     // Eger hic secilmediyse Ilk bolumu otomatik sec ki TV ekranlarina mutlaka dussun
@@ -1621,61 +1651,63 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ),
             const SizedBox(height: 20),
           ],
-          // POS modunda teslimat secimi hala burada yapilir
-          if (widget.isPosMode && _deliveryType == null) ...[
-            Text(
-              'Siparis nasil teslim edilecek?',
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
+          // Teslimat secimi popup'ta yapilamadiysa veya sifirlandiysa kartlari goster (Fallback)
+          if (_deliveryType == null) ...[
+            // Tezgahtan Teslim (Gel Al)
+            _buildOptionCard(
+              icon: Icons.storefront_outlined,
+              iconColor: Colors.amber,
+              title: 'Tezgahtan Teslim',
+              subtitle: 'Siparisi stanttan alin',
+              badge: widget.event.hasTakeaway ? null : 'KAPALI',
+              badgeColor: Colors.grey,
+              isSelected: _deliveryType == DeliveryType.gelAl,
+              isDisabled: !widget.event.hasTakeaway,
+              onTap: widget.event.hasTakeaway
+                  ? () => setState(() => _deliveryType = DeliveryType.gelAl)
+                  : null,
             ),
-            const SizedBox(height: 24),
-          ],
-          // Normal modda teslimat turu zaten popup'ta secildi, tekrar sorma
-          // Sadece POS modunda teslimat kartlarini goster
-          if (widget.isPosMode) ...[
-          
-          // Tezgahtan Teslim (Gel Al) - sadece POS
-          _buildOptionCard(
-            icon: Icons.storefront_outlined,
-            iconColor: Colors.amber,
-            title: 'Tezgahtan Teslim',
-            subtitle: 'Musteri tezgahtan alacak',
-            badge: widget.event.hasTakeaway ? null : 'KAPALI',
-            badgeColor: Colors.grey,
-            isSelected: _deliveryType == DeliveryType.gelAl,
-            isDisabled: !widget.event.hasTakeaway,
-            onTap: widget.event.hasTakeaway
-                ? () => setState(() => _deliveryType = DeliveryType.gelAl)
-                : null,
-          ),
-          if (_deliveryType == DeliveryType.gelAl) _buildSectionSelector(includeFamily: false),
-          const SizedBox(height: 12),
-          
-          // Masaya Servis - sadece POS
-          _buildOptionCard(
-            icon: Icons.table_restaurant,
-            iconColor: Colors.purple,
-            title: 'Masaya Servis',
-            subtitle: 'Garson masaya goturecek',
-            badge: widget.event.hasDineIn ? null : 'KAPALI',
-            badgeColor: Colors.grey,
-            isSelected: _deliveryType == DeliveryType.masada,
-            isDisabled: !widget.event.hasDineIn,
-            onTap: widget.event.hasDineIn
-                ? () => setState(() => _deliveryType = DeliveryType.masada)
-                : null,
-          ),
-          ], // POS mode delivery cards sonu
+            if (_deliveryType == DeliveryType.gelAl) _buildSectionSelector(includeFamily: false),
+            const SizedBox(height: 12),
+            
+            // Masaya Servis
+            _buildOptionCard(
+              icon: Icons.table_restaurant,
+              iconColor: Colors.purple,
+              title: 'Masaya Servis',
+              subtitle: 'Masaniza getirelim',
+              badge: widget.event.hasDineIn ? null : 'KAPALI',
+              badgeColor: Colors.grey,
+              isSelected: _deliveryType == DeliveryType.masada,
+              isDisabled: !widget.event.hasDineIn,
+              onTap: widget.event.hasDineIn
+                  ? () => setState(() => _deliveryType = DeliveryType.masada)
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            
+            // Kurye ile Teslimat (Eger aktifse)
+            if (widget.event.hasDelivery)
+              _buildOptionCard(
+                icon: Icons.moped_outlined,
+                iconColor: Colors.orange,
+                title: 'Kurye ile Teslimat',
+                subtitle: 'Adresinize getirelim',
+                isSelected: _deliveryType == DeliveryType.kurye,
+                onTap: () => setState(() => _deliveryType = DeliveryType.kurye),
+              ),
+          ], // Delivery cards sonu
 
           // Masaya Servis secildiginde: bolum/masa secimi (hem POS hem normal mod)
           if (_deliveryType == DeliveryType.masada) ...[
-            if (_selectedSectionId != null && _tableController.text.isNotEmpty)
+            if (_tableController.text.isNotEmpty && (_selectedSectionId != null || widget.event.sectionDefs.isEmpty))
               Container(
                  margin: const EdgeInsets.symmetric(vertical: 8),
                  padding: const EdgeInsets.all(12),
                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.green.withOpacity(0.3))),
                  child: Row(children: [
                    const Icon(Icons.check_circle, color: Colors.green), const SizedBox(width: 8),
-                   Expanded(child: Text("${widget.event.sectionDefs.firstWhere((s) => s.id == _selectedSectionId, orElse: () => widget.event.sectionDefs.first).name} - Masa ${_tableController.text}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                   Expanded(child: Text("${widget.event.sectionDefs.isEmpty ? '' : widget.event.sectionDefs.firstWhere((s) => s.id == _selectedSectionId, orElse: () => widget.event.sectionDefs.first).name + ' - '}Masa ${_tableController.text}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
                    TextButton(onPressed: () => setState(() { _tableController.clear(); _selectedSectionId = null; }), child: Text("Degistir", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)))
                  ])
               )
@@ -1919,10 +1951,33 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                  ).firstOrNull;
                  if (matchingSection != null) {
                    _selectedSectionId = matchingSection.id;
+                 } else {
+                   _selectedSectionId = section; // Fallback if admin misconfigured
                  }
+              } else if (widget.event.sectionDefs.isNotEmpty) {
+                 _selectedSectionId = widget.event.sectionDefs.first.id;
               }
             });
           }
+        } else if (uri.queryParameters.containsKey('table')) {
+          // Desteklenen yeni format: /kermesler/ID?table=M7&section=erkekler_bolumu
+          final tableLabel = uri.queryParameters['table']!;
+          final section = uri.queryParameters['section'];
+          setState(() {
+            _tableController.text = tableLabel;
+            if (section != null && section.isNotEmpty) {
+               final matchingSection = widget.event.sectionDefs.where(
+                  (s) => s.name == section || s.id == section
+               ).firstOrNull;
+               if (matchingSection != null) {
+                 _selectedSectionId = matchingSection.id;
+               } else {
+                 _selectedSectionId = section;
+               }
+            } else if (widget.event.sectionDefs.isNotEmpty) {
+               _selectedSectionId = widget.event.sectionDefs.first.id;
+            }
+          });
         }
       } catch (e) {
         debugPrint('QR Parse error: $e');
@@ -3701,6 +3756,7 @@ void showKermesCheckoutSheet(
   BuildContext context, 
   KermesEvent event, {
   String? initialTableNumber,
+  String? initialSectionId,
   int? initialDeliveryMode,
 }) {
   showModalBottomSheet(
@@ -3711,6 +3767,7 @@ void showKermesCheckoutSheet(
     builder: (context) => KermesCheckoutSheet(
       event: event,
       initialTableNumber: initialTableNumber,
+      initialSectionId: initialSectionId,
       initialDeliveryMode: initialDeliveryMode,
     ),
   );

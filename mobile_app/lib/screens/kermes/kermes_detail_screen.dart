@@ -273,20 +273,77 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
       }
     }
 
-    if (groupOrderId == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gecersiz QR kodu'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (groupOrderId != null) {
+      // PIN giris dialogunu goster
+      _showPinEntryDialog(groupOrderId);
       return;
     }
 
-    // PIN giris dialogunu goster
-    _showPinEntryDialog(groupOrderId);
+    // URL'den masa numarasini cikar (kermes ici)
+    String? tableNo;
+    String? sectionId;
+    String? kermesId;
+    
+    if (result.contains('/kermes-dinein/')) {
+      final uri = Uri.tryParse(result);
+      if (uri != null) {
+        final segments = uri.pathSegments;
+        final kermesDineinIndex = segments.indexOf('kermes-dinein');
+        if (kermesDineinIndex >= 0 && kermesDineinIndex + 1 < segments.length) {
+          kermesId = segments[kermesDineinIndex + 1];
+        }
+        final tableIndex = segments.indexOf('table');
+        if (tableIndex >= 0 && tableIndex + 1 < segments.length) {
+          tableNo = segments[tableIndex + 1];
+          sectionId = uri.queryParameters['section'];
+        }
+      }
+    } else if (result.contains('/kermesler/') || result.contains('/kermes/')) {
+      final uri = Uri.tryParse(result);
+      if (uri != null) {
+        final segments = uri.pathSegments;
+        final kermeslerIndex = segments.indexOf('kermesler') >= 0 ? segments.indexOf('kermesler') : segments.indexOf('kermes');
+        if (kermeslerIndex >= 0 && kermeslerIndex + 1 < segments.length) {
+          kermesId = segments[kermeslerIndex + 1];
+        }
+        tableNo = uri.queryParameters['table'];
+        sectionId = uri.queryParameters['section'];
+      }
+    } else if (result.contains('/table/') || result.contains('table_')) {
+      final uri = Uri.tryParse(result);
+      if (uri != null) {
+        final segments = uri.pathSegments;
+        final tableIndex = segments.indexOf('table');
+        if (tableIndex >= 0 && tableIndex + 1 < segments.length) {
+          tableNo = segments[tableIndex + 1];
+          sectionId = uri.queryParameters['section'];
+        }
+      } else {
+        // Fallback for simple table_M7 strings
+        tableNo = result.replaceAll('table_', '').trim();
+      }
+    }
+
+    if (tableNo != null) {
+      HapticFeedback.mediumImpact();
+      // Masa QR kodu okutuldugunda dogrudan o masaya yonlendir (mevcut ekrani degistir)
+      final targetKermesId = (kermesId != null && kermesId.isNotEmpty) ? kermesId : widget.event.id;
+      String redirectUrl = '/kermesler/$targetKermesId?table=$tableNo';
+      if (sectionId != null && sectionId.isNotEmpty) {
+        redirectUrl += '&section=$sectionId';
+      }
+      context.pushReplacement(redirectUrl);
+      return;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gecersiz QR kodu'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   /// 4 haneli PIN giris dialogu (QR ile katilim icin)
@@ -1321,78 +1378,46 @@ String _getLocalizedCountry(String rawCountry) {
     // Sepet bos ise: once siparis baglami popup'ini goster
     final cartState = ref.read(kermesCartProvider);
     if (cartState.isEmpty && cartState.deliveryType == null) {
-      // Deep link'ten gelen masa bilgisi varsa (QR'dan gelen kullanici)
-      // Teslimat turu ve masa zaten belli, sadece Bireysel/Grup sor
-      if (widget.initialTableNumber != null) {
-        final setupResult = await showModalBottomSheet<OrderSetupResult>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (ctx) => OrderSetupBottomSheet(
-            kermesName: _currentEvent.title ?? _currentEvent.city,
-            hasDineIn: true,
-            hasTakeaway: true, // Allow Takeaway as requested by user
-            hasDelivery: false,
-            preSelectedDelivery: DeliveryType.masada,
-            preSelectedTable: widget.initialTableNumber,
-          ),
-        );
+      final setupResult = await showModalBottomSheet<OrderSetupResult>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => OrderSetupBottomSheet(
+          kermesName: _currentEvent.title ?? _currentEvent.city,
+          hasDineIn: _currentEvent.hasDineIn || widget.initialTableNumber != null, // Force if table is scanned
+          hasTakeaway: _currentEvent.hasTakeaway,
+          hasDelivery: _currentEvent.hasDelivery,
+          preSelectedTable: widget.initialTableNumber,
+          preSelectedSectionId: widget.initialSectionId,
+          preSelectedDelivery: widget.initialTableNumber != null ? DeliveryType.masada : null,
+          onScanQR: (scanCtx) async {
+            final result = await showModalBottomSheet<String>(
+              context: scanCtx,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const KermesQrScannerSheet(),
+            );
+            return result;
+          },
+        ),
+      );
 
-        if (setupResult == null) return;
+      if (setupResult == null) return;
 
-        // Grup siparisi secildiyse: gercek grup session olustur
-        if (setupResult.isGroupOrder) {
-          await _startGroupOrder(
-            deliveryType: 'masada',
-            tableNo: widget.initialTableNumber,
-          );
-          return;
-        }
-
-        ref.read(kermesCartProvider.notifier).setOrderContext(
-          deliveryType: 'masada',
-          isGroupOrder: false,
-          tableNo: widget.initialTableNumber,
-        );
-      } else {
-        final setupResult = await showModalBottomSheet<OrderSetupResult>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (ctx) => OrderSetupBottomSheet(
-            kermesName: _currentEvent.title ?? _currentEvent.city,
-            hasDineIn: _currentEvent.hasDineIn,
-            hasTakeaway: _currentEvent.hasTakeaway,
-            hasDelivery: _currentEvent.hasDelivery,
-            onScanQR: (scanCtx) async {
-              final result = await showModalBottomSheet<String>(
-                context: scanCtx,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => const KermesQrScannerSheet(),
-              );
-              return result;
-            },
-          ),
-        );
-
-        if (setupResult == null) return;
-
-        // Grup siparisi secildiyse: gercek grup session olustur
-        if (setupResult.isGroupOrder) {
-          await _startGroupOrder(
-            deliveryType: setupResult.deliveryType.name,
-            tableNo: setupResult.tableNo,
-          );
-          return;
-        }
-
-        ref.read(kermesCartProvider.notifier).setOrderContext(
+      if (setupResult.isGroupOrder) {
+        await _startGroupOrder(
           deliveryType: setupResult.deliveryType.name,
-          isGroupOrder: false,
           tableNo: setupResult.tableNo,
         );
+        return;
       }
+
+      ref.read(kermesCartProvider.notifier).setOrderContext(
+        deliveryType: setupResult.deliveryType.name,
+        isGroupOrder: false,
+        tableNo: setupResult.tableNo,
+        sectionId: setupResult.sectionId,
+      );
     }
 
     // Multi-step: show customization sheet if item has option groups
@@ -2374,7 +2399,39 @@ String _getLocalizedCountry(String rawCountry) {
                   ),
                 ),
                 actions: [
-                  // QR kod okuyucu (grup siparisi katilimi)
+                  // Eger masa numarasi tarandiysa, kullaniciya gorsel olarak belirt
+                  if (widget.initialTableNumber != null || ref.read(kermesCartProvider).tableNo != null)
+                    GestureDetector(
+                      onTap: () {
+                        // Kucuk bir haptic ile masa numarasini degistirmek icin QR scanneri acma imkani
+                        HapticFeedback.lightImpact();
+                        _openQrScanner();
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.table_restaurant, color: Colors.green, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Masa ${ref.read(kermesCartProvider).tableNo ?? widget.initialTableNumber}',
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // QR kod okuyucu (grup siparisi katilimi veya masa degisimi)
                   GestureDetector(
                     onTap: () => _openQrScanner(),
                     child: Icon(Icons.qr_code_scanner_rounded,
@@ -4826,7 +4883,13 @@ String _getLocalizedCountry(String rawCountry) {
         borderRadius: BorderRadius.circular(28),
         onTap: () {
           HapticFeedback.selectionClick();
-          showKermesCheckoutSheet(context, _currentEvent);
+          showKermesCheckoutSheet(
+            context, 
+            _currentEvent,
+            initialTableNumber: widget.initialTableNumber,
+            initialSectionId: widget.initialSectionId,
+            initialDeliveryMode: widget.initialTableNumber != null ? 2 : null, // 2 corresponds to DeliveryType.masada
+          );
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
