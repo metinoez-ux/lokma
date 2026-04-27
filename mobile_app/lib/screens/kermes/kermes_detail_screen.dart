@@ -848,10 +848,11 @@ String _getLocalizedCountry(String rawCountry) {
     // Sepet bos ise: once siparis baglami popup'ini goster
     final cartState = ref.read(kermesCartProvider);
     if (cartState.isEmpty && cartState.deliveryType == null) {
-      final setupResult = await showDialog<OrderSetupResult>(
+      final setupResult = await showModalBottomSheet<OrderSetupResult>(
         context: context,
-        barrierDismissible: false,
-        builder: (ctx) => OrderSetupDialog(
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => OrderSetupBottomSheet(
           kermesName: _currentEvent.title ?? _currentEvent.city,
           hasDineIn: _currentEvent.hasDineIn,
           hasTakeaway: _currentEvent.hasTakeaway,
