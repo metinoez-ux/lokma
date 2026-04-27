@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, ReactNode } from 'react';
-import { collection, collectionGroup, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, orderBy, onSnapshot, Timestamp, or } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // ============================================================
@@ -257,6 +257,7 @@ export function OrdersProvider({
  initialDateFilter = 'all',
 }: OrdersProviderProps) {
  const [meatOrders, setMeatOrders] = useState<Order[]>([]);
+ const [kermesOrders, setKermesOrders] = useState<Order[]>([]);
  const [resOrders, setResOrders] = useState<Order[]>([]);
  const [loading, setLoading] = useState(true);
  const [dateFilter, setDateFilter] = useState<DateFilter>(initialDateFilter);
@@ -265,12 +266,12 @@ export function OrdersProvider({
  const [businessFilter, setBusinessFilter] = useState('all');
 
  const orders = useMemo(() => {
- return [...meatOrders, ...resOrders].sort((a, b) => {
+ return [...meatOrders, ...kermesOrders, ...resOrders].sort((a, b) => {
  const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0;
  const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
  return bTime - aTime;
  });
- }, [meatOrders, resOrders]);
+ }, [meatOrders, kermesOrders, resOrders]);
 
  // Dual Firestore listeners
  useEffect(() => {
@@ -281,8 +282,11 @@ export function OrdersProvider({
  // 1. Standard Orders Stream
  let qOrders;
  if (fixedBusinessId) {
-   // Avoid composite index error by querying only businessId, filtering date in memory
-   qOrders = query(collection(db, 'meat_orders'), where('businessId', '==', fixedBusinessId));
+   // Use OR query to match both businessId and butcherId to catch all legacy orders without creating index issues
+   qOrders = query(collection(db, 'meat_orders'), or(
+     where('businessId', '==', fixedBusinessId),
+     where('butcherId', '==', fixedBusinessId)
+   ));
  } else {
    qOrders = query(
      collection(db, 'meat_orders'), 
@@ -310,7 +314,34 @@ export function OrdersProvider({
  }, (error) => {
    console.error('[OrdersProvider] Error:', error);
    setLoading(false);
- }, (err) => { console.error("Firestore onSnapshot Error:", err); });
+  });
+
+  // 1.5 Kermes Orders Stream
+  let qKermes;
+  if (fixedBusinessId) {
+    qKermes = query(collection(db, 'kermes_orders'), where('kermesId', '==', fixedBusinessId));
+  } else {
+    qKermes = query(
+      collection(db, 'kermes_orders'), 
+      where('createdAt', '>=', Timestamp.fromDate(startDate)), 
+      orderBy('createdAt', 'desc')
+    );
+  }
+
+  const unsubKermes = onSnapshot(qKermes, (snapshot) => {
+    let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
+    if (fixedBusinessId) {
+      mapped = mapped.filter(o => o.businessId === fixedBusinessId || o._raw.kermesId === fixedBusinessId);
+      const startMs = startDate.getTime();
+      mapped = mapped.filter(o => {
+        const time = o.createdAt?.toMillis?.() || (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+        return time >= startMs;
+      });
+    }
+    setKermesOrders(mapped);
+  }, (error) => {
+    console.error('[OrdersProvider] Error fetching kermes_orders:', error);
+  });
 
  // 2. Continuous Tab Reservations Stream
  const resConstraints: any[] = [
@@ -364,10 +395,11 @@ export function OrdersProvider({
  setResOrders(mapped);
  }, (error) => {
  console.error('[useOrders] Error loading reservations:', error);
- }, (err) => { console.error("Firestore onSnapshot Error:", err); });
+ });
 
  return () => {
  unsubOrders();
+ unsubKermes();
  unsubReservations();
  };
  }, [dateFilter, fixedBusinessId]);
@@ -443,6 +475,7 @@ export interface UseOrdersStandaloneOptions {
 export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  const { businessId, initialDateFilter = 'all' } = options;
  const [meatOrders, setMeatOrders] = useState<Order[]>([]);
+ const [kermesOrders, setKermesOrders] = useState<Order[]>([]);
  const [resOrders, setResOrders] = useState<Order[]>([]);
  const [loading, setLoading] = useState(true);
  const [dateFilter, setDateFilter] = useState<DateFilter>(initialDateFilter);
@@ -450,12 +483,12 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  const [typeFilter, setTypeFilter] = useState('all');
 
  const orders = useMemo(() => {
- return [...meatOrders, ...resOrders].sort((a, b) => {
+ return [...meatOrders, ...kermesOrders, ...resOrders].sort((a, b) => {
  const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0;
  const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
  return bTime - aTime;
  });
- }, [meatOrders, resOrders]);
+ }, [meatOrders, kermesOrders, resOrders]);
 
  useEffect(() => {
  setLoading(true);
@@ -463,9 +496,12 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  
  // 1. Orders
  let qOrders;
- if (businessId) {
-   // Avoid composite index error by querying only businessId, filtering date in memory
-   qOrders = query(collection(db, 'meat_orders'), where('businessId', '==', businessId));
+    if (businessId) {
+      // Use OR query to match both businessId and butcherId to catch all legacy orders without creating index issues
+      qOrders = query(collection(db, 'meat_orders'), or(
+        where('businessId', '==', businessId),
+        where('butcherId', '==', businessId)
+      ));
  } else {
    qOrders = query(
      collection(db, 'meat_orders'), 
@@ -490,7 +526,34 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  }, (error) => {
    console.error('[useOrdersStandalone] Error:', error);
    setLoading(false);
- }, (err) => { console.error("Firestore onSnapshot Error:", err); });
+  });
+
+  // 1.5 Kermes Orders
+  let qKermes;
+  if (businessId) {
+    qKermes = query(collection(db, 'kermes_orders'), where('kermesId', '==', businessId));
+  } else {
+    qKermes = query(
+      collection(db, 'kermes_orders'), 
+      where('createdAt', '>=', Timestamp.fromDate(startDate)), 
+      orderBy('createdAt', 'desc')
+    );
+  }
+
+  const unsubKermes = onSnapshot(qKermes, (snapshot) => {
+    let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
+    if (businessId) {
+      mapped = mapped.filter(o => o.businessId === businessId || o._raw.kermesId === businessId);
+      const startMs = startDate.getTime();
+      mapped = mapped.filter(o => {
+        const time = o.createdAt?.toMillis?.() || (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+        return time >= startMs;
+      });
+    }
+    setKermesOrders(mapped);
+  }, (error) => {
+    console.error('[useOrdersStandalone] Error fetching kermes_orders:', error);
+  });
 
  // 2. Reservations
  const resConstraints: any[] = [
@@ -528,10 +591,11 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  setResOrders(mapped);
  }, (error) => {
  console.error('[useOrdersStandalone] Error loading reservations:', error);
- }, (err) => { console.error("Firestore onSnapshot Error:", err); });
+ });
 
  return () => {
  unsubOrders();
+ unsubKermes();
  unsubReservations();
  };
  }, [dateFilter, businessId]);

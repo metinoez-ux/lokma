@@ -40,6 +40,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'developer.apple.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'play.google.com',
+      },
     ],
   },
 };

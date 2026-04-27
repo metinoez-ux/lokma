@@ -108,19 +108,15 @@ export default function VendorPage() {
 
       {/* FLEX 3 - Modular Kiosk (Reverse Split Layout) */}
       <section className="py-24 md:py-32 bg-background">
-        <Link href={`/${locale}/vendor/flex3`} className="block max-w-7xl mx-auto px-6 md:px-12 lg:px-16 group cursor-pointer">
+        <Link href={`/${locale}/hardware/flex3`} className="block max-w-7xl mx-auto px-6 md:px-12 lg:px-16 group cursor-pointer">
           <div className="flex flex-col-reverse lg:flex-row items-center gap-16 lg:gap-24 p-8 md:p-12 rounded-[3rem] transition-all duration-500 hover:bg-muted/30 hover:shadow-2xl hover:shadow-emerald-500/5 border border-transparent hover:border-border/50">
             <div className="w-full lg:w-1/2 relative">
               <div className="absolute inset-0 bg-emerald-500/10 blur-3xl rounded-full transform scale-90 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-700" />
               <div className="relative z-10 w-full h-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-                <video 
-                  src="/videos/flex-3.mp4" 
-                  poster="https://file.cdn.sunmi.com/newebsite/products/flex-3/icon/flex-3.png"
-                  autoPlay 
-                  loop 
-                  muted 
-                  playsInline
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                <img 
+                  src="https://file.cdn.sunmi.com/newebsite/products/flex-3/icon/flex-3.png"
+                  alt="Sunmi Flex 3 Kiosk"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 bg-white"
                 />
               </div>
             </div>

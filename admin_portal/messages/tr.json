@@ -111,7 +111,8 @@
     "aylik_fatura_gecmisi": "Aylık Fatura Geçmişi",
     "henuz_fatura_yok": "Bu cari ay için henüz açık bir fatura (işlem) bulunmuyor.",
     "tahmini_guncel_fatura": "Güncel Tahmini Fatura (Bu Ay)",
-    "komisyon": "Komisyon"
+    "komisyon": "Komisyon",
+    "banka_bilgileri": "Banka Bilgileri"
   },
   "AdminActivitylogs": {
     "aktivite_kaydi_bulunamadi": "Aktivite kaydı bulunamadı",
@@ -1552,7 +1553,42 @@
     "yonetici_rol": "Yönetici",
     "surucu_rol": "Sürücü / Kurye",
     "garson_rol": "Garson",
-    "belirsiz_rol": "Belirsiz Rol"
+    "belirsiz_rol": "Belirsiz Rol",
+    "aktifKuryeYok": "Aktif kurye yok.",
+    "canli_operasyon_akisi": "Canlı Operasyon Akışı",
+    "siparislerin_anlik_durumu": "Siparişlerin anlık durumu",
+    "hata_olustu": "Hata oluştu",
+    "plan_degisikligi_iptal_edildi": "Bekleyen plan değişikliği iptal edildi.",
+    "tebrikler": "Tebrikler!",
+    "abonelik_degisikligi_alindi": "Abonelik değişikliği talebiniz başarıyla alınmıştır.",
+    "tamam": "Tamam",
+    "bekleyen_plan_degisikligi": "Bekleyen Plan Değişikliği",
+    "yeni_plan_gecis_tarihi": "Yeni planınız",
+    "degisikligi_iptal_et": "Değişikliği İptal Et",
+    "yeni_plan_onayi": "Yeni Plan Onayı",
+    "yeni_plan": "Yeni Plan",
+    "plan_kabul_metni": "Plan Kabul Metni",
+    "isleniyor": "İşleniyor...",
+    "satin_almayi_onayla": "Satın Almayı Onayla",
+    "mevcut_planiniz": "Mevcut Planınız",
+    "bekleyen_gecis": "Bekleyen Geçiş",
+    "bu_plani_sec": "Bu Planı Seç",
+    "limitler_ve_ucretler": "Limitler ve Ücretler",
+    "en_populer": "En Popüler",
+    "siparis_limiti": "Sipariş Limiti",
+    "masa_limiti": "Masa Limiti",
+    "yetkiniz_yok": "Yetkiniz Yok",
+    "planlar_yukleniyor": "Planlar yükleniyor veya bu sektör için plan bulunamadı.",
+    "toplam_siparis": "Toplam Sipariş",
+    "iptal_orani": "İptal Oranı",
+    "storniert": "Storniert",
+    "vergangene_bestellungen": "Geçmiş",
+    "bos": "Bos",
+    "daha_fazla": "Daha Fazla",
+    "aylik_ucret": "Aylik Ucret",
+    "degisiklik": "Degisiklik",
+    "hedefPlan": "Hedef Plan",
+    "gecisTarihi": "Geçiş Tarihi"
   },
   "AdminBusinessDetail": {
     "pending": "Beklemede",
@@ -1736,7 +1772,10 @@
     "tum_ozellikleri_goster": "Tüm Özellikleri Göster",
     "plan_degisikligi_onaylandi": "Plan değişikliği başarıyla alındı.",
     "plan_degisikligi_iptal_edildi": "Bekleyen plan değişikliği iptal edildi.",
-    "guvenlik_notu": "Güvenlik Notu: Hassas ödeme verileri sistemlerimizde saklanmaz."
+    "guvenlik_notu": "Güvenlik Notu: Hassas ödeme verileri sistemlerimizde saklanmaz.",
+    "ilk": "İlk",
+    "ucretsiz": "ücretsiz!",
+    "siparis_basi": "Sipariş başı:"
   },
   "AdminBusinessCategories": {
     "kategori_yonetimine_yonlendiriliyor": "Kategori yönetimine yönlendiriliyor..."
@@ -4524,7 +4563,20 @@
     "flash_sale_group_staff": "Personel & Adminler",
     "flash_sale_group_staff_desc": "Bu kermesin personeli ve adminleri",
     "flash_sale_group_nearby": "Yakin Cevredekiler",
-    "flash_sale_group_nearby_desc": "Kermes alaninin belirli km yakinindaki kullanicilar"
+    "flash_sale_group_nearby_desc": "Kermes alaninin belirli km yakinindaki kullanicilar",
+    "lutfen_yuklemenin_bitmesini_bekleyin": "Lütfen yüklemenin bitmesini bekleyin",
+    "musteriNo": "Müşteri No",
+    "musteriNoDegistirilemez": "Müşteri numarası değiştirilemez",
+    "impressumBaslik": "Impressum / Rechtliche Angaben",
+    "impressumAciklama": "Diese Angaben werden im Impressum der mobilen App angezeigt.",
+    "rechtsform": "Rechtsform",
+    "geschaeftsfuehrer": "Geschäftsführer / Vorstand",
+    "vertretungsberechtigter": "Vertretungsberechtigte/r",
+    "registergericht": "Registergericht",
+    "handelsregisternummer": "Vereins-/Handelsregisternummer",
+    "vergi_uid_nummer_vat": "Umsatzsteuer-ID (USt-IdNr.)",
+    "avrupaBirligiVergiNumarasiOrnDe123456789": "z.B. DE123456789",
+    "onerilen_kare_veya_yuvarlak": "Önerilen: 500x500. Kare veya yuvarlak formatında, transparan bir PNG veya temiz arka plan."
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 İşletme Admin",
@@ -5182,7 +5234,13 @@
     "kapat": "Kapat",
     "isletme": "İşletme",
     "rolYonetici": "Yönetici (Admin)",
-    "rolPersonel": "Personel (Standart)"
+    "rolPersonel": "Personel (Standart)",
+    "kermesLabel": "Kermes",
+    "eminMisinizKullaniciSil": "Eminmisinizkullanicisil",
+    "silmeHatasi": "Silmehatasi",
+    "hata": "Hata",
+    "bilinmeyenHata": "Bilinmeyenhata",
+    "profil_resmini_kirp": "Profil Resmini Kırp"
   },
   "AdminOrdersCreate": {
     "adim": "Adım",
@@ -6084,7 +6142,8 @@
     "ekran_goruntusu_tercihleri": "Ekran görüntüsünü Otomatik, Aydınlık veya Karanlık olarak belirleyin",
     "otomatik": "Otomatik",
     "aydinlik": "Gündüz",
-    "karanlik": "Gece"
+    "karanlik": "Gece",
+    "yonlendiriliyor": "İşletme Profiline Yönlendiriliyor..."
   },
   "AdminSettingsKermescategories": {
     "atistirmalik": "Atıştırmalık",
@@ -6460,7 +6519,15 @@
     "sms_gonderildi": "SMS gonderildi",
     "zorunlu_alanlari_doldurun": "Lütfen tüm zorunlu alanları doldurun",
     "email_gonderilemedi": "E-posta gönderilemedi",
-    "sms_gonderilemedi": "SMS gönderilemedi"
+    "sms_gonderilemedi": "SMS gönderilemedi",
+    "kurye_detaylari_performans": "Kurye Detayları & Performans",
+    "durdurma_sayisi": "Durdurma Sayısı",
+    "devam_ettirme": "Devam Ettirme",
+    "toplam_durma_suresi": "Toplam Durma Süresi",
+    "benzersiz_musteri": "Benzersiz Müşteri",
+    "durduruldu": "Durduruldu",
+    "devam_etti": "Devam Etti",
+    "duzenle": "Duzenle"
   },
   "AdminStaffshifts": {
     "agustos": "Ağustos",
@@ -6561,7 +6628,7 @@
     "karsilastirma_donemi": "📊 Karşılaştırma Dönemi:",
     "karsilastirma_yok": "📊 Karşılaştırma Yok",
     "kurye": "% Kurye",
-    "kurye_acma_kapama_gecmisi": "🛵 Kurye Açma/Kapama Geçmişi",
+    "kurye_acma_kapama_gecmisi": "Kurye Açma/Kapama Geçmişi",
     "kurye_durdurma": "Kurye Durdurma",
     "onceki": "Önceki:",
     "ort_hazirlama": "Ort. Hazırlama",
@@ -6578,6 +6645,7 @@
     "siparis_sayisi": "Sipariş Sayısı",
     "son_30_gun": "Son 30 Gün",
     "son_7_gun": "Son 7 Gün",
+    "son_7_gun_trend_analizi": "Son 7 Gün Trend Analizi",
     "son_90_gun": "Son 90 Gün",
     "sub": "Şub",
     "tarih": "Tarih",
@@ -6602,6 +6670,8 @@
     "retention": "Devam Ettirme",
     "daily": "Günlük",
     "weekly": "Haftalık",
+    "sadece_son_3": "Sadece Son 3",
+    "tumunu_goster": "+ Tumunu Goster ({count})",
     "monthly": "Aylık",
     "today": "Bugün",
     "thisWeek": "Bu Hafta",
@@ -6620,7 +6690,9 @@
     "completed_label": "Tamamlanan",
     "minutes_short": "dk",
     "avg_delivery": "Ort. Teslim",
-    "retention_label": "Devam Ettirme"
+    "retention_label": "Devam Ettirme",
+    "s_adece_son_3": "Sadece son 3 işlem gösteriliyor",
+    "siparisler": "Siparisler"
   },
   "AdminSubscription": {
     "01_subat_2026": "01 Şubat 2026",
@@ -8093,7 +8165,14 @@
     "quantity_kg": "Quantity kg",
     "price_kg": "Price kg",
     "total": "Total",
-    "new_total": "New total"
+    "new_total": "New total",
+    "workflow": {
+      "pending": "Yeni Sipariş",
+      "preparing": "Hazırlanıyor",
+      "ready": "Hazır",
+      "inTransit": "Yolda",
+      "completed": "Tamamlandı"
+    }
   },
   "AdminAiMenu": {
     "delete_group_title": "Grubu sil",
@@ -8687,5 +8766,28 @@
     "batteryInfoDesc": "ESL cihazlarında pil bittiğinde cihaz çöp olmaz veya kullanılamaz hale gelmez. Bu cihazlar standart Lityum Düğme Pil (genelde CR2450) kullanır. Pil ömrü dolduğunda kapağı açılarak pil çok düşük bir maliyetle saniyeler içinde yenilenir ve cihaz 5 yıl daha sorunsuz çalışmaya devam eder.",
     "returnToOrder": "Siparişe Dön",
     "rentOr": "veya {price} / ay kiralama"
-  }
+  },
+  "tr-TR": "Tr-tr",
+  "isletmeBilgileri": "İşletme Bilgileri",
+  "isletmeProfilAdresIletisim": "Profil, adres ve iletişim",
+  "teslimat": "Teslimat Ayarları",
+  "kurye_teslimat_ucreti_ve_siparis_saatler": "Kurye yönetimi ve süreler",
+  "menu_ve_urunler": "Menü & Ürünler",
+  "urun_ve_kategori_yonetimi": "Toplu ürün yönetimi",
+  "personel": "Personel",
+  "personel_listesi_ve_yonetimi": "Ekip listesi yönetimi",
+  "shifts": "Vardiya Yönetimi",
+  "vardiya_planlama_ve_takibi": "Kasaya giriş çıkış analizleri",
+  "abonelik_plan": "Abonelik Paketi",
+  "abonelik_plani_ve_ozellikler": "Mevcut plan özellikleri",
+  "faturalarim": "Faturalar",
+  "platform_faturalari_ve_abonelik_odemeler": "Platform makbuzları",
+  "gorunum": "Arayüz Tercihleri",
+  "ekran_goruntusu_tercihleri": "Sistem geneli tema ayarınız",
+  "otomatik": "Sistem",
+  "aydinlik": "Gündüz",
+  "karanlik": "Gece",
+  "personnel": "Personnel",
+  "products_admin": "Products Admin",
+  "werbung": "Werbung"
 }

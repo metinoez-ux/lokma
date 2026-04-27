@@ -824,14 +824,14 @@ export default function AccountPage() {
   <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
   <p className="text-gray-400 text-xs mb-1">Satış Değeri (Net/Brüt)</p>
   <p className="text-2xl font-bold text-green-400">
-    {formatCurrency(stats.monthlySponsoredRevenueNet, livePlan.currency || business?.currency)}
-    <span className="text-sm font-normal text-gray-500 ml-1">/ {formatCurrency(stats.monthlySponsoredRevenueGross, livePlan.currency || business?.currency)}</span>
+    {formatCurrency(stats.monthlySponsoredRevenueNet, livePlan?.currency || business?.currency)}
+    <span className="text-sm font-normal text-gray-500 ml-1">/ {formatCurrency(stats.monthlySponsoredRevenueGross, livePlan?.currency || business?.currency)}</span>
   </p>
   </div>
   <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
   <p className="text-gray-400 text-xs mb-1">Sipariş Başı Ücret</p>
   <p className="text-2xl font-bold text-yellow-400">
-  {((livePlan as any).sponsoredFeePerConversion || 0) > 0 ? formatCurrency((livePlan as any).sponsoredFeePerConversion, livePlan.currency || business?.currency) : 'Ücretsiz'}
+  {((livePlan as any)?.sponsoredFeePerConversion || 0) > 0 ? formatCurrency((livePlan as any).sponsoredFeePerConversion, livePlan?.currency || business?.currency) : 'Ücretsiz'}
   </p>
   </div>
   <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
@@ -840,7 +840,7 @@ export default function AccountPage() {
   </div>
   <div className="bg-background/50 rounded-lg p-4 border border-yellow-600/20">
   <p className="text-gray-400 text-xs mb-1">Bu Ay Toplam Ücret</p>
-  <p className="text-2xl font-bold text-red-400">{formatCurrency(stats.monthlySponsoredFees, livePlan.currency || business?.currency)}</p>
+  <p className="text-2xl font-bold text-red-400">{formatCurrency(stats.monthlySponsoredFees, livePlan?.currency || business?.currency)}</p>
   </div>
   </div>
   </div>
@@ -881,12 +881,12 @@ export default function AccountPage() {
   <div className="bg-background/50 rounded-lg p-4 border border-blue-600/20">
   <p className="text-gray-400 text-xs mb-1">Birim Ücret</p>
   <p className="text-2xl font-bold text-white">
-  {(livePlan as any).tableReservationFee > 0 ? formatCurrency((livePlan as any).tableReservationFee, livePlan.currency || business?.currency) : '0,00'}
+  {((livePlan as any)?.tableReservationFee || 0) > 0 ? formatCurrency((livePlan as any)?.tableReservationFee, livePlan?.currency || business?.currency) : '0,00'}
   </p>
   </div>
   <div className="bg-background/50 rounded-lg p-4 border border-blue-600/20">
   <p className="text-gray-400 text-xs mb-1">Bu Ay Toplam Ücret</p>
-  <p className="text-2xl font-bold text-red-400">{formatCurrency(stats.monthlyReservationFees, livePlan.currency || business?.currency)}</p>
+  <p className="text-2xl font-bold text-red-400">{formatCurrency(stats.monthlyReservationFees, livePlan?.currency || business?.currency)}</p>
   </div>
   </div>
   </div>
@@ -916,13 +916,13 @@ export default function AccountPage() {
   <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
   <p className="text-gray-400 text-xs mb-1">Aşım Birim Ücreti</p>
   <p className="text-2xl font-bold text-white">
-  {livePlan?.personnelOverageFee > 0 ? formatCurrency(livePlan.personnelOverageFee, livePlan.currency || business?.currency) : '0,00'}
+  {(livePlan?.personnelOverageFee || 0) > 0 ? formatCurrency(livePlan?.personnelOverageFee || 0, livePlan?.currency || business?.currency) : '0,00'}
   </p>
   </div>
   <div className="bg-background/50 rounded-lg p-4 border border-cyan-600/20">
   <p className="text-gray-400 text-xs mb-1">Bu Ay Aşım Ücreti</p>
   <p className="text-2xl font-bold text-red-400">
-  {livePlan?.personnelLimit != null && (business?.staffCount || 1) > livePlan.personnelLimit ? formatCurrency(((business?.staffCount || 1) - livePlan.personnelLimit) * (livePlan.personnelOverageFee || 0), livePlan.currency || business?.currency) : formatCurrency(0, livePlan.currency || business?.currency)}
+  {livePlan?.personnelLimit != null && (business?.staffCount || 1) > livePlan.personnelLimit ? formatCurrency(((business?.staffCount || 1) - livePlan.personnelLimit) * (livePlan.personnelOverageFee || 0), livePlan?.currency || business?.currency) : formatCurrency(0, livePlan?.currency || business?.currency)}
   </p>
   </div>
   </div>

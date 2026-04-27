@@ -7,8 +7,7 @@ import { auth, db } from '@/lib/firebase';
 import { isSuperAdmin } from '@/lib/config';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
+
 
 interface UserData {
  email: string | null;
@@ -181,6 +180,7 @@ export default function ProfilePage() {
  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
  downloadBlob(blob, `mira-verilerim-${dateStr}.json`);
  } else if (format === 'excel') {
+ const XLSX = await import('xlsx');
  const wb = XLSX.utils.book_new();
 
  // Profile sheet
@@ -203,6 +203,7 @@ export default function ProfilePage() {
 
  XLSX.writeFile(wb, `mira-verilerim-${dateStr}.xlsx`);
  } else if (format === 'pdf') {
+ const { default: jsPDF } = await import('jspdf');
  const pdf = new jsPDF();
 
  pdf.setFontSize(20);

@@ -1,0 +1,41 @@
+src/app/[locale]/account/page.tsx(827,55): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(828,116): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(834,121): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(843,94): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(884,102): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(889,96): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(919,4): error TS18048: 'livePlan.personnelOverageFee' is possibly 'undefined'.
+src/app/[locale]/account/page.tsx(919,55): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(919,55): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/app/[locale]/account/page.tsx(919,85): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/account/page.tsx(925,267): error TS18047: 'livePlan' is possibly 'null'.
+src/app/[locale]/admin/business/[id]/page.tsx(3049,84): error TS2304: Cannot find name 'LayoutDashboard'.
+src/app/[locale]/admin/business/[id]/page.tsx(3050,87): error TS2552: Cannot find name 'ClipboardList'. Did you mean 'Clipboard'?
+src/app/[locale]/admin/business/[id]/page.tsx(3087,2): error TS2367: This comparison appears to be unintentional because the types '"teslimat" | "personel" | "isletme" | "reservations" | "menu" | "masa" | "odeme" | "promosyon" | "marketing" | "saatler" | "procurement"' and '"dashboard"' have no overlap.
+src/app/[locale]/admin/business/[id]/page.tsx(3818,2): error TS2367: This comparison appears to be unintentional because the types '"teslimat" | "personel" | "isletme" | "reservations" | "menu" | "masa" | "odeme" | "promosyon" | "marketing" | "saatler" | "procurement"' and '"siparisler"' have no overlap.
+src/app/[locale]/admin/plans/page.tsx(156,24): error TS2551: Property 'eslSetupFee' does not exist on type 'Partial<ButcherSubscriptionPlan>'. Did you mean 'setupFee'?
+src/app/[locale]/admin/plans/page.tsx(157,40): error TS2339: Property 'eslMinimumRentMonths' does not exist on type 'Partial<ButcherSubscriptionPlan>'.
+src/app/[locale]/admin/plans/page.tsx(159,58): error TS2367: This comparison appears to be unintentional because the types 'number | null' and 'string' have no overlap.
+src/app/[locale]/admin/plans/page.tsx(160,56): error TS2367: This comparison appears to be unintentional because the types 'number | null' and 'string' have no overlap.
+src/app/[locale]/admin/plans/page.tsx(161,52): error TS2367: This comparison appears to be unintentional because the types 'number | null' and 'string' have no overlap.
+src/app/[locale]/admin/plans/page.tsx(162,60): error TS2367: This comparison appears to be unintentional because the types 'number | null' and 'string' have no overlap.
+src/app/[locale]/admin/plans/page.tsx(538,9): error TS2367: This comparison appears to be unintentional because the types 'number | undefined' and 'string' have no overlap.
+src/app/[locale]/admin/plans/page.tsx(591,20): error TS2367: This comparison appears to be unintentional because the types 'number | undefined' and 'string' have no overlap.
+src/hooks/useOrders.tsx(294,42): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '(snapshot: QuerySnapshot<DocumentData, DocumentData>) => void' has no properties in common with type 'SnapshotListenOptions'.
+src/hooks/useOrders.tsx(313,6): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/hooks/useOrders.tsx(327,54): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '(snapshot: QuerySnapshot<DocumentData, DocumentData>) => void' has no properties in common with type 'SnapshotListenOptions'.
+src/hooks/useOrders.tsx(367,6): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/hooks/useOrders.tsx(477,42): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '(snapshot: QuerySnapshot<DocumentData, DocumentData>) => void' has no properties in common with type 'SnapshotListenOptions'.
+src/hooks/useOrders.tsx(493,6): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/hooks/useOrders.tsx(507,54): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '(snapshot: QuerySnapshot<DocumentData, DocumentData>) => void' has no properties in common with type 'SnapshotListenOptions'.
+src/hooks/useOrders.tsx(531,6): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/middleware.ts(11,73): error TS2339: Property 'geo' does not exist on type 'NextRequest'.

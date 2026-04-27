@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, Fragment } from "react";
+import { useEffect, useState, useCallback, Fragment, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
 import { normalizeTimeString, getScheduleForToday, parseOpeningHoursBlock } from "@/utils/timeUtils";
-import { Store, Utensils, Users, CreditCard, Gift, Rocket, Wand2, Truck, Clock } from "lucide-react";
+import { Store, Utensils, Users, CreditCard, Gift, Rocket, Wand2, Truck, Clock, LayoutDashboard, ShoppingBag, ClipboardList, CalendarDays, Package, Star, History } from "lucide-react";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
@@ -45,7 +45,7 @@ import { useTranslations } from "next-intl";
 import { useSectors } from "@/hooks/useSectors";
 import { subscriptionService } from "@/services/subscriptionService";
 
-import { Star, History, CalendarDays } from "lucide-react";
+
 import OrderCard from "@/components/admin/OrderCard";
 import { useOrdersStandalone, type Order } from "@/hooks/useOrders";
 import OrderDetailsModal from "@/components/admin/OrderDetailsModal";
@@ -130,8 +130,10 @@ declare global {
 
 
 export default function BusinessDetailsPage() {
- const t = useTranslations('AdminBusiness');
- const tOrders = useTranslations('AdminPortal.Orders');
+  const t = useTranslations('AdminBusiness');
+  const tOrders = useTranslations('AdminPortal.Orders');
+  const tStats = useTranslations('AdminStatistics');
+  const tStaff = useTranslations('AdminStaffdashboard');
 
  // formatTo24h: paylasimli utility uzerinden -- AM/PM, 24h, nokta seperator hepsini handle eder
  function formatTo24h(timeStr: string): string {
@@ -228,7 +230,7 @@ export default function BusinessDetailsPage() {
  const router = useRouter();
  const searchParams = useSearchParams();
  const businessId = params.id as string;
- const initialTab = searchParams.get('tab') as 'overview' | 'orders' | 'reservations' | 'settings' || 'settings';
+ const initialTab = searchParams.get('tab') as 'overview' | 'orders' | 'reservations' | 'settings' || 'overview';
 	const initialSubTab = searchParams.get('settingsSubTab') as 'isletme' | 'menu' | 'personel' | 'masa' | 'odeme' | 'promosyon' | 'marketing' | 'teslimat' | 'saatler' || 'isletme';
 
  const { admin, loading: adminLoading } = useAdmin();
@@ -284,6 +286,15 @@ export default function BusinessDetailsPage() {
  const [selectedOrder, setSelectedOrder] = useState<any>(null);
  const [showCancelledModal, setShowCancelledModal] = useState(false);
  const [showCompletedModal, setShowCompletedModal] = useState(false);
+
+  // Performance & Courier Stats
+  const [perfDateRange, setPerfDateRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [pauseLogs, setPauseLogs] = useState<{ id: string; action: 'paused' | 'resumed'; timestamp: Date; adminEmail: string; adminId: string }[]>([]);
+  const [perfOrderStats, setPerfOrderStats] = useState<{ totalOrders: number; completedOrders: number; avgPreparationTime: number; avgDeliveryTime: number }>({ totalOrders: 0, completedOrders: 0, avgPreparationTime: 0, avgDeliveryTime: 0 });
+  const [showPauseLogsModal, setShowPauseLogsModal] = useState(false);
+  const [periodTab, setPeriodTab] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [showAllPauseLogs, setShowAllPauseLogs] = useState(false);
+
  const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
  const [editingOrder, setEditingOrder] = useState<any>(null);
  const [orderForm, setOrderForm] = useState<any>({
@@ -317,6 +328,87 @@ export default function BusinessDetailsPage() {
  maxProductsPerBusiness: number;
  }>({ enabled: false, feePerConversion: 0.40, maxProductsPerBusiness: 5 });
  const [sponsoredSaving, setSponsoredSaving] = useState(false);
+
+  // Fetch delivery pause logs
+  useEffect(() => {
+    if (!businessId) return;
+    const logsRef = collection(db, 'businesses', businessId, 'deliveryPauseLogs');
+    const q = query(logsRef, orderBy('timestamp', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const logsData = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+        timestamp: d.data().timestamp?.toDate() || new Date(),
+      })) as typeof pauseLogs;
+      setPauseLogs(logsData);
+    });
+    return () => unsubscribe();
+  }, [businessId]);
+
+  // Fetch performance order stats
+  useEffect(() => {
+    if (!businessId) return;
+    const loadPerfStats = async () => {
+      try {
+        const daysAgo = perfDateRange === '7d' ? 7 : perfDateRange === '30d' ? 30 : 90;
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - daysAgo);
+        const ordersRef = collection(db, 'meat_orders');
+        const q2 = query(ordersRef, where('businessId', '==', businessId), limit(500));
+        const snapshot = await getDocs(q2);
+        const allOrders = snapshot.docs.map(d => ({
+          ...d.data(),
+          status: d.data().status || '',
+          createdAt: d.data().createdAt?.toDate() || new Date(),
+          updatedAt: d.data().updatedAt?.toDate() || null,
+          completedAt: d.data().completedAt?.toDate() || null,
+        }));
+        const filtered = allOrders.filter(o => o.createdAt >= startDate);
+        const completed = filtered.filter(o => o.status === 'completed');
+        let totalPrepTime = 0, prepCount = 0, totalFulfillTime = 0, fulfillCount = 0;
+        completed.forEach(o => {
+          if (o.updatedAt && o.createdAt) {
+            const diffMins = (o.updatedAt.getTime() - o.createdAt.getTime()) / (1000 * 60);
+            if (diffMins > 0 && diffMins < 180) { totalPrepTime += diffMins; prepCount++; }
+          }
+          const endTime = o.completedAt || o.updatedAt;
+          if (endTime && o.createdAt) {
+            const diffMins = (endTime.getTime() - o.createdAt.getTime()) / (1000 * 60);
+            if (diffMins > 0 && diffMins < 180) { totalFulfillTime += diffMins; fulfillCount++; }
+          }
+        });
+        setPerfOrderStats({
+          totalOrders: filtered.length,
+          completedOrders: completed.length,
+          avgPreparationTime: prepCount > 0 ? Math.round(totalPrepTime / prepCount) : 0,
+          avgDeliveryTime: fulfillCount > 0 ? Math.round(totalFulfillTime / fulfillCount) : 0,
+        });
+      } catch (error) { console.error('Error loading perf stats:', error); }
+    };
+    loadPerfStats();
+  }, [businessId, perfDateRange]);
+
+  // Calculate pause statistics
+  const pauseStats = useMemo(() => {
+    const daysAgo = perfDateRange === '7d' ? 7 : perfDateRange === '30d' ? 30 : 90;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysAgo);
+    const filtered = pauseLogs.filter(log => log.timestamp >= startDate);
+    const pauseCount = filtered.filter(log => log.action === 'paused').length;
+    const resumeCount = filtered.filter(log => log.action === 'resumed').length;
+    let totalPausedMs = 0;
+    let pauseStart: Date | null = null;
+    const chrono = [...filtered].reverse();
+    chrono.forEach(log => {
+      if (log.action === 'paused') { pauseStart = log.timestamp; }
+      else if (log.action === 'resumed' && pauseStart) {
+        totalPausedMs += log.timestamp.getTime() - pauseStart.getTime();
+        pauseStart = null;
+      }
+    });
+    if (pauseStart !== null) { totalPausedMs += Date.now() - (pauseStart as Date).getTime(); }
+    return { pauseCount, resumeCount, totalPausedHours: Math.round(totalPausedMs / (1000 * 60 * 60)) };
+  }, [pauseLogs, perfDateRange]);
 
  // Update tab when URL changes
  useEffect(() => {
@@ -758,7 +850,7 @@ export default function BusinessDetailsPage() {
  <span className="text-4xl">🔒</span>
  <h3 className="text-foreground font-bold mt-3 text-lg">{t('buFonksiyonPlaninizdaMevcutDegil')}</h3>
  <p className="text-muted-foreground text-sm mt-2">
- {t('mevcutPlan')}: <strong className="text-foreground">{business?.subscriptionPlan || 'free'}</strong>
+ {t('mevcutPlan')}: <strong className="text-foreground">{business?.subscriptionPlan || 'eat_free'}</strong>
  </p>
  <a
  href={`/${params.locale}/admin/plans`}
@@ -818,6 +910,12 @@ export default function BusinessDetailsPage() {
  id: businessDoc.id,
  ...businessDoc.data(),
  } as ButcherPartner;
+
+ const rawPlan = (data.subscriptionPlan || "").toLowerCase().trim();
+  if (rawPlan === "free" || rawPlan === "lokma free") {
+    data.subscriptionPlan = "eat_free";
+  }
+
  setBusiness(data);
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  const d = data as any;
@@ -2295,7 +2393,7 @@ export default function BusinessDetailsPage() {
  setUploading(false);
  }
 
- const isSuperAdmin = admin?.adminType === 'super' || admin?.role === 'super';
+ const isSuperAdmin = admin?.adminType === 'super' || admin?.role === 'super_admin';
 
  const updatedData: Record<string, any> = {
  companyName: formData.companyName || "",
@@ -2750,7 +2848,7 @@ export default function BusinessDetailsPage() {
   setEditStaffLoading(false);
   };
 
-  const handleResetStaffPassword = async (staffMember: typeof staffList[0]) => {
+  const handleResetPassword = async (staffMember: typeof staffList[0]) => {
   setResetPasswordLoading(true);
   try {
   // Use existing reset-user-password route which generates password server-side
@@ -2790,6 +2888,7 @@ export default function BusinessDetailsPage() {
   console.error('Toggle active error:', error);
   showToast(t('islemBasarisiz') || 'Islem basarisiz', 'error');
   }
+  loadStaff();
   };
 
 
@@ -2839,808 +2938,535 @@ export default function BusinessDetailsPage() {
  {/* Header - Only Super Admin needs to navigate these tabs globally from here */}
  {admin?.adminType === 'super' && (
  <header className="bg-card border-b border-border sticky top-0 z-30">
- <div className="max-w-6xl mx-auto px-4 py-3">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
+ <div className="w-full px-4 py-3 flex items-center justify-between">
  <Link
  href="/admin/business"
- className="text-muted-foreground hover:text-white"
+ className="text-muted-foreground hover:text-white flex items-center gap-2 text-sm font-medium transition-colors"
  >
- {t('geri_buton')}
+ <span>←</span> {t('geri_buton')}
  </Link>
- <div>
- <h1 className="text-lg font-bold text-foreground">
- {businessId === 'new' ? t('yeniIsletmeEkle2') : (business?.companyName || t('isletmeDetayi'))}
- </h1>
- {business && (
- <p className="text-muted-foreground text-sm">
- {(business.shopPhone || business.contactPerson?.phone) && (
- <span className="mr-3"> {business.shopPhone || business.contactPerson?.phone}</span>
- )}
- <span>{business.address?.city}, {business.address?.country}</span>
- </p>
- )}
- </div>
- </div>
- <div className="flex items-center gap-3">
  <ThemeToggle />
- {businessId !== 'new' && (
- <span
- className={`px-3 py-1 rounded-full text-sm ${planInfo.color} text-white`}
- >
- {planInfo.label}
- </span>
- )}
- </div>
- </div>
-
- {/* Tabs + Ayarlar Dropdown */}
- <div className="flex flex-wrap items-center gap-1.5 mt-3">
- {/* Main Navigation Tabs */}
- <button
- onClick={() => { setActiveTab("overview"); setShowSettingsDropdown(false); }}
- className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
- >
- {t('dashboard')}
- </button>
- {((admin?.adminType === 'super' || admin?.adminType === 'admin')) && (
- <Link
- href={`/admin/business/${businessId}/performance`}
- className="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-purple-600 text-white hover:bg-purple-500"
- >
- 📈 {t('performans')}
- </Link>
- )}
- <button
- onClick={() => { setActiveTab("orders"); setShowSettingsDropdown(false); }}
- className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
- >
- {t('siparisler')}({orders.length})
- </button>
-
- {/* Ayarlar Tab (Unified) */}
- <button
- onClick={() => { setActiveTab("settings"); setShowSettingsDropdown(false); }}
- className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
- >
- {t('ayarlar')}
- </button>
- </div>
  </div>
  </header>
  )}
 
- <main className="max-w-6xl mx-auto px-4 py-6">
- {/* Overview Tab */}
- {activeTab === "overview" && (
- <div className="space-y-6">
-
- {/* Active Staff & Couriers Panel */}
- <div className="bg-card rounded-xl shadow-sm border border-border p-5">
- <div className="flex items-center justify-between mb-4">
- <h3 className="text-foreground font-bold">
- {t('aktif_personel_kuryeler')}
- </h3>
- <span className="text-green-800 dark:text-green-400 text-sm flex items-center gap-1">
- <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
- {staffList.filter((s) => s.isActive !== false).length} {t('online_label')}
- </span>
- </div>
-
- {/* Online Staff Grid */}
- <div className="grid md:grid-cols-2 gap-4">
- {/* Mağaza Çalışanları */}
- <div className="bg-muted/30 dark:bg-muted/10 border border-border rounded-lg p-4">
- <h4 className="text-foreground text-sm font-medium mb-3 flex items-center gap-2">
- {t('magazaCalisanlari')}
- </h4>
- <div className="space-y-2">
- {staffList.filter((s) => s.isActive !== false).length ===
- 0 ? (
- <p className="text-muted-foreground text-sm">
- {t('henuzAktifPersonelYok')}
- </p>
- ) : (
- staffList
- .filter((s) => s.isActive !== false)
- .map((staff) => (
- <div
- key={staff.id}
- className="flex items-center justify-between bg-background border border-border rounded-lg px-3 py-2 shadow-sm"
- >
- <div className="flex items-center gap-2">
- <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
- <span className="text-foreground text-sm">
- {staff.displayName}
- </span>
- </div>
- <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeClass(staff.adminType)}`}>
- {getRoleLabel(staff.adminType, t)}
- </span>
- </div>
- ))
- )}
- </div>
- </div>
-
- {/* Aktif Kuryeler */}
- <div className="bg-muted/30 dark:bg-muted/10 border border-border rounded-lg p-4">
- <h4 className="text-foreground text-sm font-medium mb-3 flex items-center gap-2">
- {t('kuryelerDagitimda')}
- </h4>
- <div className="space-y-2">
- {/* Gerçek kurye bilgileri - onTheWay veya claimedBy olan siparişler */}
- {(() => {
- const activeDeliveries = orders.filter(
- (o) => o.status === "onTheWay" || (o.status === "ready" && (o as any).claimedBy)
- );
- if (activeDeliveries.length > 0) {
- return activeDeliveries.slice(0, 5).map((order, idx) => (
- <div
- key={order.id}
- className="flex items-center justify-between bg-amber-600/20 border border-amber-600/30 rounded-lg px-3 py-2"
- >
- <div className="flex items-center gap-2">
- <span className="text-xl">🏍️</span>
- <div>
- <span className="text-foreground text-sm">
- {(order as any).driverName || (order as any).claimedByName || `${t('kurye_label')} ${idx + 1}`}
- </span>
- <p className="text-amber-800 dark:text-amber-400 text-xs">
- #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || t('musteri')}
- </p>
- </div>
- </div>
- <div className="text-right">
- <span className={`text-xs px-2 py-0.5 rounded ${order.status === 'onTheWay' ? 'bg-amber-600/50 text-amber-300' : 'bg-green-600/50 text-green-300'}`}>
- {order.status === 'onTheWay' ? t('yoldaEmoji') : t('hazir1')}
- </span>
- </div>
- </div>
- ));
- }
- return (
- <div className="text-center py-4">
- <p className="text-muted-foreground text-sm">
- {t('suAnDagitimdaKuryeYok')}
- </p>
- <p className="text-muted-foreground text-xs mt-1">
- {t('teslimatBasladigindaBuradaGorunecek')}
- </p>
- </div>
- );
- })()}
- </div>
- </div>
- </div>
- </div>
-
- {/* 🔴 NEW: Super Admin Parity - Quick Stats & Visual Order Workflow */}
- {(() => {
- const pendingOrders = orders.filter((o) => o.status === "pending" || o.status === "accepted");
- const preparingOrders = orders.filter((o) => o.status === "preparing");
- const readyOrders = orders.filter((o) => o.status === "ready");
- const inTransitOrders = orders.filter((o) => o.status === "onTheWay");
- const completedOrders = orders.filter((o) => o.status === "delivered" || o.status === "served");
- const cancelledOrders = orders.filter((o) => {
-    if (o.status !== "cancelled") return false;
-    const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return createdAt > sevenDaysAgo;
-  });
- 
- const stats = {
- total: orders.length,
- pending: pendingOrders.length,
- preparing: preparingOrders.length,
- ready: readyOrders.length,
- inTransit: inTransitOrders.length,
- completed: completedOrders.length,
-  cancelled: cancelledOrders.length,
- revenue: orders.filter((o) => o.status !== "cancelled").reduce((sum, o) => sum + (o.total || 0), 0),
- };
- 
- return (
- <div className="space-y-6">
- {/* Quick Stats */}
- <div className="flex gap-2">
- <div className="bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
- <p className="text-xl font-bold text-blue-900 dark:text-blue-300">{stats.total}</p>
- <p className="text-[10px] font-semibold text-blue-900/80 dark:text-blue-400">{t('toplamSiparis')}</p>
- </div>
- <div className="bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
- <p className="text-xl font-bold text-yellow-800 dark:text-yellow-300">{stats.pending}</p>
- <p className="text-[10px] font-semibold text-yellow-700 dark:text-yellow-400">{t('bekleyen')}</p>
- </div>
- <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
- <p className="text-xl font-bold text-amber-800 dark:text-amber-300">{stats.preparing}</p>
- <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">{t('hazirlanan')}</p>
- </div>
- <div className="bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
- <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{formatCurrency(stats.revenue, business?.currency)}</p>
- <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">{t('toplam_ciro')}</p>
- </div>
- </div>
-
- {/* Visual Order Status Workflow - Matching Super Admin Dashboard */}
- <div className="bg-card rounded-xl shadow-sm border border-border p-6">
- <div className="flex items-center justify-between mb-6">
- <h3 className="text-foreground font-bold">
- {t('siparis_durumlari_anlik')}
- </h3>
- <span className="text-muted-foreground text-sm">
- {t('su_anki_siparisler')}
- </span>
- </div>
-
- <div className="flex items-center gap-2 overflow-x-auto pb-2">
- {/* Bekleyen - Yanıp söner */}
- <div className={`flex-1 min-w-[100px] bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-300 dark:border-yellow-600 rounded-xl p-4 text-center relative shadow-sm ${stats.pending > 0 ? "animate-pulse" : ""}`}>
- <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-400 dark:bg-yellow-500 rounded-full border-2 border-border shadow-sm"></div>
- <p className={`text-yellow-900 dark:text-yellow-400 text-3xl font-bold ${stats.pending > 0 ? "animate-bounce" : ""}`}>
- {stats.pending}
- </p>
- <p className="text-yellow-900/80 dark:text-yellow-300 text-sm font-semibold mt-1">
- 🔔 {tOrders('workflow.pending')}
- </p>
- </div>
- <div className="text-muted-foreground text-xl">→</div>
- {/* Hazırlanıyor */}
- <div className="flex-1 min-w-[100px] bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-700/50 rounded-xl p-4 text-center relative shadow-sm">
- <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-400 dark:bg-amber-500 rounded-full border-2 border-border shadow-sm"></div>
- <p className="text-amber-900 dark:text-amber-400 text-3xl font-bold">
- {stats.preparing}
- </p>
- <p className="text-amber-900/80 dark:text-amber-300 text-sm font-semibold mt-1">👨‍🍳 {tOrders('workflow.preparing')}</p>
- </div>
- <div className="text-muted-foreground text-xl">→</div>
- {/* Hazır */}
- <div className="flex-1 min-w-[100px] bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700/50 rounded-xl p-4 text-center relative shadow-sm">
- <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-400 dark:bg-green-500 rounded-full border-2 border-border shadow-sm"></div>
- <p className="text-green-900 dark:text-green-400 text-3xl font-bold">
- {stats.ready}
- </p>
- <p className="text-green-900/80 dark:text-green-300 text-sm font-semibold mt-1">📦 {tOrders('workflow.ready')}</p>
- </div>
- <div className="text-muted-foreground text-xl">→</div>
- {/* Yolda */}
- <div className="flex-1 min-w-[100px] bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-200 dark:border-indigo-700/50 rounded-xl p-4 text-center relative shadow-sm">
- <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-400 dark:bg-indigo-500 rounded-full border-2 border-border shadow-sm"></div>
- <p className="text-indigo-900 dark:text-indigo-400 text-3xl font-bold">
- {stats.inTransit}
- </p>
- <p className="text-indigo-900/80 dark:text-indigo-300 text-sm font-semibold mt-1">🛵 {tOrders('workflow.inTransit')}</p>
- </div>
- <div className="text-muted-foreground text-xl">→</div>
- {/* Tamamlanan */}
- <div className="flex-1 min-w-[100px] bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700/50 rounded-xl p-4 text-center relative shadow-sm">
- <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-400 dark:bg-emerald-500 rounded-full border-2 border-border shadow-sm"></div>
- <p className="text-emerald-900 dark:text-emerald-400 text-3xl font-bold">
- {stats.completed}
- </p>
- <p className="text-emerald-900/80 dark:text-emerald-300 text-sm font-semibold mt-1">✓ {tOrders('workflow.completed')}</p>
- </div>
- </div>
- {/* Timeline line */}
- <div className="relative mt-2 h-1 bg-gradient-to-r from-yellow-500 via-amber-500 via-green-500 via-indigo-500 to-emerald-500 rounded-full opacity-50"></div>
- </div>
- </div>
- );
- })()}
-
- {/* Kanban Board - matches partner Bestellzentrum layout */}
- <div className="bg-card rounded-xl shadow-sm border border-border p-5">
- <div className="flex flex-col gap-3 mb-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-3">
- <h3 className="text-foreground font-bold text-lg">
- {t('bestellzentrum')}
- </h3>
- {/* Compact Upcoming Reservation Chip */}
- {upcomingReservation && (
- <div
- onClick={() => setActiveTab('reservations')}
- className="cursor-pointer flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 rounded-full text-white text-xs font-semibold shadow-sm transition-all transform hover:scale-[1.02] border border-red-500/30"
- >
- <span className="relative flex h-2 w-2">
- <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
- <span className="relative inline-flex rounded-full h-2 w-2 bg-background"></span>
- </span>
- <span>
- 🍽️ {upcomingReservation.customerName} - {(() => {
- const today = new Date();
- const resDate = new Date(upcomingReservation.reservationDate);
- const isToday = resDate.getDate() === today.getDate() && resDate.getMonth() === today.getMonth() && resDate.getFullYear() === today.getFullYear();
- const dateStr = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'short' }).format(resDate);
- return isToday ? (upcomingReservation.timeSlot || 'Bugün') : `${dateStr} ${upcomingReservation.timeSlot || ''}`;
- })()}
- </span>
- </div>
- )}
- </div>
- <span className="text-muted-foreground text-sm">
- {t('suAnkiSiparisler')}
- </span>
- </div>
- {/* Filters - identical to Bestellzentrum */}
- <div className="flex flex-wrap items-center gap-2">
- <select
- value={orderDateFilter}
- onChange={(e) => setOrderDateFilter(e.target.value as any)}
- className="px-3 py-1.5 bg-background text-foreground text-sm rounded-lg border border-border focus:ring-2 focus:ring-red-500 outline-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
- >
- <option value="today">{t('filter_heute')}</option>
- <option value="week">{t('filter_diese_woche')}</option>
- <option value="month">{t('filter_dieser_monat')}</option>
- <option value="all">{t('filter_alle')}</option>
- </select>
-
- <select
- value={orderStatusFilter}
- onChange={(e) => setOrderStatusFilter(e.target.value)}
- className="px-3 py-1.5 bg-background text-foreground text-sm rounded-lg border border-border focus:ring-2 focus:ring-red-500 outline-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
- >
- <option value="all">{t('filter_alle_status')}</option>
- <option value="pending">{t('order_pending')}</option>
- <option value="accepted">{t('filter_bestaetigt')}</option>
- <option value="preparing">{t('filter_in_zubereitung')}</option>
- <option value="ready">{t('filter_bereit')}</option>
- <option value="served">{t('filter_serviert')}</option>
- <option value="onTheWay">{t('onTheWay')}</option>
- <option value="delivered">{t('delivered')}</option>
- <option value="cancelled">{t('filter_storniert')}</option>
- </select>
-
- <select
- value={orderTypeFilter}
- onChange={(e) => setOrderTypeFilter(e.target.value)}
- className="px-3 py-1.5 bg-background text-foreground text-sm rounded-lg border border-border focus:ring-2 focus:ring-red-500 outline-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
- >
- <option value="all">{t('filter_alle_typen')}</option>
- <option value="pickup">{t('pickup_label')}</option>
- <option value="delivery">{t('delivery_label')}</option>
- <option value="dine_in">{t('filter_vor_ort')}</option>
- </select>
-
- {/* Cancelled & Completed Modals Buttons */}
- <button onClick={() => setShowCancelledModal(true)} className="px-3 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 dark:hover:bg-red-900/60 shadow-sm transition-colors flex items-center gap-1.5">
-   <span>İptal ({orders.filter(o => o.status === 'cancelled' && (o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0)) > Date.now() - 7 * 24 * 60 * 60 * 1000).length})</span>
- </button>
- <button onClick={() => setShowCompletedModal(true)} className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-200 dark:hover:bg-emerald-900/60 shadow-sm transition-colors flex items-center gap-1.5">
-   <span>Geçmiş Siparişler</span>
- </button>
- </div>
- </div>
-
- {/* Apply filters - same logic as Bestellzentrum's filteredOrders */}
- {(() => {
- const filteredOrders = orders.filter(order => {
- if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) return false;
- const orderType = (order as any).orderType || (order as any).deliveryMethod || (order as any).deliveryType || (order as any).fulfillmentType || 'pickup';
- const normalizedType = orderType === 'dineIn' ? 'dine_in' : orderType;
- if (orderTypeFilter !== 'all' && normalizedType !== orderTypeFilter) return false;
- return true;
- });
-
- const pendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
- const preparingOrders = filteredOrders.filter(o => o.status === 'preparing');
- const readyOrders = filteredOrders.filter(o => o.status === 'ready');
- const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
- const completedOrders = filteredOrders.filter(o => {
-    if (!['delivered', 'served'].includes(o.status)) return false;
-    const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
-    const startOfToday = new Date().setHours(0, 0, 0, 0);
-    return createdAt >= startOfToday;
-  });
-
- const preOrders = pendingOrders.filter(o => (o as any).isScheduledOrder || (o as any).isPreOrder);
- const immediatePendingOrders = pendingOrders.filter(o => !(o as any).isScheduledOrder && !(o as any).isPreOrder);
-
- return (
- <div className="grid grid-cols-1 md:grid-cols-5 gap-4" style={{ minHeight: '300px' }}>
- {/* Pending Column */}
- <div className="bg-yellow-50/50 dark:bg-card rounded-xl p-4 border border-yellow-200/50 dark:border-transparent">
- <h3 className="text-yellow-900 dark:text-yellow-400 font-medium mb-4 flex items-center gap-2">
- <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
- {tOrders('workflow.pending')} ({pendingOrders.length})
- </h3>
- <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
- {/* Immediate orders */}
- {immediatePendingOrders.slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
- ))}
- {immediatePendingOrders.length > 10 && (
- <p className="text-muted-foreground text-center text-sm mb-2">+{immediatePendingOrders.length - 10} {tOrders('kanban.more')}</p>
- )}
- {/* Pre-orders separator */}
- {preOrders.length > 0 && (
- <>
- <div className="flex items-center gap-2 pt-3 mb-2">
- <div className="flex-1 h-px bg-purple-500/30"></div>
- <span className="text-purple-800 dark:text-purple-400 text-xs font-medium whitespace-nowrap">🕐 {tOrders('preOrders')} ({preOrders.length})</span>
- <div className="flex-1 h-px bg-purple-500/30"></div>
- </div>
- {preOrders.slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} isPreOrder />
- ))}
- {preOrders.length > 10 && (
- <p className="text-muted-foreground text-center text-sm mt-2">+{preOrders.length - 10} {tOrders('kanban.more')}</p>
- )}
- </>
- )}
- </div>
- </div>
-
- {/* Preparing Column */}
- <div className="bg-amber-50/50 dark:bg-card rounded-xl p-4 border border-amber-200/50 dark:border-transparent">
- <h3 className="text-amber-900 dark:text-amber-400 font-medium mb-4 flex items-center gap-2">
- <span className="w-3 h-3 bg-amber-400 rounded-full"></span>
- {tOrders('workflow.preparing')} ({preparingOrders.length})
- </h3>
- <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
- {preparingOrders.slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
- ))}
- {preparingOrders.length > 10 && (
- <p className="text-muted-foreground text-center text-sm mt-2">+{preparingOrders.length - 10} {tOrders('kanban.more')}</p>
- )}
- </div>
- </div>
-
- {/* Ready Column */}
- <div className="bg-green-50/50 dark:bg-card rounded-xl p-4 border border-green-200/50 dark:border-transparent">
- <h3 className="text-green-900 dark:text-green-400 font-medium mb-4 flex items-center gap-2">
- <span className="w-3 h-3 bg-green-400 rounded-full"></span>
- {tOrders('workflow.ready')} ({readyOrders.length})
- </h3>
- <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
- {readyOrders.slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
- ))}
- {readyOrders.length > 10 && (
- <p className="text-muted-foreground text-center text-sm mt-2">+{readyOrders.length - 10} {tOrders('kanban.more')}</p>
- )}
- </div>
- </div>
-
- {/* In Transit Column */}
- <div className="bg-indigo-50/50 dark:bg-card rounded-xl p-4 border border-indigo-200/50 dark:border-transparent">
- <h3 className="text-indigo-900 dark:text-indigo-400 font-medium mb-4 flex items-center gap-2">
- <span className="w-3 h-3 bg-indigo-400 rounded-full"></span>
- {tOrders('workflow.inTransit')} ({inTransitOrders.length})
- </h3>
- <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
- {inTransitOrders.slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
- ))}
- {inTransitOrders.length > 10 && (
- <p className="text-muted-foreground text-center text-sm mt-2">+{inTransitOrders.length - 10} {tOrders('kanban.more')}</p>
- )}
- </div>
- </div>
-
- {/* Completed Column */}
- <div className="bg-emerald-50/50 dark:bg-card rounded-xl p-4 border border-emerald-200/50 dark:border-transparent">
- <h3 className="text-emerald-900 dark:text-emerald-400 font-medium mb-4 flex items-center gap-2">
- <span className="w-3 h-3 bg-emerald-400 rounded-full"></span>
- {tOrders('workflow.completed')} ({completedOrders.filter(o => !o._raw?.isArchived).length})
- </h3>
- <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
- {completedOrders.filter(o => !o._raw?.isArchived).slice(0, 10).map(order => (
- <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
- ))}
- {completedOrders.filter(o => !o._raw?.isArchived).length > 10 && (
- <p className="text-muted-foreground text-center text-sm mt-2">+{completedOrders.filter(o => !o._raw?.isArchived).length - 10} {tOrders('kanban.more')}</p>
- )}
- </div>
- </div>
-
-  </div>
- );
- })()}
- </div>
-
- {/* Modals for Cancelled and Completed Orders */}
- {showCancelledModal && (
-   <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
-     <div className="bg-background rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
-       <div className="p-4 border-b border-border flex items-center justify-between">
-         <h2 className="text-xl font-bold text-red-600 dark:text-red-400">İptal Edilenler (Son 7 Gün)</h2>
-         <button onClick={() => setShowCancelledModal(false)} className="p-2 bg-muted hover:bg-muted/80 rounded-full text-foreground transition-colors">✕</button>
-       </div>
-       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-         {orders.filter(o => {
-           if (o.status !== 'cancelled') return false;
-           const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
-           const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-           return createdAt > sevenDaysAgo;
-         }).length === 0 ? (
-           <p className="text-center text-muted-foreground py-8">İptal edilen sipariş yok.</p>
-         ) : (
-           orders.filter(o => {
-             if (o.status !== 'cancelled') return false;
-             const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
-             const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-             return createdAt > sevenDaysAgo;
-           })
-           .sort((a, b) => {
-             const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
-             const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
-             return bTime - aTime;
-           })
-           .map(order => (
-             <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => { setSelectedOrder(order); setShowCancelledModal(false); }} t={t} />
-           ))
-         )}
-       </div>
-     </div>
-   </div>
- )}
-
- {showCompletedModal && (
-   <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
-     <div className="bg-background rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
-       <div className="p-4 border-b border-border flex items-center justify-between">
-         <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">Geçmiş Siparişler (Son 7 Gün)</h2>
-         <button onClick={() => setShowCompletedModal(false)} className="p-2 bg-muted hover:bg-muted/80 rounded-full text-foreground transition-colors">✕</button>
-       </div>
-       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-         {orders.filter(o => {
-           if (!['delivered', 'served', 'completed'].includes(o.status)) return false;
-           const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
-           const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-           return createdAt > sevenDaysAgo;
-         }).length === 0 ? (
-           <p className="text-center text-muted-foreground py-8">Geçmiş sipariş bulunmuyor.</p>
-         ) : (
-           orders.filter(o => {
-             if (!['delivered', 'served', 'completed'].includes(o.status)) return false;
-             const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
-             const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-             return createdAt > sevenDaysAgo;
-           })
-           .sort((a, b) => {
-             const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
-             const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
-             return bTime - aTime;
-           })
-           .map(order => (
-             <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => { setSelectedOrder(order); setShowCompletedModal(false); }} t={t} />
-           ))
-         )}
-       </div>
-     </div>
-   </div>
- )}
-
-
-
- {/* Contact Info & Membership Details */}
- <div className="grid md:grid-cols-2 gap-4">
- {/* Contact Info */}
- <div className="bg-card rounded-xl shadow-sm border border-border p-5">
- <h3 className="text-foreground font-bold mb-4">
- {t('iletisimBilgileri')}
- </h3>
- <div className="space-y-4">
- <div className="grid grid-cols-2 gap-4">
- <div>
- <p className="text-muted-foreground text-sm">{t('yetkiliKisi')}</p>
- <p className="text-foreground font-medium">
- {business?.contactPerson?.name
- ? `${business?.contactPerson?.name} ${business?.contactPerson?.surname || ""}`
- : t('belirtilmemis')}
- </p>
- <p className="text-xs text-muted-foreground">
- {business?.contactPerson?.role}
- </p>
- </div>
- <div>
- <p className="text-muted-foreground text-sm">{t('iletisim1')}</p>
- <p className="text-foreground">
- {business?.contactPerson?.phone ||
- business?.shopPhone ||
- t('belirtilmemis')}
- </p>
- <p className="text-xs text-blue-800 dark:text-blue-400 truncate">
- {business?.contactPerson?.email ||
- business?.shopEmail ||
- ""}
- </p>
- </div>
- </div>
- <div className="border-t border-border pt-3">
- <div className="flex justify-between items-center mb-2">
- <p className="text-muted-foreground text-sm">{t('calismaSaatleri2')}</p>
- {(() => {
- const activeHours = overviewHoursTab === 'gelal' ? business?.pickupHours : (overviewHoursTab === 'kurye' ? business?.deliveryHours : business?.openingHours);
- const status = checkShopStatus(activeHours || "");
- return (
- <span
- className={`text-xs px-2 py-0.5 rounded font-medium ${status.isOpen
- ? "bg-green-900/50 text-green-800 dark:text-green-400 border border-green-800"
- : "bg-red-900/50 text-red-800 dark:text-red-400 border border-red-800"
- }`}
- >
- {status.text}
- </span>
- );
- })()}
- </div>
- {/* Tabs for Opening Hours */}
- {(() => {
- const hasPickup = (business?.pickupHours && business.pickupHours.length > 0) || business?.pickupStartTime;
- const hasDelivery = (business?.deliveryHours && business.deliveryHours.length > 0) || business?.deliveryStartTime;
- return (hasPickup || hasDelivery) ? (
- <div className="flex w-full bg-background/50 rounded-lg p-1 mb-3">
+ <div className="max-w-7xl mx-auto flex flex-col md:flex-row min-h-[calc(100vh-4rem)] w-full px-4 gap-6">
+ {/* Left Sidebar Menu */}
+ <aside className="hidden md:flex w-64 flex-shrink-0 flex-col bg-card border border-border h-fit sticky top-20 shadow-sm overflow-y-auto p-3 py-4 rounded-xl mt-6">
+ <div className="flex flex-col gap-1">
+ {/* Orders at the top */}
  <button
- onClick={() => setOverviewHoursTab('genel')}
- className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'genel' ? 'bg-foreground text-background shadow-md shadow' : 'text-muted-foreground hover:text-foreground'}`}
+ onClick={() => { setActiveTab('orders'); setSettingsSubTab('isletme'); }}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left w-full ${activeTab === 'orders' ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-foreground hover:bg-muted'}`}
  >
- Genel
+ <ShoppingBag className={`w-5 h-5 ${activeTab === 'orders' ? 'text-primary' : 'opacity-80'}`} />
+ <span className="font-medium">{t('siparisler')} ({orders.length})</span>
  </button>
- {hasPickup && (
+
+ <div className="h-px bg-border my-2" />
+
+ <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+ {t('ayarlar')}
+ </h3>
+
+ {/* Settings Items */}
+ {([
+ { key: "isletme", label: t('isletme'), icon: <Store className="w-5 h-5"/> },
+ { key: "menu", label: t('menuUrunler'), icon: <Utensils className="w-5 h-5"/> },
+ { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/> },
+ { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
+ { key: "promosyon", label: t('promosyon_label'), icon: <Gift className="w-5 h-5"/>, featureKey: "promotions" },
+ { key: "teslimat", label: t('teslimatAyarlari'), icon: <Truck className="w-5 h-5"/> },
+ { key: "saatler", label: t('acilisSaatleri'), icon: <Clock className="w-5 h-5"/> },
+ { key: "reservations", label: t('masaRezervasyonlari'), icon: <CalendarDays className="w-5 h-5"/> },
+ { key: "procurement", label: "Produkte & Beschaffung", icon: <Package className="w-5 h-5" /> },
+ ] as { key: string; label: string; icon: React.ReactNode; featureKey?: string }[]).map((item) => {
+ const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
+ if (isGated) return null;
+ const isActive = activeTab === 'settings' && settingsSubTab === item.key;
+ return (
  <button
- onClick={() => setOverviewHoursTab('gelal')}
- className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'gelal' ? 'bg-foreground text-background shadow-md shadow' : 'text-muted-foreground hover:text-foreground'}`}
+ key={item.key}
+ onClick={() => { setActiveTab('settings'); setSettingsSubTab(item.key as any); }}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left w-full ${isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-foreground hover:bg-muted"}`}
  >
- Gel-Al
+ <span className={`${isActive ? 'text-primary' : 'opacity-80'} flex items-center justify-center`}>{item.icon}</span>
+ <span className="font-medium">{item.label}</span>
  </button>
- )}
- {hasDelivery && (
- <button
- onClick={() => setOverviewHoursTab('kurye')}
- className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'kurye' ? 'bg-foreground text-background shadow-md shadow' : 'text-muted-foreground hover:text-foreground'}`}
- >
- Kurye
- </button>
- )}
- </div>
- ) : null;
- })()}
- {(() => {
- const activeHours = overviewHoursTab === 'gelal' ? business?.pickupHours : (overviewHoursTab === 'kurye' ? business?.deliveryHours : business?.openingHours);
- const hoursData = activeHours || (overviewHoursTab === 'genel' ? business?.openingHours : null);
-
- // For Gel-Al / Kurye tabs: if no per-day hours, show simple start-end time
- if (overviewHoursTab === 'gelal' && (!business?.pickupHours || business.pickupHours.length === 0)) {
- const start = business?.pickupStartTime || '';
- const end = business?.pickupEndTime || '';
- if (start || end) {
- return (
- <div className="text-xs text-foreground bg-card/50 rounded-lg p-3 space-y-1">
- <div className="flex justify-between"><span className="text-muted-foreground">{t('gelAlBaslangic')}:</span><span>{start || '-'}</span></div>
- <div className="flex justify-between"><span className="text-muted-foreground">{t('gelAlBitis')}:</span><span>{end || '-'}</span></div>
- <p className="text-muted-foreground italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
- </div>
- );
- }
- }
- if (overviewHoursTab === 'kurye' && (!business?.deliveryHours || business.deliveryHours.length === 0)) {
- const start = business?.deliveryStartTime || '';
- const end = business?.deliveryEndTime || '';
- if (start || end) {
- return (
- <div className="text-xs text-foreground bg-card/50 rounded-lg p-3 space-y-1">
- <div className="flex justify-between"><span className="text-muted-foreground">{t('kuryeBaslangic')}:</span><span>{start || '-'}</span></div>
- <div className="flex justify-between"><span className="text-muted-foreground">{t('kuryeBitis')}:</span><span>{end || '-'}</span></div>
- <p className="text-muted-foreground italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
- </div>
- );
- }
- }
-
- const hoursList = Array.isArray(hoursData)
- ? hoursData
- : (hoursData || "").split("\n");
-
- return hoursList.length > 0 && hoursList[0] !== "" ? (
- <ul className="space-y-1">
- {hoursList.map((line: string, i: number) => {
- const today = new Date().toLocaleDateString("de-DE", { weekday: "long" });
- const dayName = line.split(":")[0]?.trim();
- // Simple match check, can be improved if needed
- const isToday = dayName === today || (today === "Pazar" && dayName === "Pazar");
-
- return (
- <li
- key={i}
- className={`text-xs flex justify-between px-2 py-1 rounded ${isToday
- ? "bg-green-900/20 text-green-300 font-medium border border-green-800/30"
- : "text-foreground"
- }`}
- >
- <span className={isToday ? "text-green-800 dark:text-green-400" : "font-medium text-muted-foreground"}>
- {line.split(": ")[0]}
- </span>
- <span>{line.split(": ")[1]}</span>
- </li>
  );
  })}
- </ul>
- ) : (
- <span className="text-xs text-muted-foreground italic">
- {t('bilgi_yok')}
- </span>
- );
- })()}
- </div>
- <div className="border-t border-border pt-3">
- <p className="text-muted-foreground text-sm">{t('adres_label')}</p>
- <p className="text-foreground">
- {business?.address?.street}, {business?.address?.postalCode}{" "}
- {business?.address?.city}
- </p>
- <p className="text-muted-foreground text-xs mt-1">
- {business?.address?.country}
- </p>
- </div>
- </div>
- </div>
 
- {/* Subscription & Membership Status */}
- <div className="bg-card rounded-xl shadow-sm border border-border p-5">
- <h3 className="text-foreground font-bold mb-4">
- {t('uyelikAbonelik')}
- </h3>
- <div className="space-y-4">
- <div className="grid grid-cols-2 gap-4">
- <div>
- <p className="text-muted-foreground text-sm">{t('mevcut_plan')}</p>
- <div className="flex items-center gap-2 mt-1">
- <span
- className={`w-3 h-3 rounded-full ${planInfo.color}`}
- ></span>
- <span className="text-foreground font-medium">
- {planInfo.label}
- </span>
- </div>
- <p className="text-xs text-muted-foreground mt-1">
- {(business?.monthlyFee ?? 0) > 0
- ? `${formatCurrency(business?.monthlyFee || 0, business?.currency)}/ay`
- : t('ucretsiz')}
- </p>
- </div>
- <div>
- <p className="text-muted-foreground text-sm">{t('durum')}</p>
- <span
- className={`inline-block mt-1 px-2 py-1 rounded text-xs ${business?.isActive ? "bg-green-600/20 text-green-800 dark:text-green-400" : "bg-red-600/20 text-red-800 dark:text-red-400"}`}
+ <div className="mt-6">
+ <div className="h-px bg-border my-2" />
+ {/* Dashboard at the bottom */}
+ <button
+ onClick={() => { setActiveTab('overview'); setSettingsSubTab('isletme'); }}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left w-full ${activeTab === 'overview' ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-foreground hover:bg-muted'}`}
  >
- {business?.isActive ? t('aktifMusteri') : t('pasifMusteri')}
- </span>
+ <LayoutDashboard className={`w-5 h-5 ${activeTab === 'overview' ? 'text-primary' : 'opacity-80'}`} />
+ <span className="font-medium">{tStats('i_sletme_performansi') || t('dashboard')}</span>
+ </button>
  </div>
  </div>
- <div className="grid grid-cols-2 gap-4 border-t border-border pt-3">
- <div>
- <p className="text-muted-foreground text-sm">{t('musteriTarihi')}</p>
- <p className="text-foreground">
- {(business as any).createdAt?.toDate
- ? (business as any).createdAt
- .toDate()
- .toLocaleDateString("de-DE")
- : t('belirtilmemis')}
- </p>
- </div>
- <div>
- <p className="text-muted-foreground text-sm">{t('planBaslangic')}</p>
- <p className="text-foreground">
- {(business?.subscriptionStartDate as any)?.toDate
- ? (business?.subscriptionStartDate as any)
- .toDate()
- .toLocaleDateString("de-DE")
- : business?.subscriptionStartDate
- ? new Date(
- business?.subscriptionStartDate,
- ).toLocaleDateString("de-DE")
- : t('belirtilmemis')}
- </p>
- </div>
- </div>
- </div>
- </div>
- </div>
- </div>
- )}
+ </aside>
+
+ <main className="flex-1 w-full py-6">
+        {/* Overview Tab */}
+        {activeTab === "overview" && (
+          <div className="space-y-6">
+            {/* 🆕 Combined General Info Card */}
+            {businessId !== 'new' && business && (
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-6 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-4">
+                    {business.logoUrl ? (
+                      <img src={business.logoUrl} alt={business.companyName} className="w-16 h-16 rounded-xl object-cover border border-border shadow-sm" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-black shadow-inner">
+                        {business.companyName?.charAt(0) || 'L'}
+                      </div>
+                    )}
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                        {business.companyName}
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ${business.isActive ? "bg-green-500 text-white border-green-600" : "bg-red-500 text-white border-red-600"}`}>
+                          {business.isActive ? t('aktifMusteri') : t('pasifMusteri')}
+                        </span>
+                      </h2>
+                      <p className="text-muted-foreground text-sm flex items-center gap-2 mt-1.5 font-medium">
+                        <Store className="w-4 h-4 opacity-70" />
+                        {business.address?.street}, {business.address?.postalCode} {business.address?.city}, {business.address?.country}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-white shadow-sm ${planInfo.color}`}>
+                        {planInfo.label}
+                      </span>
+                      {business.rating > 0 && (
+                        <span className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-full text-[11px] font-bold border border-amber-500/20 shadow-sm">
+                          <Star className="w-3.5 h-3.5 fill-amber-500" />
+                          {business.rating}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 bg-muted/30 px-2.5 py-1 rounded-md">
+                      <CalendarDays className="w-3.5 h-3.5 opacity-70" />
+                      {t('musteriTarihi')}: {(business as any).createdAt?.toDate ? (business as any).createdAt.toDate().toLocaleDateString("de-DE") : '-'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border bg-muted/10 rounded-xl p-5">
+                  {/* Contact Info */}
+                  <div>
+                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5 text-primary/70" />
+                      {t('iletisimBilgileri')}
+                    </h4>
+                    <div className="space-y-2.5 text-sm bg-background p-4 rounded-xl border border-border/50 shadow-sm">
+                      <p className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{t('iletisim1')}:</span> <span className="font-bold text-foreground text-xs">{business.shopPhone || business.contactPerson?.phone || '-'}</span></p>
+                      <p className="flex justify-between items-center"><span className="text-muted-foreground text-xs">E-Posta:</span> <span className="font-medium text-blue-600 dark:text-blue-400 text-xs truncate max-w-[140px]" title={business.shopEmail || business.contactPerson?.email || '-'}>{business.shopEmail || business.contactPerson?.email || '-'}</span></p>
+                      <div className="h-px bg-border/50 my-2"></div>
+                      <p className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{t('yetkiliKisi')}:</span> <span className="font-bold text-foreground text-xs">{business.contactPerson?.name ? `${business.contactPerson.name} ${business.contactPerson.surname || ''}` : '-'}</span></p>
+                      <p className="flex justify-between items-center"><span className="text-muted-foreground text-xs">Görev:</span> <span className="font-medium text-muted-foreground text-xs">{business.contactPerson?.role || '-'}</span></p>
+                    </div>
+                  </div>
+
+                  {/* Operation Info */}
+                  <div>
+                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-primary/70" />
+                      Operasyon Durumu
+                    </h4>
+                    <div className="space-y-2.5 text-sm bg-background p-4 rounded-xl border border-border/50 shadow-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground text-xs">Şu Anki Durum:</span>
+                        {(() => {
+                          const status = checkShopStatus(business.openingHours || "");
+                          return (
+                            <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider border shadow-sm ${status.isOpen ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800" : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"}`}>
+                              {status.text}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                      <div className="h-px bg-border/50 my-2"></div>
+                      <p className="flex justify-between items-center"><span className="text-muted-foreground text-xs">Abonelik Ücreti:</span> <span className="font-black text-emerald-600 dark:text-emerald-400 text-xs">{(business.monthlyFee ?? 0) > 0 ? `${formatCurrency(business.monthlyFee || 0, business.currency)}/ay` : t('ucretsiz')}</span></p>
+                      <p className="flex justify-between items-center"><span className="text-muted-foreground text-xs">{t('planBaslangic')}:</span> <span className="font-medium text-foreground text-xs">{(business.subscriptionStartDate as any)?.toDate ? (business.subscriptionStartDate as any).toDate().toLocaleDateString("de-DE") : '-'}</span></p>
+                    </div>
+                  </div>
+
+                  {/* Feature Status */}
+                  <div>
+                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Package className="w-3.5 h-3.5 text-primary/70" />
+                      Modül Durumları
+                    </h4>
+                    <div className="space-y-3 text-sm bg-background p-4 rounded-xl border border-border/50 shadow-sm">
+                      <div className="flex items-center justify-between group">
+                        <span className="text-muted-foreground text-xs flex items-center gap-2"><Truck className="w-3.5 h-3.5 opacity-50" /> Kurye Teslimat</span>
+                        <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-wider border ${business.supportsDelivery ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800' : 'bg-muted text-muted-foreground border-border'}`}>{business.supportsDelivery ? 'Aktif' : 'Pasif'}</span>
+                      </div>
+                      <div className="flex items-center justify-between group">
+                        <span className="text-muted-foreground text-xs flex items-center gap-2"><ShoppingBag className="w-3.5 h-3.5 opacity-50" /> Gel-Al Servisi</span>
+                        <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-wider border ${business.pickupEnabled ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' : 'bg-muted text-muted-foreground border-border'}`}>{business.pickupEnabled ? 'Aktif' : 'Pasif'}</span>
+                      </div>
+                      <div className="flex items-center justify-between group">
+                        <span className="text-muted-foreground text-xs flex items-center gap-2"><Utensils className="w-3.5 h-3.5 opacity-50" /> Masa Rezervasyonu</span>
+                        <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-wider border ${business.hasReservation ? 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-800' : 'bg-muted text-muted-foreground border-border'}`}>{business.hasReservation ? 'Aktif' : 'Pasif'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* 📊 Executive Analytics Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Performance Chart Card */}
+        <div className="lg:col-span-2 bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+            <div>
+              <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
+                <LayoutDashboard className="w-5 h-5 text-primary" />
+                {tStats('i_sletme_performansi') || 'İşletme Performansı'}
+              </h3>
+              <p className="text-muted-foreground text-xs mt-1">{tStats('son_7_gun_trend_analizi')}</p>
+            </div>
+            <div className="flex gap-2">
+              <button className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full border border-primary/20 hover:bg-primary/20 transition">
+                {tStats('weekly')}
+              </button>
+              <button className="px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted rounded-full transition">
+                {tStats('monthly')}
+              </button>
+            </div>
+          </div>
+          <div className="p-6 flex-1 min-h-[300px] flex flex-col">
+            <div className="flex-1 w-full bg-muted/10 rounded-xl border border-dashed border-border flex items-end justify-between px-8 py-4 relative group">
+              <div className="absolute inset-0 flex flex-col justify-between p-4 py-8 pointer-events-none opacity-20">
+                <div className="border-t border-border w-full"></div>
+                <div className="border-t border-border w-full"></div>
+                <div className="border-t border-border w-full"></div>
+              </div>
+              {[65, 85, 45, 95, 75, 60, 90].map((height, i) => (
+                <div key={i} className="relative flex flex-col items-center group/bar w-full max-w-[40px]">
+                  <div 
+                    style={{ height: `${height}%` }} 
+                    className="w-full bg-gradient-to-t from-primary/40 to-primary rounded-t-lg transition-all duration-500 hover:brightness-110 shadow-[0_-4px_12px_rgba(var(--primary),0.2)]"
+                  ></div>
+                  <span className="text-[10px] text-muted-foreground mt-2 font-medium">
+                    {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'][i]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Stats Column */}
+        <div className="space-y-4">
+          <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+              <ShoppingBag className="w-16 h-16 text-blue-600" />
+            </div>
+            <p className="text-blue-600 dark:text-blue-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_siparis') || 'Toplam Sipariş'}</p>
+            <h4 className="text-3xl font-black text-blue-900 dark:text-blue-200 mt-2">{orders.length}</h4>
+          </div>
+
+          <div className="bg-emerald-600/10 border border-emerald-600/20 rounded-2xl p-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+              <CreditCard className="w-16 h-16 text-emerald-600" />
+            </div>
+            <p className="text-emerald-600 dark:text-emerald-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_ciro') || 'Toplam Ciro'}</p>
+            <h4 className="text-3xl font-black text-emerald-900 dark:text-emerald-200 mt-2">
+              {formatCurrency(orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
+            </h4>
+          </div>
+
+          <div className="bg-rose-600/10 border border-rose-600/20 rounded-2xl p-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+              <History className="w-16 h-16 text-rose-600" />
+            </div>
+            <p className="text-rose-600 dark:text-rose-400 text-sm font-semibold uppercase tracking-wider">{t('iptal_orani') || 'İptal Oranı'}</p>
+            <h4 className="text-3xl font-black text-rose-900 dark:text-rose-200 mt-2">
+              %{Math.round((orders.filter(o => o.status === 'cancelled').length / (orders.length || 1)) * 100)}
+            </h4>
+          </div>
+        </div>
+      </div>
+
+      {/* 🚀 Order Status Workflow Section - Super Admin Parity */}
+      {(() => {
+        const pendingOrders = orders.filter((o) => o.status === "pending" || o.status === "accepted");
+        const preparingOrders = orders.filter((o) => o.status === "preparing");
+        const readyOrders = orders.filter((o) => o.status === "ready");
+        const inTransitOrders = orders.filter((o) => o.status === "onTheWay");
+        const completedOrders = orders.filter((o) => o.status === "delivered" || o.status === "served");
+        
+        return (
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
+                  <Rocket className="w-5 h-5 text-primary" />
+                  {t('canli_operasyon_akisi') || 'Canlı Operasyon Akışı'}
+                </h3>
+                <p className="text-muted-foreground text-xs">{t('siparislerin_anlik_durumu') || 'Siparişlerin anlık durum takibi'}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+              <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-muted -translate-y-1/2 z-0"></div>
+              
+              <div className={`relative z-10 flex flex-col items-center bg-card p-4 rounded-xl border-2 transition-all ${pendingOrders.length > 0 ? 'border-yellow-500 shadow-lg shadow-yellow-500/10' : 'border-border'}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 text-xl ${pendingOrders.length > 0 ? 'bg-yellow-500 text-white animate-pulse' : 'bg-muted text-muted-foreground'}`}>
+                  🔔
+                </div>
+                <p className="text-2xl font-black text-foreground">{pendingOrders.length}</p>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">{tOrders('workflow.pending')}</p>
+              </div>
+
+              <div className={`relative z-10 flex flex-col items-center bg-card p-4 rounded-xl border-2 transition-all ${preparingOrders.length > 0 ? 'border-amber-500 shadow-lg shadow-amber-500/10' : 'border-border'}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 text-xl ${preparingOrders.length > 0 ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                  👨‍🍳
+                </div>
+                <p className="text-2xl font-black text-foreground">{preparingOrders.length}</p>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">{tOrders('workflow.preparing')}</p>
+              </div>
+
+              <div className={`relative z-10 flex flex-col items-center bg-card p-4 rounded-xl border-2 transition-all ${readyOrders.length > 0 ? 'border-green-500 shadow-lg shadow-green-500/10' : 'border-border'}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 text-xl ${readyOrders.length > 0 ? 'bg-green-500 text-white animate-bounce' : 'bg-muted text-muted-foreground'}`}>
+                  📦
+                </div>
+                <p className="text-2xl font-black text-foreground">{readyOrders.length}</p>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">{tOrders('workflow.ready')}</p>
+              </div>
+
+              <div className={`relative z-10 flex flex-col items-center bg-card p-4 rounded-xl border-2 transition-all ${inTransitOrders.length > 0 ? 'border-indigo-500 shadow-lg shadow-indigo-500/10' : 'border-border'}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 text-xl ${inTransitOrders.length > 0 ? 'bg-indigo-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                  🛵
+                </div>
+                <p className="text-2xl font-black text-foreground">{inTransitOrders.length}</p>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">{tOrders('workflow.inTransit')}</p>
+              </div>
+
+              <div className={`relative z-10 flex flex-col items-center bg-card p-4 rounded-xl border-2 transition-all ${completedOrders.length > 0 ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-border'}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 text-xl ${completedOrders.length > 0 ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                  ✓
+                </div>
+                <p className="text-2xl font-black text-foreground">{completedOrders.length}</p>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">{tOrders('workflow.completed')}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 👥 Active Staff & Couriers Grid - Now below workflow */}
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+        <div className="p-5 border-b border-border bg-muted/20 flex items-center justify-between">
+          <div>
+            <h3 className="text-foreground font-bold flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              {tStaff('personel_durumu')}
+            </h3>
+          </div>
+          <span className="bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 border border-green-500/20">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+            {staffList.filter((s) => s.isActive !== false).length} {t('online_label')}
+          </span>
+        </div>
+
+        <div className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-foreground text-xs font-bold mb-3 flex items-center gap-2 opacity-70 uppercase tracking-widest">
+                <Utensils className="w-3.5 h-3.5" />
+                {t('magazaCalisanlari')}
+              </h4>
+              <div className="space-y-2">
+                {staffList.filter((s) => s.isActive !== false).length === 0 ? (
+                  <div className="text-center py-6 bg-muted/10 rounded-xl border border-dashed border-border">
+                    <p className="text-muted-foreground text-xs italic">{t('henuzAktifPersonelYok')}</p>
+                  </div>
+                ) : (
+                  staffList
+                    .filter((s) => s.isActive !== false)
+                    .map((staff) => (
+                      <div key={staff.id} className="flex items-center justify-between bg-background/50 hover:bg-background border border-border rounded-xl px-4 py-2.5 transition shadow-sm group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                            {staff.displayName?.charAt(0) || 'P'}
+                          </div>
+                          <div>
+                            <span className="text-foreground text-sm font-semibold block">{staff.displayName}</span>
+                            <span className="text-[10px] text-muted-foreground">{getRoleLabel(staff.adminType, t)}</span>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-0.5 rounded-lg text-[9px] font-black border uppercase tracking-tighter ${getRoleBadgeClass(staff.adminType)}`}>
+                          {staff.isActive !== false ? 'ACTIVE' : 'OFFLINE'}
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-foreground text-xs font-bold mb-3 flex items-center gap-2 opacity-70 uppercase tracking-widest">
+                <Truck className="w-3.5 h-3.5" />
+                {t('kuryelerDagitimda')}
+              </h4>
+              <div className="space-y-2">
+                {(() => {
+                  const activeDeliveries = orders.filter(
+                    (o) => o.status === "onTheWay" || (o.status === "ready" && (o as any).claimedBy)
+                  );
+                  if (activeDeliveries.length > 0) {
+                    return activeDeliveries.slice(0, 5).map((order, idx) => (
+                      <div key={order.id} className="flex items-center justify-between bg-indigo-600/5 hover:bg-indigo-600/10 border border-indigo-600/20 rounded-xl px-4 py-2.5 transition group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex items-center justify-center text-lg shadow-inner">
+                            🛵
+                          </div>
+                          <div>
+                            <span className="text-foreground text-sm font-semibold block">
+                              {(order as any).driverName || (order as any).claimedByName || `${t('kurye_label')} ${idx + 1}`}
+                            </span>
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                              #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || t('musteri')}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-tighter ${order.status === 'onTheWay' ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm' : 'bg-emerald-600 text-white border-emerald-500'}`}>
+                            {order.status === 'onTheWay' ? 'DELIVERING' : 'READY'}
+                          </span>
+                        </div>
+                      </div>
+                    ));
+                  }
+                  return (
+                    <div className="text-center py-6 bg-muted/10 rounded-xl border border-dashed border-border">
+                      <p className="text-muted-foreground text-xs italic">{t('aktifKuryeYok') || 'Aktif dağıtım yok.'}</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
+
+
+
+
+   {/* Kurye Detaylari & Performans */}
+   <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+     <div className="flex items-center justify-between mb-4">
+       <h3 className="text-foreground font-bold">{tStaff('kurye_detaylari_performans')}</h3>
+       <select
+         value={perfDateRange}
+         onChange={(e) => setPerfDateRange(e.target.value as '7d' | '30d' | '90d')}
+         className="bg-muted text-foreground rounded-lg px-3 py-1.5 text-xs border border-border"
+       >
+         <option value="7d">{tStats('son_7_gun')}</option>
+         <option value="30d">{tStats('aylik')}</option>
+         <option value="90d">{tStats('bu_yil')}</option>
+       </select>
+     </div>
+
+     {/* KPI Row */}
+     <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-amber-500">
+         <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pauseStats.pauseCount}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('durdurma_sayisi')}</div>
+       </div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-emerald-500">
+         <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{pauseStats.resumeCount}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('devam_ettirme')}</div>
+       </div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-yellow-500">
+         <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pauseStats.totalPausedHours} <span className="text-sm">{tStaff('sa_kisaltma')}</span></div>
+         <div className="text-xs text-muted-foreground">{tStaff('toplam_durma_suresi')}</div>
+       </div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-blue-500">
+         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{perfOrderStats.totalOrders}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('orders')}</div>
+       </div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-green-500">
+         <div className="text-2xl font-bold text-green-600 dark:text-green-400">{perfOrderStats.completedOrders}</div>
+         <div className="text-xs text-muted-foreground">{tStaff('teslim_edildi')}</div>
+       </div>
+       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-purple-500">
+         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+           {new Set(orders.map(o => o.customerId).filter(Boolean)).size}
+         </div>
+         <div className="text-xs text-muted-foreground">{tStaff('benzersiz_musteri')}</div>
+       </div>
+     </div>
+
+     {/* Kurye Acma/Kapama Gecmisi - Collapsible */}
+     <div className="border border-border rounded-lg overflow-hidden">
+       <div className="px-4 py-3 bg-muted/30 border-b border-border">
+         <h4 className="text-sm font-bold text-foreground">{tStats('kurye_acma_kapama_gecmisi')}</h4>
+       </div>
+       <table className="min-w-full divide-y divide-border">
+         <thead className="bg-muted/20">
+           <tr>
+             <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">{tStaff('bu_hafta')}</th>
+             <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">{tStats('i_slem')}</th>
+             <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">{tStaff('ad_soyad')}</th>
+           </tr>
+         </thead>
+         <tbody className="divide-y divide-border">
+           {pauseLogs.length === 0 ? (
+             <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground text-sm">{tStats('henuz_kurye_acma_kapama_kaydi_yok')}</td></tr>
+           ) : (
+             (showAllPauseLogs ? pauseLogs : pauseLogs.slice(0, 3)).map((log) => (
+               <tr key={log.id} className={log.action === 'paused' ? 'bg-amber-500/5' : 'bg-emerald-500/5'}>
+                 <td className="px-4 py-2.5 text-sm text-foreground">
+                   {new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(log.timestamp)}
+                 </td>
+                 <td className="px-4 py-2.5">
+                   {log.action === 'paused' ? (
+                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-600 text-white text-xs font-medium">{tStaff('durduruldu')}</span>
+                   ) : (
+                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-xs font-medium">{tStaff('devam_etti')}</span>
+                   )}
+                 </td>
+                 <td className="px-4 py-2.5 text-sm text-foreground">{log.adminEmail}</td>
+               </tr>
+             ))
+           )}
+         </tbody>
+       </table>
+       {pauseLogs.length > 3 && (
+         <div className="px-4 py-2 border-t border-border bg-muted/10 text-center">
+           <button
+             onClick={() => setShowAllPauseLogs(!showAllPauseLogs)}
+             className="text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors"
+           >
+             {showAllPauseLogs ? tStats('s_adece_son_3') : t('AdminStatistics.tumunu_goster', { count: pauseLogs.length })}
+           </button>
+         </div>
+       )}
+     </div>
+   </div>
+
+
+
+</div>
+  )}
 
 
 
@@ -3780,87 +3606,181 @@ export default function BusinessDetailsPage() {
  }
 
  {/* Orders Tab */}
- {
- activeTab === "orders" && (
- <div className="bg-card rounded-xl overflow-hidden">
- <div className="p-4 border-b border-border flex justify-between items-center">
- <h3 className="text-foreground font-bold">{t('sonSiparisler')}</h3>
- <Link
- href={`/admin/business/${business?.id}/orders`}
- className="text-blue-800 dark:text-blue-400 hover:underline text-sm"
- >
- {t('tumunuGor')}
- </Link>
+ {activeTab === "orders" && (
+ <div className="space-y-6">
+   {/* Kanban Board - Operational Center */}
+   <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+     <div className="flex flex-col gap-4 mb-6">
+       <div className="flex items-center justify-between">
+         <div className="flex items-center gap-3">
+           <h3 className="text-foreground font-bold text-xl flex items-center gap-2">
+             <ShoppingBag className="w-6 h-6 text-primary" />
+             {t('bestellzentrum')}
+           </h3>
+           {/* Compact Upcoming Reservation Chip */}
+           {upcomingReservation && (
+             <div
+               onClick={() => setActiveTab('reservations')}
+               className="cursor-pointer flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 rounded-full text-white text-xs font-semibold shadow-sm transition-all transform hover:scale-[1.02] border border-red-500/30"
+             >
+               <span className="relative flex h-2 w-2">
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
+                 <span className="relative inline-flex rounded-full h-2 w-2 bg-background"></span>
+               </span>
+               <span>
+                 🍽️ {upcomingReservation.customerName} - {(() => {
+                   const today = new Date();
+                   const resDate = new Date(upcomingReservation.reservationDate);
+                   const isToday = resDate.getDate() === today.getDate() && resDate.getMonth() === today.getMonth() && resDate.getFullYear() === today.getFullYear();
+                   const dateStr = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'short' }).format(resDate);
+                   return isToday ? (upcomingReservation.timeSlot || 'Bugün') : `${dateStr} ${upcomingReservation.timeSlot || ''}`;
+                 })()}
+               </span>
+             </div>
+           )}
+         </div>
+         <div className="flex items-center gap-2">
+           <button onClick={() => setShowCancelledModal(true)} className="px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 rounded-xl text-xs font-bold hover:bg-red-500/20 transition-colors">
+             {t('storniert')} ({orders.filter(o => o.status === 'cancelled' && (o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0)) > Date.now() - 7 * 24 * 60 * 60 * 1000).length})
+           </button>
+           <button onClick={() => setShowCompletedModal(true)} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold hover:bg-emerald-500/20 transition-colors">
+             {t('vergangene_bestellungen') || 'Geçmiş'}
+           </button>
+           <Link
+             href={`/admin/business/${business?.id}/orders`}
+             className="px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-xl text-xs font-bold hover:bg-primary/20 transition-colors"
+           >
+             {t('tumunuGor')}
+           </Link>
+         </div>
+       </div>
+       
+       {/* Filters Row */}
+       <div className="flex flex-wrap items-center gap-3 bg-muted/30 p-3 rounded-2xl border border-border">
+         <select
+           value={orderDateFilter}
+           onChange={(e) => setOrderDateFilter(e.target.value as any)}
+           className="bg-background text-foreground text-xs font-bold rounded-xl border border-border px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer"
+         >
+           <option value="today">{t('filter_heute')}</option>
+           <option value="week">{t('filter_diese_woche')}</option>
+           <option value="month">{t('filter_dieser_monat')}</option>
+           <option value="all">{t('filter_alle')}</option>
+         </select>
+
+         <select
+           value={orderStatusFilter}
+           onChange={(e) => setOrderStatusFilter(e.target.value)}
+           className="bg-background text-foreground text-xs font-bold rounded-xl border border-border px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer"
+         >
+           <option value="all">{t('filter_alle_status')}</option>
+           <option value="pending">{t('order_pending')}</option>
+           <option value="accepted">{t('filter_bestaetigt')}</option>
+           <option value="preparing">{t('filter_in_zubereitung')}</option>
+           <option value="ready">{t('filter_bereit')}</option>
+           <option value="served">{t('filter_serviert')}</option>
+           <option value="onTheWay">{t('onTheWay')}</option>
+           <option value="delivered">{t('delivered')}</option>
+         </select>
+
+         <select
+           value={orderTypeFilter}
+           onChange={(e) => setOrderTypeFilter(e.target.value)}
+           className="bg-background text-foreground text-xs font-bold rounded-xl border border-border px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer"
+         >
+           <option value="all">{t('filter_alle_typen')}</option>
+           <option value="pickup">{t('pickup_label')}</option>
+           <option value="delivery">{t('delivery_label')}</option>
+           <option value="dine_in">{t('filter_vor_ort')}</option>
+         </select>
+         
+         <div className="ml-auto text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1 rounded-full border border-border">
+           Live Syncing...
+         </div>
+       </div>
+     </div>
+
+     {(() => {
+       const filteredOrders = orders.filter(order => {
+         if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) return false;
+         const orderType = (order as any).orderType || (order as any).deliveryMethod || (order as any).deliveryType || (order as any).fulfillmentType || 'pickup';
+         const normalizedType = orderType === 'dineIn' ? 'dine_in' : orderType;
+         if (orderTypeFilter !== 'all' && normalizedType !== orderTypeFilter) return false;
+         return true;
+       });
+
+       const pendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
+       const preparingOrders = filteredOrders.filter(o => o.status === 'preparing');
+       const readyOrders = filteredOrders.filter(o => o.status === 'ready');
+       const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
+       const completedOrders = filteredOrders.filter(o => {
+          if (!['delivered', 'served', 'completed'].includes(o.status)) return false;
+          const createdAt = o.createdAt?.toMillis ? o.createdAt.toMillis() : (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+          const startOfToday = new Date().setHours(0, 0, 0, 0);
+          return createdAt >= startOfToday;
+       });
+
+       return (
+         <div className="grid grid-cols-1 md:grid-cols-5 gap-4" style={{ minHeight: '500px' }}>
+           {/* Column Renderer Helper */}
+           {[
+             { title: tOrders('workflow.pending'), count: pendingOrders.length, items: pendingOrders, color: 'yellow' },
+             { title: tOrders('workflow.preparing'), count: preparingOrders.length, items: preparingOrders, color: 'amber' },
+             { title: tOrders('workflow.ready'), count: readyOrders.length, items: readyOrders, color: 'green' },
+             { title: tOrders('workflow.inTransit'), count: inTransitOrders.length, items: inTransitOrders, color: 'indigo' },
+             { title: tOrders('workflow.completed'), count: completedOrders.filter(o => !o._raw?.isArchived).length, items: completedOrders.filter(o => !o._raw?.isArchived), color: 'emerald' }
+           ].map((col, idx) => (
+             <div key={idx} className="flex flex-col bg-muted/10 rounded-2xl border border-border overflow-hidden">
+               <div className="p-3 border-b border-border bg-muted/20 flex items-center justify-between">
+                 <div className="flex items-center gap-2">
+                   <div className={`w-2 h-2 rounded-full bg-${col.color}-500 shadow-[0_0_8px_rgba(var(--${col.color}),0.5)]`}></div>
+                   <span className="text-[11px] font-black uppercase tracking-tighter text-foreground">{col.title}</span>
+                 </div>
+                 <span className="bg-background text-foreground text-[10px] font-black px-1.5 py-0.5 rounded-lg border border-border">
+                   {col.count}
+                 </span>
+               </div>
+               <div className="flex-1 p-2 space-y-2 overflow-y-auto max-h-[700px] scrollbar-thin scrollbar-thumb-muted">
+                 {col.items.length === 0 ? (
+                   <div className="h-20 flex items-center justify-center border border-dashed border-border rounded-xl opacity-30">
+                     <span className="text-[10px] font-bold uppercase tracking-widest">{t('bos')}</span>
+                   </div>
+                 ) : (
+                   col.items.slice(0, 15).map(order => (
+                     <OrderCard 
+                       key={order.id} 
+                       order={order} 
+                       businesses={{ [business?.id || '']: business?.companyName || '' }} 
+                       checkedItems={{}} 
+                       onClick={() => setSelectedOrder(order)} 
+                       t={t} 
+                     />
+                   ))
+                 )}
+                 {col.items.length > 15 && (
+                   <button 
+                     onClick={() => router.push(`/admin/business/${business?.id}/orders`)}
+                     className="w-full py-2 text-[10px] font-bold text-primary hover:bg-primary/5 transition rounded-xl uppercase tracking-widest"
+                   >
+                     +{col.items.length - 15} {t('daha_fazla')}
+                   </button>
+                 )}
+               </div>
+             </div>
+           ))}
+         </div>
+       );
+     })()}
+   </div>
  </div>
- {orders.length === 0 ? (
- <div className="text-center py-12 text-muted-foreground">
- <p className="text-4xl mb-4"></p>
- <p>{t('henuzSiparisYok')}</p>
- </div>
- ) : (
- <div className="space-y-3 p-4">
- {orders.slice(0, 10).map((order) => (
- <OrderCard
- key={order.id}
- order={order}
- businesses={{ [business?.id || '']: business?.companyName || '' }}
- checkedItems={{}}
- t={t}
- onClick={() => setSelectedOrder(order)}
- />
- ))}
- </div>
- )}
- </div>
- )
- }
+)}
 
 
  {/* Settings Tab (Unified Layout) */}
  {
  activeTab === "settings" && (
  <div className="flex flex-col md:flex-row gap-6 mt-4 w-full h-full">
- {/* Left Sidebar Menu */}
- <div className="w-full md:w-64 flex-shrink-0 bg-card rounded-xl border border-border p-3 h-fit sticky top-24 shadow-sm">
- <h3 className="text-lg font-bold text-foreground mb-4 px-3 flex items-center justify-between">
- {t('ayarlar')}
- </h3>
- <nav className="flex flex-col gap-1">
- {([
- { key: "isletme", label: t('isletme'), icon: <Store className="w-5 h-5"/> },
- { key: "menu", label: t('menuUrunler'), icon: <Utensils className="w-5 h-5"/> },
- { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/> },
- // "masa" (Table Mgmt) was moved to Reservations tab
- 
- { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
- { key: "promosyon", label: t('promosyon_label'), icon: <Gift className="w-5 h-5"/>, featureKey: "promotions" },
-									{ key: "teslimat", label: t('teslimatAyarlari'), icon: <Truck className="w-5 h-5"/> },
-									{ key: "saatler", label: t('acilisSaatleri'), icon: <Clock className="w-5 h-5"/> },
-                  { key: "reservations", label: t('masaRezervasyonlari'), icon: <CalendarDays className="w-5 h-5"/> },
-                  { key: "procurement", label: "Produkte & Beschaffung", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
- 
- ] as { key: string; label: string; icon: React.ReactNode; featureKey?: string }[]).map((item) => {
- const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
- if (isGated) return null; // Hide gated features in sidebar to keep UI clean, or show with lock
- return (
- <button
- key={item.key}
- onClick={() => setSettingsSubTab(item.key as any)}
- className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left w-full ${
- settingsSubTab === item.key
- ? "bg-red-600/10 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium"
- : "text-foreground hover:bg-muted"
- }`}
- >
- <span className="opacity-80 flex items-center justify-center">{item.icon}</span>
- <span className="font-medium">{item.label}</span>
- </button>
- );
- })}
- </nav>
- </div>
-
- {/* Right Content Pane */}
+ {/* Left Sidebar Menu is now global */}
  <div className="flex-1 w-full flex flex-col min-w-0">
  <div className="mb-6">
  {/* Settings Sub-Tab Header */}
@@ -4242,7 +4162,7 @@ export default function BusinessDetailsPage() {
  {isletmeInternalTab === "zertifikalar" && (
  <div className="space-y-6">
  {(() => {
-   const isSuperAdmin = admin?.adminType === 'super' || admin?.role === 'super';
+   const isSuperAdmin = admin?.adminType === 'super' || admin?.role === 'super_admin';
    const visibleBrands = isSuperAdmin ? platformBrands : platformBrands.filter(b => formData.activeBrandIds?.includes(b.id));
 
    return (
@@ -6550,7 +6470,7 @@ export default function BusinessDetailsPage() {
           <div>
             <h4 className="text-amber-500 font-bold text-sm mb-1">Personel Limiti Aşıldı</h4>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Mevcut planınız (<strong>{activePlan?.name || business?.subscriptionPlan || 'Free'}</strong>) en fazla <strong>{pLimit}</strong> personel desteklemektedir. 
+              Mevcut planınız (<strong>{activePlan?.name || business?.subscriptionPlan || 'Eat Free'}</strong>) en fazla <strong>{pLimit}</strong> personel desteklemektedir. 
               Şu anki <strong>{activeStaffCount}</strong> aktif personeliniz sebebiyle <strong>{overage} ekstra personel</strong> için aylık faturanıza personel aşım ücreti (overage) yansıtılmaktadır.
             </p>
           </div>
@@ -6759,7 +6679,7 @@ export default function BusinessDetailsPage() {
   </button>
   {/* Yeni Şifre */}
   <button
-  onClick={() => handleResetStaffPassword(staff)}
+  onClick={() => handleResetPassword(staff)}
   disabled={resetPasswordLoading}
   className="text-xs px-2 py-1 rounded bg-violet-600/20 text-violet-400 hover:bg-violet-600 hover:text-white disabled:opacity-50"
   >
@@ -6803,7 +6723,15 @@ export default function BusinessDetailsPage() {
          <h3 className="text-amber-500 font-bold text-lg">Personel Kotası Aşıldı</h3>
        </div>
        <p className="text-muted-foreground text-sm">
-         Mevcut abonelik planınızın personel limitini doldurdunuz. Ekleyeceğiniz her yeni personel için faturanıza ek ücret yansıtılacaktır. Onaylıyor musunuz?
+         {(() => {
+           const plan = availablePlans?.find(p => p.id === business?.subscriptionPlan || p.code === business?.subscriptionPlan);
+           const overageFee = plan?.personnelOverageFee || 5;
+           return (
+             <>
+               Mevcut abonelik planınızın personel limitini doldurdunuz. Ekleyeceğiniz her yeni personel için faturanıza <strong>aylık ek {overageFee}€</strong> ücret yansıtılacaktır. Onaylıyor musunuz?
+             </>
+           );
+         })()}
        </p>
        <div className="flex gap-3 pt-4">
          <button onClick={() => setShowInviteModal(false)} className="flex-1 py-2.5 rounded-lg border border-border text-foreground hover:bg-muted transition text-sm font-medium">{t('iptal') || 'İptal'}</button>
@@ -7815,6 +7743,7 @@ export default function BusinessDetailsPage() {
  )
  }
  </main >
+ </div>
 
  {/* Confirmation Modal */}
  {

@@ -94,24 +94,35 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
 
  // Auto-detect country on mount
  useEffect(() => {
- const detectCountry = async () => {
- try {
- // Try to get country from browser timezone or IP
- const response = await fetch('https://ipapi.co/json/');
- const data = await response.json();
- if (data.country_code) {
- const country = countries.find(c => c.code === data.country_code);
- if (country) {
- setCurrentCountry(data.country_code);
- }
- }
- } catch {
- // Default to Germany if detection fails
- setCurrentCountry('DE');
- } finally {
- setIsLoading(false);
- }
- };
+    const detectCountry = async () => {
+      try {
+        const match = document.cookie.match(new RegExp('(^| )lokma_country=([^;]+)'));
+        if (match && match[2]) {
+          const countryCode = match[2];
+          const country = countries.find(c => c.code === countryCode);
+          if (country) {
+            setCurrentCountry(countryCode);
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Try to get country from browser timezone or IP
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.country_code) {
+          const country = countries.find(c => c.code === data.country_code);
+          if (country) {
+            setCurrentCountry(data.country_code);
+          }
+        }
+      } catch {
+        // Default to Germany if detection fails
+        setCurrentCountry('DE');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
  // Check localStorage for country only (language is from URL)
  const savedCountry = localStorage.getItem('lokma_country');

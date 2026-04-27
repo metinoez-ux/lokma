@@ -1262,7 +1262,42 @@
     "yonetici_rol": "Manager",
     "surucu_rol": "Chauffeur / Koerier",
     "garson_rol": "Ober",
-    "belirsiz_rol": "Onbekende rol"
+    "belirsiz_rol": "Onbekende rol",
+    "aktifKuryeYok": "Aktif dağıtım yok.",
+    "canli_operasyon_akisi": "Canlı Operasyon Akışı",
+    "siparislerin_anlik_durumu": "Siparişlerin anlık durum takibi",
+    "hata_olustu": "Hata oluştu",
+    "plan_degisikligi_iptal_edildi": "Bekleyen plan değişikliği iptal edildi.",
+    "tebrikler": "Tebrikler!",
+    "abonelik_degisikligi_alindi": "Abonelik değişikliği talebiniz başarıyla alınmıştır.",
+    "tamam": "Tamam",
+    "bekleyen_plan_degisikligi": "Bekleyen Plan Değişikliği",
+    "yeni_plan_gecis_tarihi": "Yeni planınız",
+    "degisikligi_iptal_et": "Değişikliği İptal Et",
+    "yeni_plan_onayi": "Yeni Plan Onayı",
+    "yeni_plan": "Yeni Plan",
+    "plan_kabul_metni": "Plan Kabul Metni",
+    "isleniyor": "İşleniyor...",
+    "satin_almayi_onayla": "Satın Almayı Onayla",
+    "mevcut_planiniz": "Mevcut Planınız",
+    "bekleyen_gecis": "Bekleyen Geçiş",
+    "bu_plani_sec": "Bu Planı Seç",
+    "limitler_ve_ucretler": "Limitler ve Ücretler",
+    "en_populer": "En Popüler",
+    "siparis_limiti": "Sipariş Limiti",
+    "masa_limiti": "Masa Limiti",
+    "yetkiniz_yok": "Yetkiniz Yok",
+    "planlar_yukleniyor": "Planlar yükleniyor veya bu sektör için plan bulunamadı.",
+    "toplam_siparis": "Toplam Sipariş",
+    "iptal_orani": "İptal Oranı",
+    "storniert": "Storniert",
+    "vergangene_bestellungen": "Geçmiş",
+    "bos": "Bos",
+    "daha_fazla": "Daha Fazla",
+    "aylik_ucret": "Aylik Ucret",
+    "degisiklik": "Degisiklik",
+    "hedefPlan": "Hedef Plan",
+    "gecisTarihi": "Geçiş Tarihi"
   },
   "AdminCompanySettings": {
     "title": "Company Settings",
@@ -1682,7 +1717,13 @@
     "kermes": "Kermes",
     "sil": "Verwijderen",
     "rolYonetici": "Manager (Admin)",
-    "rolPersonel": "Personeel (Standaard)"
+    "rolPersonel": "Personeel (Standaard)",
+    "kermesLabel": "Kermes",
+    "eminMisinizKullaniciSil": "Eminmisinizkullanicisil",
+    "silmeHatasi": "Silmehatasi",
+    "hata": "Hata",
+    "bilinmeyenHata": "Bilinmeyenhata",
+    "profil_resmini_kirp": "Profil Resmini Kırp"
   },
   "AdminProducts": {
     "evet_sil": "Evet, Sil",
@@ -2441,7 +2482,10 @@
     "secili": "Secili",
     "bos": "Bos",
     "numara_secin": "Numara secin",
-    "guvenlik_notu": "Güvenlik Notu: Hassas ödeme verileri sistemlerimizde saklanmaz."
+    "guvenlik_notu": "Güvenlik Notu: Hassas ödeme verileri sistemlerimizde saklanmaz.",
+    "ilk": "İlk",
+    "ucretsiz": "ücretsiz!",
+    "siparis_basi": "Sipariş başı:"
   },
   "AdminBusinessOrders": {
     "title": "Order Management",
@@ -2584,7 +2628,15 @@
     "sms_gonderildi": "SMS verzonden",
     "zorunlu_alanlari_doldurun": "Vul alstublieft alle verplichte velden in",
     "email_gonderilemedi": "E-mail kon niet worden verzonden",
-    "sms_gonderilemedi": "SMS kon niet worden verzonden"
+    "sms_gonderilemedi": "SMS kon niet worden verzonden",
+    "kurye_detaylari_performans": "Kurye Detayları & Performans",
+    "durdurma_sayisi": "Durdurma Sayısı",
+    "devam_ettirme": "Devam Ettirme",
+    "toplam_durma_suresi": "Toplam Durma Süresi",
+    "benzersiz_musteri": "Benzersiz Müşteri",
+    "durduruldu": "Durduruldu",
+    "devam_etti": "Devam Etti",
+    "duzenle": "Duzenle"
   },
   "AdminReservations": {
     "title": "Reservations",
@@ -2663,7 +2715,17 @@
     "completed_label": "Afgerond",
     "minutes_short": "min",
     "avg_delivery": "Gem. Bezorging",
-    "retention_label": "Klantbehoud"
+    "retention_label": "Klantbehoud",
+    "i_sletme_performansi": "📈 İşletme Performansı",
+    "son_7_gun_trend_analizi": "Son 7 günlük trend analizi",
+    "son_7_gun": "Son 7 Gün",
+    "aylik": "Aylık",
+    "bu_yil": "Bu Yıl",
+    "kurye_acma_kapama_gecmisi": "🛵 Kurye Açma/Kapama Geçmişi",
+    "i_slem": "İşlem",
+    "henuz_kurye_acma_kapama_kaydi_yok": "Henüz kurye açma/kapama kaydı yok",
+    "s_adece_son_3": "Sadece son 3 işlem gösteriliyor",
+    "siparisler": "Siparisler"
   },
   "AdminTableorders": {
     "title": "Table Orders",
@@ -2869,7 +2931,8 @@
     "ciro": "Omzet",
     "iletisim_son": "neem contact op",
     "henuz_fatura_yok": "Bu cari ay için henüz açık bir fatura (işlem) bulunmuyor.",
-    "tahmini_guncel_fatura": "Güncel Tahmini Fatura (Bu Ay)"
+    "tahmini_guncel_fatura": "Güncel Tahmini Fatura (Bu Ay)",
+    "banka_bilgileri": "Banka Bilgileri"
   },
   "AdminAdmins": {
     "super_admin": "Super Admin",
@@ -4872,7 +4935,20 @@
     "flash_sale_group_staff": "Personeel & Admins",
     "flash_sale_group_staff_desc": "Personeel en beheerders van dit kermes",
     "flash_sale_group_nearby": "In de Buurt",
-    "flash_sale_group_nearby_desc": "Gebruikers binnen de ingestelde km-radius rond het kermes"
+    "flash_sale_group_nearby_desc": "Gebruikers binnen de ingestelde km-radius rond het kermes",
+    "lutfen_yuklemenin_bitmesini_bekleyin": "Lütfen yüklemenin bitmesini bekleyin",
+    "musteriNo": "Müşteri No",
+    "musteriNoDegistirilemez": "Müşteri numarası değiştirilemez",
+    "impressumBaslik": "Impressum / Rechtliche Angaben",
+    "impressumAciklama": "Diese Angaben werden im Impressum der mobilen App angezeigt.",
+    "rechtsform": "Rechtsform",
+    "geschaeftsfuehrer": "Geschäftsführer / Vorstand",
+    "vertretungsberechtigter": "Vertretungsberechtigte/r",
+    "registergericht": "Registergericht",
+    "handelsregisternummer": "Vereins-/Handelsregisternummer",
+    "vergi_uid_nummer_vat": "Umsatzsteuer-ID (USt-IdNr.)",
+    "avrupaBirligiVergiNumarasiOrnDe123456789": "z.B. DE123456789",
+    "onerilen_kare_veya_yuvarlak": "Önerilen: 500x500. Kare veya yuvarlak formatında, transparan bir PNG veya temiz arka plan."
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",
@@ -5376,7 +5452,8 @@
     "ekran_goruntusu_tercihleri": "Ekran görüntüsünü Otomatik, Aydınlık veya Karanlık olarak belirleyin",
     "otomatik": "Otomatik",
     "aydinlik": "Gündüz",
-    "karanlik": "Gece"
+    "karanlik": "Gece",
+    "yonlendiriliyor": "İşletme Profiline Yönlendiriliyor..."
   },
   "AdminSettingsKermescategories": {
     "atistirmalik": "snack",
@@ -6441,7 +6518,14 @@
     "quantity_kg": "Quantity kg",
     "price_kg": "Price kg",
     "total": "Total",
-    "new_total": "New total"
+    "new_total": "New total",
+    "workflow": {
+      "pending": "Yeni Sipariş",
+      "preparing": "Hazırlanıyor",
+      "ready": "Hazır",
+      "inTransit": "Yolda",
+      "completed": "Tamamlandı"
+    }
   },
   "AdminAiMenu": {
     "delete_group_title": "Groep verwijderen",
@@ -6990,5 +7074,28 @@
   "DIN A6 \\u00b7 105\\u00d7148 mm": "DIN A6 \\u00b7 105\\u00d7148 mm",
   "LOKMA": "LOKMA",
   "App Store": "App Store",
-  "Google Play": "Google Play"
+  "Google Play": "Google Play",
+  "tr-TR": "Tr-tr",
+  "isletmeBilgileri": "İşletme Bilgileri",
+  "isletmeProfilAdresIletisim": "Profil, adres ve iletişim",
+  "teslimat": "Teslimat Ayarları",
+  "kurye_teslimat_ucreti_ve_siparis_saatler": "Kurye yönetimi ve süreler",
+  "menu_ve_urunler": "Menü & Ürünler",
+  "urun_ve_kategori_yonetimi": "Toplu ürün yönetimi",
+  "personel": "Personel",
+  "personel_listesi_ve_yonetimi": "Ekip listesi yönetimi",
+  "shifts": "Vardiya Yönetimi",
+  "vardiya_planlama_ve_takibi": "Kasaya giriş çıkış analizleri",
+  "abonelik_plan": "Abonelik Paketi",
+  "abonelik_plani_ve_ozellikler": "Mevcut plan özellikleri",
+  "faturalarim": "Faturalar",
+  "platform_faturalari_ve_abonelik_odemeler": "Platform makbuzları",
+  "gorunum": "Arayüz Tercihleri",
+  "ekran_goruntusu_tercihleri": "Sistem geneli tema ayarınız",
+  "otomatik": "Sistem",
+  "aydinlik": "Gündüz",
+  "karanlik": "Gece",
+  "personnel": "Personnel",
+  "products_admin": "Products Admin",
+  "werbung": "Werbung"
 }

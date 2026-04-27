@@ -153,13 +153,13 @@ export default function PlansPage() {
  ...formData,
  stripeProductId: formData.stripeProductId || null,
  eslStripePriceId: formData.eslStripePriceId || null,
- eslSetupFee: formData.eslSetupFee ?? 199.00,
-        eslMinimumRentMonths: formData.eslMinimumRentMonths ?? 12,
+ eslSetupFee: (formData as any).eslSetupFee ?? 199.00,
+ eslMinimumRentMonths: (formData as any).eslMinimumRentMonths ?? 12,
  yearlyFee: formData.yearlyFee || null,
- campaignLimit: (formData.campaignLimit === undefined || formData.campaignLimit === '') ? null : formData.campaignLimit,
- productLimit: (formData.productLimit === undefined || formData.productLimit === '') ? null : formData.productLimit,
- orderLimit: (formData.orderLimit === undefined || formData.orderLimit === '') ? null : formData.orderLimit,
- personnelLimit: (formData.personnelLimit === undefined || formData.personnelLimit === '') ? null : formData.personnelLimit,
+ campaignLimit: (formData.campaignLimit === undefined || (formData.campaignLimit as any) === '') ? null : formData.campaignLimit,
+ productLimit: (formData.productLimit === undefined || (formData.productLimit as any) === '') ? null : formData.productLimit,
+ orderLimit: (formData.orderLimit === undefined || (formData.orderLimit as any) === '') ? null : formData.orderLimit,
+ personnelLimit: (formData.personnelLimit === undefined || (formData.personnelLimit as any) === '') ? null : formData.personnelLimit,
  personnelOverageFee: formData.personnelOverageFee === undefined ? 0 : formData.personnelOverageFee,
  // Kurye bazlı provizyon
  commissionClickCollect: (formData as any).commissionClickCollect ?? 5,
@@ -535,7 +535,7 @@ export default function PlansPage() {
  <input
  type="number"
  step="0.01"
- value={formData.yearlyFee === '' || formData.yearlyFee === null ? '' : formData.yearlyFee}
+ value={(formData.yearlyFee as any) === '' || formData.yearlyFee === null ? '' : formData.yearlyFee}
  onChange={e => setFormData({ ...formData, yearlyFee: e.target.value === '' ? '' : parseFloat(e.target.value) } as any)}
  className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
  placeholder="Opsiyonel"
@@ -588,7 +588,7 @@ export default function PlansPage() {
          <input
             type="number"
             step="0.01"
-            value={formData.personnelOverageFee === '' ? '' : (formData.personnelOverageFee ?? 0)}
+            value={(formData.personnelOverageFee as any) === '' ? '' : (formData.personnelOverageFee ?? 0)}
             onChange={e => setFormData({ ...formData, personnelOverageFee: e.target.value === '' ? '' : parseFloat(e.target.value) } as any)}
             className="w-full bg-background border border-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-lg px-3 py-2 text-foreground text-sm transition-colors"
             placeholder="Opsiyonel"

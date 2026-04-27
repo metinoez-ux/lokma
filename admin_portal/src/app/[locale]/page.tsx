@@ -63,20 +63,31 @@ export default function LandingPage() {
  }, []);
 
  useEffect(() => {
- const detectCountry = async () => {
- try {
- const response = await fetch('https://ipapi.co/json/');
- const data = await response.json();
- if (data.country_code) {
- const country = countries.find(c => c.code === data.country_code);
- if (country) setCurrentCountry(data.country_code);
- }
- } catch {
- setCurrentCountry('DE');
- } finally {
- setIsLoading(false);
- }
- };
+    const detectCountry = async () => {
+      try {
+        const match = document.cookie.match(new RegExp('(^| )lokma_country=([^;]+)'));
+        if (match && match[2]) {
+          const countryCode = match[2];
+          const country = countries.find(c => c.code === countryCode);
+          if (country) {
+            setCurrentCountry(countryCode);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.country_code) {
+          const country = countries.find(c => c.code === data.country_code);
+          if (country) setCurrentCountry(data.country_code);
+        }
+      } catch {
+        setCurrentCountry('DE');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
  const savedLang = localStorage.getItem('lokma_lang');
  const savedCountry = localStorage.getItem('lokma_country');
@@ -160,11 +171,11 @@ export default function LandingPage() {
         {/* Trust Badge */}
         <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 mb-10">
           <div className="flex -space-x-4">
-            <div className="w-10 h-10 rounded-full border-2 border-background bg-gray-200 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="User" />
+            <div className="w-10 h-10 rounded-full border-2 border-background bg-gray-200 overflow-hidden relative">
+              <Image src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="User" fill className="object-cover" sizes="40px" />
             </div>
-            <div className="w-10 h-10 rounded-full border-2 border-background bg-gray-200 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="User" />
+            <div className="w-10 h-10 rounded-full border-2 border-background bg-gray-200 overflow-hidden relative">
+              <Image src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="User" fill className="object-cover" sizes="40px" />
             </div>
             <div className="w-10 h-10 rounded-full border-2 border-background bg-[#ea184a] flex items-center justify-center text-xs font-bold text-white">
               +10k
@@ -190,10 +201,10 @@ export default function LandingPage() {
 
         <div className="flex items-center justify-center md:justify-start gap-4">
           <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
-            <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" className="h-[40px]" />
+            <Image src="/apple_store_badge.png" alt="App Store" width={120} height={40} className="h-[40px] w-auto object-contain" />
           </a>
           <a href="https://play.google.com/store/apps/details?id=com.lokma.app" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
-            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Google Play" className="h-[58px] -my-2" />
+            <Image src="/google_play_badge.png" alt="Google Play" width={135} height={40} className="h-[40px] w-auto object-contain" />
           </a>
         </div>
       </div>

@@ -922,41 +922,7 @@ export default function BusinessesPage() {
  </div>
  </div>
 
- {/* Sector Modules */}
  <div className="max-w-7xl mx-auto mb-6">
- <h3 className="text-foreground font-medium mb-3 flex items-center gap-2">
- {t('sektor_modulleri')}
- </h3>
- <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
- {businessTypes.map(type => {
- // 🆕 Kermes için kermes events sayısını kullan (arşivlenmemiş olanlar)
- const count = type.value === 'kermes'
- ? kermesEvents.filter((k: any) => k.isArchived !== true).length
- : businesses.filter(b => {
- const bd = b as any;
- return b.businessCategories?.includes(type.value) || bd.businessType === type.value || bd.type === type.value;
- }).length;
- return (
- <button
- key={type.value}
- onClick={() => {
- setTypeFilter(typeFilter === type.value ? 'all' : type.value);
- }}
- className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${typeFilter === type.value
- ? type.value === 'kermes' ? 'bg-pink-600/30 border-pink-500 ring-2 ring-pink-500' : 'bg-blue-600/30 border-blue-500 ring-2 ring-blue-500'
- : 'bg-card border-border hover:bg-gray-700 hover:border-gray-600'
- }`}
- >
- <span className="text-3xl">{type.icon}</span>
- <span className="text-foreground text-sm font-medium">{type.label}</span>
- <span className="text-muted-foreground text-xs">
- {type.value === 'kermes' ? `${count} kermes` : `${count} ${t('isletme1')}`}
- </span>
- </button>
- );
- })}
- </div>
-
  {/* 🕐 Son Kullanılanlar - Quick Access Chip */}
  {recentBusinesses.length > 0 && (
  <div className="mt-4">
@@ -967,7 +933,6 @@ export default function BusinessesPage() {
  : 'bg-card border-border hover:bg-gray-700 hover:border-gray-600 text-foreground'
  }`}
  >
- <span>🕐</span>
  {t('sonKullanilanlar')}
  <span className="bg-amber-600/40 text-amber-200 text-xs px-2 py-0.5 rounded-full">{recentBusinesses.length}</span>
  <span className={`transition-transform ${showRecent ? 'rotate-180' : ''}`}>▾</span>
@@ -981,9 +946,6 @@ export default function BusinessesPage() {
  href={`/admin/business/${rb.id}`}
  className="flex items-center gap-3 px-4 py-3 bg-card hover:bg-gray-700 border border-border hover:border-amber-600/50 rounded-xl transition-all group"
  >
- <span className="text-xl">
- {businessTypes.find(t => t.value === rb.type)?.icon || '🏪'}
- </span>
  <div className="min-w-0 flex-1">
  <div className="text-foreground text-sm font-medium truncate group-hover:text-amber-300 transition-colors">
  {rb.name}
@@ -1026,7 +988,7 @@ export default function BusinessesPage() {
  <option value="all">{t('tumTurler')}</option>
  {businessTypes.map(type => (
  <option key={type.value} value={type.value}>
- {type.icon} {type.label}
+ {type.label}
  </option>
  ))}
  </select>
@@ -1038,8 +1000,8 @@ export default function BusinessesPage() {
  className="px-4 py-3 bg-gray-700 text-white rounded-xl border border-gray-600"
  >
  <option value="all">{t('tumMarkalar')}</option>
- <option value="tuna">🔴 TUNA</option>
- <option value="akdeniz_toros">🏔️ Akdeniz Toros</option>
+ <option value="tuna">TUNA</option>
+ <option value="akdeniz_toros">Akdeniz Toros</option>
  <option value="none">{t('markasiz')}</option>
  </select>
 
@@ -1324,13 +1286,13 @@ export default function BusinessesPage() {
  {/* Brand Label Column */}
  <td className="px-4 py-4">
  {((business.brandLabel || (business as any).brand) === 'tuna') && (
- <span className="px-3 py-1.5 bg-red-600/30 text-red-800 dark:text-red-400 border border-red-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
- 🔴 TUNA
+ <span className="text-red-500 dark:text-red-400 font-bold text-sm tracking-wide">
+ TUNA
  </span>
  )}
  {((business.brandLabel || (business as any).brand) === 'akdeniz_toros') && (
- <span className="px-3 py-1.5 bg-card/50 text-foreground border border-gray-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
- ⚫ TOROS
+ <span className="text-green-600 dark:text-green-500 font-bold text-sm tracking-wide">
+ Akdeniz Toros
  </span>
  )}
  {!business.brandLabel && !(business as any).brand && (
