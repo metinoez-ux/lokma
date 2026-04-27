@@ -3607,33 +3607,43 @@ export default function BusinessDetailsPage() {
        </select>
      </div>
 
-     {/* KPI Row */}
-     <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
-       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-amber-500">
-         <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pauseStats.pauseCount}</div>
-         <div className="text-xs text-muted-foreground">{tStaff('durdurma_sayisi')}</div>
+     {/* Performance Stats Grid */}
+     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+       <div className="bg-background rounded-lg p-4">
+         <div className="text-3xl font-bold text-foreground">{perfOrderStats.totalOrders}</div>
+         <div className="text-sm text-muted-foreground">{tStats('toplam_siparis') || 'Gesamtbestellung'}</div>
        </div>
-       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-emerald-500">
-         <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{pauseStats.resumeCount}</div>
-         <div className="text-xs text-muted-foreground">{tStaff('devam_ettirme')}</div>
+       <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
+         <div className="text-3xl font-bold text-green-800 dark:text-green-400">{perfOrderStats.completedOrders}</div>
+         <div className="text-sm text-green-300">{tStats('completed_label') || 'Abgeschlossen'}</div>
        </div>
-       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-yellow-500">
-         <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pauseStats.totalPausedHours} <span className="text-sm">{tStaff('sa_kisaltma')}</span></div>
-         <div className="text-xs text-muted-foreground">{tStaff('toplam_durma_suresi')}</div>
+       <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
+         <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{perfOrderStats.avgPreparationTime}<span className="text-lg">{tStats('minutes_short') || 'Min.'}</span></div>
+         <div className="text-sm text-blue-300">{tStats('ort_hazirlama') || 'Durchschn. Vorbereitung'}</div>
        </div>
-       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-blue-500">
-         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{perfOrderStats.totalOrders}</div>
-         <div className="text-xs text-muted-foreground">{tStaff('orders')}</div>
+       <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
+         <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{perfOrderStats.avgDeliveryTime}<span className="text-lg">{tStats('minutes_short') || 'Min.'}</span></div>
+         <div className="text-sm text-purple-300">{tStats('avg_delivery') || 'Durchschn. Lieferung'}</div>
        </div>
-       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-green-500">
-         <div className="text-2xl font-bold text-green-600 dark:text-green-400">{perfOrderStats.completedOrders}</div>
-         <div className="text-xs text-muted-foreground">{tStaff('teslim_edildi')}</div>
+       <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
+         <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
+         <div className="text-sm text-amber-300">{tStats('kurye_durdurma') || 'Kurierstopp'}</div>
        </div>
-       <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-purple-500">
-         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-           {new Set(orders.map(o => o.customerId).filter(Boolean)).size}
-         </div>
-         <div className="text-xs text-muted-foreground">{tStaff('benzersiz_musteri')}</div>
+     </div>
+
+     {/* Pause Statistics Row */}
+     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+       <div className="bg-background rounded-lg p-4">
+         <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-muted-foreground">{tStats('durdurma_sayisi') || 'Anzahl der Stopps'}</span></div>
+         <div className="text-2xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
+       </div>
+       <div className="bg-background rounded-lg p-4">
+         <div className="flex items-center gap-2 mb-2"><span className="text-muted-foreground">{tStats('retention_label') || 'Kundenbindung'}</span></div>
+         <div className="text-2xl font-bold text-green-800 dark:text-green-400">{new Set(orders.map(o => o.customerId).filter(Boolean)).size}</div>
+       </div>
+       <div className="bg-background rounded-lg p-4">
+         <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-muted-foreground">{tStats('toplam_durdurma_suresi') || 'Gesamtstoppzeit'}</span></div>
+         <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{tStats('saat') || 'Uhr'}</span></div>
        </div>
      </div>
 
