@@ -6,30 +6,26 @@ import 'delivery_type_dialog.dart';
 class OrderSetupResult {
   final DeliveryType deliveryType;
   final bool isGroupOrder;
+  final String? tableNo;
+  final String? sectionId;
 
   const OrderSetupResult({
     required this.deliveryType,
     required this.isGroupOrder,
+    this.tableNo,
+    this.sectionId,
   });
 }
 
 /// Siparis baslamadan once kullaniciya teslimat turu ve bireysel/grup secimini soran bottom sheet.
 /// Ilk urun sepete eklenirken otomatik olarak gosterilir.
-///
-/// Kullanim:
-/// ```dart
-/// final result = await showModalBottomSheet<OrderSetupResult>(
-///   context: context,
-///   isScrollControlled: true,
-///   backgroundColor: Colors.transparent,
-///   builder: (ctx) => OrderSetupBottomSheet(kermesName: 'Kermes Adi'),
-/// );
-/// ```
 class OrderSetupBottomSheet extends StatefulWidget {
   final String kermesName;
   final bool hasDineIn;
   final bool hasTakeaway;
   final bool hasDelivery;
+  /// QR taramayi tetiklemek icin Navigator.push yapacak callback
+  final Future<String?> Function(BuildContext context)? onScanQR;
 
   const OrderSetupBottomSheet({
     super.key,
@@ -37,6 +33,7 @@ class OrderSetupBottomSheet extends StatefulWidget {
     this.hasDineIn = true,
     this.hasTakeaway = true,
     this.hasDelivery = true,
+    this.onScanQR,
   });
 
   @override
@@ -46,6 +43,23 @@ class OrderSetupBottomSheet extends StatefulWidget {
 class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
   DeliveryType? _selectedDelivery;
   bool _isGroupOrder = false;
+  String? _scannedTable;
+  String? _scannedSectionId;
+  final _manualTableController = TextEditingController();
+  bool _showManualInput = false;
+
+  @override
+  void dispose() {
+    _manualTableController.dispose();
+    super.dispose();
+  }
+
+  String? get _effectiveTable {
+    if (_scannedTable != null && _scannedTable!.isNotEmpty) return _scannedTable;
+    final manual = _manualTableController.text.trim();
+    if (manual.isNotEmpty) return manual;
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +160,110 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
                       lokmaPink: lokmaPink,
                     ),
 
-                  if (widget.hasDineIn) const SizedBox(height: 8),
+                  // Masaya Servis secildiginde: QR kod okutma + masa bilgisi
+                  if (_selectedDelivery == DeliveryType.masada) ...[
+                    const SizedBox(height: 12),
+
+                    // Masa bilgisi zaten tarandiysa: ozet goster
+                    if (_scannedTable != null && _scannedTable!.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.green, size: 22),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Masa $_scannedTable',
+                                style: TextStyle(
+                                  color: Colors.green[700],
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _scannedTable = null;
+                                  _scannedSectionId = null;
+                                });
+                              },
+                              child: Text('Degistir', style: TextStyle(color: isDark ? Colors.white60 : Colors.grey[600], fontSize: 13)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      // QR Okut butonu
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            if (widget.onScanQR != null) {
+                              final qrResult = await widget.onScanQR!(context);
+                              if (qrResult != null && qrResult.isNotEmpty) {
+                                _parseQRResult(qrResult);
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.qr_code_scanner, size: 20),
+                          label: const Text('Masa QR Kodunu Okut'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Manuel masa girisi linki
+                      if (!_showManualInput)
+                        Center(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _showManualInput = true),
+                            child: Text(
+                              'QR kod yok mu? Masa numarasini girin',
+                              style: TextStyle(
+                                color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                fontSize: 12,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Manuel masa no girisi
+                      if (_showManualInput) ...[
+                        const SizedBox(height: 4),
+                        TextField(
+                          controller: _manualTableController,
+                          keyboardType: TextInputType.text,
+                          style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15),
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: 'Masa No (orn: 5, A3)',
+                            hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                            prefixIcon: const Icon(Icons.tag, size: 18, color: Color(0xFFE50D6B)),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE50D6B), width: 1.5)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ],
+
+                  if (widget.hasDineIn && _selectedDelivery != DeliveryType.masada) const SizedBox(height: 8),
 
                   // Kurye
                   if (widget.hasDelivery)
@@ -294,11 +411,13 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _selectedDelivery != null ? () {
+                      onPressed: _canStart ? () {
                         HapticFeedback.mediumImpact();
                         Navigator.pop(context, OrderSetupResult(
                           deliveryType: _selectedDelivery!,
                           isGroupOrder: _isGroupOrder,
+                          tableNo: _effectiveTable,
+                          sectionId: _scannedSectionId,
                         ));
                       } : null,
                       style: ElevatedButton.styleFrom(
@@ -316,7 +435,7 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
                           Text(
                             'Siparise Basla',
                             style: TextStyle(
-                              color: _selectedDelivery != null ? Colors.white : (isDark ? Colors.grey[500] : Colors.grey[600]),
+                              color: _canStart ? Colors.white : (isDark ? Colors.grey[500] : Colors.grey[600]),
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
@@ -325,7 +444,7 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
                           Icon(
                             Icons.arrow_forward,
                             size: 20,
-                            color: _selectedDelivery != null ? Colors.white : (isDark ? Colors.grey[500] : Colors.grey[600]),
+                            color: _canStart ? Colors.white : (isDark ? Colors.grey[500] : Colors.grey[600]),
                           ),
                         ],
                       ),
@@ -338,6 +457,41 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
         ],
       ),
     );
+  }
+
+  bool get _canStart {
+    if (_selectedDelivery == null) return false;
+    // Masaya Servis icin masa bilgisi zorunlu degil - checkout'ta da girilebilir
+    return true;
+  }
+
+  void _parseQRResult(String result) {
+    try {
+      final uri = Uri.parse(result);
+      if (uri.pathSegments.contains('table')) {
+        final tableIndex = uri.pathSegments.indexOf('table');
+        if (tableIndex + 1 < uri.pathSegments.length) {
+          final tableLabel = uri.pathSegments[tableIndex + 1];
+          final section = uri.queryParameters['section'];
+          setState(() {
+            _scannedTable = tableLabel;
+            if (section != null && section.isNotEmpty) {
+              _scannedSectionId = section;
+            }
+          });
+        }
+      } else {
+        // Basit QR: duz metin olarak masa numarasi
+        setState(() {
+          _scannedTable = result.trim();
+        });
+      }
+    } catch (e) {
+      // Parse hatasinsa duz metin olarak al
+      setState(() {
+        _scannedTable = result.trim();
+      });
+    }
   }
 
   Widget _buildDeliveryOption({
@@ -354,7 +508,16 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
-        setState(() => _selectedDelivery = type);
+        setState(() {
+          _selectedDelivery = type;
+          // Masaya Servis'ten baska bir sey secilince masa bilgisini temizle
+          if (type != DeliveryType.masada) {
+            _scannedTable = null;
+            _scannedSectionId = null;
+            _manualTableController.clear();
+            _showManualInput = false;
+          }
+        });
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

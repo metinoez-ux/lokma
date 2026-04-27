@@ -26,6 +26,7 @@ import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/utils/distance_utils.dart';
 import 'package:lokma_app/widgets/kermes/order_setup_dialog.dart';
+import 'package:lokma_app/widgets/qr_scanner_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
@@ -857,6 +858,17 @@ String _getLocalizedCountry(String rawCountry) {
           hasDineIn: _currentEvent.hasDineIn,
           hasTakeaway: _currentEvent.hasTakeaway,
           hasDelivery: _currentEvent.hasDelivery,
+          onScanQR: (scanCtx) async {
+            final result = await Navigator.push<String>(
+              scanCtx,
+              MaterialPageRoute(
+                builder: (_) => const QRScannerScreen(
+                  prompt: 'Masadaki QR Kodu Okutun',
+                ),
+              ),
+            );
+            return result;
+          },
         ),
       );
 
@@ -867,6 +879,7 @@ String _getLocalizedCountry(String rawCountry) {
       ref.read(kermesCartProvider.notifier).setOrderContext(
         deliveryType: setupResult.deliveryType.name,
         isGroupOrder: setupResult.isGroupOrder,
+        tableNo: setupResult.tableNo,
       );
     }
 
