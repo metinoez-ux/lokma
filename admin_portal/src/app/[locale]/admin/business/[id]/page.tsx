@@ -5042,7 +5042,7 @@ export default function BusinessDetailsPage() {
  : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
  }`}
  >
- {t('urunler')}{inlineProducts.length})
+ {t('urunler')} ({inlineProducts.length})
  </button>
  <button
  onClick={() => setMenuInternalTab("sponsored")}
@@ -7854,27 +7854,11 @@ export default function BusinessDetailsPage() {
 
  {/* Procurement Tab */}
  {
- settingsSubTab === "procurement" && (
+ (settingsSubTab === "menu" && (menuInternalTab === "bestellungen" || menuInternalTab === "lieferanten")) && (
  <LockedModuleOverlay featureKey="supplyChain">
  <div className="space-y-4">
- {/* Sub-tabs */}
- <div className="flex gap-2 mb-4">
- <button
- onClick={() => setProcurementSubTab('orders')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
- >
- {t('procurement_orders')} ({supplierOrders.length})
- </button>
- <button
- onClick={() => setProcurementSubTab('suppliers')}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
- >
- {t('procurement_suppliers')} ({suppliers.length})
- </button>
- </div>
-
  {/* ═══ SUPPLIERS LIST ═══ */}
- {procurementSubTab === 'suppliers' && (
+ {menuInternalTab === 'lieferanten' && (
  <div className="bg-card rounded-xl overflow-hidden">
  <div className="p-4 border-b border-border flex justify-between items-center">
  <h3 className="text-foreground font-bold">{t('procurement_suppliers')}</h3>
@@ -7956,7 +7940,7 @@ export default function BusinessDetailsPage() {
  )}
 
  {/* ═══ SUPPLIER ORDERS LIST ═══ */}
- {procurementSubTab === 'orders' && (
+ {menuInternalTab === 'bestellungen' && (
  <div className="bg-card rounded-xl overflow-hidden">
  <div className="p-4 border-b border-border flex justify-between items-center">
  <h3 className="text-foreground font-bold">{t('procurement_orders')}</h3>
