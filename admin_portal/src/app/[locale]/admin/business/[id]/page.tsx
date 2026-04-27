@@ -2910,9 +2910,9 @@ export default function BusinessDetailsPage() {
     }));
 
     const typeBreakdown = {
-      pickup: orders.filter((o: any) => o.type === 'pickup' || o.type === 'gelAl').length,
-      delivery: orders.filter((o: any) => o.type === 'delivery').length,
-      dineIn: orders.filter((o: any) => o.type === 'dineIn' || o.type === 'dine_in' || o.type === 'masa').length,
+      pickup: orders.filter((o: any) => o.type === 'pickup' || o.type === 'gelAl' || o.deliveryMethod === 'pickup' || o.deliveryMethod === 'gelAl').length,
+      delivery: orders.filter((o: any) => o.type === 'delivery' || o.deliveryMethod === 'delivery').length,
+      dineIn: orders.filter((o: any) => o.type === 'dineIn' || o.type === 'dine_in' || o.type === 'masa' || o.deliveryMethod === 'dineIn' || o.deliveryMethod === 'masa').length,
     };
 
     const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {};
@@ -3185,6 +3185,7 @@ export default function BusinessDetailsPage() {
                   </div>
                   <p className="text-blue-600 dark:text-blue-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_siparis') || 'Toplam Sipariş'}</p>
                   <h4 className="text-3xl font-black text-blue-900 dark:text-blue-200 mt-2">{orders.length}</h4>
+                  <p className="text-[10px] text-blue-700/60 dark:text-blue-300/60 mt-1.5 font-medium uppercase tracking-widest">(Tüm Zamanlar / Son 500 Sipariş)</p>
                 </div>
 
                 <div className="bg-emerald-600/10 border border-emerald-600/20 rounded-2xl p-6 relative overflow-hidden group">
@@ -3193,8 +3194,9 @@ export default function BusinessDetailsPage() {
                   </div>
                   <p className="text-emerald-600 dark:text-emerald-400 text-sm font-semibold uppercase tracking-wider">{t('toplam_ciro') || 'Toplam Ciro'}</p>
                   <h4 className="text-3xl font-black text-emerald-900 dark:text-emerald-200 mt-2">
-                    {formatCurrency(orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
+                    {formatCurrency(orders.filter(o => ['delivered', 'picked_up', 'completed'].includes(o.status)).reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
                   </h4>
+                  <p className="text-[10px] text-emerald-700/60 dark:text-emerald-300/60 mt-1.5 font-medium uppercase tracking-widest">(Sadece Teslim Edilenler - Tüm Zamanlar)</p>
                 </div>
 
                 <div className="bg-rose-600/10 border border-rose-600/20 rounded-2xl p-6 relative overflow-hidden group">
@@ -3205,6 +3207,7 @@ export default function BusinessDetailsPage() {
                   <h4 className="text-3xl font-black text-rose-900 dark:text-rose-200 mt-2">
                     %{Math.round((orders.filter(o => o.status === 'cancelled').length / (orders.length || 1)) * 100)}
                   </h4>
+                  <p className="text-[10px] text-rose-700/60 dark:text-rose-300/60 mt-1.5 font-medium uppercase tracking-widest">(Tüm Zamanlar / Son 500 Sipariş)</p>
                 </div>
               </div>
 
@@ -3236,7 +3239,7 @@ export default function BusinessDetailsPage() {
           
           <div className="p-6 flex-1 min-h-[300px] flex flex-col gap-8">
             {/* Charts Row */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Hourly Distribution */}
               <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
                 <h3 className="text-foreground font-bold mb-4">{tStats('saatlik_siparis_dagilimi') || 'Saatlik Sipariş Yoğunluğu'}</h3>
@@ -3294,102 +3297,102 @@ export default function BusinessDetailsPage() {
                   })}
                 </div>
               </div>
+            </div>
 
-              {/* Period Chart (Weekly/Monthly/Yearly) */}
-              <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
-                <h3 className="text-foreground font-bold mb-4">Sipariş & Ciro Trendi</h3>
-                {(() => {
-                  const now = new Date();
-                  const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-                  let periodData: { label: string; count: number; revenue: number }[] = [];
+            {/* Period Chart (Weekly/Monthly/Yearly) - Full Width Below */}
+            <div className="bg-background rounded-xl p-5 border border-border shadow-sm">
+              <h3 className="text-foreground font-bold mb-4">Sipariş & Ciro Trendi</h3>
+              {(() => {
+                const now = new Date();
+                const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+                let periodData: { label: string; count: number; revenue: number }[] = [];
 
-                  if (periodTab === 'weekly') {
-                    for (let i = 6; i >= 0; i--) {
-                      const d = new Date(now);
-                      d.setDate(d.getDate() - i);
-                      const dayStr = d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric' });
-                      const dayOrders = orders.filter((o: any) => {
-                        if (!o.createdAt) return false;
-                        const od = o.createdAt.toDate?.() || new Date(o.createdAt);
-                        return od.getDate() === d.getDate() && od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
-                      });
-                      periodData.push({
-                        label: dayStr,
-                        count: dayOrders.length,
-                        revenue: dayOrders.reduce((s: number, o: any) => s + (o.total || 0), 0),
-                      });
-                    }
-                  } else if (periodTab === 'monthly') {
-                    const daysInMonth = now.getDate();
-                    for (let day = 1; day <= daysInMonth; day++) {
-                      const dayOrders = orders.filter((o: any) => {
-                        if (!o.createdAt) return false;
-                        const od = o.createdAt.toDate?.() || new Date(o.createdAt);
-                        return od.getDate() === day && od.getMonth() === now.getMonth() && od.getFullYear() === now.getFullYear();
-                      });
-                      periodData.push({
-                        label: `${day}`,
-                        count: dayOrders.length,
-                        revenue: dayOrders.reduce((s: number, o: any) => s + (o.total || 0), 0),
-                      });
-                    }
-                  } else {
-                    const currentMonth = now.getMonth();
-                    for (let m = 0; m <= currentMonth; m++) {
-                      const monthOrders = orders.filter((o: any) => {
-                        if (!o.createdAt) return false;
-                        const od = o.createdAt.toDate?.() || new Date(o.createdAt);
-                        return od.getMonth() === m && od.getFullYear() === now.getFullYear();
-                      });
-                      periodData.push({
-                        label: monthNames[m],
-                        count: monthOrders.length,
-                        revenue: monthOrders.reduce((s: number, o: any) => s + (o.total || 0), 0),
-                      });
-                    }
+                if (periodTab === 'weekly') {
+                  for (let i = 6; i >= 0; i--) {
+                    const d = new Date(now);
+                    d.setDate(d.getDate() - i);
+                    const dayStr = d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric' });
+                    const dayOrders = orders.filter((o: any) => {
+                      if (!o.createdAt) return false;
+                      const od = o.createdAt.toDate?.() || new Date(o.createdAt);
+                      return od.getDate() === d.getDate() && od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
+                    });
+                    periodData.push({
+                      label: dayStr,
+                      count: dayOrders.length,
+                      revenue: dayOrders.reduce((s: number, o: any) => s + (o.total || 0), 0),
+                    });
                   }
+                } else if (periodTab === 'monthly') {
+                  const daysInMonth = now.getDate();
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const dayOrders = orders.filter((o: any) => {
+                      if (!o.createdAt) return false;
+                      const od = o.createdAt.toDate?.() || new Date(o.createdAt);
+                      return od.getDate() === day && od.getMonth() === now.getMonth() && od.getFullYear() === now.getFullYear();
+                    });
+                    periodData.push({
+                      label: `${day}`,
+                      count: dayOrders.length,
+                      revenue: dayOrders.reduce((s: number, o: any) => s + (o.total || 0), 0),
+                    });
+                  }
+                } else {
+                  const currentMonth = now.getMonth();
+                  for (let m = 0; m <= currentMonth; m++) {
+                    const monthOrders = orders.filter((o: any) => {
+                      if (!o.createdAt) return false;
+                      const od = o.createdAt.toDate?.() || new Date(o.createdAt);
+                      return od.getMonth() === m && od.getFullYear() === now.getFullYear();
+                    });
+                    periodData.push({
+                      label: monthNames[m],
+                      count: monthOrders.length,
+                      revenue: monthOrders.reduce((s: number, o: any) => s + (o.total || 0), 0),
+                    });
+                  }
+                }
 
-                  const maxCount = Math.max(...periodData.map(d => d.count), 1);
-                  const maxRevenue = Math.max(...periodData.map(d => d.revenue), 1);
+                const maxCount = Math.max(...periodData.map(d => d.count), 1);
+                const maxRevenue = Math.max(...periodData.map(d => d.revenue), 1);
 
-                  return (
-                    <div className="flex flex-col gap-4">
-                      {/* Order Count Bars */}
-                      <div className="flex items-end gap-1" style={{ height: 60 }}>
-                        {periodData.map((d, i) => {
-                          const h = (d.count / maxCount) * 100;
-                          return (
-                            <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                              {d.count > 0 && <span className="text-[9px] text-blue-300 mb-0.5">{d.count}</span>}
-                              <div className="w-full bg-blue-500/80 rounded-t" style={{ height: `${Math.max(h, 2)}%`, minHeight: d.count > 0 ? 4 : 2 }} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                      
-                      {/* Revenue Bars */}
-                      <div className="flex items-end gap-1" style={{ height: 60 }}>
-                        {periodData.map((d, i) => {
-                          const h = (d.revenue / maxRevenue) * 100;
-                          return (
-                            <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                              {d.revenue > 0 && <span className="text-[9px] text-green-300 mb-0.5">€{d.revenue.toFixed(0)}</span>}
-                              <div className="w-full bg-green-500/80 rounded-t" style={{ height: `${Math.max(h, 2)}%`, minHeight: d.revenue > 0 ? 4 : 2 }} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex gap-1 mt-1">
-                        {periodData.map((d, i) => (
-                          <div key={i} className="flex-1 text-center">
-                            <span className="text-[8px] text-muted-foreground/80">{d.label}</span>
+                return (
+                  <div className="flex flex-col gap-4">
+                    {/* Order Count Bars */}
+                    <div className="flex items-end gap-1" style={{ height: 60 }}>
+                      {periodData.map((d, i) => {
+                        const h = (d.count / maxCount) * 100;
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                            {d.count > 0 && <span className="text-[9px] text-blue-300 mb-0.5">{d.count}</span>}
+                            <div className="w-full bg-blue-500/80 rounded-t" style={{ height: `${Math.max(h, 2)}%`, minHeight: d.count > 0 ? 4 : 2 }} />
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
-                  );
-                })()}
-              </div>
+                    
+                    {/* Revenue Bars */}
+                    <div className="flex items-end gap-1" style={{ height: 60 }}>
+                      {periodData.map((d, i) => {
+                        const h = (d.revenue / maxRevenue) * 100;
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                            {d.revenue > 0 && <span className="text-[9px] text-green-300 mb-0.5">€{d.revenue.toFixed(0)}</span>}
+                            <div className="w-full bg-green-500/80 rounded-t" style={{ height: `${Math.max(h, 2)}%`, minHeight: d.revenue > 0 ? 4 : 2 }} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-1 mt-1">
+                      {periodData.map((d, i) => (
+                        <div key={i} className="flex-1 text-center">
+                          <span className="text-[8px] text-muted-foreground/80">{d.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Top Products */}

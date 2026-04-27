@@ -333,9 +333,9 @@ export default function StatisticsPage() {
 
  // Orders by type (deliveryMethod values: 'pickup', 'delivery', 'dineIn')
  typeBreakdown: {
- pickup: filteredOrders.filter(o => o.type === 'pickup' || o.type === 'gelAl').length,
- delivery: filteredOrders.filter(o => o.type === 'delivery').length,
- dineIn: filteredOrders.filter(o => o.type === 'dineIn' || o.type === 'dine_in' || o.type === 'masa').length,
+ pickup: filteredOrders.filter(o => o.type === 'pickup' || o.type === 'gelAl' || (o as any).deliveryMethod === 'pickup' || (o as any).deliveryMethod === 'gelAl').length,
+ delivery: filteredOrders.filter(o => o.type === 'delivery' || (o as any).deliveryMethod === 'delivery').length,
+ dineIn: filteredOrders.filter(o => o.type === 'dineIn' || o.type === 'dine_in' || o.type === 'masa' || (o as any).deliveryMethod === 'dineIn' || (o as any).deliveryMethod === 'masa').length,
  },
 
  // Top products
