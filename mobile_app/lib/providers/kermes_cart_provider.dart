@@ -291,14 +291,14 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
       updatedItems[existingIndex] = existingItem.copyWith(
         quantity: existingItem.quantity + quantity,
       );
-      state = KermesCartState(
+      state = state.copyWith(
         eventId: state.eventId ?? eventId,
         eventName: state.eventName ?? eventName,
         items: updatedItems,
       );
     } else {
       // Yeni urun ekle
-      state = KermesCartState(
+      state = state.copyWith(
         eventId: state.eventId ?? eventId,
         eventName: state.eventName ?? eventName,
         items: [
@@ -337,22 +337,18 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
       final newItems = List<KermesCartItem>.from(state.items);
       newItems.removeAt(existingIndex);
       
-      state = KermesCartState(
-        eventId: newItems.isEmpty ? null : state.eventId,
-        eventName: newItems.isEmpty ? null : state.eventName,
-        items: newItems,
-      );
+      if (newItems.isEmpty) {
+        state = KermesCartState(); // Sepet bosaldiysa tamamen sifirla
+      } else {
+        state = state.copyWith(items: newItems);
+      }
     } else {
       // Miktari azalt
       final updatedItems = List<KermesCartItem>.from(state.items);
       updatedItems[existingIndex] = existingItem.copyWith(
         quantity: existingItem.quantity - 1,
       );
-      state = KermesCartState(
-        eventId: state.eventId,
-        eventName: state.eventName,
-        items: updatedItems,
-      );
+      state = state.copyWith(items: updatedItems);
     }
     _saveCartToStorage(); // Kalici kaydet
   }
@@ -360,17 +356,17 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
   /// Ürün miktarını belirle
   void setQuantity(String menuItemName, int quantity) {
     if (quantity <= 0) {
-      // Ürünü tamamen kaldır
+      // Urunu tamamen kaldir
       final newItems = state.items.where(
         (item) => item.menuItem.name != menuItemName,
       ).toList();
       
-      state = KermesCartState(
-        eventId: newItems.isEmpty ? null : state.eventId,
-        eventName: newItems.isEmpty ? null : state.eventName,
-        items: newItems,
-      );
-      _saveCartToStorage(); // Kalıcı kaydet
+      if (newItems.isEmpty) {
+        state = KermesCartState(); // Sepet bosaldiysa tamamen sifirla
+      } else {
+        state = state.copyWith(items: newItems);
+      }
+      _saveCartToStorage();
       return;
     }
 
@@ -383,12 +379,8 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
       updatedItems[existingIndex] = state.items[existingIndex].copyWith(
         quantity: quantity,
       );
-      state = KermesCartState(
-        eventId: state.eventId,
-        eventName: state.eventName,
-        items: updatedItems,
-      );
-      _saveCartToStorage(); // Kalıcı kaydet
+      state = state.copyWith(items: updatedItems);
+      _saveCartToStorage();
     }
   }
 
@@ -406,11 +398,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
       updatedItems[existingIndex] = updatedItems[existingIndex].copyWith(
         quantity: updatedItems[existingIndex].quantity + 1,
       );
-      state = KermesCartState(
-        eventId: state.eventId,
-        eventName: state.eventName,
-        items: updatedItems,
-      );
+      state = state.copyWith(items: updatedItems);
       _saveCartToStorage();
     }
   }
@@ -422,21 +410,17 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
       if (item.quantity <= 1) {
         final newItems = List<KermesCartItem>.from(state.items);
         newItems.removeAt(existingIndex);
-        state = KermesCartState(
-          eventId: newItems.isEmpty ? null : state.eventId,
-          eventName: newItems.isEmpty ? null : state.eventName,
-          items: newItems,
-        );
+        if (newItems.isEmpty) {
+          state = KermesCartState(); // Sepet bosaldiysa tamamen sifirla
+        } else {
+          state = state.copyWith(items: newItems);
+        }
       } else {
         final updatedItems = List<KermesCartItem>.from(state.items);
         updatedItems[existingIndex] = item.copyWith(
           quantity: item.quantity - 1,
         );
-        state = KermesCartState(
-          eventId: state.eventId,
-          eventName: state.eventName,
-          items: updatedItems,
-        );
+        state = state.copyWith(items: updatedItems);
       }
       _saveCartToStorage();
     }
