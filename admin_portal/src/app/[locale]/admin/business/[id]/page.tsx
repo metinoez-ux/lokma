@@ -3417,6 +3417,7 @@ export default function BusinessDetailsPage() {
               )}
             </div>
           </div>
+        </div>
       </div>
 
       {/* 🚀 Order Status Workflow Section - Super Admin Parity */}
