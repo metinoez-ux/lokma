@@ -1588,7 +1588,10 @@
     "aylik_ucret": "Aylik Ucret",
     "degisiklik": "Degisiklik",
     "hedefPlan": "Hedef Plan",
-    "gecisTarihi": "Geçiş Tarihi"
+    "gecisTarihi": "Geçiş Tarihi",
+    "saatlik_siparis_dagilimi": "Saatlik Sipariş Dağılımı",
+    "gunluk_siparis_dagilimi": "Günlük Sipariş Dağılımı",
+    "en_cok_satan_urunler": "En Çok Satan Ürünler"
   },
   "AdminBusinessDetail": {
     "pending": "Beklemede",
@@ -6612,7 +6615,7 @@
     "bugun": "Bugün",
     "carsamba": "Çarşamba",
     "durdurma_sayisi": "Durdurma Sayısı",
-    "en_cok_satan_urunler": "🏆 En Çok Satan Ürünler",
+    "en_cok_satan_urunler": "En Çok Satan Ürünler",
     "en_durgun_gun": "😴 En Durgun Gün",
     "en_yogun_gun": "🔥 En Yoğun Gün",
     "en_yogun_saat": "En Yoğun Saat",
@@ -6637,7 +6640,7 @@
     "persembe": "Perşembe",
     "platform_siparis_ve_performans_analitigi": "Platform sipariş ve performans analitiği",
     "saat": "saat",
-    "saatlik_siparis_dagilimi": "🕐 Saatlik Sipariş Dağılımı",
+    "saatlik_siparis_dagilimi": "Saatlik Sipariş Dağılımı",
     "sali": "Salı",
     "siparis": "sipariş",
     "siparis_ciro_trendi": "📊 Sipariş & Ciro Trendi",

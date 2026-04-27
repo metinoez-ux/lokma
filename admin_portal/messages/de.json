@@ -1625,7 +1625,10 @@
     "aylik_ucret": "Aylik Ucret",
     "degisiklik": "Degisiklik",
     "hedefPlan": "Hedef Plan",
-    "gecisTarihi": "Geçiş Tarihi"
+    "gecisTarihi": "Geçiş Tarihi",
+    "saatlik_siparis_dagilimi": "Stündliche Bestellverteilung",
+    "gunluk_siparis_dagilimi": "Tägliche Bestellverteilung",
+    "en_cok_satan_urunler": "Meistverkaufte Produkte"
   },
   "AdminBusinessCategories": {
     "kategori_yonetimine_yonlendiriliyor": "Weitergeleitet zur Kategorieverwaltung..."
@@ -7112,7 +7115,7 @@
     "completed_label": "Abgeschlossen",
     "daily": "Täglich",
     "durdurma_sayisi": "Anzahl der Stopps",
-    "en_cok_satan_urunler": "🏆 Meistverkaufte Produkte",
+    "en_cok_satan_urunler": "Meistverkaufte Produkte",
     "en_durgun_gun": "😴 Der stillste Tag",
     "en_yogun_gun": "🔥 Arbeitsreichster Tag",
     "en_yogun_saat": "Hauptverkehrszeit",
@@ -7120,7 +7123,7 @@
     "gecen_ay_ile": "📊 Mit Letztem Monat",
     "gecen_hafta_ile": "📊 Mit letzter Woche",
     "gecen_yil_ile": "📊 Mit letztem Jahr",
-    "gunluk_siparis_dagilimi": "Tägliche Auftragsaufschlüsselung",
+    "gunluk_siparis_dagilimi": "Tägliche Bestellverteilung",
     "haftalik": "wöchentlich",
     "henuz_kurye_acma_kapama_kaydi_yok": "Noch kein Kurier-Ein/Aus-Datensatz",
     "i_slem": "Transaktion",
@@ -7148,7 +7151,7 @@
     "revenue": "Umsatz",
     "s_adece_son_3": "Sadece son 3 işlem gösteriliyor",
     "saat": "Uhr",
-    "saatlik_siparis_dagilimi": "🕐 Stündliche Aufschlüsselung der Bestellungen",
+    "saatlik_siparis_dagilimi": "Stündliche Bestellverteilung",
     "sadece_son_3": "Last 3 Only",
     "sali": "Dienstag",
     "saturday": "Samstag",

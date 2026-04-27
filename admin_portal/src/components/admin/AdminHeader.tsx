@@ -1163,8 +1163,8 @@ export default function AdminHeader() {
   </Link>
   {businessId && (
     <Link
-    href={`/admin/business/${businessId}?tab=settings&settingsSubTab=procurement`}
-    className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav(`/admin/business/${businessId}`) && typeof window !== 'undefined' && window.location.search.includes('settingsSubTab=procurement') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
+    href={`/admin/business/${businessId}?tab=settings&settingsSubTab=menu&menuInternalTab=bestellungen`}
+    className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav(`/admin/business/${businessId}`) && typeof window !== 'undefined' && window.location.search.includes('menuInternalTab=bestellungen') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
     >
     Beschaffung
     </Link>
@@ -1385,7 +1385,7 @@ export default function AdminHeader() {
   <Link href="/admin/categories" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Kategorien</Link>
   <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Lieferanten</Link>
   {businessId && (
-    <Link href={`/admin/business/${businessId}?tab=settings&settingsSubTab=procurement`} onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Beschaffung</Link>
+    <Link href={`/admin/business/${businessId}?tab=settings&settingsSubTab=menu&menuInternalTab=bestellungen`} onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Beschaffung</Link>
   )}
   </div>
   )}

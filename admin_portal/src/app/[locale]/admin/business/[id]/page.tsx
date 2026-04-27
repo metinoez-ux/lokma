@@ -259,13 +259,13 @@ export default function BusinessDetailsPage() {
  } | null>(null);
 
  const [activeTab, setActiveTab] = useState<
- "overview" | "orders" | "reservations" | "settings" | "procurement" | "hardware"
+ "overview" | "orders" | "reservations" | "settings" | "hardware"
  >(initialTab);
  const [settingsSubTab, setSettingsSubTab] = useState<
- "isletme" | "menu" | "personel" | "masa" | "odeme" | "promosyon" | "marketing" | "teslimat" | "saatler" | "procurement" | "reservations"
+ "isletme" | "menu" | "personel" | "masa" | "promosyon" | "marketing" | "teslimat" | "saatler" | "reservations"
  >(initialSubTab);
- const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
- const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat" | "saatler">("bilgiler");
+ const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored" | "bestellungen" | "lieferanten">("kategoriler");
+ const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat" | "odeme">("bilgiler");
  const [saatlerSubTab, setSaatlerSubTab] = useState<"genel" | "kurye" | "gelal">("genel");
  const [overviewHoursTab, setOverviewHoursTab] = useState<"genel" | "kurye" | "gelal">("genel");
  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
@@ -410,18 +410,25 @@ export default function BusinessDetailsPage() {
     return { pauseCount, resumeCount, totalPausedHours: Math.round(totalPausedMs / (1000 * 60 * 60)) };
   }, [pauseLogs, perfDateRange]);
 
- // Update tab when URL changes
- useEffect(() => {
- const tab = searchParams.get('tab');
- if (tab && ['overview', 'orders', 'reservations', 'settings', 'hardware'].includes(tab)) {
- setActiveTab(tab as any);
- }
- const subTab = searchParams.get('subTab');
- if (subTab && ['isletme', 'menu', 'personel', 'masa', 'teslimat', 'odeme', 'promosyon', 'marketing', 'procurement', 'reservations'].includes(subTab)) {
- setSettingsSubTab(subTab as any);
- setActiveTab('settings');
- }
- }, [searchParams]);
+  useEffect(() => {
+  const tab = searchParams.get('tab');
+  if (tab && ['overview', 'orders', 'reservations', 'settings', 'hardware'].includes(tab)) {
+  setActiveTab(tab as any);
+  }
+  const subTab = searchParams.get('subTab') || searchParams.get('settingsSubTab');
+  if (subTab && ['isletme', 'menu', 'personel', 'masa', 'teslimat', 'promosyon', 'marketing', 'reservations'].includes(subTab)) {
+  setSettingsSubTab(subTab as any);
+  setActiveTab('settings');
+  }
+  const urlMenuInternal = searchParams.get('menuInternalTab');
+  if (urlMenuInternal && ['kategoriler', 'urunler', 'sponsored', 'bestellungen', 'lieferanten'].includes(urlMenuInternal)) {
+  setMenuInternalTab(urlMenuInternal as any);
+  }
+  const urlIsletmeInternal = searchParams.get('isletmeInternalTab');
+  if (urlIsletmeInternal && ['bilgiler', 'fatura', 'zertifikalar', 'gorseller', 'saatler', 'teslimat', 'odeme'].includes(urlIsletmeInternal)) {
+  setIsletmeInternalTab(urlIsletmeInternal as any);
+  }
+  }, [searchParams]);
 
  // Close settings dropdown when clicking outside
  useEffect(() => {
@@ -3025,12 +3032,10 @@ export default function BusinessDetailsPage() {
  { key: "isletme", label: t('isletme'), icon: <Store className="w-5 h-5"/> },
  { key: "menu", label: t('menuUrunler'), icon: <Utensils className="w-5 h-5"/> },
  { key: "personel", label: t('personel_label'), icon: <Users className="w-5 h-5"/> },
- { key: "odeme", label: t('odemeBilgileri'), icon: <CreditCard className="w-5 h-5"/> },
  { key: "promosyon", label: t('promosyon_label'), icon: <Gift className="w-5 h-5"/>, featureKey: "promotions" },
  { key: "teslimat", label: t('teslimatAyarlari'), icon: <Truck className="w-5 h-5"/> },
  { key: "saatler", label: t('acilisSaatleri'), icon: <Clock className="w-5 h-5"/> },
  { key: "reservations", label: t('masaRezervasyonlari'), icon: <CalendarDays className="w-5 h-5"/> },
- { key: "procurement", label: "Produkte & Beschaffung", icon: <Package className="w-5 h-5" /> },
  ] as { key: string; label: string; icon: React.ReactNode; featureKey?: string }[]).map((item) => {
  const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
  if (isGated) return null;
@@ -4135,7 +4140,7 @@ export default function BusinessDetailsPage() {
  </div>
 
  {/* Sub-Tab: İşletme */}
-						{(settingsSubTab === "isletme" || settingsSubTab === "teslimat" || settingsSubTab === "saatler") && (
+						{(settingsSubTab === "isletme" || settingsSubTab === "teslimat" || settingsSubTab === "saatler" || settingsSubTab === "menu") && (
  <>
  {/* Internal Tab Bar for İşletme */}
  {settingsSubTab === "isletme" && (
@@ -4143,6 +4148,7 @@ export default function BusinessDetailsPage() {
  {[
  { id: "bilgiler" as const, label: t('isletmeBilgileri') },
  { id: "fatura" as const, label: t('fatura_adresi') },
+ { id: "odeme" as const, label: t('odemeBilgileri') || "Ödeme & Banka" },
  { id: "zertifikalar" as const, label: t('certificates_title') || t('sertifikalar') || "Rozetler & Sertifikalar" },
  { id: "gorseller" as const, label: t('gorseller') },
  ].map((tab) => (
@@ -4603,6 +4609,122 @@ export default function BusinessDetailsPage() {
  </div>
  </div>
  )}
+
+
+  {/* ═══════ Tab 6: Ödeme & Banka Bilgileri ═══════ */}
+  {settingsSubTab === "isletme" && isletmeInternalTab === "odeme" && (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* LOKMA Payout Bank Account */}
+        <div className="bg-card rounded-xl p-5 border border-border shadow-sm">
+          <h4 className="text-foreground font-bold mb-4 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold">L</div>
+            LOKMA Ödeme Bilgileri
+          </h4>
+          <p className="text-xs text-muted-foreground mb-4">LOKMA'dan işletmeye yapılacak hakediş ödemeleri için banka hesabı.</p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Hesap Sahibi (Firma / Kişi Adı)</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.payoutBankAccountHolder || ""}
+                  onChange={(e) => setFormData({ ...formData, payoutBankAccountHolder: e.target.value })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary outline-none"
+                  placeholder="Hesap Sahibi"
+                />
+              ) : (
+                <p className="text-foreground font-medium bg-muted/30 px-4 py-2 rounded-lg border border-transparent min-h-[40px]">{formData.payoutBankAccountHolder || "-"}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">IBAN</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.payoutBankIban || ""}
+                  onChange={(e) => setFormData({ ...formData, payoutBankIban: e.target.value })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary outline-none"
+                  placeholder="DE..."
+                />
+              ) : (
+                <p className="text-foreground font-medium bg-muted/30 px-4 py-2 rounded-lg border border-transparent font-mono min-h-[40px]">{formData.payoutBankIban || "-"}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Banka Adı</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.payoutBankName || ""}
+                  onChange={(e) => setFormData({ ...formData, payoutBankName: e.target.value })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary outline-none"
+                  placeholder="Banka Adı"
+                />
+              ) : (
+                <p className="text-foreground font-medium bg-muted/30 px-4 py-2 rounded-lg border border-transparent min-h-[40px]">{formData.payoutBankName || "-"}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* POS Provider Bank Account */}
+        <div className="bg-card rounded-xl p-5 border border-border shadow-sm">
+          <h4 className="text-foreground font-bold mb-4 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center"><CreditCard className="w-4 h-4"/></div>
+            POS Banka Bilgileri
+          </h4>
+          <p className="text-xs text-muted-foreground mb-4">Kartlı ödeme (POS) sağlayıcısından gelecek ödemeler için banka hesabı.</p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Hesap Sahibi (Firma / Kişi Adı)</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.bankAccountHolder || ""}
+                  onChange={(e) => setFormData({ ...formData, bankAccountHolder: e.target.value })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary outline-none"
+                  placeholder="Hesap Sahibi"
+                />
+              ) : (
+                <p className="text-foreground font-medium bg-muted/30 px-4 py-2 rounded-lg border border-transparent min-h-[40px]">{formData.bankAccountHolder || "-"}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">IBAN</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.bankIban || ""}
+                  onChange={(e) => setFormData({ ...formData, bankIban: e.target.value })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary outline-none"
+                  placeholder="DE..."
+                />
+              ) : (
+                <p className="text-foreground font-medium bg-muted/30 px-4 py-2 rounded-lg border border-transparent font-mono min-h-[40px]">{formData.bankIban || "-"}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Banka Adı</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.bankName || ""}
+                  onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                  className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary outline-none"
+                  placeholder="Banka Adı"
+                />
+              ) : (
+                <p className="text-foreground font-medium bg-muted/30 px-4 py-2 rounded-lg border border-transparent min-h-[40px]">{formData.bankName || "-"}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )}
 
  {/* ═══════ Tab 5: Açılış Saatleri (Genel / Kurye / Gel-Al) ═══════ */}
  {settingsSubTab === "saatler" && (

@@ -267,7 +267,7 @@ export default function StatisticsPage() {
 
  // Calculate stats helper
  const calculateStats = (orderList: Order[]) => {
- const completed = orderList.filter(o => ['delivered', 'picked_up'].includes(o.status));
+ const completed = orderList.filter(o => ['delivered', 'picked_up', 'completed'].includes(o.status));
  return {
  total: orderList.length,
  completed: completed.length,
@@ -281,7 +281,7 @@ export default function StatisticsPage() {
 
  // Current period stats
  const stats = calculateStats(filteredOrders);
- const completedOrders = filteredOrders.filter(o => ['delivered', 'picked_up'].includes(o.status));
+ const completedOrders = filteredOrders.filter(o => ['delivered', 'picked_up', 'completed'].includes(o.status));
 
  // Comparison period stats
  const compStats = compareMode !== 'none' ? calculateStats(comparisonOrders) : null;
@@ -614,7 +614,7 @@ export default function StatisticsPage() {
  <p className="text-purple-800 dark:text-purple-400 text-sm font-medium mb-1">{t('siparis_orani')}</p>
  {filteredOrders.length > 0 ? (
  <div className="flex flex-wrap gap-2 mt-1">
- <span className="text-blue-800 dark:text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}{t('kurye')}</span>
+ <span className="text-blue-800 dark:text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}% {t('kurye')}</span>
  <span className="text-amber-800 dark:text-amber-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
  <span className="text-green-800 dark:text-green-400 font-bold text-sm">🛍️ {Math.round((analytics.typeBreakdown.pickup / filteredOrders.length) * 100)}% Gel Al</span>
  </div>

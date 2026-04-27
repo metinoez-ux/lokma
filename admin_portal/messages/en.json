@@ -1649,7 +1649,10 @@
     "aylik_ucret": "Aylik Ucret",
     "degisiklik": "Degisiklik",
     "hedefPlan": "Hedef Plan",
-    "gecisTarihi": "Geçiş Tarihi"
+    "gecisTarihi": "Geçiş Tarihi",
+    "saatlik_siparis_dagilimi": "Hourly Order Distribution",
+    "gunluk_siparis_dagilimi": "Daily Order Distribution",
+    "en_cok_satan_urunler": "Best Selling Products"
   },
   "AdminBusinessCategories": {
     "kategori_yonetimine_yonlendiriliyor": "Redirected to category management..."
@@ -7101,7 +7104,7 @@
     "completed_label": "Completed",
     "daily": "Daily",
     "durdurma_sayisi": "Number of Stops",
-    "en_cok_satan_urunler": "🏆 Best Selling Products",
+    "en_cok_satan_urunler": "Best Selling Products",
     "en_durgun_gun": "😴 The Stillest Day",
     "en_yogun_gun": "🔥 Busiest Day",
     "en_yogun_saat": "Peak Hour",
@@ -7109,7 +7112,7 @@
     "gecen_ay_ile": "📊 With Last Month",
     "gecen_hafta_ile": "📊 With Last Week",
     "gecen_yil_ile": "📊 With Last Year",
-    "gunluk_siparis_dagilimi": "Daily Order Breakdown",
+    "gunluk_siparis_dagilimi": "Daily Order Distribution",
     "haftalik": "weekly",
     "henuz_kurye_acma_kapama_kaydi_yok": "No courier on/off record yet",
     "i_slem": "transaction",
@@ -7137,7 +7140,7 @@
     "revenue": "Revenue",
     "s_adece_son_3": "Sadece son 3 işlem gösteriliyor",
     "saat": "clock",
-    "saatlik_siparis_dagilimi": "🕐 Hourly Order Breakdown",
+    "saatlik_siparis_dagilimi": "Hourly Order Distribution",
     "sali": "tuesday",
     "saturday": "Saturday",
     "siparis": "order",
