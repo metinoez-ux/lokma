@@ -3,6 +3,7 @@ import '../../widgets/brand_info_sheet.dart';
 import 'widgets/kermes_video_header.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:lokma_app/widgets/lokma_network_image.dart';
@@ -28,6 +29,9 @@ import 'package:lokma_app/utils/distance_utils.dart';
 import 'package:lokma_app/widgets/kermes/order_setup_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import 'package:lokma_app/widgets/qr_scanner_screen.dart';
+import 'package:lokma_app/providers/group_order_provider.dart';
+import 'package:lokma_app/widgets/kermes/group_order_share_sheet.dart';
+import 'package:lokma_app/screens/kermes/kermes_group_order_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
@@ -843,6 +847,171 @@ String _getLocalizedCountry(String rawCountry) {
   int get _totalItems => ref.read(kermesCartProvider).totalItems;
   double get _totalPrice => ref.read(kermesCartProvider).totalAmount;
 
+  /// Grup siparisi olustur: isim sor + Firestore session + share sheet + navigate
+  Future<void> _startGroupOrder({
+    required String deliveryType,
+    String? tableNo,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final defaultName = user?.displayName ?? user?.email?.split('@').first ?? '';
+
+    // Host ismini ve suresini sor
+    final nameController = TextEditingController(text: defaultName);
+    int selectedDuration = 20; // Varsayılan 20dk
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final setupData = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(2)),
+                ),
+                const SizedBox(height: 20),
+                Icon(Icons.groups, size: 40, color: const Color(0xFFEA184A)),
+                const SizedBox(height: 12),
+                Text('Grup Siparisi Baslat', style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                )),
+                const SizedBox(height: 8),
+                Text(
+                  'Diger katilimcilar sizi bu isimle gorecek',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: 'Adiniz Soyadiniz',
+                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    prefixIcon: const Icon(Icons.person, color: Color(0xFFEA184A)),
+                    filled: true,
+                    fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFFEA184A), width: 1.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Siparis Suresi', style: TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  )),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [15, 20, 30, 45].map((mins) {
+                    final isSel = selectedDuration == mins;
+                    return GestureDetector(
+                      onTap: () => setSheetState(() => selectedDuration = mins),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSel ? const Color(0xFFEA184A) : (isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isSel ? const Color(0xFFEA184A) : Colors.transparent),
+                        ),
+                        child: Text('$mins dk', style: TextStyle(
+                          color: isSel ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                          fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 13,
+                        )),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final name = nameController.text.trim();
+                      if (name.isNotEmpty) {
+                        Navigator.pop(ctx, {'name': name, 'duration': selectedDuration});
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEA184A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Grubu Olustur ve Paylas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (setupData == null || !mounted) return;
+
+    final String hostName = setupData['name'];
+    final int duration = setupData['duration'];
+
+    final orderId = await ref.read(groupOrderProvider.notifier).createGroupOrder(
+      kermesId: _currentEvent.id,
+      kermesName: _currentEvent.title ?? _currentEvent.city,
+      hostName: hostName,
+      hostUserId: user?.uid,
+      expirationMinutes: duration,
+    );
+
+    if (orderId == null || !mounted) return;
+
+    // Share sheet goster (QR + Link)
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => GroupOrderShareSheet(
+        orderId: orderId,
+        kermesName: _currentEvent.title ?? _currentEvent.city,
+        hostName: hostName,
+        expirationMinutes: duration,
+        expiresAt: DateTime.now().add(Duration(minutes: duration)),
+      ),
+    );
+
+    if (!mounted) return;
+
+    // Grup siparis ekranina git
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => KermesGroupOrderScreen(
+          event: _currentEvent,
+          groupOrderId: orderId,
+          tableNumber: tableNo,
+        ),
+      ),
+    );
+  }
+
   Future<void> _addToCart(KermesMenuItem item) async {
     HapticFeedback.lightImpact();
 
@@ -873,9 +1042,18 @@ String _getLocalizedCountry(String rawCountry) {
 
         if (setupResult == null) return;
 
+        // Grup siparisi secildiyse: gercek grup session olustur
+        if (setupResult.isGroupOrder) {
+          await _startGroupOrder(
+            deliveryType: 'masada',
+            tableNo: widget.initialTableNumber,
+          );
+          return;
+        }
+
         ref.read(kermesCartProvider.notifier).setOrderContext(
           deliveryType: 'masada',
-          isGroupOrder: setupResult.isGroupOrder,
+          isGroupOrder: false,
           tableNo: widget.initialTableNumber,
         );
       } else {
@@ -904,9 +1082,18 @@ String _getLocalizedCountry(String rawCountry) {
 
         if (setupResult == null) return;
 
+        // Grup siparisi secildiyse: gercek grup session olustur
+        if (setupResult.isGroupOrder) {
+          await _startGroupOrder(
+            deliveryType: setupResult.deliveryType.name,
+            tableNo: setupResult.tableNo,
+          );
+          return;
+        }
+
         ref.read(kermesCartProvider.notifier).setOrderContext(
           deliveryType: setupResult.deliveryType.name,
-          isGroupOrder: setupResult.isGroupOrder,
+          isGroupOrder: false,
           tableNo: setupResult.tableNo,
         );
       }
