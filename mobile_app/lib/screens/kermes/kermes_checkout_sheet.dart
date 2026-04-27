@@ -914,30 +914,103 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ],
           ),
           
-          // Kermes adı - ayrı satırda
+          // Kermes bilgileri (isim, adres, tarih)
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: _cardBg(isDark).withOpacity(0.5),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.location_on, color: lokmaPink, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.event.city,
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[300] : Colors.grey[700],
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                // Kermes Adi
+                Row(
+                  children: [
+                    Icon(Icons.storefront, color: lokmaPink, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.event.title,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                
+                // Adres
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.location_on, color: isDark ? Colors.grey[500] : Colors.grey[600], size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.event.address,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 13,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                
+                // Tarih / Gun Bilgisi
+                Builder(
+                  builder: (context) {
+                    final now = DateTime.now();
+                    final start = widget.event.startDate;
+                    final end = widget.event.endDate;
+                    
+                    // Sadece tarih kısımlarını karşılaştır
+                    final today = DateTime(now.year, now.month, now.day);
+                    final startDate = DateTime(start.year, start.month, start.day);
+                    final endDate = DateTime(end.year, end.month, end.day);
+                    
+                    final totalDays = endDate.difference(startDate).inDays + 1;
+                    final currentDay = today.difference(startDate).inDays + 1;
+                    
+                    final locale = Localizations.localeOf(context).languageCode;
+                    String dayText = '';
+                    if (currentDay < 1) {
+                      dayText = locale == 'de' ? 'Noch nicht begonnen' : 'Baslamadi';
+                    } else if (currentDay > totalDays) {
+                      dayText = locale == 'de' ? 'Beendet' : 'Sona Erdi';
+                    } else {
+                      dayText = locale == 'de' ? 'Tag $currentDay / $totalDays' : '$currentDay. Gun / $totalDays';
+                    }
+                    
+                    final dateStr = '${start.day.toString().padLeft(2, '0')}.${start.month.toString().padLeft(2, '0')} - ${end.day.toString().padLeft(2, '0')}.${end.month.toString().padLeft(2, '0')}.${end.year}';
+                    
+                    return Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: isDark ? Colors.grey[500] : Colors.grey[600], size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$dateStr  •  $dayText',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
                 ),
               ],
             ),
@@ -1700,18 +1773,59 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
           // Masaya Servis secildiginde: bolum/masa secimi (hem POS hem normal mod)
           if (_deliveryType == DeliveryType.masada) ...[
-            if (_tableController.text.isNotEmpty && (_selectedSectionId != null || widget.event.sectionDefs.isEmpty))
+            // Recovery: Eger _tableController bos ama cart provider'da veya widget'ta masa bilgisi varsa doldur
+            Builder(builder: (_) {
+              if (_tableController.text.isEmpty) {
+                // 1. widget.initialTableNumber'dan doldur
+                if (widget.initialTableNumber != null) {
+                  _tableController.text = widget.initialTableNumber!;
+                  if (widget.initialSectionId != null) {
+                    _selectedSectionId = widget.initialSectionId;
+                  } else {
+                    final section = widget.event.findSectionForTable(widget.initialTableNumber!);
+                    if (section != null) _selectedSectionId = section.id;
+                  }
+                } else {
+                  // 2. Cart provider'dan doldur
+                  final cartState = ref.read(kermesCartProvider);
+                  if (cartState.tableNo != null && cartState.tableNo!.isNotEmpty) {
+                    _tableController.text = cartState.tableNo!;
+                    if (cartState.sectionId != null) {
+                      _selectedSectionId = cartState.sectionId;
+                    } else {
+                      final section = widget.event.findSectionForTable(cartState.tableNo!);
+                      if (section != null) _selectedSectionId = section.id;
+                    }
+                  }
+                }
+                if (_selectedSectionId == null && widget.event.sectionDefs.isNotEmpty) {
+                  _selectedSectionId = widget.event.sectionDefs.first.id;
+                }
+              }
+              return const SizedBox.shrink();
+            }),
+            if (_tableController.text.isNotEmpty && (_selectedSectionId != null || widget.event.sectionDefs.isEmpty)) ...[
+              // Masa bilgisi zaten var - goster
               Container(
                  margin: const EdgeInsets.symmetric(vertical: 8),
                  padding: const EdgeInsets.all(12),
                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.green.withOpacity(0.3))),
                  child: Row(children: [
                    const Icon(Icons.check_circle, color: Colors.green), const SizedBox(width: 8),
-                   Expanded(child: Text("${widget.event.sectionDefs.isEmpty ? '' : widget.event.sectionDefs.firstWhere((s) => s.id == _selectedSectionId, orElse: () => widget.event.sectionDefs.first).name + ' - '}Masa ${_tableController.text}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                   Expanded(child: Text("${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' - ' : ''}Masa ${_tableController.text}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
                    TextButton(onPressed: () => setState(() { _tableController.clear(); _selectedSectionId = null; }), child: Text("Degistir", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)))
                  ])
-              )
-            else ...[
+              ),
+              // Baska masa QR kodu okut secenegi
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton.icon(
+                  onPressed: _scanTableQR,
+                  icon: Icon(Icons.qr_code_scanner, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                  label: Text('Baska bir masa QR kodu okut', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13)),
+                ),
+              ),
+            ] else ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
@@ -1924,6 +2038,32 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     );
   }
   
+  /// Bolum ismini kisaltmali goster (kulturel hassasiyet)
+  /// Hanimlar -> Bolum H / Bereich H, Erkek -> Bolum E / Bereich E, Aile -> Bolum A / Bereich A
+  String _getSectionDisplayName(String? sectionId) {
+    if (sectionId == null || widget.event.sectionDefs.isEmpty) return '';
+    final section = widget.event.sectionDefs.where((s) => s.id == sectionId).firstOrNull;
+    if (section == null) return '';
+    final name = section.name;
+    
+    // Ilk harfi belirle
+    String letter;
+    if (name.toLowerCase().contains('aile') || name.toLowerCase().contains('famil')) {
+      letter = 'A';
+    } else if (name.toLowerCase().contains('han') || name.toLowerCase().contains('kad') || name.toLowerCase().contains('damen') || name.toLowerCase().contains('frauen')) {
+      letter = 'H';
+    } else if (name.toLowerCase().contains('erkek') || name.toLowerCase().contains('herren') || name.toLowerCase().contains('manner')) {
+      letter = 'E';
+    } else {
+      letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    }
+    
+    // Locale'e gore Bolum/Bereich
+    final locale = Localizations.localeOf(context).languageCode;
+    final prefix = (locale == 'de') ? 'Bereich' : 'Bolum';
+    return '$prefix $letter';
+  }
+
   /// QR Okutma
   Future<void> _scanTableQR() async {
     final result = await Navigator.push<String>(
@@ -1937,47 +2077,81 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     
     if (result != null && result.isNotEmpty) {
       try {
-        final uri = Uri.parse(result);
-        if (uri.pathSegments.contains('table')) {
+        String? tableLabel;
+        String? sectionParam;
+
+        final uri = Uri.tryParse(result);
+        
+        if (uri != null && uri.pathSegments.contains('table')) {
           final tableIndex = uri.pathSegments.indexOf('table');
           if (tableIndex + 1 < uri.pathSegments.length) {
-            final tableLabel = uri.pathSegments[tableIndex + 1];
-            final section = uri.queryParameters['section'];
-            setState(() {
-              _tableController.text = tableLabel;
-              if (section != null && section.isNotEmpty) {
-                 final matchingSection = widget.event.sectionDefs.where(
-                    (s) => s.name == section || s.id == section
-                 ).firstOrNull;
-                 if (matchingSection != null) {
-                   _selectedSectionId = matchingSection.id;
-                 } else {
-                   _selectedSectionId = section; // Fallback if admin misconfigured
-                 }
-              } else if (widget.event.sectionDefs.isNotEmpty) {
-                 _selectedSectionId = widget.event.sectionDefs.first.id;
-              }
-            });
+            tableLabel = uri.pathSegments[tableIndex + 1];
+            sectionParam = uri.queryParameters['section'];
           }
-        } else if (uri.queryParameters.containsKey('table')) {
-          // Desteklenen yeni format: /kermesler/ID?table=M7&section=erkekler_bolumu
-          final tableLabel = uri.queryParameters['table']!;
-          final section = uri.queryParameters['section'];
+        } else if (uri != null && uri.queryParameters.containsKey('table')) {
+          // Format: /kermesler/ID?table=M7&section=erkekler_bolumu
+          tableLabel = uri.queryParameters['table']!;
+          sectionParam = uri.queryParameters['section'];
+        } else if (uri != null && uri.pathSegments.contains('kermes-dinein')) {
+          // Format: /kermes-dinein/{kermesId}/table/{tableNo}
+          final kermesDineinIndex = uri.pathSegments.indexOf('kermes-dinein');
+          final tableIndex = uri.pathSegments.indexOf('table');
+          if (tableIndex >= 0 && tableIndex + 1 < uri.pathSegments.length) {
+            tableLabel = uri.pathSegments[tableIndex + 1];
+            sectionParam = uri.queryParameters['section'];
+          }
+        }
+        
+        // Fallback: Eger hicbir format eslesmediyse, QR icerigini direkt table no olarak dene
+        if (tableLabel == null) {
+          // Basit sayi veya kisa string (orn: "7", "M7", "12") -> direkt masa numarasi olarak kabul et
+          final cleaned = result.trim();
+          if (cleaned.length <= 10 && !cleaned.contains('http') && !cleaned.contains('/')) {
+            tableLabel = cleaned;
+          }
+        }
+
+        if (tableLabel != null && tableLabel.isNotEmpty) {
           setState(() {
-            _tableController.text = tableLabel;
-            if (section != null && section.isNotEmpty) {
+            _tableController.text = tableLabel!;
+            if (sectionParam != null && sectionParam!.isNotEmpty) {
                final matchingSection = widget.event.sectionDefs.where(
-                  (s) => s.name == section || s.id == section
+                  (s) => s.name == sectionParam || s.id == sectionParam
                ).firstOrNull;
                if (matchingSection != null) {
                  _selectedSectionId = matchingSection.id;
                } else {
-                 _selectedSectionId = section;
+                 _selectedSectionId = sectionParam; // Fallback if admin misconfigured
                }
-            } else if (widget.event.sectionDefs.isNotEmpty) {
-               _selectedSectionId = widget.event.sectionDefs.first.id;
+            } else {
+              // Masanin bolumunu otomatik bul
+              final section = widget.event.findSectionForTable(tableLabel!);
+              if (section != null) {
+                _selectedSectionId = section.id;
+              } else if (widget.event.sectionDefs.isNotEmpty) {
+                _selectedSectionId = widget.event.sectionDefs.first.id;
+              }
             }
           });
+          
+          // Cart provider'a da kaydet
+          ref.read(kermesCartProvider.notifier).setOrderContext(
+            deliveryType: 'masada',
+            isGroupOrder: _isGroupOrder,
+            tableNo: tableLabel,
+            sectionId: _selectedSectionId,
+          );
+        } else {
+          // Hicbir format eşleşmedi - kullaniciya hata goster
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('QR kodu taninmadi. QR icerigi: "${result.length > 50 ? '${result.substring(0, 50)}...' : result}"'),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
         }
       } catch (e) {
         debugPrint('QR Parse error: $e');
@@ -2061,11 +2235,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             },
           ),
           
-          if (_deliveryType == DeliveryType.masada) ...[
+           if (_deliveryType == DeliveryType.masada) ...[
             const SizedBox(height: 14),
             _buildTextField(
               controller: _tableController,
-              label: 'Bolum / Masa No',
+              label: '${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' / ' : ''}Masa No',
               icon: Icons.table_restaurant_outlined,
               hint: 'Orn: M9',
               keyboardType: TextInputType.text,
@@ -2107,7 +2281,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             const SizedBox(height: 14),
             _buildTextField(
               controller: _tableController,
-              label: 'Bolum / Masa No',
+              label: '${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' / ' : ''}Masa No',
               icon: Icons.table_restaurant_outlined,
               hint: 'Orn: M9',
               keyboardType: TextInputType.text,

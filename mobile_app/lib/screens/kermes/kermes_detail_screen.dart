@@ -175,6 +175,23 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
 
     // Aktif grup siparisi var mi kontrol et
     _checkActiveGroupOrder();
+
+    // QR ile gelen masa bilgisini cart provider'a kaydet
+    if (widget.initialTableNumber != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final cartState = ref.read(kermesCartProvider);
+        // Sadece tableNo bos ise veya farkli ise guncelle
+        if (cartState.tableNo != widget.initialTableNumber) {
+          ref.read(kermesCartProvider.notifier).setOrderContext(
+            deliveryType: 'masada',
+            isGroupOrder: false,
+            tableNo: widget.initialTableNumber,
+            sectionId: widget.initialSectionId,
+          );
+        }
+      });
+    }
   }
 
   Future<void> _checkActiveGroupOrder() async {
@@ -338,9 +355,10 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gecersiz QR kodu'),
+        SnackBar(
+          content: Text('Gecersiz QR kodu: "${result.length > 60 ? '${result.substring(0, 60)}...' : result}"'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
     }
