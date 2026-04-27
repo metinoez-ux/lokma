@@ -1654,63 +1654,73 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
                     child: Row(
                       children: [
-                        Text(
-                          'kermes.events_found_count'
-                              .tr(args: [_cachedFilteredEvents.length.toString()]),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.85),
-                            letterSpacing: -0.2,
+                        Expanded(
+                          child: Text(
+                            'kermes.events_found_count'
+                                .tr(args: [_cachedFilteredEvents.length.toString()]),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.85),
+                              letterSpacing: -0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         // Sadece Aktif Chip — sort butonunun solunda, yan yana
-                        SizedBox(
-                          height: 38,
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              setState(() {
-                                _onlyActive = !_onlyActive;
-                                _updateFilteredEventsIfNeeded();
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: _onlyActive
-                                    ? Colors.green.withOpacity(0.15)
-                                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
+                        Flexible(
+                          child: SizedBox(
+                            height: 38,
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                setState(() {
+                                  _onlyActive = !_onlyActive;
+                                  _updateFilteredEventsIfNeeded();
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
                                   color: _onlyActive
-                                      ? Colors.green.withOpacity(0.6)
-                                      : Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                                      ? Colors.green.withOpacity(0.15)
+                                      : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: _onlyActive
+                                        ? Colors.green.withOpacity(0.6)
+                                        : Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _onlyActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                    size: 16,
-                                    color: _onlyActive ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    'kermes.filter_only_active'.tr(),
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: _onlyActive ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _onlyActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                      size: 16,
+                                      color: _onlyActive ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 5),
+                                    Flexible(
+                                      child: Text(
+                                        'kermes.filter_only_active'.tr(),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: _onlyActive ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

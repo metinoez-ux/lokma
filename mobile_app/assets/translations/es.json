@@ -893,6 +893,7 @@
         "repeat": "Repetir"
     },
     "kermes": {
+        "filter_only_active": "Solo Activos",
         "add_menu_item": "Añadir elemento al menú",
         "add_parking_area": "Añadir aparcamiento",
         "kermes_added_waiting_approval": "¡Kermes agregada exitosamente! Esperando aprobación.",

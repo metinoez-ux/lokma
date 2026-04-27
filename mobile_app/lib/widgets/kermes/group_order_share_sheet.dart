@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 /// WhatsApp / Link Kopyala paylaşım modal'ı
 class GroupOrderShareSheet extends StatefulWidget {
@@ -154,22 +155,6 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
           ),
           const SizedBox(height: 20),
 
-          // Success Icon
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.check_circle,
-              size: 40,
-              color: Colors.green.shade600,
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Title
           const Text(
             'Grup Siparişi Oluşturuldu!',
@@ -209,70 +194,65 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
           ),
           const SizedBox(height: 24),
 
-          // Link Preview
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.link,
-                  color: Colors.grey.shade600,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    shareLink,
+          // QR Code for Table Scanning
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  QrImageView(
+                    data: shareLink,
+                    version: QrVersions.auto,
+                    size: 180.0,
+                    backgroundColor: Colors.white,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Masadakiler bu kodu okutarak katılabilir',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                // Kopyalandı göstergesi veya kopyala butonu
-                if (_linkCopied)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check,
-                            color: Colors.green.shade600, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Kopyalandı',
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.green.shade600),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  IconButton(
-                    onPressed: _copyLink,
-                    icon: Icon(
-                      Icons.copy,
-                      color: Colors.grey.shade600,
-                      size: 20,
-                    ),
-                    tooltip: 'Kopyala',
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 20),
+
+          const SizedBox(height: 24),
+
+          // Divider text "Veya Link ile Paylaş"
+          Row(
+            children: [
+              Expanded(child: Divider(color: Colors.grey.shade300)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'Veya Uzaktakiler İçin Paylaş',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(child: Divider(color: Colors.grey.shade300)),
+            ],
+          ),
+          const SizedBox(height: 16),
 
           // Share Buttons
           Row(

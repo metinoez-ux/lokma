@@ -90,11 +90,21 @@ class KermesCartState {
   final String? eventId;
   final String? eventName;
   final List<KermesCartItem> items;
+  
+  // Sipariş Başlangıç Bağlamı
+  final String? deliveryType; // 'gelAl', 'masada', 'kurye'
+  final bool isGroupOrder;
+  final String? groupName;
+  final String? tableNo;
 
   KermesCartState({
     this.eventId,
     this.eventName,
     this.items = const [],
+    this.deliveryType,
+    this.isGroupOrder = false,
+    this.groupName,
+    this.tableNo,
   });
 
   int get totalItems => items.fold(0, (sum, item) => sum + item.quantity);
@@ -102,12 +112,37 @@ class KermesCartState {
   bool get isEmpty => items.isEmpty;
   bool get isNotEmpty => items.isNotEmpty;
 
+  /// Kopyalama metodu (state update için)
+  KermesCartState copyWith({
+    String? eventId,
+    String? eventName,
+    List<KermesCartItem>? items,
+    String? deliveryType,
+    bool? isGroupOrder,
+    String? groupName,
+    String? tableNo,
+  }) {
+    return KermesCartState(
+      eventId: eventId ?? this.eventId,
+      eventName: eventName ?? this.eventName,
+      items: items ?? this.items,
+      deliveryType: deliveryType ?? this.deliveryType,
+      isGroupOrder: isGroupOrder ?? this.isGroupOrder,
+      groupName: groupName ?? this.groupName,
+      tableNo: tableNo ?? this.tableNo,
+    );
+  }
+
   /// JSON'a dönüştür
   Map<String, dynamic> toJson() {
     return {
       'eventId': eventId,
       'eventName': eventName,
       'items': items.map((item) => item.toJson()).toList(),
+      'deliveryType': deliveryType,
+      'isGroupOrder': isGroupOrder,
+      'groupName': groupName,
+      'tableNo': tableNo,
     };
   }
 
@@ -121,6 +156,10 @@ class KermesCartState {
       eventId: json['eventId'],
       eventName: json['eventName'],
       items: itemsList,
+      deliveryType: json['deliveryType'],
+      isGroupOrder: json['isGroupOrder'] ?? false,
+      groupName: json['groupName'],
+      tableNo: json['tableNo'],
     );
   }
 }
