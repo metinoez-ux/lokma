@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/group_order_provider.dart';
 import 'package:lokma_app/models/kermes_group_order_model.dart';
+import 'package:lokma_app/screens/kermes/kermes_group_order_screen.dart';
 
 /// Floating grup siparisi butonu
 /// Aktif bir grup siparisi varken ekranda gorunur
@@ -50,11 +51,9 @@ class _FloatingGroupOrderButtonState
   Widget build(BuildContext context) {
     final groupState = ref.watch(groupOrderProvider);
 
-    // Aktif grup siparisi yoksa gosterme
+    // Aktif veya tamamlanmis grup siparisi varsa goster
     if (groupState.currentOrder == null ||
-        groupState.currentOrder!.status == GroupOrderStatus.ordered ||
-        groupState.currentOrder!.status == GroupOrderStatus.cancelled ||
-        groupState.currentOrder!.status == GroupOrderStatus.completed) {
+        groupState.currentOrder!.status == GroupOrderStatus.cancelled) {
       return const SizedBox.shrink();
     }
 
@@ -77,6 +76,19 @@ class _FloatingGroupOrderButtonState
             HapticFeedback.mediumImpact();
             if (widget.onTap != null) {
               widget.onTap!();
+            } else {
+              // Default navigation if no onTap provided
+              final order = ref.read(groupOrderProvider).currentOrder;
+              if (order != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => KermesGroupOrderScreen(
+                      groupOrderId: order.id,
+                    ),
+                  ),
+                );
+              }
             }
           },
           child: Container(

@@ -31,6 +31,8 @@ class KermesOrderItem {
   final String? readyByZone;       // Hangi zone "hazir" dedi
   final String? category;          // Urun kategorisi (Ana Yemek, Icecek vb.)
   final String? imageUrl;          // Urun resmi (POS ekraninda gosterim icin)
+  final String? participantName;   // Grup siparisi: Katilimci adi
+  final String? participantId;     // Grup siparisi: Katilimci ID
 
   KermesOrderItem({
     required this.name,
@@ -43,6 +45,8 @@ class KermesOrderItem {
     this.readyByZone,
     this.category,
     this.imageUrl,
+    this.participantName,
+    this.participantId,
   });
 
   double get totalPrice => price * quantity;
@@ -62,6 +66,8 @@ class KermesOrderItem {
       if (readyByZone != null) 'readyByZone': readyByZone,
       if (category != null) 'category': category,
       if (imageUrl != null) 'imageUrl': imageUrl,
+      if (participantName != null) 'participantName': participantName,
+      if (participantId != null) 'participantId': participantId,
     };
   }
 
@@ -84,6 +90,8 @@ class KermesOrderItem {
       readyByZone: map['readyByZone'] as String?,
       category: map['category'] as String?,
       imageUrl: map['imageUrl'] as String?,
+      participantName: map['participantName'] as String?,
+      participantId: map['participantId'] as String?,
     );
   }
 
@@ -99,6 +107,8 @@ class KermesOrderItem {
     String? readyByZone,
     String? category,
     String? imageUrl,
+    String? participantName,
+    String? participantId,
   }) {
     return KermesOrderItem(
       name: name ?? this.name,
@@ -111,6 +121,8 @@ class KermesOrderItem {
       readyByZone: readyByZone ?? this.readyByZone,
       category: category ?? this.category,
       imageUrl: imageUrl ?? this.imageUrl,
+      participantName: participantName ?? this.participantName,
+      participantId: participantId ?? this.participantId,
     );
   }
 }
@@ -152,6 +164,8 @@ class KermesOrder {
   final bool isInstantDelivery;      // Stant POS: aninda teslim (siparis = ready + delivered)
   final String? assignedWaiterId;    // Masa siparisi icin atanan garson UID
   final String? assignedWaiterName;  // Garson adi
+  final bool isGroupOrder;           // Grup siparisi mi?
+  final String? groupOrderId;        // Varsa grup siparisi ID
 
   KermesOrder({
     required this.id,
@@ -184,6 +198,8 @@ class KermesOrder {
     this.isInstantDelivery = false,
     this.assignedWaiterId,
     this.assignedWaiterName,
+    this.isGroupOrder = false,
+    this.groupOrderId,
   });
 
   /// Siparisin tum itemlari hazir mi?
@@ -241,6 +257,8 @@ class KermesOrder {
       if (isInstantDelivery) 'isInstantDelivery': isInstantDelivery,
       if (assignedWaiterId != null) 'assignedWaiterId': assignedWaiterId,
       if (assignedWaiterName != null) 'assignedWaiterName': assignedWaiterName,
+      'isGroupOrder': isGroupOrder,
+      if (groupOrderId != null) 'groupOrderId': groupOrderId,
     };
   }
 
@@ -289,6 +307,8 @@ class KermesOrder {
       isInstantDelivery: map['isInstantDelivery'] as bool? ?? false,
       assignedWaiterId: map['assignedWaiterId'] as String?,
       assignedWaiterName: map['assignedWaiterName'] as String?,
+      isGroupOrder: map['isGroupOrder'] as bool? ?? false,
+      groupOrderId: map['groupOrderId'] as String?,
     );
   }
 
@@ -405,6 +425,8 @@ class KermesOrder {
       isInstantDelivery: isInstantDelivery ?? this.isInstantDelivery,
       assignedWaiterId: assignedWaiterId ?? this.assignedWaiterId,
       assignedWaiterName: assignedWaiterName ?? this.assignedWaiterName,
+      isGroupOrder: isGroupOrder ?? this.isGroupOrder,
+      groupOrderId: groupOrderId ?? this.groupOrderId,
     );
   }
 }

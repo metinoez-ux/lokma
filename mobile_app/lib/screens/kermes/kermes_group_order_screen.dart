@@ -10,17 +10,18 @@ import '../../widgets/kermes/group_order_share_sheet.dart';
 import '../../widgets/kermes/kermes_category_chips.dart';
 import '../../widgets/kermes/kermes_menu_item_tile.dart';
 import '../../widgets/lokma_network_image.dart';
+import '../../utils/cart_warning_utils.dart';
 
 /// Kermes Grup Siparis Ekrani
 /// 3-tab layout: Menu | Benim Siparisim | Toplam
 class KermesGroupOrderScreen extends ConsumerStatefulWidget {
-  final KermesEvent event;
+  final KermesEvent? event;
   final String groupOrderId;
   final String? tableNumber;
 
   const KermesGroupOrderScreen({
     super.key,
-    required this.event,
+    this.event,
     required this.groupOrderId,
     this.tableNumber,
   });
@@ -49,16 +50,23 @@ class _KermesGroupOrderScreenState
   final ValueNotifier<bool> _pillInitialized = ValueNotifier(false);
   final GlobalKey _chipRowKey = GlobalKey();
 
-  // Realtime products
+  // Realtime products & Event
   List<KermesMenuItem> _products = [];
   StreamSubscription? _productsSub;
+  KermesEvent? _currentEvent;
+  StreamSubscription? _eventSub;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _currentEvent = widget.event;
     _startListening();
-    _fetchProducts();
+    if (_currentEvent != null) {
+      _fetchProducts();
+    } else {
+      _fetchEventAndProducts();
+    }
     // Countdown timer - her saniye guncelle
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
@@ -75,6 +83,7 @@ class _KermesGroupOrderScreenState
     _selectedCategory.dispose();
     _orderSub?.cancel();
     _productsSub?.cancel();
+    _eventSub?.cancel();
     _countdownTimer?.cancel();
     _chipScrollController.dispose();
     _pillLeft.dispose();
@@ -88,9 +97,10 @@ class _KermesGroupOrderScreenState
   }
 
   void _fetchProducts() {
+    if (_currentEvent == null) return;
     _productsSub = FirebaseFirestore.instance
         .collection('kermes_events')
-        .doc(widget.event.id)
+        .doc(_currentEvent!.id)
         .collection('products')
         .where('isActive', isEqualTo: true)
         .snapshots()
@@ -102,6 +112,30 @@ class _KermesGroupOrderScreenState
           return KermesMenuItem.fromJson(d);
         }).toList();
       });
+    });
+  }
+
+  void _fetchEventAndProducts() async {
+    // First get the group order to find kermesId
+    final groupOrder = await FirebaseFirestore.instance
+        .collection('kermes_group_orders')
+        .doc(widget.groupOrderId)
+        .get();
+
+    if (!groupOrder.exists || !mounted) return;
+    final kermesId = groupOrder.data()?['kermesId'];
+    if (kermesId == null) return;
+
+    _eventSub = FirebaseFirestore.instance
+        .collection('kermes_events')
+        .doc(kermesId)
+        .snapshots()
+        .listen((snap) {
+      if (!snap.exists || !mounted) return;
+      setState(() {
+        _currentEvent = KermesEvent.fromDocument(snap);
+      });
+      if (_productsSub == null) _fetchProducts();
     });
   }
 
@@ -1157,6 +1191,40 @@ class _KermesGroupOrderScreenState
               Navigator.pop(context);
             },
             child: const Text('Iptal Et', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String?> _showNameDialog() async {
+    String name = '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: const Text('Grup Siparişi Başlat'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Lütfen grup siparişi için adınızı girin:'),
+            const SizedBox(height: 16),
+            TextField(
+              autofocus: true,
+              onChanged: (v) => name = v,
+              decoration: InputDecoration(
+                hintText: 'Adınız',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, name),
+            child: const Text('Başlat', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

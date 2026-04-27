@@ -38,6 +38,7 @@ import 'package:lokma_app/screens/kermes/kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
 import 'package:lokma_app/services/kermes_badge_service.dart';
+import 'package:lokma_app/utils/cart_warning_utils.dart';
 import 'package:lokma_app/services/kermes_feature_service.dart';
 import 'package:lokma_app/services/weather_service.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
@@ -2885,13 +2886,14 @@ String _getLocalizedCountry(String rawCountry) {
           // Floating grup siparisi butonu
           FloatingGroupOrderButton(
             onTap: () {
-              if (_activeGroupOrderId != null) {
+              final activeId = ref.read(groupOrderProvider).currentOrder?.id ?? _activeGroupOrderId;
+              if (activeId != null) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => KermesGroupOrderScreen(
                       event: _currentEvent,
-                      groupOrderId: _activeGroupOrderId!,
+                      groupOrderId: activeId,
                     ),
                   ),
                 );

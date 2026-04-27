@@ -33,6 +33,7 @@ import 'package:lokma_app/widgets/marketplace_group_share_sheet.dart';
 import 'package:lokma_app/models/table_group_session_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lokma_app/widgets/animated_search_hint.dart';
+import 'package:lokma_app/utils/cart_warning_utils.dart';
 import 'reservation_discovery_screen.dart';
 
 /// Business type labels for display

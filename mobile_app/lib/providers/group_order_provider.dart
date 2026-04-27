@@ -1,5 +1,8 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lokma_app/models/kermes_group_order_model.dart';
+import 'package:lokma_app/models/kermes_order_model.dart';
+import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -409,11 +412,40 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
     if (order == null) return false;
 
     try {
+      // 1. Generate real order number using KermesOrderService
+      final orderService = KermesOrderService();
+      
+      // Determine tableSection for sequential numbering logic
+      String? section;
+      if (order.delivery?.type == DeliveryType.masada) {
+        section = 'masa'; // This is a general flag, service handles actual section mapping
+      }
+
+      final orderNum = await orderService.generateSequentialOrderId(
+        order.kermesId,
+        tableSection: section,
+      );
+      
+      final fullOrderId = '${order.kermesId}_$orderNum';
+
+      // 2. Convert to KermesOrder and save
+      final kermesOrder = order.toKermesOrder(
+        orderNumber: orderNum,
+        fullId: fullOrderId,
+      );
+
+      await orderService.createOrder(kermesOrder);
+
+      // 3. Update group order status in Firestore
       final updatedOrder = order.copyWith(status: GroupOrderStatus.ordered);
 
       await _groupOrdersCollection.doc(order.id).update({
         'status': GroupOrderStatus.ordered.name,
+        'kermesOrderId': fullOrderId, // Link to the real order
       });
+
+      // 4. Optionally: Notify other participants? 
+      // (For now, creating the kermesOrder will trigger host notification via Cloud Functions)
 
       state = state.copyWith(currentOrder: updatedOrder);
       await _clearPersistedSession();

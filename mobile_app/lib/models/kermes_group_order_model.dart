@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
+import 'package:lokma_app/models/kermes_order_model.dart';
 
 /// Grup siparişi durumu
 enum GroupOrderStatus {
@@ -282,6 +283,50 @@ class KermesGroupOrder {
       participants: participants ?? this.participants,
       delivery: delivery ?? this.delivery,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+    );
+  }
+
+  /// Convert to KermesOrder for processing
+  KermesOrder toKermesOrder({
+    required String orderNumber,
+    required String fullId,
+  }) {
+    final List<KermesOrderItem> kermesItems = [];
+
+    for (var participant in participants) {
+      for (var item in participant.items) {
+        kermesItems.add(KermesOrderItem(
+          name: item.menuItemName,
+          quantity: item.quantity,
+          price: item.price,
+          participantName: participant.name,
+          participantId: participant.userId,
+        ));
+      }
+    }
+
+    return KermesOrder(
+      id: fullId,
+      orderNumber: orderNumber,
+      kermesId: kermesId,
+      kermesName: kermesName,
+      userId: hostUserId,
+      customerName: hostName,
+      customerPhone: delivery?.phone ?? '',
+      deliveryType: delivery?.type ?? DeliveryType.gelAl,
+      tableNumber: delivery?.tableNumber,
+      address: delivery?.address,
+      items: kermesItems,
+      totalAmount: totalAmount,
+      paymentMethod: paymentMethod == PaymentMethod.stripe 
+          ? PaymentMethodType.card 
+          : PaymentMethodType.cash,
+      isPaid: paymentMethod == PaymentMethod.stripe,
+      status: KermesOrderStatus.pending,
+      createdAt: DateTime.now(),
+      notes: 'Grup Siparisi (${participants.length} kisi)',
+      isGroupOrder: true,
+      groupOrderId: id,
     );
   }
 }
