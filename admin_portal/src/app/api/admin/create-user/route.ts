@@ -134,9 +134,9 @@ export async function POST(request: NextRequest) {
  personnelLimit = planData?.personnelLimit ?? null;
  personnelOverageFee = planData?.personnelOverageFee ?? 0;
  } else {
- if (planId === 'free') { personnelLimit = 1; personnelOverageFee = 5; }
- else if (planId === 'basic') { personnelLimit = 3; personnelOverageFee = 5; }
- else if (planId === 'premium') { personnelLimit = null; personnelOverageFee = 0; }
+ if (planId === 'free' || planId === 'eat_free') { personnelLimit = 1; personnelOverageFee = 5; }
+ else if (planId === 'basic' || planId === 'eat_basic') { personnelLimit = 3; personnelOverageFee = 5; }
+ else if (planId === 'premium' || planId === 'eat_premium') { personnelLimit = null; personnelOverageFee = 0; }
  }
 
  if (personnelLimit !== null) {

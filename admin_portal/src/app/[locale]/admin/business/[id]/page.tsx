@@ -703,6 +703,7 @@ export default function BusinessDetailsPage() {
  tempPassword?: string;
  notifications?: { email: { sent: boolean }; whatsapp: { sent: boolean }; sms: { sent: boolean } };
  } | null>(null);
+ const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteStreet, setInviteStreet] = useState("");
   const [inviteHouseNumber, setInviteHouseNumber] = useState("");
   const [inviteAddressLine2, setInviteAddressLine2] = useState("");
@@ -2783,6 +2784,7 @@ export default function BusinessDetailsPage() {
  } catch (error: any) {
  console.error(t('invite_error'), error);
  const msg = error?.message || t('davetGonderilemedi');
+ setInviteError(msg);
  showToast(msg, "error");
  }
  setStaffLoading(false);
@@ -6805,8 +6807,7 @@ export default function BusinessDetailsPage() {
   <div className="space-y-6">
 
   {/* ═══════ Personel Tabı Header ═══════ */}
-  <div className="flex justify-between items-center mb-6">
-    <h2 className="text-xl font-bold text-foreground">{t('personelYonetimi') || 'Personalverwaltung'}</h2>
+  <div className="flex justify-end items-center mb-6">
     <button
       onClick={() => {
         setInviteFirstName('');
@@ -6815,6 +6816,7 @@ export default function BusinessDetailsPage() {
         setInviteEmail('');
         setInviteRole('Personel');
         setInviteResult(null);
+        setInviteError(null);
         
         const currentActivePlan = availablePlans?.find(p => p.id === business?.subscriptionPlan || p.code === business?.subscriptionPlan);
         const currentActiveStaffCount = staffList?.filter(s => s.isActive !== false).length || 0;
@@ -7082,6 +7084,11 @@ export default function BusinessDetailsPage() {
   <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground hover:text-foreground text-2xl leading-none">&times;</button>
   </div>
   <div className="p-6 space-y-4">
+  {inviteError && (
+  <div className="p-4 bg-red-900/30 border border-red-700 rounded-lg space-y-2">
+  <p className="text-red-300 font-medium whitespace-pre-wrap">{inviteError}</p>
+  </div>
+  )}
   {inviteResult && inviteResult.success && (
   <div className="p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-2">
   <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
