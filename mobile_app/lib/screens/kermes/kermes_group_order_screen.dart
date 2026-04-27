@@ -7,6 +7,7 @@ import '../../models/kermes_group_order_model.dart';
 import '../../models/kermes_model.dart';
 import '../../providers/group_order_provider.dart';
 import '../../widgets/kermes/group_order_share_sheet.dart';
+import '../../widgets/kermes/kermes_category_chips.dart';
 import '../../widgets/kermes/kermes_menu_item_tile.dart';
 import '../../widgets/lokma_network_image.dart';
 
@@ -34,11 +35,19 @@ class _KermesGroupOrderScreenState
     with TickerProviderStateMixin {
   late TabController _tabController;
   String _searchQuery = '';
-  String _selectedCategory = 'Tumu';
+  final ValueNotifier<String> _selectedCategory = ValueNotifier('Tumu');
   StreamSubscription? _orderSub;
   Timer? _countdownTimer;
 
   static const Color _accent = Color(0xFFEA184A);
+
+  // Pill animasyon altyapisi (aynen detail screen)
+  final Map<String, GlobalKey> _chipTabKeys = {};
+  final ScrollController _chipScrollController = ScrollController();
+  final ValueNotifier<double> _pillLeft = ValueNotifier(0.0);
+  final ValueNotifier<double> _pillWidth = ValueNotifier(60.0);
+  final ValueNotifier<bool> _pillInitialized = ValueNotifier(false);
+  final GlobalKey _chipRowKey = GlobalKey();
 
   // Realtime products
   List<KermesMenuItem> _products = [];
@@ -54,14 +63,23 @@ class _KermesGroupOrderScreenState
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
+    // Pill init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition(_selectedCategory.value);
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _selectedCategory.dispose();
     _orderSub?.cancel();
     _productsSub?.cancel();
     _countdownTimer?.cancel();
+    _chipScrollController.dispose();
+    _pillLeft.dispose();
+    _pillWidth.dispose();
+    _pillInitialized.dispose();
     super.dispose();
   }
 
@@ -98,8 +116,8 @@ class _KermesGroupOrderScreenState
 
   List<KermesMenuItem> get _filteredProducts {
     var items = _products;
-    if (_selectedCategory != 'Tumu') {
-      items = items.where((p) => (p.category ?? 'Diger') == _selectedCategory).toList();
+    if (_selectedCategory.value != 'Tumu') {
+      items = items.where((p) => (p.category ?? 'Diger') == _selectedCategory.value).toList();
     }
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
@@ -115,116 +133,380 @@ class _KermesGroupOrderScreenState
     final groupState = ref.watch(groupOrderProvider);
     final order = groupState.currentOrder;
 
+    // Force pill recalculation after every build to fix stale positioning (e.g. when chips grow with badges)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition();
+    });
+
     return Scaffold(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: bg,
-        surfaceTintColor: bg,
-        centerTitle: true,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                widget.event.title ?? widget.event.city,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: _accent.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.groups, size: 14, color: _accent),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Grup${order != null ? " (${order.participantCount})" : ""}',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _accent),
+      body: Column(
+        children: [
+          Expanded(
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                // Pinned: geri butonu + arama hapi (aynen detail screen)
+                SliverAppBar(
+                  pinned: true,
+                  floating: true,
+                  snap: true,
+                  expandedHeight: 0,
+                  toolbarHeight: 56,
+                  backgroundColor: bg,
+                  surfaceTintColor: Colors.transparent,
+                  automaticallyImplyLeading: false,
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.1)
+                              : Colors.black.withOpacity(0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.arrow_back_ios_new,
+                            color: isDark ? Colors.white : Colors.black87,
+                            size: 18),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          if (order != null && groupState.currentParticipantId != null)
-            IconButton(
-              icon: const Icon(Icons.share, size: 20),
-              tooltip: 'Davet Et',
-              onPressed: () => _showShareSheet(order),
-            ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) {
-              if (v == 'cancel') _cancelGroup();
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: 'cancel',
-                child: Row(
-                  children: [
-                    Icon(Icons.cancel, color: Colors.red, size: 20),
-                    SizedBox(width: 8),
-                    Text('Grubu Iptal Et', style: TextStyle(color: Colors.red)),
+                  title: GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => _buildSearchSheet(isDark),
+                      );
+                    },
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF2A2A2A)
+                            : const Color(0xFFF5F0E8),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          Icon(Icons.search,
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _searchQuery.isNotEmpty ? _searchQuery : 'Menude ara...',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: _searchQuery.isNotEmpty
+                                    ? (isDark ? Colors.white : Colors.black87)
+                                    : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    if (order != null && groupState.currentParticipantId != null)
+                      IconButton(
+                        icon: const Icon(Icons.share, size: 20),
+                        tooltip: 'Davet Et',
+                        onPressed: () => _showShareSheet(order),
+                      ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (v) {
+                        if (v == 'cancel') _cancelGroup();
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'cancel',
+                          child: Row(
+                            children: [
+                              Icon(Icons.cancel, color: Colors.red, size: 20),
+                              SizedBox(width: 8),
+                              Text('Grubu Iptal Et', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Countdown Timer
-          if (order?.expiresAt != null)
-            _buildCountdownTimer(order!.expiresAt!, isDark),
 
-          // Tab Bar
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            height: 44,
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              onTap: (_) => setState(() {}),
-              indicator: BoxDecoration(
-                color: _accent,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: _accent.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))],
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerHeight: 0,
-              labelColor: Colors.white,
-              unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
-              labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              tabs: [
-                Tab(text: 'Menu'),
-                Tab(text: 'Ben (${_myItemCount(order)})'),
-                Tab(text: 'Toplam (${order?.totalItems ?? 0})'),
-              ],
-            ),
-          ),
+                // Scrollable: event baslik + grup badge
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.event.title ?? widget.event.city,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _accent.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.groups, size: 14, color: _accent),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Grup${order != null ? " (${order.participantCount})" : ""}',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _accent),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-          // Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildMenuTab(isDark),
-                _buildMyOrderTab(isDark, groupState),
-                _buildTotalTab(isDark, groupState),
+                // Scrollable: countdown timer
+                if (order?.expiresAt != null)
+                  SliverToBoxAdapter(
+                    child: _buildCountdownTimer(order!.expiresAt!, isDark),
+                  ),
+
+                // Scrollable: tab bar
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    height: 44,
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      onTap: (_) => setState(() {}),
+                      indicator: BoxDecoration(
+                        color: _accent,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [BoxShadow(color: _accent.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))],
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerHeight: 0,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
+                      labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      tabs: [
+                        Tab(text: 'Menu'),
+                        Tab(text: 'Ben (${_myItemCount(order)})'),
+                        Tab(text: 'Toplam (${order?.totalItems ?? 0})'),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Sticky: kategori chip'leri (sadece Menu tab)
+                if (_tabController.index == 0)
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: KermesCategoryHeaderDelegate(
+                      child: Container(
+                        color: bg,
+                        height: 52,
+                        child: Column(
+                          children: [
+                            AnimatedBuilder(
+                              animation: Listenable.merge([
+                                _selectedCategory,
+                                _pillLeft,
+                                _pillWidth,
+                                _pillInitialized,
+                              ]),
+                              builder: (context, _) {
+                                return Expanded(
+                                  child: SingleChildScrollView(
+                                    controller: _chipScrollController,
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.only(
+                                        left: 16, right: 4, top: 4, bottom: 8),
+                                    child: Stack(
+                                      alignment: Alignment.centerLeft,
+                                      children: [
+                                        // Sliding pill indicator
+                                        if (_pillInitialized.value)
+                                          AnimatedPositioned(
+                                            duration: const Duration(milliseconds: 400),
+                                            curve: Curves.easeOutBack,
+                                            left: _pillLeft.value,
+                                            top: 0,
+                                            bottom: 0,
+                                            child: AnimatedContainer(
+                                              duration: const Duration(milliseconds: 400),
+                                              curve: Curves.easeOutBack,
+                                              width: _pillWidth.value,
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : const Color(0xFF3E3E3F),
+                                                borderRadius: BorderRadius.circular(50),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: (isDark ? Colors.white : Colors.black)
+                                                        .withOpacity(0.12),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        // Chip texts row
+                                        Row(
+                                          key: _chipRowKey,
+                                          children: _categories.map((category) {
+                                            _chipTabKeys.putIfAbsent(
+                                                category, () => GlobalKey());
+                                            final isSelected =
+                                                category == _selectedCategory.value;
+
+                                            // Kategori bazli sepet sayisi
+                                            final groupState = ref.watch(groupOrderProvider);
+                                            final myOrder = groupState.currentOrder;
+                                            final myPid = groupState.currentParticipantId;
+                                            int catCartCount = 0;
+                                            if (myOrder != null && myPid != null) {
+                                              final me = myOrder.participants.cast<GroupOrderParticipant?>().firstWhere(
+                                                (p) => p?.oderId == myPid, orElse: () => null);
+                                              if (me != null) {
+                                                if (category == 'Tumu') {
+                                                  catCartCount = me.totalItems;
+                                                } else {
+                                                  for (final ci in me.items) {
+                                                    // Urun adi uzerinden kategori bul
+                                                    final matchProduct = _products.cast<KermesMenuItem?>().firstWhere(
+                                                      (p) => p?.name == ci.menuItemName,
+                                                      orElse: () => null,
+                                                    );
+                                                    if (matchProduct?.category == category) {
+                                                      catCartCount += ci.quantity;
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+
+                                            return Padding(
+                                              padding: const EdgeInsets.only(right: 6),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  HapticFeedback.selectionClick();
+                                                  _selectGroupCategory(category);
+                                                },
+                                                child: Container(
+                                                  key: _chipTabKeys[category],
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 16, vertical: 7),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.transparent,
+                                                    borderRadius: BorderRadius.circular(50),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      AnimatedDefaultTextStyle(
+                                                        duration: const Duration(milliseconds: 300),
+                                                        curve: Curves.easeOutCubic,
+                                                        style: TextStyle(
+                                                          color: isSelected
+                                                              ? (isDark ? Colors.black : Colors.white)
+                                                              : (isDark ? Colors.white70 : Colors.black54),
+                                                          fontWeight: isSelected
+                                                              ? FontWeight.w700
+                                                              : FontWeight.w500,
+                                                          fontSize: 14,
+                                                        ),
+                                                        child: Text(category),
+                                                      ),
+                                                      // Cart count badge
+                                                      if (catCartCount > 0)
+                                                        Padding(
+                                                          padding: const EdgeInsets.only(left: 6),
+                                                          child: AnimatedContainer(
+                                                            duration: const Duration(milliseconds: 300),
+                                                            curve: Curves.easeOutBack,
+                                                            width: 20,
+                                                            height: 20,
+                                                            decoration: BoxDecoration(
+                                                              color: isSelected
+                                                                  ? (isDark ? Colors.black87 : Colors.white)
+                                                                  : Colors.red,
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            alignment: Alignment.center,
+                                                            child: Text(
+                                                              '$catCartCount',
+                                                              style: TextStyle(
+                                                                fontSize: 11,
+                                                                fontWeight: FontWeight.w600,
+                                                                color: isSelected
+                                                                    ? (isDark ? Colors.white : Colors.black87)
+                                                                    : Colors.white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            Divider(
+                              height: 1,
+                              thickness: 0.5,
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.grey[300],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
               ],
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildMenuProductList(isDark),
+                  _buildMyOrderTab(isDark, groupState),
+                  _buildTotalTab(isDark, groupState),
+                ],
+              ),
             ),
           ),
 
@@ -234,6 +516,36 @@ class _KermesGroupOrderScreenState
       ),
     );
   }
+
+  // Menu tab - sadece urun listesi (search ve categories header'da)
+  Widget _buildMenuProductList(bool isDark) {
+    if (_filteredProducts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 12),
+            Text('Urun bulunamadi', style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 80),
+      itemCount: _filteredProducts.length,
+      itemBuilder: (_, i) {
+        final item = _filteredProducts[i];
+        return KermesMenuItemTile(
+          item: item,
+          onAdd: () => _addItemToGroup(item),
+          onTap: () => _addItemToGroup(item),
+        );
+      },
+    );
+  }
+
 
   Widget _buildCountdownTimer(DateTime expiresAt, bool isDark) {
     final now = DateTime.now();
@@ -292,144 +604,66 @@ class _KermesGroupOrderScreenState
     return me?.totalItems ?? 0;
   }
 
-  // ---- TAB 1: MENU (ayni kermes detail stili) ----
-  Widget _buildMenuTab(bool isDark) {
-    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+  // Pill animasyon metodlari (aynen detail screen)
+  void _scrollChipBarToSelected(String category) {
+    if (!_chipScrollController.hasClients) return;
+    final tabKey = _chipTabKeys[category];
+    if (tabKey == null || tabKey.currentContext == null) return;
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        // Arama cubugu
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: GestureDetector(
-              onTap: () {
-                // Arama odaklanmasi
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => _buildSearchSheet(isDark),
-                );
-              },
-              child: Container(
-                height: 42,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey[500], size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      _searchQuery.isNotEmpty ? _searchQuery : 'Menude ara...',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: _searchQuery.isNotEmpty
-                            ? textColor
-                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    final RenderBox? chipBox =
+        tabKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null) return;
 
-        // Kategori chip'leri - sticky
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _GroupCategoryHeaderDelegate(
-            child: Container(
-              color: scaffoldBg,
-              height: 48,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                itemCount: _categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, i) {
-                  final cat = _categories[i];
-                  final sel = _selectedCategory == cat;
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _selectedCategory = cat);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: sel
-                            ? (isDark ? Colors.white : const Color(0xFF3E3E3F))
-                            : (isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade200),
-                        borderRadius: BorderRadius.circular(50),
-                        boxShadow: sel
-                            ? [BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              )]
-                            : null,
-                      ),
-                      child: Text(
-                        cat,
-                        style: TextStyle(
-                          color: sel
-                              ? (isDark ? Colors.black : Colors.white)
-                              : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                          fontSize: 13,
-                          fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
+    final chipPosition = chipBox.localToGlobal(Offset.zero);
+    final chipWidth = chipBox.size.width;
+    final viewportWidth = _chipScrollController.position.viewportDimension;
 
-        // Urun listesi
-        if (_filteredProducts.isEmpty)
-          SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[400]),
-                  const SizedBox(height: 12),
-                  Text('Urun bulunamadi', style: TextStyle(color: Colors.grey[500], fontSize: 15)),
-                ],
-              ),
-            ),
-          )
-        else
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, i) {
-                final item = _filteredProducts[i];
-                return KermesMenuItemTile(
-                  item: item,
-                  onAdd: () => _addItemToGroup(item),
-                  onTap: () => _addItemToGroup(item),
-                );
-              },
-              childCount: _filteredProducts.length,
-            ),
-          ),
+    final chipCenter = chipPosition.dx + chipWidth / 2;
+    final viewportCenter = viewportWidth / 2;
+    final scrollDelta = chipCenter - viewportCenter;
 
-        // Alt bosluk
-        const SliverToBoxAdapter(child: SizedBox(height: 80)),
-      ],
+    final targetOffset = (_chipScrollController.offset + scrollDelta).clamp(
+      0.0,
+      _chipScrollController.position.maxScrollExtent,
     );
+
+    _chipScrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _updatePillPosition([String? cat]) {
+    final category = cat ?? _selectedCategory.value;
+    final tabKey = _chipTabKeys[category];
+    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) {
+      return;
+    }
+
+    final RenderBox? chipBox =
+        tabKey?.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? rowBox =
+        _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null || rowBox == null) return;
+
+    final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
+
+    if (mounted) {
+      _pillLeft.value = chipPos.dx;
+      _pillWidth.value = chipBox.size.width;
+      _pillInitialized.value = true;
+    }
+  }
+
+  void _selectGroupCategory(String category) {
+    if (_selectedCategory.value == category) return;
+    _selectedCategory.value = category;
+
+    _scrollChipBarToSelected(category);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition(category);
+    });
   }
 
   Widget _buildSearchSheet(bool isDark) {
@@ -485,15 +719,30 @@ class _KermesGroupOrderScreenState
     );
   }
 
-  void _addItemToGroup(KermesMenuItem item) {
-    HapticFeedback.lightImpact();
-    final pid = ref.read(groupOrderProvider).currentParticipantId;
-    if (pid == null) return;
+  Future<void> _addItemToGroup(KermesMenuItem item) async {
+    final groupState = ref.read(groupOrderProvider);
+    final myPid = groupState.currentParticipantId;
 
+    if (myPid == null) {
+      // 1. Check for existing cart conflict before starting a group order
+      if (CartWarningUtils.checkConflictForGroupOrder(ref)) {
+        CartWarningUtils.showDifferentCartWarning(
+          context: context,
+          ref: ref,
+          targetBusinessName: widget.event.title ?? widget.event.city,
+          onConfirmClearAndAdd: () => _startGroupAndAdd(item),
+        );
+        return;
+      }
+      _startGroupAndAdd(item);
+      return;
+    }
+
+    HapticFeedback.lightImpact();
     ref.read(groupOrderProvider.notifier).addItemToCart(
-      participantId: pid,
-      menuItem: item,
-    );
+          participantId: myPid,
+          menuItem: item,
+        );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -504,6 +753,28 @@ class _KermesGroupOrderScreenState
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
+  }
+
+  Future<void> _startGroupAndAdd(KermesMenuItem item) async {
+    final name = await _showNameDialog();
+    if (name == null || name.isEmpty) return;
+
+    final orderId = await ref.read(groupOrderProvider.notifier).createGroupOrder(
+          kermesId: widget.event.id,
+          kermesName: widget.event.title ?? widget.event.city,
+          hostName: name,
+          initialItems: [],
+        );
+
+    if (orderId != null) {
+      final myPid = ref.read(groupOrderProvider).currentParticipantId;
+      if (myPid != null) {
+        ref.read(groupOrderProvider.notifier).addItemToCart(
+              participantId: myPid,
+              menuItem: item,
+            );
+      }
+    }
   }
 
   // ---- TAB 2: BENIM SIPARISIM ----
@@ -891,22 +1162,4 @@ class _KermesGroupOrderScreenState
       ),
     );
   }
-}
-
-/// Sticky category header delegate for group order menu
-class _GroupCategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  _GroupCategoryHeaderDelegate({required this.child});
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => child;
-
-  @override
-  double get maxExtent => 48;
-
-  @override
-  double get minExtent => 48;
-
-  @override
-  bool shouldRebuild(covariant _GroupCategoryHeaderDelegate oldDelegate) => true;
 }

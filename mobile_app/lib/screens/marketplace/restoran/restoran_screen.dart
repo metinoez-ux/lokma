@@ -2180,7 +2180,19 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       distance: distanceKm ?? 0.0,
       onTap: () {
         HapticFeedback.lightImpact();
-        // Cart conflict check FIRST -- regardless of isAvailable
+
+        // 0. Group order conflict check
+        if (CartWarningUtils.hasActiveGroupOrder(ref)) {
+          CartWarningUtils.showDifferentCartWarning(
+            context: context,
+            ref: ref,
+            targetBusinessName: name,
+            onConfirmClearAndAdd: () => _navigateOrShowConflict(id, name),
+          );
+          return;
+        }
+
+        // 1. Cart conflict check FIRST -- regardless of isAvailable
         final cartState = ref.read(cartProvider);
         if (cartState.isNotEmpty && cartState.butcherId != null && cartState.butcherId != id) {
           _showCartConflictSheet(
@@ -2221,6 +2233,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   /// Check for cart conflict before navigating to a business
   void _navigateOrShowConflict(String targetBusinessId, String targetBusinessName, {bool isReservationIntent = false, bool isClosedAck = false}) {
+    // 0. Group order conflict check
+    if (CartWarningUtils.hasActiveGroupOrder(ref)) {
+      CartWarningUtils.showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: targetBusinessName,
+        onConfirmClearAndAdd: () => _navigateOrShowConflict(targetBusinessId, targetBusinessName, isReservationIntent: isReservationIntent, isClosedAck: isClosedAck),
+      );
+      return;
+    }
+
     final cartState = ref.read(cartProvider);
     debugPrint('[CART-CONFLICT] targetId=$targetBusinessId, cartButcherId=${cartState.butcherId}, cartItems=${cartState.items.length}, isNotEmpty=${cartState.isNotEmpty}');
     if (cartState.isNotEmpty && cartState.butcherId != null && cartState.butcherId != targetBusinessId) {

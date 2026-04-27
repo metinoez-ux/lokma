@@ -4,10 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../providers/cart_provider.dart';
 import '../providers/kermes_cart_provider.dart';
+import '../providers/group_order_provider.dart';
+import '../models/kermes_group_order_model.dart';
 
 class CartWarningUtils {
   /// Check if adding a normal Kasap/Restoran item conflicts with an existing cart
   static bool checkConflictForNormalCart(WidgetRef ref, String newBusinessId) {
+    // 0. Is there an active group order?
+    final groupState = ref.read(groupOrderProvider);
+    if (groupState.currentOrder != null &&
+        groupState.currentOrder!.status == GroupOrderStatus.collecting) {
+      return true;
+    }
+
     // 1. Is there an active Kermes cart?
     final kermesCart = ref.read(kermesCartProvider);
     if (kermesCart.isNotEmpty) return true;
@@ -23,6 +32,13 @@ class CartWarningUtils {
 
   /// Check if adding a Kermes item conflicts with an existing cart
   static bool checkConflictForKermesCart(WidgetRef ref, String newEventId) {
+    // 0. Is there an active group order?
+    final groupState = ref.read(groupOrderProvider);
+    if (groupState.currentOrder != null &&
+        groupState.currentOrder!.status == GroupOrderStatus.collecting) {
+      return true;
+    }
+
     // 1. Is there an active normal Kasap/Restoran cart?
     final normalCart = ref.read(cartProvider);
     if (normalCart.isNotEmpty) return true;
@@ -34,6 +50,26 @@ class CartWarningUtils {
     }
     
     return false;
+  }
+
+  /// Check if starting a group order conflicts with existing carts
+  static bool checkConflictForGroupOrder(WidgetRef ref) {
+    // Normal sepet dolu mu?
+    final normalCart = ref.read(cartProvider);
+    if (normalCart.isNotEmpty) return true;
+
+    // Kermes sepeti dolu mu?
+    final kermesCart = ref.read(kermesCartProvider);
+    if (kermesCart.isNotEmpty) return true;
+
+    return false;
+  }
+
+  /// Check if there is an active group order (collecting state)
+  static bool hasActiveGroupOrder(WidgetRef ref) {
+    final groupState = ref.read(groupOrderProvider);
+    return groupState.currentOrder != null &&
+        groupState.currentOrder!.status == GroupOrderStatus.collecting;
   }
 
   /// Display a uniform warning dialog about clearing the cart
@@ -102,9 +138,10 @@ class CartWarningUtils {
             onPressed: () {
               Navigator.pop(dialogContext);
               
-              // Clear both carts to guarantee mutual exclusivity
+              // Clear both carts + group order to guarantee mutual exclusivity
               ref.read(cartProvider.notifier).clearCart();
               ref.read(kermesCartProvider.notifier).clearCart();
+              ref.read(groupOrderProvider.notifier).clearOrder();
               
               onConfirmClearAndAdd();
               

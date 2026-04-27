@@ -4443,6 +4443,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   void _showProductBottomSheet(ButcherProduct product) {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
+
+    // 0. Active Group Order conflict check
+    if (CartWarningUtils.hasActiveGroupOrder(ref)) {
+      CartWarningUtils.showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: butcherName,
+        onConfirmClearAndAdd: () => _showProductBottomSheet(product),
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

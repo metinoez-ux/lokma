@@ -1301,6 +1301,17 @@ String _getLocalizedCountry(String rawCountry) {
   Future<void> _addToCart(KermesMenuItem item) async {
     HapticFeedback.lightImpact();
 
+    // 1. Check for active group order conflict
+    if (CartWarningUtils.hasActiveGroupOrder(ref)) {
+      CartWarningUtils.showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: _currentEvent.title ?? _currentEvent.city,
+        onConfirmClearAndAdd: () => _addToCart(item),
+      );
+      return;
+    }
+
     if (_currentEvent.isMenuOnly) {
       _showMenuOnlyDialog();
       return;
