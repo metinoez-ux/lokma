@@ -50,7 +50,7 @@ class AppRouter {
     _hasSeenOnboarding = hasSeenOnboarding;
     router = GoRouter(
       navigatorKey: navigatorKey,
-      initialLocation: _hasSeenOnboarding ? '/restoran' : '/onboarding',
+      initialLocation: '/splash',
       // Handle Firebase Auth callback URLs - redirect to login and let Firebase SDK handle internally
       redirect: (context, state) {
         final location = state.uri.toString();

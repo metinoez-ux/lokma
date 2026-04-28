@@ -79,7 +79,11 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Phase 1: Logo fades in elegantly
     _fadeController.forward();
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (!mounted) return;
+
+    // Wait a bit to show the full logo before biting
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
 
     // Phase 2: Bite animation
@@ -90,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
     _audioPlayer.play(AssetSource('sounds/bite_crunch.mp3')).catchError((_) {});
 
     // Phase 3: Let user see the bitten logo
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
 
     _scaleController.reverse();
@@ -121,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: _showBitten
                   ? FractionallySizedBox(
                       key: const ValueKey('bitten'),
-                      widthFactor: 0.45,
+                      widthFactor: 0.80,
                       child: Image.asset(
                         'assets/images/lokma_splash_bitten.png',
                         fit: BoxFit.contain,
@@ -129,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
                     )
                   : FractionallySizedBox(
                       key: const ValueKey('whole'),
-                      widthFactor: 0.45,
+                      widthFactor: 0.80,
                       child: Image.asset(
                         'assets/images/lokma_splash_whole.png',
                         fit: BoxFit.contain,

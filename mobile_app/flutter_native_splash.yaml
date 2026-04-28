@@ -1,14 +1,14 @@
 flutter_native_splash:
   color: "#F61028"
-  image: "assets/images/lokma_splash_whole.png"
+  image: "assets/images/transparent.png"
   color_dark: "#F61028"
-  image_dark: "assets/images/lokma_splash_whole.png"
+  image_dark: "assets/images/transparent.png"
 
   android_12:
     color: "#F61028"
-    image: "assets/images/lokma_splash_whole.png"
+    image: "assets/images/transparent.png"
     color_dark: "#F61028"
-    image_dark: "assets/images/lokma_splash_whole.png"
+    image_dark: "assets/images/transparent.png"
     
   android: true
   ios: true
