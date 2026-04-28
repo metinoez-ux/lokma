@@ -149,6 +149,11 @@ class KermesOrder {
   final DateTime? completedAt;
   final String? notes;
   final String? courierId;
+  final String? courierName;
+  final String? courierPhone;
+  final Map<String, double>? courierLocation; // {lat, lng}
+  final DateTime? lastLocationUpdate;
+  final int? etaMinutes;
   // POS/KDS ek alanlari
   final String? createdByStaffId;   // Siparisi alan garson/kasiyer
   final String? createdByStaffName; // Garson adi
@@ -188,6 +193,11 @@ class KermesOrder {
     this.completedAt,
     this.notes,
     this.courierId,
+    this.courierName,
+    this.courierPhone,
+    this.courierLocation,
+    this.lastLocationUpdate,
+    this.etaMinutes,
     this.createdByStaffId,
     this.createdByStaffName,
     this.tableSection,
@@ -247,6 +257,11 @@ class KermesOrder {
       'completedAt': completedAt != null ? Timestamp.fromDate(completedAt!) : null,
       'notes': notes,
       'courierId': courierId,
+      if (courierName != null) 'courierName': courierName,
+      if (courierPhone != null) 'courierPhone': courierPhone,
+      if (courierLocation != null) 'courierLocation': courierLocation,
+      if (lastLocationUpdate != null) 'lastLocationUpdate': Timestamp.fromDate(lastLocationUpdate!),
+      if (etaMinutes != null) 'etaMinutes': etaMinutes,
       if (createdByStaffId != null) 'createdByStaffId': createdByStaffId,
       if (createdByStaffName != null) 'createdByStaffName': createdByStaffName,
       if (tableSection != null) 'tableSection': tableSection,
@@ -297,6 +312,16 @@ class KermesOrder {
       completedAt: (map['completedAt'] as Timestamp?)?.toDate(),
       notes: map['notes'],
       courierId: map['courierId'],
+      courierName: map['courierName'],
+      courierPhone: map['courierPhone'],
+      courierLocation: map['courierLocation'] != null
+          ? {
+              'lat': (map['courierLocation']['lat'] ?? 0).toDouble(),
+              'lng': (map['courierLocation']['lng'] ?? 0).toDouble(),
+            }
+          : null,
+      lastLocationUpdate: (map['lastLocationUpdate'] as Timestamp?)?.toDate(),
+      etaMinutes: map['etaMinutes'],
       createdByStaffId: map['createdByStaffId'] as String?,
       createdByStaffName: map['createdByStaffName'] as String?,
       tableSection: map['tableSection'] as String?,
@@ -383,6 +408,11 @@ class KermesOrder {
     DateTime? completedAt,
     String? notes,
     String? courierId,
+    String? courierName,
+    String? courierPhone,
+    Map<String, double>? courierLocation,
+    DateTime? lastLocationUpdate,
+    int? etaMinutes,
     String? createdByStaffId,
     String? createdByStaffName,
     String? tableSection,
@@ -415,6 +445,11 @@ class KermesOrder {
       completedAt: completedAt ?? this.completedAt,
       notes: notes ?? this.notes,
       courierId: courierId ?? this.courierId,
+      courierName: courierName ?? this.courierName,
+      courierPhone: courierPhone ?? this.courierPhone,
+      courierLocation: courierLocation ?? this.courierLocation,
+      lastLocationUpdate: lastLocationUpdate ?? this.lastLocationUpdate,
+      etaMinutes: etaMinutes ?? this.etaMinutes,
       createdByStaffId: createdByStaffId ?? this.createdByStaffId,
       createdByStaffName: createdByStaffName ?? this.createdByStaffName,
       tableSection: tableSection ?? this.tableSection,

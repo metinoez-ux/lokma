@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'order_service.dart';
+import 'kermes_order_service.dart';
 
 /// Location Tracking Service for courier delivery tracking
 /// Uses Geolocator stream for true background location updates on iOS.
@@ -12,11 +13,13 @@ class LocationTrackingService {
   LocationTrackingService._internal();
 
   final OrderService _orderService = OrderService();
+  final KermesOrderService _kermesOrderService = KermesOrderService();
   
   StreamSubscription<Position>? _positionSubscription;
   Timer? _heartbeatTimer;
   String? _activeOrderId;
   bool _isTracking = false;
+  bool _isKermesActive = false;
   Position? _lastPosition;
 
   bool get isTracking => _isTracking;
@@ -55,7 +58,7 @@ class LocationTrackingService {
   }
 
   /// Start tracking for a specific order using position stream
-  Future<bool> startTracking(String orderId) async {
+  Future<bool> startTracking(String orderId, {bool isKermes = false}) async {
     if (_isTracking) {
       if (_activeOrderId == orderId) {
         debugPrint('[LocationTracking] Already tracking this order: $orderId');
@@ -74,6 +77,7 @@ class LocationTrackingService {
 
     _activeOrderId = orderId;
     _isTracking = true;
+    _isKermesActive = isKermes;
 
     // Send initial location immediately
     await _sendCurrentLocation();
@@ -135,11 +139,19 @@ class LocationTrackingService {
     if (!_isTracking || _activeOrderId == null) return;
 
     try {
-      await _orderService.updateCourierLocation(
-        orderId: _activeOrderId!,
-        lat: position.latitude,
-        lng: position.longitude,
-      );
+      if (_isKermesActive) {
+        await _kermesOrderService.updateCourierLocation(
+          orderId: _activeOrderId!,
+          lat: position.latitude,
+          lng: position.longitude,
+        );
+      } else {
+        await _orderService.updateCourierLocation(
+          orderId: _activeOrderId!,
+          lat: position.latitude,
+          lng: position.longitude,
+        );
+      }
       debugPrint('[LocationTracking] 📍 Updated: ${position.latitude}, ${position.longitude}');
     } catch (e) {
       debugPrint('[LocationTracking] ❌ Error writing location: $e');
@@ -185,6 +197,7 @@ class LocationTrackingService {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
     _isTracking = false;
+    _isKermesActive = false;
     _activeOrderId = null;
     _lastPosition = null;
     debugPrint('[LocationTracking] ⏹️ Stopped tracking');

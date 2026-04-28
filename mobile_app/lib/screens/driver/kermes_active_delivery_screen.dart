@@ -99,7 +99,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
       final order = await _orderService.getOrder(widget.orderId);
       if (order != null && order.status == KermesOrderStatus.onTheWay) {
         debugPrint('[ActiveDelivery] Resuming tracking for onTheWay order ${widget.orderId}');
-        await _locationService.startTracking(widget.orderId);
+        await _locationService.startTracking(widget.orderId, isKermes: true);
       }
     } catch (e) {
       debugPrint('[ActiveDelivery] Error resuming tracking: $e');
@@ -299,7 +299,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
     );
 
     if (confirm == true) {
-      _locationService.startTracking(widget.orderId);
+      _locationService.startTracking(widget.orderId, isKermes: true);
       await _orderService.startDelivery(widget.orderId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

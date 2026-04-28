@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../models/kermes_order_model.dart';
 import '../../utils/currency_utils.dart';
 import '../../widgets/kermes/order_qr_dialog.dart';
+import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
+import '../kermes/kermes_courier_tracking_screen.dart';
 
 class KermesOrderCard extends StatelessWidget {
   final KermesOrder order;
@@ -92,7 +94,7 @@ class KermesOrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Gel Al Siparişi • ${order.createdAt.day.toString().padLeft(2, '0')}.${order.createdAt.month.toString().padLeft(2, '0')}.${order.createdAt.year}',
+                '${order.deliveryTypeLabel} • ${order.createdAt.day.toString().padLeft(2, '0')}.${order.createdAt.month.toString().padLeft(2, '0')}.${order.createdAt.year}',
                 style: TextStyle(color: Colors.grey[500], fontSize: 13),
               ),
               const SizedBox(height: 8),
@@ -130,6 +132,28 @@ class KermesOrderCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (order.deliveryType == DeliveryType.kurye && order.status == KermesOrderStatus.onTheWay) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => KermesCourierTrackingScreen(orderId: order.id),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.location_on, size: 18, color: Colors.white),
+                    label: const Text('Kuryemi Takip Et', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEA184A),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
