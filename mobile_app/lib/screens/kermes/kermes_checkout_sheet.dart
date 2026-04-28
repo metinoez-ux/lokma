@@ -880,7 +880,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       style: TextStyle(
                         color: textColor,
                         fontSize: 19,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(
@@ -963,7 +963,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black87,
                           fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -3558,36 +3558,51 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     bool readOnly = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextField(
+    
+    final textField = TextField(
       controller: controller,
       readOnly: readOnly,
       keyboardType: keyboardType,
       style: TextStyle(
         color: isDark 
-            ? (readOnly ? Colors.white54 : Colors.white) 
-            : (readOnly ? Colors.black54 : Colors.black87), 
-        fontSize: 16
+            ? (readOnly ? Colors.white70 : Colors.white) 
+            : (readOnly ? Colors.black87 : Colors.black87), 
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
       ),
       onChanged: (_) => setState(() {}), // Rebuild for validation
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 15, fontWeight: FontWeight.w600),
-        hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400], fontSize: 15),
+        labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 15, fontWeight: FontWeight.w700),
+        hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400], fontSize: 15, fontWeight: FontWeight.w500),
         prefixIcon: Icon(icon, color: isDark ? Colors.grey[500] : Colors.grey[600]),
         filled: true,
-        fillColor: _cardBg(isDark),
+        fillColor: readOnly 
+            ? (isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.02)) 
+            : _cardBg(isDark),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: lokmaPink, width: 2),
+          borderSide: BorderSide(
+            color: readOnly ? Colors.transparent : lokmaPink,
+            width: readOnly ? 0 : 2,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
+
+    if (readOnly) {
+      return IgnorePointer(
+        ignoring: true,
+        child: textField,
+      );
+    }
+    return textField;
   }
   
   Widget _buildFooter() {
