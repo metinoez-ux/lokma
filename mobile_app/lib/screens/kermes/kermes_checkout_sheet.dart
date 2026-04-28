@@ -895,6 +895,27 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 ),
               ),
               
+              // Sponsor Logo (Orta)
+              if (widget.event.sponsor == KermesSponsor.tuna)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Image.asset(
+                    'assets/images/tuna_logo_pill.png',
+                    height: 22,
+                    fit: BoxFit.contain,
+                  ),
+                )
+              else if (widget.event.sponsor == KermesSponsor.akdenizToros)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Image.asset(
+                    'assets/images/akdeniz_toros_logo.png', // Assuming this exists if Akdeniz Toros is chosen
+                    height: 22,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              
               // Close button
               GestureDetector(
                 onTap: () => Navigator.pop(context),
@@ -1701,18 +1722,39 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? lokmaPink.withOpacity(0.12) : lokmaPink.withOpacity(0.06),
+                color: _cardBg(isDark),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: lokmaPink.withOpacity(0.3)),
+                border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
-                  Icon(_getDeliveryIcon(), color: lokmaPink, size: 24),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: lokmaPink.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(_getDeliveryIcon(), color: lokmaPink, size: 20),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          'Teslimat Turu',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[400] : Colors.grey[500],
+                            fontSize: 12,
+                          ),
+                        ),
                         Text(
                           _deliveryType == DeliveryType.gelAl ? 'Gel Al'
                               : _deliveryType == DeliveryType.masada ? 'Masaya Servis'
@@ -1736,6 +1778,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     ),
                   ),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     onPressed: () {
                       // Context'i sifirla ve popup'i tekrar goster
                       ref.read(kermesCartProvider.notifier).clearOrderContext();
@@ -1744,7 +1791,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         _isGroupOrder = false;
                       });
                     },
-                    child: Text('Degistir', style: TextStyle(color: isDark ? Colors.white60 : Colors.grey[600], fontSize: 13)),
+                    child: Text('Degistir', style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13)),
                   ),
                 ],
               ),
@@ -1835,12 +1882,47 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               // Masa bilgisi zaten var - goster
               Container(
                  margin: const EdgeInsets.symmetric(vertical: 8),
-                 padding: const EdgeInsets.all(12),
-                 decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.green.withOpacity(0.3))),
+                 padding: const EdgeInsets.all(14),
+                 decoration: BoxDecoration(
+                   color: _cardBg(isDark),
+                   borderRadius: BorderRadius.circular(14),
+                   border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                   boxShadow: [
+                     BoxShadow(
+                       color: Colors.black.withOpacity(0.02),
+                       blurRadius: 8,
+                       offset: const Offset(0, 2),
+                     ),
+                   ],
+                 ),
                  child: Row(children: [
-                   const Icon(Icons.check_circle, color: Colors.green), const SizedBox(width: 8),
-                   Expanded(child: Text("${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' - ' : ''}Masa ${_tableController.text}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
-                   TextButton(onPressed: () => setState(() { _tableController.clear(); _selectedSectionId = null; }), child: Text("Degistir", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)))
+                   Container(
+                     padding: const EdgeInsets.all(8),
+                     decoration: BoxDecoration(
+                       color: Colors.green.withOpacity(0.1),
+                       shape: BoxShape.circle,
+                     ),
+                     child: const Icon(Icons.check, color: Colors.green, size: 18),
+                   ),
+                   const SizedBox(width: 12),
+                   Expanded(
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         Text("Secili Masa", style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[500])),
+                         Text("${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' - ' : ''}Masa ${_tableController.text}", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 15)),
+                       ],
+                     ),
+                   ),
+                   TextButton(
+                     onPressed: () => setState(() { _tableController.clear(); _selectedSectionId = null; }), 
+                     style: TextButton.styleFrom(
+                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                       minimumSize: Size.zero,
+                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                     ),
+                     child: Text("Degistir", style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13))
+                   )
                  ])
               ),
               // Baska masa QR kodu okut secenegi
