@@ -126,6 +126,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   bool _filterOpenNow = false; // Şimdi açık
   bool _filterTunaApproved = false; // Tuna Onaylı
   bool _filterVegetarian = false; // Vejetaryen
+  bool _hasShownPermissionDialog = false; // 🆕 GPS izin diyaloğu takibi
 
   @override
   void initState() {
@@ -970,6 +971,44 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       ],
     );
   }
+  // 🆕 GPS Ayarları Yönlendirme Diyaloğu
+  void _showPermissionSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.location_off, color: lokmaPink),
+            const SizedBox(width: 8),
+            Flexible(child: const Text('Konum İzni Gerekli', style: TextStyle(fontSize: 18))),
+          ],
+        ),
+        content: const Text(
+          'Size en yakın harika mekanları bulabilmemiz için konum izninize ihtiyacımız var.\n\n'
+          'Şu anda varsayılan olarak Hückelhoven çevresindeki restoranları görüntülüyorsunuz. '
+          'Daha iyi bir deneyim için ayarlardan konumunuzu açmak ister misiniz?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Şimdilik Geç'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: lokmaPink,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Geolocator.openAppSettings();
+            },
+            child: const Text('Ayarlara Git'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Kompakt konum başlığı (LOKMA logo, şehir+sokak, kalp ikonu)
   Widget _buildCompactLocationHeader() {
     // Get location from cached provider (no API call!)
@@ -994,6 +1033,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           if (!_sliderAutoSet && _allBusinesses.isNotEmpty) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _autoSetSliderToNearestBusiness();
+            });
+          }
+          
+          // 🆕 GPS Kapalıysa Uyarı Ver (Sadece bir kez)
+          if (!location.hasPermission && !_hasShownPermissionDialog) {
+            _hasShownPermissionDialog = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showPermissionSettingsDialog();
             });
           }
         } else {

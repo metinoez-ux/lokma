@@ -41,20 +41,20 @@ class UserLocation {
     hasPermission: false,
   );
 
-  /// Permission denied state
+  /// Permission denied state (Fallback to Hückelhoven)
   factory UserLocation.denied() => const UserLocation(
-    latitude: 0,
-    longitude: 0,
-    address: 'Konum izni verilmedi',
-    street: '',
-    city: '',
-    state: '',
-    countryCode: '',
+    latitude: 51.0494,
+    longitude: 6.2238,
+    address: 'Hückelhoven (Varsayılan Konum)',
+    street: 'Varsayılan',
+    city: 'Hückelhoven',
+    state: 'NRW',
+    countryCode: 'DE',
     hasPermission: false,
     error: 'Konum izni verilmedi',
   );
 
-  bool get isValid => latitude != 0 && longitude != 0 && hasPermission;
+  bool get isValid => latitude != 0 && longitude != 0;
 
   String _normalize(String text) {
     return text
@@ -145,14 +145,14 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
       if (!serviceEnabled) {
         debugPrint('📍 Location services are disabled!');
         _hasFetched = true;
-        state = AsyncValue.data(UserLocation(
-            latitude: 0,
-            longitude: 0,
-            address: 'Konum servisleri kapalı',
-            street: '',
-            city: '',
-            state: '',
-            countryCode: '',
+        state = AsyncValue.data(const UserLocation(
+            latitude: 51.0494,
+            longitude: 6.2238,
+            address: 'Hückelhoven (Varsayılan Konum)',
+            street: 'Varsayılan',
+            city: 'Hückelhoven',
+            state: 'NRW',
+            countryCode: 'DE',
             hasPermission: false,
             error: 'Konum servisleri kapalı'));
         return;
