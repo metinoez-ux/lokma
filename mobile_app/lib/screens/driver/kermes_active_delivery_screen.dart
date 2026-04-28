@@ -226,8 +226,34 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
     // Stop tracking immediately
     _locationService.stopTracking();
     
-    // Complete delivery
-    await _orderService.completeDelivery(widget.orderId);
+    // Complete delivery with PoD option
+    final confirmPhoto = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Teslimat Kanıtı (PoD)'),
+        content: const Text('Teslimatı tamamlamak için kanıt fotoğrafı çekmek ister misiniz?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hayır, Atla')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Evet, Fotoğraf Çek', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    String? photoUrl;
+    if (confirmPhoto == true) {
+      photoUrl = await _captureProofPhoto();
+    }
+
+    await _orderService.completeDeliveryWithProof(
+      widget.orderId,
+      deliveryType: orderSnapshot.deliveryType.name,
+      proofPhotoUrl: photoUrl,
+    );
     
     if (mounted) {
       Navigator.pop(context);

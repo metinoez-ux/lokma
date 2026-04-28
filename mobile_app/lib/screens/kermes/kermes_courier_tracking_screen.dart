@@ -106,7 +106,7 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
     
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('businesses')
+          .collection('kermes')
           .doc(kermesId)
           .get();
       
