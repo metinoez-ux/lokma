@@ -2346,12 +2346,43 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           
            if (_deliveryType == DeliveryType.masada) ...[
             const SizedBox(height: 14),
-            _buildTextField(
-              controller: _tableController,
-              label: '${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' / ' : ''}Masa No',
-              icon: Icons.table_restaurant_outlined,
-              hint: 'Orn: M9',
-              keyboardType: TextInputType.text,
+            Row(
+              children: [
+                if (_getSectionDisplayName(_selectedSectionId).isNotEmpty) ...[
+                  Expanded(
+                    flex: 11,
+                    child: _buildTextField(
+                      controller: TextEditingController(text: _getSectionDisplayName(_selectedSectionId)),
+                      label: 'Bolum',
+                      icon: Icons.meeting_room_outlined,
+                      readOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 9,
+                    child: _buildTextField(
+                      controller: _tableController,
+                      label: 'Masa No',
+                      icon: Icons.table_restaurant_outlined,
+                      hint: 'Orn: M9',
+                      keyboardType: TextInputType.text,
+                      readOnly: true,
+                    ),
+                  ),
+                ] else ...[
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _tableController,
+                      label: 'Masa No',
+                      icon: Icons.table_restaurant_outlined,
+                      hint: 'Orn: M9',
+                      keyboardType: TextInputType.text,
+                      readOnly: true,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
           
@@ -2388,12 +2419,43 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           // Masa numarasi (masada icin)
           if (_deliveryType == DeliveryType.masada) ...[
             const SizedBox(height: 14),
-            _buildTextField(
-              controller: _tableController,
-              label: '${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' / ' : ''}Masa No',
-              icon: Icons.table_restaurant_outlined,
-              hint: 'Orn: M9',
-              keyboardType: TextInputType.text,
+            Row(
+              children: [
+                if (_getSectionDisplayName(_selectedSectionId).isNotEmpty) ...[
+                  Expanded(
+                    flex: 11,
+                    child: _buildTextField(
+                      controller: TextEditingController(text: _getSectionDisplayName(_selectedSectionId)),
+                      label: 'Bolum',
+                      icon: Icons.meeting_room_outlined,
+                      readOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 9,
+                    child: _buildTextField(
+                      controller: _tableController,
+                      label: 'Masa No',
+                      icon: Icons.table_restaurant_outlined,
+                      hint: 'Orn: M9',
+                      keyboardType: TextInputType.text,
+                      readOnly: true,
+                    ),
+                  ),
+                ] else ...[
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _tableController,
+                      label: 'Masa No',
+                      icon: Icons.table_restaurant_outlined,
+                      hint: 'Orn: M9',
+                      keyboardType: TextInputType.text,
+                      readOnly: true,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
           
@@ -3493,12 +3555,19 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     required IconData icon,
     String? hint,
     TextInputType? keyboardType,
+    bool readOnly = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextField(
       controller: controller,
+      readOnly: readOnly,
       keyboardType: keyboardType,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16),
+      style: TextStyle(
+        color: isDark 
+            ? (readOnly ? Colors.white54 : Colors.white) 
+            : (readOnly ? Colors.black54 : Colors.black87), 
+        fontSize: 16
+      ),
       onChanged: (_) => setState(() {}), // Rebuild for validation
       decoration: InputDecoration(
         labelText: label,
