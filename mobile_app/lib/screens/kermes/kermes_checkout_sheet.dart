@@ -924,10 +924,14 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Kermes Adi
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Kermes Adi
                 Row(
                   children: [
                     Icon(Icons.storefront, color: lokmaPink, size: 18),
@@ -1015,9 +1019,25 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               ],
             ),
           ),
+          if (widget.event.logoUrl != null && widget.event.logoUrl!.isNotEmpty) ...[
+            const SizedBox(width: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                widget.event.logoUrl!,
+                width: 48,
+                height: 48,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ],
         ],
       ),
-    );
+    ),
+  ],
+),
+);
   }
   
   Widget _buildProgressBar() {
