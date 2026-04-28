@@ -24,39 +24,13 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> {
   bool _showBitten = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
-
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-
-  late AnimationController _scaleController;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    // Fade-in for logo appearance (from solid red to logo)
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    );
-
-    // Scale pulse for bite effect
-    _scaleController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.93).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
-    );
 
     // Start animation after first frame is painted
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,39 +40,23 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _scaleController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
 
   Future<void> _runAnimation() async {
-    // Brief pause on solid red (matches native splash feel)
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
-
-    // Phase 1: Logo fades in elegantly
-    _fadeController.forward();
-    await Future.delayed(const Duration(milliseconds: 1000));
-    if (!mounted) return;
-
-    // Wait a bit to show the full logo before biting
-    await Future.delayed(const Duration(milliseconds: 800));
+    // Phase 1: Wait a brief moment to let Flutter settle (Native splash -> Flutter handoff)
+    await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
 
     // Phase 2: Bite animation
-    _scaleController.forward();
     setState(() => _showBitten = true);
 
     // Play crunch sound (non-blocking)
     _audioPlayer.play(AssetSource('sounds/bite_crunch.mp3')).catchError((_) {});
 
-    // Phase 3: Let user see the bitten logo
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-
-    _scaleController.reverse();
-    await Future.delayed(const Duration(milliseconds: 300));
+    // Phase 3: Let user see the bitten logo briefly
+    await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
     // Navigate to the app
@@ -112,35 +70,34 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF61028),
+      backgroundColor: const Color(0xFFE9021F),
       body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              child: _showBitten
-                  ? FractionallySizedBox(
-                      key: const ValueKey('bitten'),
-                      widthFactor: 0.80,
-                      child: Image.asset(
-                        'assets/images/lokma_splash_bitten.png',
-                        fit: BoxFit.contain,
-                      ),
-                    )
-                  : FractionallySizedBox(
-                      key: const ValueKey('whole'),
-                      widthFactor: 0.80,
-                      child: Image.asset(
-                        'assets/images/lokma_splash_whole.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Bitten image (always in tree, only visible when _showBitten is true)
+            Opacity(
+              opacity: _showBitten ? 1.0 : 0.0,
+              child: FractionallySizedBox(
+                widthFactor: 0.80,
+                child: Image.asset(
+                  'assets/images/lokma_splash_bitten.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
-          ),
+            // Whole image (visible when _showBitten is false)
+            Opacity(
+              opacity: _showBitten ? 0.0 : 1.0,
+              child: FractionallySizedBox(
+                widthFactor: 0.80,
+                child: Image.asset(
+                  'assets/images/lokma_splash_whole.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

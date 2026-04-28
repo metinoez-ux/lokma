@@ -46,6 +46,13 @@ class _KermesCardState extends State<KermesCard> {
     super.initState();
     _checkFavorite();
     _loadBadges();
+
+    // 🚀 Video URL varsa arkaplanda preload islemini baslat
+    // Bu sayede kullanici karta tikladiginda video coktan yuklenmis veya yuklenmeye baslamis olur
+    final imagePath = _getImagePath();
+    if (imagePath != null && _isVideoUrl(imagePath)) {
+      VideoPreloadService.getController(imagePath);
+    }
   }
 
   String _getVideoThumbnailUrl(String videoUrl) {

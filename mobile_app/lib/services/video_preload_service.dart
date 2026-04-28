@@ -10,7 +10,10 @@ class VideoPreloadService {
       return _cache[url]!;
     }
 
-    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse(url),
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    );
     _cache[url] = controller;
     _order.add(url);
 

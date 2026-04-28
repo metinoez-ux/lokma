@@ -96,16 +96,32 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
       }
 
       if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
+        // Videoyu oynatmaya başla
+        if (!_wasCollapsed) {
+          _controller.play();
+        }
         
-        // Frame'in ekrana yansıması için ufak bir gecikme veriyoruz ki "eski kare" zıplaması olmasın
-        Future.delayed(const Duration(milliseconds: 50), () {
-          if (mounted && _isInitialized && !_wasCollapsed) {
-            _controller.play();
+        // Siyah ekran flaşını (titremeyi) önlemek için, video donanım tarafından
+        // decode edilip ilk frame'i çizene kadar (position > 0) bekle.
+        void firstFrameListener() {
+          if (_controller.value.position > Duration.zero) {
+            _controller.removeListener(firstFrameListener);
+            if (mounted) {
+              setState(() {
+                _isInitialized = true;
+              });
+            }
           }
-        });
+        }
+        _controller.addListener(firstFrameListener);
+        
+        // Eger video zaten bir frame oynamissa hemen goster
+        if (_controller.value.position > Duration.zero) {
+          _controller.removeListener(firstFrameListener);
+          setState(() {
+            _isInitialized = true;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -197,7 +213,7 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
             // 2. Video Player (renders on top once initialized with a smooth fade)
             AnimatedOpacity(
               opacity: _isInitialized ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 150),
               child: _controller.value.isInitialized
                   ? FittedBox(
                       fit: widget.fit,

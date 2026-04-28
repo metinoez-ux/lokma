@@ -1,12 +1,16 @@
 flutter_native_splash:
-  color: "#F61028"
-  color_dark: "#F61028"
+  color: "#E9021F"
+  image: "assets/images/lokma_splash_whole.png"
+  image_android: "assets/images/1152_1552_O_spachscreen_android.png"
+  color_dark: "#E9021F"
+  image_dark: "assets/images/lokma_splash_whole.png"
+  image_dark_android: "assets/images/1152_1552_O_spachscreen_android.png"
 
   android_12:
-    color: "#F61028"
-    image: "assets/images/transparent.png"
-    color_dark: "#F61028"
-    image_dark: "assets/images/transparent.png"
+    color: "#E9021F"
+    image: "assets/images/1152_1552_O_spachscreen_android.png"
+    color_dark: "#E9021F"
+    image_dark: "assets/images/1152_1552_O_spachscreen_android.png"
     
   android: true
   ios: true
