@@ -19,7 +19,12 @@ import '../../utils/currency_utils.dart';
 import '../../widgets/qr_scanner_screen.dart';
 import '../../services/staff_role_service.dart';
 import 'kermes_customization_sheet.dart';
+import 'package:lokma_app/screens/auth/login_bottom_sheet.dart';
 
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:lokma_app/config/app_secrets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -49,18 +54,24 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   // Checkout adimlari
   int _currentStep = 0;
   
-  // Form degerleri
+  // Form değerleri
   bool _isGroupOrder = false; // Step 2: Bireysel/Ailecek
   DeliveryType? _deliveryType; // Step 3: Teslimat
-  PaymentMethodType _paymentMethod = PaymentMethodType.cash; // Step 5: Odeme
-  String? _selectedSectionId; // Step 1: Bolum Secimi (kadin_bolumu, erkek_bolumu, aile_bolumu)
+  PaymentMethodType? _paymentMethod; // Step 5: Ödeme
+  String? _selectedSectionId; // Step 1: Bölüm Seçimi (kadin_bolumu, erkek_bolumu, aile_bolumu)
   bool _showManualSectionSelection = false;
   
   // Kişisel bilgiler
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _tableController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _zipController = TextEditingController();
+  final _cityController = TextEditingController();
   String _completePhoneNumber = '';
+  String? _lastAuthUid;
+  bool _isLoadingLocation = false;
 
   @override
   void initState() {
@@ -76,7 +87,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       if (widget.initialSectionId != null) {
         _selectedSectionId = widget.initialSectionId;
       } else {
-        // QR masadan gelen siparis: masanin bolumunu otomatik ata
+        // QR masadan gelen sipariş: masanın bölümünü otomatik ata
         final section = widget.event.findSectionForTable(widget.initialTableNumber!);
         if (section != null) {
           _selectedSectionId = section.id;
@@ -84,12 +95,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       }
     }
     
-    // Eger section secilmediyse ve kermes'in bolumleri varsa, ilk bolumu varsayilan yap
+    // Eğer section seçilmediyse ve kermes'in bölümleri varsa, ilk bölümü varsayılan yap
     if (_selectedSectionId == null && widget.event.sectionDefs.isNotEmpty) {
       _selectedSectionId = widget.event.sectionDefs.first.id;
     }
 
-    // Siparis baglami popup'tan gelen degerleri oku
+    // Sipariş bağlamı popup'tan gelen değerleri oku
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final cartState = ref.read(kermesCartProvider);
@@ -112,7 +123,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         needsUpdate = true;
       }
       
-      // Masa bilgisi eger daha once secildiyse ve controller bossa doldur
+      // Masa bilgisi eğer daha önce seçildiyse ve controller boşsa doldur
       if (cartState.tableNo != null && _tableController.text.isEmpty) {
         _tableController.text = cartState.tableNo!;
         
@@ -130,8 +141,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       if (needsUpdate) setState(() {});
     });
 
-    // Eger hic secilmediyse Ilk bolumu otomatik sec ki TV ekranlarina mutlaka dussun
-    // Cunku tableSection null olursa Mutfak TV ekranlarinda siparis gorunmez!
+    // Eğer hiç seçilmediyse İlk bölümü otomatik seç ki TV ekranlarına mutlaka düşsün
+    // Çünkü tableSection null olursa Mutfak TV ekranlarında sipariş görünmez!
     if (_selectedSectionId == null && widget.event.sectionDefs.isNotEmpty) {
       _selectedSectionId = widget.event.sectionDefs.first.id;
     }
@@ -141,6 +152,16 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   Future<void> _prefillUserInfo() async {
+    final profile = ref.read(currentGuestProfileProvider);
+    if (profile != null) {
+      if (mounted) {
+        setState(() {
+          _nameController.text = profile.name;
+          _phoneController.text = profile.phone;
+          _completePhoneNumber = profile.phone;
+        });
+      }
+    }
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       if (user.displayName != null && user.displayName!.isNotEmpty) {
@@ -168,38 +189,69 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       }
     }
   }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isLoadingLocation = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('Konum servisleri kapalı.');
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Konum izni reddedildi.');
+        }
+      }
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        _addressController.text = '${place.thoroughfare ?? ''} ${place.subThoroughfare ?? ''}, ${place.locality ?? ''}'.trim();
+        _streetController.text = '${place.thoroughfare ?? ''} ${place.subThoroughfare ?? ''}'.trim();
+        _zipController.text = place.postalCode ?? '';
+        _cityController.text = place.locality ?? '';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Konum alınamadı: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoadingLocation = false);
+    }
+  }
   
   // Loading state
   bool _isSubmitting = false;
   bool _isCreatingGroup = false;
   String? _activeGroupOrderId;
   
-  // Auth state tracking - login sonrasi prefill icin
-  String? _lastAuthUid;
-  
-  // Bagis/yuvarlama
+  // Bağış/yuvarlama
   double _donationAmount = 0.0;
   String _donationTarget = 'none'; // 'kermesOrg' | 'fund' | 'none'
 
-  // POS modu - opsiyonel musteri ismi (Datenschutz: sadece kisaltma gosterilir)
+  // POS modu - opsiyonel müşteri ismi (Datenschutz: sadece kısaltma gösterilir)
   final _posNameController = TextEditingController();
   
   // Renkler
   static const Color lokmaPink = Color(0xFFEA184A);
-  Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
+  Color _darkBg(BuildContext context, bool isDark) => isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFE8E8EC);
   Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
   
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _phoneController.dispose();
     _tableController.dispose();
-    _posNameController.dispose();
+    _addressController.dispose();
+    _streetController.dispose();
+    _zipController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
-  /// GDPR uyumlu isim kisaltmasi: "Metin Oz" -> "M. O."
-  /// Eger tek kelime verildiyse aynen gosterilir: "Metin" -> "Metin"
+  /// GDPR uyumlu isim kısaltması: "Metin Oz" -> "M. O."
+  /// Eğer tek kelime verildiyse aynen gösterilir: "Metin" -> "Metin"
   String _abbreviateName(String fullName) {
     final parts = fullName.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return fullName;
@@ -207,13 +259,13 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     return parts.map((p) => p.isNotEmpty ? '${p[0].toUpperCase()}.' : '').join(' ');
   }
 
-  /// Grup siparisi olustur ve paylasim sheet'ini goster
+  /// Grup siparişi oluştur ve paylaşım sheet'ini göster
   Future<void> _createAndShareGroupOrder() async {
     final hostName = _nameController.text.trim();
     if (hostName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(tr('Lutfen isminizi girin')),
+          content: Text(tr('Lütfen isminizi girin')),
           backgroundColor: Colors.amber,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -258,7 +310,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         setState(() => _isCreatingGroup = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Grup siparisi olusturulamadi: $e'),
+            content: Text('Grup siparişi oluşturulamadı: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -284,23 +336,23 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   bool get _isKermesFuture => DateTime.now().isBefore(widget.event.startDate);
-  /// Toplam adim sayisi
+  /// Toplam adım sayısı
   int get _totalSteps => widget.isPosMode ? 3 : 4;
 
-  /// Adim baslik listesi
+  /// Adım başlık listesi
   List<String> get _stepTitles {
     if (widget.isPosMode) {
-      return ['Sepetim', 'Teslimat', 'Odeme'];
+      return ['Sepetim', 'Teslimat', 'Ödeme'];
     }
     return [
       'Sepetim',
       'Teslimat',
       'Bilgileriniz',
-      'Odeme',
+      'Ödeme',
     ];
   }
   
-  /// Ileri butonu aktif mi?
+  /// İleri butonu aktif mi?
   bool get _canProceed {
     final effectiveStep = _getEffectiveStep(_currentStep);
     switch (effectiveStep) {
@@ -309,39 +361,34 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       case 'delivery':
         if (_deliveryType == null) return false;
         if (_deliveryType == DeliveryType.kurye) return true;
-        if (widget.event.sectionDefs.length <= 1) return true;
+        
+        if (_deliveryType == DeliveryType.masada) {
+          if (widget.event.sectionDefs.isNotEmpty) {
+            if (_selectedSectionId == null) return false;
+          }
+          return _tableController.text.trim().isNotEmpty;
+        }
         
         if (_deliveryType == DeliveryType.gelAl) {
-          return _selectedSectionId != null;
+          if (widget.event.sectionDefs.length > 1) {
+            return _selectedSectionId != null;
+          }
+          return true;
         }
         
-        if (_deliveryType == DeliveryType.masada) {
-          return _selectedSectionId != null;
-        }
         return true;
       case 'info':
-        final user = FirebaseAuth.instance.currentUser;
-        final isGuest = user == null || user.isAnonymous;
-        
-        if (isGuest && _deliveryType == DeliveryType.kurye) {
-          return false;
-        }
-        
-        if (isGuest && (_deliveryType == DeliveryType.gelAl || _deliveryType == DeliveryType.masada)) {
-          bool isInfoOk = _nameController.text.trim().isNotEmpty;
-          if (_deliveryType == DeliveryType.masada) {
-            isInfoOk = isInfoOk && _tableController.text.trim().isNotEmpty;
-          }
-          return isInfoOk;
-        }
-        
         bool isInfoOk = _nameController.text.trim().isNotEmpty;
         if (_deliveryType == DeliveryType.masada) {
+          isInfoOk = isInfoOk && _selectedSectionId != null;
           isInfoOk = isInfoOk && _tableController.text.trim().isNotEmpty;
+        } else if (_deliveryType == DeliveryType.kurye) {
+          isInfoOk = isInfoOk && _completePhoneNumber.isNotEmpty && _streetController.text.trim().isNotEmpty && _zipController.text.trim().isNotEmpty && _cityController.text.trim().isNotEmpty;
         }
         return isInfoOk;
       case 'payment':
-        return true;
+        if (_donationAmount > 0 && _donationTarget == 'none') return false;
+        return _paymentMethod != null;
       default:
         return true;
     }
@@ -595,11 +642,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         customerPhone: _completePhoneNumber.isNotEmpty ? _completePhoneNumber : _phoneController.text.trim(),
         deliveryType: _deliveryType ?? DeliveryType.gelAl,
         tableNumber: _tableController.text.isNotEmpty ? _tableController.text : null,
-        address: null,
+        address: _streetController.text.isNotEmpty ? '${_streetController.text}, ${_zipController.text} ${_cityController.text}' : null,
         items: orderItems,
         totalAmount: totalAmount,
         donationAmount: _donationAmount,
-        paymentMethod: _paymentMethod,
+        paymentMethod: _paymentMethod ?? PaymentMethodType.cash,
         isPaid: _paymentMethod == PaymentMethodType.card,
         status: KermesOrderStatus.pending,
         createdAt: DateTime.now(),
@@ -782,7 +829,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = _darkBg(isDark);
+    final bgColor = _darkBg(context, isDark);
     
     // Auth state degisikligi algila (login sonrasi prefill icin)
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -800,8 +847,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     }
     
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.92,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.92,
       margin: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
         color: bgColor,
@@ -820,11 +869,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ),
           ),
           
-          // Header with step indicator
+          // Header with step indicator and progress bar
           _buildHeader(),
-          
-          // Progress indicator
-          _buildProgressBar(),
           
           // Content
           Expanded(
@@ -834,6 +880,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           // Footer with navigation buttons
           _buildFooter(),
         ],
+      ),
       ),
     );
   }
@@ -884,7 +931,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       ),
                     ),
                     Text(
-                      'Adim ${_currentStep + 1} / $_totalSteps',
+                      'Adım ${_currentStep + 1} / $_totalSteps',
                       style: TextStyle(
                         color: isDark ? Colors.grey[400]! : Colors.grey[600]!,
                         fontSize: 14,
@@ -934,25 +981,31 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          _buildProgressBar(),
           
-          // Kermes bilgileri (isim, adres, tarih)
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: _cardBg(isDark).withOpacity(0.5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKermesInfoBox(bool isDark) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: _cardBg(isDark).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Kermes Adi
+                // Kermes Adi
                 Row(
                   children: [
                     Icon(Icons.storefront, color: lokmaPink, size: 18),
@@ -1001,7 +1054,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     final start = widget.event.startDate;
                     final end = widget.event.endDate;
                     
-                    // Sadece tarih kısımlarını karşılaştır
                     final today = DateTime(now.year, now.month, now.day);
                     final startDate = DateTime(start.year, start.month, start.day);
                     final endDate = DateTime(end.year, end.month, end.day);
@@ -1012,11 +1064,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     final locale = Localizations.localeOf(context).languageCode;
                     String dayText = '';
                     if (currentDay < 1) {
-                      dayText = locale == 'de' ? 'Noch nicht begonnen' : 'Baslamadi';
+                      dayText = locale == 'de' ? 'Noch nicht begonnen' : 'Başlamadı';
                     } else if (currentDay > totalDays) {
                       dayText = locale == 'de' ? 'Beendet' : 'Sona Erdi';
                     } else {
-                      dayText = locale == 'de' ? 'Tag $currentDay / $totalDays' : '$currentDay. Gun / $totalDays';
+                      dayText = locale == 'de' ? 'Tag $currentDay / $totalDays' : '$currentDay. Gün / $totalDays';
                     }
                     
                     final dateStr = '${start.day.toString().padLeft(2, '0')}.${start.month.toString().padLeft(2, '0')} - ${end.day.toString().padLeft(2, '0')}.${end.month.toString().padLeft(2, '0')}.${end.year}';
@@ -1062,17 +1114,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ],
         ],
       ),
-    ),
-  ],
-),
-);
+    );
   }
   
   Widget _buildProgressBar() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
+    return Row(
         children: List.generate(_totalSteps, (index) {
           final isCompleted = index < _currentStep;
           final isCurrent = index == _currentStep;
@@ -1089,7 +1136,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ),
           );
         }),
-      ),
     );
   }
   
@@ -1153,6 +1199,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildKermesInfoBox(isDark),
               // Cart items
               ...cartState.items.map((cartItem) {
                 final item = cartItem.menuItem;
@@ -1309,7 +1356,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${cartState.totalItems} urun',
+                          '${cartState.totalItems} ürün',
                           style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[800], fontSize: 15.5, fontWeight: FontWeight.w600),
                         ),
                         Text(
@@ -1717,6 +1764,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildKermesInfoBox(isDark),
           // Secilen teslimat turunu ozet olarak goster
           if (_deliveryType != null) ...[
             Container(
@@ -1749,7 +1797,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Teslimat Turu',
+                          'Teslimat Türü',
                           style: TextStyle(
                             color: isDark ? Colors.grey[400] : Colors.grey[500],
                             fontSize: 12,
@@ -1791,7 +1839,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         _isGroupOrder = false;
                       });
                     },
-                    child: Text('Degistir', style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13)),
+                    child: Text('Değiştir', style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13)),
                   ),
                 ],
               ),
@@ -1909,7 +1957,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                      child: Column(
                        crossAxisAlignment: CrossAxisAlignment.start,
                        children: [
-                         Text("Secili Masa", style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[500])),
+                         Text("Seçili Masa", style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[500])),
                          Text("${_getSectionDisplayName(_selectedSectionId)}${_getSectionDisplayName(_selectedSectionId).isNotEmpty ? ' - ' : ''}Masa ${_tableController.text}", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 15)),
                        ],
                      ),
@@ -1921,7 +1969,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                        minimumSize: Size.zero,
                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                      ),
-                     child: Text("Degistir", style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13))
+                     child: Text("Değiştir", style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13))
                    )
                  ])
               ),
@@ -1931,7 +1979,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 child: TextButton.icon(
                   onPressed: _scanTableQR,
                   icon: Icon(Icons.qr_code_scanner, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
-                  label: Text('Baska bir masa QR kodu okut', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13)),
+                  label: Text('Başka bir masa QR kodu okut', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13)),
                 ),
               ),
             ] else ...[
@@ -1953,16 +2001,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               const SizedBox(height: 8),
               if (widget.isPosMode) ...[ 
                 _buildSectionSelector(includeFamily: true),
-              ] else ...[
-                if (!_showManualSectionSelection)
-                  Center(
-                    child: TextButton(
-                      onPressed: () => setState(() => _showManualSectionSelection = true),
-                      child: const Text('Masada QR kod yok mu? Bolum secerek devam et', style: TextStyle(color: Colors.grey)),
-                    ),
-                  ),
-                if (_showManualSectionSelection)
-                  _buildSectionSelector(includeFamily: true),
               ],
               if (widget.isPosMode) ...[
                 const SizedBox(height: 8),
@@ -2018,7 +2056,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     child: Text(
                       _deliveryType == DeliveryType.masada
                           ? 'Masadaki arkadaslariniza QR kodu okutarak hizlica gruba katilmalarini saglayin. Uzaktakilere ise link gondererek ayni siparise dahil edebilirsiniz.'
-                          : 'Link paylasarak yakinlarinizi ayni siparise davet edin. Herkes kendi urununu eklesin, tek seferde siparis verin!',
+                          : 'Link paylaşarak yakınlarınızı aynı siparişe davet edin. Herkes kendi ürününü eklesin, tek seferde sipariş verin!',
                       style: TextStyle(
                         fontSize: 13,
                         color: isDark ? Colors.blue.shade200 : Colors.blue.shade900,
@@ -2169,7 +2207,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     
     // Locale'e gore Bolum/Bereich
     final locale = Localizations.localeOf(context).languageCode;
-    final prefix = (locale == 'de') ? 'Bereich' : 'Bolum';
+    final prefix = (locale == 'de') ? 'Bereich' : 'Bölüm';
     return '$prefix $letter';
   }
 
@@ -2280,13 +2318,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     final user = FirebaseAuth.instance.currentUser;
     final isGuest = user == null || user.isAnonymous;
     
-    // Misafir + Kurye: kayit zorunlu
-    if (isGuest && _deliveryType == DeliveryType.kurye) {
-      return _buildGuestKuryeRegistrationRequired(isDark);
-    }
-    
-    // Misafir + Gel-Al/Masa: basit isim formu + LOKMA avantajlari
+    // Misafir + Gel-Al/Masa/Kurye: basit isim formu + LOKMA avantajlari
     if (isGuest) {
+      if (_deliveryType == DeliveryType.kurye) {
+        return _buildGuestKuryeLoginStep(isDark);
+      }
       return _buildGuestSimpleInfoStep(isDark);
     }
     
@@ -2301,8 +2337,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildKermesInfoBox(isDark),
+          if (!widget.isPosMode) ...[
           Text(
-            'Siparissiniz icin bilgilerinizi girin',
+            'Siparişiniz için bilgilerinizi girin',
             style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 20),
@@ -2318,7 +2356,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           IntlPhoneField(
             controller: _phoneController,
             decoration: InputDecoration(
-              labelText: 'Telefon (Tavsiye edilir)',
+              labelText: _deliveryType == DeliveryType.kurye ? 'Telefon *' : 'Telefon (Tavsiye edilir)',
               labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 15, fontWeight: FontWeight.w600),
               filled: true,
               fillColor: _cardBg(isDark),
@@ -2376,7 +2414,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       controller: _tableController,
                       label: 'Masa No',
                       icon: Icons.table_restaurant_outlined,
-                      hint: 'Orn: M9',
+                      hint: 'Örn: M9',
                       keyboardType: TextInputType.text,
                       readOnly: true,
                     ),
@@ -2386,7 +2424,154 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             ),
           ],
           
+          if (_deliveryType == DeliveryType.kurye) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: GooglePlaceAutoCompleteTextField(
+                    textEditingController: _addressController,
+                    googleAPIKey: AppSecrets.googlePlacesApiKey,
+                    boxDecoration: const BoxDecoration(),
+                    inputDecoration: InputDecoration(
+                      hintText: 'Teslimat Adresiniz',
+                      filled: true,
+                      fillColor: _cardBg(isDark),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    ),
+                    debounceTime: 800,
+                    isLatLngRequired: true,
+                    getPlaceDetailWithLatLng: (prediction) async {
+                      _addressController.text = prediction.description ?? '';
+                      if (prediction.lat != null && prediction.lng != null) {
+                        try {
+                          List<Placemark> placemarks = await placemarkFromCoordinates(
+                              double.parse(prediction.lat!),
+                              double.parse(prediction.lng!));
+                          if (placemarks.isNotEmpty) {
+                            final p = placemarks.first;
+                            if (mounted) {
+                              setState(() {
+                                _streetController.text = '${p.thoroughfare ?? ''} ${p.subThoroughfare ?? ''}'.trim();
+                                _zipController.text = p.postalCode ?? '';
+                                _cityController.text = p.locality ?? '';
+                              });
+                            }
+                          }
+                        } catch (e) {
+                          debugPrint('Geocoding error: $e');
+                        }
+                      }
+                    },
+                    itemClick: (prediction) {
+                      _addressController.text = prediction.description ?? '';
+                      FocusScope.of(context).unfocus();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _isLoadingLocation ? null : _getCurrentLocation,
+                  child: Container(
+                    height: 52,
+                    width: 52,
+                    decoration: BoxDecoration(
+                      color: _cardBg(isDark),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: _isLoadingLocation 
+                        ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+                        : const Icon(Icons.my_location, color: lokmaPink),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: _buildTextField(
+                    controller: _streetController,
+                    label: 'Sokak ve Kapı No',
+                    icon: Icons.signpost_outlined,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: _buildTextField(
+                    controller: _zipController,
+                    label: 'Posta Kodu',
+                    icon: Icons.local_post_office_outlined,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: _buildTextField(
+                    controller: _cityController,
+                    label: 'Şehir',
+                    icon: Icons.location_city_outlined,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          ],
+          
           const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildGuestKuryeLoginStep(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+      child: Column(
+        children: [
+          Icon(Icons.lock_outline, size: 48, color: lokmaPink),
+          const SizedBox(height: 16),
+          Text(
+            'Kurye ile sipariş vermek için LOKMA hesabınıza giriş yapmalısınız.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // close checkout sheet
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) => const LoginBottomSheet(),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: lokmaPink,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Giriş Yap / Kayıt Ol', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
         ],
       ),
     );
@@ -2402,9 +2587,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildKermesInfoBox(isDark),
           // Isim alani (zorunlu)
           Text(
-            'Siparissiniz icin adinizi girin',
+            'Siparişiniz için adınızı girin',
             style: TextStyle(color: subtleColor, fontSize: 15, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 14),
@@ -2477,6 +2663,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         children: [
+          _buildKermesInfoBox(isDark),
           // Uyari ikonu
           Container(
             width: 72,
@@ -2970,6 +3157,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildKermesInfoBox(isDark),
           // Özet kartı
           Container(
             padding: const EdgeInsets.all(16),
@@ -3634,7 +3822,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${cartState.totalItems} urun',
+                      '${cartState.totalItems} ürün',
                       style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                     Text(
@@ -3720,12 +3908,54 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       case DeliveryType.gelAl:
         return 'Gel Al - Tezgahtan alacaksiniz';
       case DeliveryType.masada:
+        if (_tableController.text.isNotEmpty) {
+           final section = _getSectionDisplayName(_selectedSectionId);
+           final sectionStr = section.isNotEmpty ? '$section - ' : '';
+           return 'Masaya Servis ($sectionStr${_tableController.text})';
+        }
         return 'Masaya Servis';
       case DeliveryType.kurye:
         return 'Kurye ile Teslimat';
       default:
         return '';
     }
+  }
+
+  void _showCustomDonationDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Özel Destek Miktarı')),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            hintText: 'Örn: 15.00',
+            suffixText: '€', // Veya CurrencyUtils.getCurrencySymbol()
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(tr('common.cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final val = double.tryParse(controller.text.replaceAll(',', '.'));
+              if (val != null && val > 0) {
+                setState(() {
+                  _donationAmount = val;
+                  if (_donationTarget == 'none') _donationTarget = 'kermesOrg';
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: Text(tr('common.confirm')),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Yuvarlama ile Destek widget'i - minimal, zarif tasarim
@@ -3736,15 +3966,19 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     final String? fundUrl = null; // TODO: widget.event.donationFundUrl
     final bool hasFund = fundName != null && fundName.isNotEmpty;
     
-    // Yuvarlama hesaplamalari - bir sonraki euro, 5, ve bir sonraki 5
-    final round1 = _roundUpTo(baseTotal, 1.00);
-    final round5 = _roundUpTo(baseTotal, 5.00);
-    final round5next = round5 + 5.0;
+    final next5 = (baseTotal / 5.0).ceil() * 5.0;
+    double target1 = next5;
+    if (target1 - baseTotal < 1.0) target1 += 5.0;
+    
+    double target2 = (target1 / 10.0).ceil() * 10.0;
+    if (target2 <= target1) target2 += 10.0;
+
+    double target3 = target2 + 10.0;
     
     final rawDonations = <double>[
-      double.parse((round1 - baseTotal).toStringAsFixed(2)),
-      double.parse((round5 - baseTotal).toStringAsFixed(2)),
-      double.parse((round5next - baseTotal).toStringAsFixed(2)),
+      double.parse((target1 - baseTotal).toStringAsFixed(2)),
+      double.parse((target2 - baseTotal).toStringAsFixed(2)),
+      double.parse((target3 - baseTotal).toStringAsFixed(2)),
     ];
     // Deduplicate & sifir olanlari filtrele
     final seen = <double>{};
@@ -3788,32 +4022,49 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       _donationTarget = 'none';
                     });
                   },
-                  child: Text(
-                    'Iptal',
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[500] : Colors.grey[400],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ),
             ],
           ),
+          
+          const SizedBox(height: 10),
+          Text(
+            tr('Bir Kur\'an-ı Kerim Talebesine ikramda bulunmak ister misiniz?\nPara üstünüzü yuvarlayarak destek olabilirsiniz.'),
+            style: TextStyle(
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              fontSize: 13,
+              height: 1.4,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
           const SizedBox(height: 12),
           
-          // Yuvarlama secenekleri - sadece bagis miktari goster
-          Row(
+          // Yuvarlama secenekleri
+          Container(
+            width: double.infinity,
+            alignment: Alignment.center,
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+            runSpacing: 10,
             children: [
-              for (int i = 0; i < options.length; i++) ...[
-                if (i > 0) const SizedBox(width: 10),
+              for (int i = 0; i < options.length; i++)
                 GestureDetector(
                   onTap: () {
                     HapticFeedback.selectionClick();
                     setState(() {
                       _donationAmount = _donationAmount == options[i] ? 0.0 : options[i];
-                      if (_donationAmount > 0 && _donationTarget == 'none') {
-                        _donationTarget = 'kermesOrg';
-                      }
                       if (_donationAmount == 0) _donationTarget = 'none';
                     });
                   },
@@ -3844,39 +4095,72 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     ),
                   ),
                 ),
-              ],
-            ],
-          ),
-          
-          // Kurulus secimi (bagis secildiginde goster)
-          if (selectedDonation > 0) ...[
-            const SizedBox(height: 14),
-            // Kermes organizasyonu
-            _buildCharityOption(
-              isDark: isDark,
-              label: kermesOrgName,
-              icon: Icons.mosque,
-              isSelected: _donationTarget == 'kermesOrg',
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _donationTarget = 'kermesOrg');
-              },
-            ),
-            // Ek hayir kurumu (varsa)
-            if (hasFund) ...[
-              const SizedBox(height: 8),
-              _buildCharityOption(
-                isDark: isDark,
-                label: fundName,
-                icon: Icons.favorite,
-                isSelected: _donationTarget == 'fund',
-                url: fundUrl,
+                
+              // Diger butonu
+              GestureDetector(
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  setState(() => _donationTarget = 'fund');
+                  _showCustomDonationDialog();
                 },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: (selectedDonation > 0 && !options.contains(selectedDonation))
+                        ? Colors.green
+                        : isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: (selectedDonation > 0 && !options.contains(selectedDonation))
+                          ? Colors.green
+                          : isDark ? Colors.grey[700]! : Colors.grey.shade300,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    (selectedDonation > 0 && !options.contains(selectedDonation))
+                        ? '+${selectedDonation.toStringAsFixed(2)} $currency'
+                        : 'Diğer $currency',
+                    style: TextStyle(
+                      color: (selectedDonation > 0 && !options.contains(selectedDonation))
+                          ? Colors.white
+                          : isDark ? Colors.white70 : Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
               ),
             ],
+          ),
+        ),
+        
+        const SizedBox(height: 14),
+          // Kurulus secimi her zaman gorunur (collaps kaldirildi)
+          _buildCharityOption(
+            isDark: isDark,
+            label: kermesOrgName,
+            icon: Icons.mosque,
+            isSelected: _donationTarget == 'kermesOrg',
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() => _donationTarget = 'kermesOrg');
+            },
+          ),
+          // Ek hayir kurumu (varsa)
+          if (hasFund) ...[
+            const SizedBox(height: 8),
+            _buildCharityOption(
+              isDark: isDark,
+              label: fundName,
+              icon: Icons.favorite,
+              isSelected: _donationTarget == 'fund',
+              url: fundUrl,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _donationTarget = 'fund');
+              },
+            ),
           ],
         ],
       ),
@@ -4095,7 +4379,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, null),
-                  child: Text('Iptal', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey)),
+                  child: Text('İptal', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey)),
                 ),
                 ElevatedButton(
                   onPressed: selectedAmount != null && selectedAmount! >= orderTotal

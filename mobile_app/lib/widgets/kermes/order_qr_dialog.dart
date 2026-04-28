@@ -407,7 +407,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(tr('common.cancel_verb')),
+            child: Text(tr('common.cancel')),
           ),
         ],
       ),
@@ -652,27 +652,6 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Üst bilgi - kompakt
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: lokmaPink.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'Bu QR kodu tezgah personeline gösterin',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
                       // QR Kod - kompakt
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -683,7 +662,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         child: QrImageView(
                           data: widget.orderId,
                           version: QrVersions.auto,
-                          size: 160,
+                          size: 180,
                           backgroundColor: Colors.white,
                           eyeStyle: const QrEyeStyle(
                             eyeShape: QrEyeShape.square,
@@ -696,7 +675,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         ),
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 20),
 
                       // Sipariş Numarası başlık + numara
                       Text(
@@ -721,12 +700,12 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                _currentOrderNumber,
+                                '#$_currentOrderNumber',
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 3,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 2,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -737,12 +716,12 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 16),
 
                       // Ödeme Durumu - kompakt
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                            horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
                           color: _isPaid
                               ? Colors.green.withOpacity(0.15)
@@ -759,15 +738,15 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             Icon(
                               _isPaid ? Icons.check_circle : Icons.schedule,
                               color: _isPaid ? Colors.green : Colors.amber,
-                              size: 22,
+                              size: 20,
                             ),
                             const SizedBox(width: 10),
                             Text(
                               _isPaid ? 'ÖDEME YAPILDI' : 'ÖDEME BEKLENİYOR',
                               style: TextStyle(
                                 color: _isPaid ? Colors.green : Colors.amber,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -775,20 +754,59 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 16),
 
-                      // Ödeme Bekleniyor açıklama metni
+                      // Birleştirilmiş Açıklama Metni (Modern Kart Görünümü)
                       if (!_isPaid)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            'Siparişiniz ödeme yapıldıktan sonra\nhazırlanmaya başlanacaktır',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 12,
-                              height: 1.3,
-                            ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.amber.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.info_outline_rounded, color: Colors.amber[400], size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Ödeme yapmak için bu QR kodu tezgah personeline gösterin.\n\nSiparişiniz ödeme alındıktan sonra hazırlanmaya başlanacaktır.',
+                                  style: TextStyle(
+                                    color: Colors.grey[300],
+                                    fontSize: 13,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.check_circle_outline_rounded, color: Colors.green[400], size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Ödemeniz başarıyla alındı! Siparişiniz şu an hazırlanıyor. Lütfen numaranızla teslimat noktasından alınız.',
+                                  style: TextStyle(
+                                    color: Colors.grey[300],
+                                    fontSize: 13,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 
