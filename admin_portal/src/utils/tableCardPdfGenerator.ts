@@ -357,10 +357,10 @@ function renderCardPage(
   }
   const sponsorStartY = bottomBarY - sponsorH;
 
-  const divY = sponsorStartY - 3;
+  const divY = sponsorStartY - 0.5; // Moved down by 2.5mm to prevent Afiyet Olsun overlap
 
   // "Afiyet Olsun!" - Script/Cursive font right above footer
-  const afiyetY = divY - 1.5; // Shifted down a bit
+  const afiyetY = divY - 4; // Shifted up relative to the new divY to maintain its screen position
   doc.setFont('DancingScript', 'normal');
   doc.setFontSize(26);
   doc.setTextColor(...LOKMA_RED);
@@ -418,7 +418,7 @@ function renderCardPage(
   doc.setFont('Roboto', 'normal');
   doc.setFontSize(5);
   doc.setTextColor(190, 190, 190);
-  doc.text('DIN A6 \u00b7 105\u00d7148 mm', A6_WIDTH - PAD, A6_HEIGHT - 2, { align: 'right' });
+  doc.text('DIN A6 \u00b7 105\u00d7148 mm', A6_WIDTH - PAD, A6_HEIGHT - 0.5, { align: 'right' }); // Moved down from A6_HEIGHT - 2
 
   // BOTTOM BAR: Partner text + Logo (left) + badges (right)
   // LOKMA logo
@@ -430,7 +430,7 @@ function renderCardPage(
   doc.setFont('Roboto', 'normal');
   doc.setFontSize(6); // increased slightly from 5 as requested
   doc.setTextColor(80, 80, 80);
-  doc.text(partnerText, PAD, bottomBarY + 3.5, { align: 'left' });
+  doc.text(partnerText, PAD, bottomBarY + 4.8, { align: 'left' }); // Moved down from bottomBarY + 3.5
 
   const rowY = bottomBarY + 5.5; // Adjusted spacing between text and LOKMA logo
 
