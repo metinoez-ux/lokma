@@ -220,7 +220,7 @@ function renderCardPage(
  // ================================================================
  // TOP SECTION: Business Name + Table Number
  // ================================================================
- const contentStartY = stripH + 6; // offset past the strip
+ const contentStartY = stripH + 8.5; // offset past the strip
 
  doc.setFont('Roboto', 'bold');
  doc.setFontSize(16);
@@ -280,7 +280,7 @@ function renderCardPage(
   // ================================================================
   const qrSize = 42;
   const qrX = (A6_WIDTH - qrSize) / 2;
-  const qrY = tableY + 8; // restored space
+  const qrY = tableY + 5.5; // reduced space to keep QR in place while text moved down
 
   // White pad behind QR
   doc.setFillColor(255, 255, 255);
