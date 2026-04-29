@@ -31,7 +31,7 @@ interface PerfOrderStats {
  avgDeliveryTime: number;
 }
 
-export default function StatisticsPage() {
+export default function StatisticsPage({ embedded = false, isKermesMode = false }: { embedded?: boolean; isKermesMode?: boolean; kermesStartDate?: Date }) {
 
  const t = useTranslations('AdminStatistics');
  const { admin, loading: adminLoading } = useAdmin();
@@ -73,16 +73,20 @@ export default function StatisticsPage() {
 
  const router = useRouter();
 
- // Auto-set business filter for non-super admins
- useEffect(() => {
- if (admin && admin.adminType !== 'super') {
-   if (admin.kermesId) {
-     router.push(`/admin/kermes/${admin.kermesId}?tab=dashboard`);
-   } else if (adminBusinessId) {
-     setBusinessFilter(adminBusinessId);
-   }
- }
- }, [admin, adminBusinessId, router]);
+  // Auto-set business filter for non-super admins
+  useEffect(() => {
+    if (embedded) return;
+    if (admin && admin.adminType !== 'super') {
+      const isKermesContextOnly = admin.adminType === 'kermes_staff' || admin.adminType === 'kermes' || admin.businessType === 'kermes';
+      const kTarget = admin.kermesId || ((admin as any).kermesAssignments && (admin as any).kermesAssignments[0] && (admin as any).kermesAssignments[0].kermesId) || ((admin as any).assignments?.find((a: any) => a.entityType === 'kermes')?.entityId);
+      
+      if (isKermesContextOnly && kTarget && kTarget !== 'NONE') {
+        router.replace(`/admin/kermes/${kTarget}?tab=dashboard`);
+      } else if (adminBusinessId) {
+        setBusinessFilter(adminBusinessId);
+      }
+    }
+  }, [admin, adminBusinessId, router, embedded]);
 
  // Calculate date range based on filter
  const getDateRange = (filter: string, customStart?: string, customEnd?: string) => {
@@ -539,6 +543,7 @@ export default function StatisticsPage() {
  ) : (
  <div className="max-w-7xl mx-auto space-y-6">
  {/* Summary Cards */}
+ {!isKermesMode && (
  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
  <div className="bg-card rounded-xl p-4 text-center">
  <p className="text-3xl font-bold text-blue-800 dark:text-blue-400">
@@ -606,6 +611,7 @@ export default function StatisticsPage() {
  <p className="text-xs text-muted-foreground mt-1">{t('en_yogun_saat')}</p>
  </div>
  </div>
+ )}
 
  {/* Insights Row */}
  <div className="grid md:grid-cols-3 gap-4">
