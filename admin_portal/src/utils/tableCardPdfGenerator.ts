@@ -481,8 +481,8 @@ function renderCardPage(
   // TUNA Logo in the bottom center
   if (tunaLogoBase64) {
     try {
-      const tunaH = 6;
-      const tunaW = tunaH * 2.31;
+      const tunaH = badgeH;
+      const tunaW = badgeH * badgeRatio;
       const tunaX = (A6_WIDTH - tunaW) / 2;
       const tunaY = rowY + (logoH - tunaH) / 2;
       doc.addImage(tunaLogoBase64, 'PNG', tunaX, tunaY, tunaW, tunaH);
@@ -537,7 +537,7 @@ export async function generateTableCardPDF(
  fetchImageAsBase64('/app_store_badge.png').catch(() => ''),
  fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
  options?.businessLogoUrl ? fetchImageAsBase64(options.businessLogoUrl).catch(() => undefined) : Promise.resolve(undefined),
- fetchImageAsBase64('/tuna_logo_pill.png').catch(() => undefined)
+ fetchImageAsBase64('/tuna_logo_04_2026.png').catch(() => undefined)
  ]);
 
  const sponsorLogos = await fetchSponsorLogos(options?.sponsorLogos);
@@ -569,7 +569,7 @@ export async function generateDualLangTableCardPDF(
  fetchImageAsBase64('/app_store_badge.png').catch(() => ''),
  fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
  options?.businessLogoUrl ? fetchImageAsBase64(options.businessLogoUrl).catch(() => undefined) : Promise.resolve(undefined),
- fetchImageAsBase64('/tuna_logo_pill.png').catch(() => undefined)
+ fetchImageAsBase64('/tuna_logo_04_2026.png').catch(() => undefined)
  ]);
 
  const sponsorLogos = await fetchSponsorLogos(options?.sponsorLogos);
@@ -621,7 +621,7 @@ export async function downloadAllTableCardsAsSinglePDF(
  fetchImageAsBase64('/app_store_badge.png').catch(() => ''),
  fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
  options?.businessLogoUrl ? fetchImageAsBase64(options.businessLogoUrl).catch(() => undefined) : Promise.resolve(undefined),
- fetchImageAsBase64('/tuna_logo_pill.png').catch(() => undefined)
+ fetchImageAsBase64('/tuna_logo_04_2026.png').catch(() => undefined)
  ]);
 
  const sponsorLogos = await fetchSponsorLogos(options?.sponsorLogos);
