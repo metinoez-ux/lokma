@@ -175,6 +175,20 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       }
     }
 
+    // Normal restoran QR kodunu yakala ve reddet
+    if (result.contains('/dinein/') && !result.contains('/kermes-dinein/')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bu QR kod normal bir işletmeye ait. Lütfen sadece kermes QR kodlarını okutunuz.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
     // Masa QR kodu: /kermes-dinein/{kermesId}/table/{tableNo}
     if (result.contains('/kermes-dinein/')) {
       final uri = Uri.tryParse(result);

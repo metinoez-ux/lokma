@@ -1423,6 +1423,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         'widget': isOnShift ? WaiterTablesTab(
           businessId: capabilities.businessId!,
           isDark: isDark,
+          isKermes: StaffRoleService().businessType == 'kermes',
           onTableSelected: (session, num) {
             final query = Uri(path: '/waiter-order', queryParameters: {
               'businessId': capabilities.businessId,

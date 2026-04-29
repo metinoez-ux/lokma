@@ -220,7 +220,7 @@ function renderCardPage(
  // ================================================================
  // TOP SECTION: Business Name + Table Number
  // ================================================================
- const contentStartY = stripH + 8.5; // offset past the strip
+ const contentStartY = stripH + 14.5; // Moved down to get closer to QR
 
  doc.setFont('Roboto', 'bold');
  doc.setFontSize(16);
@@ -291,58 +291,58 @@ function renderCardPage(
   // CTA + STEPS
   // ================================================================
   // Red CTA
-  const ctaY = qrY + qrSize + 10;
+  const ctaY = qrY + qrSize + 8;
   doc.setFont('Roboto', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(...LOKMA_RED);
   doc.text(txt.cta, A6_WIDTH / 2, ctaY, { align: 'center' });
 
   // Bullet steps
-  let currentY = ctaY + 7;
+  let currentY = ctaY + 6;
   const leftX = PAD + 5;
 
   txt.steps.forEach((step) => {
-  // Bullet dot (dark)
-  doc.setFillColor(40, 40, 40);
-  doc.circle(leftX - 3.5, currentY - 1.2, 1.2, 'F');
+    // Bullet dot (dark)
+    doc.setFillColor(40, 40, 40);
+    doc.circle(leftX - 3.5, currentY - 1.2, 1.2, 'F');
 
-  // Title (bold)
-  doc.setFont('Roboto', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 30);
-  doc.text(step.title, leftX, currentY);
-  const tw = doc.getTextWidth(step.title + ' ');
+    // Title (bold)
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+    doc.text(step.title, leftX, currentY);
+    const tw = doc.getTextWidth(step.title + ' ');
 
-  // Description (normal)
-  doc.setFont('Roboto', 'normal');
-  doc.setFontSize(11);
-  doc.setTextColor(60, 60, 60);
+    // Description (normal)
+    doc.setFont('Roboto', 'normal');
+    doc.setFontSize(10.5); // Slightly smaller
+    doc.setTextColor(60, 60, 60);
 
-  const maxW = A6_WIDTH - PAD - leftX - tw;
-  if (maxW > 25) {
-  const descLines = doc.splitTextToSize(step.desc, maxW);
-   if (descLines.length <= 1) {
-   doc.text(step.desc, leftX + tw, currentY);
-   currentY += 5.5;
-   } else {
-   // First part on same line, rest below indented
-   doc.text(descLines[0], leftX + tw, currentY);
-   for (let i = 1; i < descLines.length; i++) {
-   currentY += 4.5;
-   doc.text(descLines[i], leftX + tw, currentY);
-   }
-   currentY += 5.5;
-   }
-   } else {
-   // Full wrap below title
-   const descLines = doc.splitTextToSize(step.desc, A6_WIDTH - PAD * 2 - 5);
-   doc.text(descLines[0], leftX + tw, currentY);
-   for (let i = 1; i < descLines.length; i++) {
-   currentY += 4.5;
-   doc.text(descLines[i], leftX + tw, currentY);
-   }
-   currentY += 5.5;
-   }
+    const maxW = A6_WIDTH - PAD - leftX - tw;
+    if (maxW > 25) {
+      const descLines = doc.splitTextToSize(step.desc, maxW);
+      if (descLines.length <= 1) {
+        doc.text(step.desc, leftX + tw, currentY);
+        currentY += 4.5;
+      } else {
+        // First part on same line, rest below indented
+        doc.text(descLines[0], leftX + tw, currentY);
+        for (let i = 1; i < descLines.length; i++) {
+          currentY += 4.0; // reduced spacing
+          doc.text(descLines[i], leftX + tw, currentY);
+        }
+        currentY += 4.5;
+      }
+    } else {
+      // Full wrap below title
+      const descLines = doc.splitTextToSize(step.desc, A6_WIDTH - PAD * 2 - 5);
+      doc.text(descLines[0], leftX + tw, currentY);
+      for (let i = 1; i < descLines.length; i++) {
+        currentY += 4.0; // reduced spacing
+        doc.text(descLines[i], leftX + tw, currentY);
+      }
+      currentY += 4.5;
+    }
   });
 
   // ================================================================

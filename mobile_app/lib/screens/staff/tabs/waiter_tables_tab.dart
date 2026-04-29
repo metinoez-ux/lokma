@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 class WaiterTablesTab extends ConsumerWidget {
   final String businessId;
   final bool isDark;
+  final bool isKermes;
   final Function(TableSession, int) onTableSelected;
   final Function(int) onEmptyTableSelected;
   final Function()? onWalkinOrderSelected;
@@ -14,6 +15,7 @@ class WaiterTablesTab extends ConsumerWidget {
     super.key,
     required this.businessId,
     required this.isDark,
+    this.isKermes = false,
     required this.onTableSelected,
     required this.onEmptyTableSelected,
     this.onWalkinOrderSelected,
@@ -27,9 +29,19 @@ class WaiterTablesTab extends ConsumerWidget {
 
     // Modern Table Grid Implementation
     return StreamBuilder<List<TableSession>>(
-      stream: TableSessionService().getActiveSessionsStream(businessId),
+      stream: TableSessionService().getActiveSessionsStream(businessId, isKermes: isKermes),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Masa bilgileri alınırken hata oluştu:\n${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+            ),
+          );
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
         
         final sessions = snapshot.data ?? [];
         

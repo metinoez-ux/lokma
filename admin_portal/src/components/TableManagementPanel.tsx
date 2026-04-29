@@ -33,9 +33,9 @@ interface GenderTypeConfig {
 }
 
 const FALLBACK_GENDER_TYPES: GenderTypeConfig[] = [
-  { key: 'mixed', label: 'Karisik / Aile', icon: 'A', color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40', allowedStaffGender: 'all', isDefault: true },
-  { key: 'women_only', label: 'Kadin Bolumu', icon: 'K', color: 'bg-pink-500/20 text-pink-400 border-pink-500/40', allowedStaffGender: 'female', isDefault: true },
-  { key: 'men_only', label: 'Erkek Bolumu', icon: 'E', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40', allowedStaffGender: 'male', isDefault: true },
+  { key: 'mixed', label: 'Karışık / Aile', icon: 'A', color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40', allowedStaffGender: 'all', isDefault: true },
+  { key: 'women_only', label: 'Kadın Bölümü', icon: 'K', color: 'bg-pink-500/20 text-pink-400 border-pink-500/40', allowedStaffGender: 'female', isDefault: true },
+  { key: 'men_only', label: 'Erkek Bölümü', icon: 'E', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40', allowedStaffGender: 'male', isDefault: true },
 ];
 
 const getGenderDisplay = (key: string, types: GenderTypeConfig[]) => {
@@ -86,6 +86,7 @@ export default function TableManagementPanel({
   // Hangi bolumlerin QR bolumu acik
   const [expandedQR, setExpandedQR] = useState<string[]>([]);
   const [editingSection, setEditingSection] = useState<{oldName: string, newName: string} | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
 
   const showToast = (msg: string, type: "success" | "error") => {
     setToast({ msg, type });
@@ -111,15 +112,18 @@ export default function TableManagementPanel({
         setTables(d.tables || []);
         setMaxReservationTables(d.maxReservationTables || 0);
         setTableCapacity(d.tableCapacity || 0);
-      setDeliveryZones(d.deliveryZones || []);
+        setDeliveryZones(d.deliveryZones || []);
+        setAvatarUrl(d.logoUrl || d.logo || d.avatar || "");
         const v2 = d.tableSectionsV2 as SectionDef[] | undefined;
         if (v2 && v2.length > 0) {
           setSectionDefs(v2);
           setTableSections(v2.map((s: SectionDef) => s.name));
+          setExpandedQR(v2.map((s: SectionDef) => s.name));
         } else {
           const legacy = (d.tableSections || []) as string[];
           setTableSections(legacy);
           setSectionDefs(legacy.map((name: string) => ({ name, genderRestriction: 'mixed' as const })));
+          setExpandedQR(legacy);
         }
       }
     } catch (e) {
@@ -347,15 +351,15 @@ export default function TableManagementPanel({
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-base font-semibold text-white">{t("bolumler") || "Bolumler"}</h3>
-              <p className="text-xs text-gray-400 mt-1">Masalarin yer alacagi bolumleri olusturun. Her bolum kendi masalarini ve QR kodlarini icerir.</p>
+              <h3 className="text-base font-semibold text-white">{t("bolumler") || "Bölümler"}</h3>
+              <p className="text-xs text-gray-400 mt-1">Masaların yer alacağı bölümleri oluşturun. Her bölüm kendi masalarını ve QR kodlarını içerir.</p>
             </div>
             {!showSectionInput ? (
               <button
                 onClick={() => setShowSectionInput(true)}
                 className="px-3 py-1.5 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition shadow-sm flex items-center gap-1"
               >
-                <span className="font-bold text-lg leading-none">+</span> {t("bolumEkle") || "Bolum Ekle"}
+                {t("bolumEkle") || "+ Bölüm Ekle"}
               </button>
             ) : (
               <div className="flex flex-col gap-2">
@@ -370,10 +374,11 @@ export default function TableManagementPanel({
                         key={gt.key}
                         onClick={() => {
                           const sectionName = gt.label;
-                          if (tableSections.includes(sectionName)) { showToast("Bu bolum zaten mevcut!", "error"); return; }
+                          if (tableSections.includes(sectionName)) { showToast("Bu bölüm zaten mevcut!", "error"); return; }
                           const newSections = [...tableSections, sectionName];
                           const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: gt.key }];
                           setSectionDefs(newDefs);
+                          setExpandedQR(prev => [...prev, sectionName]);
                           updateAndSave(undefined, undefined, undefined, newSections, newDefs);
                           setShowSectionInput(false);
                         }}
@@ -395,12 +400,13 @@ export default function TableManagementPanel({
                         if (!selectedSectionType.trim()) return;
                         const sectionName = selectedSectionType.trim();
                         if (tableSections.includes(sectionName)) {
-                          showToast("Bu bolum zaten mevcut!", "error");
+                          showToast("Bu bölüm zaten mevcut!", "error");
                           return;
                         }
                         const newSections = [...tableSections, sectionName];
                         const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: 'mixed' }];
                         setSectionDefs(newDefs);
+                        setExpandedQR(prev => [...prev, sectionName]);
                         updateAndSave(undefined, undefined, undefined, newSections, newDefs);
                         setSelectedSectionType('');
                         setShowSectionInput(false);
@@ -419,6 +425,7 @@ export default function TableManagementPanel({
                       const newSections = [...tableSections, sectionName];
                       const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: 'mixed' }];
                       setSectionDefs(newDefs);
+                      setExpandedQR(prev => [...prev, sectionName]);
                       updateAndSave(undefined, undefined, undefined, newSections, newDefs);
                       setSelectedSectionType('');
                       setShowSectionInput(false);
@@ -429,7 +436,7 @@ export default function TableManagementPanel({
                   <button
                     onClick={() => { setSelectedSectionType(''); setShowSectionInput(false); }}
                     className="px-2 py-1.5 text-sm text-gray-400 hover:text-white transition"
-                  >Iptal</button>
+                  >İptal</button>
                 </div>
               </div>
             )}
@@ -439,7 +446,7 @@ export default function TableManagementPanel({
         {/* Bolum kartlari - masalar ve QR kodlari icinde */}
         {tableSections.length === 0 && (
           <span className="text-sm font-medium text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 w-full mb-2 block">
-            Once bolumler olusturun, sonra her bolume masalar ekleyebilirsiniz.
+            Önce bölümler oluşturun, sonra her bölüme masalar ekleyebilirsiniz.
           </span>
         )}
 
@@ -482,7 +489,7 @@ export default function TableManagementPanel({
                       <span 
                         className="text-white font-semibold flex items-center gap-1 cursor-pointer hover:text-purple-300 transition" 
                         onClick={() => setEditingSection({oldName: section, newName: section})}
-                        title="Ismi Degistirmek Icin Tikla"
+                        title="İsmi Değiştirmek İçin Tıkla"
                       >
                          {section} <span className="material-symbols-outlined text-[13px] opacity-60">edit</span>
                       </span>
@@ -519,13 +526,13 @@ export default function TableManagementPanel({
                     <button
                       onClick={() => addSingleTable(section)}
                       className="px-2.5 py-1 text-xs bg-teal-600/80 hover:bg-teal-500 text-white rounded-lg transition font-medium"
-                      title="Bu bolume tek masa ekle"
+                      title="Bu bölüme tek masa ekle"
                     >+ Masa</button>
                     {/* Bolum sil */}
                     <button
                       onClick={() => {
                         if (sectionTables.length > 0) {
-                          showToast("Hata: Bu bolumde masalar var! Once masalari silin.", "error");
+                          showToast("Hata: Bu bölümde masalar var! Önce masaları silin.", "error");
                           return;
                         }
                         const newSections = tableSections.filter((_, i) => i !== idx);
@@ -567,9 +574,9 @@ export default function TableManagementPanel({
                         }
                       }}
                       className="px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white rounded-md text-xs font-medium transition"
-                    >Toplu Olustur</button>
+                    >Toplu Oluştur</button>
                     <span className="text-[10px] text-gray-500">
-                      {gr === 'women_only' ? 'Cift(2,4,6..)' : gr === 'men_only' ? 'Tek(1,3,5..)' : 'Ardisik(1,2,3..)'} numara atar
+                      {gr === 'women_only' ? 'Çift(2,4,6..)' : gr === 'men_only' ? 'Tek(1,3,5..)' : 'Ardışık(1,2,3..)'} numara atar
                     </span>
                   </div>
                 </div>
@@ -583,14 +590,14 @@ export default function TableManagementPanel({
                       if (sectionSelected.length === 0) return null;
                       return (
                         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mb-2 flex items-center justify-between flex-wrap gap-2">
-                          <span className="text-amber-400 text-xs font-medium">{sectionSelected.length} Masa Secildi</span>
+                          <span className="text-amber-400 text-xs font-medium">{sectionSelected.length} Masa Seçildi</span>
                           <div className="flex items-center gap-2">
                             <select
-                              title="Bolum Secimi"
+                              title="Bölüm Seçimi"
                               className="bg-gray-800 text-white px-2 py-1 rounded border border-gray-600 text-xs"
                               id={`bulkAssign-${idx}`} defaultValue=""
                             >
-                              <option value="" disabled>Bolume Ata...</option>
+                              <option value="" disabled>Bölüme Ata...</option>
                               {tableSections.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                             <button
@@ -600,13 +607,13 @@ export default function TableManagementPanel({
                                 const updated = tables.map(t => sectionSelected.includes(t.label) ? { ...t, section: sel } : t);
                                 updateAndSave(updated);
                                 setSelectedTableLabels(prev => prev.filter(l => !sectionSelected.includes(l)));
-                                showToast(`${sectionSelected.length} masa "${sel}" bolumune atandi.`, "success");
+                                showToast(`${sectionSelected.length} masa "${sel}" bölümüne atandı.`, "success");
                               }}
                               className="px-2 py-1 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded transition"
                             >Uygula</button>
                             <button
                               onClick={() => {
-                                if (confirm(`Secili ${sectionSelected.length} masayi silmek istediginize emin misiniz?`)) {
+                                if (confirm(`Seçili ${sectionSelected.length} masayı silmek istediğinize emin misiniz?`)) {
                                   const updated = tables.filter(t => !sectionSelected.includes(t.label));
                                   updateAndSave(updated, updated.length);
                                   setSelectedTableLabels(prev => prev.filter(l => !sectionSelected.includes(l)));
@@ -636,12 +643,11 @@ export default function TableManagementPanel({
                             <div className="flex items-center gap-1.5">
                               <input
                                 type="checkbox"
-                                title={`Masa ${table.label} Secimi`}
+                                title={`Masa ${table.label} Seçimi`}
                                 checked={selectedTableLabels.includes(table.label)}
                                 readOnly
                                 className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-700 text-amber-500 focus:ring-amber-500 flex-shrink-0"
                               />
-                              <span className="text-muted-foreground/80 text-xs font-bold leading-none">M</span>
                               <input
                                 type="text"
                                 value={table.label}
@@ -675,68 +681,135 @@ export default function TableManagementPanel({
                 {/* QR kodlari (toggle ile acilir) */}
                 {sectionTables.length > 0 && (
                   <div className="px-4 pb-3">
-                    <button
-                      onClick={() => setExpandedQR(prev => prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section])}
-                      className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition mb-2"
-                    >
-                      <span className={`transition-transform ${isQrExpanded ? 'rotate-90' : ''}`}>&#9654;</span>
-                      QR Kodlari ({sectionTables.length})
-                    </button>
+                    <div className="flex items-center justify-between mb-3 border-t border-gray-700 pt-3 mt-3">
+                      <span className="text-sm font-semibold text-gray-300">QR Kod Baskıları ({sectionTables.length})</span>
+                      <button
+                        onClick={() => setExpandedQR(prev => prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section])}
+                        className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition"
+                      >
+                        {isQrExpanded ? "Gizle" : "Göster"}
+                        <span className={`material-symbols-outlined text-[14px] transition-transform ${isQrExpanded ? 'rotate-180' : ''}`}>keyboard_arrow_down</span>
+                      </button>
+                    </div>
                     {isQrExpanded && (
                       <div>
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
                           <button
                             onClick={async () => {
                               const { downloadAllTableCardsAsSinglePDF } = await import("@/utils/tableCardPdfGenerator");
-                              await downloadAllTableCardsAsSinglePDF(sectionTables, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos });
+                              const ts = sectionTables.map(t => {
+                                const def = sectionDefs.find(d => d.name === t.section);
+                                const gr = def?.genderRestriction || 'mixed';
+                                const sLabel = gr === 'women_only' ? 'Bölüm - H' : gr === 'men_only' ? 'Bölüm - E' : 'Aile Bölümü';
+                                return { ...t, sectionLabel: sLabel };
+                              });
+                              await downloadAllTableCardsAsSinglePDF(ts, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos, businessLogoUrl: avatarUrl });
                             }}
-                            className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-medium transition"
-                          >{t("pdfKartTek")}</button>
+                            className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-medium transition flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
+                            Tümünü PDF İndir (Tek Dosya)
+                          </button>
                           <button
                             onClick={async () => {
                               const { downloadAllTableCardPDFs } = await import("@/utils/tableCardPdfGenerator");
-                              await downloadAllTableCardPDFs(sectionTables, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos });
+                              const ts = sectionTables.map(t => {
+                                const def = sectionDefs.find(d => d.name === t.section);
+                                const gr = def?.genderRestriction || 'mixed';
+                                const sLabel = gr === 'women_only' ? 'Bölüm - H' : gr === 'men_only' ? 'Bölüm - E' : 'Aile Bölümü';
+                                return { ...t, sectionLabel: sLabel };
+                              });
+                              await downloadAllTableCardPDFs(ts, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos, businessLogoUrl: avatarUrl });
                             }}
-                            className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-medium transition"
-                          >{t("pdfKartlarAyri")}</button>
+                            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-medium transition flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">file_copy</span>
+                            Ayrı Ayrı PDF İndir
+                          </button>
                           <button
-                            onClick={() => {
-                              for (const table of sectionTables) {
-                                const tableQrTarget = `${qrBaseUrl}/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
-                                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(tableQrTarget)}`;
-                                const link = document.createElement("a");
-                                link.href = qrUrl;
-                                link.download = `${t("masa_prefix")}_${table.label}_QR.png`;
-                                link.target = "_blank";
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
+                            onClick={async () => {
+                              try {
+                                for (const table of sectionTables) {
+                                  const tableQrTarget = `${qrBaseUrl}/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
+                                  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(tableQrTarget)}`;
+                                  const response = await fetch(qrUrl);
+                                  const blob = await response.blob();
+                                  const blobUrl = URL.createObjectURL(blob);
+                                  const link = document.createElement("a");
+                                  link.href = blobUrl;
+                                  link.download = `${t("masa_prefix")}_${table.label}_QR.png`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  await new Promise(resolve => setTimeout(resolve, 300));
+                                  URL.revokeObjectURL(blobUrl);
+                                }
+                              } catch (error) {
+                                console.error("Error downloading PNGs:", error);
+                                alert("İndirme işlemi sırasında bir hata oluştu.");
                               }
                             }}
-                            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-medium transition"
-                          >{t("qr_png")}</button>
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium transition flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">image</span>
+                            Tümünü QR PNG
+                          </button>
                         </div>
                         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                           {sectionTables.map((table) => {
                             const qrData = `${qrBaseUrl}/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
                             const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrData)}`;
                             return (
-                              <button
+                              <div
                                 key={table.label}
-                                onClick={async () => {
-                                  const { downloadTableCardPDF } = await import("@/utils/tableCardPdfGenerator");
-                                  await downloadTableCardPDF(table.label, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos });
-                                }}
-                                className="bg-gray-800 rounded-lg border border-gray-700 p-1.5 flex flex-col items-center gap-0.5 hover:border-red-500 hover:bg-gray-700/50 transition cursor-pointer group"
-                                title={t("masaKartiIndir", { label: table.label })}
+                                className="bg-gray-800 rounded-lg border border-gray-700 p-1.5 flex flex-col items-center gap-1 hover:border-red-500 hover:bg-gray-700/50 transition group"
                               >
                                 <div className="w-full aspect-square bg-background rounded flex items-center justify-center overflow-hidden">
                                   <img src={qrImageUrl} alt={`${t("masa_prefix")} ${table.label}`} className="w-full h-full object-contain" loading="lazy" />
                                 </div>
-                                <span className="text-[10px] font-bold text-gray-300 group-hover:text-red-400 transition">
-                                  M{table.label}
-                                </span>
-                              </button>
+                                <span className="text-[10px] font-bold text-gray-300">{table.label}</span>
+                                <div className="flex gap-1 w-full">
+                                  <button
+                                    onClick={async () => {
+                                      const { downloadTableCardPDF } = await import("@/utils/tableCardPdfGenerator");
+                                      const gr = def?.genderRestriction || 'mixed';
+                                      let sLabel = 'Aile Bölümü';
+                                      if (def?.type === 'station') {
+                                        sLabel = def.name;
+                                      } else if (gr === 'women_only') {
+                                        sLabel = 'Bölüm - H';
+                                      } else if (gr === 'men_only') {
+                                        sLabel = 'Bölüm - E';
+                                      }
+                                      await downloadTableCardPDF(table.label, businessId, businessName || t("isletme_fallback"), country, { isKermes, sponsorLogos, sectionLabel: sLabel, businessLogoUrl: avatarUrl });
+                                    }}
+                                    className="flex-1 bg-red-600/80 hover:bg-red-500 text-white rounded text-[9px] py-0.5 font-medium transition text-center"
+                                    title="PDF İndir"
+                                  >PDF</button>
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrData)}`;
+                                        const response = await fetch(qrUrl);
+                                        const blob = await response.blob();
+                                        const blobUrl = URL.createObjectURL(blob);
+                                        const link = document.createElement("a");
+                                        link.href = blobUrl;
+                                        link.download = `Masa_${table.label}_QR.png`;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(blobUrl);
+                                      } catch (error) {
+                                        console.error("QR Code indirilemedi:", error);
+                                        window.open(`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrData)}`, "_blank");
+                                      }
+                                    }}
+                                    className="flex-1 bg-blue-600/80 hover:bg-blue-500 text-white rounded text-[9px] py-0.5 font-medium transition text-center"
+                                    title="QR PNG İndir"
+                                  >QR PNG</button>
+                                </div>
+                              </div>
                             );
                           })}
                         </div>
@@ -749,7 +822,7 @@ export default function TableManagementPanel({
                 {/* Bos bolum */}
                 {sectionTables.length === 0 && (
                   <div className="px-4 pb-3">
-                    <p className="text-xs text-gray-500 italic">Henuz bu bolume masa eklenmedi. Yukardaki butonlari kullanin.</p>
+                    <p className="text-xs text-gray-500 italic">Henüz bu bölüme masa eklenmedi. Yukarıdaki butonları kullanın.</p>
                   </div>
                 )}
               </div>
@@ -763,13 +836,13 @@ export default function TableManagementPanel({
           if (unassigned.length === 0) return null;
           return (
             <div className="mt-4 p-4 bg-red-500/10 rounded-xl border border-red-500/30">
-              <p className="text-red-400 text-sm font-bold mb-2">Bolum Atanmamis Masalar ({unassigned.length})</p>
+              <p className="text-red-400 text-sm font-bold mb-2">Bölüm Atanmamış Masalar ({unassigned.length})</p>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {unassigned.map((table) => {
                   const globalIdx = tables.findIndex(t => t.label === table.label);
                   return (
                     <div key={table.label} className="bg-gray-800 rounded-lg border border-red-500/30 p-2 flex flex-col gap-1.5">
-                      <span className="text-white text-xs font-bold text-center">M{table.label}</span>
+                      <span className="text-white text-xs font-bold text-center">{table.label}</span>
                       <select
                         title="Bolum Sec"
                         value={table.section || ""}

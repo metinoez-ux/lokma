@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       notification: {
         title,
         body: messageBody,
-        ...(itemImage ? { imageUrl: itemImage, image: itemImage } : {})
+        ...(itemImage ? { imageUrl: itemImage } : {})
       },
       data: {
         type: 'kermes_flash_sale',
@@ -133,6 +133,11 @@ export async function POST(request: NextRequest) {
         kermesTitle: kermesTitle || '',
         click_action: 'FLUTTER_NOTIFICATION_CLICK',
         ...(itemImage ? { imageUrl: itemImage } : {})
+      },
+      android: {
+        notification: {
+          ...(itemImage ? { imageUrl: itemImage } : {})
+        }
       },
       apns: {
         payload: {

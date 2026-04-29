@@ -692,8 +692,25 @@ export default function KermesTvPage({
           {/* Sol %50 (HAZIRLANIYOR tarafı) */}
           <div style={{ flex: '0 0 50%', maxWidth: '50%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: '20px 40px' }}>
             {/* Logo Part */}
-            <div style={{ marginRight: '20px', flexShrink: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-              <span className={styles.lokmaLogo}><strong style={{fontWeight: 900}}>LOKMA</strong> <span style={{fontSize: '0.7em'}}>(ODS)</span></span>
+            <div style={{ marginRight: '20px', flexShrink: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                <span className={styles.lokmaLogo}><strong style={{fontWeight: 900}}>LOKMA</strong> <span style={{fontSize: '0.7em'}}>(ODS)</span></span>
+              </div>
+              {sectionLabel && (
+                <div style={{ 
+                  marginTop: '0px',
+                  fontSize: '16px', 
+                  fontWeight: 800, 
+                  color: '#EA184A', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1.5px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {sectionLabel}
+                </div>
+              )}
             </div>
             
             {/* Title & Weather Part */}

@@ -2229,6 +2229,45 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
         final uri = Uri.tryParse(result);
         
+        if (uri != null) {
+          // Normal restoran QR kodunu yakala ve reddet
+          if (uri.pathSegments.contains('dinein') && !uri.pathSegments.contains('kermes-dinein')) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Bu QR kod normal bir işletmeye ait. Lütfen bulunduğunuz kermesin QR kodunu okutun.'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+            return;
+          }
+
+          // Kermes ID kontrolü (Başka kermesin kartını okutmasını engellemek için)
+          String? kermesId;
+          if (uri.pathSegments.contains('kermes-dinein')) {
+            final idx = uri.pathSegments.indexOf('kermes-dinein');
+            if (idx >= 0 && idx + 1 < uri.pathSegments.length) kermesId = uri.pathSegments[idx + 1];
+          } else if (uri.pathSegments.contains('kermesler') || uri.pathSegments.contains('kermes')) {
+            final idx = uri.pathSegments.indexOf('kermesler') >= 0 ? uri.pathSegments.indexOf('kermesler') : uri.pathSegments.indexOf('kermes');
+            if (idx >= 0 && idx + 1 < uri.pathSegments.length) kermesId = uri.pathSegments[idx + 1];
+          }
+
+          if (kermesId != null && kermesId.isNotEmpty && kermesId != widget.event.id) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Bu QR kod başka bir kermese ait. Lütfen bulunduğunuz kermesin QR kodunu okutun.'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+            return;
+          }
+        }
+
         if (uri != null && uri.pathSegments.contains('table')) {
           final tableIndex = uri.pathSegments.indexOf('table');
           if (tableIndex + 1 < uri.pathSegments.length) {

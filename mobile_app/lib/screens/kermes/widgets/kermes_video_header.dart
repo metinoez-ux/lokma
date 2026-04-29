@@ -40,13 +40,7 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
     widget.scrollController?.addListener(_scrollListener);
   }
 
-  String get _thumbnailUrl {
-    if (widget.videoUrl.contains('?')) {
-      final parts = widget.videoUrl.split('?');
-      return '${parts[0]}_thumb.jpg?${parts[1]}';
-    }
-    return '${widget.videoUrl}_thumb.jpg';
-  }
+
 
   void _scrollListener() {
     if (widget.scrollController != null && widget.scrollController!.hasClients) {
@@ -197,20 +191,11 @@ class _KermesVideoHeaderState extends State<KermesVideoHeader> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // 1. Static Image (Always behind, prevents flicker during transition)
-            LokmaNetworkImage(
-              imageUrl: _thumbnailUrl,
-              fit: widget.fit,
-              width: widget.width,
-              height: widget.height,
-              fadeInDuration: Duration.zero,
-              fadeOutDuration: Duration.zero,
-              useOldImageOnUrlChange: true,
-              placeholder: (_, __) => Container(color: const Color(0xFF1E1E1E)), // Koyu arkaplan, beyaz flash'ı engeller
-              errorWidget: (_, __, ___) => Container(color: const Color(0xFF1E1E1E)),
-            ),
+            // Arka planda sadece koyu bir renk gösteriyoruz, kapak resmi yok.
+            // Bu sayede video yüklenirken boşluk veya farklı renkte bir patlama olmaz.
+            Container(color: const Color(0xFF1E1E1E)),
             
-            // 2. Video Player (renders on top once initialized with a smooth fade)
+            // Video Player (donanımda ilk frame hazır olunca yumuşakça belirir)
             AnimatedOpacity(
               opacity: _isInitialized ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 150),

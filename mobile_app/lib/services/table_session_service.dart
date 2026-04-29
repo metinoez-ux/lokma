@@ -64,16 +64,18 @@ class TableSessionService {
     required int tableNumber,
     required String waiterId,
     required String waiterName,
+    bool isKermes = false,
   }) async {
     // Close any existing active session for this table
-    final existing = await getActiveSession(businessId, tableNumber);
+    final existing = await getActiveSession(businessId, tableNumber, isKermes: isKermes);
     if (existing != null) {
-      await closeSession(existing.id, businessId);
+      await closeSession(existing.id, businessId, isKermes: isKermes);
     }
 
     final pin = _generatePin();
+    final parentCol = isKermes ? 'kermes_events' : 'businesses';
     final docRef = _db
-        .collection('businesses')
+        .collection(parentCol)
         .doc(businessId)
         .collection('table_sessions')
         .doc();
@@ -102,9 +104,10 @@ class TableSessionService {
   }
 
   /// Get active session for a specific table
-  Future<TableSession?> getActiveSession(String businessId, int tableNumber) async {
+  Future<TableSession?> getActiveSession(String businessId, int tableNumber, {bool isKermes = false}) async {
+    final parentCol = isKermes ? 'kermes_events' : 'businesses';
     final query = await _db
-        .collection('businesses')
+        .collection(parentCol)
         .doc(businessId)
         .collection('table_sessions')
         .where('tableNumber', isEqualTo: tableNumber)
@@ -117,9 +120,10 @@ class TableSessionService {
   }
 
   /// Close a table session
-  Future<void> closeSession(String sessionId, String businessId) async {
+  Future<void> closeSession(String sessionId, String businessId, {bool isKermes = false}) async {
+    final parentCol = isKermes ? 'kermes_events' : 'businesses';
     await _db
-        .collection('businesses')
+        .collection(parentCol)
         .doc(businessId)
         .collection('table_sessions')
         .doc(sessionId)
@@ -135,8 +139,9 @@ class TableSessionService {
     required String businessId,
     required int tableNumber,
     required String pin,
+    bool isKermes = false,
   }) async {
-    final session = await getActiveSession(businessId, tableNumber);
+    final session = await getActiveSession(businessId, tableNumber, isKermes: isKermes);
     if (session == null) return null;
     if (session.pin != pin) return null;
     return session;
@@ -147,9 +152,11 @@ class TableSessionService {
     required String sessionId,
     required String businessId,
     required String customerId,
+    bool isKermes = false,
   }) async {
+    final parentCol = isKermes ? 'kermes_events' : 'businesses';
     await _db
-        .collection('businesses')
+        .collection(parentCol)
         .doc(businessId)
         .collection('table_sessions')
         .doc(sessionId)
@@ -173,9 +180,10 @@ class TableSessionService {
   }
 
   /// Get session stream for realtime updates
-  Stream<TableSession?> getSessionStream(String sessionId, String businessId) {
+  Stream<TableSession?> getSessionStream(String sessionId, String businessId, {bool isKermes = false}) {
+    final parentCol = isKermes ? 'kermes_events' : 'businesses';
     return _db
-        .collection('businesses')
+        .collection(parentCol)
         .doc(businessId)
         .collection('table_sessions')
         .doc(sessionId)
@@ -184,15 +192,19 @@ class TableSessionService {
   }
 
   /// Get all active sessions for a business (waiter overview)
-  Stream<List<TableSession>> getActiveSessionsStream(String businessId) {
+  Stream<List<TableSession>> getActiveSessionsStream(String businessId, {bool isKermes = false}) {
+    final parentCol = isKermes ? 'kermes_events' : 'businesses';
     return _db
-        .collection('businesses')
+        .collection(parentCol)
         .doc(businessId)
         .collection('table_sessions')
         .where('status', isEqualTo: 'active')
-        .orderBy('createdAt', descending: false)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => TableSession.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final sessions = snapshot.docs.map((doc) => TableSession.fromFirestore(doc)).toList();
+          // Bellekte sırala (composite index gereksinimini kaldırmak için)
+          sessions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          return sessions;
+        });
   }
 }

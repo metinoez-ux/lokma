@@ -300,51 +300,108 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     String? tableNo;
     String? sectionId;
     String? kermesId;
-    
-    if (result.contains('/kermes-dinein/')) {
-      final uri = Uri.tryParse(result);
-      if (uri != null) {
-        final segments = uri.pathSegments;
-        final kermesDineinIndex = segments.indexOf('kermes-dinein');
-        if (kermesDineinIndex >= 0 && kermesDineinIndex + 1 < segments.length) {
+    bool isLegacySimpleQr = false;
+
+    final uri = Uri.tryParse(result);
+    if (uri != null && uri.pathSegments.isNotEmpty) {
+      final segments = uri.pathSegments;
+
+      // 1. Check for /kermes-dinein/ (legacy kermes)
+      int kermesDineinIndex = segments.indexOf('kermes-dinein');
+      if (kermesDineinIndex >= 0) {
+        if (kermesDineinIndex + 1 < segments.length) {
           kermesId = segments[kermesDineinIndex + 1];
         }
-        final tableIndex = segments.indexOf('table');
+        int tableIndex = segments.indexOf('table');
         if (tableIndex >= 0 && tableIndex + 1 < segments.length) {
           tableNo = segments[tableIndex + 1];
-          sectionId = uri.queryParameters['section'];
         }
       }
-    } else if (result.contains('/kermesler/') || result.contains('/kermes/')) {
-      final uri = Uri.tryParse(result);
-      if (uri != null) {
-        final segments = uri.pathSegments;
-        final kermeslerIndex = segments.indexOf('kermesler') >= 0 ? segments.indexOf('kermesler') : segments.indexOf('kermes');
-        if (kermeslerIndex >= 0 && kermeslerIndex + 1 < segments.length) {
+      // 2. Check for /kermes/ (new kermes format)
+      else if (segments.indexOf('kermes') >= 0) {
+        int kermesIndex = segments.indexOf('kermes');
+        if (kermesIndex + 1 < segments.length) {
+          kermesId = segments[kermesIndex + 1];
+        }
+        int tableIndex = segments.indexOf('table');
+        if (tableIndex >= 0 && tableIndex + 1 < segments.length) {
+          tableNo = segments[tableIndex + 1];
+        } else {
+          tableNo = uri.queryParameters['table'];
+        }
+      }
+      // 3. Check for /kermesler/ (old kermes format)
+      else if (segments.indexOf('kermesler') >= 0) {
+        int kermeslerIndex = segments.indexOf('kermesler');
+        if (kermeslerIndex + 1 < segments.length) {
           kermesId = segments[kermeslerIndex + 1];
         }
         tableNo = uri.queryParameters['table'];
-        sectionId = uri.queryParameters['section'];
       }
-    } else if (result.contains('/table/') || result.contains('table_')) {
-      final uri = Uri.tryParse(result);
-      if (uri != null) {
-        final segments = uri.pathSegments;
-        final tableIndex = segments.indexOf('table');
+      // 4. Check for /dinein/ (normal business)
+      else if (segments.indexOf('dinein') >= 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bu QR kod normal bir işletmeye ait. Lütfen bulunduğunuz kermesin QR kodunu okutun.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+      // 5. Check for legacy simple /table/ (normal business or generic)
+      else if (segments.indexOf('table') >= 0) {
+        int tableIndex = segments.indexOf('table');
         if (tableIndex >= 0 && tableIndex + 1 < segments.length) {
           tableNo = segments[tableIndex + 1];
-          sectionId = uri.queryParameters['section'];
         }
-      } else {
-        // Fallback for simple table_M7 strings
-        tableNo = result.replaceAll('table_', '').trim();
+        isLegacySimpleQr = true;
       }
+
+      sectionId = uri.queryParameters['section'];
+    } else {
+      // Fallback for simple string like "table_M7"
+      if (result.startsWith('table_')) {
+        tableNo = result.replaceAll('table_', '').trim();
+        isLegacySimpleQr = true;
+      }
+    }
+
+    // STRICT VALIDATION
+    if (kermesId != null && kermesId.isNotEmpty) {
+      if (kermesId != widget.event.id) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bu QR kod başka bir kermese ait. Lütfen bulunduğunuz kermesin QR kodunu okutun.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+    } else if (isLegacySimpleQr) {
+      // If we got a tableNo but NO kermesId, it's an old generic QR code.
+      // We must reject it in Kermes context to prevent the bug.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Geçersiz QR kod formatı. Bu QR kod başka bir işletmeye veya kermese ait olabilir.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
     }
 
     if (tableNo != null) {
       HapticFeedback.mediumImpact();
       // Masa QR kodu okutuldugunda dogrudan o masaya yonlendir (mevcut ekrani degistir)
-      final targetKermesId = (kermesId != null && kermesId.isNotEmpty) ? kermesId : widget.event.id;
+      final targetKermesId = widget.event.id;
       String redirectUrl = '/kermesler/$targetKermesId?table=$tableNo';
       if (sectionId != null && sectionId.isNotEmpty) {
         redirectUrl += '&section=$sectionId';

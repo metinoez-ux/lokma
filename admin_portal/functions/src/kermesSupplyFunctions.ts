@@ -24,8 +24,21 @@ export const onKermesSupplyRequested = onDocumentCreated(
       if (!kermesDoc.exists) return;
       const kData = kermesDoc.data()!;
       const kermesAdmins = kData.kermesAdmins || [];
+      const prepZones = kData.prepZoneAssignments || {};
 
-      if (kermesAdmins.length === 0) return;
+      const targetUids = new Set<string>(kermesAdmins);
+
+      // Include anyone assigned to a prep zone that is "Tedarik" or "Malzeme" related
+      for (const [zoneName, uids] of Object.entries(prepZones)) {
+        if (zoneName.toLowerCase().includes('tedarik') || zoneName.toLowerCase().includes('malzeme')) {
+          if (Array.isArray(uids)) {
+            uids.forEach(uid => targetUids.add(uid));
+          }
+        }
+      }
+
+      const notifyUids = Array.from(targetUids);
+      if (notifyUids.length === 0) return;
 
       const isUrgent = urgency === 'super_urgent';
       const title = isUrgent ? `🚨🔥 SÜPER ACİL: ${itemName}` : `🚨 İhtiyaç: ${itemName}`;
@@ -33,9 +46,9 @@ export const onKermesSupplyRequested = onDocumentCreated(
         ? `⚠️ DİKKAT! ${requestedByName} (${reqZone}) işi gücü bırakıp HEMEN ${itemName} getirmenizi bekliyor!`
         : `${requestedByName} (${reqZone}) şu an ${itemName} bekliyor.`;
 
-      // 1. DYNAMIC INBOX MESSAGE FOR ADMINS
+      // 1. DYNAMIC INBOX MESSAGE FOR ADMINS & SUPPLIERS
       const batch = db.batch();
-      for (const uid of kermesAdmins) {
+      for (const uid of notifyUids) {
          const notifRef = db.collection("users").doc(uid).collection("notifications").doc(requestId);
          batch.set(notifRef, {
             title,
@@ -51,9 +64,9 @@ export const onKermesSupplyRequested = onDocumentCreated(
       }
       await batch.commit();
 
-      // 2. FCM PUSH FOR ADMINS
+      // 2. FCM PUSH FOR ADMINS & SUPPLIERS
       const tokens: string[] = [];
-      const userSnaps = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', kermesAdmins.slice(0, 10)).get();
+      const userSnaps = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', notifyUids.slice(0, 30)).get();
       userSnaps.forEach((doc) => {
           const ud = doc.data();
           if (ud.fcmToken) {
@@ -108,8 +121,21 @@ export const onKermesSupplyStatusUpdated = onDocumentUpdated(
       if (kermesDoc.exists) {
          const kData = kermesDoc.data()!;
          const kermesAdmins = kData.kermesAdmins || [];
+         const prepZones = kData.prepZoneAssignments || {};
+
+         const targetUids = new Set<string>(kermesAdmins);
+         for (const [zoneName, uids] of Object.entries(prepZones)) {
+           if (zoneName.toLowerCase().includes('tedarik') || zoneName.toLowerCase().includes('malzeme')) {
+             if (Array.isArray(uids)) {
+               uids.forEach(uid => targetUids.add(uid));
+             }
+           }
+         }
+         
+         const notifyUids = Array.from(targetUids);
+
          const batch = db.batch();
-         for (const adminUid of kermesAdmins) {
+         for (const adminUid of notifyUids) {
              const notifRef = db.collection("users").doc(adminUid).collection("notifications").doc(requestId);
              if (newStatus === 'cancelled') {
                  // The requester cancelled the request, remove the alarm from all admins' inboxes immediately.

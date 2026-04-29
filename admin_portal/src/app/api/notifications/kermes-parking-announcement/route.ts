@@ -109,13 +109,18 @@ export async function POST(request: NextRequest) {
       notification: { 
         title, 
         body: message,
-        ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl, image: vehicleImageUrl } : {})
+        ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl } : {})
        },
       data: {
         type: 'kermes_parking',
         kermesId,
         click_action: 'FLUTTER_NOTIFICATION_CLICK',
         ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl } : {})
+      },
+      android: {
+        notification: {
+          ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl } : {})
+        }
       },
       apns: {
         payload: {

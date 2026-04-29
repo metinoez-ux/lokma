@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
  // Array of workspace assignments (M:N)
  assignments,
  // Kermes context (for mobile app login credentials in welcome email)
- kermesName, kermesId,
+ kermesName, kermesId, kermesRoles,
  } = body;
 
  // Resolve locale (default German for DACH market)
@@ -226,11 +226,23 @@ export async function POST(request: NextRequest) {
  photoURL: null,
     // Assignments
     assignments: assignments || [],
-    kermesAssignments: (assignments || []).filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
-      kermesId: a.id,
-      role: a.role,
-      assignedAt: a.assignedAt || new Date().toISOString()
-    })),
+    kermesAssignments: (() => {
+      const arr = (assignments || []).filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+        kermesId: a.id,
+        role: a.role,
+        assignedAt: a.assignedAt || new Date().toISOString()
+      }));
+      if (kermesId && kermesRoles && kermesRoles.length > 0) {
+        arr.push({
+          kermesId: kermesId,
+          kermesTitle: kermesName || null,
+          roles: kermesRoles,
+          assignedAt: new Date().toISOString(),
+          assignedBy: createdBy || 'system'
+        });
+      }
+      return arr;
+    })(),
  // Audit tracking
  createdBy: createdBy || 'system',
  createdBySource: body.createdBySource || 'super_admin',
@@ -309,11 +321,34 @@ export async function POST(request: NextRequest) {
 
  if (assignments !== undefined) {
  adminData.assignments = assignments;
- adminData.kermesAssignments = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
-   kermesId: a.id,
-   role: a.role,
-   assignedAt: a.assignedAt || new Date().toISOString()
- }));
+ adminData.kermesAssignments = (() => {
+   const arr = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+     kermesId: a.id,
+     role: a.role,
+     assignedAt: a.assignedAt || new Date().toISOString()
+   }));
+   if (kermesId && kermesRoles && kermesRoles.length > 0) {
+     const exists = arr.some((a: any) => a.kermesId === kermesId);
+     if (!exists) {
+       arr.push({
+         kermesId: kermesId,
+         kermesTitle: kermesName || null,
+         roles: kermesRoles,
+         assignedAt: new Date().toISOString(),
+         assignedBy: createdBy || 'system'
+       });
+     }
+   }
+   return arr;
+ })();
+ } else if (kermesId && kermesRoles && kermesRoles.length > 0) {
+ adminData.kermesAssignments = [{
+   kermesId: kermesId,
+   kermesTitle: kermesName || null,
+   roles: kermesRoles,
+   assignedAt: new Date().toISOString(),
+   assignedBy: createdBy || 'system'
+ }];
  }
 
  await db.collection('admins').doc(userRecord.uid).set(adminData);
@@ -353,11 +388,34 @@ export async function POST(request: NextRequest) {
 
     if (assignments !== undefined) {
       driverAdminData.assignments = assignments;
-      driverAdminData.kermesAssignments = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
-        kermesId: a.id,
-        role: a.role,
-        assignedAt: a.assignedAt || new Date().toISOString()
-      }));
+      driverAdminData.kermesAssignments = (() => {
+        const arr = assignments.filter((a: any) => a.entityType === 'kermes' || a.type === 'kermes').map((a: any) => ({
+          kermesId: a.id,
+          role: a.role,
+          assignedAt: a.assignedAt || new Date().toISOString()
+        }));
+        if (kermesId && kermesRoles && kermesRoles.length > 0) {
+          const exists = arr.some((a: any) => a.kermesId === kermesId);
+          if (!exists) {
+            arr.push({
+              kermesId: kermesId,
+              kermesTitle: kermesName || null,
+              roles: kermesRoles,
+              assignedAt: new Date().toISOString(),
+              assignedBy: createdBy || 'system'
+            });
+          }
+        }
+        return arr;
+      })();
+    } else if (kermesId && kermesRoles && kermesRoles.length > 0) {
+      driverAdminData.kermesAssignments = [{
+        kermesId: kermesId,
+        kermesTitle: kermesName || null,
+        roles: kermesRoles,
+        assignedAt: new Date().toISOString(),
+        assignedBy: createdBy || 'system'
+      }];
     }
 
  if (assignerName) {
