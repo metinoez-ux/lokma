@@ -523,93 +523,94 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
         backgroundColor: Colors.red.shade700,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          // QUICK REQUEST SECTION
-          Container(
-             color: isDark ? Colors.black26 : Colors.white,
-             padding: const EdgeInsets.all(16),
-             child: Column(
-               crossAxisAlignment: CrossAxisAlignment.stretch,
-               children: [
-                  Text('supply_quick_request'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  if (_isLoadingCats)
-                     const Center(child: CircularProgressIndicator())
-                  else if (_categories.isNotEmpty)
-                     ..._categories.map((cat) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                           Text(cat['title'] ?? '', style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.black54)),
-                           const SizedBox(height: 5),
-                           Wrap(
-                              spacing: 8, runSpacing: 8,
-                              children: (cat['items'] as List<dynamic>? ?? []).map((item) => InkWell(
-                                 onTap: () => _askUrgencyAndSubmit(item as String, category: cat['title']),
-                                 borderRadius: BorderRadius.circular(20),
-                                 child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                    decoration: BoxDecoration(
-                                       color: isDark ? const Color(0xFFE5E5E5) : Colors.white,
-                                       border: Border.all(color: Colors.red.shade700, width: 1.5),
-                                       borderRadius: BorderRadius.circular(20)
-                                    ),
-                                    child: Text(item, style: TextStyle(color: Colors.red.shade900, fontWeight: FontWeight.bold)),
-                                 ),
-                              )).toList(),
-                           ),
-                           const SizedBox(height: 15),
-                        ],
-                     ))
-                  else
-                     Text('supply_no_items'.tr()),
-                     
-                  const Divider(),
-                  Row(
-                    children: [
-                       Expanded(
-                         child: TextField(
-                           controller: _customCtrl,
-                           decoration: InputDecoration(
-                              hintText: 'Listede yoksa buraya yazın...',
-                              hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38),
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // QUICK REQUEST SECTION
+            Theme(
+               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+               child: ExpansionTile(
+                 initiallyExpanded: false,
+                 backgroundColor: isDark ? Colors.black26 : Colors.white,
+                 collapsedBackgroundColor: isDark ? Colors.black26 : Colors.white,
+                 title: Text('supply_quick_request'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                 childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                 children: [
+                    if (_isLoadingCats)
+                       const Center(child: CircularProgressIndicator())
+                    else if (_categories.isNotEmpty)
+                       ..._categories.map((cat) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                             Text(cat['title'] ?? '', style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.black54)),
+                             const SizedBox(height: 5),
+                             Wrap(
+                                spacing: 6, runSpacing: 6,
+                                children: (cat['items'] as List<dynamic>? ?? []).map((item) => InkWell(
+                                   onTap: () => _askUrgencyAndSubmit(item as String, category: cat['title']),
+                                   borderRadius: BorderRadius.circular(20),
+                                   child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                         color: isDark ? const Color(0xFFE5E5E5) : Colors.white,
+                                         border: Border.all(color: Colors.red.shade700, width: 1.0),
+                                         borderRadius: BorderRadius.circular(16)
+                                      ),
+                                      child: Text(item, style: TextStyle(color: Colors.red.shade900, fontSize: 12, fontWeight: FontWeight.bold)),
+                                   ),
+                                )).toList(),
+                             ),
+                             const SizedBox(height: 12),
+                          ],
+                       ))
+                    else
+                       Text('supply_no_items'.tr()),
+                       
+                    const Divider(),
+                    Row(
+                      children: [
+                         Expanded(
+                           child: TextField(
+                             controller: _customCtrl,
+                             decoration: InputDecoration(
+                                hintText: 'Listede yoksa buraya yazın...',
+                                hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38),
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                             ),
                            ),
                          ),
-                       ),
-                       const SizedBox(width: 10),
-                       ElevatedButton(
-                         style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white),
-                         onPressed: () {
-                            if (_customCtrl.text.trim().isNotEmpty) {
-                               _askUrgencyAndSubmit(_customCtrl.text.trim());
-                               _customCtrl.clear();
-                            }
-                         },
-                         child: const Text('Gönder'),
-                       )
-                    ],
-                  )
-               ],
-             ),
-          ),
-          
-          Container(
-             height: 5,
-             color: isDark ? Colors.black : Colors.grey.shade200,
-          ),
-          
-          // LIVE REQUESTS LIST
-          Container(
-             padding: const EdgeInsets.all(16),
-             alignment: Alignment.centerLeft,
-             child: const Text('Canlı İhtiyaç Listesi (Herkes Görür)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-          
-          Expanded(
-             child: StreamBuilder<QuerySnapshot>(
+                         const SizedBox(width: 10),
+                         ElevatedButton(
+                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white),
+                           onPressed: () {
+                              if (_customCtrl.text.trim().isNotEmpty) {
+                                 _askUrgencyAndSubmit(_customCtrl.text.trim());
+                                 _customCtrl.clear();
+                              }
+                           },
+                           child: const Text('Gönder'),
+                         )
+                      ],
+                    )
+                 ],
+               ),
+            ),
+            
+            Container(
+               height: 5,
+               color: isDark ? Colors.black : Colors.grey.shade200,
+            ),
+            
+            // LIVE REQUESTS LIST
+            Container(
+               padding: const EdgeInsets.all(16),
+               alignment: Alignment.centerLeft,
+               child: const Text('Canlı İhtiyaç Listesi (Herkes Görür)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            
+            StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('kermes_events')
                    .doc(widget.kermesId)
                    .collection('supply_requests')
@@ -700,7 +701,9 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                    }
 
                    return ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 40),
                       children: [
                         ...pendingDocs.map((doc) => buildCard(doc)),
                         if (completedDocs.isNotEmpty)
@@ -716,8 +719,8 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                    );
                 },
              ),
-          )
-        ],
+          ],
+        ),
       ),
     );
   }
