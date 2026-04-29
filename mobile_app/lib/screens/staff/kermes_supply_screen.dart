@@ -275,12 +275,42 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
       return displayZone;
   }
 
+  Widget _buildCategoryBlock(Map<String, dynamic> cat, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+         Text(cat['title'] ?? '', style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.black54)),
+         const SizedBox(height: 5),
+         Wrap(
+            spacing: 6, runSpacing: 6,
+            children: (cat['items'] as List<dynamic>? ?? []).map((item) => InkWell(
+               onTap: () => _askUrgencyAndSubmit(item as String, category: cat['title']),
+               borderRadius: BorderRadius.circular(20),
+               child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                     color: isDark ? const Color(0xFFE5E5E5) : Colors.white,
+                     border: Border.all(color: Colors.red.shade700, width: 1.0),
+                     borderRadius: BorderRadius.circular(16)
+                  ),
+                  child: Text(item, style: TextStyle(color: Colors.red.shade900, fontSize: 12, fontWeight: FontWeight.bold)),
+               ),
+            )).toList(),
+         ),
+         const SizedBox(height: 12),
+      ],
+    );
+  }
+
   Widget _buildStatusBadge(String status, {String? urgency}) {
     if (status == 'completed') {
-       return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(8)),
-          child: Text('supply_status_completed'.tr(), style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+       return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Tamamlandı', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(width: 4),
+            Icon(Icons.check_circle, color: Colors.green.shade600, size: 28),
+          ],
        );
     } else if (status == 'on_the_way') {
        return Container(
@@ -317,6 +347,100 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
        decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(8)),
        child: const Text('Bekliyor', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  void _showRejectionSheet(BuildContext context, QueryDocumentSnapshot doc) {
+    Navigator.pop(context); // Pop the details sheet first
+    
+    final TextEditingController noteCtrl = TextEditingController();
+    final List<String> predefinedReasons = [
+      'Şu an stokta kalmadı',
+      'Birazdan getireceğiz, lütfen bekleyin',
+      'Yanlış talep / İptal',
+      'Başka bir istasyona yönlendirildi',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(10)))),
+                  const SizedBox(height: 20),
+                  Text('Talebi Reddet', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red.shade700)),
+                  const SizedBox(height: 10),
+                  Text('Lütfen reddetme sebebini seçin veya özel bir not yazın:', style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : Colors.black87), textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  ...predefinedReasons.map((reason) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: isDark ? Colors.white : Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        alignment: Alignment.centerLeft,
+                      ),
+                      child: Text(reason),
+                      onPressed: () {
+                        doc.reference.update({
+                          'status': 'rejected',
+                          'adminReply': reason,
+                          'updatedAt': FieldValue.serverTimestamp(),
+                          'completedAt': FieldValue.serverTimestamp(),
+                        });
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  )),
+                  const Divider(height: 30),
+                  TextField(
+                    controller: noteCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'Özel bir not yazın...',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Reddet', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    onPressed: () {
+                      final note = noteCtrl.text.trim();
+                      doc.reference.update({
+                        'status': 'rejected',
+                        'adminReply': note.isNotEmpty ? note : 'Reddedildi',
+                        'updatedAt': FieldValue.serverTimestamp(),
+                        'completedAt': FieldValue.serverTimestamp(),
+                      });
+                      Navigator.pop(ctx);
+                    },
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
+      }
     );
   }
 
@@ -458,8 +582,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                            icon: const Icon(Icons.cancel),
                            label: const Text('Talebi Reddet / İptal Et', style: TextStyle(fontWeight: FontWeight.bold)),
                            onPressed: () {
-                              doc.reference.update({'status': 'cancelled', 'updatedAt': FieldValue.serverTimestamp()});
-                              Navigator.pop(ctx);
+                              _showRejectionSheet(context, doc);
                            },
                         )
                       ),
@@ -527,44 +650,29 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
         child: Column(
           children: [
             // QUICK REQUEST SECTION
-            Theme(
-               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-               child: ExpansionTile(
-                 initiallyExpanded: false,
-                 backgroundColor: isDark ? Colors.black26 : Colors.white,
-                 collapsedBackgroundColor: isDark ? Colors.black26 : Colors.white,
-                 title: Text('supply_quick_request'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                 childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                 children: [
-                    if (_isLoadingCats)
-                       const Center(child: CircularProgressIndicator())
-                    else if (_categories.isNotEmpty)
-                       ..._categories.map((cat) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                             Text(cat['title'] ?? '', style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.black54)),
-                             const SizedBox(height: 5),
-                             Wrap(
-                                spacing: 6, runSpacing: 6,
-                                children: (cat['items'] as List<dynamic>? ?? []).map((item) => InkWell(
-                                   onTap: () => _askUrgencyAndSubmit(item as String, category: cat['title']),
-                                   borderRadius: BorderRadius.circular(20),
-                                   child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                         color: isDark ? const Color(0xFFE5E5E5) : Colors.white,
-                                         border: Border.all(color: Colors.red.shade700, width: 1.0),
-                                         borderRadius: BorderRadius.circular(16)
-                                      ),
-                                      child: Text(item, style: TextStyle(color: Colors.red.shade900, fontSize: 12, fontWeight: FontWeight.bold)),
-                                   ),
-                                )).toList(),
+            Padding(
+               padding: const EdgeInsets.symmetric(horizontal: 16),
+               child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                     const SizedBox(height: 12),
+                     Text('supply_quick_request'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                     const SizedBox(height: 12),
+                     if (_isLoadingCats)
+                        const Center(child: CircularProgressIndicator())
+                     else if (_categories.isNotEmpty) ...[
+                        ..._categories.take(2).map((cat) => _buildCategoryBlock(cat, isDark)),
+                        if (_categories.length > 2)
+                           Theme(
+                             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                             child: ExpansionTile(
+                               title: const Text('Daha Fazla Göster', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                               tilePadding: EdgeInsets.zero,
+                               children: _categories.skip(2).map((cat) => _buildCategoryBlock(cat, isDark)).toList(),
                              ),
-                             const SizedBox(height: 12),
-                          ],
-                       ))
-                    else
-                       Text('supply_no_items'.tr()),
+                           ),
+                     ] else
+                        Text('supply_no_items'.tr()),
                        
                     const Divider(),
                     Row(
@@ -594,7 +702,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                          )
                       ],
                     )
-                 ],
+                  ],
                ),
             ),
             
@@ -635,15 +743,6 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                    }
                    
                    final docs = snapshot.data!.docs;
-                   final pendingDocs = docs.where((doc) {
-                      final d = doc.data() as Map<String, dynamic>;
-                      return d['status'] == 'pending' || d['status'] == 'on_the_way' || d['status'] == 'super_urgent';
-                   }).toList();
-                   
-                   final completedDocs = docs.where((doc) {
-                      final d = doc.data() as Map<String, dynamic>;
-                      return d['status'] == 'completed' || d['status'] == 'rejected' || d['status'] == 'cancelled';
-                   }).toList();
                    
                    Widget buildCard(QueryDocumentSnapshot doc) {
                          final d = doc.data() as Map<String, dynamic>;
@@ -653,8 +752,8 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                          return Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
-                               color: status == 'completed' ? (isDark ? Colors.white10 : Colors.grey.shade100) : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
-                               border: Border.all(color: status == 'on_the_way' ? Colors.amber : (status == 'completed' ? Colors.transparent : Colors.red.withValues(alpha: 0.3))),
+                               color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                               border: Border.all(color: status == 'on_the_way' ? Colors.amber : (status == 'completed' ? Colors.green.shade300 : Colors.red.withValues(alpha: 0.3))),
                                borderRadius: BorderRadius.circular(12),
                             ),
                             child: Material(
@@ -665,19 +764,19 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                                   child: Padding(
                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
                                            CircleAvatar(
-                                              backgroundColor: status == 'completed' ? Colors.grey : (status == 'on_the_way' ? Colors.amber : Colors.red.shade100),
+                                              backgroundColor: status == 'completed' ? Colors.green.shade100 : (status == 'on_the_way' ? Colors.amber : Colors.red.shade100),
                                               child: Icon(status == 'completed' ? Icons.check : (status == 'on_the_way' ? Icons.local_shipping : Icons.campaign), 
-                                                 color: status == 'completed' ? Colors.white : (status == 'on_the_way' ? Colors.white : Colors.red)),
+                                                 color: status == 'completed' ? Colors.green : (status == 'on_the_way' ? Colors.white : Colors.red)),
                                            ),
                                            const SizedBox(width: 12),
                                            Expanded(
                                               child: Column(
                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                  children: [
-                                                    Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, decoration: (status == 'completed' || status == 'cancelled' || status == 'rejected') ? TextDecoration.lineThrough : null)),
+                                                    Text(d['itemName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, decoration: (status == 'cancelled' || status == 'rejected') ? TextDecoration.lineThrough : null)),
                                                     const SizedBox(height: 2),
                                                     Text("${d['requestedByName']} • ${_getDisplayZone(d)}", style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87)),
                                                     if (isMine && status == 'pending') ...[
@@ -705,14 +804,14 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 40),
                       children: [
-                        ...pendingDocs.map((doc) => buildCard(doc)),
-                        if (completedDocs.isNotEmpty)
+                        ...docs.take(15).map((doc) => buildCard(doc)),
+                        if (docs.length > 15)
                            Theme(
                              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                              child: ExpansionTile(
                                tilePadding: EdgeInsets.zero,
-                               title: Text('Tamamlananlar (${completedDocs.length})', style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                               children: completedDocs.map((doc) => Opacity(opacity: 0.6, child: buildCard(doc))).toList(),
+                               title: Text('Daha Fazla Göster (${docs.length - 15})', style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                               children: docs.skip(15).map((doc) => buildCard(doc)).toList(),
                              ),
                            )
                       ],

@@ -22,12 +22,13 @@ class _KermesQrScannerSheetState extends State<KermesQrScannerSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
-      height: screenHeight * 0.72,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+    return FractionallySizedBox(
+      heightFactor: 0.85,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
       child: Column(
         children: [
           // Handle bar
@@ -158,6 +159,6 @@ class _KermesQrScannerSheetState extends State<KermesQrScannerSheet> {
           const SizedBox(height: 20),
         ],
       ),
-    );
+    ));
   }
 }

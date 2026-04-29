@@ -5219,21 +5219,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       builder: (ctx) {
         bool isScanned = false;
 
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.75,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2A2A28) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-                blurRadius: 30,
-                offset: const Offset(0, -10),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
+        return FractionallySizedBox(
+          heightFactor: 0.85,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A28) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  blurRadius: 30,
+                  offset: const Offset(0, -10),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
               // Handle bar
               Container(
                 margin: const EdgeInsets.only(top: 12),
@@ -5343,7 +5344,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               const SizedBox(height: 16),
             ],
           ),
-        );
+        ));
       },
     );
   }
