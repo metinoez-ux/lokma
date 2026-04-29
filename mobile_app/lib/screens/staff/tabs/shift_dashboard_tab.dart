@@ -479,6 +479,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     }
 
     List<String> uids = [];
+    bool isFallbackRole = false;
     final docSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kermesId).get();
     if (docSnap.exists) {
       final data = docSnap.data()!;
@@ -507,6 +508,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           uids = List<String>.from(prepZoneAssignments[targetKey] ?? []);
         } else {
           uids = List<String>.from(data['assignedStaff'] ?? []);
+          isFallbackRole = true;
         }
       }
     }
@@ -602,6 +604,21 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               if (normalizedUserGender != requiredGender) {
                   continue; 
               }
+           }
+
+           // Fallback role strict check (e.g. "Park Görevlisi")
+           if (isFallbackRole && doc.id != currentUserUid) {
+               bool hasExactRole = false;
+               final assignments = List<dynamic>.from(d['assignments'] ?? []);
+               for (var a in assignments) {
+                   if (a is Map && a['id'] == kermesId && a['role'] == roleOrZone) {
+                       hasExactRole = true;
+                       break;
+                   }
+               }
+               if (!hasExactRole) {
+                   continue;
+               }
            }
 
            result.add({

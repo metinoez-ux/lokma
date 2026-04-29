@@ -166,6 +166,14 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
           
           List<String> earlyPrepZones = [];
           if (isKermes && roleService.businessId != null) {
+             if (_lastListeningBusinessId != roleService.businessId) {
+               _kermesSub?.cancel();
+               _kermesSub = FirebaseFirestore.instance.collection('kermes_events').doc(roleService.businessId).snapshots().listen((_) {
+                 if (!state.isLoading) _loadCapabilities();
+               });
+               _lastListeningBusinessId = roleService.businessId;
+             }
+
              try {
                 final kDoc = await FirebaseFirestore.instance.collection('kermes_events').doc(roleService.businessId).get();
                 if (kDoc.exists) {

@@ -342,8 +342,10 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                           SvgPicture.asset('assets/icons/package_ok1.svg', width: 22, height: 22, colorFilter: ColorFilter.mode(isDark ? Colors.green[300]! : Colors.green[700]!, BlendMode.srcIn))
                         else if (isActionStatus)
                           SvgPicture.asset('assets/icons/man_run1.svg', width: 22, height: 22, colorFilter: ColorFilter.mode(isDark ? Colors.orange[300]! : Colors.orange[700]!, BlendMode.srcIn))
+                        else if (isParking)
+                          Image.asset('assets/icons/no_parking.png', width: 24, height: 24, color: isDark ? Colors.red[300] : Colors.red[700])
                         else
-                          Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : Icons.info_outline_rounded, size: 18, color: isParkingOrDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
+                          Icon(isDeleted ? Icons.cancel : isWarning ? Icons.warning_amber_rounded : Icons.info_outline_rounded, size: 18, color: isDeleted ? (isDark ? Colors.red[300] : Colors.red[700]) : isWarning ? (isDark ? Colors.orange[300] : Colors.orange[700]) : (isDark ? Colors.blue[300] : Colors.blue[700])),
                         const SizedBox(width: 8),
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4411,7 +4413,7 @@ class _GenericNotificationCard extends StatelessWidget {
     try {
       final kId = data['kermesId'] as String?;
       final rId = data['requestId'] as String?;
-      if (kId == null || rId == null) return fallbackBody;
+      if (kId == null || kId.isEmpty || rId == null || rId.isEmpty) return fallbackBody;
 
       final sSnap = await FirebaseFirestore.instance.collection('kermes_events').doc(kId).collection('supply_requests').doc(rId).get(const GetOptions(source: Source.cache));
       if (!sSnap.exists) {
@@ -4543,7 +4545,7 @@ class _GenericNotificationCard extends StatelessWidget {
                       Color bgColor;
                       Color iconColor;
                       IconData? iconData;
-                      String? svgAsset;
+                      String? assetPath;
 
                       if (isCampaign) {
                         bgColor = isDark ? const Color(0xFF880E4F).withOpacity(0.3) : const Color(0xFFFCE4EC);
@@ -4554,9 +4556,9 @@ class _GenericNotificationCard extends StatelessWidget {
                         iconColor = isDark ? Colors.blue[300]! : Colors.blue[700]!;
                         iconData = Icons.assignment_ind_rounded;
                       } else if (isParking) {
-                        bgColor = isDark ? Colors.orange[900]!.withOpacity(0.3) : Colors.orange[50]!;
-                        iconColor = isDark ? Colors.orange[300]! : Colors.orange[700]!;
-                        iconData = Icons.local_parking_rounded;
+                        bgColor = isDark ? Colors.red[900]!.withOpacity(0.3) : Colors.red[50]!;
+                        iconColor = isDark ? Colors.red[300]! : Colors.red[700]!;
+                        assetPath = 'assets/icons/no_parking.png';
                       } else if (type == 'supply_alarm' || type == 'supply_alarm_status') {
                         final st = data['status'] as String? ?? '';
                         if (type == 'supply_alarm') {
@@ -4571,11 +4573,11 @@ class _GenericNotificationCard extends StatelessWidget {
                             } else if (st == 'on_the_way') {
                                 bgColor = isDark ? Colors.orange[900]!.withOpacity(0.3) : Colors.orange[50]!;
                                 iconColor = isDark ? Colors.orange[300]! : Colors.orange[700]!;
-                                svgAsset = 'assets/icons/man_run1.svg';
+                                assetPath = 'assets/icons/man_run1.svg';
                             } else if (st == 'completed') {
                                 bgColor = isDark ? Colors.green[900]!.withOpacity(0.3) : Colors.green[50]!;
                                 iconColor = isDark ? Colors.green[300]! : Colors.green[700]!;
-                                svgAsset = 'assets/icons/package_ok1.svg';
+                                assetPath = 'assets/icons/package_ok1.svg';
                             } else {
                                 bgColor = isDark ? Colors.teal[900]!.withOpacity(0.3) : Colors.teal[50]!;
                                 iconColor = isDark ? Colors.teal[300]! : Colors.teal[700]!;
@@ -4594,8 +4596,10 @@ class _GenericNotificationCard extends StatelessWidget {
                           color: bgColor,
                           shape: BoxShape.circle,
                         ),
-                        child: svgAsset != null
-                            ? SvgPicture.asset(svgAsset, width: 20, height: 20, colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn))
+                        child: assetPath != null
+                            ? (assetPath!.endsWith('.png') 
+                                ? Image.asset(assetPath!, width: 24, height: 24, color: iconColor)
+                                : SvgPicture.asset(assetPath!, width: 20, height: 20, colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn)))
                             : Icon(
                                 iconData,
                                 color: iconColor,

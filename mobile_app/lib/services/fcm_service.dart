@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:easy_localization/easy_localization.dart';
 import '../router/app_router.dart';
 import '../widgets/in_app_notification.dart';
@@ -150,17 +151,37 @@ class FCMService {
   }
 
   /// Show a local notification with type-specific LOKMA sound (instant)
-  Future<void> _showLocalNotificationWithSound(String? title, String? body, {String? payload, String? type}) async {
+  Future<void> _showLocalNotificationWithSound(String? title, String? body, {String? payload, String? type, String? imageUrl}) async {
     final soundFile = _getSoundForType(type);
     
+    StyleInformation? styleInformation;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      try {
+        final response = await http.get(Uri.parse(imageUrl));
+        if (response.statusCode == 200) {
+          styleInformation = BigPictureStyleInformation(
+            ByteArrayAndroidBitmap(response.bodyBytes),
+            largeIcon: ByteArrayAndroidBitmap(response.bodyBytes),
+            contentTitle: title,
+            summaryText: body,
+            htmlFormatContentTitle: true,
+            htmlFormatSummaryText: true,
+          );
+        }
+      } catch (e) {
+        debugPrint('Error downloading image for notification: $e');
+      }
+    }
+    
     // Use custom LOKMA sound from iOS bundle
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'lokma_orders',
       'Sipariş Bildirimleri',
       channelDescription: 'LOKMA sipariş bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
       playSound: true,
+      styleInformation: styleInformation,
     );
     
     // Use type-specific CAF sound from iOS app bundle
@@ -275,9 +296,17 @@ class FCMService {
     final data = message.data;
     final type = data['type'] as String?;
     
+    String? imageUrl;
+    if (Platform.isAndroid) {
+      imageUrl = message.notification?.android?.imageUrl;
+    } else {
+      imageUrl = message.notification?.apple?.imageUrl;
+    }
+    imageUrl ??= data['image'] ?? data['imageUrl'];
+    
     // ── INSTANT: Play custom sound via local notification FIRST ──
     final payload = '${type ?? "unknown"}:${data['orderId'] ?? ""}';
-    _showLocalNotificationWithSound(title, body, payload: payload, type: type);
+    _showLocalNotificationWithSound(title, body, payload: payload, type: type, imageUrl: imageUrl);
     
     // ── Then show in-app overlay ──
     String emoji;

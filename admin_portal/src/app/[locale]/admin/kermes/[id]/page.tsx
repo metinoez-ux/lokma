@@ -976,16 +976,35 @@ export default function KermesDetailPage() {
  return vals.some(val => val.includes(qLower));
  };
 
- const [snapUsers, snapAdmins] = await Promise.all([
- getDocs(collection(db, 'users')),
- getDocs(collection(db, 'admins')),
- ]);
+       const checks = [
+        getDocs(collection(db, 'admins'))
+      ];
 
- const allUsers = new Map<string, any>();
- snapAdmins.docs.forEach(d => allUsers.set(d.id, { id: d.id, _src: 'admin', ...d.data() }));
- snapUsers.docs.forEach(d => {
- if (!allUsers.has(d.id)) allUsers.set(d.id, { id: d.id, _src: 'user', ...d.data() });
- });
+      // Sadece 3 karakter ve uzeri ise users'da isimle arama yapalim, 
+      // butun users koleksiyonunu indirmek cok tehlikeli
+      if (q.length >= 3) {
+        const qCap = q.charAt(0).toUpperCase() + q.slice(1);
+        checks.push(
+          getDocs(query(collection(db, 'users'), where('fullName', '>=', qCap), where('fullName', '<=', qCap + '\uf8ff'), limit(10))),
+          getDocs(query(collection(db, 'users'), where('fullName', '>=', q), where('fullName', '<=', q + '\uf8ff'), limit(10))),
+          getDocs(query(collection(db, 'users'), where('firstName', '>=', qCap), where('firstName', '<=', qCap + '\uf8ff'), limit(10))),
+          getDocs(query(collection(db, 'users'), where('firstName', '>=', q), where('firstName', '<=', q + '\uf8ff'), limit(10)))
+        );
+      }
+
+      const snapshots = await Promise.all(checks);
+
+      const allUsers = new Map<string, any>();
+      
+      // Admins (ilk sonuc)
+      snapshots[0].docs.forEach((d: any) => allUsers.set(d.id, { id: d.id, _src: 'admin', ...d.data() }));
+      
+      // Users (diger sonuclar)
+      for (let i = 1; i < snapshots.length; i++) {
+        snapshots[i].docs.forEach((d: any) => {
+          if (!allUsers.has(d.id)) allUsers.set(d.id, { id: d.id, _src: 'user', ...d.data() });
+        });
+      }
 
  const alreadyInTeam = new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters]);
 
