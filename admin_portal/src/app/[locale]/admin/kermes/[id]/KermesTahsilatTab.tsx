@@ -9,6 +9,7 @@ interface KermesTahsilatTabProps {
   kermesId: string;
   kermesAdmins: any[];
   workspaceStaff: any[];
+  isAdmin: boolean;
 }
 
 interface Handover {
@@ -21,7 +22,7 @@ interface Handover {
   resolvedAt?: any;
 }
 
-export default function KermesTahsilatTab({ kermesId, kermesAdmins, workspaceStaff }: KermesTahsilatTabProps) {
+export default function KermesTahsilatTab({ kermesId, kermesAdmins, workspaceStaff, isAdmin }: KermesTahsilatTabProps) {
   const t = useTranslations('Kermes');
   const [activeSubTab, setActiveSubTab] = useState<'personel' | 'onaylar' | 'loglar'>('personel');
   const [handovers, setHandovers] = useState<Handover[]>([]);
@@ -74,6 +75,20 @@ export default function KermesTahsilatTab({ kermesId, kermesAdmins, workspaceSta
   };
 
   const pendingHandovers = handovers.filter(h => h.status === 'PENDING');
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center text-3xl">
+          🔒
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Yetkisiz Erişim</h2>
+        <p className="text-muted-foreground max-w-md">
+          Sizin yeterli Admin haklarınız bulunmuyor. Tahsilat bölümüne sadece Kermes Yöneticileri erişebilir.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">

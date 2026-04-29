@@ -461,8 +461,8 @@ const { admin, loading: adminLoading } = useAdmin();
             <Link href="/admin/settings/kermes-menus" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Menüs (Global)</Link>
             <Link href="/admin/kermes/menu-builder" className="px-4 py-2 rounded-lg border border-pink-500/50 bg-pink-900/20 text-pink-50 text-sm font-bold hover:bg-pink-900/40 transition">Kermes Menü Oluştur</Link>
             <Link href="/admin/settings/kermes-features" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Funktionen</Link>
-            <Link href="/admin/settings/kermes-categories" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Markalar & Rozetler</Link>
-            <Link href="/admin/settings/kermes-donation-funds" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bagis Fonlari</Link>
+            <Link href="/admin/settings/platform-brands" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Markalar & Rozetler</Link>
+            <Link href="/admin/settings/donation-funds" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bagis Fonlari</Link>
             <Link href="/admin/settings/kermes-gender-types" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bolum Tipleri</Link>
             <Link href="/admin/settings/kermes-stock-images" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Archivbilder</Link>
           </div>

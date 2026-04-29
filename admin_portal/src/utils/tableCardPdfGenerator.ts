@@ -40,6 +40,7 @@ interface CardTexts {
  cta: string;
  steps: { title: string; desc: string }[];
  afiyetOlsun: string;
+ sectionLabels?: Record<string, string>;
 }
 
 const CARD_TEXTS: Record<CardLang, CardTexts> = {

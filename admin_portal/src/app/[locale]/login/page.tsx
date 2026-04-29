@@ -111,10 +111,29 @@ export default function LoginPage() {
   }, []);
 
   // Helper: determine redirect path based on role
-  const getAdminRedirectPath = (role?: string, adminType?: string) => {
+  const getAdminRedirectPath = (adminData?: any) => {
+    if (!adminData) return "/admin/dashboard";
+    
+    const role = adminData.role;
+    const adminType = adminData.adminType;
     if (role === "super_admin" || adminType === "super_admin")
       return "/admin/analytics";
-    return "/admin/orders";
+      
+    // Handle Kermes users explicitly
+    if (adminData.businessType === 'kermes') {
+      const kId = adminData.businessId || adminData.kermesId;
+      if (kId) return `/admin/kermes/${kId}?tab=dashboard`;
+    }
+    
+    // Check assignments for Kermes
+    if (adminData.assignments && Array.isArray(adminData.assignments)) {
+      const kermesAssignment = adminData.assignments.find((a: any) => a.entityType === 'kermes');
+      if (kermesAssignment && kermesAssignment.entityId) {
+        return `/admin/kermes/${kermesAssignment.entityId}?tab=dashboard`;
+      }
+    }
+    
+    return "/admin/dashboard";
   };
 
   // Helper: request fullscreen mode after login (tablet optimization)
@@ -142,7 +161,7 @@ export default function LoginPage() {
           const adminDoc = await getDoc(doc(db, "admins", user.uid));
           if (adminDoc.exists() && adminDoc.data().isActive) {
             const data = adminDoc.data();
-            router.push(getAdminRedirectPath(data.role, data.adminType));
+            router.push(getAdminRedirectPath(data));
           } else {
             // Not an admin/worker — sign out and show error
             const { signOut } = await import("firebase/auth");
@@ -296,7 +315,7 @@ export default function LoginPage() {
         localStorage.removeItem("mira_active_assignment_id");
 
       router.push(
-        getAdminRedirectPath(primaryAdminData.role, primaryAdminData.adminType),
+        getAdminRedirectPath(primaryAdminData),
       );
       return;
     }
@@ -615,10 +634,7 @@ export default function LoginPage() {
         if (typeof window !== "undefined")
           localStorage.removeItem("mira_active_assignment_id");
         router.push(
-          getAdminRedirectPath(
-            matchedAdminData.role,
-            matchedAdminData.adminType,
-          ),
+          getAdminRedirectPath(matchedAdminData),
         );
         return;
       }

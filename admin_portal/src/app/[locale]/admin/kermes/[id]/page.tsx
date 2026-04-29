@@ -17,6 +17,8 @@ import { getLocalizedText } from '@/lib/utils';
 import TableManagementPanel from '@/components/TableManagementPanel';
 import KermesTahsilatTab from './KermesTahsilatTab';
 import KermesSiparislerTab from './KermesSiparislerTab';
+import KermesDashboardTab from './KermesDashboardTab';
+import KermesKDSTab from './KermesKDSTab';
 import KermesRosterTab from './KermesRosterTab';
 import KermesTedarikTab from './KermesTedarikTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
@@ -336,7 +338,7 @@ export default function KermesDetailPage() {
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
- const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel' | 'vardiya' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat' | 'bildirimler' | 'tedarik'>('bilgi');
+ const [activeTab, setActiveTab] = useState<'dashboard' | 'kds' | 'bilgi' | 'menu' | 'personel' | 'vardiya' | 'gorevler' | 'mutfak' | 'masalar' | 'siparisler' | 'tahsilat' | 'bildirimler' | 'tedarik'>('dashboard');
   const [bilgiSubTab, setBilgiSubTab] = useState<'genel' | 'marka' | 'ozellikler' | 'teslimat' | 'fiyat' | 'imkanlar'>('genel');
  // Mutfak: PrepZone -> Personel atamalari
  const [prepZoneAssignments, setPrepZoneAssignments] = useState<Record<string, string[]>>({});
@@ -432,6 +434,30 @@ export default function KermesDetailPage() {
 
   const [globalSystemRoles, setGlobalSystemRoles] = useState<GlobalSystemRole[]>([]);
   const [editingGlobalRole, setEditingGlobalRole] = useState<GlobalSystemRole | null>(null);
+
+  const hasPermission = useCallback((permId: string) => {
+    if (isSuperAdmin || isKermesAdminOfThis) return true;
+
+    const userRoles: string[] = [];
+    if (assignedStaff.includes(adminUid)) userRoles.push('role_staff');
+    if (assignedWaiters.includes(adminUid)) userRoles.push('role_waiter');
+    if (assignedDrivers.includes(adminUid)) userRoles.push('role_driver');
+
+    Object.entries(customRoleAssignments).forEach(([rId, uids]) => {
+      if (uids.includes(adminUid)) userRoles.push(rId);
+    });
+
+    for (const rId of userRoles) {
+      let roleObj = kermes?.customRoles?.find((r:any) => r.id === rId);
+      if (!roleObj) {
+        roleObj = globalSystemRoles.find((r:any) => r.id === rId);
+      }
+      if (roleObj && roleObj.permissions && roleObj.permissions.includes(permId)) {
+        return true;
+      }
+    }
+    return false;
+  }, [isSuperAdmin, isKermesAdminOfThis, adminUid, assignedStaff, assignedWaiters, assignedDrivers, customRoleAssignments, kermes, globalSystemRoles]);
 
  const [kermesAdmins, setKermesAdmins] = useState<string[]>([]); // Kermes Admin UIDs
  const [staffSearchQuery, setStaffSearchQuery] = useState('');
@@ -2211,7 +2237,7 @@ export default function KermesDetailPage() {
  onClick={() => { setActiveTab('masalar'); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight/2, behavior: 'smooth' }), 100); }}
  className="h-10 px-4 mr-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg shadow-sm font-bold text-sm flex items-center justify-center gap-2 transform transition hover:scale-105 whitespace-nowrap"
  >
- Mutfak & Expo (KDS)
+ Ocakbaşı & Expo (KDS)
  </button>
  {kermes.sponsor === 'tuna' && (
    <div className="h-10 px-4 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg text-sm font-bold flex items-center justify-center gap-2 border border-blue-600/30 whitespace-nowrap">
@@ -2228,57 +2254,102 @@ export default function KermesDetailPage() {
 
  {/* Tabs */}
  <div className="flex gap-2 mb-6 bg-card p-1 rounded-xl w-full sm:w-fit mx-auto overflow-x-auto custom-scrollbar">
+ {hasPermission('view_dashboard') && (
+ <button onClick={() => setActiveTab('dashboard')}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ <FiActivity className="w-4 h-4" /> Dashboard
+ </button>
+ )}
+ {hasPermission('manage_settings') && (
  <button onClick={() => setActiveTab('bilgi')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Bilgiler
  </button>
+ )}
+ {hasPermission('manage_products') && (
  <button onClick={() => setActiveTab('menu')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Menü ({products.length})
  </button>
+ )}
+ {hasPermission('manage_staff') && (
  <button onClick={() => setActiveTab('personel')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Personel
  </button>
+ )}
+ {hasPermission('manage_staff') && (
  <button onClick={() => setActiveTab('vardiya')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'vardiya' ? 'bg-cyan-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Vardiya
  </button>
+ )}
+ {(hasPermission('manage_staff') || hasPermission('manage_custom_roles')) && (
  <button onClick={() => setActiveTab('gorevler')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'gorevler' ? 'bg-purple-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Görevler
  </button>
+ )}
+ {hasPermission('manage_prepzones') && (
  <button onClick={() => setActiveTab('mutfak')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- Mutfak
+ Ocakbaşı
  </button>
+ )}
+ {hasPermission('manage_tables') && (
  <button onClick={() => setActiveTab('masalar')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Masalar
  </button>
+ )}
+ {(hasPermission('manage_orders') || hasPermission('take_orders') || hasPermission('kds_screen')) && (
  <button onClick={() => setActiveTab('siparisler')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Siparişler
  </button>
- {(isSuperAdmin || isKermesAdminOfThis) && (
+ )}
+ {hasPermission('kds_screen') && (
+ <button onClick={() => setActiveTab('kds')}
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-2 ${activeTab === 'kds' ? 'bg-red-600 text-white shadow-md' : 'text-muted-foreground hover:text-white'}`}>
+ <FiAlertCircle className="w-4 h-4" /> KDS Ekranı
+ </button>
+ )}
+ {hasPermission('view_reports') && (
  <button onClick={() => setActiveTab('tahsilat')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Tahsilat
  </button>
  )}
- {(isSuperAdmin || isKermesAdminOfThis) && (
- <>
+ {hasPermission('manage_settings') && (
  <button onClick={() => setActiveTab('tedarik')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tedarik' ? 'bg-rose-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Tedarik
  </button>
+ )}
+ {hasPermission('send_notifications') && (
  <button onClick={() => setActiveTab('bildirimler')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
  Bildirimler
  </button>
- </>
  )}
  </div>
+
+ {/* Tab Content - Dashboard */}
+ {activeTab === 'dashboard' && (
+   <KermesDashboardTab 
+     kermesId={kermesId}
+     assignedStaffCount={assignedStaff.length}
+     assignedWaitersCount={assignedWaiters.length}
+     locale={locale}
+   />
+ )}
+ {/* Tab Content - KDS */}
+ {activeTab === 'kds' && (
+   <KermesKDSTab 
+     kermesId={kermesId}
+     locale={locale}
+   />
+ )}
 
  {/* Tab Content - Bilgi */}
  {activeTab === 'bilgi' && (
@@ -4204,8 +4275,8 @@ export default function KermesDetailPage() {
    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/><path d="M5.71 17.11a17.04 17.04 0 0 1 11.4-11.4"/></svg>
    </span>
    <div>
-   <h3 className="text-foreground font-bold">Mutfak Istasyonlari</h3>
-   <p className="text-xs text-muted-foreground">Her hazirlik alanina (PrepZone) personel atayin. Siparis geldiginde atanan personellerin ekranina dusecektir.</p>
+   <h3 className="text-foreground font-bold">Ocakbaşı İstasyonları</h3>
+   <p className="text-xs text-muted-foreground">Her hazırlık alanına (PrepZone) personel atayın. Sipariş geldiğinde atanan personellerin ekranına düşecektir.</p>
    </div>
    </div>
    </div>
@@ -4213,18 +4284,18 @@ export default function KermesDetailPage() {
     {!showNewKitchenPanel ? (
       <button onClick={() => setShowNewKitchenPanel(true)} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-orange-500/30 text-orange-500 rounded-xl hover:bg-orange-500/10 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        <span className="font-medium">Yeni Mutfak / Üretim Alanı Ekle</span>
+        <span className="font-medium">Yeni Ocakbaşı Ekle</span>
       </button>
     ) : (
       <div className="bg-card rounded-xl p-4 border border-orange-500/40">
-        <h4 className="font-semibold text-foreground mb-3">Yeni Mutfak Bölümü Oluştur</h4>
+        <h4 className="font-semibold text-foreground mb-3">Yeni Ocakbaşı Bölümü Oluştur</h4>
         <div className="space-y-4">
           <div>
-            <label className="text-xs text-muted-foreground block mb-1.5">Mutfak Adı</label>
+            <label className="text-xs text-muted-foreground block mb-1.5">Ocakbaşı Adı</label>
             <input type="text" value={newKitchenName} onChange={e => setNewKitchenName(e.target.value)} placeholder="Örn: Tatlı Sepeti, Izgara Çadırı.." className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-1.5">Bu Mutfak Kimler İçin Hizmet Verecek? (Zorunlu Porsiyon Takibi İçin)</label>
+            <label className="text-xs text-muted-foreground block mb-1.5">Bu Ocakbaşı Kimler İçin Hizmet Verecek? (Zorunlu Porsiyon Takibi İçin)</label>
             <div className="flex gap-2">
               <button onClick={() => setNewKitchenGender('women_only')} className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${newKitchenGender === 'women_only' ? 'bg-pink-500/20 border-pink-500 text-pink-400' : 'bg-background border-border text-muted-foreground hover:border-pink-500/50'}`}>Hanımlar Bölümü</button>
               <button onClick={() => setNewKitchenGender('men_only')} className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${newKitchenGender === 'men_only' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-background border-border text-muted-foreground hover:border-blue-500/50'}`}>Beyler Bölümü</button>
@@ -4247,7 +4318,7 @@ export default function KermesDetailPage() {
               }} 
               className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
             >
-              Mutfak Oluştur
+              Ocakbaşı Oluştur
             </button>
           </div>
         </div>
@@ -4259,8 +4330,8 @@ export default function KermesDetailPage() {
     <div className="text-4xl mb-3">
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto opacity-40"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
     </div>
-    <p className="text-sm font-medium">Henuz Mutfak veya Üretim Alanı eklemediniz.</p>
-    <p className="text-xs mt-1">Yukarıdaki butona tıklayarak mutfak bölümlerini oluşturabilir, ardından onlara PrepZone (Hazırlık İstasyonu) ekleyebilirsiniz.</p>
+    <p className="text-sm font-medium">Henüz Ocakbaşı eklemediniz.</p>
+    <p className="text-xs mt-1">Yukarıdaki butona tıklayarak ocakbaşı bölümlerini oluşturabilir, ardından onlara PrepZone (Hazırlık İstasyonu) ekleyebilirsiniz.</p>
     </div>
    ) : (
    <div className="space-y-4">
@@ -4368,7 +4439,7 @@ export default function KermesDetailPage() {
        </button>
       </div>
       <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground">{assignedIds.length} personel atandi</span>
+      <span className="text-xs text-muted-foreground">{assignedDetails.length} personel atandi</span>
       <button onClick={async () => {
        if (!confirm(`"${zone}" istasyonunu silmek istediginizden emin misiniz?`)) return;
        const newDefs = kermesSectionDefs.map((d: any) => d.name === section.name ? { ...d, prepZones: (d.prepZones || []).filter((z: string) => z !== zone) } : d);
@@ -5088,7 +5159,7 @@ export default function KermesDetailPage() {
                 <div className="bg-orange-900/10 dark:bg-orange-950/20 border border-orange-500/20 rounded-xl p-4 space-y-4">
                   <h3 className="text-foreground text-sm font-medium flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>
-                    Mutfak Operasyonu
+                    Ocakbaşı Operasyonu
                   </h3>
 
                   {/* Hazirlik Yeri - PrepZone secimi */}
@@ -6669,6 +6740,7 @@ export default function KermesDetailPage() {
     kermesId={kermesId as string}
     kermesAdmins={kermesAdmins}
     workspaceStaff={assignedStaffDetails}
+    isAdmin={canManageStaff}
   />
  )}
 
@@ -6693,6 +6765,7 @@ export default function KermesDetailPage() {
      adminGender={(admin as any)?.gender || (admin as any)?.profile?.gender || 'unknown'}
      kermesSections={editForm.tableSectionsV2 || []}
      customRoles={(editForm.customRoles || [])}
+     isAdmin={canManageStaff}
    />
   </div>
  )}

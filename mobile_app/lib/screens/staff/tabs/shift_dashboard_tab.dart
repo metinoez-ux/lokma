@@ -606,17 +606,19 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
               }
            }
 
-           // Fallback role strict check (e.g. "Park Görevlisi")
-           if (isFallbackRole && doc.id != currentUserUid) {
-               bool hasExactRole = false;
+           // Only include users who are actually assigned to this kermes (ignore stale IDs)
+           if (doc.id != currentUserUid) {
+               bool hasActiveAssignment = false;
                final assignments = List<dynamic>.from(d['assignments'] ?? []);
                for (var a in assignments) {
-                   if (a is Map && a['id'] == kermesId && a['role'] == roleOrZone) {
-                       hasExactRole = true;
-                       break;
+                   if (a is Map && a['id'] == kermesId) {
+                       if (!isFallbackRole || a['role'] == roleOrZone) {
+                           hasActiveAssignment = true;
+                           break;
+                       }
                    }
                }
-               if (!hasExactRole) {
+               if (!hasActiveAssignment) {
                    continue;
                }
            }

@@ -740,11 +740,13 @@ export default function AdminHeader() {
   </button>
   {kermesMenuOpen && (
     <div className="bg-muted/10 py-1">
+      <Link href="/admin/kermes" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-bold border-b border-border/30 mb-1 pb-2">Bütün Kermesler</Link>
       <Link href="/admin/settings/kermes-categories" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Kategoriler</Link>
       <Link href="/admin/settings/kermes-menus" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Menüler</Link>
       <Link href="/admin/settings/kermes-features" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özellikler (Features)</Link>
       <Link href="/admin/settings/kermes-gender-types" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Özel Ziyaret Alanları</Link>
       <Link href="/admin/settings/kermes-stock-images" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Stock Görseller</Link>
+      <Link href="/admin/settings/kermes-roles" className="px-6 py-2 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block font-medium">Görevler (Roller)</Link>
       <Link href="/admin/settings/donation-funds" className="px-6 py-2 text-xs transition-colors text-pink-600 dark:text-pink-400 hover:bg-muted font-bold block">Yardım Vakıfları</Link>
     </div>
   )}
@@ -1113,6 +1115,35 @@ export default function AdminHeader() {
 
  {/* Navigation Chips - hidden on tablet, visible on desktop */}
  <div className="hidden lg:flex flex-wrap items-center justify-center gap-1.5 flex-1">
+ {admin?.kermesId ? (
+   <>
+     {[
+       { href: `/admin/kermes/${admin.kermesId}?tab=dashboard`, label: t('dashboard') },
+       { href: `/admin/kermes/${admin.kermesId}?tab=siparisler`, label: 'KDS' },
+       { href: `/admin/kermes/${admin.kermesId}?tab=products`, label: 'Ürünler' },
+       { href: `/admin/kermes/${admin.kermesId}?tab=roster`, label: 'Personel' },
+       { href: `/admin/kermes/${admin.kermesId}?tab=tahsilat`, label: 'Kasa' },
+       { href: `/admin/kermes/${admin.kermesId}?tab=settings`, label: t('settings') },
+     ].map(({ href, label }) => {
+       const isActive = typeof window !== 'undefined' && 
+         (window.location.search.includes(href.split('?')[1] || 'no-match-param') || 
+         (href === `/admin/kermes/${admin.kermesId}?tab=dashboard` && window.location.pathname.includes(`/admin/kermes/${admin.kermesId}`) && (!window.location.search || window.location.search.includes('tab=dashboard'))));
+       return (
+         <Link
+           key={href}
+           href={href}
+           className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActive
+             ? 'bg-accent border border-border text-foreground shadow-inner'
+             : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+           }`}
+         >
+           {label}
+         </Link>
+       );
+     })}
+   </>
+ ) : (
+   <>
  {[
   { href: '/admin/dashboard', label: t('dashboard') },
   { href: '/admin/orders', label: 'KDS' },
@@ -1220,6 +1251,8 @@ export default function AdminHeader() {
  >
  {t('settings')}
  </Link>
+ </>
+ )}
  </div>
 
  {/* Printer Status + Profile & Role */}
@@ -1369,57 +1402,70 @@ export default function AdminHeader() {
  <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-foreground text-xl">{`\u2715`}</button>
  </div>
  <nav className="py-2">
-  <Link href="/admin/dashboard" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
-  <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
-  <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
+  {admin?.kermesId ? (
+    <>
+      <Link href={`/admin/kermes/${admin.kermesId}?tab=dashboard`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
+      <Link href={`/admin/kermes/${admin.kermesId}?tab=siparisler`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
+      <Link href={`/admin/kermes/${admin.kermesId}?tab=products`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Ürünler</Link>
+      <Link href={`/admin/kermes/${admin.kermesId}?tab=roster`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Personel</Link>
+      <Link href={`/admin/kermes/${admin.kermesId}?tab=tahsilat`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Kasa</Link>
+      <Link href={`/admin/kermes/${admin.kermesId}?tab=settings`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('settings')}</Link>
+    </>
+  ) : (
+    <>
+   <Link href="/admin/dashboard" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
+   <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
+   <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
 
-  {/* Produkte & Lieferanten section */}
-  <div className="border-t border-border mt-1 pt-1">
-  <button onClick={() => toggleSection('products_admin')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
-  Produkte & Lieferanten
-  <span className={`text-xs transition-transform ${expandedSection === 'products_admin' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
-  </button>
-  {expandedSection === 'products_admin' && (
-  <div className="bg-muted/50 py-1">
-  <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Produkte</Link>
-  <Link href="/admin/categories" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Kategorien</Link>
-  <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Lieferanten</Link>
-  {businessId && (
-    <Link href={`/admin/business/${businessId}?tab=settings&settingsSubTab=menu&menuInternalTab=bestellungen`} onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Beschaffung</Link>
-  )}
-  </div>
-  )}
-  </div>
+   {/* Produkte & Lieferanten section */}
+   <div className="border-t border-border mt-1 pt-1">
+   <button onClick={() => toggleSection('products_admin')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
+   Produkte & Lieferanten
+   <span className={`text-xs transition-transform ${expandedSection === 'products_admin' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
+   </button>
+   {expandedSection === 'products_admin' && (
+   <div className="bg-muted/50 py-1">
+   <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Produkte</Link>
+   <Link href="/admin/categories" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Kategorien</Link>
+   <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Lieferanten</Link>
+   {businessId && (
+     <Link href={`/admin/business/${businessId}?tab=settings&settingsSubTab=menu&menuInternalTab=bestellungen`} onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">Beschaffung</Link>
+   )}
+   </div>
+   )}
+   </div>
 
-  {/* Werbung section */}
-  <div className="border-t border-border mt-1 pt-1">
-  <button onClick={() => toggleSection('werbung')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
+   {/* Werbung section */}
+   <div className="border-t border-border mt-1 pt-1">
+   <button onClick={() => toggleSection('werbung')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
 									Marketing
 									<span className={`text-xs transition-transform ${expandedSection === 'werbung' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
-  </button>
-  {expandedSection === 'werbung' && (
-  <div className="bg-muted/50 py-1">
-  <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('promotions')}</Link>
-  <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
+   </button>
+   {expandedSection === 'werbung' && (
+   <div className="bg-muted/50 py-1">
+   <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('promotions')}</Link>
+   <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
 										<Link
 											href={`/admin/business/${businessId}?tab=settings&settingsSubTab=marketing`}
 											className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground`}
 										>
 											Marketing Boost
 										</Link>
+   </div>
+   )}
+   </div>
+
+
+
+  {/* Settings Link */}
+  <div className="border-t border-border mt-1 pt-1">
+  <Link href={businessId ? `/admin/business/${businessId}?tab=settings` : '/admin/settings'} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">
+  {t('settings')}
+  </Link>
   </div>
+  </>
   )}
-  </div>
-
-
-
- {/* Settings Link */}
- <div className="border-t border-border mt-1 pt-1">
- <Link href={businessId ? `/admin/business/${businessId}?tab=settings` : '/admin/settings'} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">
- {t('settings')}
- </Link>
- </div>
- </nav>
+  </nav>
  </div>
  </>
  )}

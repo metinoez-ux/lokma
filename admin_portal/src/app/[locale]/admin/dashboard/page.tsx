@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
@@ -70,12 +71,18 @@ export default function StatisticsPage() {
  loadBusinesses();
  }, []);
 
+ const router = useRouter();
+
  // Auto-set business filter for non-super admins
  useEffect(() => {
- if (admin && admin.adminType !== 'super' && adminBusinessId) {
- setBusinessFilter(adminBusinessId);
+ if (admin && admin.adminType !== 'super') {
+   if (admin.kermesId) {
+     router.push(`/admin/kermes/${admin.kermesId}?tab=dashboard`);
+   } else if (adminBusinessId) {
+     setBusinessFilter(adminBusinessId);
+   }
  }
- }, [admin, adminBusinessId]);
+ }, [admin, adminBusinessId, router]);
 
  // Calculate date range based on filter
  const getDateRange = (filter: string, customStart?: string, customEnd?: string) => {

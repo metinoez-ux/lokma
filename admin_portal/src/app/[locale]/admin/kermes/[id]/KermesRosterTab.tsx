@@ -28,11 +28,12 @@ interface KermesRosterTabProps {
   kermesEnd: string; // YYYY-MM-DD
   isSuperAdmin?: boolean;
   adminGender?: string;
-  kermesSections?: any[];
   customRoles?: any[];
+  kermesSections?: any[];
+  isAdmin: boolean;
 }
 
-export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceStaff, adminUid, kermesStart, kermesEnd, isSuperAdmin, adminGender, kermesSections = [], customRoles = [] }: KermesRosterTabProps) {
+export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceStaff, adminUid, kermesStart, kermesEnd, isSuperAdmin, adminGender, kermesSections = [], customRoles = [], isAdmin }: KermesRosterTabProps) {
   const t = useTranslations('Kermes');
   
   const [rosters, setRosters] = useState<KermesRoster[]>([]);
@@ -309,7 +310,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       return ['Ocakbaşı - Kumpir', 'Tatlı Standı', 'İçecek Standı', 'Gözleme'];
     }
     const roles: string[] = [];
-    kermesSections.forEach(sec => {
+    kermesSections.forEach((sec: any) => {
       if (sec.prepZones) {
         sec.prepZones.forEach((pz: string) => {
           if (!roles.includes(pz)) roles.push(pz);
@@ -342,7 +343,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     const isFemaleStaff = staffGender === 'female' || staffGender === 'kadin';
     
     // 1. Önce Admin'in Sistemden (Mutfak Sekmesi) Açıkça Yaptığı Cinsiyet Atamasını Kontrol Et
-    const mappedSection = kermesSections?.find(sec => sec.prepZones?.includes(r));
+    const mappedSection = kermesSections?.find((sec: any) => sec.prepZones?.includes(r));
     if (mappedSection && mappedSection.genderRestriction) {
       if (mappedSection.genderRestriction === 'female' && isMaleStaff) return true;
       if (mappedSection.genderRestriction === 'male' && isFemaleStaff) return true;
@@ -521,160 +522,173 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   return (
     <div className="space-y-6 overflow-hidden">
       {/* Vardiya ve Mesai Planlama Paneli */}
-      <div className="bg-card rounded-xl p-6 shadow-sm border border-border overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-          <div className="flex-1 min-w-0 pr-4">
-            <h3 className="text-foreground font-bold flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-cyan-600/20 flex shrink-0 items-center justify-center text-sm">📅</span>
-              Vardiya ve Mesai Planlama
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Personel havuzunuzdaki kişileri kermes süresi boyunca belirli gün ve saatlere görevlendirerek takvimi netleştirin.
-            </p>
-          </div>
-          <button 
-            type="button"
-            onClick={() => setIsAddingVardiya(!isAddingVardiya)}
-            className="shrink-0 whitespace-nowrap px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold rounded-lg transition"
-          >
-            {isAddingVardiya ? 'İptal Et' : '+ Yeni Vardiya Ekle'}
-          </button>
-        </div>
-
-        {isAddingVardiya && (
-          <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30">
-            <h5 className="text-sm font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h5>
-            <form onSubmit={handleCreate} className="flex flex-col gap-4">
-          <div className="w-full min-w-0 space-y-1">
-            <div className="flex justify-between items-center">
-              <label className="text-xs text-muted-foreground">Personel Seç</label>
-              <button 
-                type="button" 
-                onClick={() => {
-                  const el = document.querySelector('[data-tab="personel"]') as HTMLElement;
-                  if (el) el.click();
-                  else window.location.href = '?tab=personel';
-                }}
-                className="text-[10px] text-blue-500 hover:underline"
-              >
-                Yeni Ekle
-              </button>
+      {isAdmin ? (
+        <div className="bg-card rounded-xl p-6 shadow-sm border border-border overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+            <div className="flex-1 min-w-0 pr-4">
+              <h3 className="text-foreground font-bold flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-cyan-600/20 flex shrink-0 items-center justify-center text-sm">📅</span>
+                Vardiya ve Mesai Planlama
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Personel havuzunuzdaki kişileri kermes süresi boyunca belirli gün ve saatlere görevlendirerek takvimi netleştirin.
+              </p>
             </div>
-            <select 
-              value={form.userId} 
-              onChange={e => setForm({...form, userId: e.target.value})}
-              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">Seçiniz</option>
-              {allowedStaffIds.map(uid => (
-                <option key={uid} value={uid}>{getUserName(uid)}</option>
-              ))}
-            </select>
-          </div>
-          <div className="w-full min-w-0 space-y-1">
-            <label className="text-xs text-muted-foreground">Görev / Rol</label>
-            <select 
-              value={form.role} 
-              onChange={e => setForm({...form, role: e.target.value})}
-              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">Seçiniz</option>
-              <optgroup label="Saha & Lojistik Görevleri">
-                {dynamicSahaRoles.map(r => {
-                  const disabled = isRoleDisabled(r);
-                  return (
-                    <option key={r} value={r} disabled={disabled} className={disabled ? 'text-gray-400 bg-gray-50 dark:bg-gray-800' : ''}>
-                      {r} {disabled ? '(Uyumsuz)' : ''}
-                    </option>
-                  );
-                })}
-              </optgroup>
-              <optgroup label="Stand & Mutfak Bölümleri">
-                {dynamicFoodRoles.map(r => {
-                  const disabled = isRoleDisabled(r);
-                  return (
-                    <option key={r} value={r} disabled={disabled} className={disabled ? 'text-gray-400 bg-gray-50 dark:bg-gray-800' : ''}>
-                      {r} {disabled ? '(Uyumsuz)' : ''}
-                    </option>
-                  );
-                })}
-              </optgroup>
-            </select>
-          </div>
-          <div className="w-full min-w-0 space-y-1">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs text-muted-foreground">Tarih Aralığı</label>
-              <label className="text-[10px] flex items-center gap-1 cursor-pointer text-blue-500 hover:text-blue-600 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">
-                <input 
-                  type="checkbox" 
-                  checked={isFullKermes} 
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setIsFullKermes(checked);
-                    if (checked) {
-                      setForm(prev => ({...prev, startDate: kermesStart || '', endDate: kermesEnd || ''}));
-                    }
-                  }} 
-                  className="rounded border-blue-300 w-3 h-3 text-blue-600 focus:ring-blue-500" 
-                />
-                Tüm Kermes
-              </label>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 min-w-0">
-              <input 
-                type="date" 
-                value={form.startDate}
-                min={kermesStart || ''}
-                max={kermesEnd || ''}
-                disabled={isFullKermes}
-                onChange={e => {
-                  const val = e.target.value;
-                  setForm(prev => ({...prev, startDate: val, endDate: prev.endDate < val ? val : prev.endDate}));
-                }}
-                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-              <span className="hidden sm:inline text-muted-foreground">-</span>
-              <input 
-                type="date" 
-                value={form.endDate}
-                min={form.startDate || kermesStart || ''}
-                max={kermesEnd || ''}
-                disabled={isFullKermes}
-                onChange={e => setForm({...form, endDate: e.target.value})}
-                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-          <div className="w-full min-w-0 space-y-1">
-            <label className="text-xs text-muted-foreground">Saat (Başlangıç - Bitiş)</label>
-            <div className="flex flex-col sm:flex-row items-center gap-2 min-w-0">
-              <input 
-                type="time" 
-                value={form.startTime}
-                onChange={e => setForm({...form, startTime: e.target.value})}
-                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
-              />
-              <span className="hidden sm:inline text-muted-foreground">-</span>
-              <input 
-                type="time" 
-                value={form.endTime}
-                onChange={e => setForm({...form, endTime: e.target.value})}
-                className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          <div className="w-full flex justify-end mt-2">
             <button 
-              type="submit" 
-              disabled={isCreating}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg py-2 px-8 transition disabled:opacity-50 min-w-[150px]"
+              type="button"
+              onClick={() => setIsAddingVardiya(!isAddingVardiya)}
+              className="shrink-0 whitespace-nowrap px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold rounded-lg transition"
             >
-              {isCreating ? 'Ekleniyor...' : 'Kermese Vardiya Ekle'}
+              {isAddingVardiya ? 'İptal Et' : '+ Yeni Vardiya Ekle'}
             </button>
           </div>
-        </form>
+
+          {isAddingVardiya && (
+            <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30">
+              <h5 className="text-sm font-semibold text-foreground mb-4">Yeni Vardiya Ekle</h5>
+              <form onSubmit={handleCreate} className="flex flex-col gap-4">
+                <div className="w-full min-w-0 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs text-muted-foreground">Personel Seç</label>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const el = document.querySelector('[data-tab="personel"]') as HTMLElement;
+                        if (el) el.click();
+                        else window.location.href = '?tab=personel';
+                      }}
+                      className="text-[10px] text-blue-500 hover:underline"
+                    >
+                      Yeni Ekle
+                    </button>
+                  </div>
+                  <select 
+                    value={form.userId} 
+                    onChange={e => setForm({...form, userId: e.target.value})}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="">Seçiniz</option>
+                    {allowedStaffIds.map(uid => (
+                      <option key={uid} value={uid}>{getUserName(uid)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-full min-w-0 space-y-1">
+                  <label className="text-xs text-muted-foreground">Görev / Rol</label>
+                  <select 
+                    value={form.role} 
+                    onChange={e => setForm({...form, role: e.target.value})}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="">Seçiniz</option>
+                    <optgroup label="Saha & Lojistik Görevleri">
+                      {dynamicSahaRoles.map(r => {
+                        const disabled = isRoleDisabled(r);
+                        return (
+                          <option key={r} value={r} disabled={disabled} className={disabled ? 'text-gray-400 bg-gray-50 dark:bg-gray-800' : ''}>
+                            {r} {disabled ? '(Uyumsuz)' : ''}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                    <optgroup label="Stand & Mutfak Bölümleri">
+                      {dynamicFoodRoles.map(r => {
+                        const disabled = isRoleDisabled(r);
+                        return (
+                          <option key={r} value={r} disabled={disabled} className={disabled ? 'text-gray-400 bg-gray-50 dark:bg-gray-800' : ''}>
+                            {r} {disabled ? '(Uyumsuz)' : ''}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  </select>
+                </div>
+                <div className="w-full min-w-0 space-y-1">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs text-muted-foreground">Tarih Aralığı</label>
+                    <label className="text-[10px] flex items-center gap-1 cursor-pointer text-blue-500 hover:text-blue-600 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">
+                      <input 
+                        type="checkbox" 
+                        checked={isFullKermes} 
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setIsFullKermes(checked);
+                          if (checked) {
+                            setForm(prev => ({...prev, startDate: kermesStart || '', endDate: kermesEnd || ''}));
+                          }
+                        }} 
+                        className="rounded border-blue-300 w-3 h-3 text-blue-600 focus:ring-blue-500" 
+                      />
+                      Tüm Kermes
+                    </label>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center gap-2 min-w-0">
+                    <input 
+                      type="date" 
+                      value={form.startDate}
+                      min={kermesStart || ''}
+                      max={kermesEnd || ''}
+                      disabled={isFullKermes}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setForm(prev => ({...prev, startDate: val, endDate: prev.endDate < val ? val : prev.endDate}));
+                      }}
+                      className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                    <span className="hidden sm:inline text-muted-foreground">-</span>
+                    <input 
+                      type="date" 
+                      value={form.endDate}
+                      min={form.startDate || kermesStart || ''}
+                      max={kermesEnd || ''}
+                      disabled={isFullKermes}
+                      onChange={e => setForm({...form, endDate: e.target.value})}
+                      className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+                <div className="w-full min-w-0 space-y-1">
+                  <label className="text-xs text-muted-foreground">Saat (Başlangıç - Bitiş)</label>
+                  <div className="flex flex-col sm:flex-row items-center gap-2 min-w-0">
+                    <input 
+                      type="time" 
+                      value={form.startTime}
+                      onChange={e => setForm({...form, startTime: e.target.value})}
+                      className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
+                    />
+                    <span className="hidden sm:inline text-muted-foreground">-</span>
+                    <input 
+                      type="time" 
+                      value={form.endTime}
+                      onChange={e => setForm({...form, endTime: e.target.value})}
+                      className="w-full min-w-0 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="w-full flex justify-end mt-2">
+                  <button 
+                    type="submit" 
+                    disabled={isCreating}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg py-2 px-8 transition disabled:opacity-50 min-w-[150px]"
+                  >
+                    {isCreating ? 'Ekleniyor...' : 'Kermese Vardiya Ekle'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
-        )}
+      ) : (
+        <div className="bg-card rounded-xl p-6 shadow-sm border border-border flex flex-col items-center justify-center py-10 text-center space-y-3">
+          <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center text-2xl">
+            🔒
+          </div>
+          <h2 className="text-lg font-bold text-foreground">Vardiya Oluşturma Yetkiniz Yok</h2>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Sizin yeterli Admin haklarınız bulunmuyor. Görev/Vardiya atamalarını sadece Kermes Yöneticileri yapabilir. Aşağıdan mevcut görev listenizi inceleyebilirsiniz.
+          </p>
+        </div>
+      )}
 
       <div className="border border-border rounded-xl bg-background/50 overflow-hidden mb-6">
         <button 
@@ -779,16 +793,18 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                            {gapInfo.gaps.map((gapText, j) => (
                              <button 
                                key={j} 
-                               onClick={() => handleGapClick(gapInfo.date, gapText, gapInfo.role)}
-                               className={`group w-full flex items-center justify-between p-2 rounded-lg transition-colors border border-transparent ${gapInfo.empty ? 'hover:bg-red-500/20 hover:border-red-500/30' : 'hover:bg-orange-500/20 hover:border-orange-500/30'}`}
+                               onClick={() => isAdmin && handleGapClick(gapInfo.date, gapText, gapInfo.role)}
+                               className={`group w-full flex items-center justify-between p-2 rounded-lg transition-colors border border-transparent ${isAdmin ? (gapInfo.empty ? 'hover:bg-red-500/20 hover:border-red-500/30 cursor-pointer' : 'hover:bg-orange-500/20 hover:border-orange-500/30 cursor-pointer') : 'cursor-default opacity-80'}`}
                              >
                                <div className={`flex items-center gap-2 text-sm font-semibold ${gapInfo.empty ? 'text-red-400' : 'text-orange-400'}`}>
                                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                  {gapText}
                                </div>
-                               <span className={`text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${gapInfo.empty ? 'text-red-300' : 'text-orange-300'}`}>
-                                 Atama Yap <span>&rarr;</span>
-                               </span>
+                               {isAdmin && (
+                                 <span className={`text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${gapInfo.empty ? 'text-red-300' : 'text-orange-300'}`}>
+                                   Atama Yap <span>&rarr;</span>
+                                 </span>
+                               )}
                              </button>
                            ))}
                          </div>
@@ -891,15 +907,17 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
                                   </div>
                                   
                                   {/* Delete Action */}
-                                  <button 
-                                    onClick={() => handleDeleteClick(roster)}
-                                    className="text-red-500 hover:bg-red-500/10 rounded-md transition-all p-1.5 absolute right-2 top-1/2 -translate-y-1/2"
-                                    title="Vardiyayı Sil"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
+                                  {isAdmin && (
+                                    <button 
+                                      onClick={() => handleDeleteClick(roster)}
+                                      className="text-red-500 hover:bg-red-500/10 rounded-md transition-all p-1.5 absolute right-2 top-1/2 -translate-y-1/2"
+                                      title="Vardiyayı Sil"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  )}
                                   
                                 </div>
                               );
@@ -973,6 +991,5 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
         </div>
       )}
       </div>
-    </div>
   );
 }
