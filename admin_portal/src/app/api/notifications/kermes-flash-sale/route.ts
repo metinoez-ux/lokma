@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
             'mutable-content': 1
           }
         },
-        fcm_options: {
-          ...(itemImage ? { image: itemImage } : {})
+        fcmOptions: {
+          ...(itemImage ? { imageUrl: itemImage } : {})
         }
       },
       tokens: tokensArray,

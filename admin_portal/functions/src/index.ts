@@ -1130,7 +1130,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                 // Attach POD image for rich iOS & Android notifications
                 if (podImageUrl) {
                     messagePayload.apns = {
-                        fcm_options: { image: podImageUrl },
+                        fcmOptions: { imageUrl: podImageUrl },
                         payload: { aps: { "mutable-content": 1 } },
                     };
                     messagePayload.android = {

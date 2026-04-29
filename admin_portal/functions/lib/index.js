@@ -1095,7 +1095,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             // Attach POD image for rich iOS & Android notifications
             if (podImageUrl) {
                 messagePayload.apns = {
-                    fcm_options: { image: podImageUrl },
+                    fcmOptions: { imageUrl: podImageUrl },
                     payload: { aps: { "mutable-content": 1 } },
                 };
                 messagePayload.android = {
