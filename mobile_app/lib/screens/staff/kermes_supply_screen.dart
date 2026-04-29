@@ -11,13 +11,13 @@ class KermesSupplyScreen extends StatefulWidget {
   final String userName;
 
   const KermesSupplyScreen({
-    Key? key,
+    super.key,
     required this.kermesId,
     required this.userPrepZones,
     this.userSection = '',
     this.userRoles = const [],
     this.userName = '',
-  }) : super(key: key);
+  });
 
   @override
   State<KermesSupplyScreen> createState() => _KermesSupplyScreenState();
@@ -29,6 +29,18 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
   bool _isLoadingCats = true;
   String _currentUserName = '';
   DateTime? _eventEndDate;
+
+  bool get isSupplier => widget.userRoles.any((r) => 
+      r.toLowerCase().contains('tedarik') || 
+      r.toLowerCase().contains('stok') || 
+      r.toLowerCase().contains('lojistik') || 
+      r.toLowerCase().contains('malzeme') || 
+      r.toLowerCase().contains('depo') || 
+      r.toLowerCase().contains('alım') || 
+      r.toLowerCase().contains('satınalma') || 
+      r.toLowerCase().contains('satın alma') || 
+      r.toLowerCase().contains('supplier'));
+
 
   @override
   void initState() {
@@ -54,7 +66,9 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
               });
            }
         }
-      } catch (e) {}
+      } catch (e) {
+        // ignore
+      }
     }
   }
 
@@ -98,6 +112,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
          .get();
          
     if (recent.docs.isNotEmpty) {
+       if (!mounted) return;
        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('''$itemName ${'supply_already_requested'.tr()}''')));
        return;
     }
@@ -147,7 +162,9 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
             backgroundColor: Colors.green,
          ));
       }
-    } catch(e) {}
+    } catch(e) {
+      // ignore
+    }
   }
 
   
@@ -192,6 +209,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
        }
     }
 
+    if (!mounted) return;
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) {
@@ -235,6 +253,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
     );
 
     if (result != null) {
+      if (!mounted) return;
       await _submitRequest(itemName, selectedZone, category: category, urgency: result);
     }
   }
@@ -273,7 +292,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
        return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(8)),
-          child: const Text('İptal Edildi', style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+          child: const Text('İptal Edildi', style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
        );
     } else if (status == 'rejected') {
        return Container(
@@ -328,14 +347,14 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
     String statusText = 'Bekliyor';
     IconData statusIcon = Icons.access_time_filled;
     if (status == 'on_the_way') { statusColor = Colors.amber; statusText = 'Yolda / Hazırlanıyor'; statusIcon = Icons.local_shipping; }
-    String _formatD(int m) {
+    String formatDuration(int m) {
       if (m < 60) return '$m dakika';
       if (m < 24 * 60) return '${m ~/ 60} saat${m % 60 == 0 ? '' : ' ${m % 60} dk'}';
       return '${m ~/ (24 * 60)} gün${(m % (24 * 60)) ~/ 60 == 0 ? '' : ' ${(m % (24 * 60)) ~/ 60} saat'}';
     }
 
-    if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; if (diffMins != null) statusText += '\n(${_formatD(diffMins)} sürdü)'; statusIcon = Icons.check_circle; }
-    else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; if (diffMins != null) statusText += '\n(${_formatD(diffMins)} sürdü)'; statusIcon = Icons.cancel; }
+    if (status == 'completed') { statusColor = Colors.green; statusText = 'Tamamlandı'; if (diffMins != null) statusText += '\n(${formatDuration(diffMins)} sürdü)'; statusIcon = Icons.check_circle; }
+    else if (status == 'rejected') { statusColor = Colors.red; statusText = 'Reddedildi'; if (diffMins != null) statusText += '\n(${formatDuration(diffMins)} sürdü)'; statusIcon = Icons.cancel; }
     else if (status == 'cancelled') { statusColor = Colors.grey; statusText = 'İptal Edildi'; statusIcon = Icons.cancel; }
     
     if (urgency == 'super_urgent' && status == 'pending') {
@@ -417,7 +436,47 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                       )
                     ),
                     const SizedBox(height: 20),
-                    if (isMine && status == 'pending')
+                    if (isSupplier && status == 'pending') ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                           style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade600, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14)),
+                           icon: const Icon(Icons.local_shipping),
+                           label: const Text('HAZIRLANIYOR / YOLDA', style: TextStyle(fontWeight: FontWeight.bold)),
+                           onPressed: () {
+                              doc.reference.update({'status': 'on_the_way', 'updatedAt': FieldValue.serverTimestamp()});
+                              Navigator.pop(ctx);
+                           },
+                        )
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade50, foregroundColor: Colors.red, elevation: 0, 
+                                                           side: BorderSide(color: Colors.red.shade300), padding: const EdgeInsets.symmetric(vertical: 14)),
+                           icon: const Icon(Icons.cancel),
+                           label: const Text('Talebi Reddet / İptal Et', style: TextStyle(fontWeight: FontWeight.bold)),
+                           onPressed: () {
+                              doc.reference.update({'status': 'cancelled', 'updatedAt': FieldValue.serverTimestamp()});
+                              Navigator.pop(ctx);
+                           },
+                        )
+                      ),
+                    ] else if (isSupplier && status == 'on_the_way') ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14)),
+                           icon: const Icon(Icons.check_circle_outline),
+                           label: const Text('TESLİM EDİLDİ / TAMAMLANDI', style: TextStyle(fontWeight: FontWeight.bold)),
+                           onPressed: () {
+                              doc.reference.update({'status': 'completed', 'updatedAt': FieldValue.serverTimestamp()});
+                              Navigator.pop(ctx);
+                           },
+                        )
+                      ),
+                    ] else if (isMine && status == 'pending') ...[
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -431,20 +490,8 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                            },
                         )
                       )
-                    else if (status == 'on_the_way')
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14)),
-                           icon: const Icon(Icons.check_circle_outline),
-                           label: const Text('TESLİM EDİLDİ / TAMAMLANDI', style: TextStyle(fontWeight: FontWeight.bold)),
-                           onPressed: () {
-                              doc.reference.update({'status': 'completed', 'updatedAt': FieldValue.serverTimestamp()});
-                              Navigator.pop(ctx);
-                           },
-                        )
-                      ),
-                  ]
+                    ],
+                  ],
                 )
               ),
               const SizedBox(height: 30),
@@ -606,7 +653,7 @@ class _KermesSupplyScreenState extends State<KermesSupplyScreen> {
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
                                color: status == 'completed' ? (isDark ? Colors.white10 : Colors.grey.shade100) : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
-                               border: Border.all(color: status == 'on_the_way' ? Colors.amber : (status == 'completed' ? Colors.transparent : Colors.red.withOpacity(0.3))),
+                               border: Border.all(color: status == 'on_the_way' ? Colors.amber : (status == 'completed' ? Colors.transparent : Colors.red.withValues(alpha: 0.3))),
                                borderRadius: BorderRadius.circular(12),
                             ),
                             child: Material(

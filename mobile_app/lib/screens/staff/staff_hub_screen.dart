@@ -1559,14 +1559,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false, // Remove default back button
         leading: IconButton(
-          icon: const Icon(Icons.manage_accounts_rounded, color: Colors.white),
-          tooltip: 'Ayarlar ve Ana Pano',
+          icon: const Icon(Icons.home_rounded, color: Colors.white),
+          tooltip: 'Ana Sayfa',
           onPressed: () {
-            if (_selectedNavIndex != 0) {
-              setState(() => _selectedNavIndex = 0);
-            } else {
-              _handleWorkplaceSwitch(); // If already on home, act as profile/settings
-            }
+            context.go('/');
           },
         ),
         titleSpacing: 0,
@@ -1589,6 +1585,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.manage_accounts_rounded, color: Colors.white),
+            tooltip: 'Ayarlar ve İşyeri Değiştir',
+            onPressed: () {
+              _handleWorkplaceSwitch();
+            },
+          ),
           if (showQr)
             IconButton(
               icon: const Icon(Icons.qr_code_scanner, size: 22, color: Colors.white),

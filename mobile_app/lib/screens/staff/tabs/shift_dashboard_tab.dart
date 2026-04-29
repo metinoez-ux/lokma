@@ -1023,9 +1023,13 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () {
+                     final allRoles = [
+                        ...gorevler,
+                        ...dynamicRoles.map((g) => g['name'] as String),
+                     ];
                      Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => KermesSupplyScreen(userSection: bolumText, userRoles: gorevler, userName: capabilities.staffName, 
+                        MaterialPageRoute(builder: (_) => KermesSupplyScreen(userSection: bolumText, userRoles: allRoles, userName: capabilities.staffName, 
                            kermesId: capabilities.businessId!,
                            userPrepZones: capabilities.kermesPrepZones,
                         )),
