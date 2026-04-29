@@ -341,10 +341,18 @@ class _StaffNotificationsScreenState extends ConsumerState<StaffNotificationsScr
                         imageUrl,
                         width: double.infinity,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 80,
+                        errorBuilder: (_, error, ___) => Container(
+                          height: 120,
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF0F0F2), borderRadius: BorderRadius.circular(14)),
-                          child: Center(child: Icon(Icons.broken_image_rounded, color: Colors.grey[500], size: 32)),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image_rounded, color: Colors.grey[500], size: 32),
+                              const SizedBox(height: 8),
+                              Text('Hata: $error\nURL: $imageUrl', style: const TextStyle(fontSize: 10, color: Colors.red), textAlign: TextAlign.center, maxLines: 3, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
                         ),
                         loadingBuilder: (_, child, progress) {
                           if (progress == null) return child;

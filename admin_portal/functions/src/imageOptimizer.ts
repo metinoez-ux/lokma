@@ -54,11 +54,15 @@ export const optimizeLokmaImages = onObjectFinalized(
 
             // Overwrite the original file with the optimized one
             // We explicitely set 'isOptimized' to "true" to break the onFinalize chain.
+            // MUST PRESERVE the firebaseStorageDownloadTokens so client URLs don't break!
+            const existingTokens = metadata.firebaseStorageDownloadTokens;
+            
             await file.save(optimizedBuffer, {
                 metadata: {
                     contentType: "image/webp",
                     metadata: {
                         isOptimized: "true",
+                        ...(existingTokens ? { firebaseStorageDownloadTokens: existingTokens } : {}),
                     },
                 },
                 // Allow overwriting

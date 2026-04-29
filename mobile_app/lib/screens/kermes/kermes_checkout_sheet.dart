@@ -2213,11 +2213,17 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
   /// QR Okutma
   Future<void> _scanTableQR() async {
-    final result = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const QRScannerScreen(
-          prompt: 'Masadaki QR Kodu Okutun',
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.85,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: const QRScannerScreen(
+            prompt: 'Masadaki QR Kodu Okutun',
+          ),
         ),
       ),
     );

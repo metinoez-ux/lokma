@@ -558,11 +558,20 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   }
 
   void _openQrScanner(String? businessId) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => const QRScannerScreen(
-        prompt: 'QR Kodunu Okutun',
+    showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.85,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: const QRScannerScreen(
+            prompt: 'QR Kodunu Okutun',
+          ),
+        ),
       ),
-    )).then((scannedText) {
+    ).then((scannedText) {
       if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
         if (scannedText.startsWith('kermes://handover/')) {
           _handleHandoverQR(scannedText);
@@ -1561,9 +1570,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         automaticallyImplyLeading: false, // Remove default back button
         leading: IconButton(
           icon: const Icon(Icons.home_rounded, color: Colors.white),
-          tooltip: 'Ana Sayfa',
+          tooltip: 'Ana Pano',
           onPressed: () {
-            context.go('/');
+            setState(() {
+              _selectedNavIndex = 0;
+            });
           },
         ),
         titleSpacing: 0,
@@ -1586,13 +1597,6 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.manage_accounts_rounded, color: Colors.white),
-            tooltip: 'Ayarlar ve İşyeri Değiştir',
-            onPressed: () {
-              _handleWorkplaceSwitch();
-            },
-          ),
           if (showQr)
             IconButton(
               icon: const Icon(Icons.qr_code_scanner, size: 22, color: Colors.white),

@@ -1628,11 +1628,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   // ========== QR SCANNER LOGIC ==========
   void _openProfileQrScanner(String? businessId) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => const QRScannerScreen(
-        prompt: 'QR Kodunu Okutun',
+    showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.85,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: const QRScannerScreen(
+            prompt: 'QR Kodunu Okutun',
+          ),
+        ),
       ),
-    )).then((scannedText) {
+    ).then((scannedText) {
       if (scannedText != null && scannedText is String && scannedText.isNotEmpty) {
         if (scannedText.startsWith('kermes://handover/')) {
           _handleHandoverQR(scannedText);

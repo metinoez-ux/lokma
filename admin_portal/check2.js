@@ -23,17 +23,16 @@ initializeApp({
 const db = getFirestore();
 
 async function check() {
-  const users = await db.collection('users').limit(100).get();
+  const users = await db.collection('users').get();
   for (const user of users.docs) {
     const hist = await db.collection('users').doc(user.id).collection('notifications')
       .where('type', '==', 'kermes_parking')
-      .limit(10).get();
+      .orderBy('createdAt', 'desc')
+      .limit(1).get();
     
-    for (const doc of hist.docs) {
-        if (doc.data().imageUrl) {
-            console.log("Image URL:", doc.data().imageUrl);
-            return;
-        }
+    if (!hist.empty && hist.docs[0].data().imageUrl) {
+      console.log("Image URL:", hist.docs[0].data().imageUrl);
+      return;
     }
   }
 }
