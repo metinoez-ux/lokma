@@ -323,25 +323,25 @@ function renderCardPage(
   const descLines = doc.splitTextToSize(step.desc, maxW);
    if (descLines.length <= 1) {
    doc.text(step.desc, leftX + tw, currentY);
-   currentY += 7.5;
+   currentY += 5.5;
    } else {
    // First part on same line, rest below indented
    doc.text(descLines[0], leftX + tw, currentY);
    for (let i = 1; i < descLines.length; i++) {
-   currentY += 5;
+   currentY += 4.5;
    doc.text(descLines[i], leftX + tw, currentY);
    }
-   currentY += 7.5;
+   currentY += 5.5;
    }
    } else {
    // Full wrap below title
    const descLines = doc.splitTextToSize(step.desc, A6_WIDTH - PAD * 2 - 5);
    doc.text(descLines[0], leftX + tw, currentY);
    for (let i = 1; i < descLines.length; i++) {
-   currentY += 5;
+   currentY += 4.5;
    doc.text(descLines[i], leftX + tw, currentY);
    }
-   currentY += 7.5;
+   currentY += 5.5;
    }
   });
 
