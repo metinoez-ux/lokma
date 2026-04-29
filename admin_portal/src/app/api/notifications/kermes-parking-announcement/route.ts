@@ -118,7 +118,10 @@ export async function POST(request: NextRequest) {
         ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl } : {})
       },
       android: {
+        priority: 'high',
         notification: {
+          defaultSound: true,
+          defaultVibrateTimings: true,
           ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl } : {})
         }
       },
@@ -130,8 +133,8 @@ export async function POST(request: NextRequest) {
             'mutable-content': 1
           }
         },
-        fcm_options: {
-          ...(vehicleImageUrl ? { image: vehicleImageUrl } : {})
+        fcmOptions: {
+          ...(vehicleImageUrl ? { imageUrl: vehicleImageUrl } : {})
         }
       },
       tokens: tokensArray,
