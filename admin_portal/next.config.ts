@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
     },
   },
   env: {
+    VERCEL_OTEL_DISABLED: "1",
     // Inject at build time for server-side use
     FIREBASE_SERVICE_ACCOUNT_KEY: process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
     NEXT_PUBLIC_BUILD_TIME: (() => {

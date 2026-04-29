@@ -1,7 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
 import { routing } from './routing';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 
 export default getRequestConfig(async ({ requestLocale }) => {
  // This typically corresponds to the `[locale]` segment
@@ -33,15 +31,41 @@ export default getRequestConfig(async ({ requestLocale }) => {
  console.warn(`Local fallback messages for '${locale}' could not be loaded.`, e);
  }
 
- try {
- // Fetch dynamic translations from Firestore using the Client SDK
- // This is necessary because Turbopack bundles request.ts into the edge middleware,
- // and firebase-admin (Node.js) causes 'node:process' missing errors in Firebase Edge.
- const docRef = doc(db, 'translations', locale as string);
- const docSnap = await getDoc(docRef);
+  try {
+  // Fetch dynamic translations from Firestore using REST API to prevent
+  // bundling the massive Firebase Client SDK into the Edge middleware
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'aylar-a45af';
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/translations/${locale}`;
+  
+  const response = await fetch(url, {
+    // Cache for 10 seconds to avoid spamming the DB, but keep it mostly fresh
+    next: { revalidate: 10 }
+  });
 
- if (docSnap.exists()) {
- const firestoreMessages = docSnap.data() || {};
+  if (response.ok) {
+    const data = await response.json();
+    
+    // Firestore REST API returns fields like { fields: { key: { stringValue: "val" } } }
+    // We need to parse this into a normal JS object.
+    const parseFirestoreDoc = (fields: any): any => {
+      if (!fields) return {};
+      const result: any = {};
+      for (const [key, value] of Object.entries(fields)) {
+        if (!value) continue;
+        const valObj = value as any;
+        if (valObj.stringValue !== undefined) result[key] = valObj.stringValue;
+        else if (valObj.integerValue !== undefined) result[key] = parseInt(valObj.integerValue, 10);
+        else if (valObj.doubleValue !== undefined) result[key] = parseFloat(valObj.doubleValue);
+        else if (valObj.booleanValue !== undefined) result[key] = valObj.booleanValue;
+        else if (valObj.mapValue && valObj.mapValue.fields) result[key] = parseFirestoreDoc(valObj.mapValue.fields);
+        else if (valObj.arrayValue && valObj.arrayValue.values) {
+          result[key] = valObj.arrayValue.values.map((v: any) => parseFirestoreDoc({ temp: v }).temp);
+        }
+      }
+      return result;
+    };
+
+    const firestoreMessages = parseFirestoreDoc(data.fields);
 
  // Deep merge function
  const isObject = (item: any) => (item && typeof item === 'object' && !Array.isArray(item));
