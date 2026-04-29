@@ -349,7 +349,7 @@ function renderCardPage(
   // BOTTOM ANCHORED SECTION (Footer, Badges, Afiyet Olsun)
   // ================================================================
   const bottomBarH = 10;
-  const bottomBarY = A6_HEIGHT - bottomBarH - 3;
+  const bottomBarY = A6_HEIGHT - bottomBarH - 4.5;
 
   let sponsorH = 0;
   if (sponsorLogos && sponsorLogos.length > 0) {
@@ -360,7 +360,7 @@ function renderCardPage(
   const divY = sponsorStartY - 3;
 
   // "Afiyet Olsun!" - Script/Cursive font right above footer
-  const afiyetY = divY - 4; // Shifted up
+  const afiyetY = divY - 1.5; // Shifted down a bit
   doc.setFont('DancingScript', 'normal');
   doc.setFontSize(26);
   doc.setTextColor(...LOKMA_RED);
@@ -422,7 +422,7 @@ function renderCardPage(
 
   // BOTTOM BAR: Partner text + Logo (left) + badges (right)
   // LOKMA logo
-  const logoW = 26;
+  const logoW = 25;
   const logoH = logoW / 3.63;
 
   const partnerText = isKermes ? txt.kermesPartnerLine : txt.partnerLine;
@@ -444,7 +444,7 @@ function renderCardPage(
   }
 
   // App Store + Google Play badges
-  const badgeH = 5.5;
+  const badgeH = 4.8;
   const badgeRatio = 626 / 186; // Both new badges have this aspect ratio
   const asBadgeW = badgeH * badgeRatio;
   const gpBadgeW = badgeH * badgeRatio; 
