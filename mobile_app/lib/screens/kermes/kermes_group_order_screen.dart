@@ -372,7 +372,11 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
                   // Scrollable: countdown timer
                   if (order?.expiresAt != null)
                     SliverToBoxAdapter(
-                      child: _buildCountdownTimer(order!.expiresAt!, isDark),
+                      child: GroupOrderCountdownTimer(
+                        expiresAt: order!.expiresAt!,
+                        isDark: isDark,
+                        accentColor: _accent,
+                      ),
                     ),
 
                   // Scrollable: tab bar
@@ -1419,6 +1423,7 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
         .firstWhere((p) => p?.oderId == pid, orElse: () => null);
     final isHost = me?.isHost ?? false;
 
+
     return Container(
       padding: EdgeInsets.fromLTRB(
           16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
@@ -1516,6 +1521,17 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
         ),
       );
       Navigator.pop(context);
+    } else if (!success && mounted) {
+      final error = ref.read(groupOrderProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Hata: ${error ?? "Bilinmeyen hata"}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
 

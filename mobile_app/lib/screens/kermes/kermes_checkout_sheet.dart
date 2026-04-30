@@ -1072,38 +1072,71 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               // Close button
               GestureDetector(
                 onTap: () async {
-                  final shouldClear = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text('marketplace.clear_cart_warning'.tr()),
-                      content: Text('marketplace.clear_cart_warning_desc'.tr()),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text('common.cancel'.tr()),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text(
-                            'common.clear'.tr(),
-                            style: const TextStyle(color: Colors.red),
+                  final isGroupActive = ref.read(groupOrderProvider).currentOrder != null;
+                  final wasGroupOrder = ref.read(kermesCartProvider).isGroupOrder;
+                  
+                  if (isGroupActive || wasGroupOrder) {
+                    // Grup siparisinde: sadece sheet'i kapat, grubu silme
+                    // Eger gercekten iptal etmek istiyorsa grup ekranindaki "Grubu Iptal Et" butonu var
+                    final result = await showDialog<String>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Grup Siparisi'),
+                        content: const Text('Grup siparisine devam etmek mi istiyorsunuz, yoksa grubu iptal edip sepeti bosaltmak mi?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, 'back'),
+                            child: const Text('Geri Don'),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, 'cancel_group'),
+                            child: const Text(
+                              'Grubu Iptal Et',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
 
-                  if (shouldClear == true) {
-                    final wasGroupOrder = ref.read(kermesCartProvider).isGroupOrder;
-                    final isGroupActive = ref.read(groupOrderProvider).currentOrder != null;
-                    ref.read(kermesCartProvider.notifier).clearCart();
-                    
-                    if (isGroupActive || wasGroupOrder) {
-                      ref.read(groupOrderProvider.notifier).clearOrder();
-                    }
-
-                    if (context.mounted) {
+                    if (result == 'back' && context.mounted) {
                       Navigator.pop(context);
+                    } else if (result == 'cancel_group') {
+                      ref.read(kermesCartProvider.notifier).clearCart();
+                      ref.read(groupOrderProvider.notifier).clearOrder();
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    }
+                  } else {
+                    // Normal siparis: mevcut davranis
+                    final shouldClear = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text('marketplace.clear_cart_warning'.tr()),
+                        content: Text('marketplace.clear_cart_warning_desc'.tr()),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text('common.cancel'.tr()),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: Text(
+                              'common.clear'.tr(),
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (shouldClear == true) {
+                      ref.read(kermesCartProvider.notifier).clearCart();
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
                     }
                   }
                 },

@@ -193,8 +193,14 @@ class KermesGroupOrder {
   /// Toplam ürün sayısı
   int get totalItems => participants.fold(0, (sum, p) => sum + p.totalItems);
 
-  /// Tüm katılımcılar hazır mı?
-  bool get allParticipantsReady => participants.every((p) => p.isReady);
+  /// Tum katilimcilar hazir mi? Solo host ise ready kontrolu gerekmez.
+  bool get allParticipantsReady {
+    if (participants.length == 1 && participants.first.isHost) {
+      // Tek kisi (host) - sepetinde urun varsa yeterli
+      return participants.first.items.isNotEmpty;
+    }
+    return participants.every((p) => p.isReady);
+  }
 
   /// Katılımcı sayısı
   int get participantCount => participants.length;

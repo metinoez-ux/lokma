@@ -1441,15 +1441,40 @@ String _getLocalizedCountry(String rawCountry) {
   Future<void> _addToCart(KermesMenuItem item) async {
     HapticFeedback.lightImpact();
 
-    // 1. Check for active group order conflict
+    // 1. Check for active group order
+    final groupState = ref.read(groupOrderProvider);
     if (CartWarningUtils.hasActiveGroupOrder(ref)) {
-      CartWarningUtils.showDifferentCartWarning(
-        context: context,
-        ref: ref,
-        targetBusinessName: _currentEvent.title ?? _currentEvent.city,
-        onConfirmClearAndAdd: () => _addToCart(item),
-      );
-      return;
+      final activeOrder = groupState.currentOrder!;
+      if (activeOrder.kermesId == _currentEvent.id) {
+        // Ayni kermesin grup siparisi - urunu gruba ekle
+        final pid = groupState.currentParticipantId;
+        if (pid != null) {
+          await ref.read(groupOrderProvider.notifier).addItemToCart(
+            participantId: pid,
+            menuItem: item,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${item.name} gruba eklendi'),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          }
+        }
+        return;
+      } else {
+        // Farkli kermesin grup siparisi - conflict
+        CartWarningUtils.showGroupOrderConflictWarning(
+          context: context,
+          ref: ref,
+          onConfirmLeaveAndAdd: () => _addToCart(item),
+        );
+        return;
+      }
     }
 
     if (_currentEvent.isMenuOnly) {
