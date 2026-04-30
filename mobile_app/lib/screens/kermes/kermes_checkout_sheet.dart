@@ -759,7 +759,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       ref.read(kermesCartProvider.notifier).clearCart();
       
       // Eger grup siparisi ise oturumu temizle
-      if (widget.isGroupParticipant || cartState.isGroupOrder) {
+      final isGroupActive = ref.read(groupOrderProvider).currentOrder != null;
+      if (isGroupActive || cartState.isGroupOrder) {
         ref.read(groupOrderProvider.notifier).clearOrder();
       }
       
@@ -1094,9 +1095,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 
                   if (shouldClear == true) {
                     final wasGroupOrder = ref.read(kermesCartProvider).isGroupOrder;
+                    final isGroupActive = ref.read(groupOrderProvider).currentOrder != null;
                     ref.read(kermesCartProvider.notifier).clearCart();
                     
-                    if (widget.isGroupParticipant || wasGroupOrder) {
+                    if (isGroupActive || wasGroupOrder) {
                       ref.read(groupOrderProvider.notifier).clearOrder();
                     }
 
