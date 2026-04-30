@@ -35,7 +35,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
 
   String get shareMessage => '${widget.kermesName}\n\n'
       '${widget.hostName} sizi grup siparisine davet ediyor!\n\n'
-      '${widget.groupPin != null ? "PIN: ${widget.groupPin}\n" : ""}'
+      'PIN: ${widget.groupPin ?? widget.orderId}\n'
       'Sure: ${widget.expirationMinutes} dakika\n'
       'Katil: $shareLink';
 
@@ -171,24 +171,20 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
           // Timer Info
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(20),
-            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.timer,
                   size: 16,
-                  color: Colors.amber.shade700,
+                  color: Colors.black87,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${widget.expirationMinutes} dakika süreniz var',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
-                    color: Colors.amber.shade700,
+                    color: Colors.black87,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -230,33 +226,26 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
                       color: Colors.black87,
                     ),
                   ),
-                  if (widget.groupPin != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEA184A).withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFEA184A).withOpacity(0.2)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.lock, size: 16, color: const Color(0xFFEA184A)),
-                          const SizedBox(width: 8),
-                          Text(
-                            'PIN: ${widget.groupPin}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 6,
-                              color: Color(0xFFEA184A),
-                            ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.lock, size: 16, color: Colors.black87),
+                        const SizedBox(width: 8),
+                        Text(
+                          'PIN: ${widget.groupPin ?? widget.orderId}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 6,
+                            color: Colors.black87,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
@@ -322,6 +311,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
                   icon: Icon(_linkCopied ? Icons.check : Icons.copy, size: 20),
                   label: Text(_linkCopied ? 'Kopyalandı!' : 'Linki Kopyala'),
                   style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black87,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -341,8 +331,9 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
               child: const Text(
                 'Siparişe Devam Et',
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
                 ),
               ),
             ),

@@ -188,8 +188,18 @@ class _KermesGroupOrderScreenState
       if (mounted) _updatePillPosition();
     });
 
-    return Scaffold(
-      backgroundColor: bg,
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          final myPid = ref.read(groupOrderProvider).currentParticipantId;
+          if (myPid != null) {
+            ref.read(groupOrderProvider.notifier).setParticipantReadyStatus(participantId: myPid, isReady: false);
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: bg,
       body: Column(
         children: [
           Expanded(
@@ -208,7 +218,14 @@ class _KermesGroupOrderScreenState
                   leading: Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
+                      onTap: () {
+                        // Reset ready state when leaving the group order screen
+                        final myPid = groupState.currentParticipantId;
+                        if (myPid != null) {
+                          ref.read(groupOrderProvider.notifier).setParticipantReadyStatus(participantId: myPid, isReady: false);
+                        }
+                        Navigator.of(context).pop();
+                      },
                       child: Container(
                         width: 36,
                         height: 36,
@@ -312,22 +329,29 @@ class _KermesGroupOrderScreenState
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _accent.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.groups, size: 14, color: _accent),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Grup${order != null ? " (${order.participantCount})" : ""}',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _accent),
-                              ),
-                            ],
+                        GestureDetector(
+                          onTap: () {
+                            if (order != null) {
+                              _showParticipantsSheet(context, order, isDark);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _accent.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.groups, size: 14, color: _accent),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Grup${order != null ? " (${order.participantCount})" : ""}',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _accent),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -769,6 +793,91 @@ class _KermesGroupOrderScreenState
     );
   }
 
+  void _showParticipantsSheet(BuildContext context, KermesGroupOrder initialOrder, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Consumer(
+          builder: (context, ref, child) {
+            final groupState = ref.watch(groupOrderProvider);
+            final order = groupState.currentOrder ?? initialOrder;
+            
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.6,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 12),
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Text(
+                    'Katılımcılar (${order.participantCount})',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: order.participants.length,
+                      itemBuilder: (context, index) {
+                        final participant = order.participants[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: _accent.withOpacity(0.1),
+                            child: Text(
+                              participant.name.isNotEmpty ? participant.name[0].toUpperCase() : '?',
+                              style: const TextStyle(color: _accent, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          title: Text(
+                            participant.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${participant.totalItems} ürün - ${participant.totalAmount.toStringAsFixed(2)} €',
+                            style: TextStyle(
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                          trailing: participant.isHost
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text('Kurucu', style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
+                                )
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _addItemToGroup(KermesMenuItem item) async {
     final groupState = ref.read(groupOrderProvider);
     final myPid = groupState.currentParticipantId;
@@ -1172,6 +1281,7 @@ class _KermesGroupOrderScreenState
         hostName: order.hostName,
         expirationMinutes: 30,
         expiresAt: order.expiresAt ?? DateTime.now().add(const Duration(minutes: 30)),
+        groupPin: order.groupPin,
       ),
     );
   }

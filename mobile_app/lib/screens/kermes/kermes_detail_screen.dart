@@ -198,6 +198,13 @@ class _KermesDetailScreenState extends ConsumerState<KermesDetailScreen> {
     final orderId = await ref.read(groupOrderProvider.notifier).restoreSession();
     if (orderId != null && mounted) {
       setState(() => _activeGroupOrderId = orderId);
+    } else if (mounted) {
+      // Temiz bir yapı için: Eğer aktif grup siparişi yoksa ve sepet de boşsa (ve QR taraması ile gelinmediyse), 
+      // daha önceki yarım kalmış sepetin sipariş bağlamını (deliveryType vs) temizle.
+      final cartState = ref.read(kermesCartProvider);
+      if (cartState.isEmpty && widget.initialTableNumber == null) {
+        ref.read(kermesCartProvider.notifier).clearOrderContext();
+      }
     }
   }
 

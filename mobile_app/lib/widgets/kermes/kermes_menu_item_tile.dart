@@ -28,7 +28,9 @@ class KermesMenuItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
+    final images = item.allImages;
+    final hasImage = images.isNotEmpty;
+    final displayImageUrl = hasImage ? images.first : null;
     final isAvailable = item.isAvailable;
     final isSoldOut = !isAvailable;
     final textColor = isDark ? Colors.white : Colors.black87;
@@ -253,7 +255,7 @@ class KermesMenuItemTile extends StatelessWidget {
                                 color:
                                     isDark ? Colors.white10 : Colors.grey[100],
                                 child: LokmaNetworkImage(
-                                  imageUrl: item.imageUrl!,
+                                  imageUrl: displayImageUrl!,
                                   fit: BoxFit.cover,
                                   errorWidget: (_, __, ___) => Icon(
                                     _getIconForItem(item.name),

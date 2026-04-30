@@ -292,15 +292,22 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       ];
     }
 
-    final updatedParticipant = participant.copyWith(items: updatedItems);
+    final updatedParticipant = participant.copyWith(
+      items: updatedItems,
+      isReady: false, // Reset ready status when items change
+    );
     final updatedParticipants = List<GroupOrderParticipant>.from(order.participants);
     updatedParticipants[participantIndex] = updatedParticipant;
 
-    final updatedOrder = order.copyWith(participants: updatedParticipants);
+    final updatedOrder = order.copyWith(
+      participants: updatedParticipants,
+      status: GroupOrderStatus.collecting, // Order is no longer fully ready
+    );
 
     // Firestore güncelle
     await _groupOrdersCollection.doc(order.id).update({
       'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+      'status': GroupOrderStatus.collecting.name,
     });
 
     state = state.copyWith(currentOrder: updatedOrder);
@@ -339,15 +346,22 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       updatedItems.removeAt(existingItemIndex);
     }
 
-    final updatedParticipant = participant.copyWith(items: updatedItems);
+    final updatedParticipant = participant.copyWith(
+      items: updatedItems,
+      isReady: false, // Reset ready status when items change
+    );
     final updatedParticipants = List<GroupOrderParticipant>.from(order.participants);
     updatedParticipants[participantIndex] = updatedParticipant;
 
-    final updatedOrder = order.copyWith(participants: updatedParticipants);
+    final updatedOrder = order.copyWith(
+      participants: updatedParticipants,
+      status: GroupOrderStatus.collecting, // Order is no longer fully ready
+    );
 
     // Firestore güncelle
     await _groupOrdersCollection.doc(order.id).update({
       'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+      'status': GroupOrderStatus.collecting.name,
     });
 
     state = state.copyWith(currentOrder: updatedOrder);
@@ -362,7 +376,21 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
     if (participantIndex < 0) return;
 
     final participant = order.participants[participantIndex];
-    final updatedParticipant = participant.copyWith(isReady: !participant.isReady);
+    await setParticipantReadyStatus(participantId: participantId, isReady: !participant.isReady);
+  }
+
+  /// "Siparişim Tamam" durumunu açıkça belirle
+  Future<void> setParticipantReadyStatus({required String participantId, required bool isReady}) async {
+    final order = state.currentOrder;
+    if (order == null) return;
+
+    final participantIndex = order.participants.indexWhere((p) => p.oderId == participantId);
+    if (participantIndex < 0) return;
+
+    final participant = order.participants[participantIndex];
+    if (participant.isReady == isReady) return; // Zaten ayni durumdaysa islem yapma
+
+    final updatedParticipant = participant.copyWith(isReady: isReady);
     
     final updatedParticipants = List<GroupOrderParticipant>.from(order.participants);
     updatedParticipants[participantIndex] = updatedParticipant;

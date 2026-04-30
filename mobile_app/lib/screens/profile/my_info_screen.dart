@@ -950,72 +950,91 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             final streetFull = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
             final fullAddress = [streetFull, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
             
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
-                boxShadow: [
-                  if (!isDark) BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _addressController.text = data['street']?.toString() ?? '';
+                  _houseNumberController.text = data['houseNumber']?.toString() ?? '';
+                  _addressLine2Controller.text = data['addressLine2']?.toString() ?? '';
+                  _postalCodeController.text = data['postalCode']?.toString() ?? '';
+                  _cityController.text = data['city']?.toString() ?? '';
+                });
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('"${label.isNotEmpty ? label : fullAddress}" ana teslimat adresi alanına kopyalandı.'),
+                    backgroundColor: const Color(0xFF4CAF50),
+                    duration: const Duration(seconds: 2),
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Label icon
-                  Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(
-                      color: _getLabelColor(label).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
+                  boxShadow: [
+                    if (!isDark) BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Icon(_getLabelIcon(label), color: _getLabelColor(label), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  // Address details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (label.isNotEmpty)
-                          Text(
-                            label,
-                            style: TextStyle(
-                              color: _getLabelColor(label),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Label icon
+                    Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(
+                        color: _getLabelColor(label).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(_getLabelIcon(label), color: _getLabelColor(label), size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    // Address details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (label.isNotEmpty)
+                            Text(
+                              label,
+                              style: TextStyle(
+                                color: _getLabelColor(label),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                              ),
                             ),
+                          Text(
+                            fullAddress,
+                            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        Text(
-                          fullAddress,
-                          style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  // Edit button
-                  IconButton(
-                    icon: Icon(Icons.edit_outlined, color: Colors.grey[500], size: 18),
-                    onPressed: () => _showEditAddressDialog(doc.id, data, isDark, cardBg, textColor, hintColor, borderColor),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  ),
-                  // Delete button
-                  IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.red[400], size: 18),
-                    onPressed: () => _confirmDeleteAddress(doc.id, label.isNotEmpty ? label : fullAddress),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  ),
-                ],
+                    // Edit button
+                    IconButton(
+                      icon: Icon(Icons.edit_outlined, color: Colors.grey[500], size: 18),
+                      onPressed: () => _showEditAddressDialog(doc.id, data, isDark, cardBg, textColor, hintColor, borderColor),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    ),
+                    // Delete button
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, color: Colors.red[400], size: 18),
+                      onPressed: () => _confirmDeleteAddress(doc.id, label.isNotEmpty ? label : fullAddress),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),

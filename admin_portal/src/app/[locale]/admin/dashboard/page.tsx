@@ -86,10 +86,10 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
   useEffect(() => {
     if (embedded) return;
     if (admin && admin.adminType !== 'super') {
-      const isKermesContextOnly = admin.adminType === 'kermes_staff' || admin.adminType === 'kermes' || admin.businessType === 'kermes';
-      const kTarget = admin.kermesId || ((admin as any).kermesAssignments && (admin as any).kermesAssignments[0] && (admin as any).kermesAssignments[0].kermesId) || ((admin as any).assignments?.find((a: any) => a.entityType === 'kermes')?.entityId);
+      // If the admin's active assignment is a kermes, redirect to kermes page
+      const kTarget = admin.kermesId;
       
-      if (isKermesContextOnly && kTarget && kTarget !== 'NONE') {
+      if (kTarget && kTarget !== 'NONE') {
         router.replace(`/admin/kermes/${kTarget}?tab=dashboard`);
       } else if (adminBusinessId) {
         setBusinessFilter(adminBusinessId);

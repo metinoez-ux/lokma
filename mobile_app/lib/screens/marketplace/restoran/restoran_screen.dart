@@ -356,32 +356,27 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   bool _isBusinessOpenNow(Map<String, dynamic> data, {String? mode}) {
     final now = DateTime.now();
     
+    final dh = OpeningHoursHelper(data['deliveryHours']);
+    final ph = OpeningHoursHelper(data['pickupHours']);
+    final oh = OpeningHoursHelper(data['openingHours']);
+
     // Segment-priority logic
     if (mode == 'teslimat') {
-      if (data['deliveryHours'] != null && OpeningHoursHelper(data['deliveryHours']).isOpenAt(now)) return true;
-      if (data['pickupHours'] != null && OpeningHoursHelper(data['pickupHours']).isOpenAt(now)) return true;
-      if (data['openingHours'] != null && OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
+      if (!dh.isEmpty) return dh.isOpenAt(now);
+      if (!ph.isEmpty) return ph.isOpenAt(now);
+      if (!oh.isEmpty) return oh.isOpenAt(now);
     } else if (mode == 'gelal') {
-      if (data['pickupHours'] != null && OpeningHoursHelper(data['pickupHours']).isOpenAt(now)) return true;
-      if (data['openingHours'] != null && OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
+      if (!ph.isEmpty) return ph.isOpenAt(now);
+      if (!oh.isEmpty) return oh.isOpenAt(now);
     }
     
     // Default fallback if open in any capacity
-    final openingHoursData = data['openingHours'];
-    if (openingHoursData != null) {
-      if (OpeningHoursHelper(openingHoursData).isOpenAt(now)) return true;
-    }
-    final deliveryHoursData = data['deliveryHours'];
-    if (deliveryHoursData != null) {
-      if (OpeningHoursHelper(deliveryHoursData).isOpenAt(now)) return true;
-    }
-    final pickupHoursData = data['pickupHours'];
-    if (pickupHoursData != null) {
-      if (OpeningHoursHelper(pickupHoursData).isOpenAt(now)) return true;
-    }
+    if (!oh.isEmpty && oh.isOpenAt(now)) return true;
+    if (!dh.isEmpty && dh.isOpenAt(now)) return true;
+    if (!ph.isEmpty && ph.isOpenAt(now)) return true;
     
     // If no hours data exists at all, default to open (avoid blocking sales)
-    if (openingHoursData == null && deliveryHoursData == null && pickupHoursData == null) {
+    if (oh.isEmpty && dh.isEmpty && ph.isEmpty) {
       return true;
     }
     
@@ -1918,6 +1913,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (hoursData == null) return null;
       try {
         final helper = OpeningHoursHelper(hoursData);
+        if (helper.isEmpty) return null;
+        
         final now = DateTime.now();
         if (helper.isOpenAt(now)) {
           return isShop 

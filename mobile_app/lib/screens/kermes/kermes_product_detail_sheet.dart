@@ -532,7 +532,9 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white54 : Colors.black45;
     final divider = isDark ? Colors.white12 : Colors.grey[200]!;
-    final hasImage = item.imageUrl?.isNotEmpty == true;
+    final images = item.allImages;
+    final hasImage = images.isNotEmpty;
+    final displayImageUrl = hasImage ? images.first : null;
 
     return Container(
       constraints: BoxConstraints(
@@ -578,7 +580,7 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                         width: double.infinity,
                         height: 180,
                         child: LokmaNetworkImage(
-                          imageUrl: item.imageUrl!,
+                          imageUrl: displayImageUrl!,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
                             color: _lokmaPink.withOpacity(0.1),

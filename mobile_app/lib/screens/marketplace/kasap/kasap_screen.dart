@@ -366,17 +366,18 @@ class _KasapScreenState extends State<KasapScreen> {
                 {'label': 'Mağaza', 'icon': '🏪', 'color': 0xFF9E9E9E};
             
               // Check open: openingHours first, then deliveryHours/pickupHours fallback
+              final oh = OpeningHoursHelper(data['openingHours']);
+              final dh = OpeningHoursHelper(data['deliveryHours']);
+              final ph = OpeningHoursHelper(data['pickupHours']);
+
               bool isOpenNow = false;
-              if (data['openingHours'] != null) {
-                isOpenNow = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
-              }
-              if (!isOpenNow && data['deliveryHours'] != null) {
-                isOpenNow = OpeningHoursHelper(data['deliveryHours']).isOpenAt(DateTime.now());
-              }
-              if (!isOpenNow && data['pickupHours'] != null) {
-                isOpenNow = OpeningHoursHelper(data['pickupHours']).isOpenAt(DateTime.now());
-              }
-              if (data['openingHours'] == null && data['deliveryHours'] == null && data['pickupHours'] == null) {
+              if (!oh.isEmpty) {
+                isOpenNow = oh.isOpenAt(DateTime.now());
+              } else if (!dh.isEmpty) {
+                isOpenNow = dh.isOpenAt(DateTime.now());
+              } else if (!ph.isEmpty) {
+                isOpenNow = ph.isOpenAt(DateTime.now());
+              } else {
                 isOpenNow = true;
               }
 

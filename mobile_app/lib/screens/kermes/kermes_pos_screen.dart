@@ -762,11 +762,11 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
             child: Row(
               children: [
                 // Resim
-                if (item.imageUrl != null && item.imageUrl!.isNotEmpty)
+                if (item.allImages.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
-                      item.imageUrl!,
+                      item.allImages.first,
                       width: 44,
                       height: 44,
                       fit: BoxFit.cover,
@@ -1033,7 +1033,9 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
   Widget _buildMenuStyleItem(KermesMenuItem item, bool isDark) {
     final qty = _getCartQuantity(item.name);
     final hasQty = qty > 0;
-    final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
+    final images = item.allImages;
+    final hasImage = images.isNotEmpty;
+    final displayImageUrl = hasImage ? images.first : null;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
 
@@ -1146,7 +1148,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                               width: 96,
                               height: 96,
                               child: Image.network(
-                                item.imageUrl!,
+                                displayImageUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Container(
                                   color: isDark ? Colors.white10 : Colors.grey[100],

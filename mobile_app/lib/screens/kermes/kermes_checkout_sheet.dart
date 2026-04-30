@@ -30,6 +30,7 @@ import 'package:lokma_app/config/app_secrets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:lokma_app/services/stripe_payment_service.dart';
 
 /// Unified Checkout Sheet - Tüm sipariş akışı tek bir tam ekran bottom sheet'te
 class KermesCheckoutSheet extends ConsumerStatefulWidget {
@@ -180,12 +181,40 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           final doc = await db.collection('users').doc(user.uid).get();
           if (doc.exists) {
             final data = doc.data()!;
-            if (_nameController.text.isEmpty && data['name'] != null) {
-              _nameController.text = data['name'];
-            }
-            if (_phoneController.text.isEmpty && data['phone'] != null) {
-              _phoneController.text = data['phone'];
-              _completePhoneNumber = data['phone'];
+            if (mounted) {
+              setState(() {
+                if (_nameController.text.isEmpty && data['name'] != null) {
+                  _nameController.text = data['name'];
+                }
+                if (_nameController.text.isEmpty && data['fullName'] != null) {
+                  _nameController.text = data['fullName'];
+                }
+                if (_phoneController.text.isEmpty && data['phone'] != null) {
+                  _phoneController.text = data['phone'];
+                  _completePhoneNumber = data['phone'];
+                }
+                if (_phoneController.text.isEmpty && data['phoneNumber'] != null) {
+                  _phoneController.text = data['phoneNumber'];
+                  _completePhoneNumber = data['phoneNumber'];
+                }
+                
+                // Pre-fill primary address fields if present
+                if (_streetController.text.isEmpty && data['address'] != null) {
+                  final street = data['address']?.toString() ?? '';
+                  final houseNumber = data['houseNumber']?.toString() ?? '';
+                  _streetController.text = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+                  
+                  if (data['city'] != null) {
+                    _cityController.text = data['city']?.toString() ?? '';
+                  }
+                  if (data['postalCode'] != null) {
+                    _zipController.text = data['postalCode']?.toString() ?? '';
+                  }
+                  if (data['addressLine2'] != null && data['addressLine2'].toString().isNotEmpty) {
+                    // Optional: append addressLine2 or use it if needed
+                  }
+                }
+              });
             }
           }
         } catch (_) {}
@@ -333,6 +362,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             hostName: hostName,
             expirationMinutes: 30,
             expiresAt: DateTime.now().add(const Duration(minutes: 30)),
+            groupPin: ref.read(groupOrderProvider).currentOrder?.groupPin,
           ),
         );
       }
@@ -728,6 +758,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       // Sepeti temizle
       ref.read(kermesCartProvider.notifier).clearCart();
       
+      // Eger grup siparisi ise oturumu temizle
+      if (widget.isGroupParticipant || cartState.isGroupOrder) {
+        ref.read(groupOrderProvider.notifier).clearOrder();
+      }
+      
       // Başarı - QR göster veya Yönlendir
       if (mounted) {
         final rootNavContext = Navigator.of(context, rootNavigator: true).context;
@@ -1035,7 +1070,40 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               
               // Close button
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () async {
+                  final shouldClear = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(AppLocalizations.of(ctx).translate('marketplace.clear_cart_warning') ?? 'Sepeti Temizle'),
+                      content: Text(AppLocalizations.of(ctx).translate('marketplace.clear_cart_warning_desc') ?? 'Sepetteki tüm ürünler silinecek. Emin misiniz?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(AppLocalizations.of(ctx).translate('common.cancel') ?? 'İptal'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(
+                            AppLocalizations.of(ctx).translate('common.clear') ?? 'Temizle',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (shouldClear == true) {
+                    ref.read(kermesCartProvider.notifier).clearCart();
+                    
+                    if (widget.isGroupParticipant || cartState.isGroupOrder) {
+                      ref.read(groupOrderProvider.notifier).clearOrder();
+                    }
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -1707,6 +1775,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                               hostName: _nameController.text.trim(),
                               expirationMinutes: 30,
                               expiresAt: DateTime.now().add(const Duration(minutes: 30)),
+                              groupPin: ref.read(groupOrderProvider).currentOrder?.groupPin,
                             ),
                           );
                         },
@@ -2233,6 +2302,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                               hostName: _nameController.text.trim(),
                               expirationMinutes: 30,
                               expiresAt: DateTime.now().add(const Duration(minutes: 30)),
+                              groupPin: ref.read(groupOrderProvider).currentOrder?.groupPin,
                             ),
                           );
                         },
@@ -2421,6 +2491,116 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     }
   }
 
+  Widget _buildSavedAddressesSelector(bool isDark) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+    
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('savedAddresses')
+          .orderBy('createdAt', descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        
+        final docs = snapshot.data!.docs;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0, left: 4.0, top: 12.0),
+              child: Text(
+                'Kayıtlı Adresler',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 70,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: docs.length,
+                separatorBuilder: (ctx, i) => const SizedBox(width: 10),
+                itemBuilder: (ctx, i) {
+                  final data = docs[i].data() as Map<String, dynamic>;
+                  final label = data['label']?.toString() ?? 'Adres';
+                  final street = data['street']?.toString() ?? '';
+                  final houseNumber = data['houseNumber']?.toString() ?? '';
+                  final city = data['city']?.toString() ?? '';
+                  
+                  IconData icon = Icons.location_on_outlined;
+                  if (label.toLowerCase().contains('ev')) icon = Icons.home_outlined;
+                  if (label.toLowerCase().contains('iş')) icon = Icons.work_outline;
+                  
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      setState(() {
+                        _streetController.text = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+                        _cityController.text = city;
+                        _zipController.text = data['postalCode']?.toString() ?? '';
+                      });
+                    },
+                    child: Container(
+                      width: 160,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _cardBg(isDark),
+                        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(icon, color: lokmaPink, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  '$street $houseNumber',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Step 3: Kişisel Bilgiler
   Widget _buildInfoStep() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -2540,6 +2720,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ],
           
           if (_deliveryType == DeliveryType.kurye) ...[
+            _buildSavedAddressesSelector(isDark),
             const SizedBox(height: 14),
             Row(
               children: [

@@ -168,11 +168,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     // In masa mode with QR scanned: block if restaurant is closed (no pre-order for dine-in)
     if (_isMasaMode && widget.initialTableNumber != null) {
-      bool isOpen = false;
-      if (data['openingHours'] != null) {
-        isOpen = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
-      }
-      if (data['openingHours'] == null) isOpen = true;
+      final oh = OpeningHoursHelper(data['openingHours']);
+      bool isOpen = oh.isEmpty ? true : oh.isOpenAt(DateTime.now());
       if (!isOpen) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -601,18 +598,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
         // 🆕 Kapalı işletme kontrolü
         // Check if open: openingHours first, then deliveryHours/pickupHours as fallback
+        final oh = OpeningHoursHelper(data['openingHours']);
+        final dh = OpeningHoursHelper(data['deliveryHours']);
+        final ph = OpeningHoursHelper(data['pickupHours']);
+
         bool isOpen = false;
-        if (data['openingHours'] != null) {
-          isOpen = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
-        }
-        if (!isOpen && data['deliveryHours'] != null) {
-          isOpen = OpeningHoursHelper(data['deliveryHours']).isOpenAt(DateTime.now());
-        }
-        if (!isOpen && data['pickupHours'] != null) {
-          isOpen = OpeningHoursHelper(data['pickupHours']).isOpenAt(DateTime.now());
-        }
-        // If no hours data at all, default to open
-        if (data['openingHours'] == null && data['deliveryHours'] == null && data['pickupHours'] == null) {
+        if (!oh.isEmpty) {
+          isOpen = oh.isOpenAt(DateTime.now());
+        } else if (!dh.isEmpty) {
+          isOpen = dh.isOpenAt(DateTime.now());
+        } else if (!ph.isEmpty) {
+          isOpen = ph.isOpenAt(DateTime.now());
+        } else {
+          // If no hours data at all, default to open
           isOpen = true;
         }
         final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
@@ -682,6 +680,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       if (hoursData == null) return null;
       try {
         final helper = OpeningHoursHelper(hoursData);
+        if (helper.isEmpty) return null;
+        
         final now = DateTime.now();
         if (helper.isOpenAt(now)) {
           return isShop 
@@ -4258,11 +4258,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Check if restaurant is currently open
-    bool isOpen = false;
-    if (data?['openingHours'] != null) {
-      isOpen = OpeningHoursHelper(data!['openingHours']).isOpenAt(DateTime.now());
-    }
-    if (data?['openingHours'] == null) isOpen = true;
+    final oh = OpeningHoursHelper(data?['openingHours']);
+    bool isOpen = oh.isEmpty ? true : oh.isOpenAt(DateTime.now());
 
     // If closed in Vor Ort mode: show a friendly closed sheet (no pre-order option)
     if (!isOpen && data != null) {

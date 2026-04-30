@@ -42,6 +42,7 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
     let completed = 0;
     let cancelled = 0;
     let ocakbasi = 0;
+    let filteredTotal = 0;
     const hourCounts: Record<number, number> = {};
     const active: any[] = [];
     const sections: Record<string, { count: number, revenue: number }> = {
@@ -77,6 +78,7 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
       
       if (orderDate < kStart) return;
       if (orderDate > kEnd) return;
+      filteredTotal++;
 
       if (data.status === 'cancelled' || data.status === 'rejected') {
         cancelled++;
@@ -116,8 +118,14 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
         // Stant (PrepZone / Delivery Point) calculation
         (data.items || []).forEach((item: any) => {
            const qty = parseInt(item.quantity || item.count || '1', 10) || 1;
-           const price = parseFloat(item.price || item.totalPrice || item.unitPrice || '0') || 0;
-           const totalVal = qty * price;
+           let totalVal = 0;
+           if (item.totalPrice !== undefined && item.totalPrice !== null) {
+             totalVal = parseFloat(item.totalPrice) || 0;
+           } else if (item.price !== undefined && item.price !== null) {
+             totalVal = parseFloat(item.price) || 0;
+           } else if (item.unitPrice !== undefined && item.unitPrice !== null) {
+             totalVal = qty * (parseFloat(item.unitPrice) || 0);
+           }
            
            let zones: string[] = [];
            if (Array.isArray(item.prepZone)) {
@@ -155,16 +163,25 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
            stantStats[formattedZone].revenue += totalVal;
 });
 
-        // Ocakbaşı check (by category, prepZone or name)
+        // Ocakbasi check: any item with a real stant/prepZone (not generic section)
         const hasOcakbasi = (data.items || []).some((item: any) => {
-          const prepZoneMatch = Array.isArray(item.prepZone) 
-            ? item.prepZone.some((pz: string) => typeof pz === 'string' && pz.toLowerCase() === 'ocakbasi')
-            : typeof item.prepZone === 'string' && item.prepZone.toLowerCase() === 'ocakbasi';
-            
-          return prepZoneMatch ||
-            item.category?.toLowerCase().includes('ocak') ||
-            item.name?.toLowerCase().includes('ocak') ||
-            item.productName?.toLowerCase().includes('ocak');
+          let zones: string[] = [];
+          if (Array.isArray(item.prepZone)) {
+            zones = item.prepZone.filter((z: any) => typeof z === 'string' && z.trim() !== '');
+          } else if (typeof item.prepZone === 'string' && item.prepZone.trim() !== '') {
+            zones = [item.prepZone.trim()];
+          }
+          return zones.some(z => {
+            const zl = z.toLowerCase();
+            return zl !== '' &&
+              zl !== 'genel / belirtilmemiş' &&
+              !zl.includes('erkek') &&
+              !zl.includes('kadin') && !zl.includes('kadın') &&
+              !zl.includes('hanim') && !zl.includes('hanım') &&
+              !zl.includes('aile') &&
+              !zl.includes('masa') &&
+              !zl.includes('stant') && !zl.includes('stand');
+          });
         });
         if (hasOcakbasi) ocakbasi++;
 
@@ -188,7 +205,7 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
       activeOrders: active,
       todayRevenue: revenue,
       totalRevenue: totalRev,
-      totalOrders: orders.length,
+      totalOrders: filteredTotal,
       completedCount: completed,
       cancelledCount: cancelled,
       ocakbasiCount: ocakbasi,
@@ -248,9 +265,19 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
             <p className="text-3xl font-bold text-gray-800 dark:text-gray-400">{assignedStaffCount}</p>
             <p className="text-xs text-muted-foreground mt-1">Kermes Personeli</p>
           </div>
-          <div className="bg-card rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-orange-800 dark:text-orange-400">{ocakbasiCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ocakbaşı Sipariş</p>
+          <div className="bg-card rounded-xl p-4 text-center flex flex-col justify-center">
+            <div className="flex justify-around items-center">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-orange-800 dark:text-orange-400">{ocakbasiCount}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">Siparis</p>
+              </div>
+              <div className="w-px h-8 bg-border/50"></div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-amber-800 dark:text-amber-400">&euro;{Object.values(stantStats).reduce((sum: number, s: any) => sum + s.revenue, 0).toFixed(2)}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">Ciro</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Ocakbasi</p>
           </div>
         </div>
       </div>
