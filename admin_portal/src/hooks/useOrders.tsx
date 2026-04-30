@@ -470,10 +470,11 @@ export function useOrders() {
 export interface UseOrdersStandaloneOptions {
  businessId?: string | null;
  initialDateFilter?: DateFilter;
+ isKermesMode?: boolean;
 }
 
-export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
- const { businessId, initialDateFilter = 'all' } = options;
+ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
+ const { businessId, initialDateFilter = 'all', isKermesMode = false } = options;
  const [meatOrders, setMeatOrders] = useState<Order[]>([]);
  const [kermesOrders, setKermesOrders] = useState<Order[]>([]);
  const [resOrders, setResOrders] = useState<Order[]>([]);
@@ -494,39 +495,42 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
  setLoading(true);
  const startDate = getStartDateForFilter(dateFilter);
  
- // 1. Orders
- let qOrders;
-    if (businessId) {
-      // Use OR query to match both businessId and butcherId to catch all legacy orders without creating index issues
-      qOrders = query(collection(db, 'meat_orders'), or(
-        where('businessId', '==', businessId),
-        where('butcherId', '==', businessId)
-      ));
- } else {
-   qOrders = query(
-     collection(db, 'meat_orders'), 
-     where('createdAt', '>=', Timestamp.fromDate(startDate)), 
-     orderBy('createdAt', 'desc')
-   );
- }
+ // 1. Orders (Skip in Kermes Mode)
+ let unsubOrders = () => {};
+ if (!isKermesMode) {
+  let qOrders;
+     if (businessId) {
+       // Use OR query to match both businessId and butcherId to catch all legacy orders without creating index issues
+       qOrders = query(collection(db, 'meat_orders'), or(
+         where('businessId', '==', businessId),
+         where('butcherId', '==', businessId)
+       ));
+  } else {
+    qOrders = query(
+      collection(db, 'meat_orders'), 
+      where('createdAt', '>=', Timestamp.fromDate(startDate)), 
+      orderBy('createdAt', 'desc')
+    );
+  }
 
- const unsubOrders = onSnapshot(qOrders, (snapshot) => {
-   let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
-   if (businessId) {
-     mapped = mapped.filter(o => o.businessId === businessId || o._raw.butcherId === businessId);
-     // Client-side date filter since we bypassed the query constraint
-     const startMs = startDate.getTime();
-     mapped = mapped.filter(o => {
-       const time = o.createdAt?.toMillis?.() || (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
-       return time >= startMs;
-     });
-   }
-   setMeatOrders(mapped);
-   setLoading(false);
- }, (error) => {
-   console.error('[useOrdersStandalone] Error:', error);
-   setLoading(false);
-  });
+  unsubOrders = onSnapshot(qOrders, (snapshot) => {
+    let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
+    if (businessId) {
+      mapped = mapped.filter(o => o.businessId === businessId || o._raw.butcherId === businessId);
+      // Client-side date filter since we bypassed the query constraint
+      const startMs = startDate.getTime();
+      mapped = mapped.filter(o => {
+        const time = o.createdAt?.toMillis?.() || (o.createdAt?.seconds ? o.createdAt.seconds * 1000 : 0);
+        return time >= startMs;
+      });
+    }
+    setMeatOrders(mapped);
+    setLoading(false);
+  }, (error) => {
+    console.error('[useOrdersStandalone] Error:', error);
+    setLoading(false);
+   });
+ }
 
   // 1.5 Kermes Orders
   let qKermes;
@@ -551,54 +555,59 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
       });
     }
     setKermesOrders(mapped);
+    if (isKermesMode) setLoading(false);
   }, (error) => {
     console.error('[useOrdersStandalone] Error fetching kermes_orders:', error);
+    if (isKermesMode) setLoading(false);
   });
 
- // 2. Reservations
- const resConstraints: any[] = [
- where('createdAt', '>=', Timestamp.fromDate(startDate)),
- ];
- let qReservations;
- if (businessId) {
- resConstraints.push(orderBy('createdAt', 'desc'));
- qReservations = query(collection(db, 'businesses', businessId, 'reservations'), ...resConstraints);
- } else {
- qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
- }
+ // 2. Reservations (Skip in Kermes Mode)
+ let unsubReservations = () => {};
+ if (!isKermesMode) {
+  const resConstraints: any[] = [
+  where('createdAt', '>=', Timestamp.fromDate(startDate)),
+  ];
+  let qReservations;
+  if (businessId) {
+  resConstraints.push(orderBy('createdAt', 'desc'));
+  qReservations = query(collection(db, 'businesses', businessId, 'reservations'), ...resConstraints);
+  } else {
+  qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
+  }
 
- const unsubReservations = onSnapshot(qReservations, (snapshot) => {
- // Include pre-order/tab reservations AND plain pending/confirmed reservations
- const relevantDocs = snapshot.docs.filter(d => {
- const data = d.data();
- if (data.status === 'cancelled' || data.status === 'rejected') return true; // Keep in history
- if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
- if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
- return false;
- });
+  unsubReservations = onSnapshot(qReservations, (snapshot) => {
+  // Include pre-order/tab reservations AND plain pending/confirmed reservations
+  const relevantDocs = snapshot.docs.filter(d => {
+  const data = d.data();
+  if (data.status === 'cancelled' || data.status === 'rejected') return true; // Keep in history
+  if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
+  if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
+  return false;
+  });
 
- let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data(), doc.ref.parent.parent?.id));
- if (businessId) {
- mapped = mapped.filter(o => o.businessId === businessId);
- } else {
- // Sort client-side when no orderBy in query
- mapped.sort((a, b) => {
- const aMs = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
- const bMs = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
- return bMs - aMs;
- });
+  let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data(), doc.ref.parent.parent?.id));
+  if (businessId) {
+  mapped = mapped.filter(o => o.businessId === businessId);
+  } else {
+  // Sort client-side when no orderBy in query
+  mapped.sort((a, b) => {
+  const aMs = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+  const bMs = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+  return bMs - aMs;
+  });
+  }
+  setResOrders(mapped);
+  }, (error) => {
+  console.error('[useOrdersStandalone] Error loading reservations:', error);
+  });
  }
- setResOrders(mapped);
- }, (error) => {
- console.error('[useOrdersStandalone] Error loading reservations:', error);
- });
 
  return () => {
  unsubOrders();
  unsubKermes();
  unsubReservations();
  };
- }, [dateFilter, businessId]);
+ }, [dateFilter, businessId, isKermesMode]);
 
  const filteredOrders = useMemo(() => {
  return orders.filter(order => {

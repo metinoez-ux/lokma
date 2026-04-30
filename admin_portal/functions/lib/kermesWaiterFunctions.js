@@ -51,9 +51,9 @@ const db = admin.firestore();
  *
  * Siparisler butun bolumlerden (Kadin/Erkek/Aile) gelen itemlari
  * kendi bolumlerinin PrepZone'larinda hazirlanir, sonra o bolumun
- * Tezgah'inda (genel alma noktasi) toplanir.
- * - Masada: Garson Tezgah'tan alip masaya goturur
- * - GelAl: Musteri push notification ile Tezgah'a gelip alir
+ * Stant'inda (genel alma noktasi) toplanir.
+ * - Masada: Garson Stant'tan alip masaya goturur
+ * - GelAl: Musteri push notification ile Stant'a gelip alir
  */
 exports.kermesWaiterTimeoutCheck = (0, scheduler_1.onSchedule)({
     schedule: "every 1 minutes",
@@ -225,10 +225,10 @@ exports.kermesWaiterTimeoutCheck = (0, scheduler_1.onSchedule)({
  * Kermes siparisi ready oldugunda otomatik garson atamasi
  *
  * Siparis KDS'de tum itemlari "ready" olarak isaretlendiginde tetiklenir.
- * - Masa siparisi: en az mesgul aktif garsona atar. Garson Tezgah'tan alip masaya goturur.
- * - Gel-Al (McDonald's usulu): push notification gonderir. Musteri Tezgah'a gelip alir.
+ * - Masa siparisi: en az mesgul aktif garsona atar. Garson Stant'tan alip masaya goturur.
+ * - Gel-Al (McDonald's usulu): push notification gonderir. Musteri Stant'a gelip alir.
  *
- * Her bolumun kendi Tezgah/alma noktasi vardir. Siparis o bolumun Tezgah'ina duser.
+ * Her bolumun kendi Stant/alma noktasi vardir. Siparis o bolumun Stant'ina duser.
  */
 exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
     document: "kermes_orders/{orderId}",
@@ -250,7 +250,7 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
     console.log(`[OrderReady] Siparis ${orderId} hazir, tip: ${deliveryType}`);
     if (deliveryType === "masada") {
         // Masa siparisi: en az mesgul garsona ata
-        // Garson bu siparisi ilgili bolumun Tezgah'indan alip masaya goturecek
+        // Garson bu siparisi ilgili bolumun Stant'indan alip masaya goturecek
         let query = db
             .collection("kermes_staff_status")
             .where("kermesId", "==", kermesId)
@@ -328,7 +328,7 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
     }
     else if (deliveryType === "gelAl") {
         // Gel-Al (McDonald's usulu): "Siparisiz hazir!" push notification
-        // Musteri ilgili bolumun Tezgah'ina gidip siparisini alacak
+        // Musteri ilgili bolumun Stant'ina gidip siparisini alacak
         const userId = after.userId;
         if (!userId) {
             console.log(`[OrderReady] Siparis ${orderId}: userId yok, push gonderilemez`);
@@ -345,8 +345,8 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
             return;
         }
         const orderNumber = after.orderNumber;
-        // Bolumun Tezgah ismini bul (genel alma noktasi)
-        let tezgahLabel = "Tezgah";
+        // Bolumun Stant ismini bul (genel alma noktasi)
+        let tezgahLabel = "Stant";
         if (tableSection && kermesId) {
             try {
                 const eventDoc = await db.collection("kermes_events").doc(kermesId).get();
@@ -361,13 +361,13 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
                             tezgahLabel = `${sectionLabel} - ${tezgahlar[0]}`;
                         }
                         else {
-                            tezgahLabel = `${sectionLabel} Tezgahi`;
+                            tezgahLabel = `${sectionLabel} Stantı`;
                         }
                     }
                 }
             }
             catch (e) {
-                console.warn(`[OrderReady] Bolum tezgah bilgisi alinamadi: ${e}`);
+                console.warn(`[OrderReady] Bolum stant bilgisi alinamadi: ${e}`);
             }
         }
         try {

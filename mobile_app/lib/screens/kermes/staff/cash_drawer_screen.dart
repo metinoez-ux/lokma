@@ -691,7 +691,7 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
                       IconData typeIcon = Icons.storefront;
                       
                       if (orderType.toLowerCase() == 'gel-al' || orderType.toLowerCase() == 'pickup') {
-                        typeBadgeName = 'Gel-Al'; typeColor = Colors.orange; typeIcon = Icons.directions_walk;
+                        typeBadgeName = 'Stant'; typeColor = Colors.orange; typeIcon = Icons.directions_walk;
                       } else if (orderType.toLowerCase() == 'masa' || orderType.toLowerCase() == 'dine-in') {
                         typeBadgeName = 'Masa'; typeColor = Colors.purple; typeIcon = Icons.restaurant;
                       } else if (orderType.toLowerCase() == 'kurye' || orderType.toLowerCase() == 'delivery') {

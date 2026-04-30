@@ -814,7 +814,7 @@ function NewKermesContent() {
  onChange={(e) => setHasTakeaway(e.target.checked)}
  className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500"
  />
- <span className="text-foreground">Gel-Al İmkanı (Takeaway)</span>
+ <span className="text-foreground">Stant Teslimatı (Takeaway)</span>
  </label>
  <label className="flex items-center gap-3 cursor-pointer">
  <input

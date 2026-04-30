@@ -15,125 +15,102 @@ interface KermesDashboardProps {
   kermesEnd?: string;
 }
 
+import { useOrdersStandalone } from '@/hooks/useOrders';
+
 export default function KermesDashboardTab({ kermesId, assignedStaffCount, assignedWaitersCount, locale = 'tr', kermesStart, kermesEnd }: KermesDashboardProps) {
-  const [activeOrders, setActiveOrders] = useState<any[]>([]);
-  const [todayRevenue, setTodayRevenue] = useState(0);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [completedCount, setCompletedCount] = useState(0);
-  const [cancelledCount, setCancelledCount] = useState(0);
-  const [ocakbasiCount, setOcakbasiCount] = useState(0);
-  const [peakHour, setPeakHour] = useState(12);
-  const [sectionStats, setSectionStats] = useState<Record<string, { count: number, revenue: number }>>({});
-  const [loading, setLoading] = useState(true);
+  const { orders, loading } = useOrdersStandalone({ businessId: kermesId, isKermesMode: true });
 
-  useEffect(() => {
-    if (!kermesId) {
-      setLoading(false);
-      return;
-    }
-
+  const {
+    activeOrders,
+    todayRevenue,
+    totalRevenue,
+    totalOrders,
+    completedCount,
+    cancelledCount,
+    ocakbasiCount,
+    peakHour,
+    sectionStats
+  } = React.useMemo(() => {
+    let revenue = 0;
+    let totalRev = 0;
+    let completed = 0;
+    let cancelled = 0;
+    let ocakbasi = 0;
+    const hourCounts: Record<number, number> = {};
+    const active: any[] = [];
+    const sections: Record<string, { count: number, revenue: number }> = {};
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Fail-safe timeout in case Firestore hangs
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
+    orders.forEach(order => {
+      const data = order._raw;
+      const orderDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(order.createdAt?.seconds ? order.createdAt.seconds * 1000 : order.createdAt);
+      
+      if (data.status === 'cancelled' || data.status === 'rejected') {
+        cancelled++;
+      } else {
+        totalRev += (data.totalAmount || data.totalPrice || data.total || 0);
+        if (orderDate >= today) {
+          revenue += (data.totalAmount || data.totalPrice || data.total || 0);
+        }
+        if (['delivered', 'served', 'completed'].includes(data.status)) {
+          completed++;
+        }
 
-    const q = query(collection(db, 'kermes_orders'), where('kermesId', '==', kermesId));
-    const unsub = onSnapshot(q, (snap) => {
-      clearTimeout(timeoutId);
-      let revenue = 0;
-      let totalRev = 0;
-      let completed = 0;
-      let cancelled = 0;
-      let ocakbasi = 0;
-      const hourCounts: Record<number, number> = {};
-      const active: any[] = [];
-      const sections: Record<string, { count: number, revenue: number }> = {};
-
-      snap.docs.forEach(d => {
-        const data = d.data();
-        const orderDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
-        
-        if (data.status === 'cancelled' || data.status === 'rejected') {
-          cancelled++;
+        // Section mapping (Dine-in only)
+        if (data.deliveryType === 'dine_in' || data.type === 'dine_in' || data.orderType === 'dineIn') {
+          const sectionName = data.tableSection || 'Diğer / Atanmamış';
+          if (!sections[sectionName]) sections[sectionName] = { count: 0, revenue: 0 };
+          sections[sectionName].count++;
+          sections[sectionName].revenue += (data.totalAmount || data.totalPrice || data.total || 0);
         } else {
-          totalRev += (data.totalAmount || 0);
-          if (orderDate >= today) {
-            revenue += (data.totalAmount || 0);
-          }
-          if (['delivered', 'served', 'completed'].includes(data.status)) {
-            completed++;
-          }
+          const sectionName = 'Stant / Paket';
+          if (!sections[sectionName]) sections[sectionName] = { count: 0, revenue: 0 };
+          sections[sectionName].count++;
+          sections[sectionName].revenue += (data.totalAmount || data.totalPrice || data.total || 0);
+        }
 
-          // Section mapping (Dine-in only)
-          if (data.deliveryType === 'dine_in') {
-            const sectionName = data.tableSection || 'Diğer / Atanmamış';
-            if (!sections[sectionName]) sections[sectionName] = { count: 0, revenue: 0 };
-            sections[sectionName].count++;
-            sections[sectionName].revenue += (data.totalAmount || 0);
-          } else {
-            const sectionName = 'Gel-Al / Paket';
-            if (!sections[sectionName]) sections[sectionName] = { count: 0, revenue: 0 };
-            sections[sectionName].count++;
-            sections[sectionName].revenue += (data.totalAmount || 0);
-          }
-
-          // Ocakbaşı check (by category, prepZone or name)
-          const hasOcakbasi = (data.items || []).some((item: any) => 
-            item.prepZone?.toLowerCase() === 'ocakbasi' ||
+        // Ocakbaşı check (by category, prepZone or name)
+        const hasOcakbasi = (data.items || []).some((item: any) => {
+          const prepZoneMatch = Array.isArray(item.prepZone) 
+            ? item.prepZone.some((pz: string) => typeof pz === 'string' && pz.toLowerCase() === 'ocakbasi')
+            : typeof item.prepZone === 'string' && item.prepZone.toLowerCase() === 'ocakbasi';
+            
+          return prepZoneMatch ||
             item.category?.toLowerCase().includes('ocak') ||
             item.name?.toLowerCase().includes('ocak') ||
-            item.productName?.toLowerCase().includes('ocak')
-          );
-          if (hasOcakbasi) ocakbasi++;
+            item.productName?.toLowerCase().includes('ocak');
+        });
+        if (hasOcakbasi) ocakbasi++;
 
-          // Peak hour calculation
-          const h = orderDate.getHours();
-          hourCounts[h] = (hourCounts[h] || 0) + 1;
-        }
+        // Peak hour calculation
+        const h = orderDate.getHours();
+        hourCounts[h] = (hourCounts[h] || 0) + 1;
+      }
 
-        if (['pending', 'accepted', 'preparing', 'ready'].includes(data.status)) {
-          active.push({ id: d.id, ...data });
-        }
-      });
-
-      // Find peak hour
-      let maxH = 0;
-      let pHour = 12;
-      Object.entries(hourCounts).forEach(([h, count]) => {
-         if (count > maxH) { maxH = count; pHour = parseInt(h); }
-      });
-
-      setTotalOrders(snap.docs.length);
-      setTodayRevenue(revenue);
-      setTotalRevenue(totalRev);
-      setCompletedCount(completed);
-      setCancelledCount(cancelled);
-      setOcakbasiCount(ocakbasi);
-      setPeakHour(pHour);
-      setSectionStats(sections);
-      
-      setActiveOrders(active.sort((a, b) => {
-        const getMs = (dateObj: any) => {
-          if (!dateObj) return 0;
-          if (typeof dateObj.toMillis === 'function') return dateObj.toMillis();
-          if (dateObj.seconds) return dateObj.seconds * 1000;
-          if (typeof dateObj.getTime === 'function') return dateObj.getTime();
-          return 0;
-        };
-        return getMs(b.createdAt) - getMs(a.createdAt);
-      }));
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching kermes dashboard data:", error);
-      setLoading(false);
+      if (['pending', 'accepted', 'preparing', 'ready'].includes(data.status)) {
+        active.push({ id: order.id, ...data });
+      }
     });
 
-    return () => unsub();
-  }, [kermesId]);
+    let maxH = 0;
+    let pHour = 12;
+    Object.entries(hourCounts).forEach(([h, count]) => {
+        if (count > maxH) { maxH = count; pHour = parseInt(h); }
+    });
+
+    return {
+      activeOrders: active,
+      todayRevenue: revenue,
+      totalRevenue: totalRev,
+      totalOrders: orders.length,
+      completedCount: completed,
+      cancelledCount: cancelled,
+      ocakbasiCount: ocakbasi,
+      peakHour: pHour,
+      sectionStats: sections
+    };
+  }, [orders]);
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Dashboard yükleniyor...</div>;
@@ -231,7 +208,7 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
               {activeOrders.slice(0, 10).map((order) => (
                 <div key={order.id} className="p-4 hover:bg-muted/30 transition flex justify-between items-center">
                   <div className="flex flex-col">
-                    <span className="font-semibold">{order.orderNumber || order.id.slice(-5).toUpperCase()} - {order.deliveryType === 'dine_in' ? `Masa ${order.tableNo}` : 'Gel-Al'}</span>
+                    <span className="font-semibold">{order.orderNumber || order.id.slice(-5).toUpperCase()} - {order.deliveryType === 'dine_in' ? `Masa ${order.tableNo}` : 'Stant'}</span>
                     <span className="text-xs text-muted-foreground">
                       {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleTimeString() : ''} 
                     </span>

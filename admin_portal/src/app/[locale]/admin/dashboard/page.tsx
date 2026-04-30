@@ -38,7 +38,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  const adminBusinessId = useAdminBusinessId();
  const effectiveBusinessId = isKermesMode && kermesId ? kermesId : adminBusinessId;
  // Orders from unified hook (single Firestore listener)
- const { orders, loading: ordersLoading } = useOrdersStandalone({ businessId: effectiveBusinessId, initialDateFilter: 'all' });
+ const { orders, loading: ordersLoading } = useOrdersStandalone({ businessId: effectiveBusinessId, initialDateFilter: isKermesMode ? 'all' : '30d', isKermesMode });
  const [businesses, setBusinesses] = useState<Record<string, string>>({});
  const [loading, setLoading] = useState(true);
  const [dateFilter, setDateFilter] = useState<string>('all');
@@ -251,6 +251,11 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  let filtered = orders.filter(o => {
  if (!o.createdAt) return false;
  const orderDate = o.createdAt.toDate();
+ if (isKermesMode && kermesStartDate) {
+ const kEnd = kermesEndDate ? new Date(kermesEndDate) : new Date(kermesStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+ kEnd.setHours(23, 59, 59, 999);
+ return orderDate >= kermesStartDate && orderDate <= kEnd;
+ }
  return orderDate >= currentStart && orderDate <= currentEnd;
  });
  if (businessFilter !== 'all') {
@@ -328,7 +333,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  // Advanced Analytics - All filtered by selected business
   const analytics = useMemo(() => {
     const hourlyDistribution = Array(24).fill(0).map((_, hour) => ({ hour, count: 0, revenue: 0 }));
-    const dailyDistribution = ['Pazar', 'Pazartesi', t('sali'), t('carsamba'), t('persembe'), 'Cuma', 'Cumartesi'].map(day => ({ day, count: 0, revenue: 0 }));
+    const dailyDistribution = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'].map(day => ({ day, count: 0, revenue: 0 }));
     const kermesDailyMap = {};
     const typeBreakdown = { pickup: 0, delivery: 0, dineIn: 0 };
     const productCounts = {};
@@ -457,13 +462,13 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  }
 
  return (
- <div className="min-h-screen bg-background p-6">
+ <div className={embedded ? "w-full" : "min-h-screen bg-background p-4 md:p-6"}>
  {/* Header */}
  <div className="w-full mb-6">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
- 📊 İstatistikler
+ İstatistikler
  </h1>
  <p className="text-muted-foreground text-sm mt-1">
  {t('platform_siparis_ve_performans_analitigi')}
@@ -473,6 +478,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  </div>
 
  {/* Global Filters */}
+ {!isKermesMode && (
  <div className="w-full mb-6">
  <div className="bg-card rounded-xl p-4 space-y-4">
  {/* First Row - Date & Business Filters */}
@@ -575,6 +581,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  )}
  </div>
  </div>
+ )}
 
  {loading ? (
  <div className="w-full bg-card rounded-xl p-12 text-center">
@@ -668,9 +675,18 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  <p className="text-purple-800 dark:text-purple-400 text-sm font-medium mb-1">{t('siparis_orani')}</p>
  {filteredOrders.length > 0 ? (
  <div className="flex flex-wrap gap-2 mt-1">
- <span className="text-blue-800 dark:text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}% {t('kurye')}</span>
- <span className="text-amber-800 dark:text-amber-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
- <span className="text-green-800 dark:text-green-400 font-bold text-sm">🛍️ {Math.round((analytics.typeBreakdown.pickup / filteredOrders.length) * 100)}% Gel Al</span>
+ {(() => {
+   let { delivery, dineIn, pickup } = analytics.typeBreakdown;
+   let totalTyped = delivery + dineIn + pickup;
+   if (totalTyped === 0) { pickup = filteredOrders.length; totalTyped = pickup; }
+   return (
+     <>
+       <span className="text-blue-800 dark:text-blue-400 font-bold text-sm">🚚 {Math.round((delivery / totalTyped) * 100)}% {t('kurye')}</span>
+       <span className="text-amber-800 dark:text-amber-400 font-bold text-sm">🪑 {Math.round((dineIn / totalTyped) * 100)}% Masa</span>
+       <span className="text-green-800 dark:text-green-400 font-bold text-sm">🛍️ {Math.round((pickup / totalTyped) * 100)}% Gel Al</span>
+     </>
+   );
+ })()}
  </div>
  ) : (
  <p className="text-muted-foreground/80 text-sm">{t('veri_yok')}</p>
@@ -722,12 +738,13 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  <div className="bg-card rounded-xl p-6">
  <h3 className="text-foreground font-bold mb-4">{t('gunluk_siparis_dagilimi')}</h3>
  <div className="space-y-2">
- {analytics.dailyDistribution.map((d) => {
- const maxCount = Math.max(...analytics.dailyDistribution.map(d => d.count), 1);
+ {(isKermesMode ? analytics.kermesDailyDistribution : analytics.dailyDistribution).map((d) => {
+ const distArray = isKermesMode ? analytics.kermesDailyDistribution : analytics.dailyDistribution;
+ const maxCount = Math.max(...distArray.map(x => x.count), 1);
  const width = (d.count / maxCount) * 100;
  return (
  <div key={d.day} className="flex items-center gap-3">
- <span className="text-muted-foreground text-sm w-20">{d.day.slice(0, 3)}</span>
+ <span className="text-muted-foreground text-sm w-32 truncate" title={d.day}>{isKermesMode ? d.day.split(' ')[0] + ' ' + d.day.split(' ')[1] : d.day.slice(0, 3)}</span>
  <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
  <div
  className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
@@ -749,7 +766,29 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
 
  let periodData: { label: string; count: number; revenue: number }[] = [];
 
- if (periodTab === 'weekly') {
+ if (isKermesMode && kermesStartDate) {
+ const start = new Date(kermesStartDate);
+ start.setHours(0, 0, 0, 0);
+ const end = kermesEndDate ? new Date(kermesEndDate) : new Date(kermesStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+ end.setHours(23, 59, 59, 999);
+ const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
+ 
+ for (let i = 0; i < diffDays; i++) {
+ const d = new Date(start);
+ d.setDate(d.getDate() + i);
+ const dayStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+ const dayOrders = orders.filter(o => {
+ if (!o.createdAt) return false;
+ const od = o.createdAt.toDate();
+ return od.getDate() === d.getDate() && od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
+ });
+ periodData.push({
+ label: dayStr,
+ count: dayOrders.length,
+ revenue: dayOrders.reduce((s, o) => s + (o.totalAmount || o.total || 0), 0),
+ });
+ }
+ } else if (periodTab === 'weekly') {
  for (let i = 6; i >= 0; i--) {
  const d = new Date(now);
  d.setDate(d.getDate() - i);
@@ -802,6 +841,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  <div className="bg-card rounded-xl p-6">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-foreground font-bold">{t('siparis_ciro_trendi')}</h3>
+ {!isKermesMode && (
  <div className="flex bg-gray-700 rounded-lg overflow-hidden">
  {(['weekly', 'monthly', 'yearly'] as const).map(tab => (
  <button
@@ -816,8 +856,8 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  </button>
  ))}
  </div>
+ )}
  </div>
-
  {/* Order Count Bars */}
  <div className="mb-4">
  <p className="text-muted-foreground text-xs mb-2">{t('siparis_sayisi')}</p>

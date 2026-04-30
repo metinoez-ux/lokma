@@ -66,6 +66,14 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   const [activeDate, setActiveDate] = useState<string>('');
 
   useEffect(() => {
+    setForm(prev => ({
+      ...prev,
+      startDate: kermesStart || prev.startDate,
+      endDate: isFullKermes ? (kermesEnd || prev.endDate) : (kermesStart || prev.endDate)
+    }));
+  }, [kermesStart, kermesEnd, isFullKermes]);
+
+  useEffect(() => {
     if (!kermesId) return;
     setLoading(true);
     
@@ -840,7 +848,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
             Buna kermese henüz vardiya eklenmedi.
           </div>
         ) : (
-          <div className="space-y-6 max-w-[880px] mx-auto">
+          <div className="space-y-6 w-full mx-auto">
             {/* Horizontal Date Tabs */}
             <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
               {Object.keys(groupedRosters).sort().map(dateStr => {

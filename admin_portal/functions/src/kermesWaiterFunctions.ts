@@ -266,53 +266,76 @@ export const onKermesOrderReady = onDocumentUpdated(
     console.log(`[OrderReady] Siparis ${orderId} hazir, tip: ${deliveryType}`);
 
     if (deliveryType === "masada") {
-      // Masa siparisi: en az mesgul garsona ata
-      // Garson bu siparisi ilgili bolumun Tezgah'indan alip masaya goturecek
+      // Masa siparişi: İlgili bölümdeki tüm aktif garsonlara bildirim gönder (Sahiplenme modeli)
       let query = db
         .collection("kermes_staff_status")
         .where("kermesId", "==", kermesId)
-        .where("status", "==", "active");
+        .where("status", "==", "active")
+        .where("role", "==", "waiter");
 
       if (tableSection) {
         query = query.where("assignedSection", "==", tableSection);
       }
 
-      const candidates = await query
-        .orderBy("currentOrderCount", "asc")
-        .limit(1)
-        .get();
+      const activeWaiters = await query.get();
 
-      if (candidates.empty) {
+      if (activeWaiters.empty) {
         console.log(`[OrderReady] Siparis ${orderId}: aktif garson yok`);
         return;
       }
 
-      const waiter = candidates.docs[0].data();
-      const waiterId = waiter.staffId as string;
-      const waiterName = waiter.staffName as string;
+      // Aktif garsonların user dökümanlarını bulup FCM tokenlarını al
+      const tokens: string[] = [];
+      const waiterIds = activeWaiters.docs.map(doc => doc.data().staffId as string);
 
-      // Siparisi garsona ata
-      await event.data!.after.ref.update({
-        assignedWaiterId: waiterId,
-        assignedWaiterName: waiterName,
-        waiterAssignedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      for (const wId of waiterIds) {
+        const userDoc = await db.collection("users").doc(wId).get();
+        if (userDoc.exists) {
+          const fcmToken = userDoc.data()?.fcmToken;
+          if (fcmToken) {
+            tokens.push(fcmToken);
+          }
+        }
+      }
 
-      // Garson sayacini artir
-      const staffDocId = `${kermesId}__${waiterId}`;
-      await db
-        .collection("kermes_staff_status")
-        .doc(staffDocId)
-        .update({
-          currentOrderCount: admin.firestore.FieldValue.increment(1),
-          lastAssignedAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+      const tableNo = after.tableNo as string || "Bilinmiyor";
 
-      console.log(
-        `[OrderReady] Siparis ${orderId} -> garson ${waiterName} (${waiterId})`
-      );
+      if (tokens.length > 0) {
+        try {
+          await admin.messaging().sendEachForMulticast({
+            tokens: tokens,
+            notification: {
+              title: `Masa ${tableNo} Siparişi Hazır!`,
+              body: "Teslimat bekliyor. Sahiplenmek için dokunun.",
+            },
+            data: {
+              type: "kermes_waiter_order_ready",
+              orderId: orderId,
+              tableNo: tableNo,
+              tableSection: tableSection || "",
+            },
+            android: {
+              priority: "high",
+              notification: {
+                channelId: "kermes_orders",
+                sound: "notification_sound",
+              },
+            },
+            apns: {
+              payload: {
+                aps: {
+                  sound: "notification_sound",
+                  badge: 1,
+                },
+              },
+            },
+          });
+          console.log(`[OrderReady] Masa ${tableNo} siparişi için ${tokens.length} garsona bildirim gönderildi.`);
+        } catch (pushErr) {
+          console.error(`[OrderReady] Garsonlara push gönderilemedi:`, pushErr);
+        }
+      }
+
     } else if (deliveryType === "kurye") {
       // Kurye siparisi: en az mesgul aktif surucu atanir
       // Garson mantigi ile ayni: round-robin, en bos surucu

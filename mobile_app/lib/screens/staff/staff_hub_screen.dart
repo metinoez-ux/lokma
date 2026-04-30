@@ -15,6 +15,7 @@ import 'providers/staff_hub_provider.dart';
 import 'tabs/shift_dashboard_tab.dart';
 import 'tabs/courier_tab.dart';
 import 'tabs/waiter_tables_tab.dart';
+import 'tabs/waiter_deliveries_tab.dart';
 import 'tabs/finance_wallet_tab.dart';
 import 'staff_reservations_screen.dart';
 import '../../widgets/qr_scanner_screen.dart';
@@ -674,7 +675,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     // Nav label -> okunakli baslik
     switch (label) {
       case 'Mutfak': return 'Mutfak (Ocak Basi)';
-      case 'Tezgah': return 'Tezgah';
+      case 'Tezgah': return 'Stant';
       case 'POS': return 'Kermes POS';
       case 'Kurye': return 'Kurye';
       case 'Garson': return 'Garson (Masa Servisi)';
@@ -1401,7 +1402,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           tezgahName: capabilities.tezgahName.isNotEmpty ? capabilities.tezgahName : 'T1',
           allowedSections: capabilities.kermesAllowedSections,
         ) : _buildShiftLockedPlaceholder(isDark), 
-        'icon': Icons.storefront, 'label': 'Tezgah', 'color': Colors.blue
+        'icon': Icons.storefront, 'label': 'Stant', 'color': Colors.blue
       });
     }
 
@@ -1426,38 +1427,28 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       });
     }
 
-    // 5. Masalar
+    // 5. Garson (Sipariş Alma)
     if (capabilities.hasTablesRole && capabilities.businessId != null) {
       allDestinations.add({
-        'widget': isOnShift ? WaiterTablesTab(
-          businessId: capabilities.businessId!,
-          isDark: isDark,
-          isKermes: StaffRoleService().businessType == 'kermes',
-          onTableSelected: (session, num) {
-            final query = Uri(path: '/waiter-order', queryParameters: {
-              'businessId': capabilities.businessId,
-              'businessName': capabilities.businessName,
-              'tableNumber': num.toString(),
-            }).toString();
-            context.push(query);
-          },
-          onEmptyTableSelected: (num) {
-            final query = Uri(path: '/waiter-order', queryParameters: {
-              'businessId': capabilities.businessId,
-              'businessName': capabilities.businessName,
-              'tableNumber': num.toString(),
-            }).toString();
-            context.push(query);
-          },
-          onWalkinOrderSelected: () {
-            final query = Uri(path: '/waiter-order', queryParameters: {
-              'businessId': capabilities.businessId,
-              'businessName': capabilities.businessName,
-            }).toString();
-            context.push(query);
-          },
+        'widget': isOnShift ? StaffPosWrapperTab(
+          kermesId: capabilities.businessId!,
+          staffId: capabilities.userId,
+          staffName: capabilities.staffName,
+          allowedSections: capabilities.kermesAllowedSections,
         ) : _buildShiftLockedPlaceholder(isDark), 
-        'icon': Icons.table_restaurant, 'label': 'Garson', 'color': Colors.pink
+        'icon': Icons.room_service, 'label': 'Garson', 'color': Colors.pink
+      });
+
+      // 5.5 Teslimatlar (Garsonlar için)
+      allDestinations.add({
+        'widget': isOnShift ? WaiterDeliveriesTab(
+          kermesId: capabilities.businessId!,
+          staffId: capabilities.userId,
+          staffName: capabilities.staffName,
+          allowedSections: capabilities.kermesAllowedSections,
+          isDark: isDark,
+        ) : _buildShiftLockedPlaceholder(isDark),
+        'icon': Icons.room_service, 'label': 'Teslimatlar', 'color': Colors.deepOrange
       });
     }
 

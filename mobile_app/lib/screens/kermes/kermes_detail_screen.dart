@@ -1827,7 +1827,7 @@ String _getLocalizedCountry(String rawCountry) {
     if (lang.startsWith('nl')) return 'Volg Kermes-evenementen met de LOKMA-app! Bestel voor bezorging, afhaal of dine-in voor een compleet nieuwe ervaring!\n\nJullie zijn allemaal van harte uitgenodigd op onze Kermes, we verwachten jullie!';
     if (lang.startsWith('fr')) return 'Suivez les événements Kermes avec l\'application LOKMA ! Commandez en livraison, à emporter ou sur place pour une toute nouvelle expérience !\n\nVous êtes tous chaleureusement invités à notre Kermes, nous vous attendons !';
     if (lang.startsWith('en')) return 'Follow Kermes events with the LOKMA App! Order delivery, pickup, or dine-in for a completely new experience!\n\nYou are all warmly invited to our Kermes, we are waiting for you!';
-    return 'LOKMA App ile Kermesleri takip edin! Evinize sipariş verin, Gel-Al veya Masaya Servis ile yeni bir deneyim yaşayın!\n\nHepiniz kermesimize davetlisiniz, bekliyoruz!';
+    return 'LOKMA App ile Kermesleri takip edin! Evinize sipariş verin, Stant veya Masaya Servis ile yeni bir deneyim yaşayın!\n\nHepiniz kermesimize davetlisiniz, bekliyoruz!';
   }
 
   String _getSearchText(String lang) {

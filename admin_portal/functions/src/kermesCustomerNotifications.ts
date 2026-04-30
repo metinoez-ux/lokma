@@ -438,3 +438,77 @@ export const cancelStaleCashOrders = onSchedule({
     console.error("[CancelStaleCashOrders] Error fetching or updating orders", err);
   }
 });
+
+export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
+  {
+    document: "kermes_orders/{orderId}",
+    region: "europe-west1",
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+
+    if (!before || !after) return;
+    if (before.status === after.status) return;
+
+    const db = admin.firestore();
+    const orderId = event.params.orderId;
+    const userId = after.userId as string | undefined;
+    const orderNumber = after.orderNumber as string;
+    const deliveryType = after.deliveryType as string;
+
+    if (!userId || userId.startsWith("guest_")) return;
+
+    const userLang = await getUserLanguage(userId);
+    const trans = await getPushTranslations(userLang);
+
+    let title = "";
+    let body = "";
+    let notifType = "kermes_order_update";
+
+    if (after.status === "preparing") {
+      title = trans.kermesOrderPreparingTitle || "Siparişiniz Hazırlanıyor";
+      body = (trans.kermesOrderPreparingBody || "#{{orderNumber}} numaralı siparişiniz mutfakta hazırlanmaya başladı!").replace("{{orderNumber}}", orderNumber);
+    } else if (after.status === "delivering" && deliveryType === "masada") {
+      const waiterName = after.assignedWaiterName || "Garsonumuz";
+      title = trans.kermesOrderDeliveringTitle || "Siparişiniz Geliyor!";
+      body = (trans.kermesOrderDeliveringBody || "Siparişiniz yola çıktı, {{waiterName}} tarafından masanıza getiriliyor.").replace("{{waiterName}}", waiterName);
+    } else {
+      return;
+    }
+
+    try {
+      await db.collection("users").doc(userId).collection("notifications").add({
+        title,
+        body,
+        type: notifType,
+        orderId: orderId,
+        orderNumber: orderNumber,
+        status: after.status,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        read: false,
+      });
+    } catch (e) {
+      console.error("[OrderStatusNotif] DB write failed", e);
+    }
+
+    try {
+      const userDoc = await db.collection("users").doc(userId).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        const fcmToken = userData?.fcmToken;
+        if (fcmToken) {
+          await admin.messaging().send({
+            token: fcmToken,
+            notification: { title, body },
+            data: { type: notifType, orderId, orderNumber },
+            android: { priority: "high", notification: { channelId: "kermes_orders", sound: "default" } },
+            apns: { payload: { aps: { sound: "default", badge: 1 } } },
+          });
+        }
+      }
+    } catch (pushErr) {
+      console.error("[OrderStatusNotif] Push failed:", pushErr);
+    }
+  }
+);
