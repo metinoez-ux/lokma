@@ -588,9 +588,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   void _handleCustomerOrderPaymentQR(String orderId) async {
     final capabilities = ref.read(staffCapabilitiesProvider);
     if (!capabilities.hasKermesAdminRole && !capabilities.hasPosRole) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tahsilat işlemi için yetkiniz bulunmuyor.'), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lütfen başka yetkili Garson veya Stant Kermes yetkilisine okutun.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
       return;
     }
 
@@ -598,6 +604,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
+        useRootNavigator: true,
         builder: (ctx) => const Center(
           child: CircularProgressIndicator(),
         ),
@@ -608,12 +615,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       final order = await KermesOrderService().getOrder(orderId);
       
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
+        Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog
         
         if (order != null) {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
+            useRootNavigator: true,
             backgroundColor: Colors.transparent,
             builder: (ctx) => AdminPaymentCollectionSheet(order: order),
           );
@@ -625,7 +633,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
+        Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sipariş sorgulanamadı: $e'), backgroundColor: Colors.red),
         );

@@ -774,8 +774,8 @@ export default function TableManagementPanel({
                                       const { downloadTableCardPDF } = await import("@/utils/tableCardPdfGenerator");
                                       const gr = def?.genderRestriction || 'mixed';
                                       let sLabel = 'Aile Bölümü';
-                                      if (def?.type === 'station') {
-                                        sLabel = def.name;
+                                      if ((def as any)?.type === 'station') {
+                                        sLabel = def?.name || 'Stant';
                                       } else if (gr === 'women_only') {
                                         sLabel = 'Bölüm - H';
                                       } else if (gr === 'men_only') {

@@ -17,6 +17,8 @@ import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import 'package:lokma_app/widgets/kermes/group_order_share_sheet.dart';
 import '../../utils/currency_utils.dart';
 import '../../widgets/qr_scanner_screen.dart';
+import '../../services/chat_service.dart';
+import 'kermes_courier_tracking_screen.dart';
 import '../../services/staff_role_service.dart';
 import 'kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/auth/login_bottom_sheet.dart';
@@ -149,6 +151,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     
     // Autofill user info if logged in or has guest profile
     _prefillUserInfo();
+    _fetchDonationFunds();
   }
   
   Future<void> _prefillUserInfo() async {
@@ -190,6 +193,33 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     }
   }
 
+  Future<void> _fetchDonationFunds() async {
+    final funds = widget.event.selectedDonationFunds;
+    if (funds.isEmpty) return;
+
+    final db = FirebaseFirestore.instance;
+    final Map<String, Map<String, dynamic>> fetched = {};
+    for (final fund in funds) {
+      final id = fund['id']?.toString();
+      if (id != null && id.isNotEmpty) {
+        try {
+          final doc = await db.collection('donation_funds').doc(id).get();
+          if (doc.exists) {
+            fetched[id] = doc.data()!;
+          }
+        } catch (e) {
+          debugPrint('Error fetching donation fund $id: $e');
+        }
+      }
+    }
+    
+    if (mounted && fetched.isNotEmpty) {
+      setState(() {
+        _fetchedDonationFunds = fetched;
+      });
+    }
+  }
+
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
     try {
@@ -227,7 +257,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   // Bağış/yuvarlama
   double _donationAmount = 0.0;
-  String _donationTarget = 'none'; // 'kermesOrg' | 'fund' | 'none'
+  String _donationTarget = 'none'; // 'kermesOrg' | 'fund_ID' | 'none'
+  Map<String, Map<String, dynamic>> _fetchedDonationFunds = {};
 
   // POS modu - opsiyonel müşteri ismi (Datenschutz: sadece kısaltma gösterilir)
   final _posNameController = TextEditingController();
@@ -662,11 +693,42 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       
       // Siparişi kaydet
       await orderService.createOrder(order);
+
+      // Kurye ve Online Kart seçiliyse STRIPE ile ödeme al
+      if (_deliveryType == DeliveryType.kurye && _paymentMethod == PaymentMethodType.card) {
+        final paymentResult = await StripePaymentService.processPayment(
+          amount: totalAmount,
+          businessId: widget.event.id,
+          orderId: docId,
+          customerEmail: FirebaseAuth.instance.currentUser?.email,
+        );
+
+        if (!paymentResult.success) {
+          if (!paymentResult.wasCancelled && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(paymentResult.error ?? 'Ödeme başarısız oldu'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          if (mounted) setState(() => _isSubmitting = false);
+          return; // Sepeti temizleme ve devam etme
+        }
+
+        // Ödeme başarılıysa durumu güncelle
+        await FirebaseFirestore.instance.collection('kermes_orders').doc(docId).update({
+          'isPaid': true,
+          'paymentMethod': 'card',
+          'paidAt': FieldValue.serverTimestamp(),
+          if (paymentResult.paymentIntentId != null) 'stripePaymentIntentId': paymentResult.paymentIntentId,
+        });
+      }
       
       // Sepeti temizle
       ref.read(kermesCartProvider.notifier).clearCart();
       
-      // Başarı - QR göster (kullanıcıya orderNumber göster)
+      // Başarı - QR göster veya Yönlendir
       if (mounted) {
         final rootNavContext = Navigator.of(context, rootNavigator: true).context;
         Navigator.pop(context);
@@ -687,6 +749,14 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           _showPOSOrderNumberDialog(rootNavContext, orderNumber,
               abbreviatedName: posName.isNotEmpty ? _abbreviateName(posName) : null,
               tableInfo: subtitle);
+        } else if (_deliveryType == DeliveryType.kurye) {
+          // Normal yemek siparişi gibi Kurye takip ekranına gönder
+          Navigator.push(
+            rootNavContext,
+            MaterialPageRoute(
+              builder: (ctx) => KermesCourierTrackingScreen(orderId: docId),
+            ),
+          );
         } else {
           showOrderQRDialog(
             rootNavContext,
@@ -4181,7 +4251,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         ),
         
         const SizedBox(height: 14),
-          // Kurulus secimi her zaman gorunur (collaps kaldirildi)
+          // Kurulus secimi her zaman gorunur
           _buildCharityOption(
             isDark: isDark,
             label: kermesOrgName,
@@ -4192,8 +4262,52 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               setState(() => _donationTarget = 'kermesOrg');
             },
           ),
-          // Ek hayir kurumu (varsa)
-          if (hasFund) ...[
+          
+          // Çoklu vakıf gösterimi
+          if (widget.event.selectedDonationFunds.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'Veya Desteklenecek Kurumu Seçin',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final fundMap in widget.event.selectedDonationFunds) ...[
+              Builder(
+                builder: (context) {
+                  final String fundId = fundMap['id']?.toString() ?? '';
+                  final String fundName = fundMap['name']?.toString() ?? 'Kurum';
+                  final fundData = _fetchedDonationFunds[fundId];
+                  final String? logoUrl = fundData?['logoUrl']?.toString();
+                  final String? description = fundData?['description']?.toString();
+                  final String? websiteUrl = fundData?['websiteUrl']?.toString();
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _buildCharityOption(
+                      isDark: isDark,
+                      label: fundName,
+                      icon: Icons.favorite,
+                      isSelected: _donationTarget == fundId,
+                      url: websiteUrl,
+                      logoUrl: logoUrl,
+                      description: description,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _donationTarget = fundId);
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
+          ] else if (hasFund) ...[
             const SizedBox(height: 8),
             _buildCharityOption(
               isDark: isDark,
@@ -4215,16 +4329,18 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   Widget _buildCharityOption({
     required bool isDark,
     required String label,
-    required IconData icon,
+    IconData? icon,
     required bool isSelected,
     required VoidCallback onTap,
     String? url,
+    String? logoUrl,
+    String? description,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
               ? Colors.green.withOpacity(0.12)
@@ -4235,39 +4351,80 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             width: isSelected ? 1.5 : 1,
           ),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-              size: 20,
-              color: isSelected ? Colors.green : (isDark ? Colors.white38 : Colors.grey),
-            ),
-            const SizedBox(width: 10),
-            Icon(icon, size: 16, color: isSelected ? Colors.green : (isDark ? Colors.white54 : Colors.grey)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.white70 : Colors.black54),
+            Row(
+              children: [
+                Icon(
+                  isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  size: 20,
+                  color: isSelected ? Colors.green : (isDark ? Colors.white38 : Colors.grey),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+                const SizedBox(width: 10),
+                if (logoUrl != null && logoUrl.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.network(
+                      logoUrl,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(icon ?? Icons.favorite, size: 20, color: isSelected ? Colors.green : (isDark ? Colors.white54 : Colors.grey)),
+                    ),
+                  )
+                else
+                  Icon(icon ?? Icons.favorite, size: 20, color: isSelected ? Colors.green : (isDark ? Colors.white54 : Colors.grey)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.white70 : Colors.black54),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (url != null && url.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Bilgi', style: TextStyle(fontSize: 11, color: Colors.green[600], fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 2),
+                          Icon(Icons.open_in_new, size: 12, color: Colors.green[600]),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            if (url != null && url.isNotEmpty)
-              GestureDetector(
-                onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(width: 4),
-                    Icon(Icons.open_in_new, size: 14, color: Colors.green[400]),
-                  ],
+            if (description != null && description.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 30),
+                child: Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.3,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+            ]
           ],
         ),
       ),

@@ -19,6 +19,7 @@ import KermesTahsilatTab from './KermesTahsilatTab';
 import KermesSiparislerTab from './KermesSiparislerTab';
 import KermesDashboardTab from './KermesDashboardTab';
 import KermesKDSTab from './KermesKDSTab';
+import KermesTezgahTab from './KermesTezgahTab';
 import KermesRosterTab from './KermesRosterTab';
 import KermesTedarikTab from './KermesTedarikTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
@@ -262,6 +263,7 @@ interface KermesEvent {
  acceptsDonations?: boolean;
  selectedDonationFundId?: string;
  selectedDonationFundName?: string;
+ selectedDonationFunds?: {id: string, name: string}[];
  // Sila Yolu
  isSilaYolu?: boolean;
 }
@@ -415,6 +417,7 @@ export default function KermesDetailPage() {
  acceptsDonations: false,
  selectedDonationFundId: '',
  selectedDonationFundName: '',
+ selectedDonationFunds: [] as {id: string, name: string}[],
  isSilaYolu: false,
  // Roles
  customRoles: [] as KermesCustomRole[],
@@ -766,6 +769,7 @@ export default function KermesDetailPage() {
  acceptsDonations: data.acceptsDonations || false,
  selectedDonationFundId: data.selectedDonationFundId || '',
  selectedDonationFundName: data.selectedDonationFundName || '',
+ selectedDonationFunds: data.selectedDonationFunds || [],
  isSilaYolu: data.isSilaYolu || false,
  customRoles: (data.customRoles || []),
  tableSectionsV2: data.tableSectionsV2 || [],
@@ -837,7 +841,7 @@ export default function KermesDetailPage() {
       const q = query(collection(db, 'kermes_categories'), orderBy('order'));
       const snapshot = await getDocs(q);
       
-      let finalCats = [];
+      let finalCats: any[] = [];
       let rawDocs = [];
       if (snapshot.empty) {
         finalCats = [...DEFAULT_CATEGORIES];
@@ -1788,8 +1792,9 @@ export default function KermesDetailPage() {
  setSaving(true);
  try {
  const sku = `CUSTOM-${kermesId.slice(0, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+ const finalCategory = customProduct.category && categories.includes(customProduct.category) ? customProduct.category : (categories[0] || 'Ana Yemek');
  const productData = {
- masterSku: sku, name: customProduct.name.trim(), category: customProduct.category,
+ masterSku: sku, name: customProduct.name.trim(), category: finalCategory,
  price: customProduct.price, isAvailable: true, isCustom: true, sourceType: 'custom',
  prepZone: customProduct.prepZone || [],
  serviceType: customProduct.serviceType || 'prepped',
@@ -2256,7 +2261,7 @@ export default function KermesDetailPage() {
     </button>
   )}
   {(hasPermission('kds_screen') || hasPermission('take_orders') || hasPermission('manage_tables')) && (
-    <button onClick={() => setActiveTab('masalar')} className="flex items-center justify-center h-10 px-4 rounded-lg text-sm font-bold transition bg-amber-600 hover:bg-amber-500 text-white shadow-sm transform transition hover:scale-105 whitespace-nowrap">
+    <button onClick={() => setActiveTab('tezgah')} className="flex items-center justify-center h-10 px-4 rounded-lg text-sm font-bold transition bg-amber-600 hover:bg-amber-500 text-white shadow-sm transform transition hover:scale-105 whitespace-nowrap">
       Stant (Tezgah)
     </button>
   )}
@@ -2300,16 +2305,10 @@ export default function KermesDetailPage() {
  Vardiya
  </button>
  )}
- {(hasPermission('manage_staff') || hasPermission('manage_custom_roles')) && (
- <button onClick={() => setActiveTab('gorevler')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'gorevler' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
- Görevler
- </button>
- )}
- {hasPermission('manage_prepzones') && (
+ {(hasPermission('manage_prepzones') || hasPermission('manage_staff') || hasPermission('manage_custom_roles')) && (
  <button onClick={() => setActiveTab('mutfak')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
- Ocakbaşı
+ Ocakbaşı & Görevler
  </button>
  )}
  {hasPermission('manage_tables') && (
@@ -2341,6 +2340,8 @@ export default function KermesDetailPage() {
      kermesId={kermesId}
      assignedStaffCount={assignedStaff.length}
      assignedWaitersCount={assignedWaiters.length}
+     kermesStart={editForm.date}
+     kermesEnd={editForm.endDate}
      locale={locale}
    />
  )}
@@ -2349,6 +2350,13 @@ export default function KermesDetailPage() {
    <KermesKDSTab 
      kermesId={kermesId}
      locale={locale}
+   />
+ )}
+
+ {/* Tab Content - Tezgah */}
+ {activeTab === 'tezgah' && (
+   <KermesTezgahTab 
+     kermesId={kermesId}
    />
  )}
 
@@ -2939,19 +2947,31 @@ export default function KermesDetailPage() {
  <div className="pl-6 border-l-2 border-gray-700 ml-2 space-y-3">
  <p className="text-muted-foreground text-xs">Kullanici her zaman <strong className="text-white">kendi kermes kurulasuna</strong> yuvarlayabilir. Asagidan bir 2. bagis fonu da sec:</p>
  {donationFunds.length > 0 ? (
- <select
- value={editForm.selectedDonationFundId}
+ <div className="space-y-2 mt-2">
+ {donationFunds.map(f => {
+ const isSelected = editForm.selectedDonationFunds?.some(sf => sf.id === f.id);
+ return (
+ <label key={f.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800/50 border border-transparent hover:border-gray-700 transition-colors">
+ <input 
+ type="checkbox" 
+ checked={isSelected}
  onChange={(e) => {
- const fund = donationFunds.find(f => f.id === e.target.value);
- setEditForm({ ...editForm, selectedDonationFundId: e.target.value, selectedDonationFundName: fund?.name || '' });
+ const isChecked = e.target.checked;
+ let newFunds = [...(editForm.selectedDonationFunds || [])];
+ if (isChecked) {
+ newFunds.push({ id: f.id, name: f.name });
+ } else {
+ newFunds = newFunds.filter(sf => sf.id !== f.id);
+ }
+ setEditForm({ ...editForm, selectedDonationFunds: newFunds });
  }}
- className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow text-sm"
- >
- <option value="">-- 2. Fon secme (sadece kendi kurulusu gosterilir) --</option>
- {donationFunds.map(f => (
- <option key={f.id} value={f.id}>{f.name}</option>
- ))}
- </select>
+ className="w-4 h-4 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" 
+ />
+ <span className="text-foreground text-sm">{f.name}</span>
+ </label>
+ );
+ })}
+ </div>
  ) : (
  <p className="text-yellow-400 text-xs">Henuz aktif bagis fonu tanimlanmamis. Super Admin &gt; Ayarlar &gt; Bagis Fonlari kisminda ekleyin.</p>
  )}
@@ -2965,11 +2985,19 @@ export default function KermesDetailPage() {
  }`}>
  {(kermes as any).acceptsDonations ? 'Yuvarlama Aktif' : 'Yuvarlama Pasif'}
  </span>
- {(kermes as any).selectedDonationFundName && (
+ {(kermes as any).selectedDonationFunds && (kermes as any).selectedDonationFunds.length > 0 ? (
+ <div className="flex flex-wrap gap-2 mt-2 w-full">
+ {(kermes as any).selectedDonationFunds.map((sf: any) => (
+ <span key={sf.id} className="px-3 py-1 rounded-full text-xs bg-blue-600/30 text-blue-400">
+ {sf.name}
+ </span>
+ ))}
+ </div>
+ ) : (kermes as any).selectedDonationFundName ? (
  <span className="px-3 py-1 rounded-full text-xs bg-blue-600/30 text-blue-400">
  2. Fon: {(kermes as any).selectedDonationFundName}
  </span>
- )}
+ ) : null}
  </div>
  )}
  </div>
@@ -4079,8 +4107,9 @@ export default function KermesDetailPage() {
   )}
 
    {/* Tab Content - Gorevler (Roles) */}
-   {activeTab === 'gorevler' && (
-   <div className="space-y-6">
+  {(activeTab === 'mutfak' || activeTab === 'gorevler') && (hasPermission('manage_staff') || hasPermission('manage_custom_roles')) && (
+  <div className="space-y-6 mt-8">
+   <h2 className="text-xl font-bold text-foreground pb-2 border-b border-border/40 mb-4">Görevler ve Rol Yönetimi</h2>
     <div className="bg-card rounded-xl p-6 border border-border">
      <div className="flex items-center gap-3 mb-4">
       <span className="w-10 h-10 rounded-xl bg-purple-600/20 flex items-center justify-center text-xl">
@@ -4214,8 +4243,9 @@ export default function KermesDetailPage() {
      </div>
     </div>
    )}   {/* Tab Content - Mutfak (PrepZone Istasyon Yonetimi) */}
-   {activeTab === 'mutfak' && (
-   <div className="space-y-4">
+  {activeTab === 'mutfak' && hasPermission('manage_prepzones') && (
+  <div className="space-y-4">
+   <h2 className="text-xl font-bold text-foreground pb-2 border-b border-border/40 mb-4">Ocakbaşı İstasyonları</h2>
    <div className="bg-card rounded-xl p-4 border border-orange-500/20">
    <div className="flex items-center gap-3 mb-1">
    <span className="w-8 h-8 rounded-lg bg-orange-600/20 flex items-center justify-center text-sm">
@@ -4808,7 +4838,10 @@ export default function KermesDetailPage() {
  <h3 className="text-foreground font-bold">{t('master_catalog')}</h3>
  <p className="text-muted-foreground text-sm">{t('barkodlu_urunler')}</p>
  </button>
- <button onClick={() => setModalView('custom')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
+ <button onClick={() => { 
+   setCustomProduct({ name: '', category: categories.includes('Ana Yemek') ? 'Ana Yemek' : (categories[0] || 'Ana Yemek'), price: 0, prepZone: [], serviceType: 'prepped', counterAvailability: 'all' });
+   setModalView('custom'); 
+ }} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
  <div className="text-3xl mb-2"><span className="material-symbols-outlined text-3xl">star</span></div>
  <h3 className="text-foreground font-bold">{t('ozel_urun')}</h3>
  <p className="text-muted-foreground text-sm">{t('kendi_urununuzu_ekleyin')}</p>

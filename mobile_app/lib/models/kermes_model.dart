@@ -179,6 +179,7 @@ class KermesEvent {
   final bool acceptsDonations;
   final String? selectedDonationFundId;
   final String? selectedDonationFundName;
+  final List<Map<String, dynamic>> selectedDonationFunds;
 
   // Sila Yolu
   final bool isSilaYolu;
@@ -272,6 +273,7 @@ class KermesEvent {
     this.acceptsDonations = false,
     this.selectedDonationFundId,
     this.selectedDonationFundName,
+    this.selectedDonationFunds = const [],
     // Sila Yolu
     this.isSilaYolu = false,
     // Bolum tanimlari

@@ -61,13 +61,11 @@ export async function GET(request: Request) {
           .collection('myOrdersList')
           .doc(doc.id);
 
-        batch.update(orderSummaryRef, {
+        batch.set(orderSummaryRef, {
           status: 'cancelled',
           cancellationReason: 'Diğer',
           updatedAt: now
-        }).catch(() => {
-          // Eger summary dokumani yoksa sessizce devam et
-        });
+        }, { merge: true });
       }
 
       cancelledCount++;

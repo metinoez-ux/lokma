@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Clock as FiClock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import StatisticsPage from '../../dashboard/page';
 
 interface KermesDashboardProps {
@@ -19,6 +20,10 @@ import { useOrdersStandalone } from '@/hooks/useOrders';
 
 export default function KermesDashboardTab({ kermesId, assignedStaffCount, assignedWaitersCount, locale = 'tr', kermesStart, kermesEnd }: KermesDashboardProps) {
   const { orders, loading } = useOrdersStandalone({ businessId: kermesId, isKermesMode: true });
+  const [showStantStats, setShowStantStats] = useState(false);
+  const [showSectionStats, setShowSectionStats] = useState(false);
+  const t = useTranslations('AdminStatistics');
+  const tDetail = useTranslations('AdminKermesDetail');
 
   const {
     activeOrders,
@@ -29,7 +34,8 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
     cancelledCount,
     ocakbasiCount,
     peakHour,
-    sectionStats
+    sectionStats,
+    stantStats
   } = React.useMemo(() => {
     let revenue = 0;
     let totalRev = 0;
@@ -38,14 +44,40 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
     let ocakbasi = 0;
     const hourCounts: Record<number, number> = {};
     const active: any[] = [];
-    const sections: Record<string, { count: number, revenue: number }> = {};
+    const sections: Record<string, { count: number, revenue: number }> = {
+      'Aile Bölümü': { count: 0, revenue: 0 },
+      'Hanımlar Bölümü': { count: 0, revenue: 0 },
+      'Erkekler Bölümü': { count: 0, revenue: 0 },
+      'Kurye': { count: 0, revenue: 0 }
+    };
+    const stantStats: Record<string, { count: number, revenue: number }> = {};
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    let kStart: Date = new Date();
+    kStart.setHours(0, 0, 0, 0);
+    let kEnd: Date = new Date();
+    kEnd.setHours(23, 59, 59, 999);
+    
+    if (kermesStart) {
+      kStart = new Date(kermesStart);
+      kStart.setHours(0, 0, 0, 0);
+    }
+    if (kermesEnd) {
+      kEnd = new Date(kermesEnd);
+      kEnd.setHours(23, 59, 59, 999);
+    } else if (kermesStart) {
+      kEnd = new Date(kStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+      kEnd.setHours(23, 59, 59, 999);
+    }
 
     orders.forEach(order => {
       const data = order._raw;
       const orderDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(order.createdAt?.seconds ? order.createdAt.seconds * 1000 : order.createdAt);
       
+      if (orderDate < kStart) return;
+      if (orderDate > kEnd) return;
+
       if (data.status === 'cancelled' || data.status === 'rejected') {
         cancelled++;
       } else {
@@ -57,18 +89,71 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
           completed++;
         }
 
-        // Section mapping (Dine-in only)
-        if (data.deliveryType === 'dine_in' || data.type === 'dine_in' || data.orderType === 'dineIn') {
-          const sectionName = data.tableSection || 'Diğer / Atanmamış';
-          if (!sections[sectionName]) sections[sectionName] = { count: 0, revenue: 0 };
-          sections[sectionName].count++;
-          sections[sectionName].revenue += (data.totalAmount || data.totalPrice || data.total || 0);
+        // Section mapping (All Orders)
+        const dType = data.deliveryType || data.type || data.orderType;
+        const isDineIn = ['dine_in', 'dineIn', 'masa'].includes(dType);
+        
+        // Either use the explicit tableSection, or fallback
+        let sectionName = data.tableSection || '';
+        
+        const sLower = sectionName.toLowerCase();
+        
+        // Normalize section names to prevent duplication
+        if (dType === 'delivery' || dType === 'kurye') {
+          sectionName = 'Kurye';
+        } else if (sLower.includes('kadin') || sLower.includes('kadın') || sLower.includes('hanim') || sLower.includes('hanım')) {
+          sectionName = 'Hanımlar Bölümü';
+        } else if (sLower.includes('erkek')) {
+          sectionName = 'Erkekler Bölümü';
         } else {
-          const sectionName = 'Stant / Paket';
-          if (!sections[sectionName]) sections[sectionName] = { count: 0, revenue: 0 };
-          sections[sectionName].count++;
-          sections[sectionName].revenue += (data.totalAmount || data.totalPrice || data.total || 0);
+          sectionName = 'Aile Bölümü';
         }
+        
+        if (!sections[sectionName]) sections[sectionName] = { count: 0, revenue: 0 };
+        sections[sectionName].count++;
+        sections[sectionName].revenue += (data.totalAmount || data.totalPrice || data.total || 0);
+
+        // Stant (PrepZone / Delivery Point) calculation
+        (data.items || []).forEach((item: any) => {
+           const qty = parseInt(item.quantity || item.count || '1', 10) || 1;
+           const price = parseFloat(item.price || item.totalPrice || item.unitPrice || '0') || 0;
+           const totalVal = qty * price;
+           
+           let zones: string[] = [];
+           if (Array.isArray(item.prepZone)) {
+             zones = item.prepZone.filter((z: any) => typeof z === 'string' && z.trim() !== '');
+           } else if (typeof item.prepZone === 'string' && item.prepZone.trim() !== '') {
+             zones = [item.prepZone.trim()];
+           }
+           
+           if (zones.length === 0) {
+             zones = ['Genel / Belirtilmemiş'];
+           }
+           
+           let primaryZone = zones[0];
+           const zLower = primaryZone ? primaryZone.toLowerCase() : '';
+           
+           if (!primaryZone || 
+               zLower === 'genel / belirtilmemiş' || 
+               zLower.includes('erkek') || 
+               zLower.includes('kadin') || 
+               zLower.includes('kadın') || 
+               zLower.includes('hanim') || 
+               zLower.includes('hanım') || 
+               zLower.includes('aile') ||
+               zLower.includes('masa') ||
+               zLower.includes('stant') ||
+               zLower.includes('stand')) {
+             return; // Skip items that don't have a valid Tezgah/Ocakbaşı assigned
+           }
+
+           // Format nicely (e.g., "Grill K", "Kumpir")
+           const formattedZone = primaryZone.toUpperCase();
+
+           if (!stantStats[formattedZone]) stantStats[formattedZone] = { count: 0, revenue: 0 };
+           stantStats[formattedZone].count += qty;
+           stantStats[formattedZone].revenue += totalVal;
+});
 
         // Ocakbaşı check (by category, prepZone or name)
         const hasOcakbasi = (data.items || []).some((item: any) => {
@@ -108,9 +193,10 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
       cancelledCount: cancelled,
       ocakbasiCount: ocakbasi,
       peakHour: pHour,
-      sectionStats: sections
+      sectionStats: sections,
+      stantStats: stantStats
     };
-  }, [orders]);
+  }, [orders, kermesStart, kermesEnd]);
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Dashboard yükleniyor...</div>;
@@ -123,8 +209,8 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
     <div className="space-y-6">
       {/* Genel İstatistik Grid */}
       <div>
-        <h2 className="text-lg font-bold mb-4">Genel İstatistikler</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <h2 className="text-lg font-bold mb-4">İşletme Performansı (Kermes)</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
           <div className="bg-card rounded-xl p-4 text-center">
             <p className="text-3xl font-bold text-green-800 dark:text-green-400">€{todayRevenue.toFixed(2)}</p>
             <p className="text-xs text-muted-foreground mt-1">Bugünkü Ciro</p>
@@ -141,37 +227,65 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
             <p className="text-3xl font-bold text-purple-800 dark:text-purple-400">€{avgOrderValue.toFixed(2)}</p>
             <p className="text-xs text-muted-foreground mt-1">Ort. Sipariş</p>
           </div>
-          <div className="bg-card rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-teal-800 dark:text-teal-400">{completedCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">Tamamlanan</p>
-          </div>
-          <div className="bg-card rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-red-800 dark:text-red-400">{cancelledCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">İptal</p>
-          </div>
-          <div className="bg-card rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-amber-800 dark:text-amber-400">{peakHour}:00</p>
-            <p className="text-xs text-muted-foreground mt-1">En Yoğun Saat</p>
-          </div>
-          <div className="bg-card rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-orange-800 dark:text-orange-400">{ocakbasiCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ocakbaşı Siparişi</p>
+          <div className="bg-card rounded-xl p-4 text-center flex flex-col justify-center">
+            <div className="flex justify-around items-center">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-teal-800 dark:text-teal-400">{completedCount}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">Tamamlanan</p>
+              </div>
+              <div className="w-px h-8 bg-border/50"></div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-red-800 dark:text-red-400">{cancelledCount}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">İptal Edilen</p>
+              </div>
+            </div>
           </div>
           <div className="bg-card rounded-xl p-4 text-center">
             <p className="text-3xl font-bold text-indigo-800 dark:text-indigo-400">{activeOrders.length}</p>
-            <p className="text-xs text-muted-foreground mt-1">Aktif Bekleyen</p>
+            <p className="text-xs text-muted-foreground mt-1">Aktif Siparişler</p>
           </div>
           <div className="bg-card rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-gray-800 dark:text-gray-400">{assignedWaitersCount + assignedStaffCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">Görevli Personel ({assignedWaitersCount} Garson)</p>
+            <p className="text-3xl font-bold text-gray-800 dark:text-gray-400">{assignedStaffCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">Kermes Personeli</p>
+          </div>
+          <div className="bg-card rounded-xl p-4 text-center">
+            <p className="text-3xl font-bold text-orange-800 dark:text-orange-400">{ocakbasiCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">Ocakbaşı Sipariş</p>
           </div>
         </div>
       </div>
 
+      {/* Ocakbaşı (Hazırlık Noktası) İstatistikleri */}
+      {Object.keys(stantStats).length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-bold mb-4 cursor-pointer flex items-center justify-between hover:opacity-80" onClick={() => setShowStantStats(!showStantStats)}>
+            <span>Ocakbaşı Performansı</span>
+            <span className="text-sm bg-muted/50 px-3 py-1 rounded-full">{showStantStats ? 'Gizle' : 'Göster'}</span>
+          </h2>
+          {showStantStats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(stantStats).sort((a: any, b: any) => b[1].revenue - a[1].revenue).map(([zone, stats]: [string, any]) => (
+              <div key={zone} className="bg-gradient-to-br from-amber-100 dark:from-amber-900/30 to-amber-50 dark:to-amber-800/20 border border-amber-200 dark:border-amber-700/30 rounded-xl p-4 text-center">
+                 <p className="text-sm font-bold text-amber-800 dark:text-amber-400 mb-2 truncate" title={zone.toUpperCase()}>{zone.toUpperCase()}</p>
+                 <div className="flex justify-between items-center text-amber-900 dark:text-amber-300">
+                    <span className="text-lg font-bold">{stats.count} Ürün</span>
+                    <span className="text-lg font-bold">€{stats.revenue.toFixed(2)}</span>
+                 </div>
+              </div>
+            ))}
+          </div>
+          )}
+        </div>
+      )}
+
       {/* Bölüm Bazlı İstatistikler */}
       {Object.keys(sectionStats).length > 0 && (
         <div className="mt-8">
-          <h2 className="text-lg font-bold mb-4">Bölüm Performansları (Aile, Hanımlar vs.)</h2>
+          <h2 className="text-lg font-bold mb-4 cursor-pointer flex items-center justify-between hover:opacity-80" onClick={() => setShowSectionStats(!showSectionStats)}>
+            <span>Bölüm Performansları (Aile, Hanımlar vs.)</span>
+            <span className="text-sm bg-muted/50 px-3 py-1 rounded-full">{showSectionStats ? 'Gizle' : 'Göster'}</span>
+          </h2>
+          {showSectionStats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(sectionStats).sort((a, b) => b[1].revenue - a[1].revenue).map(([sec, stats]) => (
               <div key={sec} className="bg-gradient-to-br from-indigo-100 dark:from-indigo-900/30 to-indigo-50 dark:to-indigo-800/20 border border-indigo-200 dark:border-indigo-700/30 rounded-xl p-4 text-center">
@@ -183,6 +297,7 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 
@@ -220,7 +335,7 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
                       order.status === 'preparing' ? 'bg-blue-500/10 text-blue-600' :
                       'bg-emerald-500/10 text-emerald-600'
                     }`}>
-                      {order.status.toUpperCase()}
+                      {order.status === 'pending' ? 'BEKLİYOR' : order.status === 'accepted' ? 'ONAYLANDI' : order.status === 'preparing' ? 'HAZIRLANIYOR' : order.status === 'ready' ? 'HAZIR' : order.status.toUpperCase()}
                     </span>
                   </div>
                 </div>
@@ -236,7 +351,7 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
           embedded={true} 
           isKermesMode={true} 
           kermesId={kermesId}
-          kermesStartDate={kermesStart ? new Date(kermesStart) : new Date()} 
+          kermesStartDate={kermesStart ? new Date(kermesStart) : undefined} 
           kermesEndDate={kermesEnd ? new Date(kermesEnd) : undefined}
         />
       </div>

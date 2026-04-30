@@ -856,6 +856,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   data['selectedDonationFundId']?.toString(),
               selectedDonationFundName:
                   data['selectedDonationFundName']?.toString(),
+              selectedDonationFunds: data['selectedDonationFunds'] != null ? List<Map<String, dynamic>>.from(data['selectedDonationFunds']) : [],
               isSilaYolu: data['isSilaYolu'] == true,
               sectionDefs: _parseSectionDefs(data['tableSectionsV2']),
               deliveryZones: _parseDeliveryZones(data['deliveryZones']),

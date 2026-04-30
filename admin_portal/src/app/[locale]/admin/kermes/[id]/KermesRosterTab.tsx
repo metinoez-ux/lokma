@@ -316,8 +316,26 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     return acc;
   }, {} as Record<string, KermesRoster[]>);
 
+  const kermesDates = React.useMemo(() => {
+    if (!kermesStart || !kermesEnd) return [];
+    const dates = [];
+    const sDate = new Date(kermesStart);
+    sDate.setHours(12, 0, 0, 0);
+    const eDate = new Date(kermesEnd);
+    eDate.setHours(12, 0, 0, 0);
+    
+    if (sDate > eDate) return [kermesStart];
+    
+    const curr = new Date(sDate);
+    while (curr <= eDate) {
+      dates.push(curr.toISOString().split('T')[0]);
+      curr.setDate(curr.getDate() + 1);
+    }
+    return dates;
+  }, [kermesStart, kermesEnd]);
+
   useEffect(() => {
-    const dates = Object.keys(groupedRosters).sort();
+    const dates = kermesDates.length > 0 ? kermesDates : Object.keys(groupedRosters).sort();
     if (dates.length > 0 && !dates.includes(activeDate)) {
       setActiveDate(dates[0]);
     }
@@ -542,10 +560,10 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   };
 
   return (
-    <div className="space-y-6 overflow-hidden">
+    <div className="bg-card rounded-xl p-6 border border-border space-y-8 overflow-hidden w-full">
       {/* Vardiya ve Mesai Planlama Paneli */}
       {isAdmin ? (
-        <div className="bg-card rounded-xl p-6 shadow-sm border border-border overflow-hidden">
+        <div className="bg-slate-900/50 rounded-xl p-5 shadow-inner border border-border/50">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
             <div className="flex-1 min-w-0 pr-4">
               <h3 className="text-foreground font-bold flex items-center gap-2">
@@ -843,15 +861,11 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
         <h4 className="font-semibold text-foreground mb-4">Vardiya Takvimi</h4>
         {loading ? (
           <div className="text-center py-6 text-muted-foreground text-sm">Takvim yükleniyor...</div>
-        ) : Object.keys(groupedRosters).length === 0 ? (
-          <div className="text-center py-8 border border-dashed border-border rounded-xl text-muted-foreground">
-            Buna kermese henüz vardiya eklenmedi.
-          </div>
         ) : (
           <div className="space-y-6 w-full mx-auto">
             {/* Horizontal Date Tabs */}
             <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
-              {Object.keys(groupedRosters).sort().map(dateStr => {
+              {(kermesDates.length > 0 ? kermesDates : Object.keys(groupedRosters).sort()).map(dateStr => {
                 const dateObj = new Date(dateStr);
                 const isActive = activeDate === dateStr;
                 return (

@@ -4,7 +4,8 @@ import { execSync } from "child_process";
 
 const withNextIntl = createNextIntlPlugin();
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   output: "standalone",
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
@@ -54,7 +55,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withNextIntl(nextConfig as any);
 
 // Force new Firebase Cloud Run revision hash to bypass 409 conflict
 // Timestamp: 2026-04-11T21:19:19Z

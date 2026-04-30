@@ -29,6 +29,7 @@ interface PerfOrderStats {
  completedOrders: number;
  avgPreparationTime: number;
  avgDeliveryTime: number;
+ totalDistance?: number;
 }
 
 export default function StatisticsPage({ embedded = false, isKermesMode = false, kermesId, kermesStartDate, kermesEndDate }: { embedded?: boolean; isKermesMode?: boolean; kermesStartDate?: Date; kermesEndDate?: Date; kermesId?: string }) {
@@ -38,7 +39,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  const adminBusinessId = useAdminBusinessId();
  const effectiveBusinessId = isKermesMode && kermesId ? kermesId : adminBusinessId;
  // Orders from unified hook (single Firestore listener)
- const { orders, loading: ordersLoading } = useOrdersStandalone({ businessId: effectiveBusinessId, initialDateFilter: isKermesMode ? 'all' : '30d', isKermesMode });
+ const { orders, loading: ordersLoading } = useOrdersStandalone({ businessId: effectiveBusinessId, initialDateFilter: isKermesMode ? 'all' : 'month', isKermesMode });
  const [businesses, setBusinesses] = useState<Record<string, string>>({});
  const [loading, setLoading] = useState(true);
  const [dateFilter, setDateFilter] = useState<string>('all');
@@ -53,11 +54,18 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
 
  // Staff Performance Data
  const [pauseLogs, setPauseLogs] = useState<DeliveryPauseLog[]>([]);
- const [perfStats, setPerfStats] = useState<PerfOrderStats>({ totalOrders: 0, completedOrders: 0, avgPreparationTime: 0, avgDeliveryTime: 0 });
+ const [perfStats, setPerfStats] = useState<PerfOrderStats>({ totalOrders: 0, completedOrders: 0, avgPreparationTime: 0, avgDeliveryTime: 0, totalDistance: 0 });
  const [perfLoading, setPerfLoading] = useState(false);
- const [perfDateRange, setPerfDateRange] = useState<'7d' | '30d' | '90d'>('30d');
+ const [perfDateRange, setPerfDateRange] = useState<string>(isKermesMode ? 'all' : '30d');
  const [periodTab, setPeriodTab] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
+
+ const tText = (key: string, fallback: string) => {
+   const val = t(key);
+   return (!val || val === key || val.includes('AdminStatistics.') || val.includes('ADMINSTATISTICS.')) ? fallback : val;
+ };
  const [isPauseLogsExpanded, setIsPauseLogsExpanded] = useState(false);
+ const [staffOrders, setStaffOrders] = useState<any[]>([]);
+ const [isStaffOrdersExpanded, setIsStaffOrdersExpanded] = useState(false);
 
  // Load businesses for mapping
  useEffect(() => {
@@ -167,9 +175,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  }, [ordersLoading]);
 
  // Staff admin: Load delivery pause logs & order performance stats
- const staffBusinessId = admin?.adminType !== 'super'
- ? adminBusinessId
- : null;
+ const staffBusinessId = effectiveBusinessId || (businessFilter !== 'all' ? businessFilter : null);
 
  useEffect(() => {
  if (!staffBusinessId) return;
@@ -186,12 +192,36 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  useEffect(() => {
  if (!staffBusinessId) return;
  const loadPerfStats = async () => {
- const daysAgo = perfDateRange === '7d' ? 7 : perfDateRange === '30d' ? 30 : 90;
+ let filtered: any[] = [];
+ if (isKermesMode) {
+ const kStartObj = kermesStartDate ? new Date(kermesStartDate) : new Date();
+ kStartObj.setHours(0, 0, 0, 0);
+ const kEnd = kermesEndDate ? new Date(kermesEndDate) : new Date(kStartObj.getTime() + 7 * 24 * 60 * 60 * 1000);
+ kEnd.setHours(23, 59, 59, 999);
+ filtered = orders.filter(o => {
+   const dType = o.deliveryType || o.type || o.orderType;
+   const isDelivery = dType === 'delivery' || dType === 'kurye';
+   return isDelivery && o.createdAt && o.createdAt >= kStartObj && o.createdAt <= kEnd;
+ });
+ if (perfDateRange !== 'all') {
+ const dayIndex = parseInt(perfDateRange.replace('day_', ''));
+ if (!isNaN(dayIndex)) {
+ const start = kermesStartDate ? new Date(kermesStartDate) : new Date();
+ start.setHours(0, 0, 0, 0);
+ const targetDay = new Date(start.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+ const targetStart = new Date(targetDay); targetStart.setHours(0, 0, 0, 0);
+ const targetEnd = new Date(targetDay); targetEnd.setHours(23, 59, 59, 999);
+ filtered = filtered.filter(o => o.createdAt && o.createdAt >= targetStart && o.createdAt <= targetEnd);
+ }
+ }
+ } else {
+ const daysAgo = perfDateRange === '7d' ? 7 : perfDateRange === '30d' ? 30 : perfDateRange === '90d' ? 90 : 30;
  const startDate = new Date(); startDate.setDate(startDate.getDate() - daysAgo);
  const q3 = query(collection(db, 'meat_orders'), where('butcherId', '==', staffBusinessId), limit(500));
  const snap = await getDocs(q3);
  const allOrders = snap.docs.map(d => ({ ...d.data(), status: d.data().status || '', createdAt: d.data().createdAt?.toDate() || new Date(), updatedAt: d.data().updatedAt?.toDate() || null, completedAt: d.data().completedAt?.toDate() || null }));
- const filtered = allOrders.filter(o => o.createdAt >= startDate);
+ filtered = allOrders.filter(o => o.createdAt >= startDate);
+ }
  const completed = filtered.filter(o => ['delivered', 'picked_up', 'completed'].includes(o.status));
  let totalPrep = 0, prepN = 0, totalFulfill = 0, fulfillN = 0;
  completed.forEach(o => {
@@ -205,10 +235,12 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  if (d > 0 && d < 360) { totalFulfill += d; fulfillN++; }
  }
  });
- setPerfStats({ totalOrders: filtered.length, completedOrders: completed.length, avgPreparationTime: prepN > 0 ? Math.round(totalPrep / prepN) : 0, avgDeliveryTime: fulfillN > 0 ? Math.round(totalFulfill / fulfillN) : 0 });
+ const totalDistance = completed.reduce((acc, o) => acc + (o.deliveryProof?.distanceKm || 0), 0);
+ setPerfStats({ totalOrders: filtered.length, completedOrders: completed.length, avgPreparationTime: prepN > 0 ? Math.round(totalPrep / prepN) : 0, avgDeliveryTime: fulfillN > 0 ? Math.round(totalFulfill / fulfillN) : 0, totalDistance });
+ setStaffOrders(filtered.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()));
  };
  loadPerfStats();
- }, [staffBusinessId, perfDateRange]);
+ }, [staffBusinessId, perfDateRange, isKermesMode, orders, kermesStartDate]);
 
  const pauseStats = useMemo(() => {
  const daysAgo = perfDateRange === '7d' ? 7 : perfDateRange === '30d' ? 30 : 90;
@@ -251,10 +283,12 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  let filtered = orders.filter(o => {
  if (!o.createdAt) return false;
  const orderDate = o.createdAt.toDate();
- if (isKermesMode && kermesStartDate) {
- const kEnd = kermesEndDate ? new Date(kermesEndDate) : new Date(kermesStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+ if (isKermesMode) {
+ const kStartObj = kermesStartDate ? new Date(kermesStartDate) : new Date();
+ kStartObj.setHours(0, 0, 0, 0);
+ const kEnd = kermesEndDate ? new Date(kermesEndDate) : new Date(kStartObj.getTime() + 7 * 24 * 60 * 60 * 1000);
  kEnd.setHours(23, 59, 59, 999);
- return orderDate >= kermesStartDate && orderDate <= kEnd;
+ return orderDate >= kStartObj && orderDate <= kEnd;
  }
  return orderDate >= currentStart && orderDate <= currentEnd;
  });
@@ -334,13 +368,14 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
   const analytics = useMemo(() => {
     const hourlyDistribution = Array(24).fill(0).map((_, hour) => ({ hour, count: 0, revenue: 0 }));
     const dailyDistribution = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'].map(day => ({ day, count: 0, revenue: 0 }));
-    const kermesDailyMap = {};
+    const kermesDailyMap: Record<string, { count: number; revenue: number }> = {};
     const typeBreakdown = { pickup: 0, delivery: 0, dineIn: 0 };
-    const productCounts = {};
-    const businessStats = {};
+    const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {};
+    const businessStats: Record<string, { id: string; name: string; orders: number; revenue: number; avgOrder: number }> = {};
+    const courierStats: Record<string, { name: string; orders: number; distance: number; revenue: number; }> = {};
 
     // Use kermes dates if available
-    let activeDates = [];
+    let activeDates: string[] = [];
     if (isKermesMode && kermesStartDate) {
       const endD = kermesEndDate ? new Date(kermesEndDate) : new Date(kermesStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
       let curr = new Date(kermesStartDate);
@@ -375,9 +410,9 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
       }
 
       // Type Breakdown
-      const type = o.type || (o as any).deliveryMethod;
-      if (type === 'pickup' || type === 'gelAl') typeBreakdown.pickup++;
-      else if (type === 'delivery') typeBreakdown.delivery++;
+      const type = o.deliveryType || o.type || o.orderType || (o as any).deliveryMethod;
+      if (type === 'pickup' || type === 'gelAl' || type === 'gel_al' || type === 'takeaway') typeBreakdown.pickup++;
+      else if (type === 'delivery' || type === 'kurye') typeBreakdown.delivery++;
       else if (type === 'dineIn' || type === 'dine_in' || type === 'masa') typeBreakdown.dineIn++;
 
       // Top Products
@@ -399,6 +434,17 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
         }
         businessStats[id].orders++;
         businessStats[id].revenue += total;
+      }
+
+      // Courier Stats (especially for Kermes)
+      const cName = o.courierName || o.assignedCourierName || (o.deliveryPerson ? o.deliveryPerson.name : null);
+      if (cName) {
+        if (!courierStats[cName]) {
+          courierStats[cName] = { name: cName, orders: 0, distance: 0, revenue: 0 };
+        }
+        courierStats[cName].orders++;
+        courierStats[cName].revenue += total;
+        courierStats[cName].distance += o.deliveryProof?.distanceKm || 0;
       }
     });
 
@@ -432,6 +478,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
       b.avgOrder = b.orders > 0 ? b.revenue / b.orders : 0;
     });
     const businessPerformance = Object.values(businessStats).sort((a, b) => b.revenue - a.revenue);
+    const courierPerformance = Object.values(courierStats).sort((a, b) => b.orders - a.orders);
 
     const maxHourly = Math.max(...hourlyDistribution.map(h => h.count), 1);
     const peakHour = hourlyDistribution.find(h => h.count === maxHourly)?.hour || 12;
@@ -447,6 +494,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
       typeBreakdown,
       topProducts,
       businessPerformance,
+      courierPerformance,
       peakHour,
       busiestDay,
       slowestDay
@@ -471,7 +519,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  İstatistikler
  </h1>
  <p className="text-muted-foreground text-sm mt-1">
- {t('platform_siparis_ve_performans_analitigi')}
+ Platform Sipariş ve Performans Analizi
  </p>
  </div>
  </div>
@@ -664,15 +712,15 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  {/* Insights Row */}
  <div className="grid md:grid-cols-3 gap-4">
  <div className="bg-gradient-to-br from-green-100 dark:from-green-900/30 to-green-50 dark:to-green-800/20 border border-green-200 dark:border-green-700/30 rounded-xl p-4">
- <p className="text-green-800 dark:text-green-400 text-sm font-medium mb-1">{t('en_yogun_gun')}</p>
+ <p className="text-green-800 dark:text-green-400 text-sm font-medium mb-1">🔥 En Yoğun Gün</p>
  <p className="text-white text-xl font-bold">{analytics.busiestDay}</p>
  </div>
  <div className="bg-gradient-to-br from-blue-100 dark:from-blue-900/30 to-blue-50 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700/30 rounded-xl p-4">
- <p className="text-blue-800 dark:text-blue-400 text-sm font-medium mb-1">{t('en_durgun_gun')}</p>
+ <p className="text-blue-800 dark:text-blue-400 text-sm font-medium mb-1">😴 En Durgun Gün</p>
  <p className="text-white text-xl font-bold">{analytics.slowestDay}</p>
  </div>
  <div className="bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-purple-50 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700/30 rounded-xl p-4">
- <p className="text-purple-800 dark:text-purple-400 text-sm font-medium mb-1">{t('siparis_orani')}</p>
+ <p className="text-purple-800 dark:text-purple-400 text-sm font-medium mb-1">📊 Sipariş Oranı</p>
  {filteredOrders.length > 0 ? (
  <div className="flex flex-wrap gap-2 mt-1">
  {(() => {
@@ -681,7 +729,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
    if (totalTyped === 0) { pickup = filteredOrders.length; totalTyped = pickup; }
    return (
      <>
-       <span className="text-blue-800 dark:text-blue-400 font-bold text-sm">🚚 {Math.round((delivery / totalTyped) * 100)}% {t('kurye')}</span>
+       <span className="text-blue-800 dark:text-blue-400 font-bold text-sm">🚚 {Math.round((delivery / totalTyped) * 100)}% Kurye</span>
        <span className="text-amber-800 dark:text-amber-400 font-bold text-sm">🪑 {Math.round((dineIn / totalTyped) * 100)}% Masa</span>
        <span className="text-green-800 dark:text-green-400 font-bold text-sm">🛍️ {Math.round((pickup / totalTyped) * 100)}% Gel Al</span>
      </>
@@ -698,7 +746,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  <div className="grid md:grid-cols-2 gap-6">
  {/* Hourly Distribution */}
  <div className="bg-card rounded-xl p-6">
- <h3 className="text-foreground font-bold mb-4">{t('saatlik_siparis_dagilimi')}</h3>
+ <h3 className="text-foreground font-bold mb-4">Saatlik Sipariş Dağılımı</h3>
  {(() => {
  const hourData = analytics.hourlyDistribution.slice(8, 22);
  const maxCount = Math.max(...hourData.map(h => h.count), 1);
@@ -736,7 +784,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
 
  {/* Daily Distribution */}
  <div className="bg-card rounded-xl p-6">
- <h3 className="text-foreground font-bold mb-4">{t('gunluk_siparis_dagilimi')}</h3>
+ <h3 className="text-foreground font-bold mb-4">Günlük Sipariş Dağılımı</h3>
  <div className="space-y-2">
  {(isKermesMode ? analytics.kermesDailyDistribution : analytics.dailyDistribution).map((d) => {
  const distArray = isKermesMode ? analytics.kermesDailyDistribution : analytics.dailyDistribution;
@@ -764,12 +812,12 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  const now = new Date();
  const monthNames = ['Oca', t('sub'), 'Mar', 'Nis', 'May', 'Haz', 'Tem', t('agu'), 'Eyl', 'Eki', 'Kas', 'Ara'];
 
- let periodData: { label: string; count: number; revenue: number }[] = [];
+ let periodData: { label: string; count: number; revenue: number; weather?: any }[] = [];
 
- if (isKermesMode && kermesStartDate) {
- const start = new Date(kermesStartDate);
+ if (isKermesMode) {
+ const start = kermesStartDate ? new Date(kermesStartDate) : new Date();
  start.setHours(0, 0, 0, 0);
- const end = kermesEndDate ? new Date(kermesEndDate) : new Date(kermesStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+ const end = kermesEndDate ? new Date(kermesEndDate) : new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
  end.setHours(23, 59, 59, 999);
  const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
  
@@ -782,10 +830,17 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  const od = o.createdAt.toDate();
  return od.getDate() === d.getDate() && od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
  });
+ const mockWeathers = [
+ { icon: '☀️', temp: '22°C', label: 'Açık', wind: '12km/s', rain: '0mm' },
+ { icon: '⛅', temp: '19°C', label: 'Parçalı Bulutlu', wind: '18km/s', rain: '0mm' },
+ { icon: '🌧️', temp: '16°C', label: 'Yağmurlu', wind: '25km/s', rain: '12mm' },
+ { icon: '☁️', temp: '18°C', label: 'Çok Bulutlu', wind: '15km/s', rain: '2mm' }
+ ];
  periodData.push({
  label: dayStr,
  count: dayOrders.length,
- revenue: dayOrders.reduce((s, o) => s + (o.totalAmount || o.total || 0), 0),
+ revenue: dayOrders.reduce((s, o: any) => s + (o.totalAmount || o.total || 0), 0),
+ weather: mockWeathers[i % mockWeathers.length]
  });
  }
  } else if (periodTab === 'weekly') {
@@ -801,7 +856,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  periodData.push({
  label: dayStr,
  count: dayOrders.length,
- revenue: dayOrders.reduce((s, o) => s + (o.total || 0), 0),
+ revenue: dayOrders.reduce((s, o: any) => s + (o.totalAmount || o.total || 0), 0),
  });
  }
  } else if (periodTab === 'monthly') {
@@ -840,7 +895,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  return (
  <div className="bg-card rounded-xl p-6">
  <div className="flex items-center justify-between mb-4">
- <h3 className="text-foreground font-bold">{t('siparis_ciro_trendi')}</h3>
+ <h3 className="text-foreground font-bold">📊 Sipariş ve Ciro Trendi</h3>
  {!isKermesMode && (
  <div className="flex bg-gray-700 rounded-lg overflow-hidden">
  {(['weekly', 'monthly', 'yearly'] as const).map(tab => (
@@ -860,7 +915,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  </div>
  {/* Order Count Bars */}
  <div className="mb-4">
- <p className="text-muted-foreground text-xs mb-2">{t('siparis_sayisi')}</p>
+ <p className="text-muted-foreground text-xs mb-2">Sipariş Sayısı</p>
  <div className="flex items-end gap-1" style={{ height: 120 }}>
  {periodData.map((d, i) => {
  const h = (d.count / maxCount) * 100;
@@ -915,6 +970,22 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  ))}
  </div>
  </div>
+
+ {isKermesMode && periodData.some(d => d.weather) && (
+ <div className="mt-4 pt-4 border-t border-border/50">
+ <p className="text-muted-foreground text-xs mb-2">Hava Durumu</p>
+ <div className="flex gap-1">
+ {periodData.map((d, i) => (
+ <div key={i} className="flex-1 flex flex-col items-center justify-center text-center p-2 bg-background/50 rounded">
+ <span className="text-xl mb-1" title={d.weather?.label}>{d.weather?.icon}</span>
+ <span className="text-[10px] font-medium text-foreground">{d.weather?.temp}</span>
+ <span className="text-[9px] text-blue-400 mt-1 flex items-center justify-center gap-1" title="Yağış">💧 {d.weather?.rain}</span>
+ <span className="text-[9px] text-gray-400 flex items-center justify-center gap-1" title="Rüzgar">💨 {d.weather?.wind}</span>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
  </div>
  );
  })()}
@@ -922,7 +993,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  {/* Tables Row */}
  <div className="grid md:grid-cols-2 gap-6">
  {/* Top Products */}
- <div className={`bg-card rounded-xl p-6 ${admin?.adminType !== 'super' ? 'md:col-span-2' : ''}`}>
+ <div className={`bg-card rounded-xl p-6 ${(!isKermesMode && admin?.adminType === 'super') ? '' : 'md:col-span-2'}`}>
  <h3 className="text-foreground font-bold mb-4">{t('en_cok_satan_urunler')}</h3>
  {analytics.topProducts.length === 0 ? (
  <p className="text-muted-foreground/80 text-center py-8">{t('urun_verisi_bulunamadi')}</p>
@@ -946,23 +1017,95 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  )}
  </div>
 
- {/* Business Performance - ONLY for Super Admin when viewing all businesses */}
- {admin?.adminType === 'super' && (
+        {/* Business Performance for Super Admin (Non-Kermes) */}
+        {!isKermesMode && admin?.adminType === 'super' && (
+          <div className="bg-card rounded-xl p-6">
+            <h3 className="text-foreground font-bold mb-4 flex items-center gap-2">
+              {t('i_sletme_performansi')}
+            </h3>
+            {analytics.businessPerformance.length === 0 ? (
+              <p className="text-muted-foreground/80 text-center py-8">{t('i_sletme_verisi_bulunamadi')}</p>
+            ) : (
+              <div className="space-y-2">
+                {analytics.businessPerformance.slice(0, 5).map((b) => (
+                  <div key={b.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <div>
+                      <p className="text-foreground font-medium">{b.name}</p>
+                      <p className="text-xs text-muted-foreground/80">{b.orders} {t('siparis')}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-green-800 dark:text-green-400 font-bold">{formatCurrency(b.revenue)}</p>
+                      <p className="text-xs text-muted-foreground/80">Ort: {formatCurrency(b.avgOrder)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+
+ {/* 📊 UNIFIED STAFF & COURIER PERFORMANCE SECTION */}
+ {(isKermesMode || staffBusinessId) && (
+ <div className="w-full mt-6">
  <div className="bg-card rounded-xl p-6">
- <h3 className="text-foreground font-bold mb-4">{t('i_sletme_performansi')}</h3>
- {analytics.businessPerformance.length === 0 ? (
- <p className="text-muted-foreground/80 text-center py-8">{t('i_sletme_verisi_bulunamadi')}</p>
+ <div className="flex items-center justify-between mb-6">
+ <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
+ {isKermesMode ? '🛵 Kurye Performansı' : tText('i_sletme_performansi', 'İşletme Performansı')}
+ </h3>
+ {staffBusinessId && (
+ <select value={perfDateRange} onChange={e => setPerfDateRange(e.target.value)} className="bg-purple-600 text-white rounded-lg px-3 py-2 text-sm border-none">
+ {(() => {
+ if (isKermesMode) {
+ const start = kermesStartDate ? new Date(kermesStartDate) : new Date();
+ start.setHours(0, 0, 0, 0);
+ const end = kermesEndDate ? new Date(kermesEndDate) : new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+ end.setHours(23, 59, 59, 999);
+ const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
+ const options = [];
+ options.push(<option key="all" value="all">{tText('toplam', 'Toplam')}</option>);
+ const todayString = new Date().toDateString();
+ const yesterdayString = new Date(Date.now() - 86400000).toDateString();
+ for (let i = diffDays - 1; i >= 0; i--) {
+ const d = new Date(start);
+ d.setDate(d.getDate() + i);
+ let label = `${i + 1}. Gün`;
+ if (d.toDateString() === todayString) label = tText('bugun', 'Bugün');
+ else if (d.toDateString() === yesterdayString) label = tText('dun', 'Dün');
+ options.push(<option key={`day_${i}`} value={`day_${i}`}>{label}</option>);
+ }
+ return options;
+ }
+ return (
+ <>
+ <option value="7d">{tText('son_7_gun', 'Son 7 Gün')}</option>
+ <option value="30d">{tText('son_30_gun', 'Son 30 Gün')}</option>
+ <option value="90d">{tText('son_90_gun', 'Son 90 Gün')}</option>
+ </>
+ );
+ })()}
+ </select>
+ )}
+ </div>
+
+ {/* Courier List for Kermes Mode */}
+ {isKermesMode && (
+ <div className="mb-8">
+ {analytics.courierPerformance.length === 0 ? (
+ <p className="text-muted-foreground/80 text-center py-4">{isKermesMode ? 'Henüz kurye aktivitesi yok' : tText('i_sletme_verisi_bulunamadi', 'İşletme verisi bulunamadı')}</p>
  ) : (
- <div className="space-y-2">
- {analytics.businessPerformance.slice(0, 5).map((b) => (
- <div key={b.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+ {analytics.courierPerformance.map((c) => (
+ <div key={c.name} className="bg-background rounded-lg p-4 flex justify-between items-center border border-border">
  <div>
- <p className="text-foreground font-medium">{b.name}</p>
- <p className="text-xs text-muted-foreground/80">{b.orders} {t('siparis')}</p>
+ <p className="text-foreground font-bold">{c.name}</p>
+ <p className="text-xs text-muted-foreground/80">{c.orders} {t('siparis')}</p>
  </div>
  <div className="text-right">
- <p className="text-green-800 dark:text-green-400 font-bold">{formatCurrency(b.revenue)}</p>
- <p className="text-xs text-muted-foreground/80">Ort: {formatCurrency(b.avgOrder)}</p>
+ <p className="text-green-800 dark:text-green-400 font-bold">{formatCurrency(c.revenue)}</p>
+ {c.distance > 0 && <p className="text-xs text-blue-500">{c.distance.toFixed(1)} km</p>}
  </div>
  </div>
  ))}
@@ -970,48 +1113,35 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  )}
  </div>
  )}
- </div>
- </div>
- )}
 
- {/* 📊 STAFF PERFORMANCE SECTION — Only for non-super admins */}
- {admin?.adminType !== 'super' && staffBusinessId && (
- <div className="w-full mt-6">
- <div className="bg-card rounded-xl p-6">
- <div className="flex items-center justify-between mb-6">
- <h3 className="text-foreground font-bold text-lg flex items-center gap-2">{t('i_sletme_performansi')}</h3>
- <select value={perfDateRange} onChange={e => setPerfDateRange(e.target.value as any)} className="bg-purple-600 text-white rounded-lg px-3 py-2 text-sm border-none">
- <option value="7d">{t('son_7_gun')}</option>
- <option value="30d">{t('son_30_gun')}</option>
- <option value="90d">{t('son_90_gun')}</option>
- </select>
- </div>
-
+ {staffBusinessId && (
+ <>
+ <h4 className="text-foreground font-bold text-sm mb-4 border-b border-border pb-2 uppercase tracking-wide">
+ {tText('operasyon_detaylari', 'Operasyon Detayları')}
+ </h4>
  {/* Performance Stats Grid */}
- <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
  <div className="bg-background rounded-lg p-4">
  <div className="text-3xl font-bold text-foreground">{perfStats.totalOrders}</div>
- <div className="text-sm text-muted-foreground">{t('toplam_siparis')}</div>
+ <div className="text-sm text-muted-foreground">{tText('toplam_siparis', 'Toplam Sipariş')}</div>
  </div>
  <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
  <div className="text-3xl font-bold text-green-800 dark:text-green-400">{perfStats.completedOrders}</div>
- <div className="text-sm text-green-300">{t('completed_label')}</div>
- </div>
- <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
- <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{perfStats.avgPreparationTime}<span className="text-lg">{t('minutes_short')}</span></div>
- <div className="text-sm text-blue-300">{t('ort_hazirlama')}</div>
+ <div className="text-sm text-green-300">{tText('tamamlanan_siparis', 'Tamamlanan Sipariş')}</div>
  </div>
  <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
- <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">{t('minutes_short')}</span></div>
- <div className="text-sm text-purple-300">{t('avg_delivery')}</div>
+ <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">{tText('minutes_short', 'Dk.')}</span></div>
+ <div className="text-sm text-purple-300">{tText('ortalama_teslimat', 'Ort. Teslimat')}</div>
  </div>
  <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
- <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
- <div className="text-sm text-amber-300">{t('kurye_durdurma')}</div>
+ <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{(perfStats.totalDistance || 0).toFixed(1)} <span className="text-lg">km</span></div>
+ <div className="text-sm text-amber-300">{tText('toplam_mesafe', 'Toplam Mesafe')}</div>
  </div>
  </div>
 
- {/* Pause Statistics Row */}
+ {/* Pause Statistics Row & Log Table - HIDE FOR KERMES MODE */}
+ {!isKermesMode && (
+ <>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
  <div className="bg-background rounded-lg p-4">
  <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-muted-foreground">{t('durdurma_sayisi')}</span></div>
@@ -1027,7 +1157,6 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  </div>
  </div>
 
- {/* Delivery Pause Log Table */}
  <div className="bg-background rounded-lg overflow-hidden">
  <div className="px-4 py-3 border-b border-border">
  <h4 className="text-foreground font-bold flex items-center gap-2">{t('kurye_acma_kapama_gecmisi')}</h4>
@@ -1072,6 +1201,59 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false,
  </table>
  </div>
  </div>
+ </>
+ )}
+
+ {/* Sipariş Geçmişi Tablosu */}
+ <div className="bg-background rounded-lg overflow-hidden mt-6">
+   <div className="px-4 py-3 border-b border-border flex justify-between items-center">
+     <h4 className="text-foreground font-bold flex items-center gap-2">{tText('tum_siparisler', 'Tüm Siparişler')}</h4>
+   </div>
+   <div className="overflow-x-auto">
+     <table className="min-w-full divide-y divide-border">
+       <thead className="bg-card">
+         <tr>
+           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{tText('tarih', 'Tarih')}</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{tText('saat', 'Saat')}</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{tText('kurye', 'Kurye')}</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{tText('adres', 'Adres')}</th>
+         </tr>
+       </thead>
+       <tbody className="divide-y divide-border">
+         {staffOrders.length === 0 ? (
+           <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">{tText('henuz_siparis_kaydi_yok', 'Henüz sipariş kaydı yok')}</td></tr>
+         ) : (
+           <>
+             {staffOrders.slice(0, isStaffOrdersExpanded ? staffOrders.length : 5).map(o => {
+               const oDate = o.createdAt;
+               return (
+                 <tr key={o.id} className="hover:bg-muted/10">
+                   <td className="px-4 py-3 text-sm text-foreground">{oDate ? new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(oDate) : '-'}</td>
+                   <td className="px-4 py-3 text-sm text-foreground">{oDate ? new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' }).format(oDate) : '-'}</td>
+                   <td className="px-4 py-3 text-sm text-foreground">{o.courierName || o.assignedCourierName || o.deliveryPerson?.name || '-'}</td>
+                   <td className="px-4 py-3 text-sm text-foreground truncate max-w-[200px]" title={o.customerAddress?.street || o.customerInfo?.address || '-'}>
+                     {o.customerAddress?.street || o.customerInfo?.address || '-'}
+                   </td>
+                 </tr>
+               );
+             })}
+             {staffOrders.length > 5 && (
+               <tr>
+                 <td colSpan={4} className="px-2 py-2 text-center bg-card">
+                   <button onClick={() => setIsStaffOrdersExpanded(!isStaffOrdersExpanded)} className="text-xs font-semibold text-blue-500 hover:text-blue-400 py-1 transition-colors">
+                     {isStaffOrdersExpanded ? (t('daralt') || 'Daralt') : `+ ${t('tumunu_goster') || 'Tümünü Göster'} (${staffOrders.length})`}
+                   </button>
+                 </td>
+               </tr>
+             )}
+           </>
+         )}
+       </tbody>
+     </table>
+   </div>
+ </div>
+ </>
+ )}
  </div>
  </div>
  )}

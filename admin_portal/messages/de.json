@@ -4625,7 +4625,8 @@
     "handelsregisternummer": "Vereins-/Handelsregisternummer",
     "vergi_uid_nummer_vat": "Umsatzsteuer-ID (USt-IdNr.)",
     "avrupaBirligiVergiNumarasiOrnDe123456789": "z.B. DE123456789",
-    "onerilen_kare_veya_yuvarlak": "Önerilen: 500x500. Kare veya yuvarlak formatında, transparan bir PNG veya temiz arka plan."
+    "onerilen_kare_veya_yuvarlak": "Önerilen: 500x500. Kare veya yuvarlak formatında, transparan bir PNG veya temiz arka plan.",
+    "kermesStaff": "Kermes-Personal"
   },
   "AdminKermesNew": {
     "0_yok": "0 = keine",
@@ -12531,5 +12532,7 @@
   "karanlik": "Gece",
   "personnel": "Personnel",
   "products_admin": "Products Admin",
-  "werbung": "Werbung"
+  "werbung": "Werbung",
+  "bugunku_ciro": "Tagesumsatz",
+  "aktif_siparisler": "Aktive Bestellungen"
 }

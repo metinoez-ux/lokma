@@ -12,7 +12,7 @@ import '../providers/bottom_nav_provider.dart';
 import '../services/order_service.dart';
 import '../models/kermes_order_model.dart';
 import '../screens/orders/courier_tracking_screen.dart';
-import '../providers/unpaid_kermes_orders_provider.dart';
+import '../providers/active_kermes_orders_provider.dart';
 import '../widgets/kermes/order_qr_dialog.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -203,8 +203,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
           if (FirebaseAuth.instance.currentUser != null)
             Consumer(
               builder: (context, ref, child) {
-                final unpaidOrdersState = ref.watch(unpaidKermesOrdersProvider);
-                return unpaidOrdersState.when(
+                final activeOrdersState = ref.watch(activeKermesOrdersProvider);
+                return activeOrdersState.when(
                   data: (orders) {
                     if (orders.isEmpty) return const SizedBox.shrink();
                     return _buildFloatingQRButton(orders.first);
@@ -300,7 +300,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
 
   Widget _buildFloatingQRButton(KermesOrder order) {
     return Positioned(
-      left: 16, // Placed on the left to avoid overlapping with delivery tracking on the right
+      right: 16, // Placed on the right as requested by user
       bottom: 110, // Above bottom nav bar
       child: GestureDetector(
         onTap: () {
@@ -348,7 +348,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
                 const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'tr' == 'tr' ? 'Nakit Ödeme Kodu (QR)' : 'Payment Code (QR)',
+                  'tr' == 'tr' ? 'Siparişim (QR)' : 'My Order (QR)',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,

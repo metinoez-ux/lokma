@@ -104,6 +104,9 @@ class _KermesMenuWrapperState extends State<KermesMenuWrapper> {
           hasKidsActivities: features.contains('kids') || features.contains('kids_area'),
           activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
           selectedDonationFundId: data['selectedDonationFundId']?.toString(),
+          selectedDonationFundName: data['selectedDonationFundName']?.toString(),
+          selectedDonationFunds: data['selectedDonationFunds'] != null ? List<Map<String, dynamic>>.from(data['selectedDonationFunds']) : [],
+          isSilaYolu: data['isSilaYolu'] ?? false,
           sectionDefs: _parseSectionDefs(data['tableSectionsV2']),
         );
 

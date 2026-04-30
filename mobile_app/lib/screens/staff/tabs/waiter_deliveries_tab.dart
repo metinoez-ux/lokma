@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lokma/theme/lokma_colors.dart';
+
 import '../providers/staff_hub_provider.dart';
 
 class WaiterDeliveriesTab extends ConsumerWidget {
