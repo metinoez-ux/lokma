@@ -297,7 +297,7 @@ function GlobalProductsPageContent() {
  try {
  // Simple query without orderBy to avoid index requirement
  const snapshot = await getDocs(collection(db, "master_products"));
- const fetchedProducts = snapshot.docs.map(doc => doc.data() as MasterProduct);
+ const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MasterProduct));
  // Sort client-side
  fetchedProducts.sort((a, b) => {
  const nameA = getLocalizedText(a.name);
@@ -542,13 +542,27 @@ function GlobalProductsPageContent() {
  categories: p.categories || [p.category || 'dana'],
  defaultUnit: p.defaultUnit || 'kg',
  unit: p.unit || p.defaultUnit || 'kg',
- price: p.defaultPrice || 0,
+ price: p.defaultPrice || p.price || 0,
  isActive: true,
  isAvailable: true,
  brandLabels: p.brandLabels || [],
  imageUrl: p.imageUrl || '',
  images: p.imageUrl ? [p.imageUrl] : (p.images || []),
  optionGroups: p.optionGroups || [],
+ allergens: p.allergens || {},
+ nutritionPer100g: p.nutritionPer100g || {},
+ weight: p.weight || '',
+ mhd: p.mhd || '',
+ packung: p.packung || '',
+ storageTemp: p.storageTemp || '',
+ specialInfo: p.specialInfo || '',
+ consumptionInfo: p.consumptionInfo || '',
+ additives: p.additives || [],
+ origin: p.origin || p.originCountry || '',
+ barcode: p.barcode || '',
+ artikelnummer: p.artikelnummer || '',
+ brand: p.brand || '',
+ ingredients: p.ingredients || '',
  createdAt: new Date().toISOString(),
  updatedAt: new Date().toISOString(),
  }, { merge: true });
