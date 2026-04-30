@@ -1075,17 +1075,17 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   final shouldClear = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: Text(AppLocalizations.of(ctx).translate('marketplace.clear_cart_warning') ?? 'Sepeti Temizle'),
-                      content: Text(AppLocalizations.of(ctx).translate('marketplace.clear_cart_warning_desc') ?? 'Sepetteki tüm ürünler silinecek. Emin misiniz?'),
+                      title: Text('marketplace.clear_cart_warning'.tr()),
+                      content: Text('marketplace.clear_cart_warning_desc'.tr()),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(AppLocalizations.of(ctx).translate('common.cancel') ?? 'İptal'),
+                          child: Text('common.cancel'.tr()),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, true),
                           child: Text(
-                            AppLocalizations.of(ctx).translate('common.clear') ?? 'Temizle',
+                            'common.clear'.tr(),
                             style: const TextStyle(color: Colors.red),
                           ),
                         ),
