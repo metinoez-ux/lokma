@@ -302,7 +302,9 @@ function GlobalProductsPageContent() {
  fetchedProducts.sort((a, b) => {
  const nameA = getLocalizedText(a.name);
  const nameB = getLocalizedText(b.name);
- if (a.category !== b.category) return a.category.localeCompare(b.category);
+ const catA = a.category || a.categoryName || '';
+ const catB = b.category || b.categoryName || '';
+ if (catA !== catB) return catA.localeCompare(catB);
  return nameA.localeCompare(nameB);
  });
  setProducts(fetchedProducts);
