@@ -11,9 +11,11 @@ interface KermesDashboardProps {
   assignedStaffCount: number;
   assignedWaitersCount: number;
   locale?: string;
+  kermesStart?: string;
+  kermesEnd?: string;
 }
 
-export default function KermesDashboardTab({ kermesId, assignedStaffCount, assignedWaitersCount, locale = 'tr' }: KermesDashboardProps) {
+export default function KermesDashboardTab({ kermesId, assignedStaffCount, assignedWaitersCount, locale = 'tr', kermesStart, kermesEnd }: KermesDashboardProps) {
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -26,13 +28,22 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!kermesId) return;
+    if (!kermesId) {
+      setLoading(false);
+      return;
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Fail-safe timeout in case Firestore hangs
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     const q = query(collection(db, 'kermes_orders'), where('kermesId', '==', kermesId));
     const unsub = onSnapshot(q, (snap) => {
+      clearTimeout(timeoutId);
       let revenue = 0;
       let totalRev = 0;
       let completed = 0;
@@ -104,7 +115,20 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
       setOcakbasiCount(ocakbasi);
       setPeakHour(pHour);
       setSectionStats(sections);
-      setActiveOrders(active.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis()));
+      
+      setActiveOrders(active.sort((a, b) => {
+        const getMs = (dateObj: any) => {
+          if (!dateObj) return 0;
+          if (typeof dateObj.toMillis === 'function') return dateObj.toMillis();
+          if (dateObj.seconds) return dateObj.seconds * 1000;
+          if (typeof dateObj.getTime === 'function') return dateObj.getTime();
+          return 0;
+        };
+        return getMs(b.createdAt) - getMs(a.createdAt);
+      }));
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching kermes dashboard data:", error);
       setLoading(false);
     });
 
@@ -231,7 +255,13 @@ export default function KermesDashboardTab({ kermesId, assignedStaffCount, assig
 
       {/* Konsolide Edilmiş Grafikler (Global Dashboard'dan Sadece Grafikleri Alır) */}
       <div className="mt-8 border-t border-border/50 pt-8">
-        <StatisticsPage embedded={true} isKermesMode={true} kermesStartDate={new Date()} />
+        <StatisticsPage 
+          embedded={true} 
+          isKermesMode={true} 
+          kermesId={kermesId}
+          kermesStartDate={kermesStart ? new Date(kermesStart) : new Date()} 
+          kermesEndDate={kermesEnd ? new Date(kermesEnd) : undefined}
+        />
       </div>
     </div>
   );

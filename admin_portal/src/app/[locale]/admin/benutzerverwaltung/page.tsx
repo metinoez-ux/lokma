@@ -483,12 +483,11 @@ export default function BenutzerverwaltungPage() {
  setEditRoles([...user.roles]);
  setEditIsActive(user.isActive !== false);
 
- let pr = 'staff';
+ let pr = 'customer';
  if (user.roles.includes('super')) pr = 'super';
- else if (user.roles.includes('lokma_admin')) pr = 'lokma_admin';
- else if (user.roles.includes('business_admin') || user.roles.includes('kermes_admin')) pr = 'business_admin';
+ else if (user.roles.includes('lokma_admin') || user.roles.includes('business_admin') || user.roles.includes('kermes_admin')) pr = 'business_admin';
+ else if (user.roles.includes('staff') || user.roles.includes('kermes_staff') || user.roles.includes('driver_business') || user.roles.includes('driver_lokma') || user.roles.includes('driver')) pr = 'staff';
  else if (user.roles.includes('customer')) pr = 'customer';
- else if (user.roles.includes('driver_business') || user.roles.includes('driver_lokma')) pr = 'staff';
  
  setEditRole(pr);
  setSelectedUser(user);
@@ -532,36 +531,64 @@ export default function BenutzerverwaltungPage() {
  // Eski atama alanlarını yeni assignments listesine dahil et (Eğer yoksa)
  const initialAssignments = data.assignments ? [...data.assignments] : [];
  
- if (data.businessId && data.businessId !== 'NONE' && !initialAssignments.some((a: any) => a.id === data.businessId)) {
-   initialAssignments.push({
-     id: data.businessId,
-     entityType: 'business',
-     role: 'staff'
-   });
- }
- 
- if (data.kermesId && data.kermesId !== 'NONE' && !initialAssignments.some((a: any) => a.id === data.kermesId)) {
-   initialAssignments.push({
-     id: data.kermesId,
-     entityType: 'kermes',
-     role: 'staff'
-   });
- }
+ if (data.businessId && data.businessId !== 'NONE') {
+    const isActuallyKermes = data.businessType === 'kermes' || data.adminType === 'kermes_staff' || data.adminType === 'kermes' || data.kermesId === data.businessId;
+    const type = isActuallyKermes ? 'kermes' : 'business';
+    if (!initialAssignments.some((a: any) => a.id === data.businessId)) {
+      initialAssignments.push({
+        id: data.businessId,
+        entityType: type,
+        entityName: data.businessName || data.kermesName || '',
+        role: 'staff'
+      });
+    }
+  }
+  
+  if (data.kermesId && data.kermesId !== 'NONE' && !initialAssignments.some((a: any) => a.id === data.kermesId)) {
+    initialAssignments.push({
+      id: data.kermesId,
+      entityName: data.kermesName || data.businessName || '',
+      entityType: 'kermes',
+      role: 'staff'
+    });
+  }
 
- if (data.kermesAssignments && data.kermesAssignments.length > 0) {
-   data.kermesAssignments.forEach((ka: any) => {
-     const kId = ka.kermesId || ka;
-     if (!initialAssignments.some((a: any) => a.id === kId)) {
-       initialAssignments.push({
-         id: kId,
-         entityType: 'kermes',
-         role: ka.role || 'staff'
-       });
-     }
-   });
- }
+  if (data.kermesAssignments && data.kermesAssignments.length > 0) {
+    data.kermesAssignments.forEach((ka: any) => {
+      const kId = ka.kermesId || ka;
+      const kRole = Array.isArray(ka.roles) && ka.roles.length > 0 ? ka.roles[0] : (ka.role || 'staff');
+      if (!initialAssignments.some((a: any) => a.id === kId)) {
+        initialAssignments.push({
+          id: kId,
+          entityType: 'kermes',
+          entityName: ka.kermesTitle || ka.kermesName || '',
+          role: kRole
+        });
+      } else {
+        const existing = initialAssignments.find((a: any) => a.id === kId);
+        if (existing) {
+           if (!existing.entityName && (ka.kermesTitle || ka.kermesName)) {
+               existing.entityName = ka.kermesTitle || ka.kermesName;
+           }
+           existing.entityType = 'kermes';
+        }
+      }
+    });
+  }
 
- setEditAssignments(initialAssignments);
+  initialAssignments.forEach((a: any) => {
+    if (!a.entityName) {
+       if (a.entityType === 'kermes') {
+          const matchedKermes = kermesEvents.find((k: any) => k.id === a.id);
+          if (matchedKermes) a.entityName = matchedKermes.name || (matchedKermes as any).title || '';
+       } else {
+          const matchedBusiness = businesses.find((b: any) => b.id === a.id);
+          if (matchedBusiness) a.entityName = matchedBusiness.name || '';
+       }
+    }
+  });
+
+  setEditAssignments(initialAssignments);
  setEditKermesAllowedSections(data.kermesAllowedSections || []);
 
  // Kermes bolumleri cek (kermesId varsa)

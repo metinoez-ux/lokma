@@ -226,11 +226,18 @@ const { admin, loading: adminLoading } = useAdmin();
  }
  }, [admin]);
 
- useEffect(() => {
- if (!adminLoading && admin) {
- loadEvents();
- }
- }, [adminLoading, admin, loadEvents]);
+   useEffect(() => {
+    if (!adminLoading && admin) {
+      const isKermesContextOnly = admin.adminType === 'kermes_staff' || admin.adminType === 'kermes' || admin.businessType === 'kermes';
+      const kTarget = admin.kermesId || ((admin as any).kermesAssignments && (admin as any).kermesAssignments[0] && (admin as any).kermesAssignments[0].kermesId);
+      
+      if (admin.role !== 'super_admin' && isKermesContextOnly && kTarget && kTarget !== 'NONE') {
+         router.replace(`/admin/kermes/${kTarget}?tab=dashboard`);
+         return;
+      }
+      loadEvents();
+    }
+  }, [adminLoading, admin, loadEvents, router]);
 
  useEffect(() => {
  const loadBadges = async () => {
@@ -453,20 +460,22 @@ const { admin, loading: adminLoading } = useAdmin();
         </div>
 
         {/* SİSTEM AYARLARI */}
-        <div className="mt-8 border border-border/50 rounded-xl bg-card p-4">
-          <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
-            <span>⚙️</span> SİSTEM AYARLARI
-          </h3>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/admin/settings/kermes-menus" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Menüs (Global)</Link>
-            <Link href="/admin/kermes/menu-builder" className="px-4 py-2 rounded-lg border border-pink-500/50 bg-pink-900/20 text-pink-50 text-sm font-bold hover:bg-pink-900/40 transition">Kermes Menü Oluştur</Link>
-            <Link href="/admin/settings/kermes-features" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Funktionen</Link>
-            <Link href="/admin/settings/platform-brands" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Markalar & Rozetler</Link>
-            <Link href="/admin/settings/donation-funds" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bagis Fonlari</Link>
-            <Link href="/admin/settings/kermes-gender-types" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bolum Tipleri</Link>
-            <Link href="/admin/settings/kermes-stock-images" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Archivbilder</Link>
+        {admin.role === 'super_admin' && (
+          <div className="mt-8 border border-border/50 rounded-xl bg-card p-4">
+            <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span>⚙️</span> SİSTEM AYARLARI
+            </h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link href="/admin/settings/kermes-menus" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Menüs (Global)</Link>
+              <Link href="/admin/kermes/menu-builder" className="px-4 py-2 rounded-lg border border-pink-500/50 bg-pink-900/20 text-pink-50 text-sm font-bold hover:bg-pink-900/40 transition">Kermes Menü Oluştur</Link>
+              <Link href="/admin/settings/kermes-features" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Kermes-Funktionen</Link>
+              <Link href="/admin/settings/platform-brands" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Markalar & Rozetler</Link>
+              <Link href="/admin/settings/donation-funds" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bagis Fonlari</Link>
+              <Link href="/admin/settings/kermes-gender-types" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Bolum Tipleri</Link>
+              <Link href="/admin/settings/kermes-stock-images" className="px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground text-sm font-medium hover:bg-muted transition">Archivbilder</Link>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Search and Filters */}

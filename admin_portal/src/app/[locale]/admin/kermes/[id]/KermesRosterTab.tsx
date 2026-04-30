@@ -29,11 +29,12 @@ interface KermesRosterTabProps {
   isSuperAdmin?: boolean;
   adminGender?: string;
   customRoles?: any[];
+  globalSystemRoles?: any[];
   kermesSections?: any[];
   isAdmin: boolean;
 }
 
-export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceStaff, adminUid, kermesStart, kermesEnd, isSuperAdmin, adminGender, kermesSections = [], customRoles = [], isAdmin }: KermesRosterTabProps) {
+export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceStaff, adminUid, kermesStart, kermesEnd, isSuperAdmin, adminGender, kermesSections = [], customRoles = [], globalSystemRoles = [], isAdmin }: KermesRosterTabProps) {
   const t = useTranslations('Kermes');
   
   const [rosters, setRosters] = useState<KermesRoster[]>([]);
@@ -60,6 +61,9 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   // Coverage Dashboard State
   const [coverageOpen, setCoverageOpen] = useState(false);
   const [coverageRole, setCoverageRole] = useState('Genel Sorumlu');
+
+  // Active Date for Horizontal Tabs
+  const [activeDate, setActiveDate] = useState<string>('');
 
   useEffect(() => {
     if (!kermesId) return;
@@ -274,7 +278,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   const isFemaleAdmin = adminGender === 'female' || adminGender === 'kadin';
 
   const allowedStaffIds = assignedStaffIds.filter(uid => {
-    if (isSuperAdmin) return true;
+    if (isSuperAdmin || isAdmin) return true;
     const staff = workspaceStaff.find(w => w.id === uid || w.userId === uid);
     const staffGender = staff?.gender || staff?.profile?.gender || '';
     const isMaleStaff = staffGender === 'male' || staffGender === 'erkek';
@@ -286,7 +290,7 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   });
 
   const allowedRosters = rosters.filter(r => {
-    if (isSuperAdmin) return true;
+    if (isSuperAdmin || isAdmin) return true;
     const staff = workspaceStaff.find(w => w.id === r.userId || w.userId === r.userId);
     const staffGender = staff?.gender || staff?.profile?.gender || '';
     const isMaleStaff = staffGender === 'male' || staffGender === 'erkek';
@@ -303,6 +307,13 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
     acc[curr.date].push(curr);
     return acc;
   }, {} as Record<string, KermesRoster[]>);
+
+  useEffect(() => {
+    const dates = Object.keys(groupedRosters).sort();
+    if (dates.length > 0 && !dates.includes(activeDate)) {
+      setActiveDate(dates[0]);
+    }
+  }, [groupedRosters, activeDate]);
 
   // Default Roles based on Kermes configuration
   const dynamicFoodRoles = React.useMemo(() => {
@@ -321,13 +332,16 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
   }, [kermesSections]);
 
   const dynamicSahaRoles = React.useMemo(() => {
+    const base = globalSystemRoles && globalSystemRoles.length > 0 
+      ? globalSystemRoles.map(g => g.name)
+      : ['Genel Sorumlu', 'Garson', 'Sürücü / Nakliye', 'Temizlik Görevlisi', 'Park Görevlisi', 'Çocuk Görevlisi', 'Özel Misafir (VIP)', 'Malzeme Tedarikçisi'];
+      
     if (!customRoles || customRoles.length === 0) {
-       return ['Genel Sorumlu', 'Garson', 'Sürücü / Nakliye', 'Güvenlik', 'Temizlik', 'Park Görevlisi', 'Çocuk Bakıcısı', 'VIP Görevlisi'];
+       return base;
     }
-    const base = ['Genel Sorumlu', 'Garson', 'Sürücü / Nakliye'];
     const crNames = customRoles.map(cr => cr.name);
     return [...base, ...crNames.filter(n => !base.includes(n))];
-  }, [customRoles]);
+  }, [globalSystemRoles, customRoles]);
 
   const defaultRoles = [...dynamicSahaRoles, ...dynamicFoodRoles];
 
@@ -499,11 +513,11 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
       case 'garson': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 ring-emerald-500/30';
       case 'sürücü / nakliye': return 'bg-amber-500/10 text-amber-400 border-amber-500/20 ring-amber-500/30';
       case 'ocakbaşı - kumpir': return 'bg-orange-500/10 text-orange-400 border-orange-500/20 ring-orange-500/30';
-      case 'güvenlik': return 'bg-slate-500/10 text-slate-400 border-slate-500/20 ring-slate-500/30';
-      case 'temizlik': return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20 ring-cyan-500/30';
+      case 'temizlik görevlisi': return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20 ring-cyan-500/30';
       case 'park görevlisi': return 'bg-lime-500/10 text-lime-400 border-lime-500/20 ring-lime-500/30';
-      case 'çocuk bakıcısı': return 'bg-rose-500/10 text-rose-400 border-rose-500/20 ring-rose-500/30';
-      case 'vip görevlisi': return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20 ring-fuchsia-500/30';
+      case 'çocuk görevlisi': return 'bg-rose-500/10 text-rose-400 border-rose-500/20 ring-rose-500/30';
+      case 'özel misafir (vip)': return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20 ring-fuchsia-500/30';
+      case 'malzeme tedarikçisi': return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 ring-indigo-500/30';
       case 'tatlı standı': return 'bg-pink-500/10 text-pink-400 border-pink-500/20 ring-pink-500/30';
       case 'içecek standı': return 'bg-blue-500/10 text-blue-400 border-blue-500/20 ring-blue-500/30';
       case 'gözleme': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 ring-yellow-500/30';
@@ -827,109 +841,118 @@ export default function KermesRosterTab({ kermesId, assignedStaffIds, workspaceS
           </div>
         ) : (
           <div className="space-y-6 max-w-[880px] mx-auto">
-            {Object.keys(groupedRosters).sort().map(dateStr => {
-              const dateObj = new Date(dateStr);
-              return (
-                <div key={dateStr} className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-px bg-border flex-1"></div>
-                    <span className="text-sm font-semibold text-blue-400 bg-blue-400/10 px-3 py-1 rounded-full border border-blue-400/20">
-                      {dateObj.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </span>
-                    <div className="h-px bg-border flex-1"></div>
-                  </div>
+            {/* Horizontal Date Tabs */}
+            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+              {Object.keys(groupedRosters).sort().map(dateStr => {
+                const dateObj = new Date(dateStr);
+                const isActive = activeDate === dateStr;
+                return (
+                  <button
+                    key={dateStr}
+                    onClick={() => setActiveDate(dateStr)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${
+                      isActive
+                        ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/20'
+                        : 'bg-card text-muted-foreground border-border hover:bg-slate-800 hover:text-foreground'
+                    }`}
+                  >
+                    {dateObj.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'short' })}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Content for Active Date */}
+            {activeDate && groupedRosters[activeDate] && (
+              <div className="space-y-6 mt-4">
+                {Object.entries(groupedRosters[activeDate].reduce((acc: any, roster) => {
+                  if (!acc[roster.role]) acc[roster.role] = [];
+                  acc[roster.role].push(roster);
+                  return acc;
+                }, {})).sort().map(([role, list]: [string, any]) => {
+                  const roleBadge = getRoleColor(role);
+                  const borderColor = roleBadge.match(/border-([a-z]+-[0-9]+)/)?.[0] || 'border-border';
+                  const bgColor = roleBadge.match(/bg-([a-z]+-[0-9]+)\/10/)?.[0] || 'bg-muted';
+                  const textColor = roleBadge.match(/text-([a-z]+-[0-9]+)/)?.[0] || 'text-foreground';
                   
-                  <div className="space-y-6 mt-6">
-                    {Object.entries(groupedRosters[dateStr].reduce((acc, roster) => {
-                      if (!acc[roster.role]) acc[roster.role] = [];
-                      acc[roster.role].push(roster);
-                      return acc;
-                    }, {} as Record<string, typeof groupedRosters[string]>)).sort().map(([role, list]) => {
-                      const roleBadge = getRoleColor(role);
-                      const borderColor = roleBadge.match(/border-([a-z]+-[0-9]+)/)?.[0] || 'border-border';
-                      const bgColor = roleBadge.match(/bg-([a-z]+-[0-9]+)\/10/)?.[0] || 'bg-muted';
-                      const textColor = roleBadge.match(/text-([a-z]+-[0-9]+)/)?.[0] || 'text-foreground';
-                      
-                      return (
-                        <div key={role} className="relative bg-card/30 border border-border rounded-2xl p-4 shadow-sm">
-                          {/* Role Header */}
-                          <div className={`flex items-center gap-3 mb-4 pb-3 border-b ${borderColor}/20`}>
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${bgColor}/20 ${textColor} ${borderColor}`}>
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                            <div className="flex flex-col">
-                              <h5 className={`font-bold text-base ${textColor}`}>{role}</h5>
-                              <span className="text-xs font-semibold text-muted-foreground">{list.length} Personel Görevlendirildi</span>
-                            </div>
-                          </div>
-                          
-                          {/* Cards Grid under this Role */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {list.map(roster => {
-                              const staffName = getUserName(roster.userId);
-                              return (
-                                <div key={roster.id} className={`group relative ${bgColor}/5 hover:${bgColor}/10 border ${borderColor}/30 rounded-xl p-3 flex items-center gap-3 transition-colors cursor-default`}>
-                                  
-                                  {/* Avatar */}
-                                  <div className={`w-10 h-10 rounded-full ${bgColor}/20 border ${borderColor}/50 flex items-center justify-center font-bold text-sm ${textColor} shadow-inner`}>
-                                    {getInitials(staffName)}
-                                  </div>
-                                  
-                                  {/* Info */}
-                                  <div className="flex-1 min-w-0 pr-6">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <p className="font-bold text-foreground text-sm truncate">{staffName}</p>
-                                      {/* Status Badge */}
-                                      {roster.status === 'accepted' && (
-                                        <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded ml-2">
-                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> Kabul
-                                        </span>
-                                      )}
-                                      {roster.status === 'rejected' && (
-                                        <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded ml-2">
-                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg> Red
-                                        </span>
-                                      )}
-                                      {(!roster.status || roster.status === 'pending') && (
-                                        <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded ml-2">
-                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Bekleyen
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className={`flex items-center gap-1.5 mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${bgColor}/20 ${textColor} w-max border ${borderColor}/30`}>
-                                      <svg className="w-3.5 h-3.5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                      </svg>
-                                      <span>{roster.startTime} - {roster.endTime}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Delete Action */}
-                                  {isAdmin && (
-                                    <button 
-                                      onClick={() => handleDeleteClick(roster)}
-                                      className="text-red-500 hover:bg-red-500/10 rounded-md transition-all p-1.5 absolute right-2 top-1/2 -translate-y-1/2"
-                                      title="Vardiyayı Sil"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                      </svg>
-                                    </button>
-                                  )}
-                                  
-                                </div>
-                              );
-                            })}
-                          </div>
+                  return (
+                    <div key={role} className="relative bg-card/30 border border-border rounded-2xl p-4 shadow-sm">
+                      {/* Role Header */}
+                      <div className={`flex items-center gap-3 mb-4 pb-3 border-b ${borderColor}/20`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${bgColor}/20 ${textColor} ${borderColor}`}>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                        <div className="flex flex-col">
+                          <h5 className={`font-bold text-base ${textColor}`}>{role}</h5>
+                          <span className="text-xs font-semibold text-muted-foreground">{list.length} Personel Görevlendirildi</span>
+                        </div>
+                      </div>
+                      
+                      {/* Cards Grid under this Role */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {list.map((roster: any) => {
+                          const staffName = getUserName(roster.userId);
+                          return (
+                            <div key={roster.id} className={`group relative ${bgColor}/5 hover:${bgColor}/10 border ${borderColor}/30 rounded-xl p-3 flex items-center gap-3 transition-colors cursor-default`}>
+                              
+                              {/* Avatar */}
+                              <div className={`w-10 h-10 rounded-full ${bgColor}/20 border ${borderColor}/50 flex items-center justify-center font-bold text-sm ${textColor} shadow-inner`}>
+                                {getInitials(staffName)}
+                              </div>
+                              
+                              {/* Info */}
+                              <div className="flex-1 min-w-0 pr-6">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="font-bold text-foreground text-sm truncate">{staffName}</p>
+                                  {/* Status Badge */}
+                                  {roster.status === 'accepted' && (
+                                    <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded ml-2">
+                                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> Kabul
+                                    </span>
+                                  )}
+                                  {roster.status === 'rejected' && (
+                                    <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded ml-2">
+                                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg> Red
+                                    </span>
+                                  )}
+                                  {(!roster.status || roster.status === 'pending') && (
+                                    <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded ml-2">
+                                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Bekleyen
+                                    </span>
+                                  )}
+                                </div>
+                                <div className={`flex items-center gap-1.5 mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${bgColor}/20 ${textColor} w-max border ${borderColor}/30`}>
+                                  <svg className="w-3.5 h-3.5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span>{roster.startTime} - {roster.endTime}</span>
+                                </div>
+                              </div>
+                              
+                              {/* Delete Action */}
+                              {isAdmin && (
+                                <button 
+                                  onClick={() => handleDeleteClick(roster)}
+                                  className="text-red-500 hover:bg-red-500/10 rounded-md transition-all p-1.5 absolute right-2 top-1/2 -translate-y-1/2"
+                                  title="Vardiyayı Sil"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              )}
+                              
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

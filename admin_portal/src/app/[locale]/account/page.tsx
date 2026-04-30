@@ -594,6 +594,76 @@ export default function AccountPage() {
   const tableReservationUsed = usageStats?.tableReservations?.used || 0;
   const tableReservationProgress = tableReservationLimit === null ? 0 : (tableReservationUsed / (tableReservationLimit || 1)) * 100;
 
+  const kTarget = admin?.kermesId || ((admin as any)?.kermesAssignments && (admin as any)?.kermesAssignments[0] && (admin as any)?.kermesAssignments[0].kermesId) || ((admin as any)?.assignments?.find((a: any) => a.entityType === 'kermes')?.entityId);
+  const isKermesUser = business?.type === 'kermes' || business?.businessType === 'kermes' || !!kTarget || ['kermes', 'kermes_staff', 'kermes_admin', 'mutfak', 'garson', 'teslimat', 'kds', 'kasa', 'vezne', 'volunteer'].includes(admin?.adminType || '');
+
+  if (isKermesUser) {
+    const balance = admin?.collectedCash || admin?.walletBalance || admin?.balance || 0;
+    const assignedShifts = admin?.assignedShifts || admin?.shifts || [];
+    const workedHours = admin?.workedHours || admin?.totalHours || 0;
+
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                {tNav('myAccount') || 'Hesabım'}
+              </h1>
+              <p className="text-gray-400 mt-1">
+                {admin?.name || admin?.firstName || admin?.adminName || 'Gönüllü Personel'} - {business?.companyName || business?.brand || 'Kermes'}
+              </p>
+            </div>
+            <button onClick={() => router.back()} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+              {tSub('geri_buton') || '← Geri'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gradient-to-r from-emerald-900/60 to-emerald-800/40 border border-emerald-500/40 rounded-2xl p-6">
+              <p className="text-emerald-200 text-sm mb-2">Cüzdan / Kasa Durumu</p>
+              <h2 className="text-4xl font-bold text-white">
+                {formatCurrency(balance, business?.currency || 'EUR')}
+              </h2>
+              <p className="text-emerald-200/70 text-xs mt-2">Aktif olarak üzerinizde bulunan tahsilat tutarı</p>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-900/60 to-blue-800/40 border border-blue-500/40 rounded-2xl p-6">
+              <p className="text-blue-200 text-sm mb-2">Çalışma İstatistiği</p>
+              <h2 className="text-4xl font-bold text-white">
+                {workedHours} Saat
+              </h2>
+              <p className="text-blue-200/70 text-xs mt-2">Bu kermes boyunca kaydedilen toplam görev süresi</p>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              Atanan Vardiyalar
+            </h3>
+            {assignedShifts && assignedShifts.length > 0 ? (
+              <div className="space-y-3">
+                {assignedShifts.map((shift: any, idx: number) => (
+                  <div key={idx} className="flex justify-between items-center p-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                    <div>
+                      <p className="text-white font-medium">{shift.name || shift.title || 'Vardiya'}</p>
+                      <p className="text-gray-400 text-sm mt-0.5">{shift.date} • {shift.startTime} - {shift.endTime}</p>
+                    </div>
+                    <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
+                      {shift.role || 'Gönüllü'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm py-4">Henüz atanmış bir vardiyanız bulunmuyor.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
  return (
  <div className="min-h-screen bg-gray-900">
  <div className="max-w-6xl mx-auto px-4 py-8">
@@ -609,9 +679,9 @@ export default function AccountPage() {
   {business?.companyName || business?.brand || 'İşletme'} - {tSub('limitler_ve_ucretler') || 'Limitler ve Ücretler'}
   </p>
   </div>
-  <Link href="/admin/orders" className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg">
+  <button onClick={() => router.back()} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg">
   {tSub('geri_buton') || '← Geri'}
-  </Link>
+  </button>
   </div>
 
   {/* ═══════════════════════════════════════════════════════════════════

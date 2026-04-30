@@ -30,19 +30,20 @@ const HeaderClock = ({ currentLocale }: { currentLocale: string }) => {
 
   const bcp47 = localeToBcp47[currentLocale] || 'de-DE';
   return (
-    <>
-      <span className="text-sm font-light tabular-nums tracking-wider text-white">
+    <div className="flex items-center justify-center gap-2">
+      <span className="text-xl md:text-2xl font-bold tabular-nums tracking-wider text-foreground">
         {currentTime.toLocaleTimeString(bcp47, { hour: '2-digit', minute: '2-digit' })}
       </span>
-      <span className="text-muted-foreground/80 text-xs">|</span>
-      <span className="text-xs text-muted-foreground">
-        {currentTime.toLocaleDateString(bcp47, { day: '2-digit', month: '2-digit', year: 'numeric' })}
-      </span>
-      <span className="text-muted-foreground/80 text-xs">|</span>
-      <span className="text-xs text-muted-foreground">
-        {currentTime.toLocaleDateString(bcp47, { weekday: 'short' })}
-      </span>
-    </>
+      <span className="text-muted-foreground/30 text-2xl font-light leading-none">|</span>
+      <div className="flex flex-col items-start justify-center">
+        <span className="text-xs md:text-sm font-semibold text-foreground leading-tight">
+          {currentTime.toLocaleDateString(bcp47, { day: '2-digit', month: '2-digit', year: 'numeric' })}
+        </span>
+        <span className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-widest leading-none mt-0.5">
+          {currentTime.toLocaleDateString(bcp47, { weekday: 'long' })}
+        </span>
+      </div>
+    </div>
   );
 };
 
@@ -127,7 +128,12 @@ export default function AdminHeader() {
  const [oldestPendingTime, setOldestPendingTime] = useState<Date | null>(null);
 
  // Real-time pending orders listener
- const businessId = useAdminBusinessId();
+  const businessId = useAdminBusinessId();
+    const activeAssignment = admin?.assignments?.find((a: any) => a.entityId === businessId);
+  const kermesAssignment = (admin as any)?.kermesAssignments?.find((a: any) => a.kermesId === businessId);
+  const isKermesContext = activeAssignment?.entityType === 'kermes' || !!admin?.kermesId || !!kermesAssignment || admin?.businessType === 'kermes';
+  const isKermesUser = isKermesContext || admin?.adminType === 'kermes' || admin?.adminType === 'kermes_staff';
+  const targetKermesId = admin?.kermesId || kermesAssignment?.kermesId || businessId;
  useEffect(() => {
  if (!admin) return;
  const isSuperAdmin = admin.adminType === 'super';
@@ -318,6 +324,7 @@ export default function AdminHeader() {
  city?: string;
  country?: string;
  imageUrl?: string;
+ kermesDates?: { start: Date; end: Date };
  } | null>(null);
 
  // Stats counts and lists removed (handled in Analytics page)
@@ -364,9 +371,29 @@ export default function AdminHeader() {
  // Load business info for non-super admins
  useEffect(() => {
  const loadBusinessInfo = async () => {
- if (admin?.butcherId && admin?.adminType !== 'super') {
+ if (admin?.adminType === 'super') return;
+
  try {
  const { doc, getDoc } = await import('firebase/firestore');
+ 
+ if (isKermesUser && targetKermesId) {
+ const kermesDoc = await getDoc(doc(db, 'kermes_events', targetKermesId));
+ if (kermesDoc.exists()) {
+ const data = kermesDoc.data();
+ let startD: Date | undefined;
+ let endD: Date | undefined;
+ if (data.date) startD = data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date);
+ if (data.endDate) endD = data.endDate instanceof Timestamp ? data.endDate.toDate() : new Date(data.endDate);
+ 
+ setBusinessInfo({
+ id: kermesDoc.id,
+ companyName: data.title || 'Kermes',
+ city: data.city || '',
+ imageUrl: data.logoUrl || data.headerImage || '',
+ kermesDates: startD && endD ? { start: startD, end: endD } : undefined
+ });
+ }
+ } else if (admin?.butcherId) {
  const businessDoc = await getDoc(doc(db, 'businesses', admin.butcherId));
  if (businessDoc.exists()) {
  const data = businessDoc.data();
@@ -381,13 +408,13 @@ export default function AdminHeader() {
  imageUrl: data.imageUrl || '',
  });
  }
+ }
  } catch (error) {
  console.error('Error loading business info:', error);
  }
- }
  };
  loadBusinessInfo();
- }, [admin?.butcherId, admin?.adminType]);
+ }, [admin?.butcherId, admin?.adminType, isKermesUser, targetKermesId]);
 
  // Stats loading removed
 
@@ -1016,21 +1043,38 @@ export default function AdminHeader() {
  ═══════════════════════════════════════════════════════════════════ */}
  {admin && admin.adminType !== 'super' && (
  <div className="bg-card border-b border-border">
- <div className="max-w-7xl mx-auto px-4 py-2">
- <div className="flex items-center gap-4">
- {/* Business Logo + Name + Address (compact) */}
+ <div className={`mx-auto px-4 py-2 ${isKermesUser ? 'max-w-5xl' : 'max-w-7xl'}`}>
+ <div className="flex items-center justify-between gap-4">
+ {/* Left: Business Logo + Name + Dates */}
  {businessInfo && (
  <div
- onClick={() => router.push('/admin/orders')}
- className="flex items-center gap-3 shrink-0 mr-2 cursor-pointer hover:bg-background/5 rounded-lg px-2 py-1 -mx-2 -my-1 transition"
+ onClick={() => router.push(isKermesUser && targetKermesId ? `/admin/kermes/${targetKermesId}` : '/admin/dashboard')}
+ className="flex items-center gap-3 shrink-0 cursor-pointer hover:bg-background/5 rounded-lg px-2 py-1 -mx-2 -my-1 transition max-w-[40%] lg:max-w-xs"
  title={t('orders')}
  >
- <div className="w-9 h-9 bg-background/10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+ <div className="min-w-0">
+ <h1 className="text-foreground font-semibold text-sm md:text-base lg:text-lg truncate leading-tight">
+ {businessInfo.companyName}
+ </h1>
+ {isKermesUser && businessInfo.kermesDates ? (
+ <p className="text-muted-foreground text-[10px] md:text-xs truncate leading-tight mt-0.5">
+ {businessInfo.kermesDates.start.toLocaleDateString(currentLocale)} - {businessInfo.kermesDates.end.toLocaleDateString(currentLocale)}
+ <span className="opacity-60 ml-1">
+ ({Math.ceil((businessInfo.kermesDates.end.getTime() - businessInfo.kermesDates.start.getTime()) / (1000 * 3600 * 24)) + 1} Gün)
+ </span>
+ </p>
+ ) : (businessInfo.streetAddress || businessInfo.city) && (
+ <p className="text-muted-foreground text-xs truncate leading-tight mt-0.5">
+ {businessInfo.streetAddress && `${businessInfo.streetAddress}, `}{businessInfo.postalCode} {businessInfo.city}
+ </p>
+ )}
+ </div>
+ <div className="w-10 h-10 bg-background/10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
  {businessInfo.imageUrl ? (
  <img
  src={businessInfo.imageUrl}
  alt={businessInfo.companyName}
- className="w-full h-full object-cover"
+ className="w-full h-full object-contain p-0.5"
  />
  ) : (
  <span className="text-foreground font-bold text-sm">
@@ -1038,26 +1082,15 @@ export default function AdminHeader() {
  </span>
  )}
  </div>
- <div className="min-w-0">
- <h1 className="text-foreground font-semibold text-sm truncate leading-tight">
- {businessInfo.companyName}
- </h1>
- {(businessInfo.streetAddress || businessInfo.city) && (
- <p className="text-muted-foreground text-xs truncate leading-tight">
- {businessInfo.streetAddress && `${businessInfo.streetAddress}, `}{businessInfo.postalCode} {businessInfo.city}
- </p>
- )}
- </div>
  </div>
  )}
 
- {/* Separator */}
- {businessInfo && <div className="w-px h-6 bg-slate-600 shrink-0" />}
-
+ {/* Center: Hamburger + Tablet Clock/Status */}
+ <div className="flex flex-1 items-center justify-center gap-2 min-w-0">
  {/* Hamburger button - visible only on tablet/mobile */}
  <button
  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
- className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-foreground hover:text-white hover:bg-background/10 transition"
+ className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-foreground hover:text-white hover:bg-background/10 transition shrink-0"
  aria-label="Menu"
  >
  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1069,17 +1102,10 @@ export default function AdminHeader() {
  </svg>
  </button>
 
- {/* Tablet-only status info */}
- <div className="lg:hidden flex items-center gap-2 flex-1 justify-center">
+ {/* Clock */}
+ <div className="hidden sm:flex items-center justify-center">
  <HeaderClock currentLocale={currentLocale} />
-  {process.env.NEXT_PUBLIC_BUILD_TIME && (
-    <>
-      <span className="text-muted-foreground/80 text-xs">|</span>
-      <span className="text-xs font-semibold text-rose-500/80">
-      v.{process.env.NEXT_PUBLIC_BUILD_TIME}
-      </span>
-    </>
-  )}
+ </div>
  {/* Printer status compact */}
  <Link
  href="/admin/settings"
@@ -1115,34 +1141,7 @@ export default function AdminHeader() {
 
  {/* Navigation Chips - hidden on tablet, visible on desktop */}
  <div className="hidden lg:flex flex-wrap items-center justify-center gap-1.5 flex-1">
- {admin?.kermesId ? (
-   <>
-     {[
-       { href: `/admin/kermes/${admin.kermesId}?tab=dashboard`, label: t('dashboard') },
-       { href: `/admin/kermes/${admin.kermesId}?tab=siparisler`, label: 'KDS' },
-       { href: `/admin/kermes/${admin.kermesId}?tab=products`, label: 'Ürünler' },
-       { href: `/admin/kermes/${admin.kermesId}?tab=roster`, label: 'Personel' },
-       { href: `/admin/kermes/${admin.kermesId}?tab=tahsilat`, label: 'Kasa' },
-       { href: `/admin/kermes/${admin.kermesId}?tab=settings`, label: t('settings') },
-     ].map(({ href, label }) => {
-       const isActive = typeof window !== 'undefined' && 
-         (window.location.search.includes(href.split('?')[1] || 'no-match-param') || 
-         (href === `/admin/kermes/${admin.kermesId}?tab=dashboard` && window.location.pathname.includes(`/admin/kermes/${admin.kermesId}`) && (!window.location.search || window.location.search.includes('tab=dashboard'))));
-       return (
-         <Link
-           key={href}
-           href={href}
-           className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActive
-             ? 'bg-accent border border-border text-foreground shadow-inner'
-             : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-           }`}
-         >
-           {label}
-         </Link>
-       );
-     })}
-   </>
- ) : (
+ {isKermesUser && targetKermesId ? null : (
    <>
  {[
   { href: '/admin/dashboard', label: t('dashboard') },
@@ -1402,14 +1401,14 @@ export default function AdminHeader() {
  <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-foreground text-xl">{`\u2715`}</button>
  </div>
  <nav className="py-2">
-  {admin?.kermesId ? (
+  {isKermesUser && targetKermesId ? (
     <>
-      <Link href={`/admin/kermes/${admin.kermesId}?tab=dashboard`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
-      <Link href={`/admin/kermes/${admin.kermesId}?tab=siparisler`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
-      <Link href={`/admin/kermes/${admin.kermesId}?tab=products`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Ürünler</Link>
-      <Link href={`/admin/kermes/${admin.kermesId}?tab=roster`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Personel</Link>
-      <Link href={`/admin/kermes/${admin.kermesId}?tab=tahsilat`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Kasa</Link>
-      <Link href={`/admin/kermes/${admin.kermesId}?tab=settings`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('settings')}</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=dashboard`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=siparisler`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=products`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Ürünler</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=roster`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Personel</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=tahsilat`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Kasa</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=settings`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('settings')}</Link>
     </>
   ) : (
     <>

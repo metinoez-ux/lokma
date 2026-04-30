@@ -570,6 +570,8 @@ export default function KermesDetailPage() {
 
  // Categories - dinamik
  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [categoryDocs, setCategoryDocs] = useState<any[]>([]);
+  const [showManageCategoriesModal, setShowManageCategoriesModal] = useState(false);
  const [showCategoryModal, setShowCategoryModal] = useState(false);
  const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -836,23 +838,27 @@ export default function KermesDetailPage() {
       const snapshot = await getDocs(q);
       
       let finalCats = [];
+      let rawDocs = [];
       if (snapshot.empty) {
-        // Eğer Firebase'de kategori yoksa, default'ları kaydet ve göster
         finalCats = [...DEFAULT_CATEGORIES];
         for (let i = 0; i < DEFAULT_CATEGORIES.length; i++) {
           const catName = DEFAULT_CATEGORIES[i];
           const categoryId = catName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_ğüşöçı]/g, '');
-          await setDoc(doc(db, 'kermes_categories', categoryId), {
-            name: catName, id: categoryId, order: i, createdAt: new Date(),
-          });
+          const newDoc = { name: catName, id: categoryId, order: i, createdAt: new Date(), isActive: true };
+          await setDoc(doc(db, 'kermes_categories', categoryId), newDoc);
+          rawDocs.push({ ...newDoc, id: categoryId });
         }
       } else {
-        // Firebase'den gelen kategorileri çevirileriyle beraber al
-        finalCats = snapshot.docs.map(d => {
-          const name = d.data().name;
-          return typeof name === "object" ? getLocalizedText(name, locale) : String(name || "");
+        snapshot.docs.forEach(d => {
+          const data = d.data();
+          rawDocs.push({ id: d.id, ...data });
+          if (data.isActive !== false) {
+            const name = data.name;
+            finalCats.push(typeof name === "object" ? getLocalizedText(name, locale) : String(name || ""));
+          }
         });
       }
+      setCategoryDocs(rawDocs);
       setCategories(finalCats);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -4611,7 +4617,7 @@ export default function KermesDetailPage() {
 
  {products.length === 0 ? (
  <div className="text-center py-8">
- <p className="text-4xl mb-3">🍽️</p>
+ <p className="text-4xl mb-3"><span className="material-symbols-outlined text-sm">restaurant</span></p>
  <p className="text-muted-foreground mb-4">{t('henuz_menude_urun_yok')}</p>
  <button onClick={() => { setShowAddModal(true); setModalView('select'); }}
  className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-sm">
@@ -4654,7 +4660,7 @@ export default function KermesDetailPage() {
  <img src={product.imageUrls[0]} alt={product.name} className="w-8 h-8 rounded-full object-cover border border-gray-600" />
  ) : (
  <div className="w-8 h-8 rounded-full bg-gray-600/50 border border-gray-500/50 flex items-center justify-center">
- <span className="text-[10px]">🍽️</span>
+ <span className="text-[10px]"><span className="material-symbols-outlined text-sm">restaurant</span></span>
  </div>
  )}
  <span className="text-foreground font-medium">{getLocalizedText(product.name, locale)}</span>
@@ -4787,7 +4793,7 @@ export default function KermesDetailPage() {
  <h2 className="text-lg font-bold text-foreground">
  {modalView === 'select' && t('urun_ekle')}
  {modalView === 'catalog' && t('kermes_katalogu')}
- {modalView === 'master' && '📦 Master Katalog (Barkodlu)'}
+ {modalView === 'master' && '<span className="material-symbols-outlined text-3xl">inventory_2</span> Master Katalog (Barkodlu)'}
  {modalView === 'custom' && t('ozel_urun')}
  </h2>
  </div>
@@ -4798,17 +4804,17 @@ export default function KermesDetailPage() {
  {modalView === 'select' && (
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <button onClick={() => setModalView('catalog')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
- <div className="text-3xl mb-2">🎪</div>
+ <div className="text-3xl mb-2"><span className="material-symbols-outlined text-3xl">storefront</span></div>
  <h3 className="text-foreground font-bold">{t('kermes_katalogu')}</h3>
  <p className="text-muted-foreground text-sm">{t('hazir_yemek_listesi')}</p>
  </button>
  <button onClick={() => { setModalView('master'); loadMasterProducts(); }} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
- <div className="text-3xl mb-2">📦</div>
+ <div className="text-3xl mb-2"><span className="material-symbols-outlined text-3xl">inventory_2</span></div>
  <h3 className="text-foreground font-bold">{t('master_catalog')}</h3>
  <p className="text-muted-foreground text-sm">{t('barkodlu_urunler')}</p>
  </button>
  <button onClick={() => setModalView('custom')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
- <div className="text-3xl mb-2">✨</div>
+ <div className="text-3xl mb-2"><span className="material-symbols-outlined text-3xl">star</span></div>
  <h3 className="text-foreground font-bold">{t('ozel_urun')}</h3>
  <p className="text-muted-foreground text-sm">{t('kendi_urununuzu_ekleyin')}</p>
  </button>
@@ -4980,14 +4986,14 @@ export default function KermesDetailPage() {
  {/* Ürün Görseli (Elit Modası Upload) */}
  <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-xl p-4">
  <h3 className="text-foreground text-sm font-medium mb-3 flex items-center justify-between">
- <span>📸 {t('urun_gorseli') || 'Ürün Görseli'}</span>
+ <span><span className="material-symbols-outlined text-sm">photo_camera</span> {t('urun_gorseli') || 'Ürün Görseli'}</span>
  </h3>
  <div className="flex items-center gap-4">
  <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-gray-500 overflow-hidden bg-gray-800 flex items-center justify-center shrink-0">
  {editProduct.imageUrls && editProduct.imageUrls.length > 0 ? (
  <img src={editProduct.imageUrls[0]} alt="Product" className="w-full h-full object-cover" />
  ) : (
- <span className="text-3xl opacity-50">🍽️</span>
+ <span className="text-3xl opacity-50"><span className="material-symbols-outlined text-sm">restaurant</span></span>
  )}
  {isUploadingProductImage && (
  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -5047,7 +5053,7 @@ export default function KermesDetailPage() {
 
  {/* Fiyat Bilgileri */}
  <div className="bg-muted/80 dark:bg-muted/20 border border-border rounded-xl p-4">
- <h3 className="text-foreground text-sm font-medium mb-3">💰 Fiyat Bilgileri</h3>
+ <h3 className="text-foreground text-sm font-medium mb-3"><span className="material-symbols-outlined text-sm">payments</span> Fiyat Bilgileri</h3>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <div>
  <label className="text-muted-foreground text-xs block mb-1">{t('satis_fiyati')}</label>
@@ -5171,7 +5177,7 @@ export default function KermesDetailPage() {
                 <div className="space-y-4">
  {/* Alerjenler */}
  <div className="bg-amber-900/20 rounded-xl p-4 border border-amber-800/30">
- <label className="text-amber-800 dark:text-amber-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
+ <label className="text-amber-800 dark:text-amber-400 text-sm font-medium block mb-2"><span className="material-symbols-outlined text-sm">warning</span> Alerjenler</label>
  <div className="flex flex-wrap gap-2 mb-2">
  {(Array.isArray(editProduct.allergens) ? editProduct.allergens : []).map((allergen, idx) => (
  <span key={idx} className="px-3 py-1 bg-amber-600/30 text-amber-300 rounded-full text-xs flex items-center gap-1">
@@ -6699,14 +6705,14 @@ export default function KermesDetailPage() {
  )}
 
  {activeTab === "vardiya" && (
-  <div className="max-w-5xl mx-auto">
+  <div className="w-full">
    <KermesRosterTab
      kermesId={kermesId as string}
      assignedStaffIds={[...new Set([...assignedStaff, ...assignedDrivers, ...assignedWaiters])]}
      workspaceStaff={assignedStaffDetails}
      adminUid={adminUid}
-     kermesStart={editForm.date}
-     kermesEnd={editForm.endDate}
+     kermesStart={kermes?.startDate?.toDate?.()?.toISOString()?.split('T')[0] || kermes?.date?.toDate?.()?.toISOString()?.split('T')[0] || editForm.date}
+     kermesEnd={kermes?.endDate?.toDate?.()?.toISOString()?.split('T')[0] || editForm.endDate}
      isSuperAdmin={isSuperAdmin}
      adminGender={(admin as any)?.gender || (admin as any)?.profile?.gender || 'unknown'}
      kermesSections={editForm.tableSectionsV2 || []}

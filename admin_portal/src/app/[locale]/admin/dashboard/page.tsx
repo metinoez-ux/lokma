@@ -31,13 +31,14 @@ interface PerfOrderStats {
  avgDeliveryTime: number;
 }
 
-export default function StatisticsPage({ embedded = false, isKermesMode = false }: { embedded?: boolean; isKermesMode?: boolean; kermesStartDate?: Date }) {
+export default function StatisticsPage({ embedded = false, isKermesMode = false, kermesId, kermesStartDate, kermesEndDate }: { embedded?: boolean; isKermesMode?: boolean; kermesStartDate?: Date; kermesEndDate?: Date; kermesId?: string }) {
 
  const t = useTranslations('AdminStatistics');
  const { admin, loading: adminLoading } = useAdmin();
  const adminBusinessId = useAdminBusinessId();
+ const effectiveBusinessId = isKermesMode && kermesId ? kermesId : adminBusinessId;
  // Orders from unified hook (single Firestore listener)
- const { orders, loading: ordersLoading } = useOrdersStandalone({ initialDateFilter: 'all' });
+ const { orders, loading: ordersLoading } = useOrdersStandalone({ businessId: effectiveBusinessId, initialDateFilter: 'all' });
  const [businesses, setBusinesses] = useState<Record<string, string>>({});
  const [loading, setLoading] = useState(true);
  const [dateFilter, setDateFilter] = useState<string>('all');
@@ -325,87 +326,127 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false 
  };
 
  // Advanced Analytics - All filtered by selected business
- const analytics = {
- // Orders by hour of day
- hourlyDistribution: Array(24).fill(0).map((_, hour) => ({
- hour,
- count: filteredOrders.filter(o => o.createdAt?.toDate().getHours() === hour).length,
- revenue: filteredOrders.filter(o => o.createdAt?.toDate().getHours() === hour)
- .reduce((sum, o) => sum + (o.total || 0), 0),
- })),
+  const analytics = useMemo(() => {
+    const hourlyDistribution = Array(24).fill(0).map((_, hour) => ({ hour, count: 0, revenue: 0 }));
+    const dailyDistribution = ['Pazar', 'Pazartesi', t('sali'), t('carsamba'), t('persembe'), 'Cuma', 'Cumartesi'].map(day => ({ day, count: 0, revenue: 0 }));
+    const kermesDailyMap = {};
+    const typeBreakdown = { pickup: 0, delivery: 0, dineIn: 0 };
+    const productCounts = {};
+    const businessStats = {};
 
- // Orders by day of week
- dailyDistribution: ['Pazar', 'Pazartesi', t('sali'), t('carsamba'), t('persembe'), 'Cuma', 'Cumartesi'].map((day, idx) => ({
- day,
- count: filteredOrders.filter(o => o.createdAt?.toDate().getDay() === idx).length,
- revenue: filteredOrders.filter(o => o.createdAt?.toDate().getDay() === idx)
- .reduce((sum, o) => sum + (o.total || 0), 0),
- })),
+    // Use kermes dates if available
+    let activeDates = [];
+    if (isKermesMode && kermesStartDate) {
+      const endD = kermesEndDate ? new Date(kermesEndDate) : new Date(kermesStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+      let curr = new Date(kermesStartDate);
+      while (curr <= endD) {
+        activeDates.push(curr.toISOString().split('T')[0]);
+        curr.setDate(curr.getDate() + 1);
+      }
+    }
 
- // Orders by type (deliveryMethod values: 'pickup', 'delivery', 'dineIn')
- typeBreakdown: {
- pickup: filteredOrders.filter(o => o.type === 'pickup' || o.type === 'gelAl' || (o as any).deliveryMethod === 'pickup' || (o as any).deliveryMethod === 'gelAl').length,
- delivery: filteredOrders.filter(o => o.type === 'delivery' || (o as any).deliveryMethod === 'delivery').length,
- dineIn: filteredOrders.filter(o => o.type === 'dineIn' || o.type === 'dine_in' || o.type === 'masa' || (o as any).deliveryMethod === 'dineIn' || (o as any).deliveryMethod === 'masa').length,
- },
+    filteredOrders.forEach(o => {
+      const date = o.createdAt?.toDate();
+      const total = o.total || 0;
 
- // Top products
- topProducts: (() => {
- const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {};
- filteredOrders.forEach(order => {
- order.items?.forEach((item: any) => {
- const itemName = item.productName || item.name || '';
- if (!itemName) return; // Skip items with no name at all
- const key = itemName;
- if (!productCounts[key]) {
- productCounts[key] = { name: itemName, quantity: 0, revenue: 0 };
- }
- productCounts[key].quantity += item.quantity || 1;
- productCounts[key].revenue += (item.totalPrice || item.price || 0) * (item.quantity || 1);
- });
- });
- return Object.values(productCounts)
- .filter(p => p.name && p.name !== t('urun'))
- .sort((a, b) => b.quantity - a.quantity)
- .slice(0, 10);
- })(),
+      if (date) {
+        // Hourly
+        const hour = date.getHours();
+        hourlyDistribution[hour].count++;
+        hourlyDistribution[hour].revenue += total;
 
- // Business performance (only for super admin when viewing all)
- businessPerformance: (() => {
- const businessStats: Record<string, { id: string; name: string; orders: number; revenue: number; avgOrder: number }> = {};
- filteredOrders.forEach(order => {
- const id = order.businessId;
- if (!businessStats[id]) {
- businessStats[id] = {
- id,
- name: businesses[id] || order.businessName || id,
- orders: 0,
- revenue: 0,
- avgOrder: 0
- };
- }
- businessStats[id].orders++;
- businessStats[id].revenue += order.total || 0;
- });
- Object.values(businessStats).forEach(b => {
- b.avgOrder = b.orders > 0 ? b.revenue / b.orders : 0;
- });
- return Object.values(businessStats).sort((a, b) => b.revenue - a.revenue);
- })(),
+        // Daily
+        const day = date.getDay();
+        dailyDistribution[day].count++;
+        dailyDistribution[day].revenue += total;
 
- peakHour: 0,
- slowestDay: '',
- busiestDay: '',
- };
+        // Kermes Daily
+        const dateStr = date.toISOString().split('T')[0];
+        if (!kermesDailyMap[dateStr]) {
+          kermesDailyMap[dateStr] = { count: 0, revenue: 0 };
+        }
+        kermesDailyMap[dateStr].count++;
+        kermesDailyMap[dateStr].revenue += total;
+      }
 
- // Find peak hour
- const maxHourly = Math.max(...analytics.hourlyDistribution.map(h => h.count), 1);
- analytics.peakHour = analytics.hourlyDistribution.find(h => h.count === maxHourly)?.hour || 12;
+      // Type Breakdown
+      const type = o.type || (o as any).deliveryMethod;
+      if (type === 'pickup' || type === 'gelAl') typeBreakdown.pickup++;
+      else if (type === 'delivery') typeBreakdown.delivery++;
+      else if (type === 'dineIn' || type === 'dine_in' || type === 'masa') typeBreakdown.dineIn++;
 
- // Find busiest/slowest days
- const sortedDays = [...analytics.dailyDistribution].sort((a, b) => b.count - a.count);
- analytics.busiestDay = sortedDays[0]?.day || 'Cumartesi';
- analytics.slowestDay = sortedDays[sortedDays.length - 1]?.day || 'Pazartesi';
+      // Top Products
+      o.items?.forEach((item) => {
+        const itemName = item.productName || item.name || '';
+        if (!itemName) return;
+        if (!productCounts[itemName]) {
+          productCounts[itemName] = { name: itemName, quantity: 0, revenue: 0 };
+        }
+        productCounts[itemName].quantity += item.quantity || 1;
+        productCounts[itemName].revenue += (item.totalPrice || item.price || 0) * (item.quantity || 1);
+      });
+
+      // Business Stats
+      const id = o.businessId;
+      if (id) {
+        if (!businessStats[id]) {
+          businessStats[id] = { id, name: businesses[id] || o.businessName || id, orders: 0, revenue: 0, avgOrder: 0 };
+        }
+        businessStats[id].orders++;
+        businessStats[id].revenue += total;
+      }
+    });
+
+    const mockWeathers = [
+      { icon: '☀️', temp: '22°C', label: 'Açık', wind: '12km/s', rain: '0mm' },
+      { icon: '⛅', temp: '19°C', label: 'Parçalı Bulutlu', wind: '18km/s', rain: '0mm' },
+      { icon: '🌧️', temp: '16°C', label: 'Yağmurlu', wind: '25km/s', rain: '12mm' },
+      { icon: '☁️', temp: '18°C', label: 'Çok Bulutlu', wind: '15km/s', rain: '2mm' }
+    ];
+
+    // Combine activeDates and orders' dates
+    let allDates = Array.from(new Set([...activeDates, ...Object.keys(kermesDailyMap)])).sort();
+    
+    const kermesDailyDistribution = allDates.map((dateStr, idx) => {
+      const dateObj = new Date(dateStr);
+      const dateFormatted = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long' }).format(dateObj);
+      return {
+        day: `${idx + 1}. Gün (${dateFormatted})`,
+        weather: mockWeathers[idx % mockWeathers.length],
+        count: kermesDailyMap[dateStr]?.count || 0,
+        revenue: kermesDailyMap[dateStr]?.revenue || 0,
+      };
+    });
+
+    const topProducts = Object.values(productCounts)
+      .filter(p => p.name && p.name !== t('urun'))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
+
+    Object.values(businessStats).forEach(b => {
+      b.avgOrder = b.orders > 0 ? b.revenue / b.orders : 0;
+    });
+    const businessPerformance = Object.values(businessStats).sort((a, b) => b.revenue - a.revenue);
+
+    const maxHourly = Math.max(...hourlyDistribution.map(h => h.count), 1);
+    const peakHour = hourlyDistribution.find(h => h.count === maxHourly)?.hour || 12;
+
+    const sortedDays = [...dailyDistribution].sort((a, b) => b.count - a.count);
+    const busiestDay = sortedDays[0]?.day || 'Cumartesi';
+    const slowestDay = sortedDays[sortedDays.length - 1]?.day || 'Pazartesi';
+
+    return {
+      hourlyDistribution,
+      dailyDistribution,
+      kermesDailyDistribution,
+      typeBreakdown,
+      topProducts,
+      businessPerformance,
+      peakHour,
+      busiestDay,
+      slowestDay
+    };
+  }, [filteredOrders, businesses, t, isKermesMode, kermesStartDate, kermesEndDate]);
 
  if (adminLoading) {
  return (
@@ -418,7 +459,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false 
  return (
  <div className="min-h-screen bg-background p-6">
  {/* Header */}
- <div className="max-w-7xl mx-auto mb-6">
+ <div className="w-full mb-6">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -432,7 +473,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false 
  </div>
 
  {/* Global Filters */}
- <div className="max-w-7xl mx-auto mb-6">
+ <div className="w-full mb-6">
  <div className="bg-card rounded-xl p-4 space-y-4">
  {/* First Row - Date & Business Filters */}
  <div className="flex flex-wrap gap-4 items-center">
@@ -536,12 +577,12 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false 
  </div>
 
  {loading ? (
- <div className="max-w-7xl mx-auto bg-card rounded-xl p-12 text-center">
+ <div className="w-full bg-card rounded-xl p-12 text-center">
  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
  <p className="text-muted-foreground mt-4">{t('veriler_yukleniyor')}</p>
  </div>
  ) : (
- <div className="max-w-7xl mx-auto space-y-6">
+ <div className="w-full space-y-6">
  {/* Summary Cards */}
  {!isKermesMode && (
  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -895,7 +936,7 @@ export default function StatisticsPage({ embedded = false, isKermesMode = false 
 
  {/* 📊 STAFF PERFORMANCE SECTION — Only for non-super admins */}
  {admin?.adminType !== 'super' && staffBusinessId && (
- <div className="max-w-7xl mx-auto mt-6">
+ <div className="w-full mt-6">
  <div className="bg-card rounded-xl p-6">
  <div className="flex items-center justify-between mb-6">
  <h3 className="text-foreground font-bold text-lg flex items-center gap-2">{t('i_sletme_performansi')}</h3>
