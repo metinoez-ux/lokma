@@ -588,6 +588,7 @@ class _KermesGroupOrderScreenState
           _buildBottomBar(isDark, groupState),
         ],
       ),
+    ),
     );
   }
 
