@@ -10,6 +10,7 @@ import '../../../utils/i18n_utils.dart';
 import '../../../utils/currency_utils.dart';
 import '../../../utils/cart_warning_utils.dart';
 import '../../../providers/product_favorites_provider.dart';
+
 ///
 /// Shows: product info, required option groups (radio), optional extras (checkbox),
 /// Sonderwunsch removals, quantity selector, and dynamic price.
@@ -59,9 +60,8 @@ class _ProductCustomizationSheetState
       }
     } else {
       // New item: use defaults
-      _quantity = widget.product.unitType == 'kg'
-          ? widget.product.minQuantity
-          : 1;
+      _quantity =
+          widget.product.unitType == 'kg' ? widget.product.minQuantity : 1;
       for (final group in widget.product.optionGroups) {
         _selections[group.id] = {};
         for (final option in group.options) {
@@ -139,33 +139,37 @@ class _ProductCustomizationSheetState
   }
 
   void _addToCart() {
-    final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
-    final recipientText = _recipientName?.trim().isNotEmpty == true ? _recipientName!.trim() : null;
-    
-    // Check for cart conflicts (different Kasap OR any Kermes)
-    if (CartWarningUtils.checkConflictForNormalCart(ref, widget.businessId)) {
-      CartWarningUtils.showDifferentCartWarning(
-        context: context,
-        ref: ref,
-        targetBusinessName: widget.businessName,
-        onConfirmClearAndAdd: () {
-          _executeAddToCart(noteText, recipientText);
-        },
-      );
+    final noteText = _noteController.text.trim().isNotEmpty
+        ? _noteController.text.trim()
+        : null;
+    final recipientText = _recipientName?.trim().isNotEmpty == true
+        ? _recipientName!.trim()
+        : null;
+
+    if (CartWarningUtils.handleCartConflict(
+      context: context,
+      ref: ref,
+      targetBusinessName: widget.businessName,
+      targetId: widget.businessId,
+      isKermes: false,
+      onConfirmClearAndAdd: () {
+        _executeAddToCart(noteText, recipientText);
+      },
+    )) {
       return;
     }
-    
+
     _executeAddToCart(noteText, recipientText);
   }
 
   void _executeAddToCart(String? noteText, String? recipientText) {
     final cartNotifier = ref.read(cartProvider.notifier);
-    
+
     // If editing, remove the old variant first (options may have changed -> different uniqueKey)
     if (widget.existingItem != null) {
       cartNotifier.removeFromCart(widget.existingItem!.uniqueKey);
     }
-    
+
     cartNotifier.addToCart(
       widget.product,
       _quantity,
@@ -217,20 +221,25 @@ class _ProductCustomizationSheetState
           // ── Scrollable Content ──
           Flexible(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(left: 16, right: 16, bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 0),
+              padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
 
                   // ── Product Header ──
-                  _buildProductHeader(product, isByWeight, isDark, textPrimary, textSecondary, accent),
+                  _buildProductHeader(product, isByWeight, isDark, textPrimary,
+                      textSecondary, accent),
 
                   if (product.optionGroups.isNotEmpty) ...[
                     Divider(color: divider, height: 24),
 
                     // ── Option Groups (sorted: required first, progressive reveal) ──
-                    ..._buildVisibleOptionGroups(isDark, textPrimary, textSecondary, accent, divider),
+                    ..._buildVisibleOptionGroups(
+                        isDark, textPrimary, textSecondary, accent, divider),
                   ],
 
                   // -- Note Chip (tappable, opens full note bottom sheet) --
@@ -238,20 +247,28 @@ class _ProductCustomizationSheetState
                     GestureDetector(
                       onTap: () => _showNoteSheet(isDark),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                          color: isDark
+                              ? Colors.white.withOpacity(0.05)
+                              : Colors.grey[100],
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.edit_note_rounded, color: accent, size: 20),
+                            Icon(Icons.edit_note_rounded,
+                                color: accent, size: 20),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 _buildNotePreview(),
                                 style: TextStyle(
-                                  color: (_noteController.text.trim().isNotEmpty || (_recipientName?.trim().isNotEmpty ?? false))
+                                  color: (_noteController.text
+                                              .trim()
+                                              .isNotEmpty ||
+                                          (_recipientName?.trim().isNotEmpty ??
+                                              false))
                                       ? textPrimary
                                       : textSecondary,
                                   fontSize: 13,
@@ -260,7 +277,8 @@ class _ProductCustomizationSheetState
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (_noteController.text.trim().isNotEmpty || (_recipientName?.trim().isNotEmpty ?? false))
+                            if (_noteController.text.trim().isNotEmpty ||
+                                (_recipientName?.trim().isNotEmpty ?? false))
                               Icon(Icons.check_circle, color: accent, size: 16),
                           ],
                         ),
@@ -279,7 +297,9 @@ class _ProductCustomizationSheetState
               left: 16,
               right: 16,
               top: 12,
-              bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom +
+                  MediaQuery.of(context).padding.bottom +
+                  12,
             ),
             decoration: BoxDecoration(
               color: bg,
@@ -301,18 +321,22 @@ class _ProductCustomizationSheetState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _qtyButton(
-                            icon: _quantity <= (isByWeight ? product.minQuantity : 1)
+                            icon: _quantity <=
+                                    (isByWeight ? product.minQuantity : 1)
                                 ? Icons.delete_outline
                                 : Icons.remove,
-                            color: _quantity <= (isByWeight ? product.minQuantity : 1)
+                            color: _quantity <=
+                                    (isByWeight ? product.minQuantity : 1)
                                 ? textSecondary
                                 : textPrimary,
                             onTap: () {
-                              if (_quantity <= (isByWeight ? product.minQuantity : 1)) {
+                              if (_quantity <=
+                                  (isByWeight ? product.minQuantity : 1)) {
                                 Navigator.pop(context);
                                 return;
                               }
-                              setState(() => _quantity -= isByWeight ? product.stepQuantity : 1);
+                              setState(() => _quantity -=
+                                  isByWeight ? product.stepQuantity : 1);
                             },
                           ),
                           Padding(
@@ -330,9 +354,12 @@ class _ProductCustomizationSheetState
                           ),
                           _qtyButton(
                             icon: Icons.add,
-                            color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF3A3A3C),
                             onTap: () {
-                              setState(() => _quantity += isByWeight ? product.stepQuantity : 1);
+                              setState(() => _quantity +=
+                                  isByWeight ? product.stepQuantity : 1);
                             },
                           ),
                         ],
@@ -346,18 +373,23 @@ class _ProductCustomizationSheetState
                       child: SizedBox(
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: _allRequiredGroupsSelected ? _addToCart : null,
+                          onPressed:
+                              _allRequiredGroupsSelected ? _addToCart : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: accent,
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: isDark ? Colors.white12 : Colors.grey[300],
-                            disabledForegroundColor: isDark ? Colors.white30 : Colors.grey,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                            disabledBackgroundColor:
+                                isDark ? Colors.white12 : Colors.grey[300],
+                            disabledForegroundColor:
+                                isDark ? Colors.white30 : Colors.grey,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24)),
                             elevation: 0,
                           ),
                           child: Text(
                             '${widget.existingItem != null ? 'marketplace.update_item'.tr() : 'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2)}',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -416,19 +448,23 @@ class _ProductCustomizationSheetState
                 return GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
-                      product.sku,
-                      businessId: widget.businessId,
-                      productName: product.name,
-                      imageUrl: product.imageUrl ?? '',
-                      price: product.effectiveAppPrice,
-                    );
+                    ref
+                        .read(productFavoritesDetailedProvider.notifier)
+                        .toggleFavorite(
+                          product.sku,
+                          businessId: widget.businessId,
+                          productName: product.name,
+                          imageUrl: product.imageUrl ?? '',
+                          price: product.effectiveAppPrice,
+                        );
                   },
                   child: Container(
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[100],
+                      color: isDark
+                          ? Colors.white.withOpacity(0.08)
+                          : Colors.grey[100],
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -478,7 +514,8 @@ class _ProductCustomizationSheetState
               color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
               fontWeight: FontWeight.w600,
               decoration: TextDecoration.underline,
-              decorationColor: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
+              decorationColor:
+                  isDark ? Colors.white70 : const Color(0xFF3A3A3C),
             ),
           ),
         ),
@@ -488,8 +525,8 @@ class _ProductCustomizationSheetState
   }
 
   // ── Sorted & Progressive Option Groups ──
-  List<Widget> _buildVisibleOptionGroups(bool isDark,
-      Color textPrimary, Color textSecondary, Color accent, Color divider) {
+  List<Widget> _buildVisibleOptionGroups(bool isDark, Color textPrimary,
+      Color textSecondary, Color accent, Color divider) {
     final groups = List<OptionGroup>.from(widget.product.optionGroups);
     // Sort: required groups first, optional groups last
     groups.sort((a, b) {
@@ -515,15 +552,16 @@ class _ProductCustomizationSheetState
 
       if (!allPreviousRequiredSatisfied) break; // stop rendering further groups
 
-      widgets.add(_buildOptionGroup(group, isDark, textPrimary, textSecondary, accent, divider));
+      widgets.add(_buildOptionGroup(
+          group, isDark, textPrimary, textSecondary, accent, divider));
     }
 
     return widgets;
   }
 
   // ── Option Group ──
-  Widget _buildOptionGroup(OptionGroup group, bool isDark,
-      Color textPrimary, Color textSecondary, Color accent, Color divider) {
+  Widget _buildOptionGroup(OptionGroup group, bool isDark, Color textPrimary,
+      Color textSecondary, Color accent, Color divider) {
     final selectedIds = _selections[group.id] ?? {};
 
     return Column(
@@ -550,7 +588,9 @@ class _ProductCustomizationSheetState
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                group.required ? 'marketplace.required_field'.tr() : 'common.optional'.tr(),
+                group.required
+                    ? 'marketplace.required_field'.tr()
+                    : 'common.optional'.tr(),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
@@ -576,8 +616,12 @@ class _ProductCustomizationSheetState
                   // Radio / Checkbox icon
                   Icon(
                     group.isRadio
-                        ? (isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked)
-                        : (isSelected ? Icons.check_box : Icons.check_box_outline_blank),
+                        ? (isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked)
+                        : (isSelected
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank),
                     color: isSelected ? accent : textSecondary,
                     size: 22,
                   ),
@@ -589,7 +633,8 @@ class _ProductCustomizationSheetState
                       style: TextStyle(
                         fontSize: 14,
                         color: textPrimary,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
                       ),
                     ),
                   ),
@@ -632,8 +677,10 @@ class _ProductCustomizationSheetState
 
   // -- Note bottom sheet (same as cart) --
   void _showNoteSheet(bool isDark) {
-    final recipientController = TextEditingController(text: _recipientName ?? '');
-    final noteSheetController = TextEditingController(text: _noteController.text);
+    final recipientController =
+        TextEditingController(text: _recipientName ?? '');
+    final noteSheetController =
+        TextEditingController(text: _noteController.text);
 
     showModalBottomSheet(
       context: context,
@@ -647,7 +694,8 @@ class _ProductCustomizationSheetState
             ),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF2A2A28) : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -699,7 +747,9 @@ class _ProductCustomizationSheetState
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
+                      color: isDark
+                          ? const Color(0xFF1E1E1E)
+                          : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
@@ -728,7 +778,8 @@ class _ProductCustomizationSheetState
                           size: 20,
                         ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                         counterText: '',
                       ),
                     ),
@@ -772,7 +823,9 @@ class _ProductCustomizationSheetState
                   Container(
                     constraints: const BoxConstraints(minHeight: 80),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
+                      color: isDark
+                          ? const Color(0xFF1E1E1E)
+                          : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
@@ -831,10 +884,12 @@ class _ProductCustomizationSheetState
                         child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              _noteController.text = noteSheetController.text.trim();
-                              _recipientName = recipientController.text.trim().isNotEmpty
-                                  ? recipientController.text.trim()
-                                  : null;
+                              _noteController.text =
+                                  noteSheetController.text.trim();
+                              _recipientName =
+                                  recipientController.text.trim().isNotEmpty
+                                      ? recipientController.text.trim()
+                                      : null;
                             });
                             Navigator.pop(ctx);
                           },
@@ -842,9 +897,15 @@ class _ProductCustomizationSheetState
                             height: 50,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: (noteSheetController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
-                                  ? const Color(0xFF3E3E40)
-                                  : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                              color:
+                                  (noteSheetController.text.trim().isNotEmpty ||
+                                          recipientController.text
+                                              .trim()
+                                              .isNotEmpty)
+                                      ? const Color(0xFF3E3E40)
+                                      : (isDark
+                                          ? Colors.grey[800]
+                                          : Colors.grey[200]),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Text(
@@ -852,9 +913,16 @@ class _ProductCustomizationSheetState
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
-                                color: (noteSheetController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
+                                color: (noteSheetController.text
+                                            .trim()
+                                            .isNotEmpty ||
+                                        recipientController.text
+                                            .trim()
+                                            .isNotEmpty)
                                     ? Colors.white
-                                    : (isDark ? Colors.grey[500] : Colors.grey[400]),
+                                    : (isDark
+                                        ? Colors.grey[500]
+                                        : Colors.grey[400]),
                               ),
                             ),
                           ),
@@ -872,7 +940,10 @@ class _ProductCustomizationSheetState
   }
 
   // -- Quantity button helper --
-  Widget _qtyButton({required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _qtyButton(
+      {required IconData icon,
+      required Color color,
+      required VoidCallback onTap}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -894,7 +965,8 @@ class _ProductCustomizationSheetState
     final textSecondary = isDark ? Colors.white54 : Colors.black45;
     final bg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
-    final warningBg = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
+    final warningBg =
+        isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
 
     showModalBottomSheet(
       context: context,
@@ -915,7 +987,8 @@ class _ProductCustomizationSheetState
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 8),
               child: Container(
-                width: 36, height: 4,
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white24 : Colors.black12,
                   borderRadius: BorderRadius.circular(2),
@@ -935,7 +1008,10 @@ class _ProductCustomizationSheetState
                   Expanded(
                     child: Text(
                       'marketplace.product_info'.tr(),
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: textPrimary),
                     ),
                   ),
                 ],
@@ -953,29 +1029,43 @@ class _ProductCustomizationSheetState
                     // Product name
                     Text(
                       I18nUtils.getLocalizedText(context, product.nameData),
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: textPrimary),
                     ),
                     const SizedBox(height: 24),
                     // Allergene Section
                     Row(
                       children: [
-                        Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
+                        Text('marketplace.allergens'.tr(),
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: textPrimary)),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: product.allergens.isNotEmpty
                                   ? const Color(0xFFE8F5E9)
-                                  : (isDark ? Colors.white10 : Colors.grey[200]),
+                                  : (isDark
+                                      ? Colors.white10
+                                      : Colors.grey[200]),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              product.allergens.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
+                              product.allergens.isNotEmpty
+                                  ? 'marketplace.confirmed_by_seller'.tr()
+                                  : 'marketplace.not_confirmed_by_seller'.tr(),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: product.allergens.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                                color: product.allergens.isNotEmpty
+                                    ? const Color(0xFF2E7D32)
+                                    : textSecondary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -986,40 +1076,56 @@ class _ProductCustomizationSheetState
                     const SizedBox(height: 12),
                     if (product.allergens.isNotEmpty)
                       ...product.allergens.map((allergen) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Icon(Icons.eco_outlined, size: 18, color: textSecondary),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(allergen, style: TextStyle(fontSize: 14, color: textPrimary))),
-                          ],
-                        ),
-                      ))
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.eco_outlined,
+                                    size: 18, color: textSecondary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                    child: Text(allergen,
+                                        style: TextStyle(
+                                            fontSize: 14, color: textPrimary))),
+                              ],
+                            ),
+                          ))
                     else
-                      Text('marketplace.no_info_available'.tr(), style: TextStyle(fontSize: 14, color: textSecondary)),
+                      Text('marketplace.no_info_available'.tr(),
+                          style: TextStyle(fontSize: 14, color: textSecondary)),
                     const SizedBox(height: 20),
                     Divider(color: dividerColor),
                     const SizedBox(height: 16),
                     // Zusatzstoffe Section
                     Row(
                       children: [
-                        Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
+                        Text('marketplace.additives'.tr(),
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: textPrimary)),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: product.additives.isNotEmpty
                                   ? const Color(0xFFE8F5E9)
-                                  : (isDark ? Colors.white10 : Colors.grey[200]),
+                                  : (isDark
+                                      ? Colors.white10
+                                      : Colors.grey[200]),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              product.additives.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
+                              product.additives.isNotEmpty
+                                  ? 'marketplace.confirmed_by_seller'.tr()
+                                  : 'marketplace.not_confirmed_by_seller'.tr(),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: product.additives.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                                color: product.additives.isNotEmpty
+                                    ? const Color(0xFF2E7D32)
+                                    : textSecondary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1030,17 +1136,22 @@ class _ProductCustomizationSheetState
                     const SizedBox(height: 12),
                     if (product.additives.isNotEmpty)
                       ...product.additives.map((additive) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Icon(Icons.science_outlined, size: 18, color: textSecondary),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(additive, style: TextStyle(fontSize: 14, color: textPrimary))),
-                          ],
-                        ),
-                      ))
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.science_outlined,
+                                    size: 18, color: textSecondary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                    child: Text(additive,
+                                        style: TextStyle(
+                                            fontSize: 14, color: textPrimary))),
+                              ],
+                            ),
+                          ))
                     else
-                      Text('marketplace.no_info_available'.tr(), style: TextStyle(fontSize: 14, color: textSecondary)),
+                      Text('marketplace.no_info_available'.tr(),
+                          style: TextStyle(fontSize: 14, color: textSecondary)),
                     const SizedBox(height: 24),
                     // Haftungsausschluss / Disclaimer
                     Container(
@@ -1052,12 +1163,17 @@ class _ProductCustomizationSheetState
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.warning_amber_rounded, size: 24, color: isDark ? Colors.amber : Colors.amber[700]),
+                          Icon(Icons.warning_amber_rounded,
+                              size: 24,
+                              color: isDark ? Colors.amber : Colors.amber[700]),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               'marketplace.disclaimer_text'.tr(),
-                              style: TextStyle(fontSize: 13, color: textSecondary, height: 1.5),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: textSecondary,
+                                  height: 1.5),
                             ),
                           ),
                         ],

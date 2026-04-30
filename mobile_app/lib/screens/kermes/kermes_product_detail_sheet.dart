@@ -471,15 +471,14 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
       return;
     }
 
-    if (CartWarningUtils.checkConflictForKermesCart(ref, widget.eventId)) {
-      CartWarningUtils.showDifferentCartWarning(
-        context: context,
-        ref: ref,
-        targetBusinessName: '${widget.eventName} Kermesi',
-        onConfirmClearAndAdd: () {
-          _executeAddToCartAndClose();
-        },
-      );
+    if (CartWarningUtils.handleCartConflict(
+      context: context,
+      ref: ref,
+      targetBusinessName: '${widget.eventName} Kermesi',
+      targetId: widget.eventId,
+      isKermes: true,
+      onConfirmClearAndAdd: _executeAddToCartAndClose,
+    )) {
       return;
     }
     _executeAddToCartAndClose();

@@ -34,13 +34,19 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 Widget buildKasapProductMedia(String url, BoxFit fit, bool isDark) {
   if (url.startsWith('assets/')) {
-    return Image.asset(url, fit: fit, errorBuilder: (_, __, ___) => Icon(Icons.restaurant_menu, color: isDark ? Colors.white24 : Colors.grey[400], size: 40));
+    return Image.asset(url,
+        fit: fit,
+        errorBuilder: (_, __, ___) => Icon(Icons.restaurant_menu,
+            color: isDark ? Colors.white24 : Colors.grey[400], size: 40));
   }
   return LokmaNetworkImage(
     imageUrl: url,
     fit: fit,
-    placeholder: (_, __) => Container(color: isDark ? Colors.grey[900] : Colors.grey[100], child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
-    errorWidget: (_, __, ___) => Icon(Icons.restaurant_menu, color: isDark ? Colors.white24 : Colors.grey[400], size: 40),
+    placeholder: (_, __) => Container(
+        color: isDark ? Colors.grey[900] : Colors.grey[100],
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
+    errorWidget: (_, __, ___) => Icon(Icons.restaurant_menu,
+        color: isDark ? Colors.white24 : Colors.grey[400], size: 40),
   );
 }
 
@@ -52,23 +58,33 @@ class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String? groupSessionId;
   final bool isReservationIntent;
   final String? reservationTabId;
-  
-  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber, this.closedAcknowledged = false, this.groupSessionId, this.isReservationIntent = false, this.reservationTabId});
+
+  const BusinessDetailScreen(
+      {super.key,
+      required this.businessId,
+      this.initialDeliveryMode = 0,
+      this.initialTableNumber,
+      this.closedAcknowledged = false,
+      this.groupSessionId,
+      this.isReservationIntent = false,
+      this.reservationTabId});
 
   @override
-  ConsumerState<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
+  ConsumerState<BusinessDetailScreen> createState() =>
+      _BusinessDetailScreenState();
 }
 
 class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Theme-aware colors (resolved in build method)
   // 🎨 BRAND COLOUR: Fallback when no brandColor in Firestore
-  static const Color _defaultBrandColor = Color(0xFFEA184A);  // LOKMA brand color
-  
+  static const Color _defaultBrandColor =
+      Color(0xFFEA184A); // LOKMA brand color
+
   // 🎨 BRAND COLOUR: Get merchant's brand color from Firestore
   // Reads 'brandColor' field (hex string like '#FF5733') from business document
   Color _getAccent(BuildContext context) {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
-    
+
     // 🎨 BRAND COLOUR: Check for brandColor field in Firestore (hex format: #RRGGBB)
     final brandColorHex = data?['brandColor']?.toString();
     if (brandColorHex != null && brandColorHex.isNotEmpty) {
@@ -82,7 +98,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         // Fall through to defaults if parsing fails
       }
     }
-    
+
     // Check for legacy brand field
     final brand = data?['brand']?.toString().toLowerCase();
     if (brand == 'tuna') {
@@ -90,11 +106,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     } else if (brand == 'akdeniz_toros') {
       return const Color(0xFF1B5E20); // 🎨 BRAND COLOUR: Akdeniz Toros green
     }
-    
+
     // 🎨 BRAND COLOUR: Default fallback
     return _defaultBrandColor;
   }
-  
+
   String _selectedCategory = 'marketplace.category_all'.tr();
 
   final Map<String, GlobalKey> _categoryKeys = {};
@@ -118,30 +134,38 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     if (_selectedCategory == category) return;
     setState(() => _selectedCategory = category);
     _isUserScrolling = false;
-    
+
     // Auto-scroll the chip bar to show the selected chip fully
     _scrollChipBarToSelected(category);
-    
+
     // Slide the pill to the new chip position
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updatePillPosition(category);
     });
-    
+
     if (category == 'marketplace.category_all'.tr()) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        _scrollController.animateTo(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut);
       }
     } else {
       final key = _categoryKeys[category];
-      if (key != null && key.currentContext != null && _scrollController.hasClients) {
+      if (key != null &&
+          key.currentContext != null &&
+          _scrollController.hasClients) {
         // Calculate the position using RenderBox relative to the scrollable viewport
-        final RenderBox? targetBox = key.currentContext!.findRenderObject() as RenderBox?;
-        final RenderBox? scrollableBox = context.findRenderObject() as RenderBox?;
-        
+        final RenderBox? targetBox =
+            key.currentContext!.findRenderObject() as RenderBox?;
+        final RenderBox? scrollableBox =
+            context.findRenderObject() as RenderBox?;
+
         if (targetBox != null && scrollableBox != null) {
-          final targetPosition = targetBox.localToGlobal(Offset.zero, ancestor: scrollableBox);
+          final targetPosition =
+              targetBox.localToGlobal(Offset.zero, ancestor: scrollableBox);
           // Offset by current scroll position minus sticky header height (status bar + search bar + category tabs)
-          final scrollTarget = _scrollController.offset + targetPosition.dy - 190;
+          final scrollTarget =
+              _scrollController.offset + targetPosition.dy - 190;
           _scrollController.animateTo(
             scrollTarget.clamp(0.0, _scrollController.position.maxScrollExtent),
             duration: const Duration(milliseconds: 300),
@@ -150,7 +174,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         }
       }
     }
-    
+
     Future.delayed(const Duration(milliseconds: 350), () {
       if (mounted) _isUserScrolling = true;
     });
@@ -161,7 +185,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     if (data == null) return;
 
     // In masa mode: QR must be scanned first (show prompt if not yet shown)
-    if (_isMasaMode && widget.initialTableNumber == null && !_masaPreOrderPromptShown) {
+    if (_isMasaMode &&
+        widget.initialTableNumber == null &&
+        !_masaPreOrderPromptShown) {
       _showMasaPreOrderPrompt(product);
       return;
     }
@@ -186,7 +212,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     if (product.optionGroups.isNotEmpty) {
       _showProductBottomSheet(product);
     } else {
-      final butcherName = data['companyName'] ?? data['name'] ?? 'common.butcher'.tr();
+      final butcherName =
+          data['companyName'] ?? data['name'] ?? 'common.butcher'.tr();
       HapticFeedback.mediumImpact();
       _quickAddToCart(
         product,
@@ -198,21 +225,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
   }
 
-
-  void _quickAddToCart(ButcherProduct product, double quantity, String businessId, String? butcherName, {VoidCallback? onSuccess}) {
-    if (CartWarningUtils.checkConflictForNormalCart(ref, businessId)) {
-      CartWarningUtils.showDifferentCartWarning(
-        context: context,
-        ref: ref,
-        targetBusinessName: butcherName ?? 'common.butcher'.tr(),
-        onConfirmClearAndAdd: () {
-          ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName ?? 'common.butcher'.tr());
-          if (onSuccess != null) onSuccess();
-        },
-      );
+  void _quickAddToCart(ButcherProduct product, double quantity,
+      String businessId, String? butcherName,
+      {VoidCallback? onSuccess}) {
+    if (CartWarningUtils.handleCartConflict(
+      context: context,
+      ref: ref,
+      targetBusinessName: butcherName ?? 'common.butcher'.tr(),
+      targetId: businessId,
+      isKermes: false,
+      onConfirmClearAndAdd: () {
+        ref.read(cartProvider.notifier).addToCart(product, quantity, businessId,
+            butcherName ?? 'common.butcher'.tr());
+        if (onSuccess != null) onSuccess();
+      },
+    )) {
       return;
     }
-    ref.read(cartProvider.notifier).addToCart(product, quantity, businessId, butcherName ?? 'common.butcher'.tr());
+    ref.read(cartProvider.notifier).addToCart(
+        product, quantity, businessId, butcherName ?? 'common.butcher'.tr());
     if (onSuccess != null) onSuccess();
   }
 
@@ -221,25 +252,26 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     if (!_chipScrollController.hasClients) return;
     final tabKey = _tabKeys[category];
     if (tabKey == null || tabKey.currentContext == null) return;
-    
-    final RenderBox? chipBox = tabKey.currentContext!.findRenderObject() as RenderBox?;
+
+    final RenderBox? chipBox =
+        tabKey.currentContext!.findRenderObject() as RenderBox?;
     if (chipBox == null) return;
-    
+
     // Get the chip's position relative to the viewport
     final chipPosition = chipBox.localToGlobal(Offset.zero);
     final chipWidth = chipBox.size.width;
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     // Calculate where this chip should be scrolled to (centered)
     final chipCenter = chipPosition.dx + chipWidth / 2;
     final viewportCenter = screenWidth / 2;
     final scrollDelta = chipCenter - viewportCenter;
-    
+
     final targetOffset = (_chipScrollController.offset + scrollDelta).clamp(
       0.0,
       _chipScrollController.position.maxScrollExtent,
     );
-    
+
     _chipScrollController.animateTo(
       targetOffset,
       duration: const Duration(milliseconds: 400),
@@ -251,10 +283,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   void _updatePillPosition([String? cat]) {
     final category = cat ?? _selectedCategory;
     final tabKey = _tabKeys[category];
-    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) return;
+    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null)
+      return;
 
-    final RenderBox? chipBox = tabKey!.currentContext!.findRenderObject() as RenderBox?;
-    final RenderBox? rowBox = _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
+    final RenderBox? chipBox =
+        tabKey!.currentContext!.findRenderObject() as RenderBox?;
+    final RenderBox? rowBox =
+        _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
     if (chipBox == null || rowBox == null) return;
     if (!chipBox.hasSize || !rowBox.hasSize) return;
 
@@ -268,7 +303,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     // Sanity check: reject clearly invalid values (chip outside row bounds)
     if (newWidth <= 0 || newLeft < -1 || newLeft > rowBox.size.width) {
-      debugPrint('⚠️ [PILL] Skipping invalid pill pos: left=$newLeft, width=$newWidth, rowWidth=${rowBox.size.width}');
+      debugPrint(
+          '⚠️ [PILL] Skipping invalid pill pos: left=$newLeft, width=$newWidth, rowWidth=${rowBox.size.width}');
       // Still mark as initialized so text colors work correctly
       if (!_pillInitialized && mounted) {
         setState(() => _pillInitialized = true);
@@ -277,7 +313,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
 
     if (mounted) {
-      if ((_pillLeft - newLeft).abs() > 0.5 || (_pillWidth - newWidth).abs() > 0.5 || !_pillInitialized) {
+      if ((_pillLeft - newLeft).abs() > 0.5 ||
+          (_pillWidth - newWidth).abs() > 0.5 ||
+          !_pillInitialized) {
         setState(() {
           _pillLeft = newLeft;
           _pillWidth = newWidth;
@@ -286,7 +324,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       }
     }
   }
-
 
   void _onMenuScroll() {
     if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
@@ -301,7 +338,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           if (mounted) _updatePillPosition('marketplace.category_all'.tr());
         });
         Future.delayed(const Duration(milliseconds: 50), () {
-          if (mounted) _scrollChipBarToSelected('marketplace.category_all'.tr());
+          if (mounted)
+            _scrollChipBarToSelected('marketplace.category_all'.tr());
         });
       }
       return;
@@ -315,20 +353,22 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     for (var entry in _categoryKeys.entries) {
       final key = entry.value;
       if (key.currentContext != null) {
-        final RenderBox? box = key.currentContext!.findRenderObject() as RenderBox?;
+        final RenderBox? box =
+            key.currentContext!.findRenderObject() as RenderBox?;
         if (box != null) {
           final position = box.localToGlobal(Offset.zero, ancestor: ancestor);
           // 200 to 400 is roughly where the sticky header is.
           if (position.dy > 150 && position.dy < 400) {
-             visibleCategory = entry.key;
-             break;
+            visibleCategory = entry.key;
+            break;
           }
         }
       }
     }
 
     if (visibleCategory != null && visibleCategory != _selectedCategory) {
-      debugPrint('🌀 [LOOP FIX] _onMenuScroll visibleCategory change! $visibleCategory');
+      debugPrint(
+          '🌀 [LOOP FIX] _onMenuScroll visibleCategory change! $visibleCategory');
       HapticFeedback.selectionClick();
       setState(() {
         _selectedCategory = visibleCategory!;
@@ -343,7 +383,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       });
     }
   }
-  
+
   // 🚀 Service Mode (Lieferando-style toggle)
   // 0 = Kurye/Teslimat, 1 = Gel Al/Abholung, 2 = Masa/Dine-in
   late int _deliveryModeIndex;
@@ -353,13 +393,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Masa Pre-Order Prompt state
   bool _masaPreOrderPromptShown = false;
   bool _masaPreOrderEnabled = false; // true = pre-order, false = just browsing
-  
+
   // 🛒 Market-type detection: grid layout for these business types
   static const Set<String> _marketTypes = {
-    'kasap', 'market', 'balik', 'sarkuteri', 'kuruyemis', 
-    'ciftci', 'petshop', 'kozmetik', 'eticaret',
+    'kasap',
+    'market',
+    'balik',
+    'sarkuteri',
+    'kuruyemis',
+    'ciftci',
+    'petshop',
+    'kozmetik',
+    'eticaret',
   };
-  
+
   bool get _isMarketType {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     if (data == null) return false;
@@ -368,35 +415,42 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Also check types array
     final types = data['types'];
     if (types is List) {
-      return types.any((t) => t is String && _marketTypes.contains(t.toLowerCase()));
+      return types
+          .any((t) => t is String && _marketTypes.contains(t.toLowerCase()));
     }
     return false;
   }
 
   // 🔍 Menu Search
   String _menuSearchQuery = '';
-  
+
   // 📜 Scroll Controller for Lieferando-style search bar
   final ScrollController _scrollController = ScrollController();
   bool _showSearchBar = false; // Shows when scrolled past hero
   final TextEditingController _searchController = TextEditingController();
-  
+
   // 🔄 Dynamic categories loaded from Firestore
   List<Map<String, dynamic>> _categories = [
-    {'name': 'marketplace.category_all'.tr(), 'icon': Icons.grid_view, 'emoji': '🏠'},
+    {
+      'name': 'marketplace.category_all'.tr(),
+      'icon': Icons.grid_view,
+      'emoji': '🏠'
+    },
   ];
-  
+
   // 🔮 Safe dynamically computed categories (includes missing/orphaned category names from products)
   List<Map<String, dynamic>> get _effectiveCategories {
     final existingNames = _categories.map((c) => c['name'] as String).toSet();
     final effective = List<Map<String, dynamic>>.from(_categories);
-    
+
     for (final p in _allProducts) {
       if (p.category.isNotEmpty && !existingNames.contains(p.category)) {
-        final localizedName = _getLocalizedCategoryName(p.categoryData ?? p.category);
-        
+        final localizedName =
+            _getLocalizedCategoryName(p.categoryData ?? p.category);
+
         // Prevent duplicate localized names or IDs
-        if (!effective.any((c) => c['name'] == localizedName || c['id'] == p.category)) {
+        if (!effective
+            .any((c) => c['name'] == localizedName || c['id'] == p.category)) {
           effective.add({
             'id': p.category,
             'name': localizedName,
@@ -408,7 +462,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         }
       }
     }
-    
+
     return effective;
   }
 
@@ -419,10 +473,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   // 🆕 Plan features resolved from subscription_plans collection
   Map<String, dynamic> _planFeatures = {};
-  
+
   // Local Cart/Selection State (simple map: sku -> quantity)
   final Map<String, double> _selections = {};
-  
+
   // 🔍 Store all loaded products for instant search
   List<ButcherProduct> _allProducts = [];
 
@@ -440,7 +494,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         .snapshots();
     _loadButcherAndReviews();
     _setupCategoriesListener(); // 🔄 Real-time listener for categories
-    
+
     // Listen to scroll to show/hide search bar
     _scrollController.addListener(() {
       final shouldShow = _scrollController.offset > 150; // After hero image
@@ -458,9 +512,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     _minOrderSuccessTimer?.cancel();
     super.dispose();
   }
+
   // 🔄 Real-time subscription for categories
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _categoriesStream;
-  
+
   // 🆕 Helper: Extract localized string from a potentially multi-language name field
   // Handles both String and Map<String, dynamic> (e.g. {tr: 'Dana Eti', de: 'Rindfleisch', en: 'Beef'})
   String _getLocalizedCategoryName(dynamic name) {
@@ -473,36 +528,48 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       } catch (_) {
         // context.locale may not be available yet during initState/early callbacks
       }
-      return (name[locale] ?? name['tr'] ?? name.values.firstOrNull ?? 'common.category'.tr()).toString();
+      return (name[locale] ??
+              name['tr'] ??
+              name.values.firstOrNull ??
+              'common.category'.tr())
+          .toString();
     }
     return 'common.category'.tr();
   }
-  
+
   // 🆕 Setup real-time listener for categories from Firestore subcollection
   void _setupCategoriesListener() {
-    debugPrint('🔵 [LOKMA] Setting up real-time categories listener for: ${widget.businessId}');
-    
+    debugPrint(
+        '🔵 [LOKMA] Setting up real-time categories listener for: ${widget.businessId}');
+
     _categoriesStream = FirebaseFirestore.instance
         .collection('businesses')
         .doc(widget.businessId)
         .collection('categories')
         .snapshots();
-    
+
     _categoriesStream.listen((snapshot) {
-      debugPrint('🔵 [LOKMA] Categories update received: ${snapshot.docs.length} categories');
-      
+      debugPrint(
+          '🔵 [LOKMA] Categories update received: ${snapshot.docs.length} categories');
+
       if (snapshot.docs.isNotEmpty) {
         final dynamicCategories = <Map<String, dynamic>>[
-          {'name': 'marketplace.category_all'.tr(), 'icon': Icons.grid_view, 'emoji': '🏠'},
+          {
+            'name': 'marketplace.category_all'.tr(),
+            'icon': Icons.grid_view,
+            'emoji': '🏠'
+          },
         ];
-        
+
         // Sort by order field client-side
         final sortedDocs = snapshot.docs.toList()
-          ..sort((a, b) => ((a.data()['order'] ?? 0) as int).compareTo((b.data()['order'] ?? 0) as int));
-        
+          ..sort((a, b) => ((a.data()['order'] ?? 0) as int)
+              .compareTo((b.data()['order'] ?? 0) as int));
+
         for (final doc in sortedDocs) {
           final data = doc.data();
-          debugPrint('🔵 [LOKMA] Category: ${data['name']} - isActive: ${data['isActive']}');
+          debugPrint(
+              '🔵 [LOKMA] Category: ${data['name']} - isActive: ${data['isActive']}');
           final bool isActive = data['isActive'] ?? true;
           if (isActive) {
             dynamicCategories.add({
@@ -514,18 +581,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             });
           }
         }
-        
-        debugPrint('🔵 [LOKMA] Total active categories: ${dynamicCategories.length}');
-        
+
+        debugPrint(
+            '🔵 [LOKMA] Total active categories: ${dynamicCategories.length}');
+
         // If no categories are active, fallback so products still show
         if (dynamicCategories.length == 1) {
           dynamicCategories.add({
-            'name': 'marketplace.all_products'.tr(), 
-            'icon': Icons.shopping_bag, 
+            'name': 'marketplace.all_products'.tr(),
+            'icon': Icons.shopping_bag,
             'emoji': '🛒'
           });
         }
-        
+
         if (mounted) {
           setState(() {
             _categories = dynamicCategories;
@@ -537,8 +605,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (mounted) {
           setState(() {
             _categories = [
-              {'name': 'marketplace.category_all'.tr(), 'icon': Icons.grid_view, 'emoji': '🏠'},
-              {'name': 'marketplace.all_products'.tr(), 'icon': Icons.shopping_bag, 'emoji': '🛒'},
+              {
+                'name': 'marketplace.category_all'.tr(),
+                'icon': Icons.grid_view,
+                'emoji': '🏠'
+              },
+              {
+                'name': 'marketplace.all_products'.tr(),
+                'icon': Icons.shopping_bag,
+                'emoji': '🛒'
+              },
             ];
           });
         }
@@ -547,7 +623,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       debugPrint('🔴 [LOKMA] Error in categories listener: $e');
     });
   }
-  
+
   // Helper to convert emoji to Material Icon
   IconData _getIconFromEmoji(String emoji) {
     final emojiToIcon = {
@@ -578,7 +654,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     return emojiToIcon[emoji] ?? Icons.category;
   }
 
-
   void _loadButcherAndReviews() {
     try {
       _businessSubscription = FirebaseFirestore.instance
@@ -587,7 +662,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           .snapshots()
           .listen((doc) async {
         if (!doc.exists) {
-          debugPrint('🔴 [LOKMA] Business document NOT FOUND: ${widget.businessId}');
+          debugPrint(
+              '🔴 [LOKMA] Business document NOT FOUND: ${widget.businessId}');
           return;
         }
         debugPrint('🟢 [LOKMA] Business document loaded: ${widget.businessId}');
@@ -614,9 +690,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           isOpen = true;
         }
         final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
-        
-        final skipClosedPopup = _isMasaMode && widget.initialTableNumber == null;
-        if (!isOpen && !_closedDialogShown && !widget.closedAcknowledged && !skipClosedPopup) {
+
+        final skipClosedPopup =
+            _isMasaMode && widget.initialTableNumber == null;
+        if (!isOpen &&
+            !_closedDialogShown &&
+            !widget.closedAcknowledged &&
+            !skipClosedPopup) {
           _closedDialogShown = true;
           _showClosedBusinessDialog(preOrderEnabled: preOrderEnabled);
         }
@@ -626,13 +706,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           try {
             Map<String, dynamic>? details;
             if (googlePlaceId != null && googlePlaceId.isNotEmpty) {
-              details = await GooglePlacesService.getPlaceDetails(googlePlaceId);
+              details =
+                  await GooglePlacesService.getPlaceDetails(googlePlaceId);
             } else {
               final bName = data['businessName'] ?? data['companyName'] ?? '';
-              final cCity = data['address'] is Map ? (data['address']['city'] ?? '') : '';
+              final cCity =
+                  data['address'] is Map ? (data['address']['city'] ?? '') : '';
               final fAddr = _formatAddress(data['address']);
               if (bName.toString().isNotEmpty) {
-                details = await GooglePlacesService.getBusinessDetails(bName, cCity, fullAddress: fAddr);
+                details = await GooglePlacesService.getBusinessDetails(
+                    bName, cCity,
+                    fullAddress: fAddr);
               }
             }
             if (mounted && details != null) {
@@ -655,7 +739,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             if (planSnap.docs.isNotEmpty) {
               final planData = planSnap.docs.first.data();
               if (mounted) {
-                setState(() => _planFeatures = (planData['features'] as Map<String, dynamic>?) ?? {});
+                setState(() => _planFeatures =
+                    (planData['features'] as Map<String, dynamic>?) ?? {});
               }
             }
           } catch (e) {
@@ -673,44 +758,61 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Compact closed-business popup (China-Thai style)
   void _showClosedBusinessDialog({bool preOrderEnabled = false}) {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
-    final businessName = data?['businessName'] ?? data?['companyName'] ?? 'common.business'.tr();
-    
+    final businessName =
+        data?['businessName'] ?? data?['companyName'] ?? 'common.business'.tr();
+
     // Multi-hour display logic
     String? _formatNextOpen(dynamic hoursData, {bool isShop = false}) {
       if (hoursData == null) return null;
       try {
         final helper = OpeningHoursHelper(hoursData);
         if (helper.isEmpty) return null;
-        
+
         final now = DateTime.now();
         if (helper.isOpenAt(now)) {
-          return isShop 
-              ? tr('marketplace.filter_open_now_title') 
+          return isShop
+              ? tr('marketplace.filter_open_now_title')
               : tr('marketplace.available_now');
         }
-        
+
         final nextOpen = helper.getNextOpenDateTime(now);
         if (nextOpen == null) return null;
-        
-        final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+
+        final isToday = nextOpen.day == now.day &&
+            nextOpen.month == now.month &&
+            nextOpen.year == now.year;
         final tomorrow = now.add(const Duration(days: 1));
-        final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
-        
-        final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+        final isTomorrow = nextOpen.day == tomorrow.day &&
+            nextOpen.month == tomorrow.month &&
+            nextOpen.year == tomorrow.year;
+
+        final timeStr =
+            '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
         if (isToday) {
-          return isShop 
-              ? tr('marketplace.opens_today', namedArgs: {'time': timeStr}) 
+          return isShop
+              ? tr('marketplace.opens_today', namedArgs: {'time': timeStr})
               : tr('marketplace.available_today', namedArgs: {'time': timeStr});
         } else if (isTomorrow) {
-          return isShop 
-              ? tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr}) 
-              : tr('marketplace.available_tomorrow', namedArgs: {'time': timeStr});
+          return isShop
+              ? tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr})
+              : tr('marketplace.available_tomorrow',
+                  namedArgs: {'time': timeStr});
         } else {
-          final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+          final dayKeys = [
+            'day_monday',
+            'day_tuesday',
+            'day_wednesday',
+            'day_thursday',
+            'day_friday',
+            'day_saturday',
+            'day_sunday'
+          ];
           final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
-          return isShop 
-              ? tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr}) 
-              : tr('marketplace.available_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+          return isShop
+              ? tr('marketplace.opens_on_day',
+                  namedArgs: {'day': dayName, 'time': timeStr})
+              : tr('marketplace.available_on_day',
+                  namedArgs: {'day': dayName, 'time': timeStr});
         }
       } catch (e) {
         return null;
@@ -720,38 +822,51 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final shopText = _formatNextOpen(data?['openingHours'], isShop: true);
     final deliveryText = _formatNextOpen(data?['deliveryHours']);
     final pickupText = _formatNextOpen(data?['pickupHours']);
-    
-    Widget _buildTimeRow(IconData icon, String label, String time, BuildContext ctx) {
+
+    Widget _buildTimeRow(
+        IconData icon, String label, String time, BuildContext ctx) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+            Icon(icon,
+                size: 16, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
             const SizedBox(width: 8),
-            Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+            Text(label,
+                style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
             const Spacer(),
-            Text(time, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+            Text(time,
+                style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
           ],
         ),
       );
     }
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       showDialog(
         context: context,
         barrierDismissible: true,
         builder: (dialogCtx) {
           final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
-          final accent = isDark ? const Color(0xFFEA184A) : const Color(0xFF282726);      
+          final accent =
+              isDark ? const Color(0xFFEA184A) : const Color(0xFF282726);
           return Dialog(
             backgroundColor: Theme.of(dialogCtx).colorScheme.surface,
             surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             insetPadding: const EdgeInsets.symmetric(horizontal: 24),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24), // Reduced padding
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 24), // Reduced padding
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -762,10 +877,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       color: accent.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.storefront_outlined, size: 28, color: accent), // Reduced
+                    child: Icon(Icons.storefront_outlined,
+                        size: 28, color: accent), // Reduced
                   ),
                   const SizedBox(height: 12), // Reduced
-                  
+
                   // Business Name (Thin, Elegant Typography)
                   Text(
                     businessName,
@@ -780,33 +896,66 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       color: Theme.of(dialogCtx).colorScheme.onSurface,
                     ),
                   ),
-                  
-                  if (shopText != null || deliveryText != null || pickupText != null) ...[
+
+                  if (shopText != null ||
+                      deliveryText != null ||
+                      pickupText != null) ...[
                     const SizedBox(height: 16),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                        color: Theme.of(dialogCtx)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withOpacity(0.35),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.5),
+                          color: Theme.of(dialogCtx)
+                              .colorScheme
+                              .outlineVariant
+                              .withOpacity(0.5),
                         ),
                       ),
                       child: Column(
                         children: [
-                          if (shopText != null) _buildTimeRow(Icons.storefront, 'common.dine_in'.tr(), shopText, dialogCtx),
-                          if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
-                          if (deliveryText != null) _buildTimeRow(Icons.delivery_dining, 'common.delivery'.tr(), deliveryText, dialogCtx),
-                          if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
-                          if (pickupText != null) _buildTimeRow(Icons.shopping_bag_outlined, 'common.pickup'.tr(), pickupText, dialogCtx),
+                          if (shopText != null)
+                            _buildTimeRow(Icons.storefront,
+                                'common.dine_in'.tr(), shopText, dialogCtx),
+                          if (shopText != null &&
+                              (deliveryText != null || pickupText != null))
+                            Divider(
+                                height: 8,
+                                thickness: 0.5,
+                                color: Theme.of(dialogCtx)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withOpacity(0.4)),
+                          if (deliveryText != null)
+                            _buildTimeRow(
+                                Icons.delivery_dining,
+                                'common.delivery'.tr(),
+                                deliveryText,
+                                dialogCtx),
+                          if (deliveryText != null && pickupText != null)
+                            Divider(
+                                height: 8,
+                                thickness: 0.5,
+                                color: Theme.of(dialogCtx)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withOpacity(0.4)),
+                          if (pickupText != null)
+                            _buildTimeRow(Icons.shopping_bag_outlined,
+                                'common.pickup'.tr(), pickupText, dialogCtx),
                         ],
                       ),
                     ),
                   ],
-                  
+
                   const SizedBox(height: 12), // Reduced
-                  
+
                   // Descriptive Subtitle
                   Text(
                     preOrderEnabled
@@ -817,13 +966,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       letterSpacing: 0.3,
-                      color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
+                      color: Theme.of(dialogCtx)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.9),
                       height: 1.3,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24), // Reduced
-                  
+
                   // Primary CTA (Continue)
                   SizedBox(
                     width: double.infinity,
@@ -834,7 +986,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         backgroundColor: accent,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                       child: Text(
                         'common.continue_button'.tr(),
@@ -847,9 +1000,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 4), // Reduced
-                  
+
                   // Secondary CTA (Find Open Businesses)
                   SizedBox(
                     width: double.infinity,
@@ -860,8 +1013,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         context.go('/');
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        foregroundColor: Theme.of(dialogCtx)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.9),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                       child: Text(
                         'marketplace.find_open_businesses'.tr(),
@@ -892,8 +1049,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             initialQuery: _menuSearchQuery,
             products: _allProducts,
             businessId: widget.businessId,
-            businessName: (_butcherDoc?.data() as Map<String, dynamic>?)?['companyName'] ?? 
-                          (_butcherDoc?.data() as Map<String, dynamic>?)?['name'] ?? 'common.butcher'.tr(),
+            businessName: (_butcherDoc?.data()
+                    as Map<String, dynamic>?)?['companyName'] ??
+                (_butcherDoc?.data() as Map<String, dynamic>?)?['name'] ??
+                'common.butcher'.tr(),
             onSearch: (query) {
               setState(() {
                 _menuSearchQuery = query;
@@ -916,25 +1075,26 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // DEPRECATED: Now using OpeningHoursHelper
   // Removed _isShopOpenNow and _getTodayHours
 
-
   // Format address: handles both String and Map<String, dynamic>
   String _formatAddress(dynamic address) {
     if (address is String) return address;
     if (address is Map) {
       final street = address['street'] ?? '';
       final houseNumber = address['houseNumber'] ?? '';
-      final postalCode = address['postalCode'] ?? address['zipCode'] ?? address['zip'] ?? '';
+      final postalCode =
+          address['postalCode'] ?? address['zipCode'] ?? address['zip'] ?? '';
       final city = address['city'] ?? '';
       final country = address['country'] ?? '';
       final parts = <String>[];
       if (street.toString().isNotEmpty) {
-        final streetFull = houseNumber.toString().isNotEmpty 
-            ? '${street} ${houseNumber}' 
+        final streetFull = houseNumber.toString().isNotEmpty
+            ? '${street} ${houseNumber}'
             : street.toString();
         parts.add(streetFull);
       }
       if (postalCode.toString().isNotEmpty || city.toString().isNotEmpty) {
-        final cityFull = [postalCode, city].where((s) => s.toString().isNotEmpty).join(' ');
+        final cityFull =
+            [postalCode, city].where((s) => s.toString().isNotEmpty).join(' ');
         parts.add(cityFull);
       }
       if (country.toString().isNotEmpty) parts.add(country.toString());
@@ -946,10 +1106,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   String _getBrandLabel(String? brand) {
     if (brand == null) return 'marketplace.independent_butcher'.tr();
     switch (brand.toLowerCase()) {
-      case 'tuna': return 'TUNA';
-      case 'akdeniz_toros': return 'Akdeniz Toros';
-      case 'independent': return 'marketplace.independent_butcher'.tr();
-      default: return 'marketplace.independent_butcher'.tr();
+      case 'tuna':
+        return 'TUNA';
+      case 'akdeniz_toros':
+        return 'Akdeniz Toros';
+      case 'independent':
+        return 'marketplace.independent_butcher'.tr();
+      default:
+        return 'marketplace.independent_butcher'.tr();
     }
   }
 
@@ -957,35 +1121,35 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   String? _getEstimatedDeliveryTime() {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     if (data == null) return null;
-    
+
     // Check Firestore fields first (future Admin Portal support)
     final deliveryMin = data['estimatedDeliveryMin'] as int?;
     final deliveryMax = data['estimatedDeliveryMax'] as int?;
     final unit = tr('delivery_modes.minutes_short');
-    
+
     if (deliveryMin != null && deliveryMax != null) {
       return '$deliveryMin-$deliveryMax $unit';
     }
     if (deliveryMin != null) {
       return '~$deliveryMin $unit';
     }
-    
+
     // Smart default
     return '20-40 $unit';
   }
-  
+
   String? _getEstimatedPickupTime() {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     if (data == null) return null;
-    
+
     // Check Firestore fields first
     final pickupMin = data['estimatedPickupMinutes'] as int?;
     final unit = tr('delivery_modes.minutes_short');
-    
+
     if (pickupMin != null) {
       return '~$pickupMin $unit';
     }
-    
+
     // Smart default
     return '~15 $unit';
   }
@@ -993,15 +1157,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   String? _getEstimatedDineInTime() {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     if (data == null) return null;
-    
+
     // Check Firestore fields first (for future when businesses specify this)
     final dineInMin = data['estimatedDineInMinutes'] as int?;
     final unit = tr('delivery_modes.minutes_short');
-    
+
     if (dineInMin != null) {
       return '~$dineInMin $unit';
     }
-    
+
     // Smart default for Dine-in
     return '~10 $unit';
   }
@@ -1060,25 +1224,38 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             children: [
               Center(
                 child: Container(
-                  width: 40, height: 4,
+                  width: 40,
+                  height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(
+                      color: handleColor,
+                      borderRadius: BorderRadius.circular(2)),
                 ),
               ),
               Text(
                 'marketplace.weekly_hours'.tr(),
-                style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    color: textColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
               Text(
                 tabLabel,
-                style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w400),
+                style: TextStyle(
+                    color: subtitleColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400),
               ),
               const SizedBox(height: 16),
               Expanded(
                 child: _buildServiceHoursTab(
-                  '', '',
-                  isDark, textColor, subtitleColor, accent,
+                  '',
+                  '',
+                  isDark,
+                  textColor,
+                  subtitleColor,
+                  accent,
                   perDayHours: perDayHours,
                 ),
               ),
@@ -1093,107 +1270,156 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final rating = _placeDetails?['rating'] ?? 0.0;
     final total = _placeDetails?['user_ratings_total'] ?? 0;
     List reviews = List.from(_placeDetails?['reviews'] ?? []);
-    
+
     // Sort options
-    final sortOptions = ['Relevanteste', 'Neueste', 'Beste Bewertung', 'Niedrigste Bewertung'];
+    final sortOptions = [
+      'Relevanteste',
+      'Neueste',
+      'Beste Bewertung',
+      'Niedrigste Bewertung'
+    ];
     String selectedSort = 'Relevanteste';
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateModal) {
-          // Sorting Logic
-          List sortedReviews = List.from(reviews);
-          if (selectedSort == 'Neueste') {
-            sortedReviews.sort((a, b) => (b['time'] ?? 0).compareTo(a['time'] ?? 0));
-          } else if (selectedSort == 'Beste Bewertung') {
-            sortedReviews.sort((a, b) => (b['rating'] ?? 0).compareTo(a['rating'] ?? 0));
-          } else if (selectedSort == 'Niedrigste Bewertung') {
-            sortedReviews.sort((a, b) => (a['rating'] ?? 0).compareTo(b['rating'] ?? 0));
-          }
-          // 'Relevanteste' uses default API order
+      builder: (context) => StatefulBuilder(builder: (context, setStateModal) {
+        // Sorting Logic
+        List sortedReviews = List.from(reviews);
+        if (selectedSort == 'Neueste') {
+          sortedReviews
+              .sort((a, b) => (b['time'] ?? 0).compareTo(a['time'] ?? 0));
+        } else if (selectedSort == 'Beste Bewertung') {
+          sortedReviews
+              .sort((a, b) => (b['rating'] ?? 0).compareTo(a['rating'] ?? 0));
+        } else if (selectedSort == 'Niedrigste Bewertung') {
+          sortedReviews
+              .sort((a, b) => (a['rating'] ?? 0).compareTo(b['rating'] ?? 0));
+        }
+        // 'Relevanteste' uses default API order
 
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.85,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 16),
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
-                ),
-                
-                // Header (Summary)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: Row(
-                    children: [
-                       Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           Row(
-                             children: [
-                               Text('$rating', style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 42, fontWeight: FontWeight.w600)),
-                               const SizedBox(width: 8),
-                               Column(
-                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                 children: [
-                                   Row(children: List.generate(5, (i) => Icon(Icons.star, color: i < rating.round() ? Colors.amber : Colors.grey, size: 14))),
-                                   SizedBox(height: 4),
-                                   Text('marketplace.reviews_count'.tr(namedArgs: {'count': '$total'}), style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-                                 ],
-                               ),
-                             ],
-                           ),
-                         ],
-                       ),
-                       Spacer(),
-                       Icon(FontAwesomeIcons.google, color: const Color(0xFFE0E0E0), size: 28),
-                    ],
-                  ),
-                ),
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: const BoxDecoration(
+            color: Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 16),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
 
-                Divider(color: Colors.white10, height: 1),
-
-                // Sort Dropdown
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('marketplace.reviews'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 16, fontWeight: FontWeight.w600)),
-                      PopupMenuButton<String>(
-                        initialValue: selectedSort,
-                        color: const Color(0xFF2C2C2C),
-                        onSelected: (val) => setStateModal(() => selectedSort = val),
-                        child: Row(
+              // Header (Summary)
+              Padding(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Icon(Icons.sort, color: _getAccent(context), size: 16),
+                            Text('$rating',
+                                style: const TextStyle(
+                                    color: Color(0xFFE0E0E0),
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.w600)),
                             const SizedBox(width: 8),
-                            Text(selectedSort, style: TextStyle(color: _getAccent(context), fontSize: 13, fontWeight: FontWeight.w600)),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                    children: List.generate(
+                                        5,
+                                        (i) => Icon(Icons.star,
+                                            color: i < rating.round()
+                                                ? Colors.amber
+                                                : Colors.grey,
+                                            size: 14))),
+                                SizedBox(height: 4),
+                                Text(
+                                    'marketplace.reviews_count'
+                                        .tr(namedArgs: {'count': '$total'}),
+                                    style: TextStyle(
+                                        color: Colors.grey[400], fontSize: 12)),
+                              ],
+                            ),
                           ],
                         ),
-                        itemBuilder: (context) => sortOptions.map((opt) => PopupMenuItem(
-                          value: opt,
-                          child: Text(opt, style: TextStyle(color: selectedSort == opt ? _getAccent(context) : Colors.white)),
-                        )).toList(),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    Spacer(),
+                    Icon(FontAwesomeIcons.google,
+                        color: const Color(0xFFE0E0E0), size: 28),
+                  ],
                 ),
+              ),
 
-                // Review List
-                Expanded(
-                  child: sortedReviews.isEmpty 
-                    ? Center(child: Text('marketplace.no_review_yet'.tr(), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black45)))
+              Divider(color: Colors.white10, height: 1),
+
+              // Sort Dropdown
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('marketplace.reviews'.tr(),
+                        style: const TextStyle(
+                            color: Color(0xFFE0E0E0),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600)),
+                    PopupMenuButton<String>(
+                      initialValue: selectedSort,
+                      color: const Color(0xFF2C2C2C),
+                      onSelected: (val) =>
+                          setStateModal(() => selectedSort = val),
+                      child: Row(
+                        children: [
+                          Icon(Icons.sort,
+                              color: _getAccent(context), size: 16),
+                          const SizedBox(width: 8),
+                          Text(selectedSort,
+                              style: TextStyle(
+                                  color: _getAccent(context),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      itemBuilder: (context) => sortOptions
+                          .map((opt) => PopupMenuItem(
+                                value: opt,
+                                child: Text(opt,
+                                    style: TextStyle(
+                                        color: selectedSort == opt
+                                            ? _getAccent(context)
+                                            : Colors.white)),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Review List
+              Expanded(
+                child: sortedReviews.isEmpty
+                    ? Center(
+                        child: Text('marketplace.no_review_yet'.tr(),
+                            style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white54
+                                    : Colors.black45)))
                     : ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 8),
                         itemCount: sortedReviews.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 24),
                         itemBuilder: (context, index) {
@@ -1204,30 +1430,53 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               Row(
                                 children: [
                                   CircleAvatar(
-                                    backgroundImage: NetworkImage(review['profile_photo_url'] ?? ''),
+                                    backgroundImage: NetworkImage(
+                                        review['profile_photo_url'] ?? ''),
                                     backgroundColor: Colors.grey[800],
                                     radius: 16,
-                                    child: review['profile_photo_url'] == null ? const Icon(Icons.person, color: Color(0xFFE0E0E0)) : null,
+                                    child: review['profile_photo_url'] == null
+                                        ? const Icon(Icons.person,
+                                            color: Color(0xFFE0E0E0))
+                                        : null,
                                   ),
                                   SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(review['author_name'] ?? 'common.guest'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600)),
+                                        Text(
+                                            review['author_name'] ??
+                                                'common.guest'.tr(),
+                                            style: const TextStyle(
+                                                color: Color(0xFFE0E0E0),
+                                                fontWeight: FontWeight.w600)),
                                         const SizedBox(height: 2),
-                                        Text(review['relative_time_description'] ?? '', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                                        Text(
+                                            review['relative_time_description'] ??
+                                                '',
+                                            style: TextStyle(
+                                                color: Colors.grey[500],
+                                                fontSize: 11)),
                                       ],
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                        color: Colors.amber.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(4)),
                                     child: Row(
                                       children: [
-                                        Text('${review['rating']}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.w600, fontSize: 12)),
+                                        Text('${review['rating']}',
+                                            style: const TextStyle(
+                                                color: Colors.amber,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 12)),
                                         const SizedBox(width: 4),
-                                        const Icon(Icons.star, color: Colors.amber, size: 10),
+                                        const Icon(Icons.star,
+                                            color: Colors.amber, size: 10),
                                       ],
                                     ),
                                   ),
@@ -1236,18 +1485,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               const SizedBox(height: 12),
                               Text(
                                 review['text'] ?? '',
-                                style: TextStyle(color: Colors.grey[300], fontSize: 14, height: 1.5),
+                                style: TextStyle(
+                                    color: Colors.grey[300],
+                                    fontSize: 14,
+                                    height: 1.5),
                               ),
                             ],
                           );
                         },
                       ),
-                ),
-              ],
-            ),
-          );
-        }
-      ),
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 
@@ -1279,8 +1530,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               children: [
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 36, height: 4,
-                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: handleColor,
+                      borderRadius: BorderRadius.circular(2)),
                 ),
                 Positioned(
                   right: 12,
@@ -1294,33 +1548,58 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             // Title
             Padding(
               padding: const EdgeInsets.only(left: 20, bottom: 12),
-              child: Text('Kategoriler', style: TextStyle(color: textPrimary, fontSize: 22, fontWeight: FontWeight.w600)),
+              child: Text('Kategoriler',
+                  style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600)),
             ),
             // Category list
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _effectiveCategories.where((c) => c['name'] == 'marketplace.category_all'.tr() || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).length,
+                itemCount: _effectiveCategories
+                    .where((c) =>
+                        c['name'] == 'marketplace.category_all'.tr() ||
+                        c['name'] == 'marketplace.all_products'.tr() ||
+                        _allProducts.any((p) =>
+                            p.category == c['name'] ||
+                            (c['id'] != null && p.category == c['id'])))
+                    .length,
                 itemBuilder: (context, index) {
                   // Only show categories with products (or 'marketplace.category_all'.tr()/'all_products')
-                  final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'marketplace.category_all'.tr() || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
+                  final visibleCategories = _effectiveCategories
+                      .where((c) =>
+                          c['name'] == 'marketplace.category_all'.tr() ||
+                          c['name'] == 'marketplace.all_products'.tr() ||
+                          _allProducts.any((p) =>
+                              p.category == c['name'] ||
+                              (c['id'] != null && p.category == c['id'])))
+                      .toList();
                   final cat = visibleCategories[index];
                   final catName = cat['name'] as String;
                   final isSelected = _selectedCategory == catName;
-                  
+
                   // Get product names for this category
                   String productPreview = '';
-                  if (catName == 'marketplace.category_all'.tr() || catName == 'marketplace.all_products'.tr()) {
-                    productPreview = _allProducts.take(4).map((p) => p.name).join(', ');
+                  if (catName == 'marketplace.category_all'.tr() ||
+                      catName == 'marketplace.all_products'.tr()) {
+                    productPreview =
+                        _allProducts.take(4).map((p) => p.name).join(', ');
                   } else {
                     final catId = cat['id'] as String?;
-                    final catProducts = _allProducts.where((p) => p.category == catName || (catId != null && p.category == catId)).toList();
-                    productPreview = catProducts.take(4).map((p) => p.name).join(', ');
+                    final catProducts = _allProducts
+                        .where((p) =>
+                            p.category == catName ||
+                            (catId != null && p.category == catId))
+                        .toList();
+                    productPreview =
+                        catProducts.take(4).map((p) => p.name).join(', ');
                   }
                   if (productPreview.length > 60) {
                     productPreview = '${productPreview.substring(0, 57)}...';
                   }
-                  
+
                   return InkWell(
                     onTap: () {
                       Navigator.pop(context);
@@ -1338,7 +1617,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   _formatCategoryKey(catName),
                                   style: TextStyle(
                                     color: textPrimary,
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
                                     fontSize: 17,
                                   ),
                                 ),
@@ -1346,7 +1627,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     productPreview,
-                                    style: TextStyle(color: textSecondary, fontSize: 13),
+                                    style: TextStyle(
+                                        color: textSecondary, fontSize: 13),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1396,90 +1678,130 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 child: Column(
                   children: [
                     Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       margin: EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                      decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2)),
                     ),
-                    Image.asset('assets/images/tuna_logo_pill.png', height: 40, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))),
+                    Image.asset('assets/images/tuna_logo_pill.png',
+                        height: 40,
+                        errorBuilder: (_, __, ___) => const Text('TUNA',
+                            style: TextStyle(
+                                fontFamily: 'Cursive',
+                                fontSize: 40,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600))),
                     SizedBox(height: 16),
                     Text(
                       'marketplace.tuna_subtitle'.tr(),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
-              
-               Expanded(
+
+              Expanded(
                 child: ListView(
                   controller: controller,
                   padding: const EdgeInsets.all(24),
                   children: [
-                     // Intro Text
-                     Text(
-                       '${'marketplace.tuna_description_1'.tr()}\n\n${'marketplace.tuna_description_2'.tr()}',
-                       style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
-                     ),
-                     SizedBox(height: 24),
-                     
-                     // Icons Row
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                       children: [
-                         _buildBrandIconElement(Icons.verified, 'Halal-Schlachtung', Colors.green),
-                         _buildBrandIconElement(Icons.bolt, 'Ohne Betäubung', Colors.amber),
-                         _buildBrandIconElement(Icons.clean_hands, 'marketplace.kuru_yolum'.tr(), Colors.amber),
-                       ],
-                     ),
-                     SizedBox(height: 32),
-                     
-                     // Standards List
-                     Text('marketplace.supply_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
-                     const SizedBox(height: 16),
-                     _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
-                     _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
-                     _buildCheckItem('marketplace.soksuz_kesim'.tr(), 'marketplace.soksuz_kesim_desc'.tr()),
-                     _buildCheckItem('marketplace.kuru_yolum'.tr(), 'marketplace.kuru_yolum_desc'.tr()),
+                    // Intro Text
+                    Text(
+                      '${'marketplace.tuna_description_1'.tr()}\n\n${'marketplace.tuna_description_2'.tr()}',
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 15, height: 1.5),
+                    ),
+                    SizedBox(height: 24),
 
-                     const SizedBox(height: 24),
-                     
-                     // Kuru Yolum Info Box
-                     Container(
-                       padding: const EdgeInsets.all(16),
-                       decoration: BoxDecoration(
-                         color: const Color(0xFF2C1B1B), // Dark Reddish Tint
-                         borderRadius: BorderRadius.circular(12),
-                         border: Border.all(color: const Color(0xFF4A2A2A)),
-                       ),
-                       child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           Row(
-                             children: [
-                               Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
-                               const SizedBox(width: 8),
-                               Text('marketplace.what_is_kuru_yolum'.tr(), style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
-                             ],
-                           ),
-                           const SizedBox(height: 8),
-                           Text(
-                             'marketplace.kuru_yolum_full_desc'.tr(),
-                             style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
-                           ),
-                         ],
-                       ),
-                     ),
-                     
-                     SizedBox(height: 24),
-                     Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
-                     const SizedBox(height: 16),
-                     _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
-                     _buildCheckItem('marketplace.without_e621'.tr(), 'marketplace.no_msg'.tr()),
-                     _buildCheckItem('marketplace.without_mms'.tr(), 'marketplace.pure_meat'.tr()),
-                     _buildCheckItem('marketplace.gluten_free'.tr(), 'marketplace.no_wheat'.tr()),
-                     
-                     const SizedBox(height: 40),
+                    // Icons Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildBrandIconElement(
+                            Icons.verified, 'Halal-Schlachtung', Colors.green),
+                        _buildBrandIconElement(
+                            Icons.bolt, 'Ohne Betäubung', Colors.amber),
+                        _buildBrandIconElement(Icons.clean_hands,
+                            'marketplace.kuru_yolum'.tr(), Colors.amber),
+                      ],
+                    ),
+                    SizedBox(height: 32),
+
+                    // Standards List
+                    Text('marketplace.supply_standards'.tr(),
+                        style: const TextStyle(
+                            color: Color(0xFFE0E0E0),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 16),
+                    _buildCheckItem('marketplace.helal_kesim'.tr(),
+                        'marketplace.helal_kesim_desc'.tr()),
+                    _buildCheckItem('marketplace.elle_kesim'.tr(),
+                        'marketplace.elle_kesim_desc'.tr()),
+                    _buildCheckItem('marketplace.soksuz_kesim'.tr(),
+                        'marketplace.soksuz_kesim_desc'.tr()),
+                    _buildCheckItem('marketplace.kuru_yolum'.tr(),
+                        'marketplace.kuru_yolum_desc'.tr()),
+
+                    const SizedBox(height: 24),
+
+                    // Kuru Yolum Info Box
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C1B1B), // Dark Reddish Tint
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF4A2A2A)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline,
+                                  color: Colors.amber[800], size: 20),
+                              const SizedBox(width: 8),
+                              Text('marketplace.what_is_kuru_yolum'.tr(),
+                                  style: TextStyle(
+                                      color: Colors.amber[800],
+                                      fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'marketplace.kuru_yolum_full_desc'.tr(),
+                            style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                height: 1.5),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 24),
+                    Text('marketplace.production_standards'.tr(),
+                        style: const TextStyle(
+                            color: Color(0xFFE0E0E0),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 16),
+                    _buildCheckItem('marketplace.yuksek_et_orani'.tr(),
+                        'marketplace.yuksek_et_orani_desc'.tr()),
+                    _buildCheckItem('marketplace.without_e621'.tr(),
+                        'marketplace.no_msg'.tr()),
+                    _buildCheckItem('marketplace.without_mms'.tr(),
+                        'marketplace.pure_meat'.tr()),
+                    _buildCheckItem('marketplace.gluten_free'.tr(),
+                        'marketplace.no_wheat'.tr()),
+
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -1503,7 +1825,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           child: Icon(icon, color: color, size: 28),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -1520,8 +1846,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600, fontSize: 15)),
-                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                Text(title,
+                    style: const TextStyle(
+                        color: Color(0xFFE0E0E0),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15)),
+                Text(subtitle,
+                    style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ],
             ),
           ),
@@ -1538,7 +1869,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final handleColor = isDark ? Colors.white24 : Colors.grey.shade300;
     final dividerColor = isDark ? Colors.white10 : Colors.grey.shade200;
     final accent = _getAccent(context);
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1546,7 +1877,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       builder: (ctx) {
         try {
           final data = _butcherDoc?.data() as Map<String, dynamic>?;
-          
+
           bool isMarket = false;
           if (data != null) {
             final str = [
@@ -1557,25 +1888,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               data['category'],
               data['tags'],
             ].join(' ').toLowerCase();
-            isMarket = str.contains('market') || str.contains('markt') || str.contains('bakkal') || str.contains('grocery');
+            isMarket = str.contains('market') ||
+                str.contains('markt') ||
+                str.contains('bakkal') ||
+                str.contains('grocery');
           }
 
           // Extract address
           final address = data?['address'];
           final street = address is Map ? (address['street'] ?? '') : '';
-          final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
+          final postalCode =
+              address is Map ? (address['postalCode'] ?? '') : '';
           final city = address is Map ? (address['city'] ?? '') : '';
           final hasAddress = street.toString().trim().isNotEmpty;
-          final fullAddress = hasAddress ? '$street\n$postalCode $city' : 'marketplace.no_address_info'.tr();
-          
+          final fullAddress = hasAddress
+              ? '$street\n$postalCode $city'
+              : 'marketplace.no_address_info'.tr();
+
           final phone = data?['shopPhone']?.toString() ?? '';
           final hasPhone = phone.trim().isNotEmpty;
-          
+
           // Cuisine type
           final cuisineType = data?['cuisineType']?.toString() ?? '';
-          
+
           // ══ Determine which service tabs to show ══
-          final hasDelivery = data?['supportsDelivery'] == true || data?['hasDelivery'] == true;
+          final hasDelivery =
+              data?['supportsDelivery'] == true || data?['hasDelivery'] == true;
           final deliveryStart = data?['deliveryStartTime']?.toString() ?? '';
           final deliveryEnd = data?['deliveryEndTime']?.toString() ?? '';
           final pickupStart = data?['pickupStartTime']?.toString() ?? '';
@@ -1583,10 +1921,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           // Per-day arrays saved by admin portal
           final deliveryHoursRaw = data?['deliveryHours'];
           final pickupHoursRaw = data?['pickupHours'];
-          final List<dynamic>? deliveryHoursArray = deliveryHoursRaw is List ? deliveryHoursRaw : null;
-          final List<dynamic>? pickupHoursArray = pickupHoursRaw is List ? pickupHoursRaw : null;
-          final hasPickup = pickupStart.trim().isNotEmpty || pickupEnd.trim().isNotEmpty || (pickupHoursArray != null && pickupHoursArray.isNotEmpty);
-          
+          final List<dynamic>? deliveryHoursArray =
+              deliveryHoursRaw is List ? deliveryHoursRaw : null;
+          final List<dynamic>? pickupHoursArray =
+              pickupHoursRaw is List ? pickupHoursRaw : null;
+          final hasPickup = pickupStart.trim().isNotEmpty ||
+              pickupEnd.trim().isNotEmpty ||
+              (pickupHoursArray != null && pickupHoursArray.isNotEmpty);
+
           // Build dynamic tabs list
           final List<Tab> tabs = [
             Tab(
@@ -1597,15 +1939,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           final List<Widget> tabViews = [
             _buildGeneralHoursTab(isDark, textColor, subtitleColor, accent),
           ];
-          
+
           if (hasDelivery) {
             tabs.add(Tab(
               icon: const Icon(Icons.delivery_dining, size: 18),
               text: 'marketplace.hours_delivery'.tr(),
             ));
             tabViews.add(_buildServiceHoursTab(
-              deliveryStart, deliveryEnd,
-              isDark, textColor, subtitleColor, accent,
+              deliveryStart,
+              deliveryEnd,
+              isDark,
+              textColor,
+              subtitleColor,
+              accent,
               perDayHours: deliveryHoursArray,
             ));
           }
@@ -1615,12 +1961,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               text: 'marketplace.hours_pickup'.tr(),
             ));
             tabViews.add(_buildServiceHoursTab(
-              pickupStart, pickupEnd,
-              isDark, textColor, subtitleColor, accent,
+              pickupStart,
+              pickupEnd,
+              isDark,
+              textColor,
+              subtitleColor,
+              accent,
               perDayHours: pickupHoursArray,
             ));
           }
-          
+
           final showTabs = tabs.length > 1;
 
           return DraggableScrollableSheet(
@@ -1629,379 +1979,502 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             maxChildSize: 0.95,
             expand: false,
             builder: (ctx2, scrollController) => Container(
-            decoration: BoxDecoration(
-              color: sheetBg,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: DefaultTabController(
-              length: tabs.length,
-              child: Column(
-                children: [
-                  // ── Handle ──
-                  Container(
-                    margin: const EdgeInsets.only(top: 8, bottom: 12),
-                    width: 40, height: 4,
-                    decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
-                  ),
+              decoration: BoxDecoration(
+                color: sheetBg,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: DefaultTabController(
+                length: tabs.length,
+                child: Column(
+                  children: [
+                    // ── Handle ──
+                    Container(
+                      margin: const EdgeInsets.only(top: 8, bottom: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: handleColor,
+                          borderRadius: BorderRadius.circular(2)),
+                    ),
 
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      children: [
-                        // ═══ Business Name ═══
-                        Text(
-                          data?['companyName'] ?? 'marketplace.business_info'.tr(),
-                          style: GoogleFonts.inter(color: textColor, fontSize: 22, fontWeight: FontWeight.w400),
-                        ),
-                        const SizedBox(height: 6),
-                        
-                        // Brand Badge — pill style matching business card
-                        // Yeni sistem varsa (activeBrandIds), legacy pill'i SADECE activeBrandIds dolu ise goster
-                        if (!(data?.containsKey('activeBrandIds') == true && (data?['activeBrandIds'] as List?)?.isEmpty == true) && data?['brandLabelActive'] == true)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: InkWell(
-                              onTap: () { Navigator.pop(ctx); _showTunaBrandInfo(); },
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFA01E22),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.verified, color: Colors.white, size: 14),
-                                      const SizedBox(width: 5),
-                                      Text(_getBrandLabel(data?['brand']).toUpperCase(),
-                                        style: GoogleFonts.inter(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 1.2,
-                                        )),
-                                    ],
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        children: [
+                          // ═══ Business Name ═══
+                          Text(
+                            data?['companyName'] ??
+                                'marketplace.business_info'.tr(),
+                            style: GoogleFonts.inter(
+                                color: textColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w400),
+                          ),
+                          const SizedBox(height: 6),
+
+                          // Brand Badge — pill style matching business card
+                          // Yeni sistem varsa (activeBrandIds), legacy pill'i SADECE activeBrandIds dolu ise goster
+                          if (!(data?.containsKey('activeBrandIds') == true &&
+                                  (data?['activeBrandIds'] as List?)?.isEmpty ==
+                                      true) &&
+                              data?['brandLabelActive'] == true)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  _showTunaBrandInfo();
+                                },
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFA01E22),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.verified,
+                                            color: Colors.white, size: 14),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                            _getBrandLabel(data?['brand'])
+                                                .toUpperCase(),
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              letterSpacing: 1.2,
+                                            )),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        
-                        if (isMarket || data?['brandLabelActive'] != true)
-                          const SizedBox(height: 10),
 
-                        // ═══ MAP SECTION — "So findest du uns" ═══
-                        if (hasAddress) ...[
-                          Text('marketplace.find_us'.tr(),
-                            style: GoogleFonts.inter(color: textColor, fontSize: 18, fontWeight: FontWeight.w400)),
-                          const SizedBox(height: 10),
-                          Builder(
-                            builder: (context) {
-                              // Extract lat/lng from business document
-                              double? lat = (address is Map && address['lat'] is num)
-                                  ? (address['lat'] as num).toDouble() : null;
-                              double? lng = (address is Map && address['lng'] is num)
-                                  ? (address['lng'] as num).toDouble() : null;
-                              // Fallback to top-level
-                              lat ??= (data?['lat'] is num) ? (data!['lat'] as num).toDouble() : null;
-                              lng ??= (data?['lng'] is num) ? (data!['lng'] as num).toDouble() : null;
-                              // Fallback to placeDetails
-                              lat ??= (data?['placeDetails']?['lat'] is num)
-                                  ? (data!['placeDetails']['lat'] as num).toDouble() : null;
-                              lng ??= (data?['placeDetails']?['lng'] is num)
-                                  ? (data!['placeDetails']['lng'] as num).toDouble() : null;
+                          if (isMarket || data?['brandLabelActive'] != true)
+                            const SizedBox(height: 10),
 
-                              if (lat != null && lng != null) {
-                                final center = LatLng(lat, lng);
-                                return GestureDetector(
-                                  onTap: () {
-                                    final query = Uri.encodeComponent('$street, $postalCode $city');
-                                    launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
-                                  },
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: SizedBox(
-                                      height: 160,
-                                      width: double.infinity,
-                                      child: Stack(
-                                        children: [
-                                          AbsorbPointer(
-                                            child: FlutterMap(
-                                              options: MapOptions(
-                                                initialCenter: center,
-                                                initialZoom: 17,
-                                                interactionOptions: const InteractionOptions(
-                                                  flags: InteractiveFlag.none,
+                          // ═══ MAP SECTION — "So findest du uns" ═══
+                          if (hasAddress) ...[
+                            Text('marketplace.find_us'.tr(),
+                                style: GoogleFonts.inter(
+                                    color: textColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w400)),
+                            const SizedBox(height: 10),
+                            Builder(
+                              builder: (context) {
+                                // Extract lat/lng from business document
+                                double? lat =
+                                    (address is Map && address['lat'] is num)
+                                        ? (address['lat'] as num).toDouble()
+                                        : null;
+                                double? lng =
+                                    (address is Map && address['lng'] is num)
+                                        ? (address['lng'] as num).toDouble()
+                                        : null;
+                                // Fallback to top-level
+                                lat ??= (data?['lat'] is num)
+                                    ? (data!['lat'] as num).toDouble()
+                                    : null;
+                                lng ??= (data?['lng'] is num)
+                                    ? (data!['lng'] as num).toDouble()
+                                    : null;
+                                // Fallback to placeDetails
+                                lat ??= (data?['placeDetails']?['lat'] is num)
+                                    ? (data!['placeDetails']['lat'] as num)
+                                        .toDouble()
+                                    : null;
+                                lng ??= (data?['placeDetails']?['lng'] is num)
+                                    ? (data!['placeDetails']['lng'] as num)
+                                        .toDouble()
+                                    : null;
+
+                                if (lat != null && lng != null) {
+                                  final center = LatLng(lat, lng);
+                                  return GestureDetector(
+                                    onTap: () {
+                                      final query = Uri.encodeComponent(
+                                          '$street, $postalCode $city');
+                                      launchUrl(Uri.parse(
+                                          'https://maps.apple.com/?q=$query'));
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: SizedBox(
+                                        height: 160,
+                                        width: double.infinity,
+                                        child: Stack(
+                                          children: [
+                                            AbsorbPointer(
+                                              child: FlutterMap(
+                                                options: MapOptions(
+                                                  initialCenter: center,
+                                                  initialZoom: 17,
+                                                  interactionOptions:
+                                                      const InteractionOptions(
+                                                    flags: InteractiveFlag.none,
+                                                  ),
                                                 ),
-                                              ),
-                                              children: [
-                                                TileLayer(
-                                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                                  userAgentPackageName: 'shop.lokma.app',
-                                                ),
-                                                MarkerLayer(
-                                                  rotate: true,
-                                                  markers: [
-                                                    Marker(
-                                                      point: center,
-                                                      width: 40,
-                                                      height: 40,
-                                                      child: const Icon(
-                                                        Icons.location_on,
-                                                        color: Colors.red,
-                                                        size: 40,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          // "Open in Maps" indicator
-                                          Positioned(
-                                            bottom: 8, right: 10,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.9),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  const Icon(Icons.open_in_new, size: 12, color: Colors.black87),
-                                                  const SizedBox(width: 4),
-                                                  Text('marketplace.open_maps'.tr(), style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w400, color: Colors.black87)),
+                                                  TileLayer(
+                                                    urlTemplate:
+                                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                    userAgentPackageName:
+                                                        'shop.lokma.app',
+                                                  ),
+                                                  MarkerLayer(
+                                                    rotate: true,
+                                                    markers: [
+                                                      Marker(
+                                                        point: center,
+                                                        width: 40,
+                                                        height: 40,
+                                                        child: const Icon(
+                                                          Icons.location_on,
+                                                          color: Colors.red,
+                                                          size: 40,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ],
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                // Fallback: show placeholder with address
-                                return GestureDetector(
-                                  onTap: () {
-                                    final query = Uri.encodeComponent('$street, $postalCode $city');
-                                    launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
-                                  },
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: Container(
-                                      height: 160,
-                                      width: double.infinity,
-                                      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
-                                      child: Center(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.map_outlined, color: subtitleColor, size: 36),
-                                            const SizedBox(height: 6),
-                                            Text('$postalCode $city',
-                                              style: GoogleFonts.inter(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w300)),
-                                            const SizedBox(height: 4),
-                                            Text('marketplace.open_maps'.tr(),
-                                              style: GoogleFonts.inter(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w400)),
+                                            // "Open in Maps" indicator
+                                            Positioned(
+                                              bottom: 8,
+                                              right: 10,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(
+                                                        Icons.open_in_new,
+                                                        size: 12,
+                                                        color: Colors.black87),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                        'marketplace.open_maps'
+                                                            .tr(),
+                                                        style:
+                                                            GoogleFonts.inter(
+                                                                fontSize: 11,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w400,
+                                                                color: Colors
+                                                                    .black87)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                        ],
-
-                        // ═══ ADDRESS ROW — Lieferando style ═══
-                        InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: hasAddress ? () {
-                            final query = Uri.encodeComponent('$street, $postalCode $city');
-                            launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
-                          } : null,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('common.address'.tr(),
-                                        style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w400)),
-                                      const SizedBox(height: 3),
-                                      Text(fullAddress,
-                                        style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w300, height: 1.4)),
-                                    ],
-                                  ),
-                                ),
-                                if (hasAddress)
-                                  Icon(Icons.arrow_forward_ios, color: subtitleColor, size: 14),
-                              ],
+                                  );
+                                } else {
+                                  // Fallback: show placeholder with address
+                                  return GestureDetector(
+                                    onTap: () {
+                                      final query = Uri.encodeComponent(
+                                          '$street, $postalCode $city');
+                                      launchUrl(Uri.parse(
+                                          'https://maps.apple.com/?q=$query'));
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Container(
+                                        height: 160,
+                                        width: double.infinity,
+                                        color: isDark
+                                            ? const Color(0xFF2A2A2A)
+                                            : Colors.grey.shade100,
+                                        child: Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.map_outlined,
+                                                  color: subtitleColor,
+                                                  size: 36),
+                                              const SizedBox(height: 6),
+                                              Text('$postalCode $city',
+                                                  style: GoogleFonts.inter(
+                                                      color: subtitleColor,
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w300)),
+                                              const SizedBox(height: 4),
+                                              Text('marketplace.open_maps'.tr(),
+                                                  style: GoogleFonts.inter(
+                                                      color: Colors.blue,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w400)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
                             ),
-                          ),
-                        ),
-                        
-                        Divider(color: dividerColor, height: 1),
-                        
-                        // ═══ PHONE ROW — only show if phone exists ═══
-                        if (hasPhone) ...[
+                            const SizedBox(height: 14),
+                          ],
+
+                          // ═══ ADDRESS ROW — Lieferando style ═══
                           InkWell(
                             borderRadius: BorderRadius.circular(12),
-                            onTap: _callStore,
+                            onTap: hasAddress
+                                ? () {
+                                    final query = Uri.encodeComponent(
+                                        '$street, $postalCode $city');
+                                    launchUrl(Uri.parse(
+                                        'https://maps.apple.com/?q=$query'));
+                                  }
+                                : null,
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 40, height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.withOpacity(0.12),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(Icons.phone, color: Colors.blue, size: 20),
-                                  ),
-                                  const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text('marketplace.phone_label'.tr(),
-                                          style: GoogleFonts.inter(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w300)),
+                                        Text('common.address'.tr(),
+                                            style: GoogleFonts.inter(
+                                                color: textColor,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w400)),
                                         const SizedBox(height: 3),
-                                        Text(phone,
-                                          style: GoogleFonts.inter(
-                                            color: Colors.blue,
-                                            fontSize: 15, fontWeight: FontWeight.w300,
-                                          )),
+                                        Text(fullAddress,
+                                            style: GoogleFonts.inter(
+                                                color: textColor,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w300,
+                                                height: 1.4)),
                                       ],
                                     ),
                                   ),
-                                  Icon(Icons.arrow_forward_ios, color: subtitleColor, size: 14),
+                                  if (hasAddress)
+                                    Icon(Icons.arrow_forward_ios,
+                                        color: subtitleColor, size: 14),
                                 ],
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                        ],
-                        
-                        // ═══ KÜCHE (CUISINE) SECTION ═══
-                        if (cuisineType.trim().isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text('marketplace.cuisine'.tr(),
-                            style: GoogleFonts.inter(color: textColor, fontSize: 18, fontWeight: FontWeight.w400)),
-                          const SizedBox(height: 6),
-                          Text(
-                            cuisineType.split(RegExp(r'[,;]')).map((t) => t.trim()).where((t) => t.isNotEmpty).join('  ·  '),
-                            style: GoogleFonts.inter(color: subtitleColor, fontSize: 14, fontWeight: FontWeight.w300),
-                          ),
-                          const SizedBox(height: 20),
+
                           Divider(color: dividerColor, height: 1),
-                          const SizedBox(height: 16),
-                        ],
-                        
-                        // ═══ BUSINESS HOURS ═══
-                        const SizedBox(height: 5),
-                        Text('marketplace.business_hours'.tr(),
-                          style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w400)),
-                        // ═══ CLOSING SOON INDICATOR ═══
-                        Builder(builder: (context) {
-                          final closingSoonText = _getClosingSoonText();
-                          if (closingSoonText == null) return const SizedBox.shrink();
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                closingSoonText,
-                                style: GoogleFonts.inter(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w400),
-                              ),
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 12),
-                        
-                        // Show underline tab bar only if there are multiple tabs
-                        if (showTabs) ...[
-                          TabBar(
-                            indicatorSize: TabBarIndicatorSize.label,
-                            dividerColor: dividerColor,
-                            indicatorColor: accent,
-                            indicatorWeight: 2.5,
-                            labelColor: textColor,
-                            unselectedLabelColor: subtitleColor,
-                            labelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
-                            unselectedLabelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w300),
-                            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                            tabs: tabs,
-                          ),
-                          const SizedBox(height: 12),
-                          
-                          // Tab Content
-                          SizedBox(
-                            height: 380,
-                            child: TabBarView(
-                              children: tabViews,
-                            ),
-                          ),
-                        ] else ...[
-                          // No tabs needed — just show general hours directly
-                          _buildGeneralHoursTab(isDark, textColor, subtitleColor, accent),
-                        ],
-                        
-                        // ═══ IMPRESSUM ═══
-                        if (data != null) ...[
-                          const SizedBox(height: 24),
-                          Divider(color: dividerColor, height: 1),
-                          const SizedBox(height: 16),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F0E8),
+
+                          // ═══ PHONE ROW — only show if phone exists ═══
+                          if (hasPhone) ...[
+                            InkWell(
                               borderRadius: BorderRadius.circular(12),
+                              onTap: _callStore,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(Icons.phone,
+                                          color: Colors.blue, size: 20),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text('marketplace.phone_label'.tr(),
+                                              style: GoogleFonts.inter(
+                                                  color: subtitleColor,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w300)),
+                                          const SizedBox(height: 3),
+                                          Text(phone,
+                                              style: GoogleFonts.inter(
+                                                color: Colors.blue,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w300,
+                                              )),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(Icons.arrow_forward_ios,
+                                        color: subtitleColor, size: 14),
+                                  ],
+                                ),
+                              ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Impressum',
-                                  style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w400)),
-                                const SizedBox(height: 12),
-                                _buildImpressumSection(data, textColor, subtitleColor),
-                              ],
+                            const SizedBox(height: 16),
+                          ],
+
+                          // ═══ KÜCHE (CUISINE) SECTION ═══
+                          if (cuisineType.trim().isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text('marketplace.cuisine'.tr(),
+                                style: GoogleFonts.inter(
+                                    color: textColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w400)),
+                            const SizedBox(height: 6),
+                            Text(
+                              cuisineType
+                                  .split(RegExp(r'[,;]'))
+                                  .map((t) => t.trim())
+                                  .where((t) => t.isNotEmpty)
+                                  .join('  ·  '),
+                              style: GoogleFonts.inter(
+                                  color: subtitleColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w300),
                             ),
-                          ),
-                        ],
-                        
-                        const SizedBox(height: 30),
-                      ],    // ListView children
-                    ),      // ListView
-                  ),        // Expanded
-                ],          // Column children
-              ),            // Column
-            ),              // DefaultTabController
-          ),               // Container (DSS builder return)
-        );  // DraggableScrollableSheet
+                            const SizedBox(height: 20),
+                            Divider(color: dividerColor, height: 1),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // ═══ BUSINESS HOURS ═══
+                          const SizedBox(height: 5),
+                          Text('marketplace.business_hours'.tr(),
+                              style: GoogleFonts.inter(
+                                  color: textColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400)),
+                          // ═══ CLOSING SOON INDICATOR ═══
+                          Builder(builder: (context) {
+                            final closingSoonText = _getClosingSoonText();
+                            if (closingSoonText == null)
+                              return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  closingSoonText,
+                                  style: GoogleFonts.inter(
+                                      color: Colors.orange,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w400),
+                                ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 12),
+
+                          // Show underline tab bar only if there are multiple tabs
+                          if (showTabs) ...[
+                            TabBar(
+                              indicatorSize: TabBarIndicatorSize.label,
+                              dividerColor: dividerColor,
+                              indicatorColor: accent,
+                              indicatorWeight: 2.5,
+                              labelColor: textColor,
+                              unselectedLabelColor: subtitleColor,
+                              labelStyle: GoogleFonts.inter(
+                                  fontSize: 14, fontWeight: FontWeight.w400),
+                              unselectedLabelStyle: GoogleFonts.inter(
+                                  fontSize: 14, fontWeight: FontWeight.w300),
+                              labelPadding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              tabs: tabs,
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Tab Content
+                            SizedBox(
+                              height: 380,
+                              child: TabBarView(
+                                children: tabViews,
+                              ),
+                            ),
+                          ] else ...[
+                            // No tabs needed — just show general hours directly
+                            _buildGeneralHoursTab(
+                                isDark, textColor, subtitleColor, accent),
+                          ],
+
+                          // ═══ IMPRESSUM ═══
+                          if (data != null) ...[
+                            const SizedBox(height: 24),
+                            Divider(color: dividerColor, height: 1),
+                            const SizedBox(height: 16),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF1A1A1A)
+                                    : const Color(0xFFF5F0E8),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Impressum',
+                                      style: GoogleFonts.inter(
+                                          color: textColor,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400)),
+                                  const SizedBox(height: 12),
+                                  _buildImpressumSection(
+                                      data, textColor, subtitleColor),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 30),
+                        ], // ListView children
+                      ), // ListView
+                    ), // Expanded
+                  ], // Column children
+                ), // Column
+              ), // DefaultTabController
+            ), // Container (DSS builder return)
+          ); // DraggableScrollableSheet
         } catch (e) {
           debugPrint('Error building info sheet: $e');
           return SizedBox(
@@ -2009,10 +2482,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: sheetBg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Center(
-                child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: subtitleColor)),
+                child: Text('marketplace.info_load_error'.tr(),
+                    style: TextStyle(color: subtitleColor)),
               ),
             ),
           );
@@ -2021,59 +2496,86 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
-
   // ═══ IMPRESSUM SECTION ═══
-  Widget _buildImpressumSection(Map<String, dynamic>? data, Color textColor, Color subtitleColor) {
+  Widget _buildImpressumSection(
+      Map<String, dynamic>? data, Color textColor, Color subtitleColor) {
     if (data == null) return const SizedBox.shrink();
-    
+
     final companyName = data['companyName']?.toString() ?? '';
-    final businessName = data['businessName']?.toString() ?? data['name']?.toString() ?? '';
+    final businessName =
+        data['businessName']?.toString() ?? data['name']?.toString() ?? '';
     final displayName = companyName.isNotEmpty ? companyName : businessName;
-    
+
     final legalForm = data['legalForm']?.toString() ?? '';
-    final managingDirector = data['managingDirector']?.toString() ?? data['ownerName']?.toString() ?? '';
+    final managingDirector = data['managingDirector']?.toString() ??
+        data['ownerName']?.toString() ??
+        '';
     final authorizedRep = data['authorizedRepresentative']?.toString() ?? '';
     final registerCourt = data['registerCourt']?.toString() ?? '';
     final registerNumber = data['registerNumber']?.toString() ?? '';
-    final taxId = data['taxId']?.toString() ?? data['taxNumber']?.toString() ?? '';
+    final taxId =
+        data['taxId']?.toString() ?? data['taxNumber']?.toString() ?? '';
     final vatId = data['vatId']?.toString() ?? '';
-    final email = data['email']?.toString() ?? data['shopEmail']?.toString() ?? data['contactEmail']?.toString() ?? '';
-    final phone = data['phone']?.toString() ?? data['phoneNumber']?.toString() ?? data['contactPhone']?.toString() ?? '';
-    
+    final email = data['email']?.toString() ??
+        data['shopEmail']?.toString() ??
+        data['contactEmail']?.toString() ??
+        '';
+    final phone = data['phone']?.toString() ??
+        data['phoneNumber']?.toString() ??
+        data['contactPhone']?.toString() ??
+        '';
+
     final address = data['address'];
     final street = address is Map ? (address['street'] ?? '') : '';
     final houseNumber = address is Map ? (address['houseNumber'] ?? '') : '';
     final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
     final city = address is Map ? (address['city'] ?? '') : '';
-    final streetFull = houseNumber.toString().trim().isNotEmpty 
-      ? '${street} ${houseNumber}' 
-      : street.toString();
-    final fullAddress = streetFull.toString().trim().isNotEmpty 
-      ? '$streetFull\n$postalCode $city' 
-      : '';
-    
+    final streetFull = houseNumber.toString().trim().isNotEmpty
+        ? '${street} ${houseNumber}'
+        : street.toString();
+    final fullAddress = streetFull.toString().trim().isNotEmpty
+        ? '$streetFull\n$postalCode $city'
+        : '';
+
     // Format legal form label
     String legalFormLabel = '';
     const legalFormMap = {
-      'gmbh': 'GmbH', 'ug': 'UG (haftungsbeschr\u00e4nkt)', 'ag': 'AG',
-      'gbr': 'GbR', 'ohg': 'OHG', 'kg': 'KG', 'gmbh_co_kg': 'GmbH & Co. KG',
-      'einzelunternehmen': 'Einzelunternehmen', 'freiberufler': 'Freiberufler',
-      'ev': 'e.V.', 'eg': 'eG', 'se': 'SE',
+      'gmbh': 'GmbH',
+      'ug': 'UG (haftungsbeschr\u00e4nkt)',
+      'ag': 'AG',
+      'gbr': 'GbR',
+      'ohg': 'OHG',
+      'kg': 'KG',
+      'gmbh_co_kg': 'GmbH & Co. KG',
+      'einzelunternehmen': 'Einzelunternehmen',
+      'freiberufler': 'Freiberufler',
+      'ev': 'e.V.',
+      'eg': 'eG',
+      'se': 'SE',
     };
     if (legalForm.isNotEmpty) {
       legalFormLabel = legalFormMap[legalForm] ?? legalForm;
     }
 
     // Body text style: very small, very thin
-    final bodyStyle = GoogleFonts.inter(color: subtitleColor, fontSize: 11, fontWeight: FontWeight.w300, height: 1.5);
-    
+    final bodyStyle = GoogleFonts.inter(
+        color: subtitleColor,
+        fontSize: 11,
+        fontWeight: FontWeight.w300,
+        height: 1.5);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (displayName.isNotEmpty)
           Text(
-            displayName + (legalFormLabel.isNotEmpty ? ' ($legalFormLabel)' : ''),
-            style: GoogleFonts.inter(color: textColor, fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
+            displayName +
+                (legalFormLabel.isNotEmpty ? ' ($legalFormLabel)' : ''),
+            style: GoogleFonts.inter(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                height: 1.4),
           ),
         if (fullAddress.isNotEmpty)
           Padding(
@@ -2083,65 +2585,88 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (managingDirector.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text('${'marketplace.impressum_representative'.tr()}: $managingDirector', style: bodyStyle),
+            child: Text(
+                '${'marketplace.impressum_representative'.tr()}: $managingDirector',
+                style: bodyStyle),
           ),
         if (authorizedRep.isNotEmpty && authorizedRep != managingDirector)
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text('${'marketplace.impressum_authorized'.tr()}: $authorizedRep', style: bodyStyle),
+            child: Text(
+                '${'marketplace.impressum_authorized'.tr()}: $authorizedRep',
+                style: bodyStyle),
           ),
-        
+
         // Phone
         if (phone.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(phone, style: bodyStyle),
         ],
-        
+
         // Register info
         if (registerCourt.isNotEmpty || registerNumber.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            [if (registerCourt.isNotEmpty) registerCourt, if (registerNumber.isNotEmpty) registerNumber].join(', '),
+            [
+              if (registerCourt.isNotEmpty) registerCourt,
+              if (registerNumber.isNotEmpty) registerNumber
+            ].join(', '),
             style: bodyStyle,
           ),
         ],
         if (taxId.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text('${'marketplace.impressum_tax_id'.tr()}: $taxId', style: bodyStyle),
+            child: Text('${'marketplace.impressum_tax_id'.tr()}: $taxId',
+                style: bodyStyle),
           ),
         if (vatId.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text('${'marketplace.impressum_vat_id'.tr()}: $vatId', style: bodyStyle),
+            child: Text('${'marketplace.impressum_vat_id'.tr()}: $vatId',
+                style: bodyStyle),
           ),
         // Email - always show label
         const SizedBox(height: 8),
-        Text('${'marketplace.impressum_email'.tr()}: ${email.isNotEmpty ? email : "-"}', style: bodyStyle),
-        
+        Text(
+            '${'marketplace.impressum_email'.tr()}: ${email.isNotEmpty ? email : "-"}',
+            style: bodyStyle),
+
         // Professional tagline
         const SizedBox(height: 14),
         Divider(color: subtitleColor.withOpacity(0.2), height: 1),
         const SizedBox(height: 10),
         Text(
           _getImpressumTagline(),
-          style: GoogleFonts.inter(color: subtitleColor.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.w300, height: 1.5),
+          style: GoogleFonts.inter(
+              color: subtitleColor.withOpacity(0.7),
+              fontSize: 10,
+              fontWeight: FontWeight.w300,
+              height: 1.5),
         ),
       ],
     );
   }
-  
+
   String _getImpressumTagline() {
     final locale = context.locale.languageCode;
     switch (locale) {
-      case 'de': return 'Wir sind ein professioneller Anbieter. Erfahre mehr dar\u00fcber, wie wir gemeinsam mit LOKMA die Verbraucherverantwortung \u00fcbernehmen.';
-      case 'en': return 'We are a professional provider. Learn more about how we take consumer responsibility together with LOKMA.';
-      case 'tr': return 'Profesyonel bir hizmet saglayicisiyiz. LOKMA ile birlikte t\u00fcketici sorumlulugunu nasil \u00fcstlendigimiz hakkinda daha fazla bilgi edinin.';
-      case 'nl': return 'Wij zijn een professionele aanbieder. Lees meer over hoe wij samen met LOKMA de consumentenverantwoordelijkheid dragen.';
-      case 'fr': return 'Nous sommes un prestataire professionnel. D\u00e9couvrez comment nous assumons ensemble la responsabilit\u00e9 envers les consommateurs avec LOKMA.';
-      case 'it': return 'Siamo un fornitore professionale. Scopri come assumiamo la responsabilit\u00e0 verso i consumatori insieme a LOKMA.';
-      case 'es': return 'Somos un proveedor profesional. Descubre c\u00f3mo asumimos la responsabilidad del consumidor junto con LOKMA.';
-      default: return 'We are a professional provider. Learn more about how we take consumer responsibility together with LOKMA.';
+      case 'de':
+        return 'Wir sind ein professioneller Anbieter. Erfahre mehr dar\u00fcber, wie wir gemeinsam mit LOKMA die Verbraucherverantwortung \u00fcbernehmen.';
+      case 'en':
+        return 'We are a professional provider. Learn more about how we take consumer responsibility together with LOKMA.';
+      case 'tr':
+        return 'Profesyonel bir hizmet saglayicisiyiz. LOKMA ile birlikte t\u00fcketici sorumlulugunu nasil \u00fcstlendigimiz hakkinda daha fazla bilgi edinin.';
+      case 'nl':
+        return 'Wij zijn een professionele aanbieder. Lees meer over hoe wij samen met LOKMA de consumentenverantwoordelijkheid dragen.';
+      case 'fr':
+        return 'Nous sommes un prestataire professionnel. D\u00e9couvrez comment nous assumons ensemble la responsabilit\u00e9 envers les consommateurs avec LOKMA.';
+      case 'it':
+        return 'Siamo un fornitore professionale. Scopri come assumiamo la responsabilit\u00e0 verso i consumatori insieme a LOKMA.';
+      case 'es':
+        return 'Somos un proveedor profesional. Descubre c\u00f3mo asumimos la responsabilidad del consumidor junto con LOKMA.';
+      default:
+        return 'We are a professional provider. Learn more about how we take consumer responsibility together with LOKMA.';
     }
   }
 
@@ -2167,10 +2692,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
       // Map English day names to Turkish (data is stored in Turkish)
       final enToTr = {
-        'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
-        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
+        'Monday': 'Pazartesi',
+        'Tuesday': 'Salı',
+        'Wednesday': 'Çarşamba',
+        'Thursday': 'Perşembe',
+        'Friday': 'Cuma',
+        'Saturday': 'Cumartesi',
+        'Sunday': 'Pazar'
       };
-      final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final dayNamesTr = [
+        'Pazartesi',
+        'Salı',
+        'Çarşamba',
+        'Perşembe',
+        'Cuma',
+        'Cumartesi',
+        'Pazar'
+      ];
       final now = DateTime.now();
       final todayIndex = now.weekday - 1;
       final todayDayName = dayNamesTr[todayIndex];
@@ -2202,7 +2740,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false),
         (match) {
           int h = int.parse(match.group(1)!);
-          int m = match.group(2) != null ? int.parse(match.group(2)!.substring(1)) : 0;
+          int m = match.group(2) != null
+              ? int.parse(match.group(2)!.substring(1))
+              : 0;
           String period = match.group(3)!.toUpperCase();
           if (period == 'PM' && h < 12) h += 12;
           if (period == 'AM' && h == 12) h = 0;
@@ -2218,7 +2758,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       final closeHour = int.parse(lastMatch.group(1)!);
       final closeMinute = int.parse(lastMatch.group(2)!);
 
-      final closeTime = DateTime(now.year, now.month, now.day, closeHour, closeMinute);
+      final closeTime =
+          DateTime(now.year, now.month, now.day, closeHour, closeMinute);
       final diff = closeTime.difference(now);
       final remainingMinutes = diff.inMinutes;
 
@@ -2227,9 +2768,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
       final hrs = remainingMinutes ~/ 60;
       final mins = remainingMinutes % 60;
-      final timeStr = hrs > 0
-          ? '$hrs:${mins.toString().padLeft(2, '0')}'
-          : '${mins}min';
+      final timeStr =
+          hrs > 0 ? '$hrs:${mins.toString().padLeft(2, '0')}' : '${mins}min';
 
       return 'marketplace.closing_soon'.tr(namedArgs: {'time': timeStr});
     } catch (e) {
@@ -2238,29 +2778,52 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
   // ═══ GENERAL HOURS TAB — day-by-day from openingHours ═══
-  Widget _buildGeneralHoursTab(bool isDark, Color textColor, Color subtitleColor, Color accent) {
+  Widget _buildGeneralHoursTab(
+      bool isDark, Color textColor, Color subtitleColor, Color accent) {
     try {
       if (_butcherDoc == null) {
-        return Center(child: Text('marketplace.hours_loading'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
+        return Center(
+            child: Text('marketplace.hours_loading'.tr(),
+                style: GoogleFonts.inter(
+                    color: subtitleColor, fontWeight: FontWeight.w300)));
       }
-      
+
       final rawData = _butcherDoc!.data();
       if (rawData == null) {
-        return Center(child: Text('marketplace.hours_not_found'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
+        return Center(
+            child: Text('marketplace.hours_not_found'.tr(),
+                style: GoogleFonts.inter(
+                    color: subtitleColor, fontWeight: FontWeight.w300)));
       }
-      
+
       final data = rawData as Map<String, dynamic>;
       final hours = data['openingHours'];
 
       if (hours == null || hours.toString().trim().isEmpty) {
-        return Center(child: Text('marketplace.business_hours_not_entered'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
+        return Center(
+            child: Text('marketplace.business_hours_not_entered'.tr(),
+                style: GoogleFonts.inter(
+                    color: subtitleColor, fontWeight: FontWeight.w300)));
       }
 
       final dayNamesDisplay = [
-        'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
-        'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+        'common.day_monday'.tr(),
+        'common.day_tuesday'.tr(),
+        'common.day_wednesday'.tr(),
+        'common.day_thursday'.tr(),
+        'common.day_friday'.tr(),
+        'common.day_saturday'.tr(),
+        'common.day_sunday'.tr(),
       ];
-      final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final dayNamesTr = [
+        'Pazartesi',
+        'Salı',
+        'Çarşamba',
+        'Perşembe',
+        'Cuma',
+        'Cumartesi',
+        'Pazar'
+      ];
       final now = DateTime.now();
       final todayIndex = now.weekday - 1;
 
@@ -2270,18 +2833,30 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       } else if (hours is List) {
         lines = hours.map((e) => e.toString()).toList();
       } else {
-        return Center(child: Text('marketplace.call_store_for_hours'.tr(), style: TextStyle(color: subtitleColor)));
+        return Center(
+            child: Text('marketplace.call_store_for_hours'.tr(),
+                style: TextStyle(color: subtitleColor)));
       }
 
       lines = lines.where((l) => l.trim().isNotEmpty).toList();
 
       final Map<String, String> enToTr = {
-        'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
-        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar',
-        'Montag': 'Pazartesi', 'Dienstag': 'Salı', 'Mittwoch': 'Çarşamba',
-        'Donnerstag': 'Perşembe', 'Freitag': 'Cuma', 'Samstag': 'Cumartesi', 'Sonntag': 'Pazar',
+        'Monday': 'Pazartesi',
+        'Tuesday': 'Salı',
+        'Wednesday': 'Çarşamba',
+        'Thursday': 'Perşembe',
+        'Friday': 'Cuma',
+        'Saturday': 'Cumartesi',
+        'Sunday': 'Pazar',
+        'Montag': 'Pazartesi',
+        'Dienstag': 'Salı',
+        'Mittwoch': 'Çarşamba',
+        'Donnerstag': 'Perşembe',
+        'Freitag': 'Cuma',
+        'Samstag': 'Cumartesi',
+        'Sonntag': 'Pazar',
       };
-      
+
       List<String> standardizedLines = [];
       for (var line in lines) {
         String cleanLine = line.trim();
@@ -2291,22 +2866,28 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             break;
           }
         }
-        cleanLine = cleanLine.replaceAllMapped(RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false), (match) {
+        cleanLine = cleanLine.replaceAllMapped(
+            RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false),
+            (match) {
           int h = int.parse(match.group(1)!);
-          int m = match.group(2) != null ? int.parse(match.group(2)!.substring(1)) : 0;
+          int m = match.group(2) != null
+              ? int.parse(match.group(2)!.substring(1))
+              : 0;
           String period = match.group(3)!.toUpperCase();
           if (period == 'PM' && h < 12) h += 12;
           if (period == 'AM' && h == 12) h = 0;
           return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
         });
         cleanLine = cleanLine.replaceAll('–', '-').replaceAll('—', '-');
-        cleanLine = cleanLine.replaceAll(RegExp(r'Closed', caseSensitive: false), 'Kapalı');
+        cleanLine = cleanLine.replaceAll(
+            RegExp(r'Closed', caseSensitive: false), 'Kapalı');
         standardizedLines.add(cleanLine);
       }
       lines = standardizedLines;
 
-      bool structureMatch = lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
-      
+      bool structureMatch =
+          lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+
       final bool isOpenNow = OpeningHoursHelper(hours).isOpenAt(now);
 
       if (!structureMatch) {
@@ -2318,10 +2899,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
-              children: lines.map((line) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Text(line, style: GoogleFonts.inter(color: textColor, fontSize: 14, fontWeight: FontWeight.w300)),
-              )).toList(),
+              children: lines
+                  .map((line) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Text(line,
+                            style: GoogleFonts.inter(
+                                color: textColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w300)),
+                      ))
+                  .toList(),
             ),
           ],
         );
@@ -2341,45 +2928,83 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               final isToday = todayIndex == i;
 
               final line = lines.firstWhere(
-                (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
-                orElse: () => '$dayNameTr: Kapalı'
-              );
+                  (l) =>
+                      l.startsWith('$dayNameTr:') ||
+                      l.startsWith('$dayNameTr '),
+                  orElse: () => '$dayNameTr: Kapalı');
 
-              String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
-              if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
+              String content = line
+                  .replaceAll('$dayNameTr:', '')
+                  .replaceAll(dayNameTr, '')
+                  .trim();
+              if (content.isEmpty || content == 'Kapalı')
+                content = 'common.closed'.tr();
 
-              return _buildDayRow(dayNameDisplay, content, isToday, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+              return _buildDayRow(dayNameDisplay, content, isToday, isDark,
+                  textColor, subtitleColor, accent,
+                  isOpenNow: isOpenNow);
             }),
           ),
         ],
       );
     } catch (e) {
       debugPrint('Error building general hours tab: $e');
-      return Center(child: Text('marketplace.hours_cannot_display'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
+      return Center(
+          child: Text('marketplace.hours_cannot_display'.tr(),
+              style: GoogleFonts.inter(
+                  color: subtitleColor, fontWeight: FontWeight.w300)));
     }
   }
 
   // ═══ SERVICE HOURS TAB (Delivery / Pickup) ═══
   // Now reads per-day hours arrays from Firestore (deliveryHours / pickupHours).
   // Falls back to uniform startTime/endTime if per-day data is missing.
-  Widget _buildServiceHoursTab(String startTime, String endTime, bool isDark, Color textColor, Color subtitleColor, Color accent, {List<dynamic>? perDayHours}) {
+  Widget _buildServiceHoursTab(String startTime, String endTime, bool isDark,
+      Color textColor, Color subtitleColor, Color accent,
+      {List<dynamic>? perDayHours}) {
     final dayNamesDisplay = [
-      'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
-      'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+      'common.day_monday'.tr(),
+      'common.day_tuesday'.tr(),
+      'common.day_wednesday'.tr(),
+      'common.day_thursday'.tr(),
+      'common.day_friday'.tr(),
+      'common.day_saturday'.tr(),
+      'common.day_sunday'.tr(),
     ];
-    final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    final dayNamesTr = [
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
+      'Pazar'
+    ];
     final Map<String, String> aliasToTr = {
-      'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
-      'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar',
-      'Montag': 'Pazartesi', 'Dienstag': 'Salı', 'Mittwoch': 'Çarşamba',
-      'Donnerstag': 'Perşembe', 'Freitag': 'Cuma', 'Samstag': 'Cumartesi', 'Sonntag': 'Pazar',
+      'Monday': 'Pazartesi',
+      'Tuesday': 'Salı',
+      'Wednesday': 'Çarşamba',
+      'Thursday': 'Perşembe',
+      'Friday': 'Cuma',
+      'Saturday': 'Cumartesi',
+      'Sunday': 'Pazar',
+      'Montag': 'Pazartesi',
+      'Dienstag': 'Salı',
+      'Mittwoch': 'Çarşamba',
+      'Donnerstag': 'Perşembe',
+      'Freitag': 'Cuma',
+      'Samstag': 'Cumartesi',
+      'Sonntag': 'Pazar',
     };
     final now = DateTime.now();
     final todayIndex = now.weekday - 1;
 
     // ── Try per-day array first ──
     if (perDayHours != null && perDayHours.isNotEmpty) {
-      final lines = perDayHours.map((e) => e.toString().trim()).where((l) => l.isNotEmpty).toList();
+      final lines = perDayHours
+          .map((e) => e.toString().trim())
+          .where((l) => l.isNotEmpty)
+          .toList();
       // Standardize day names to Turkish
       final List<String> standardizedLines = [];
       for (var line in lines) {
@@ -2403,7 +3028,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         standardizedLines.add(clean);
       }
 
-      final bool structureMatch = standardizedLines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+      final bool structureMatch =
+          standardizedLines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
       final bool isOpenNow = OpeningHoursHelper(perDayHours).isOpenAt(now);
 
       if (structureMatch) {
@@ -2418,16 +3044,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               children: List.generate(7, (i) {
                 final dayNameTr = dayNamesTr[i];
                 final line = standardizedLines.firstWhere(
-                  (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
+                  (l) =>
+                      l.startsWith('$dayNameTr:') ||
+                      l.startsWith('$dayNameTr '),
                   orElse: () => '$dayNameTr: Kapalı',
                 );
-                String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+                String content = line
+                    .replaceAll('$dayNameTr:', '')
+                    .replaceAll(dayNameTr, '')
+                    .trim();
                 final isClosed = content.isEmpty ||
                     content.toLowerCase().contains('kapalı') ||
                     content.toLowerCase().contains('geschlossen') ||
                     content.toLowerCase().contains('closed');
                 if (isClosed) content = 'common.closed'.tr();
-                return _buildDayRow(dayNamesDisplay[i], content, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+                return _buildDayRow(dayNamesDisplay[i], content,
+                    todayIndex == i, isDark, textColor, subtitleColor, accent,
+                    isOpenNow: isOpenNow);
               }),
             ),
           ],
@@ -2436,7 +3069,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
 
     // ── Fallback: uniform startTime / endTime ──
-    final hasCustomHours = startTime.trim().isNotEmpty && endTime.trim().isNotEmpty;
+    final hasCustomHours =
+        startTime.trim().isNotEmpty && endTime.trim().isNotEmpty;
     if (!hasCustomHours) {
       return Center(
         child: Column(
@@ -2445,15 +3079,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Icon(Icons.schedule, color: subtitleColor, size: 40),
             const SizedBox(height: 12),
             Text('marketplace.same_as_general'.tr(),
-              style: GoogleFonts.inter(color: subtitleColor, fontSize: 16, fontWeight: FontWeight.w300)),
+                style: GoogleFonts.inter(
+                    color: subtitleColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w300)),
           ],
         ),
       );
     }
 
     final hoursText = '$startTime - $endTime';
-    final isOpenNow = OpeningHoursHelper(null).isOpenWithinTime(startTime, endTime, now);
-    
+    final isOpenNow =
+        OpeningHoursHelper(null).isOpenWithinTime(startTime, endTime, now);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -2463,7 +3101,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
           children: List.generate(7, (i) {
-            return _buildDayRow(dayNamesDisplay[i], hoursText, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+            return _buildDayRow(dayNamesDisplay[i], hoursText, todayIndex == i,
+                isDark, textColor, subtitleColor, accent,
+                isOpenNow: isOpenNow);
           }),
         ),
       ],
@@ -2475,10 +3115,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(Icons.schedule_rounded, size: 15, color: isOpenNow ? Colors.green : Colors.red),
+          Icon(Icons.schedule_rounded,
+              size: 15, color: isOpenNow ? Colors.green : Colors.red),
           const SizedBox(width: 5),
           Text(
-            isOpenNow ? 'marketplace.filter_open_now_title'.tr() : 'marketplace.currently_closed'.tr(),
+            isOpenNow
+                ? 'marketplace.filter_open_now_title'.tr()
+                : 'marketplace.currently_closed'.tr(),
             style: GoogleFonts.inter(
               color: isOpenNow ? Colors.green : Colors.red,
               fontWeight: FontWeight.w400,
@@ -2491,48 +3134,67 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
   // ═══ SINGLE DAY ROW — Lieferando style ═══
-  Widget _buildDayRow(String dayName, String hours, bool isToday, bool isDark, Color textColor, Color subtitleColor, Color accent, {bool? isOpenNow}) {
-    final isClosed = hours == 'common.closed'.tr() || hours.toLowerCase().contains('kapalı') || hours.toLowerCase().contains('geschlossen') || hours.toLowerCase().contains('closed');
-    
+  Widget _buildDayRow(String dayName, String hours, bool isToday, bool isDark,
+      Color textColor, Color subtitleColor, Color accent,
+      {bool? isOpenNow}) {
+    final isClosed = hours == 'common.closed'.tr() ||
+        hours.toLowerCase().contains('kapalı') ||
+        hours.toLowerCase().contains('geschlossen') ||
+        hours.toLowerCase().contains('closed');
+
     Color todayColor;
     if (isOpenNow != null) {
       todayColor = isOpenNow ? Colors.green : Colors.red;
     } else {
       todayColor = accent;
     }
-    
-    final dayColor = isToday ? todayColor : (isDark ? Colors.grey[300]! : Colors.black87);
-    final hoursColor = isToday ? todayColor : (isClosed ? (isDark ? Colors.grey[500]! : Colors.grey) : textColor);
+
+    final dayColor =
+        isToday ? todayColor : (isDark ? Colors.grey[300]! : Colors.black87);
+    final hoursColor = isToday
+        ? todayColor
+        : (isClosed ? (isDark ? Colors.grey[500]! : Colors.grey) : textColor);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       margin: const EdgeInsets.only(bottom: 2),
-      decoration: isToday ? BoxDecoration(
-        color: todayColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(6),
-      ) : null,
+      decoration: isToday
+          ? BoxDecoration(
+              color: todayColor.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(6),
+            )
+          : null,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(dayName, style: GoogleFonts.inter(
-            color: dayColor,
-            fontSize: 15,
-            fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
-          )),
-          Text(hours, style: GoogleFonts.inter(
-            color: hoursColor,
-            fontSize: 15,
-            fontWeight: isToday ? FontWeight.w500 : FontWeight.w300,
-          )),
+          Text(dayName,
+              style: GoogleFonts.inter(
+                color: dayColor,
+                fontSize: 15,
+                fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
+              )),
+          Text(hours,
+              style: GoogleFonts.inter(
+                color: hoursColor,
+                fontSize: 15,
+                fontWeight: isToday ? FontWeight.w500 : FontWeight.w300,
+              )),
         ],
       ),
     );
   }
 
-
   String _formatCategoryKey(String key) {
-    if (key == 'marketplace.category_all'.tr() || key == 'Diğer' || key.contains(' ')) return key;
-    return key.replaceAll('_', ' ').split(' ').map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1)}' : '').join(' ');
+    if (key == 'marketplace.category_all'.tr() ||
+        key == 'Diğer' ||
+        key.contains(' ')) return key;
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word.isNotEmpty
+            ? '${word[0].toUpperCase()}${word.substring(1)}'
+            : '')
+        .join(' ');
   }
 
   @override
@@ -2540,14 +3202,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // LIEFERANDO STYLE: Theme-aware color system
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Dynamic colors based on theme
     final scaffoldBg = isDark ? const Color(0xFF2B2929) : Colors.white;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white70 : Colors.black54;
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
-    
+
     final favoriteButchers = ref.watch(butcherFavoritesProvider);
     final isFavorite = favoriteButchers.contains(widget.businessId);
 
@@ -2556,14 +3218,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       return Scaffold(
         backgroundColor: scaffoldBg,
         body: Center(
-          child: CircularProgressIndicator(color: _defaultBrandColor), // 🎨 BRAND COLOUR
+          child: CircularProgressIndicator(
+              color: _defaultBrandColor), // 🎨 BRAND COLOUR
         ),
       );
     }
-    
+
     // Preparation - Safe Data Access
     final data = _butcherDoc!.data() as Map<String, dynamic>?;
-    
+
     // Helper for robust type extraction
     bool checkIsMarket(Map<String, dynamic>? d) {
       if (d == null) return false;
@@ -2575,9 +3238,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         d['category'],
         d['tags'],
       ].join(' ').toLowerCase();
-      
+
       // If ANY of the classification fields contain "market", "markt" (German), or "bakkal", treat it as a market!
-      return str.contains('market') || str.contains('markt') || str.contains('bakkal') || str.contains('grocery');
+      return str.contains('market') ||
+          str.contains('markt') ||
+          str.contains('bakkal') ||
+          str.contains('grocery');
     }
 
     double parseSafelyDouble(dynamic val) {
@@ -2586,18 +3252,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       if (val is String) return double.tryParse(val) ?? 0.0;
       return 0.0;
     }
+
     int parseSafelyInt(dynamic val) {
       if (val == null) return 0;
       if (val is num) return val.toInt();
       if (val is String) return int.tryParse(val) ?? 0;
       return 0;
     }
-    
+
     final brand = data?['brand'];
     // Tab-aware opening hours: use deliveryHours/pickupHours/openingHours based on active tab
     final OpeningHoursHelper openingHelper;
-    final bool hasDeliveryHours = data?['deliveryHours'] != null && (data?['deliveryHours'] as List).isNotEmpty;
-    final bool hasPickupHours = data?['pickupHours'] != null && (data?['pickupHours'] as List).isNotEmpty;
+    final bool hasDeliveryHours = data?['deliveryHours'] != null &&
+        (data?['deliveryHours'] as List).isNotEmpty;
+    final bool hasPickupHours = data?['pickupHours'] != null &&
+        (data?['pickupHours'] as List).isNotEmpty;
 
     if (_deliveryModeIndex == 0 && hasDeliveryHours) {
       openingHelper = OpeningHoursHelper(data?['deliveryHours']);
@@ -2609,14 +3278,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final isOpen = openingHelper.isOpenAt(DateTime.now());
 
     // Pause detection
-    final bool isDeliveryPaused = data?['temporaryDeliveryPaused'] as bool? ?? false;
-    final bool isPickupPaused = data?['temporaryPickupPaused'] as bool? ?? false;
-    final bool isPausedForCurrentTab = (_deliveryModeIndex == 0 && isDeliveryPaused) ||
-        (_deliveryModeIndex == 1 && isPickupPaused);
+    final bool isDeliveryPaused =
+        data?['temporaryDeliveryPaused'] as bool? ?? false;
+    final bool isPickupPaused =
+        data?['temporaryPickupPaused'] as bool? ?? false;
+    final bool isPausedForCurrentTab =
+        (_deliveryModeIndex == 0 && isDeliveryPaused) ||
+            (_deliveryModeIndex == 1 && isPickupPaused);
     // Calculate remaining minutes for pause countdown
     int? pauseRemainingMinutes;
     if (isPausedForCurrentTab) {
-      final pauseUntilField = _deliveryModeIndex == 0 ? 'deliveryPauseUntil' : 'pickupPauseUntil';
+      final pauseUntilField =
+          _deliveryModeIndex == 0 ? 'deliveryPauseUntil' : 'pickupPauseUntil';
       final pauseUntilTs = data?[pauseUntilField];
       if (pauseUntilTs != null) {
         final DateTime pauseUntilDt = pauseUntilTs is Timestamp
@@ -2631,12 +3304,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final platformBrandsAsync = ref.watch(platformBrandsProvider);
     final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
-    debugPrint('🔍 [DetailScreen] ${data?['companyName'] ?? 'NoName'}: checking brand resolution. activeBrandIds = ${activeBrandIds}');
+    debugPrint(
+        '🔍 [DetailScreen] ${data?['companyName'] ?? 'NoName'}: checking brand resolution. activeBrandIds = ${activeBrandIds}');
     if (platformBrandsAsync.value != null && activeBrandIds.isNotEmpty) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
       for (final brand in platformBrandsAsync.value!) {
         if (activeBrandIds.contains(brand.id)) {
-          debugPrint('✅ [DetailScreen] ${data?['companyName'] ?? 'NoName'}: MATCH! Adding badge ${brand.name}');
+          debugPrint(
+              '✅ [DetailScreen] ${data?['companyName'] ?? 'NoName'}: MATCH! Adding badge ${brand.name}');
           activeBadges.add({
             'name': brand.name,
             'iconUrl': brand.iconUrl,
@@ -2644,9 +3319,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         }
       }
     } else {
-      debugPrint('⚠️ [DetailScreen] ${data?['companyName'] ?? 'NoName'}: platformBrandsAsync.value is null (${platformBrandsAsync.value == null}) OR activeBrandIds is empty (${activeBrandIds.isEmpty})');
+      debugPrint(
+          '⚠️ [DetailScreen] ${data?['companyName'] ?? 'NoName'}: platformBrandsAsync.value is null (${platformBrandsAsync.value == null}) OR activeBrandIds is empty (${activeBrandIds.isEmpty})');
     }
-    
+
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
     if (brand?.toString().toLowerCase() == 'tuna') {
@@ -2667,51 +3343,60 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           if (snapshot.hasError) {
             debugPrint('🔴 [LOKMA] Products stream error: ${snapshot.error}');
           }
-          
+
           // Process Products
           List<ButcherProduct> products = [];
           if (snapshot.hasData) {
             for (final doc in snapshot.data!.docs) {
               try {
                 final data = doc.data() as Map<String, dynamic>;
-                
+
                 // Client-side fallback: if 'isActive' is totally missing, assume true
                 final bool isActive = data['isActive'] ?? true;
                 if (!isActive) continue;
 
                 final sku = data['masterProductId'] ?? data['masterProductSku'];
                 final masterData = MASTER_PRODUCT_CATALOG[sku];
-                
-                final masterMap = masterData != null ? {
-                  'name': masterData.name,
-                  'description': masterData.description,
-                  'category': masterData.category,
-                  'unit': masterData.unitType,
-                  'imageAsset': masterData.imagePath,
-                  'tags': masterData.tags,
-                } : null;
-                
-                final productObj = ButcherProduct.fromFirestore(data, doc.id, butcherId: widget.businessId, masterData: masterMap);
-                
-                if (productObj.imageUrl == null || productObj.imageUrl!.isEmpty) {
-                    debugPrint('🔴 [LOKMA] Product image missing! Raw data keys: ${data.keys.toList()}');
-                    // Look for anything resembling 'image'
-                    final imageKeys = data.keys.where((k) => k.toLowerCase().contains('image')).toList();
-                    if (imageKeys.isNotEmpty) {
-                        debugPrint('   -> Potential image fields found:');
-                        for (var k in imageKeys) {
-                            debugPrint('      $k: ${data[k]}');
-                        }
+
+                final masterMap = masterData != null
+                    ? {
+                        'name': masterData.name,
+                        'description': masterData.description,
+                        'category': masterData.category,
+                        'unit': masterData.unitType,
+                        'imageAsset': masterData.imagePath,
+                        'tags': masterData.tags,
+                      }
+                    : null;
+
+                final productObj = ButcherProduct.fromFirestore(data, doc.id,
+                    butcherId: widget.businessId, masterData: masterMap);
+
+                if (productObj.imageUrl == null ||
+                    productObj.imageUrl!.isEmpty) {
+                  debugPrint(
+                      '🔴 [LOKMA] Product image missing! Raw data keys: ${data.keys.toList()}');
+                  // Look for anything resembling 'image'
+                  final imageKeys = data.keys
+                      .where((k) => k.toLowerCase().contains('image'))
+                      .toList();
+                  if (imageKeys.isNotEmpty) {
+                    debugPrint('   -> Potential image fields found:');
+                    for (var k in imageKeys) {
+                      debugPrint('      $k: ${data[k]}');
                     }
+                  }
                 }
                 products.add(productObj);
               } catch (e) {
                 debugPrint('🔴 [LOKMA] Error parsing product ${doc.id}: $e');
               }
             }
-            debugPrint('🟢 [LOKMA] Loaded ${products.length} products for ${widget.businessId}');
+            debugPrint(
+                '🟢 [LOKMA] Loaded ${products.length} products for ${widget.businessId}');
             if (products.isNotEmpty) {
-              debugPrint('🟢 [LOKMA] Categories for first 5 products: ${products.take(5).map((p) => p.category).toList()}');
+              debugPrint(
+                  '🟢 [LOKMA] Categories for first 5 products: ${products.take(5).map((p) => p.category).toList()}');
             }
             // 🔍 Update all products for instant search
             _allProducts = products;
@@ -2722,10 +3407,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           List<ButcherProduct> searchResults = [];
           if (isSearching) {
             final query = _menuSearchQuery.toLowerCase();
-            searchResults = products.where((p) => 
-              p.name.toLowerCase().contains(query) ||
-              p.description.toLowerCase().contains(query)
-            ).toList();
+            searchResults = products
+                .where((p) =>
+                    p.name.toLowerCase().contains(query) ||
+                    p.description.toLowerCase().contains(query))
+                .toList();
           }
 
           return CustomScrollView(
@@ -2756,34 +3442,48 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         }
                       },
                       child: SizedBox(
-                        width: 40, height: 40,
-                        child: Icon(Icons.arrow_back_ios_new, color: textPrimary, size: 18),
+                        width: 40,
+                        height: 40,
+                        child: Icon(Icons.arrow_back_ios_new,
+                            color: textPrimary, size: 18),
                       ),
                     ),
                   ),
                 ),
                 // Title: Search Bar when scrolled, else Service Toggle
                 // In QR mode: always show search bar (no toggle needed)
-                title: (_showSearchBar || (widget.initialTableNumber != null || widget.isReservationIntent))
+                title: (_showSearchBar ||
+                        (widget.initialTableNumber != null ||
+                            widget.isReservationIntent))
                     ? GestureDetector(
                         onTap: () => _showMenuSearchOverlay(),
                         child: Container(
                           height: 44,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF424242) : const Color(0xFFF5F0E8),
+                            color: isDark
+                                ? const Color(0xFF424242)
+                                : const Color(0xFFF5F0E8),
                             borderRadius: BorderRadius.circular(22),
                           ),
                           child: Row(
                             children: [
                               const SizedBox(width: 12),
-                              Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 22),
+                              Icon(Icons.search,
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                  size: 22),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'marketplace.search_in_menu'.tr(),
+                                  _menuSearchQuery.isNotEmpty
+                                      ? _menuSearchQuery
+                                      : 'marketplace.search_in_menu'.tr(),
                                   style: TextStyle(
-                                    fontSize: 14, 
-                                    color: _menuSearchQuery.isNotEmpty ? textPrimary : Colors.grey[500],
+                                    fontSize: 14,
+                                    color: _menuSearchQuery.isNotEmpty
+                                        ? textPrimary
+                                        : Colors.grey[500],
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -2813,7 +3513,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               (_planFeatures['dineInQR'] == true) ||
                               (_planFeatures['waiterOrder'] == true))
                             TabItem(
-                              title: tr('delivery_modes.dine_in'), 
+                              title: tr('delivery_modes.dine_in'),
                               subtitle: _getEstimatedDineInTime(),
                               icon: Icons.restaurant,
                             ),
@@ -2831,8 +3531,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: GestureDetector(
                         onTap: () => _showMenuSearchOverlay(),
                         child: SizedBox(
-                          width: 40, height: 40,
-                          child: Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 22),
+                          width: 40,
+                          height: 40,
+                          child: Icon(Icons.search,
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                              size: 22),
                         ),
                       ),
                     )
@@ -2840,7 +3544,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     const SizedBox(width: 48),
                 ],
               ),
-              
+
               // Small spacer between toggle and card content
               const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
@@ -2848,28 +3552,39 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               SliverToBoxAdapter(
                 child: (_butcherDoc != null)
                     ? FutureBuilder<List<BusinessDeal>>(
-                        future: BusinessDealsService.getActiveDeals(_butcherDoc!.id),
+                        future: BusinessDealsService.getActiveDeals(
+                            _butcherDoc!.id),
                         builder: (context, dealSnap) {
-                          if (!dealSnap.hasData || dealSnap.data!.isEmpty) return const SizedBox.shrink();
+                          if (!dealSnap.hasData || dealSnap.data!.isEmpty)
+                            return const SizedBox.shrink();
                           final deals = dealSnap.data!;
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 14),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [const Color(0xFFEA184A).withOpacity(0.08), const Color(0xFFFF6B6B).withOpacity(0.04)],
+                                  colors: [
+                                    const Color(0xFFEA184A).withOpacity(0.08),
+                                    const Color(0xFFFF6B6B).withOpacity(0.04)
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFEA184A).withOpacity(0.25)),
+                                border: Border.all(
+                                    color: const Color(0xFFEA184A)
+                                        .withOpacity(0.25)),
                               ),
                               child: Row(
                                 children: [
-                                  const Text('🔥', style: TextStyle(fontSize: 20)),
+                                  const Text('🔥',
+                                      style: TextStyle(fontSize: 20)),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
-                                      deals.map((d) => d.badgeText).join(' \u2022 '),
+                                      deals
+                                          .map((d) => d.badgeText)
+                                          .join(' \u2022 '),
                                       style: const TextStyle(
                                         color: Color(0xFFEA184A),
                                         fontSize: 13,
@@ -2898,15 +3613,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         fit: StackFit.expand,
                         children: [
                           // Business Image
-                          (data?['imageUrl'] != null && (data!['imageUrl'] as String).isNotEmpty)
+                          (data?['imageUrl'] != null &&
+                                  (data!['imageUrl'] as String).isNotEmpty)
                               ? LokmaNetworkImage(
                                   imageUrl: data['imageUrl'],
                                   fit: BoxFit.cover,
                                 )
-                              : Image.asset('assets/images/kasap_card.png', fit: BoxFit.cover),
-                          
+                              : Image.asset('assets/images/kasap_card.png',
+                                  fit: BoxFit.cover),
+
                           // Logo (Bottom Left - Lieferando style)
-                          if (data?['logoUrl'] != null && (data!['logoUrl'] as String).isNotEmpty)
+                          if (data?['logoUrl'] != null &&
+                              (data!['logoUrl'] as String).isNotEmpty)
                             Positioned(
                               left: 12,
                               bottom: 12,
@@ -2916,7 +3634,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 decoration: BoxDecoration(
                                   color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), blurRadius: 8)],
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.2),
+                                        blurRadius: 8)
+                                  ],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
@@ -2935,77 +3660,101 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: activeBadges.map((badge) {
-                                  final Color badgeColor = Theme.of(context).colorScheme.surface;
-                                  final Color textColor = Theme.of(context).colorScheme.onSurface;
+                                  final Color badgeColor =
+                                      Theme.of(context).colorScheme.surface;
+                                  final Color textColor =
+                                      Theme.of(context).colorScheme.onSurface;
 
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 6),
                                     child: GestureDetector(
                                       onTap: () {
                                         HapticFeedback.lightImpact();
-                                        if (badge['name'].toString().toLowerCase().contains('tuna')) {
+                                        if (badge['name']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('tuna')) {
                                           _showTunaBrandInfo();
                                         }
                                       },
-                                      child: Builder(
-                                        builder: (context) {
-                                          final bool hasIcon = badge['iconUrl'] != null && badge['iconUrl'].toString().isNotEmpty;
-                                          return Container(
-                                            padding: hasIcon ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: hasIcon ? Colors.transparent : badgeColor,
-                                              borderRadius: hasIcon ? BorderRadius.circular(8) : BorderRadius.circular(16),
-                                              boxShadow: [
-                                                if (!hasIcon)
-                                                  BoxShadow(
-                                                    color: Colors.black.withOpacity(0.3),
-                                                    blurRadius: 4,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                              ],
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                if (hasIcon)
-                                                  ClipRRect(
-                                                    borderRadius: BorderRadius.circular(8),
-                                                    child: badge['iconUrl'].toString().startsWith('http')
-                                                        ? LokmaNetworkImage(
-                                                            imageUrl: badge['iconUrl'],
+                                      child: Builder(builder: (context) {
+                                        final bool hasIcon =
+                                            badge['iconUrl'] != null &&
+                                                badge['iconUrl']
+                                                    .toString()
+                                                    .isNotEmpty;
+                                        return Container(
+                                          padding: hasIcon
+                                              ? EdgeInsets.zero
+                                              : const EdgeInsets.symmetric(
+                                                  horizontal: 14, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: hasIcon
+                                                ? Colors.transparent
+                                                : badgeColor,
+                                            borderRadius: hasIcon
+                                                ? BorderRadius.circular(8)
+                                                : BorderRadius.circular(16),
+                                            boxShadow: [
+                                              if (!hasIcon)
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.3),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (hasIcon)
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  child: badge['iconUrl']
+                                                          .toString()
+                                                          .startsWith('http')
+                                                      ? LokmaNetworkImage(
+                                                          imageUrl:
+                                                              badge['iconUrl'],
+                                                          height: 38,
+                                                          fit: BoxFit.contain,
+                                                          placeholder:
+                                                              (context, url) =>
+                                                                  Container(
+                                                            color: Colors
+                                                                .transparent,
                                                             height: 38,
-                                                            fit: BoxFit.contain,
-                                                            placeholder: (context, url) => Container(
-                                                              color: Colors.transparent,
-                                                              height: 38,
-                                                              width: 38,
-                                                            ),
-                                                            errorWidget: (context, url, error) =>
-                                                                const SizedBox.shrink(),
-                                                          )
-                                                        : Image.asset(
-                                                            badge['iconUrl'],
-                                                            height: 38,
-                                                            fit: BoxFit.contain,
+                                                            width: 38,
                                                           ),
+                                                          errorWidget: (context,
+                                                                  url, error) =>
+                                                              const SizedBox
+                                                                  .shrink(),
+                                                        )
+                                                      : Image.asset(
+                                                          badge['iconUrl'],
+                                                          height: 38,
+                                                          fit: BoxFit.contain,
+                                                        ),
+                                                ),
+                                              if (!hasIcon) ...[
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  badge['name'],
+                                                  style: TextStyle(
+                                                    color: textColor,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                    letterSpacing: 1.2,
                                                   ),
-                                                if (!hasIcon) ...[
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    badge['name'],
-                                                    style: TextStyle(
-                                                      color: textColor,
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w600,
-                                                      letterSpacing: 1.2,
-                                                    ),
-                                                  ),
-                                                ],
+                                                ),
                                               ],
-                                            ),
-                                          );
-                                        }
-                                      ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
                                     ),
                                   );
                                 }).toList(),
@@ -3015,29 +3764,40 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             builder: (context) {
                               bool isMarket = checkIsMarket(data);
                               // KURAL 2: Hazir Paket Yazi Ibaresi = sellsTunaProducts / sellsTorosProducts
-                              bool actuallySellsTuna = data?['sellsTunaProducts'] == true;
-                              bool actuallySellsToros = data?['sellsTorosProducts'] == true;
+                              bool actuallySellsTuna =
+                                  data?['sellsTunaProducts'] == true;
+                              bool actuallySellsToros =
+                                  data?['sellsTorosProducts'] == true;
 
-                              if (activeBadges.isNotEmpty) return const SizedBox.shrink();
+                              if (activeBadges.isNotEmpty)
+                                return const SizedBox.shrink();
 
                               if (actuallySellsTuna || actuallySellsToros) {
                                 return Positioned(
                                   bottom: 12,
                                   right: 12,
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (actuallySellsTuna)
                                         Container(
-                                          margin: const EdgeInsets.only(bottom: 6),
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                          margin:
+                                              const EdgeInsets.only(bottom: 6),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 14, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF9F1C20).withValues(alpha: 0.95), // TUNA Pink/Red
-                                            borderRadius: BorderRadius.circular(16),
+                                            color: const Color(0xFF9F1C20)
+                                                .withValues(
+                                                    alpha:
+                                                        0.95), // TUNA Pink/Red
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.3),
+                                                color: Colors.black
+                                                    .withValues(alpha: 0.3),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -3059,7 +3819,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               Text(
                                                 'Şarküteri Ürünleri',
                                                 style: GoogleFonts.inter(
-                                                  color: Colors.white.withValues(alpha: 0.95),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.95),
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w500,
                                                   letterSpacing: 0.2,
@@ -3071,13 +3832,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         ),
                                       if (actuallySellsToros)
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 14, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF1B5E20).withValues(alpha: 0.9), // Toros Green
-                                            borderRadius: BorderRadius.circular(16),
+                                            color: const Color(0xFF1B5E20)
+                                                .withValues(
+                                                    alpha: 0.9), // Toros Green
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.3),
+                                                color: Colors.black
+                                                    .withValues(alpha: 0.3),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -3086,7 +3852,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
+                                              const Icon(
+                                                  Icons.shopping_bag_outlined,
+                                                  color: Colors.white,
+                                                  size: 14),
                                               const SizedBox(width: 6),
                                               Text(
                                                 'Akdeniz Toros Şarküteri Ürünleri',
@@ -3112,20 +3881,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             right: 12,
                             top: 12,
                             child: Material(
-                              color: isFavorite 
-                                  ? accent.withOpacity(0.9) 
+                              color: isFavorite
+                                  ? accent.withOpacity(0.9)
                                   : Colors.black.withOpacity(0.4),
                               borderRadius: BorderRadius.circular(20),
                               child: InkWell(
                                 onTap: () {
-                                  ref.read(butcherFavoritesProvider.notifier).toggleFavorite(widget.businessId);
+                                  ref
+                                      .read(butcherFavoritesProvider.notifier)
+                                      .toggleFavorite(widget.businessId);
                                 },
                                 borderRadius: BorderRadius.circular(20),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8),
                                   child: Icon(
-                                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                                    color: Theme.of(context).colorScheme.surface,
+                                    isFavorite
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
                                     size: 22,
                                   ),
                                 ),
@@ -3141,308 +3915,443 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
               // 2. Lieferando-Style Info Section (Clean & Compact)
               SliverToBoxAdapter(
-                 child: Container(
-                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                   child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     children: [
-                       // 2a. Business Name + Info Button (Lieferando: name + "Über uns")
-                       Row(
-                         children: [
-                           Expanded(
-                             child: Column(
-                               crossAxisAlignment: CrossAxisAlignment.start,
-                               children: [
-                                 Text(
-                                   data?['companyName'] ?? data?['name'] ?? 'common.business'.tr(),
-                                   style: TextStyle(
-                                     color: Theme.of(context).colorScheme.onSurface,
-                                     fontSize: 24,
-                                     fontWeight: FontWeight.w600,
-                                     letterSpacing: -0.5,
-                                   ),
-                                   maxLines: 2,
-                                   overflow: TextOverflow.ellipsis,
-                                 ),
-                                 // In masa mode: show table info + order type
-                                 if (_isMasaMode && widget.initialTableNumber != null)
-                                   Padding(
-                                     padding: const EdgeInsets.only(top: 2),
-                                     child: Text(
-                                       '(${tr('delivery_modes.dine_in')} ${widget.initialTableNumber}${_isGroupMode ? ' / ${tr('orders.label_group_order')}' : ' / ${tr('cart.single_person_order')}'})',
-                                       style: TextStyle(
-                                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                                         fontSize: 14,
-                                         fontWeight: FontWeight.w500,
-                                       ),
-                                     ),
-                                   ),
-                               ],
-                             ),
-                           ),
-                           const SizedBox(width: 8),
-                           // Info Button (compact Lieferando style)
-                           Material(
-                             color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
-                             borderRadius: BorderRadius.circular(16),
-                             child: InkWell(
-                               onTap: _showInfoSheet,
-                               borderRadius: BorderRadius.circular(16),
-                               child: Padding(
-                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                 child: Row(
-                                   mainAxisSize: MainAxisSize.min,
-                                   children: [
-                                     Icon(
-                                       Icons.info_outline,
-                                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                       size: 16,
-                                     ),
-                                     const SizedBox(width: 4),
-                                     Text(
-                                       'business_details.about_us'.tr(),
-                                       style: TextStyle(
-                                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                         fontSize: 13,
-                                         fontWeight: FontWeight.w600,
-                                       ),
-                                     ),
-                                   ],
-                                 ),
-                               ),
-                             ),
-                           ),
-
-                         ],
-                       ),
-                       
-                       const SizedBox(height: 8),
-                       
-                       // 2b. Stats Line (Lieferando: ★ 4.5 · Open/Closed · Delivery info)
-                       // In masa mode: simplified - only cuisine type + open/closed
-                       Wrap(
-                         spacing: 4,
-                         runSpacing: 4,
-                         crossAxisAlignment: WrapCrossAlignment.center,
-                         children: [
-                           // Rating (hidden in masa mode)
-                           if (!_isMasaMode) ...[
-                             if (_placeDetails != null)
-                               InkWell(
-                                 onTap: _showRatings,
-                                 child: Row(
-                                   mainAxisSize: MainAxisSize.min,
-                                   children: [
-                                     const Icon(Icons.star, color: Colors.amber, size: 16),
-                                     const SizedBox(width: 4),
-                                     Text(
-                                       '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
-                                       style: TextStyle(
-                                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                                         fontSize: 14,
-                                         fontWeight: FontWeight.w600,
-                                       ),
-                                     ),
-                                   ],
-                                 ),
-                               )
-                              else if (parseSafelyDouble(data?['rating']) > 0)
-                                InkWell(
-                                  onTap: _showRatings,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${parseSafelyDouble(data?['rating']).toStringAsFixed(1).replaceAll('.', ',')}${parseSafelyInt(data?['reviewCount']) > 0 ? ' (${parseSafelyInt(data?['reviewCount'])})' : ''}',
-                                        style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 2a. Business Name + Info Button (Lieferando: name + "Über uns")
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  data?['companyName'] ??
+                                      data?['name'] ??
+                                      'common.business'.tr(),
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.5,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                // In masa mode: show table info + order type
+                                if (_isMasaMode &&
+                                    widget.initialTableNumber != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      '(${tr('delivery_modes.dine_in')} ${widget.initialTableNumber}${_isGroupMode ? ' / ${tr('orders.label_group_order')}' : ' / ${tr('cart.single_person_order')}'})',
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
                                       ),
-                                    ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Info Button (compact Lieferando style)
+                          Material(
+                            color: isDark
+                                ? const Color(0xFF2A2A2A)
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(16),
+                            child: InkWell(
+                              onTap: _showInfoSheet,
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.7),
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'business_details.about_us'.tr(),
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // 2b. Stats Line (Lieferando: ★ 4.5 · Open/Closed · Delivery info)
+                      // In masa mode: simplified - only cuisine type + open/closed
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          // Rating (hidden in masa mode)
+                          if (!_isMasaMode) ...[
+                            if (_placeDetails != null)
+                              InkWell(
+                                onTap: _showRatings,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.star,
+                                        color: Colors.amber, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.8),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else if (parseSafelyDouble(data?['rating']) > 0)
+                              InkWell(
+                                onTap: _showRatings,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.star,
+                                        color: Colors.amber, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${parseSafelyDouble(data?['rating']).toStringAsFixed(1).replaceAll('.', ',')}${parseSafelyInt(data?['reviewCount']) > 0 ? ' (${parseSafelyInt(data?['reviewCount'])})' : ''}',
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.8),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            // Separator
+                            const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 0),
+                                child: Text('·',
+                                    style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900))),
+                          ],
+
+                          // Masa Rezervasyon (only shown in masa mode)
+                          if (_isMasaMode &&
+                              (data?["hasReservation"] as bool? ?? false)) ...[
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                final butcherName =
+                                    data?["companyName"] ?? data?["name"] ?? "";
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ReservationBookingScreen(
+                                      businessId: widget.businessId,
+                                      businessName: butcherName,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  tr('marketplace.table_reservation'),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.black
+                                        : Colors.white,
                                   ),
                                 ),
-                             
-                             // Separator
-                             const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
-                           ],
+                              ),
+                            ),
+                            // Separator after pill: only if cuisine/type exists OR closed badge will be visible (= QR scanned AND closed)
+                            if ((data?['cuisineType']?.toString() ?? '')
+                                    .isNotEmpty ||
+                                (data?['type']?.toString() ?? '').isNotEmpty ||
+                                (widget.initialTableNumber != null &&
+                                    (!isOpen || isPausedForCurrentTab)))
+                              const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 0),
+                                  child: Text('·',
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900))),
+                          ],
 
-                           // Masa Rezervasyon (only shown in masa mode)
-                           if (_isMasaMode && (data?["hasReservation"] as bool? ?? false)) ...[
-                             GestureDetector(
-                               onTap: () {
-                                 HapticFeedback.selectionClick();
-                                 final butcherName = data?["companyName"] ?? data?["name"] ?? "";
-                                 Navigator.of(context).push(
-                                   MaterialPageRoute(
-                                     builder: (_) => ReservationBookingScreen(
-                                       businessId: widget.businessId,
-                                       businessName: butcherName,
-                                     ),
-                                   ),
-                                 );
-                               },
-                               child: Container(
-                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                 decoration: BoxDecoration(
-                                   color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
-                                   borderRadius: BorderRadius.circular(20),
-                                 ),
-                                 child: Text(
-                                   tr('marketplace.table_reservation'),
-                                   style: TextStyle(
-                                     fontSize: 12,
-                                     fontWeight: FontWeight.w700,
-                                     color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
-                                   ),
-                                 ),
-                               ),
-                             ),
-                             // Separator after pill: only if cuisine/type exists OR closed badge will be visible (= QR scanned AND closed)
-                             if ((data?['cuisineType']?.toString() ?? '').isNotEmpty ||
-                                 (data?['type']?.toString() ?? '').isNotEmpty ||
-                                 (widget.initialTableNumber != null && (!isOpen || isPausedForCurrentTab)))
-                               const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
-                           ],
+                          // Business / Cuisine Type
+                          if ((data?['cuisineType']?.toString() ?? '')
+                              .isNotEmpty) ...[
+                            Text(
+                              data!['cuisineType'].toString(),
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.7),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            // Separator before closed badge: only if QR scanned AND closed (masa mode), or always in normal mode
+                            if ((!_isMasaMode ||
+                                    widget.initialTableNumber != null) &&
+                                (!isOpen || isPausedForCurrentTab))
+                              const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 0),
+                                  child: Text('·',
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900))),
+                          ] else if ((data?['type']?.toString() ?? '')
+                              .isNotEmpty) ...[
+                            Text(
+                              'marketplace.business_type_${data!['type'].toString().toLowerCase()}'
+                                  .tr(),
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.7),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if ((!_isMasaMode ||
+                                    widget.initialTableNumber != null) &&
+                                (!isOpen || isPausedForCurrentTab))
+                              const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 0),
+                                  child: Text('·',
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900))),
+                          ],
 
-                           // Business / Cuisine Type
-                           if ((data?['cuisineType']?.toString() ?? '').isNotEmpty) ...[
-                             Text(
-                               data!['cuisineType'].toString(),
-                               style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                 fontSize: 14,
-                                 fontWeight: FontWeight.w500,
-                               ),
-                             ),
-                              // Separator before closed badge: only if QR scanned AND closed (masa mode), or always in normal mode
-                              if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
-                                const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
-                            ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
-                             Text(
-                               'marketplace.business_type_${data!['type'].toString().toLowerCase()}'.tr(),
-                               style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                 fontSize: 14,
-                                 fontWeight: FontWeight.w500,
-                               ),
-                             ),
-                              if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
-                                const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
-                            ],
-                            
-                            // Open/Closed Status
-                            if ((!_isMasaMode || widget.initialTableNumber != null) && (!isOpen || isPausedForCurrentTab))
-                              InkWell(
-                             onTap: _showWeeklyHours,
-                             child: Row(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 Container(
-                                   constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.4),
-                                   child: Text(
-                                     (() {
-                                         if (isPausedForCurrentTab) {
-                                             return pauseRemainingMinutes != null
-                                                 ? (_deliveryModeIndex == 0
-                                                     ? tr('marketplace.delivery_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'})
-                                                     : tr('marketplace.pickup_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'}))
-                                                 : (_deliveryModeIndex == 0
-                                                     ? tr('marketplace.courier_not_available')
-                                                     : tr('marketplace.pickup_paused'));
-                                         }
-                                         String openText = isOpen ? tr('business_status.open') : tr('business_status.closed');
-                                         if (isOpen && data?['openingHours'] != null) {
-                                             final mins = OpeningHoursHelper(data!['openingHours']).getMinutesUntilClose(DateTime.now());
-                                             if (mins != null && mins <= 30 && mins > 0) {
-                                                 openText = '$mins dakika daha açık';
-                                             }
-                                         }
-                                         return openText;
-                                     })(),
-                                     style: TextStyle(
-                                       color: isPausedForCurrentTab
-                                           ? Colors.orange
-                                           : (isOpen ? Colors.green : Colors.red),
-                                       fontSize: isPausedForCurrentTab ? 12 : 14,
-                                       fontWeight: FontWeight.w600,
-                                     ),
-                                     maxLines: 1,
-                                     overflow: TextOverflow.ellipsis,
-                                   ),
-                                 ),
-                               ],
-                             ),
-                           ),
-                           
-                           // Delivery Fee (hidden in masa mode)
-                           if (!_isMasaMode && data?['deliveryFee'] != null) ...[
-                             const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
-                             Row(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 Icon(Icons.delivery_dining, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                                 const SizedBox(width: 3),
-                                 Text(
-                                   parseSafelyDouble(data?['deliveryFee']) == 0
-                                       ? tr('marketplace.free_delivery_label')
-                                       : '${parseSafelyDouble(data?['deliveryFee']).toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
-                                   style: TextStyle(
-                                     color: parseSafelyDouble(data?['deliveryFee']) == 0
-                                         ? const Color(0xFF4CAF50)
-                                         : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                     fontSize: 14,
-                                     fontWeight: parseSafelyDouble(data?['deliveryFee']) == 0 ? FontWeight.w600 : FontWeight.w500,
-                                   ),
-                                 ),
-                               ],
-                             ),
-                           ],
+                          // Open/Closed Status
+                          if ((!_isMasaMode ||
+                                  widget.initialTableNumber != null) &&
+                              (!isOpen || isPausedForCurrentTab))
+                            InkWell(
+                              onTap: _showWeeklyHours,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    constraints: BoxConstraints(
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                                0.4),
+                                    child: Text(
+                                      (() {
+                                        if (isPausedForCurrentTab) {
+                                          return pauseRemainingMinutes != null
+                                              ? (_deliveryModeIndex == 0
+                                                  ? tr(
+                                                      'marketplace.delivery_resumes_in',
+                                                      namedArgs: {
+                                                          'minutes':
+                                                              '$pauseRemainingMinutes'
+                                                        })
+                                                  : tr(
+                                                      'marketplace.pickup_resumes_in',
+                                                      namedArgs: {
+                                                          'minutes':
+                                                              '$pauseRemainingMinutes'
+                                                        }))
+                                              : (_deliveryModeIndex == 0
+                                                  ? tr(
+                                                      'marketplace.courier_not_available')
+                                                  : tr(
+                                                      'marketplace.pickup_paused'));
+                                        }
+                                        String openText = isOpen
+                                            ? tr('business_status.open')
+                                            : tr('business_status.closed');
+                                        if (isOpen &&
+                                            data?['openingHours'] != null) {
+                                          final mins = OpeningHoursHelper(
+                                                  data!['openingHours'])
+                                              .getMinutesUntilClose(
+                                                  DateTime.now());
+                                          if (mins != null &&
+                                              mins <= 30 &&
+                                              mins > 0) {
+                                            openText = '$mins dakika daha açık';
+                                          }
+                                        }
+                                        return openText;
+                                      })(),
+                                      style: TextStyle(
+                                        color: isPausedForCurrentTab
+                                            ? Colors.orange
+                                            : (isOpen
+                                                ? Colors.green
+                                                : Colors.red),
+                                        fontSize:
+                                            isPausedForCurrentTab ? 12 : 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
-                           // Min Order (hidden in masa mode)
-                           if (!_isMasaMode && parseSafelyDouble(data?['minDeliveryOrder']) > 0) ...[
-                             const Padding(padding: EdgeInsets.symmetric(horizontal: 0), child: Text('·', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w900))),
-                             Row(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 Text(
-                                   'Min. ',
-                                   style: TextStyle(
-                                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                     fontSize: 14,
-                                     fontWeight: FontWeight.w500,
-                                   ),
-                                 ),
-                                 SvgPicture.asset(
-                                   'assets/images/basket_1.svg',
-                                   width: 14,
-                                   height: 14,
-                                   colorFilter: ColorFilter.mode(
-                                     Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                     BlendMode.srcIn,
-                                   ),
-                                 ),
-                                 const SizedBox(width: 4),
-                                 Text(
-                                   '${parseSafelyDouble(data?['minDeliveryOrder']).toStringAsFixed(2).replaceAll('.00', '')}${CurrencyUtils.getCurrencySymbol()}',
-                                   style: TextStyle(
-                                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                     fontSize: 14,
-                                     fontWeight: FontWeight.w500,
-                                   ),
-                                 ),
-                               ],
-                             ),
-                           ],
+                          // Delivery Fee (hidden in masa mode)
+                          if (!_isMasaMode && data?['deliveryFee'] != null) ...[
+                            const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 0),
+                                child: Text('·',
+                                    style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900))),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.delivery_dining,
+                                    size: 14,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.6)),
+                                const SizedBox(width: 3),
+                                Text(
+                                  parseSafelyDouble(data?['deliveryFee']) == 0
+                                      ? tr('marketplace.free_delivery_label')
+                                      : '${parseSafelyDouble(data?['deliveryFee']).toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
+                                  style: TextStyle(
+                                    color: parseSafelyDouble(
+                                                data?['deliveryFee']) ==
+                                            0
+                                        ? const Color(0xFF4CAF50)
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                    fontSize: 14,
+                                    fontWeight: parseSafelyDouble(
+                                                data?['deliveryFee']) ==
+                                            0
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
 
-                         ],
-                       ),
-                     ],
-                   ),
-                 ),
+                          // Min Order (hidden in masa mode)
+                          if (!_isMasaMode &&
+                              parseSafelyDouble(data?['minDeliveryOrder']) >
+                                  0) ...[
+                            const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 0),
+                                child: Text('·',
+                                    style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900))),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Min. ',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SvgPicture.asset(
+                                  'assets/images/basket_1.svg',
+                                  width: 14,
+                                  height: 14,
+                                  colorFilter: ColorFilter.mode(
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${parseSafelyDouble(data?['minDeliveryOrder']).toStringAsFixed(2).replaceAll('.00', '')}${CurrencyUtils.getCurrencySymbol()}',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
 
               // 3. LIEFERANDO STYLE: Sticky Horizontal Category Tabs
@@ -3463,42 +4372,70 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 child: Builder(
                                   builder: (context) {
                                     // Only show categories that have products (or 'marketplace.category_all'.tr())
-                                    final visibleCategories = _effectiveCategories.where((c) => c['name'] == 'marketplace.category_all'.tr() || c['name'] == 'marketplace.all_products'.tr() || _allProducts.any((p) => p.category == c['name'] || (c['id'] != null && p.category == c['id']))).toList();
-                                    
+                                    final visibleCategories = _effectiveCategories
+                                        .where((c) =>
+                                            c['name'] == 'marketplace.category_all'.tr() ||
+                                            c['name'] ==
+                                                'marketplace.all_products'
+                                                    .tr() ||
+                                            _allProducts.any((p) =>
+                                                p.category == c['name'] ||
+                                                (c['id'] != null &&
+                                                    p.category == c['id'])))
+                                        .toList();
+
                                     // Always schedule pill position check to handle dynamic width changes (like cart badges appearing)
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
                                       if (mounted) _updatePillPosition();
                                     });
-                                    
+
                                     return SingleChildScrollView(
                                       controller: _chipScrollController,
                                       scrollDirection: Axis.horizontal,
-                                      padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
+                                      padding: const EdgeInsets.only(
+                                          left: 16,
+                                          right: 4,
+                                          top: 8,
+                                          bottom: 8),
                                       child: Stack(
                                         alignment: Alignment.centerLeft,
                                         children: [
                                           // 1. Sliding pill indicator (always rendered, fades in once positioned)
                                           AnimatedPositioned(
-                                            duration: const Duration(milliseconds: 400),
+                                            duration: const Duration(
+                                                milliseconds: 400),
                                             curve: Curves.easeOutBack,
                                             left: _pillLeft,
                                             top: 0,
                                             bottom: 0,
                                             child: AnimatedOpacity(
-                                              opacity: _pillInitialized ? 1.0 : 0.0,
-                                              duration: const Duration(milliseconds: 200),
+                                              opacity:
+                                                  _pillInitialized ? 1.0 : 0.0,
+                                              duration: const Duration(
+                                                  milliseconds: 200),
                                               child: AnimatedContainer(
-                                                duration: const Duration(milliseconds: 400),
+                                                duration: const Duration(
+                                                    milliseconds: 400),
                                                 curve: Curves.easeOutBack,
-                                                width: _pillWidth > 0 ? _pillWidth : 80,
+                                                width: _pillWidth > 0
+                                                    ? _pillWidth
+                                                    : 80,
                                                 decoration: BoxDecoration(
-                                                  color: isDark ? Colors.white : const Color(0xFF3E3E3F),
-                                                  borderRadius: BorderRadius.circular(50),
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : const Color(0xFF3E3E3F),
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                                                      color: (isDark
+                                                              ? Colors.white
+                                                              : Colors.black)
+                                                          .withOpacity(0.12),
                                                       blurRadius: 8,
-                                                      offset: const Offset(0, 2),
+                                                      offset:
+                                                          const Offset(0, 2),
                                                     ),
                                                   ],
                                                 ),
@@ -3509,69 +4446,144 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           // 2. Chip texts row (painted second = on top of pill)
                                           Row(
                                             key: _chipRowKey,
-                                            children: visibleCategories.map((cat) {
-                                              final catName = cat['name'] as String;
-                                              final isSelected = _selectedCategory == catName;
-                                              final cartItems = ref.watch(cartProvider).items;
-                                              final catCartCount = catName == 'marketplace.category_all'.tr()
-                                                  ? cartItems.fold<int>(0, (sum, ci) => sum + ci.quantity.toInt())
-                                                  : cartItems.where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
+                                            children:
+                                                visibleCategories.map((cat) {
+                                              final catName =
+                                                  cat['name'] as String;
+                                              final isSelected =
+                                                  _selectedCategory == catName;
+                                              final cartItems =
+                                                  ref.watch(cartProvider).items;
+                                              final catCartCount = catName ==
+                                                      'marketplace.category_all'
+                                                          .tr()
+                                                  ? cartItems.fold<int>(
+                                                      0,
+                                                      (sum, ci) =>
+                                                          sum +
+                                                          ci.quantity.toInt())
+                                                  : cartItems
+                                                      .where((ci) =>
+                                                          ci.product.category ==
+                                                          catName)
+                                                      .fold<int>(
+                                                          0,
+                                                          (sum, ci) =>
+                                                              sum +
+                                                              ci.quantity
+                                                                  .toInt());
                                               return Padding(
-                                                padding: const EdgeInsets.only(right: 6),
+                                                padding: const EdgeInsets.only(
+                                                    right: 6),
                                                 child: GestureDetector(
-                                                  onTap: () => _selectCategory(catName),
+                                                  onTap: () =>
+                                                      _selectCategory(catName),
                                                   child: Container(
-                                                    key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
-                                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                                                    key: _tabKeys.putIfAbsent(
+                                                        catName,
+                                                        () => GlobalKey()),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 7),
                                                     decoration: BoxDecoration(
                                                       color: Colors.transparent,
-                                                      borderRadius: BorderRadius.circular(50),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              50),
                                                     ),
                                                     child: Row(
-                                                      mainAxisSize: MainAxisSize.min,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
                                                       children: [
                                                         AnimatedDefaultTextStyle(
-                                                          duration: const Duration(milliseconds: 300),
-                                                          curve: Curves.easeOutCubic,
+                                                          duration:
+                                                              const Duration(
+                                                                  milliseconds:
+                                                                      300),
+                                                          curve: Curves
+                                                              .easeOutCubic,
                                                           style: TextStyle(
                                                             // Pill fades in via AnimatedOpacity.
                                                             // Until initialized, show readable fallback for selected chip
                                                             // so it doesn't appear invisible against the scaffold background.
                                                             color: isSelected
-                                                              ? (_pillInitialized
-                                                                  ? (isDark ? Colors.black : Colors.white)   // on pill
-                                                                  : (isDark ? Colors.white : Colors.black87)) // pre-pill fallback
-                                                              : (isDark ? Colors.white70 : Colors.black54),
-                                                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                                                ? (_pillInitialized
+                                                                    ? (isDark
+                                                                        ? Colors
+                                                                            .black
+                                                                        : Colors
+                                                                            .white) // on pill
+                                                                    : (isDark
+                                                                        ? Colors
+                                                                            .white
+                                                                        : Colors
+                                                                            .black87)) // pre-pill fallback
+                                                                : (isDark
+                                                                    ? Colors
+                                                                        .white70
+                                                                    : Colors
+                                                                        .black54),
+                                                            fontWeight:
+                                                                isSelected
+                                                                    ? FontWeight
+                                                                        .w700
+                                                                    : FontWeight
+                                                                        .w500,
                                                             fontSize: 14,
                                                           ),
                                                           child: Text(
-                                                            catName == 'marketplace.category_all'.tr() ? tr('business_details.all') : _formatCategoryKey(catName),
+                                                            catName ==
+                                                                    'marketplace.category_all'
+                                                                        .tr()
+                                                                ? tr(
+                                                                    'business_details.all')
+                                                                : _formatCategoryKey(
+                                                                    catName),
                                                           ),
                                                         ),
-
-                                                        if (catCartCount > 0) ...[
-                                                          const SizedBox(width: 6),
+                                                        if (catCartCount >
+                                                            0) ...[
+                                                          const SizedBox(
+                                                              width: 6),
                                                           AnimatedContainer(
-                                                            duration: const Duration(milliseconds: 300),
-                                                            curve: Curves.easeOutBack,
+                                                            duration:
+                                                                const Duration(
+                                                                    milliseconds:
+                                                                        300),
+                                                            curve: Curves
+                                                                .easeOutBack,
                                                             width: 20,
                                                             height: 20,
-                                                            decoration: BoxDecoration(
+                                                            decoration:
+                                                                BoxDecoration(
                                                               color: isSelected
-                                                                  ? (isDark ? Colors.black87 : Colors.white)
+                                                                  ? (isDark
+                                                                      ? Colors
+                                                                          .black87
+                                                                      : Colors
+                                                                          .white)
                                                                   : Colors.red,
-                                                              shape: BoxShape.circle,
+                                                              shape: BoxShape
+                                                                  .circle,
                                                             ),
-                                                            alignment: Alignment.center,
+                                                            alignment: Alignment
+                                                                .center,
                                                             child: Text(
                                                               '$catCartCount',
                                                               style: TextStyle(
                                                                 fontSize: 11,
-                                                                fontWeight: FontWeight.w600,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
                                                                 color: isSelected
-                                                                    ? (isDark ? Colors.white : Colors.black87)
-                                                                    : Colors.white,
+                                                                    ? (isDark
+                                                                        ? Colors
+                                                                            .white
+                                                                        : Colors
+                                                                            .black87)
+                                                                    : Colors
+                                                                        .white,
                                                               ),
                                                             ),
                                                           ),
@@ -3593,10 +4605,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               GestureDetector(
                                 onTap: _showCategorySelector,
                                 child: Padding(
-                                  padding: const EdgeInsets.only(right: 12, left: 2),
+                                  padding:
+                                      const EdgeInsets.only(right: 12, left: 2),
                                   child: Icon(
                                     Icons.format_list_bulleted,
-                                    color: isDark ? Colors.white70 : Colors.black54,
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54,
                                     size: 22,
                                   ),
                                 ),
@@ -3615,167 +4630,46 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               if (isSearching) ...[
                 // Flat list/grid for search results
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   sliver: SliverToBoxAdapter(
                     child: Text(
-                      'Suchergebnisse (${searchResults.length})', 
-                      style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.w600),
+                      'Suchergebnisse (${searchResults.length})',
+                      style: TextStyle(
+                          color: textPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
                 SliverPadding(
-                  padding: _isMarketType ? const EdgeInsets.symmetric(horizontal: 12) : EdgeInsets.zero,
-                  sliver: searchResults.isEmpty 
-                    ? SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(40.0),
-                          child: Center(
-                              child: Text(
-                                'marketplace.no_results_found'.tr(), 
-                                style: TextStyle(color: textSecondary),
-                              )),
-                        ),
-                      )
-                    : _isMarketType
-                      // 🛒 MARKET: Grid layout for search results
-                      ? SliverGrid(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.52,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) => _buildMarketGridCard(
-                              searchResults[index],
-                              ref.watch(cartProvider),
-                              isDark: isDark,
-                              accent: accent,
-                              cardBg: cardBg,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                            ),
-                            childCount: searchResults.length,
+                  padding: _isMarketType
+                      ? const EdgeInsets.symmetric(horizontal: 12)
+                      : EdgeInsets.zero,
+                  sliver: searchResults.isEmpty
+                      ? SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(40.0),
+                            child: Center(
+                                child: Text(
+                              'marketplace.no_results_found'.tr(),
+                              style: TextStyle(color: textSecondary),
+                            )),
                           ),
                         )
-                      // 🍽️ RESTORAN: List layout for search results
-                      : SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) => _buildLieferandoProductCard(
-                              searchResults[index], 
-                              ref.watch(cartProvider),
-                              isDark: isDark,
-                              accent: accent,
-                              cardBg: cardBg,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                            ),
-                            childCount: searchResults.length,
-                          ),
-                        ),
-                ),
-              ] else ...[
-              // Category Grouped List/Grid
-              ..._effectiveCategories.where((c) => c['name'] != 'marketplace.category_all'.tr()).expand((cat) {
-                final catName = cat['name'] as String;
-                final catId = cat['id'] as String?;
-                final isFallbackAll = catName == 'marketplace.all_products'.tr();
-                final catProducts = isFallbackAll 
-                    ? products 
-                    : products.where((p) => p.category == catName || (catId != null && p.category == catId)).toList();
-                
-                debugPrint('🟢 [LOKMA] Category Filter Check -> UI Category Name: "$catName" | UI Category ID: "$catId" -> Has ${catProducts.length} products. Is Fallback All? $isFallbackAll.');
-                if (catProducts.isEmpty && products.isNotEmpty) {
-                    debugPrint('🔴 [LOKMA] WARNING: UI Category "$catName" (ID: $catId) yielded 0 products! Here are the first 3 actual product categories from DB: ${products.take(3).map((e) => e.category).toList()}');
-                }
-                
-                if (catProducts.isEmpty) return <Widget>[];
-
-                return <Widget>[
-                  SliverToBoxAdapter(
-                    child: Container(
-                      key: _categoryKeys.putIfAbsent(catName, () => GlobalKey()),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Category Header with cart count badge
-                          Builder(builder: (context) {
-                            final catCartCount = ref.watch(cartProvider).items
-                                .where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
-                            return Container(
-                              width: double.infinity,
-                              color: isDark ? const Color(0xFF2C2C2C).withOpacity(0.6) : const Color(0xFFF2EEE9),
-                              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _formatCategoryKey(catName),
-                                      style: TextStyle(
-                                        color: isDark ? accent : textPrimary,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: -0.5,
-                                      ),
-                                    ),
-                                  ),
-                                  if (catCartCount > 0)
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        color: isDark ? Colors.white : Colors.black87,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '$catCartCount',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: isDark ? Colors.black : Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                ],
+                      : _isMarketType
+                          // 🛒 MARKET: Grid layout for search results
+                          ? SliverGrid(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.52,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
                               ),
-                            );
-                          }),
-                          // Products: Grid for market, List for restoran
-                          _isMarketType
-                            // 🛒 MARKET: 2-column grid
-                            ? Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                child: GridView.builder(
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  shrinkWrap: true,
-                                  padding: EdgeInsets.zero,
-                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    childAspectRatio: 0.52,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
-                                  ),
-                                  itemCount: catProducts.length,
-                                  itemBuilder: (context, index) => _buildMarketGridCard(
-                                    catProducts[index],
-                                    ref.watch(cartProvider),
-                                    isDark: isDark,
-                                    accent: accent,
-                                    cardBg: cardBg,
-                                    textPrimary: textPrimary,
-                                    textSecondary: textSecondary,
-                                  ),
-                                ),
-                              )
-                            // 🍽️ RESTORAN: Vertical list
-                            : ListView.builder(
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                padding: EdgeInsets.zero,
-                                itemCount: catProducts.length,
-                                itemBuilder: (context, index) => _buildLieferandoProductCard(
-                                  catProducts[index], 
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) => _buildMarketGridCard(
+                                  searchResults[index],
                                   ref.watch(cartProvider),
                                   isDark: isDark,
                                   accent: accent,
@@ -3783,49 +4677,214 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   textPrimary: textPrimary,
                                   textSecondary: textSecondary,
                                 ),
+                                childCount: searchResults.length,
                               ),
-                        ],
+                            )
+                          // 🍽️ RESTORAN: List layout for search results
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) => _buildLieferandoProductCard(
+                                  searchResults[index],
+                                  ref.watch(cartProvider),
+                                  isDark: isDark,
+                                  accent: accent,
+                                  cardBg: cardBg,
+                                  textPrimary: textPrimary,
+                                  textSecondary: textSecondary,
+                                ),
+                                childCount: searchResults.length,
+                              ),
+                            ),
+                ),
+              ] else ...[
+                // Category Grouped List/Grid
+                ..._effectiveCategories
+                    .where((c) => c['name'] != 'marketplace.category_all'.tr())
+                    .expand((cat) {
+                  final catName = cat['name'] as String;
+                  final catId = cat['id'] as String?;
+                  final isFallbackAll =
+                      catName == 'marketplace.all_products'.tr();
+                  final catProducts = isFallbackAll
+                      ? products
+                      : products
+                          .where((p) =>
+                              p.category == catName ||
+                              (catId != null && p.category == catId))
+                          .toList();
+
+                  debugPrint(
+                      '🟢 [LOKMA] Category Filter Check -> UI Category Name: "$catName" | UI Category ID: "$catId" -> Has ${catProducts.length} products. Is Fallback All? $isFallbackAll.');
+                  if (catProducts.isEmpty && products.isNotEmpty) {
+                    debugPrint(
+                        '🔴 [LOKMA] WARNING: UI Category "$catName" (ID: $catId) yielded 0 products! Here are the first 3 actual product categories from DB: ${products.take(3).map((e) => e.category).toList()}');
+                  }
+
+                  if (catProducts.isEmpty) return <Widget>[];
+
+                  return <Widget>[
+                    SliverToBoxAdapter(
+                      child: Container(
+                        key: _categoryKeys.putIfAbsent(
+                            catName, () => GlobalKey()),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Category Header with cart count badge
+                            Builder(builder: (context) {
+                              final catCartCount = ref
+                                  .watch(cartProvider)
+                                  .items
+                                  .where((ci) => ci.product.category == catName)
+                                  .fold<int>(0,
+                                      (sum, ci) => sum + ci.quantity.toInt());
+                              return Container(
+                                width: double.infinity,
+                                color: isDark
+                                    ? const Color(0xFF2C2C2C).withOpacity(0.6)
+                                    : const Color(0xFFF2EEE9),
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _formatCategoryKey(catName),
+                                        style: TextStyle(
+                                          color: isDark ? accent : textPrimary,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    if (catCartCount > 0)
+                                      Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black87,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '$catCartCount',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark
+                                                ? Colors.black
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            }),
+                            // Products: Grid for market, List for restoran
+                            _isMarketType
+                                // 🛒 MARKET: 2-column grid
+                                ? Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    child: GridView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      shrinkWrap: true,
+                                      padding: EdgeInsets.zero,
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        childAspectRatio: 0.52,
+                                        crossAxisSpacing: 10,
+                                        mainAxisSpacing: 10,
+                                      ),
+                                      itemCount: catProducts.length,
+                                      itemBuilder: (context, index) =>
+                                          _buildMarketGridCard(
+                                        catProducts[index],
+                                        ref.watch(cartProvider),
+                                        isDark: isDark,
+                                        accent: accent,
+                                        cardBg: cardBg,
+                                        textPrimary: textPrimary,
+                                        textSecondary: textSecondary,
+                                      ),
+                                    ),
+                                  )
+                                // 🍽️ RESTORAN: Vertical list
+                                : ListView.builder(
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    shrinkWrap: true,
+                                    padding: EdgeInsets.zero,
+                                    itemCount: catProducts.length,
+                                    itemBuilder: (context, index) =>
+                                        _buildLieferandoProductCard(
+                                      catProducts[index],
+                                      ref.watch(cartProvider),
+                                      isDark: isDark,
+                                      accent: accent,
+                                      cardBg: cardBg,
+                                      textPrimary: textPrimary,
+                                      textSecondary: textSecondary,
+                                    ),
+                                  ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ];
-              }),
-            ],
+                  ];
+                }),
+              ],
 
-            // Impressum at bottom of menu
-            SliverToBoxAdapter(
-              child: Builder(
-                builder: (context) {
-                  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-                  final textColor = isDarkMode ? Colors.white : Colors.black87;
-                  final subtitleColor = isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
-                  final butcherData = _butcherDoc?.data() as Map<String, dynamic>?;
-                  
-                  if (butcherData == null) return const SizedBox.shrink();
-                  
-                  return Container(
-                    margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF5F0E8),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Impressum',
-                          style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 12),
-                        _buildImpressumSection(butcherData, textColor, subtitleColor),
-                      ],
-                    ),
-                  );
-                },
+              // Impressum at bottom of menu
+              SliverToBoxAdapter(
+                child: Builder(
+                  builder: (context) {
+                    final isDarkMode =
+                        Theme.of(context).brightness == Brightness.dark;
+                    final textColor =
+                        isDarkMode ? Colors.white : Colors.black87;
+                    final subtitleColor =
+                        isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
+                    final butcherData =
+                        _butcherDoc?.data() as Map<String, dynamic>?;
+
+                    if (butcherData == null) return const SizedBox.shrink();
+
+                    return Container(
+                      margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? const Color(0xFF1A1A1A)
+                            : const Color(0xFFF5F0E8),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Impressum',
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 12),
+                          _buildImpressumSection(
+                              butcherData, textColor, subtitleColor),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
 
-            // Bottom Spacer
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              // Bottom Spacer
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           );
         },
@@ -3833,240 +4892,275 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
-
   Widget _buildCartBar() {
-     final cart = ref.watch(cartProvider);
-     
-     if (cart.isEmpty) {
-       // Reset min order state when cart is empty
-       if (_minOrderReached) {
-         _minOrderReached = false;
-         _showMinOrderSuccess = false;
-         _minOrderSuccessTimer?.cancel();
-       }
-       return const SizedBox.shrink();
-     }
-     
-     final isDark = Theme.of(context).brightness == Brightness.dark;
-     final accent = _getAccent(context);
-     final currency = CurrencyUtils.getCurrencySymbol();
+    final cart = ref.watch(cartProvider);
 
-     // Min order value from business data
-     final butcherData = _butcherDoc?.data() as Map<String, dynamic>?;
-     final minOrder = (butcherData?['minDeliveryOrder'] as num?)?.toDouble() ?? (butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 0.0;
-     final cartTotal = cart.totalAmount;
-     final remaining = minOrder - cartTotal;
-     final isDeliveryMode = _deliveryModeIndex == 0 && !_isMasaMode;
-     final itemCount = cart.items.fold<int>(0, (sum, item) => sum + (item.quantity is int ? item.quantity.toInt() : item.quantity.round()));
+    if (cart.isEmpty) {
+      // Reset min order state when cart is empty
+      if (_minOrderReached) {
+        _minOrderReached = false;
+        _showMinOrderSuccess = false;
+        _minOrderSuccessTimer?.cancel();
+      }
+      return const SizedBox.shrink();
+    }
 
-     // Track min order reached transition
-     if (minOrder > 0 && isDeliveryMode) {
-       if (remaining <= 0 && !_minOrderReached) {
-         _minOrderReached = true;
-         _showMinOrderSuccess = true;
-         HapticFeedback.mediumImpact();
-         _minOrderSuccessTimer?.cancel();
-         _minOrderSuccessTimer = Timer(const Duration(seconds: 2), () {
-           if (mounted) setState(() => _showMinOrderSuccess = false);
-         });
-       } else if (remaining > 0 && _minOrderReached) {
-         _minOrderReached = false;
-         _showMinOrderSuccess = false;
-         _minOrderSuccessTimer?.cancel();
-       }
-     }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = _getAccent(context);
+    final currency = CurrencyUtils.getCurrencySymbol();
 
-     // Should we show the banner?
-     final showBanner = minOrder > 0 && isDeliveryMode && (remaining > 0 || _showMinOrderSuccess);
-     final isSuccess = remaining <= 0 && _showMinOrderSuccess;
+    // Min order value from business data
+    final butcherData = _butcherDoc?.data() as Map<String, dynamic>?;
+    final minOrder = (butcherData?['minDeliveryOrder'] as num?)?.toDouble() ??
+        (butcherData?['minOrderAmount'] as num?)?.toDouble() ??
+        0.0;
+    final cartTotal = cart.totalAmount;
+    final remaining = minOrder - cartTotal;
+    final isDeliveryMode = _deliveryModeIndex == 0 && !_isMasaMode;
+    final itemCount = cart.items.fold<int>(
+        0,
+        (sum, item) =>
+            sum +
+            (item.quantity is int
+                ? item.quantity.toInt()
+                : item.quantity.round()));
 
-     // Wallet-card stacked design
-     final cartButton = Material(
-       color: accent,
-       borderRadius: BorderRadius.circular(28),
-       elevation: 4,
-       shadowColor: accent.withOpacity(0.4),
-       child: InkWell(
-         borderRadius: BorderRadius.circular(28),
-         onTap: () {
-           HapticFeedback.selectionClick();
-           Navigator.of(context).push(
-             MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber, isReservationIntent: widget.isReservationIntent, reservationTabId: widget.reservationTabId)),
-           );
-         },
-         child: Padding(
-           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-           child: Row(
-             children: [
-               // Cart icon with badge
-               Stack(
-                 clipBehavior: Clip.none,
-                 children: [
-                   const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 24),
-                   Positioned(
-                     top: -6,
-                     right: -8,
-                     child: Container(
-                       padding: const EdgeInsets.all(4),
-                       decoration: const BoxDecoration(
-                         color: Color(0xFF1A1A1A),
-                         shape: BoxShape.circle,
-                       ),
-                       child: Text(
-                         '$itemCount',
-                         style: const TextStyle(
-                           color: Colors.white,
-                           fontSize: 12,
-                           fontWeight: FontWeight.w700,
-                         ),
-                       ),
-                     ),
-                   ),
-                 ],
-               ),
-               const SizedBox(width: 14),
-               // Center text
-               Expanded(
-                 child: Text(
-                   _isMasaMode ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(),
-                   style: const TextStyle(
-                     color: Colors.white,
-                     fontSize: 16,
-                     fontWeight: FontWeight.w600,
-                   ),
-                 ),
-               ),
-               // Price on right
-               Text(
-                 '${cartTotal.toStringAsFixed(2)} $currency',
-                 style: const TextStyle(
-                   color: Colors.white,
-                   fontSize: 16,
-                   fontWeight: FontWeight.w600,
-                 ),
-               ),
-             ],
-           ),
-         ),
-       ),
-     );
+    // Track min order reached transition
+    if (minOrder > 0 && isDeliveryMode) {
+      if (remaining <= 0 && !_minOrderReached) {
+        _minOrderReached = true;
+        _showMinOrderSuccess = true;
+        HapticFeedback.mediumImpact();
+        _minOrderSuccessTimer?.cancel();
+        _minOrderSuccessTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _showMinOrderSuccess = false);
+        });
+      } else if (remaining > 0 && _minOrderReached) {
+        _minOrderReached = false;
+        _showMinOrderSuccess = false;
+        _minOrderSuccessTimer?.cancel();
+      }
+    }
 
-     if (!showBanner) {
-       return Container(
-         margin: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
-         child: cartButton,
-       );
-     }
+    // Should we show the banner?
+    final showBanner = minOrder > 0 &&
+        isDeliveryMode &&
+        (remaining > 0 || _showMinOrderSuccess);
+    final isSuccess = remaining <= 0 && _showMinOrderSuccess;
 
-     // Wallet-style: pocket illusion 
-     // Layer 1 (Back Wall): Holds the text, turns green on success, sits at top: 0
-     final infoCardColor = isSuccess
-          ? (isDark ? const Color(0xFF243F24) : const Color(0xFFE8F5E9)) // Lieferando style dark green / light green bg
-          : (isDark ? const Color(0xFF5A5652) : const Color(0xFFE2E2E2)); // Lieferando style neutral grey bg
-     final infoTextColor = isSuccess
-          ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32)) // Lieferando style green text
-          : (isDark ? Colors.white : const Color(0xFF1A1A1A));
-     final infoIconColor = infoTextColor;
-     
-     // Layer 2 (Front Lip): Empty, thinner, sits in front
-     final shadowStripColor = Theme.of(context).scaffoldBackgroundColor;
+    // Wallet-card stacked design
+    final cartButton = Material(
+      color: accent,
+      borderRadius: BorderRadius.circular(28),
+      elevation: 4,
+      shadowColor: accent.withOpacity(0.4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (context) => CartScreen(
+                    initialPickUp: _deliveryModeIndex == 1,
+                    initialDineIn: _isMasaMode,
+                    initialTableNumber: widget.initialTableNumber,
+                    isReservationIntent: widget.isReservationIntent,
+                    reservationTabId: widget.reservationTabId)),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              // Cart icon with badge
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.shopping_bag_rounded,
+                      color: Colors.white, size: 24),
+                  Positioned(
+                    top: -6,
+                    right: -8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1A1A1A),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$itemCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 14),
+              // Center text
+              Expanded(
+                child: Text(
+                  _isMasaMode ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              // Price on right
+              Text(
+                '${cartTotal.toStringAsFixed(2)} $currency',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
 
-     // Heights based on user pocket illusion
-     final bottomPadding = MediaQuery.of(context).padding.bottom;
-     final cartButtonHeight = 54.0; 
-     final textRowHeight = 30.0; // Decreased roughly 6-10px
-     final frontLipHeight = 10.0; // Decreased by 14px total
+    if (!showBanner) {
+      return Container(
+        margin: EdgeInsets.fromLTRB(
+            16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
+        child: cartButton,
+      );
+    }
 
-     return Row(
-       mainAxisAlignment: MainAxisAlignment.center,
-       crossAxisAlignment: CrossAxisAlignment.end,
-       children: [
-         Flexible(
-           child: ConstrainedBox(
-             constraints: const BoxConstraints(maxWidth: 600),
-             child: Container(
-               // Edge-to-edge! Only top corners will be rounded by the decorations inside.
-               margin: const EdgeInsets.only(top: 0),
-               height: cartButtonHeight + textRowHeight + frontLipHeight + bottomPadding + 12, // Adjusted padding
-               child: Stack(
-                 alignment: Alignment.bottomCenter,
-                 clipBehavior: Clip.none,
-                 children: [
-                   // Layer 1 (Back Wall): Dark wallet card holding the text
-                   Positioned(
-                     top: 0,
-                     bottom: 0,
-                     left: 0,
-                     right: 0,
-                     child: Container(
-                       padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
-                       decoration: BoxDecoration(
-                         color: infoCardColor,
-                         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                       ),
-                       alignment: Alignment.topCenter,
-                       child: Row(
-                         mainAxisAlignment: MainAxisAlignment.center,
-                         children: [
-                           Icon(
-                             isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
-                             size: 16,
-                             color: infoIconColor,
-                           ),
-                           const SizedBox(width: 6),
-                           Flexible(
-                             child: Text(
-                               isSuccess
-                                   ? 'marketplace.min_order_success'.tr()
-                                   : 'marketplace.min_order_add_text'.tr(namedArgs: {
-                                        'amount': remaining.toStringAsFixed(2),
-                                        'currency': currency,
-                                        'minOrder': minOrder.toStringAsFixed(0),
-                                      }),
-                               style: TextStyle(
-                                 fontSize: 13,
-                                 fontWeight: FontWeight.w600,
-                                 color: infoTextColor,
-                               ),
-                               textAlign: TextAlign.center,
-                               maxLines: 1,
-                               overflow: TextOverflow.ellipsis,
-                             ),
-                           ),
-                         ],
-                       ),
-                     ),
-                   ),
-                   // Layer 2 (Front Lip): Empty, thinner light grey card
-                   Positioned(
-                     top: textRowHeight, // Lets the text peek out
-                     bottom: 0,
-                     left: 0,
-                     right: 0,
-                     child: Container(
-                       decoration: BoxDecoration(
-                         color: shadowStripColor,
-                         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                       ),
-                     ),
-                   ),
-                   // Layer 3 (Front): Cart button floating inside the Front Lip
-                   Positioned(
-                     bottom: bottomPadding + 10, // Floating above the bottom edge safe area
-                     left: 16, 
-                     right: 16,
-                     child: cartButton,
-                   ),
-                 ],
-               ),
-             ),
-           ),
-         ),
-       ],
-     );
-   }
+    // Wallet-style: pocket illusion
+    // Layer 1 (Back Wall): Holds the text, turns green on success, sits at top: 0
+    final infoCardColor = isSuccess
+        ? (isDark
+            ? const Color(0xFF243F24)
+            : const Color(
+                0xFFE8F5E9)) // Lieferando style dark green / light green bg
+        : (isDark
+            ? const Color(0xFF5A5652)
+            : const Color(0xFFE2E2E2)); // Lieferando style neutral grey bg
+    final infoTextColor = isSuccess
+        ? (isDark
+            ? const Color(0xFF81C784)
+            : const Color(0xFF2E7D32)) // Lieferando style green text
+        : (isDark ? Colors.white : const Color(0xFF1A1A1A));
+    final infoIconColor = infoTextColor;
 
-   // Instagram-style animated heart overlay for favorite toggle
+    // Layer 2 (Front Lip): Empty, thinner, sits in front
+    final shadowStripColor = Theme.of(context).scaffoldBackgroundColor;
+
+    // Heights based on user pocket illusion
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final cartButtonHeight = 54.0;
+    final textRowHeight = 30.0; // Decreased roughly 6-10px
+    final frontLipHeight = 10.0; // Decreased by 14px total
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Flexible(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Container(
+              // Edge-to-edge! Only top corners will be rounded by the decorations inside.
+              margin: const EdgeInsets.only(top: 0),
+              height: cartButtonHeight +
+                  textRowHeight +
+                  frontLipHeight +
+                  bottomPadding +
+                  12, // Adjusted padding
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                clipBehavior: Clip.none,
+                children: [
+                  // Layer 1 (Back Wall): Dark wallet card holding the text
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.only(top: 8, left: 16, right: 16),
+                      decoration: BoxDecoration(
+                        color: infoCardColor,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24)),
+                      ),
+                      alignment: Alignment.topCenter,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isSuccess
+                                ? Icons.check_circle_outline
+                                : Icons.pedal_bike,
+                            size: 16,
+                            color: infoIconColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              isSuccess
+                                  ? 'marketplace.min_order_success'.tr()
+                                  : 'marketplace.min_order_add_text'
+                                      .tr(namedArgs: {
+                                      'amount': remaining.toStringAsFixed(2),
+                                      'currency': currency,
+                                      'minOrder': minOrder.toStringAsFixed(0),
+                                    }),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: infoTextColor,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Layer 2 (Front Lip): Empty, thinner light grey card
+                  Positioned(
+                    top: textRowHeight, // Lets the text peek out
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: shadowStripColor,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24)),
+                      ),
+                    ),
+                  ),
+                  // Layer 3 (Front): Cart button floating inside the Front Lip
+                  Positioned(
+                    bottom: bottomPadding +
+                        10, // Floating above the bottom edge safe area
+                    left: 16,
+                    right: 16,
+                    child: cartButton,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Instagram-style animated heart overlay for favorite toggle
   void _showFavoriteHeartOverlay(BuildContext ctx, bool isNowFavorite) {
     late OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
@@ -4081,7 +5175,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Vor Ort kapalı bottom sheet — ön sipariş seçeneği olmadan, açılış saati + güzel mesaj
   void _showMasaClosedSheet(Map<String, dynamic> data) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final businessName = data['companyName'] ?? data['businessName'] ?? data['name'] ?? '';
+    final businessName =
+        data['companyName'] ?? data['businessName'] ?? data['name'] ?? '';
 
     // Compute next opening time from openingHours
     String nextOpenText = '';
@@ -4090,18 +5185,33 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       final now = DateTime.now();
       final nextOpen = helper.getNextOpenDateTime(now);
       if (nextOpen != null) {
-        final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
-        final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+        final timeStr =
+            '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+        final isToday = nextOpen.day == now.day &&
+            nextOpen.month == now.month &&
+            nextOpen.year == now.year;
         final tomorrow = now.add(const Duration(days: 1));
-        final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+        final isTomorrow = nextOpen.day == tomorrow.day &&
+            nextOpen.month == tomorrow.month &&
+            nextOpen.year == tomorrow.year;
         if (isToday) {
           nextOpenText = timeStr;
         } else if (isTomorrow) {
-          nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
+          nextOpenText =
+              tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
         } else {
-          final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+          final dayKeys = [
+            'day_monday',
+            'day_tuesday',
+            'day_wednesday',
+            'day_thursday',
+            'day_friday',
+            'day_saturday',
+            'day_sunday'
+          ];
           final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
-          nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+          nextOpenText = tr('marketplace.opens_on_day',
+              namedArgs: {'day': dayName, 'time': timeStr});
         }
       }
     } catch (_) {}
@@ -4125,7 +5235,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               children: [
                 // Drag handle
                 Container(
-                  width: 40, height: 4,
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[600] : Colors.grey[300],
                     borderRadius: BorderRadius.circular(2),
@@ -4134,9 +5245,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 const SizedBox(height: 28),
                 // Icon
                 Container(
-                  width: 72, height: 72,
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : const Color(0xFF1C1C1E)).withOpacity(0.08),
+                    color: (isDark ? Colors.white : const Color(0xFF1C1C1E))
+                        .withOpacity(0.08),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -4161,7 +5274,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 const SizedBox(height: 8),
                 // "Currently closed" label
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -4180,12 +5294,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 if (nextOpenText.isNotEmpty) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF7F7F7),
+                      color: isDark
+                          ? const Color(0xFF2A2A2C)
+                          : const Color(0xFFF7F7F7),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? Colors.white12 : Colors.black.withOpacity(0.06),
+                        color: isDark
+                            ? Colors.white12
+                            : Colors.black.withOpacity(0.06),
                       ),
                     ),
                     child: Row(
@@ -4198,13 +5317,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            tr('marketplace.opens_today', namedArgs: {'time': nextOpenText}).contains(nextOpenText)
-                                ? tr('marketplace.opens_today', namedArgs: {'time': nextOpenText})
+                            tr('marketplace.opens_today',
+                                        namedArgs: {'time': nextOpenText})
+                                    .contains(nextOpenText)
+                                ? tr('marketplace.opens_today',
+                                    namedArgs: {'time': nextOpenText})
                                 : nextOpenText,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1C1C1E),
                             ),
                           ),
                         ),
@@ -4213,7 +5337,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    tr('marketplace.closed_masa_welcome_back', namedArgs: {'time': nextOpenText}),
+                    tr('marketplace.closed_masa_welcome_back',
+                        namedArgs: {'time': nextOpenText}),
                     style: TextStyle(
                       fontSize: 14,
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -4230,8 +5355,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   child: TextButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: TextButton.styleFrom(
-                      backgroundColor: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                      backgroundColor: isDark
+                          ? const Color(0xFF2A2A2C)
+                          : const Color(0xFFF0F0F0),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26)),
                     ),
                     child: Text(
                       tr('common.close'),
@@ -4253,7 +5381,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   // Masa Pre-Order Prompt - shown on first "+" tap in Masa mode
   void _showMasaPreOrderPrompt(ButcherProduct product) {
-
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -4268,7 +5395,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
 
     showModalBottomSheet(
-
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -4296,7 +5422,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Icon
                 Container(
                   width: 72,
@@ -4312,7 +5438,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Title
                 Text(
                   'masa.preorder_title'.tr(),
@@ -4324,7 +5450,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Description
                 Text(
                   'masa.preorder_desc'.tr(),
@@ -4336,7 +5462,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 28),
-                
+
                 // Button 1: Pre-order
                 GestureDetector(
                   onTap: () {
@@ -4351,10 +5477,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       _showProductBottomSheet(product);
                     } else {
                       final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                      final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
+                      final butcherName = data?['companyName'] ??
+                          data?['name'] ??
+                          'common.butcher'.tr();
                       _quickAddToCart(
                         product,
-                        product.unitType.toLowerCase() == 'kg' ? product.minQuantity : 1,
+                        product.unitType.toLowerCase() == 'kg'
+                            ? product.minQuantity
+                            : 1,
                         widget.businessId,
                         butcherName,
                         onSuccess: () => setState(() {}),
@@ -4372,7 +5502,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20),
+                        const Icon(Icons.shopping_bag_outlined,
+                            color: Colors.white, size: 20),
                         const SizedBox(width: 8),
                         Text(
                           'masa.preorder_yes'.tr(),
@@ -4387,7 +5518,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Button 2: Just browse
                 GestureDetector(
                   onTap: () {
@@ -4402,7 +5533,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     width: double.infinity,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
+                      color: isDark
+                          ? const Color(0xFF2A2A2A)
+                          : const Color(0xFFF5F5F5),
                       borderRadius: BorderRadius.circular(26),
                       border: Border.all(
                         color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
@@ -4413,8 +5546,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.menu_book_rounded, 
-                          color: isDark ? Colors.grey[400] : Colors.grey[700], size: 20),
+                        Icon(Icons.menu_book_rounded,
+                            color: isDark ? Colors.grey[400] : Colors.grey[700],
+                            size: 20),
                         const SizedBox(width: 8),
                         Text(
                           'masa.preorder_no'.tr(),
@@ -4439,7 +5573,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // LIEFERANDO STYLE: Unified Product Bottom Sheet
   void _showProductBottomSheet(ButcherProduct product) {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
-    final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
+    final butcherName =
+        data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
 
     // 0. Active Group Order conflict check
     if (CartWarningUtils.hasActiveGroupOrder(ref)) {
@@ -4464,11 +5599,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
-
-
   // LIEFERANDO STYLE: Horizontal Product Card (List Item)
   Widget _buildLieferandoProductCard(
-    ButcherProduct product, 
+    ButcherProduct product,
     CartState cart, {
     required bool isDark,
     required Color accent,
@@ -4478,11 +5611,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }) {
     final isByWeight = product.unitType == 'kg';
     // Find all cart items for this product (may be multiple with different options)
-    final productCartItems = cart.items.where((item) => item.product.sku == product.sku).toList();
+    final productCartItems =
+        cart.items.where((item) => item.product.sku == product.sku).toList();
     final inCart = productCartItems.isNotEmpty;
-    final totalQtyInCart = productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
-    
-    final isAvailable = (product.inStock || product.allowBackorder) && !product.outOfStock;
+    final totalQtyInCart =
+        productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
+
+    final isAvailable =
+        (product.inStock || product.allowBackorder) && !product.outOfStock;
     final hasImage = product.imageUrl?.isNotEmpty == true;
 
     return Column(
@@ -4499,19 +5635,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       SnackBar(
                         content: Row(
                           children: [
-                            Icon(Icons.remove_circle_outline, color: Colors.white, size: 18),
+                            Icon(Icons.remove_circle_outline,
+                                color: Colors.white, size: 18),
                             const SizedBox(width: 10),
                             Text(
-                              product.outOfStock ? 'marketplace.product_out_of_stock_desc'.tr() : 'marketplace.product_not_available_desc'.tr(),
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                              product.outOfStock
+                                  ? 'marketplace.product_out_of_stock_desc'.tr()
+                                  : 'marketplace.product_not_available_desc'
+                                      .tr(),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                         duration: const Duration(seconds: 2),
                         behavior: SnackBarBehavior.floating,
                         margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[800],
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        backgroundColor:
+                            isDark ? const Color(0xFF2C2C2E) : Colors.grey[800],
                       ),
                     );
                   },
@@ -4519,13 +5663,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               HapticFeedback.heavyImpact();
               final favs = ref.read(productFavoritesProvider);
               final wasFav = favs.contains(product.sku);
-              ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
-                product.sku,
-                businessId: widget.businessId,
-                productName: product.name,
-                imageUrl: product.imageUrl ?? '',
-                price: product.effectiveAppPrice,
-              );
+              ref
+                  .read(productFavoritesDetailedProvider.notifier)
+                  .toggleFavorite(
+                    product.sku,
+                    businessId: widget.businessId,
+                    productName: product.name,
+                    imageUrl: product.imageUrl ?? '',
+                    price: product.effectiveAppPrice,
+                  );
               _showFavoriteHeartOverlay(context, !wasFav);
             },
             child: Container(
@@ -4547,7 +5693,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               child: Text(
                                 product.name,
                                 style: TextStyle(
-                                  color: isAvailable ? textPrimary : textSecondary,
+                                  color:
+                                      isAvailable ? textPrimary : textSecondary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   height: 1.2,
@@ -4556,7 +5703,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (ref.watch(productFavoritesProvider).contains(product.sku)) ...[
+                            if (ref
+                                .watch(productFavoritesProvider)
+                                .contains(product.sku)) ...[
                               const SizedBox(width: 4),
                               Icon(
                                 Icons.favorite_rounded,
@@ -4570,17 +5719,24 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         if (!isAvailable) ...[
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: product.outOfStock
                                   ? Colors.orange.withOpacity(0.15)
-                                  : (isDark ? Colors.white10 : Colors.grey[200]!),
+                                  : (isDark
+                                      ? Colors.white10
+                                      : Colors.grey[200]!),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              product.outOfStock ? 'marketplace.out_of_stock'.tr() : 'marketplace.product_not_available'.tr(),
+                              product.outOfStock
+                                  ? 'marketplace.out_of_stock'.tr()
+                                  : 'marketplace.product_not_available'.tr(),
                               style: TextStyle(
-                                color: product.outOfStock ? Colors.orange : textSecondary,
+                                color: product.outOfStock
+                                    ? Colors.orange
+                                    : textSecondary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -4589,7 +5745,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ],
                         const SizedBox(height: 6),
                         // Description (Ingredients)
-                         if (product.description.isNotEmpty)
+                        if (product.description.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Text(
@@ -4614,99 +5770,123 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           ),
                         ),
 
-                        
                         // Selected extras inline
-                        if (isAvailable && inCart && productCartItems.any((ci) => ci.selectedOptions.isNotEmpty))
-                          ...productCartItems.where((ci) => ci.selectedOptions.isNotEmpty).map((ci) =>
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                    final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (ctx) => ProductCustomizationSheet(
-                                        product: product,
-                                        businessId: widget.businessId,
-                                        businessName: butcherName,
-                                        existingItem: ci,
-                                      ),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFF5F0E8),
+                        if (isAvailable &&
+                            inCart &&
+                            productCartItems
+                                .any((ci) => ci.selectedOptions.isNotEmpty))
+                          ...productCartItems
+                              .where((ci) => ci.selectedOptions.isNotEmpty)
+                              .map(
+                                (ci) => Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        final data = _butcherDoc?.data()
+                                            as Map<String, dynamic>?;
+                                        final butcherName =
+                                            data?['companyName'] ??
+                                                data?['name'] ??
+                                                'common.butcher'.tr();
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (ctx) =>
+                                              ProductCustomizationSheet(
+                                            product: product,
+                                            businessId: widget.businessId,
+                                            businessName: butcherName,
+                                            existingItem: ci,
+                                          ),
+                                        );
+                                      },
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
-                                        width: 0.5,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.edit_outlined, size: 12, color: textSecondary.withOpacity(0.5)),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            ci.selectedOptions.map((o) => o.optionName).join(', '),
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w500,
-                                              color: textSecondary,
-                                              height: 1.2,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.06)
+                                              : const Color(0xFFF5F0E8),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: isDark
+                                                ? Colors.white.withOpacity(0.08)
+                                                : Colors.grey[200]!,
+                                            width: 0.5,
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          '${CurrencyUtils.getCurrencySymbol()}${ci.unitPrice.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: textPrimary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        if (ci.quantity > 0) ...[
-                                          const SizedBox(width: 4),
-                                          Container(
-                                            width: 22,
-                                            height: 22,
-                                            decoration: BoxDecoration(
-                                              color: isDark ? Colors.white : Colors.black87,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              '${ci.quantity.toInt()}',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: Theme.of(context).colorScheme.surface,
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit_outlined,
+                                                size: 12,
+                                                color: textSecondary
+                                                    .withOpacity(0.5)),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                ci.selectedOptions
+                                                    .map((o) => o.optionName)
+                                                    .join(', '),
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: textSecondary,
+                                                  height: 1.2,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ],
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${CurrencyUtils.getCurrencySymbol()}${ci.unitPrice.toStringAsFixed(2)}',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: textPrimary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            if (ci.quantity > 0) ...[
+                                              const SizedBox(width: 4),
+                                              Container(
+                                                width: 22,
+                                                height: 22,
+                                                decoration: BoxDecoration(
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : Colors.black87,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  '${ci.quantity.toInt()}',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .surface,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Image & Add Button (Right)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -4722,12 +5902,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               child: Container(
                                 width: 100,
                                 height: 100,
-                                color: isDark ? Colors.white10 : Colors.grey[100],
-                                child: buildKasapProductMedia(product.imageUrl!, BoxFit.cover, isDark),
+                                color:
+                                    isDark ? Colors.white10 : Colors.grey[100],
+                                child: buildKasapProductMedia(
+                                    product.imageUrl!, BoxFit.cover, isDark),
                               ),
                             ),
                             // 🆕 Brand Triangle Badge (Top Left)
-                            if (product.certifications.contains('cert_tuna') || product.certifications.contains('cert_akdeniz'))
+                            if (product.certifications.contains('cert_tuna') ||
+                                product.certifications.contains('cert_akdeniz'))
                               Positioned(
                                 top: 0,
                                 left: 0,
@@ -4736,13 +5919,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   child: Container(
                                     width: 44,
                                     height: 44,
-                                    color: const Color(0xFFEA184A), // Lokma/Tuna Red
+                                    color: const Color(
+                                        0xFFEA184A), // Lokma/Tuna Red
                                     alignment: Alignment.topLeft,
-                                    padding: const EdgeInsets.only(left: 3, top: 3),
+                                    padding:
+                                        const EdgeInsets.only(left: 3, top: 3),
                                     child: Transform.rotate(
-                                      angle: -0.15, // slight rotation for visual pop in the triangle
+                                      angle:
+                                          -0.15, // slight rotation for visual pop in the triangle
                                       child: Image.asset(
-                                        product.certifications.contains('cert_tuna')
+                                        product.certifications
+                                                .contains('cert_tuna')
                                             ? 'assets/images/tuna_logo_pill.png'
                                             : 'assets/images/akdeniz_toros_logo_pill.png',
                                         width: 22,
@@ -4761,54 +5948,64 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 child: GestureDetector(
                                   onTap: () => _handleAddProduct(product),
                                   child: inCart && product.optionGroups.isEmpty
-                                    ? Container(
-                                        width: 36,
-                                        height: 36,
-                                        decoration: BoxDecoration(
-                                          color: isDark ? Colors.white : Colors.black87,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.15),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
+                                      ? Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.15),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            '${totalQtyInCart.toInt()}',
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? Colors.black
+                                                  : Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
                                             ),
-                                          ],
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '${totalQtyInCart.toInt()}',
-                                          style: TextStyle(
-                                            color: isDark ? Colors.black : Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: isDark
+                                                ? const Color(0xFF2A2A2A)
+                                                : Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: isDark
+                                                  ? Colors.grey[700]!
+                                                  : Colors.grey[300]!,
+                                              width: 1,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
+                                                blurRadius: 6,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Icon(
+                                            Icons.add,
+                                            color: accent,
+                                            size: 20,
                                           ),
                                         ),
-                                      )
-                                    : Container(
-                                        width: 36,
-                                        height: 36,
-                                        decoration: BoxDecoration(
-                                          color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-                                            width: 1,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.1),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Icon(
-                                          Icons.add,
-                                          color: accent,
-                                          size: 20,
-                                        ),
-                                      ),
                                 ),
                               ),
                           ],
@@ -4818,47 +6015,53 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         GestureDetector(
                           onTap: () => _handleAddProduct(product),
                           child: inCart && product.optionGroups.isEmpty
-                            ? Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: isDark ? Colors.white : Colors.black87,
-                                  borderRadius: BorderRadius.circular(22),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  '${totalQtyInCart.toInt()}',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.black : Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                              ? Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
+                                    borderRadius: BorderRadius.circular(22),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '${totalQtyInCart.toInt()}',
+                                    style: TextStyle(
+                                      color:
+                                          isDark ? Colors.black : Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? const Color(0xFF2A2A2A)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(22),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.grey[800]!
+                                          : Colors.grey[300]!,
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      )
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.add,
+                                    color: accent,
+                                    size: 24,
                                   ),
                                 ),
-                              )
-                            : Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                                  borderRadius: BorderRadius.circular(22),
-                                  border: Border.all(
-                                    color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-                                    width: 1,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    )
-                                  ],
-                                ),
-                                child: Icon(
-                                  Icons.add,
-                                  color: accent,
-                                  size: 24,
-                                ),
-                              ),
                         ),
                     ],
                   ),
@@ -4871,7 +6074,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         Divider(
           height: 1,
           thickness: 0.5,
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.2),
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : Colors.grey.withOpacity(0.2),
         ),
       ],
     );
@@ -4888,15 +6093,22 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     required Color textSecondary,
   }) {
     final isByWeight = product.unitType == 'kg';
-    final productCartItems = cart.items.where((item) => item.product.sku == product.sku).toList();
+    final productCartItems =
+        cart.items.where((item) => item.product.sku == product.sku).toList();
     final inCart = productCartItems.isNotEmpty;
-    final totalQtyInCart = productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
-    final isAvailable = (product.inStock || product.allowBackorder) && !product.outOfStock;
+    final totalQtyInCart =
+        productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
+    final isAvailable =
+        (product.inStock || product.allowBackorder) && !product.outOfStock;
     final hasImage = product.imageUrl?.isNotEmpty == true;
 
     // Default quantity step (in native unit: kg for weight items, pieces for count)
-    final stepQty = isByWeight ? (product.stepQuantity > 0 ? product.stepQuantity : 0.5) : 1.0;
-    final defaultQty = isByWeight ? (product.minQuantity > 0 ? product.minQuantity : 0.5) : 1.0;
+    final stepQty = isByWeight
+        ? (product.stepQuantity > 0 ? product.stepQuantity : 0.5)
+        : 1.0;
+    final defaultQty = isByWeight
+        ? (product.minQuantity > 0 ? product.minQuantity : 0.5)
+        : 1.0;
 
     // When NOT in cart: use local _selections as quantity picker
     // When IN cart: display the cart quantity
@@ -4904,8 +6116,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final displayQty = inCart ? totalQtyInCart : selectedQty;
     final unitLabel = isByWeight ? (displayQty >= 1.0 ? 'kg' : 'gr') : '';
     // Convert kg to grams/kg for display
-    final displayQtyText = isByWeight 
-        ? (displayQty >= 1.0 
+    final displayQtyText = isByWeight
+        ? (displayQty >= 1.0
             ? '${displayQty.toStringAsFixed(displayQty == displayQty.roundToDouble() ? 0 : 1)}'
             : '${(displayQty * 1000).toInt()}')
         : '${displayQty.toInt()}';
@@ -4925,19 +6137,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   SnackBar(
                     content: Row(
                       children: [
-                        Icon(Icons.remove_circle_outline, color: Colors.white, size: 18),
+                        Icon(Icons.remove_circle_outline,
+                            color: Colors.white, size: 18),
                         const SizedBox(width: 10),
                         Text(
-                          product.outOfStock ? 'marketplace.product_out_of_stock_desc'.tr() : 'marketplace.product_not_available_desc'.tr(),
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                          product.outOfStock
+                              ? 'marketplace.product_out_of_stock_desc'.tr()
+                              : 'marketplace.product_not_available_desc'.tr(),
+                          style: const TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
                     duration: const Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
                     margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[800],
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    backgroundColor:
+                        isDark ? const Color(0xFF2C2C2E) : Colors.grey[800],
                   ),
                 );
               },
@@ -4946,19 +6164,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           final favs = ref.read(productFavoritesProvider);
           final wasFav = favs.contains(product.sku);
           ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
-            product.sku,
-            businessId: widget.businessId,
-            productName: product.name,
-            imageUrl: product.imageUrl ?? '',
-            price: product.effectiveAppPrice,
-          );
+                product.sku,
+                businessId: widget.businessId,
+                productName: product.name,
+                imageUrl: product.imageUrl ?? '',
+                price: product.effectiveAppPrice,
+              );
           _showFavoriteHeartOverlay(context, !wasFav);
         },
         child: Container(
           decoration: BoxDecoration(
             color: cardBg,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200, width: 0.5),
+            border: Border.all(
+                color: isDark ? Colors.white10 : Colors.grey.shade200,
+                width: 0.5),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4967,19 +6187,24 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               AspectRatio(
                 aspectRatio: 1.15,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(14)),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       hasImage
-                          ? buildKasapProductMedia(product.imageUrl!, BoxFit.cover, isDark)
+                          ? buildKasapProductMedia(
+                              product.imageUrl!, BoxFit.cover, isDark)
                           : Container(
-                              color: isDark ? Colors.grey[900] : Colors.grey[100],
-                              child: Icon(Icons.restaurant_menu, color: textSecondary, size: 40),
+                              color:
+                                  isDark ? Colors.grey[900] : Colors.grey[100],
+                              child: Icon(Icons.restaurant_menu,
+                                  color: textSecondary, size: 40),
                             ),
-                      
+
                       // 🆕 Brand Triangle Badge (Top Left)
-                      if (product.certifications.contains('cert_tuna') || product.certifications.contains('cert_akdeniz'))
+                      if (product.certifications.contains('cert_tuna') ||
+                          product.certifications.contains('cert_akdeniz'))
                         Positioned(
                           top: 0,
                           left: 0,
@@ -4992,7 +6217,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               alignment: Alignment.topLeft,
                               padding: const EdgeInsets.only(left: 3, top: 3),
                               child: Transform.rotate(
-                                angle: -0.15, // slight rotation for visual pop in the triangle
+                                angle:
+                                    -0.15, // slight rotation for visual pop in the triangle
                                 child: Image.asset(
                                   product.certifications.contains('cert_tuna')
                                       ? 'assets/images/tuna_logo_pill.png'
@@ -5012,7 +6238,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           top: 8,
                           right: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: product.outOfStock
                                   ? Colors.orange.withOpacity(0.85)
@@ -5020,8 +6247,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              product.outOfStock ? tr('marketplace.out_of_stock') : tr('marketplace.unavailable'),
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                              product.outOfStock
+                                  ? tr('marketplace.out_of_stock')
+                                  : tr('marketplace.unavailable'),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -5032,7 +6264,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           top: 8,
                           left: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
                               color: accent,
                               borderRadius: BorderRadius.circular(8),
@@ -5045,14 +6278,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               ],
                             ),
                             child: Text(
-                              isByWeight 
-                                ? (totalQtyInCart >= 1.0 
-                                    ? '${totalQtyInCart.toStringAsFixed(1)} kg' 
-                                    : '${(totalQtyInCart * 1000).toInt()} g')
-                                : '${totalQtyInCart.toInt()}x',
+                              isByWeight
+                                  ? (totalQtyInCart >= 1.0
+                                      ? '${totalQtyInCart.toStringAsFixed(1)} kg'
+                                      : '${(totalQtyInCart * 1000).toInt()} g')
+                                  : '${totalQtyInCart.toInt()}x',
                               style: const TextStyle(
-                                color: Colors.white, 
-                                fontSize: 11, 
+                                color: Colors.white,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.3,
                               ),
@@ -5088,7 +6321,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (ref.watch(productFavoritesProvider).contains(product.sku)) ...[
+                          if (ref
+                              .watch(productFavoritesProvider)
+                              .contains(product.sku)) ...[
                             const SizedBox(width: 3),
                             Icon(
                               Icons.favorite_rounded,
@@ -5136,15 +6371,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       const Spacer(),
-                      
+
                       // ➕ Quantity & Cart Wrapper
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 6),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF222224) : const Color(0xFFF8F8F8),
+                          color: isDark
+                              ? const Color(0xFF222224)
+                              : const Color(0xFFF8F8F8),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isDark ? Colors.white.withOpacity(0.04) : Colors.grey.shade200,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.04)
+                                : Colors.grey.shade200,
                             width: 1,
                           ),
                         ),
@@ -5162,12 +6402,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   onTap: () {
                                     if (inCart) {
                                       if (productCartItems.isNotEmpty) {
-                                        ref.read(cartProvider.notifier).removeFromCart(productCartItems.first.uniqueKey);
+                                        ref
+                                            .read(cartProvider.notifier)
+                                            .removeFromCart(productCartItems
+                                                .first.uniqueKey);
                                       }
                                     } else {
-                                      final current = _selections[product.sku] ?? defaultQty;
+                                      final current =
+                                          _selections[product.sku] ??
+                                              defaultQty;
                                       if (current > defaultQty) {
-                                        setState(() => _selections[product.sku] = current - stepQty);
+                                        setState(() =>
+                                            _selections[product.sku] =
+                                                current - stepQty);
                                       }
                                     }
                                   },
@@ -5175,10 +6422,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     width: 34,
                                     height: 34,
                                     decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF2A2A2C) : Colors.white,
+                                      color: isDark
+                                          ? const Color(0xFF2A2A2C)
+                                          : Colors.white,
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.15)
+                                            : Colors.grey.shade300,
                                         width: 1,
                                       ),
                                     ),
@@ -5186,7 +6437,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     child: Text(
                                       '—',
                                       style: TextStyle(
-                                        color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withOpacity(0.3),
+                                        color: (inCart ||
+                                                (selectedQty > defaultQty))
+                                            ? textPrimary
+                                            : textSecondary.withOpacity(0.3),
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -5223,35 +6477,51 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                                 // Plus button
                                 GestureDetector(
-                                  onTap: isAvailable ? () {
-                                    if (inCart) {
-                                      if (product.optionGroups.isNotEmpty) {
-                                        _showProductBottomSheet(product);
-                                      } else {
-                                        final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                        final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                                        HapticFeedback.mediumImpact();
-                                        _quickAddToCart(
-                                          product,
-                                          isByWeight ? stepQty : 1,
-                                          widget.businessId,
-                                          butcherName,
-                                          onSuccess: () => setState(() {}),
-                                        );
-                                      }
-                                    } else {
-                                      final current = _selections[product.sku] ?? defaultQty;
-                                      setState(() => _selections[product.sku] = current + stepQty);
-                                    }
-                                  } : null,
+                                  onTap: isAvailable
+                                      ? () {
+                                          if (inCart) {
+                                            if (product
+                                                .optionGroups.isNotEmpty) {
+                                              _showProductBottomSheet(product);
+                                            } else {
+                                              final data = _butcherDoc?.data()
+                                                  as Map<String, dynamic>?;
+                                              final butcherName =
+                                                  data?['companyName'] ??
+                                                      data?['name'] ??
+                                                      'common.butcher'.tr();
+                                              HapticFeedback.mediumImpact();
+                                              _quickAddToCart(
+                                                product,
+                                                isByWeight ? stepQty : 1,
+                                                widget.businessId,
+                                                butcherName,
+                                                onSuccess: () =>
+                                                    setState(() {}),
+                                              );
+                                            }
+                                          } else {
+                                            final current =
+                                                _selections[product.sku] ??
+                                                    defaultQty;
+                                            setState(() =>
+                                                _selections[product.sku] =
+                                                    current + stepQty);
+                                          }
+                                        }
+                                      : null,
                                   child: Container(
                                     width: 34,
                                     height: 34,
                                     decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF2A2A2C) : Colors.white,
+                                      color: isDark
+                                          ? const Color(0xFF2A2A2C)
+                                          : Colors.white,
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.15)
+                                            : Colors.grey.shade300,
                                         width: 1,
                                       ),
                                     ),
@@ -5268,52 +6538,62 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 6),
-                            
+
                             // 🛒 Sepete Ekle / Sepette button — BRAND RED
                             GestureDetector(
-                              onTap: isAvailable ? () {
-                                if (inCart) {
-                                  // Already in cart — go to cart or show sheet
-                                  _showProductBottomSheet(product);
-                                } else {
-                                  // NOT in cart — add selected quantity
-                                  if (product.optionGroups.isNotEmpty) {
-                                    _showProductBottomSheet(product);
-                                  } else {
-                                    final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                    final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                                    final qtyToAdd = _selections[product.sku] ?? defaultQty;
-                                    HapticFeedback.mediumImpact();
-                                    _quickAddToCart(
-                                      product,
-                                      qtyToAdd,
-                                      widget.businessId,
-                                      butcherName,
-                                      onSuccess: () {
-                                        setState(() => _selections.remove(product.sku));
+                              onTap: isAvailable
+                                  ? () {
+                                      if (inCart) {
+                                        // Already in cart — go to cart or show sheet
+                                        _showProductBottomSheet(product);
+                                      } else {
+                                        // NOT in cart — add selected quantity
+                                        if (product.optionGroups.isNotEmpty) {
+                                          _showProductBottomSheet(product);
+                                        } else {
+                                          final data = _butcherDoc?.data()
+                                              as Map<String, dynamic>?;
+                                          final butcherName =
+                                              data?['companyName'] ??
+                                                  data?['name'] ??
+                                                  'common.butcher'.tr();
+                                          final qtyToAdd =
+                                              _selections[product.sku] ??
+                                                  defaultQty;
+                                          HapticFeedback.mediumImpact();
+                                          _quickAddToCart(
+                                              product,
+                                              qtyToAdd,
+                                              widget.businessId,
+                                              butcherName, onSuccess: () {
+                                            setState(() => _selections
+                                                .remove(product.sku));
+                                          });
+                                        }
                                       }
-                                    );
-                                  }
-                                }
-                              } : null,
+                                    }
+                                  : null,
                               child: Container(
                                 width: double.infinity,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                  color: inCart ? Colors.green.shade600 : accent,
+                                  color:
+                                      inCart ? Colors.green.shade600 : accent,
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: (inCart ? Colors.green : accent).withOpacity(0.3),
+                                      color: (inCart ? Colors.green : accent)
+                                          .withOpacity(0.3),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -5322,8 +6602,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           fit: BoxFit.scaleDown,
                                           child: Text(
                                             inCart
-                                              ? 'cart.in_cart_price'.tr(namedArgs: {'price': totalPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()})
-                                              : 'cart.add_to_cart_price'.tr(namedArgs: {'price': previewPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()}),
+                                                ? 'cart.in_cart_price'
+                                                    .tr(namedArgs: {
+                                                    'price': totalPrice
+                                                        .toStringAsFixed(2),
+                                                    'currency': CurrencyUtils
+                                                        .getCurrencySymbol()
+                                                  })
+                                                : 'cart.add_to_cart_price'
+                                                    .tr(namedArgs: {
+                                                    'price': previewPrice
+                                                        .toStringAsFixed(2),
+                                                    'currency': CurrencyUtils
+                                                        .getCurrencySymbol()
+                                                  }),
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 15,
@@ -5352,7 +6644,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       ),
     );
   }
-
 }
 
 // LIEFERANDO STYLE: Sticky Header Delegate for Category Tabs
@@ -5374,15 +6665,16 @@ class _StickyTabDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => maxHeight;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return SizedBox.expand(child: child);
   }
 
   @override
   bool shouldRebuild(_StickyTabDelegate oldDelegate) {
     return maxHeight != oldDelegate.maxHeight ||
-           minHeight != oldDelegate.minHeight ||
-           child != oldDelegate.child;
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
   }
 }
 
@@ -5425,8 +6717,6 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
   // ═══════════════════════════════════════════════════════════════════════════
   // 🪑 MASA (DINE-IN) HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
-
-
 
   @override
   void dispose() {
@@ -5471,19 +6761,19 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     final query = _normalizeTurkish(_localQuery);
     return widget.products.where((p) {
       // Search across ALL language variants of name, description, category
-      final allNames = _allLocalizedValues(p.nameData).isNotEmpty 
-          ? _allLocalizedValues(p.nameData) 
+      final allNames = _allLocalizedValues(p.nameData).isNotEmpty
+          ? _allLocalizedValues(p.nameData)
           : [p.name];
-      final allDescs = _allLocalizedValues(p.descriptionData).isNotEmpty 
-          ? _allLocalizedValues(p.descriptionData) 
+      final allDescs = _allLocalizedValues(p.descriptionData).isNotEmpty
+          ? _allLocalizedValues(p.descriptionData)
           : [p.description];
-      final allCats = _allLocalizedValues(p.categoryData).isNotEmpty 
-          ? _allLocalizedValues(p.categoryData) 
+      final allCats = _allLocalizedValues(p.categoryData).isNotEmpty
+          ? _allLocalizedValues(p.categoryData)
           : [p.category];
 
       return allNames.any((n) => _normalizeTurkish(n).contains(query)) ||
-             allDescs.any((d) => _normalizeTurkish(d).contains(query)) ||
-             allCats.any((c) => _normalizeTurkish(c).contains(query));
+          allDescs.any((d) => _normalizeTurkish(d).contains(query)) ||
+          allCats.any((c) => _normalizeTurkish(c).contains(query));
     }).toList();
   }
 
@@ -5526,7 +6816,9 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF424242) : const Color(0xFFF5F0E8),
+                      color: isDark
+                          ? const Color(0xFF424242)
+                          : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Row(
@@ -5542,7 +6834,8 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             textInputAction: TextInputAction.search,
                             decoration: InputDecoration(
                               hintText: 'marketplace.search_in_menu'.tr(),
-                              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                              hintStyle: TextStyle(
+                                  color: Colors.grey[500], fontSize: 16),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
                               isDense: true,
@@ -5580,7 +6873,9 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
+                      color: isDark
+                          ? const Color(0xFF1E1E1E)
+                          : const Color(0xFFF5F0E8),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.close, color: textPrimary, size: 20),
@@ -5598,20 +6893,27 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
+                            Icon(Icons.search_off,
+                                size: 48, color: Colors.grey[400]),
                             const SizedBox(height: 12),
                             Text(
                               'marketplace.no_results_found'.tr(),
-                              style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                              style: TextStyle(
+                                  color: Colors.grey[500], fontSize: 16),
                             ),
                           ],
                         ),
                       )
                     : ListView.builder(
-                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: groupedProducts.entries.fold<int>(
-                          0, (sum, e) => sum + 1 + e.value.length), // Categories + products
+                            0,
+                            (sum, e) =>
+                                sum +
+                                1 +
+                                e.value.length), // Categories + products
                         itemBuilder: (context, index) {
                           // Build flat list with category headers
                           int currentIndex = 0;
@@ -5619,10 +6921,14 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             // Category header
                             if (index == currentIndex) {
                               return Container(
-                                margin: const EdgeInsets.only(top: 12, bottom: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                margin:
+                                    const EdgeInsets.only(top: 12, bottom: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.white.withOpacity(0.04) : const Color(0xFFF2EEE9),
+                                  color: isDark
+                                      ? Colors.white.withOpacity(0.04)
+                                      : const Color(0xFFF2EEE9),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -5644,11 +6950,11 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                                 final product = entry.value[i];
                                 final isLast = i == entry.value.length - 1;
                                 return _buildProductResultItem(
-                                  product, 
-                                  isDark, 
-                                  textPrimary, 
-                                  textSecondary!, 
-                                  accent, 
+                                  product,
+                                  isDark,
+                                  textPrimary,
+                                  textSecondary!,
+                                  accent,
                                   isLast,
                                 );
                               }
@@ -5665,10 +6971,10 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
   }
 
   Widget _buildProductResultItem(
-    ButcherProduct product, 
-    bool isDark, 
-    Color textPrimary, 
-    Color textSecondary, 
+    ButcherProduct product,
+    bool isDark,
+    Color textPrimary,
+    Color textSecondary,
     Color accent,
     bool isLast,
   ) {
@@ -5676,7 +6982,8 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     final hasImage = product.imageUrl?.isNotEmpty == true;
     final isAvailable = product.inStock || product.allowBackorder;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final dividerColor = isDark ? Colors.white.withOpacity(0.06) : Colors.grey.withOpacity(0.15);
+    final dividerColor =
+        isDark ? Colors.white.withOpacity(0.06) : Colors.grey.withOpacity(0.15);
 
     return Opacity(
       opacity: isAvailable ? 1.0 : 0.5,
@@ -5762,7 +7069,8 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         child: SizedBox(
                           width: 72,
                           height: 72,
-                          child: buildKasapProductMedia(product.imageUrl!, BoxFit.cover, isDark),
+                          child: buildKasapProductMedia(
+                              product.imageUrl!, BoxFit.cover, isDark),
                         ),
                       )
                     else
@@ -5770,7 +7078,9 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                          color: isDark
+                              ? Colors.white.withOpacity(0.05)
+                              : Colors.grey[100],
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -5781,7 +7091,8 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                       ),
 
                     // 🆕 Brand Triangle Badge (Top Left)
-                    if (product.certifications.contains('cert_tuna') || product.certifications.contains('cert_akdeniz'))
+                    if (product.certifications.contains('cert_tuna') ||
+                        product.certifications.contains('cert_akdeniz'))
                       Positioned(
                         top: 0,
                         left: 0,
@@ -5794,7 +7105,8 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             alignment: Alignment.topLeft,
                             padding: const EdgeInsets.only(left: 3, top: 3),
                             child: Transform.rotate(
-                              angle: -0.15, // slight rotation for visual pop in the triangle
+                              angle:
+                                  -0.15, // slight rotation for visual pop in the triangle
                               child: Image.asset(
                                 product.certifications.contains('cert_tuna')
                                     ? 'assets/images/tuna_logo_pill.png'
@@ -5827,7 +7139,8 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.add, color: Colors.white, size: 18),
+                          child: const Icon(Icons.add,
+                              color: Colors.white, size: 18),
                         ),
                       ),
                   ],
@@ -5846,10 +7159,12 @@ class _FavoriteHeartAnimation extends StatefulWidget {
   final bool isAdded;
   final VoidCallback onComplete;
 
-  const _FavoriteHeartAnimation({required this.isAdded, required this.onComplete});
+  const _FavoriteHeartAnimation(
+      {required this.isAdded, required this.onComplete});
 
   @override
-  State<_FavoriteHeartAnimation> createState() => _FavoriteHeartAnimationState();
+  State<_FavoriteHeartAnimation> createState() =>
+      _FavoriteHeartAnimationState();
 }
 
 class _FavoriteHeartAnimationState extends State<_FavoriteHeartAnimation>
@@ -5868,15 +7183,24 @@ class _FavoriteHeartAnimationState extends State<_FavoriteHeartAnimation>
 
     // Scale: 0 -> 1.4 (overshoot bounce) -> 1.0 then hold
     _scaleAnim = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.4).chain(CurveTween(curve: Curves.easeOut)), weight: 35),
-      TweenSequenceItem(tween: Tween(begin: 1.4, end: 1.0).chain(CurveTween(curve: Curves.elasticOut)), weight: 25),
+      TweenSequenceItem(
+          tween: Tween(begin: 0.0, end: 1.4)
+              .chain(CurveTween(curve: Curves.easeOut)),
+          weight: 35),
+      TweenSequenceItem(
+          tween: Tween(begin: 1.4, end: 1.0)
+              .chain(CurveTween(curve: Curves.elasticOut)),
+          weight: 25),
       TweenSequenceItem(tween: ConstantTween(1.0), weight: 40),
     ]).animate(_controller);
 
     // Opacity: fully visible for first 60%, then fade out
     _opacityAnim = TweenSequence<double>([
       TweenSequenceItem(tween: ConstantTween(1.0), weight: 55),
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)), weight: 45),
+      TweenSequenceItem(
+          tween: Tween(begin: 1.0, end: 0.0)
+              .chain(CurveTween(curve: Curves.easeIn)),
+          weight: 45),
     ]).animate(_controller);
 
     _controller.forward().then((_) => widget.onComplete());

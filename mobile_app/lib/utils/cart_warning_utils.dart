@@ -20,13 +20,15 @@ class CartWarningUtils {
     // 1. Is there an active Kermes cart?
     final kermesCart = ref.read(kermesCartProvider);
     if (kermesCart.isNotEmpty) return true;
-    
+
     // 2. Is there an active Kasap/Restoran cart from a DIFFERENT business?
     final normalCart = ref.read(cartProvider);
-    if (normalCart.isNotEmpty && normalCart.butcherId != null && normalCart.butcherId != newBusinessId) {
+    if (normalCart.isNotEmpty &&
+        normalCart.butcherId != null &&
+        normalCart.butcherId != newBusinessId) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -42,23 +44,25 @@ class CartWarningUtils {
     // 1. Is there an active normal Kasap/Restoran cart?
     final normalCart = ref.read(cartProvider);
     if (normalCart.isNotEmpty) return true;
-    
+
     // 2. Is there an active Kermes cart from a DIFFERENT Kermes?
     final kermesCart = ref.read(kermesCartProvider);
-    if (kermesCart.isNotEmpty && kermesCart.eventId != null && kermesCart.eventId != newEventId) {
+    if (kermesCart.isNotEmpty &&
+        kermesCart.eventId != null &&
+        kermesCart.eventId != newEventId) {
       return true;
     }
-    
+
     return false;
   }
 
   /// Check if starting a group order conflicts with existing carts
   static bool checkConflictForGroupOrder(WidgetRef ref) {
-    // Normal sepet dolu mu?
+    if (hasActiveGroupOrder(ref)) return true;
+
     final normalCart = ref.read(cartProvider);
     if (normalCart.isNotEmpty) return true;
 
-    // Kermes sepeti dolu mu?
     final kermesCart = ref.read(kermesCartProvider);
     if (kermesCart.isNotEmpty) return true;
 
@@ -89,7 +93,8 @@ class CartWarningUtils {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 28),
+            const Icon(Icons.warning_amber_rounded,
+                color: Colors.amber, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -137,16 +142,17 @@ class CartWarningUtils {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              
+
               // Clear both carts + group order to guarantee mutual exclusivity
               ref.read(cartProvider.notifier).clearCart();
               ref.read(kermesCartProvider.notifier).clearCart();
               ref.read(groupOrderProvider.notifier).clearOrder();
-              
+
               onConfirmClearAndAdd();
-              
+
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('marketplace.cart_cleared_and_added'.tr(args: [targetBusinessName])),
+                  content: Text('marketplace.cart_cleared_and_added'
+                      .tr(args: [targetBusinessName])),
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   behavior: SnackBarBehavior.floating));
             },
@@ -160,5 +166,112 @@ class CartWarningUtils {
         ],
       ),
     );
+  }
+
+  /// Display a specific warning for when user is in an active group order
+  static void showGroupOrderConflictWarning({
+    required BuildContext context,
+    required WidgetRef ref,
+    required VoidCallback onConfirmLeaveAndAdd,
+  }) {
+    HapticFeedback.heavyImpact();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(dialogContext).brightness == Brightness.dark
+            ? const Color(0xFF1E1E1E)
+            : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.groups_rounded, color: Colors.blue, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Aktif Grup Siparişi',
+                style: TextStyle(
+                  color: Theme.of(dialogContext).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Şu anda aktif bir grup siparişine katılmış durumdasınız. Yeni bir ürün eklerseniz gruptan ayrılacaksınız.',
+              style: TextStyle(
+                  color: Theme.of(dialogContext).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black87,
+                  fontSize: 15),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('İptal',
+                style: const TextStyle(color: Colors.grey, fontSize: 15)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+
+              ref.read(cartProvider.notifier).clearCart();
+              ref.read(kermesCartProvider.notifier).clearCart();
+              ref.read(groupOrderProvider.notifier).clearOrder();
+
+              onConfirmLeaveAndAdd();
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            child: const Text('Gruptan Ayrıl'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper to handle the conflict checking and showing the appropriate warning dialog
+  /// Returns true if a conflict was found (and warning shown), false otherwise.
+  static bool handleCartConflict({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String targetBusinessName,
+    required String targetId,
+    required bool isKermes,
+    required VoidCallback onConfirmClearAndAdd,
+  }) {
+    final hasConflict = isKermes
+        ? checkConflictForKermesCart(ref, targetId)
+        : checkConflictForNormalCart(ref, targetId);
+
+    if (!hasConflict) return false;
+
+    if (hasActiveGroupOrder(ref)) {
+      showGroupOrderConflictWarning(
+        context: context,
+        ref: ref,
+        onConfirmLeaveAndAdd: onConfirmClearAndAdd,
+      );
+    } else {
+      showDifferentCartWarning(
+        context: context,
+        ref: ref,
+        targetBusinessName: targetBusinessName,
+        onConfirmClearAndAdd: onConfirmClearAndAdd,
+      );
+    }
+    return true;
   }
 }

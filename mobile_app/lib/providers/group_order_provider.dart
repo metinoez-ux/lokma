@@ -304,13 +304,19 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       status: GroupOrderStatus.collecting, // Order is no longer fully ready
     );
 
-    // Firestore güncelle
-    await _groupOrdersCollection.doc(order.id).update({
-      'participants': updatedParticipants.map((p) => p.toMap()).toList(),
-      'status': GroupOrderStatus.collecting.name,
-    });
-
+    // Optimistic update
     state = state.copyWith(currentOrder: updatedOrder);
+
+    // Firestore güncelle
+    try {
+      await _groupOrdersCollection.doc(order.id).update({
+        'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+        'status': GroupOrderStatus.collecting.name,
+      });
+    } catch (e) {
+      // Rollback on failure
+      state = state.copyWith(currentOrder: order, error: e.toString());
+    }
   }
 
   /// Katılımcının sepetinden ürün çıkar
@@ -358,13 +364,18 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       status: GroupOrderStatus.collecting, // Order is no longer fully ready
     );
 
-    // Firestore güncelle
-    await _groupOrdersCollection.doc(order.id).update({
-      'participants': updatedParticipants.map((p) => p.toMap()).toList(),
-      'status': GroupOrderStatus.collecting.name,
-    });
-
+    // Optimistic update
     state = state.copyWith(currentOrder: updatedOrder);
+
+    // Firestore güncelle
+    try {
+      await _groupOrdersCollection.doc(order.id).update({
+        'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+        'status': GroupOrderStatus.collecting.name,
+      });
+    } catch (e) {
+      state = state.copyWith(currentOrder: order, error: e.toString());
+    }
   }
 
   /// "Siparişim Tamam" durumunu değiştir
@@ -404,13 +415,19 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       updatedOrder = updatedOrder.copyWith(status: GroupOrderStatus.collecting);
     }
 
-    // Firestore güncelle
-    await _groupOrdersCollection.doc(order.id).update({
-      'participants': updatedParticipants.map((p) => p.toMap()).toList(),
-      'status': updatedOrder.status.name,
-    });
-
+    // Optimistic update
     state = state.copyWith(currentOrder: updatedOrder);
+
+    // Firestore güncelle
+    try {
+      await _groupOrdersCollection.doc(order.id).update({
+        'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+        'status': updatedOrder.status.name,
+      });
+    } catch (e) {
+      // Rollback on error
+      state = state.copyWith(currentOrder: order, error: e.toString());
+    }
   }
 
   /// Teslimat ve ödeme bilgilerini ayarla (sadece host)
