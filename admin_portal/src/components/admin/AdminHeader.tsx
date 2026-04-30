@@ -853,7 +853,15 @@ export default function AdminHeader() {
   )}
   </div>
 
- {/* Language Selection */}
+ {/* Kermes Special Menus */}
+  {isKermesUser && targetKermesId && (
+    <div className="py-2 border-b border-border bg-emerald-900/10">
+      <p className="px-4 py-1 text-[10px] uppercase font-bold text-emerald-500/80 tracking-wider">Kermes Yönetimi</p>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=tahsilat`} className="block px-4 py-2 text-xs font-bold text-emerald-500 hover:bg-muted transition">Tahsilat (Kasa)</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=bildirimler`} className="block px-4 py-2 text-xs font-bold text-violet-500 hover:bg-muted transition">Bildirimler</Link>
+    </div>
+  )}
+  {/* Language Selection */}
  <div className="py-2 border-b border-border">
  <p className="px-4 py-1 text-[10px] uppercase font-bold text-muted-foreground/80">{t('language')}</p>
  <div className="flex flex-wrap gap-1 px-3 py-1">
@@ -1353,7 +1361,15 @@ export default function AdminHeader() {
  </div>
  </div>
  )}
- {/* Language Selection */}
+ {/* Kermes Special Menus */}
+  {isKermesUser && targetKermesId && (
+    <div className="py-2 border-b border-border bg-emerald-900/10">
+      <p className="px-4 py-1 text-[10px] uppercase font-bold text-emerald-500/80 tracking-wider">Kermes Yönetimi</p>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=tahsilat`} className="block px-4 py-2 text-xs font-bold text-emerald-500 hover:bg-muted transition">Tahsilat (Kasa)</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=bildirimler`} className="block px-4 py-2 text-xs font-bold text-violet-500 hover:bg-muted transition">Bildirimler</Link>
+    </div>
+  )}
+  {/* Language Selection */}
  <div className="py-2 border-b border-border">
  <p className="px-4 py-1 text-[10px] uppercase font-bold text-muted-foreground/80">{t('language')}</p>
  <div className="flex flex-wrap gap-1 px-3 py-1">
@@ -1404,10 +1420,12 @@ export default function AdminHeader() {
   {isKermesUser && targetKermesId ? (
     <>
       <Link href={`/admin/kermes/${targetKermesId}?tab=dashboard`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
-      <Link href={`/admin/kermes/${targetKermesId}?tab=siparisler`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">KDS</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=kds`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-red-500 font-medium hover:bg-muted">KDS Ekranı</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=tezgah`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-pink-500 font-medium hover:bg-muted">Stant (Tezgah)</Link>
       <Link href={`/admin/kermes/${targetKermesId}?tab=products`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Ürünler</Link>
       <Link href={`/admin/kermes/${targetKermesId}?tab=roster`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Personel</Link>
-      <Link href={`/admin/kermes/${targetKermesId}?tab=tahsilat`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">Kasa</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=tahsilat`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-emerald-500 font-medium hover:bg-muted">Tahsilat (Kasa)</Link>
+      <Link href={`/admin/kermes/${targetKermesId}?tab=bildirimler`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-violet-500 font-medium hover:bg-muted">Bildirimler</Link>
       <Link href={`/admin/kermes/${targetKermesId}?tab=settings`} onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('settings')}</Link>
     </>
   ) : (

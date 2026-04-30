@@ -23,7 +23,7 @@ import KermesRosterTab from './KermesRosterTab';
 import KermesTedarikTab from './KermesTedarikTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
 import { compressLokmaImage } from "@/lib/imageCompression";
-import { Activity, AlertCircle } from 'lucide-react';
+import { Activity, AlertCircle, Settings } from 'lucide-react';
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
 interface KermesFeature {
  id: string;
@@ -2234,22 +2234,37 @@ export default function KermesDetailPage() {
    <Link href="/admin/kermes" className="text-muted-foreground hover:text-white">← Geri</Link>
  )}
  <div>
- <h1 className="text-xl font-bold text-foreground flex items-center gap-2">{kermes.title}</h1>
+ <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+  {kermes.title}
+  {hasPermission('manage_settings') && (
+    <button 
+      onClick={() => setActiveTab('bilgi')}
+      className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition"
+      title="Ayarlar / Bilgiler"
+    >
+      <Settings className="w-4 h-4" />
+    </button>
+  )}
+ </h1>
  {kermes.organizationName && <p className="text-muted-foreground text-sm">{kermes.organizationName}</p>}
  </div>
  </div>
  <div className="flex items-center gap-2">
- <button 
- onClick={() => { setActiveTab('masalar'); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight/2, behavior: 'smooth' }), 100); }}
- className="h-10 px-4 mr-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg shadow-sm font-bold text-sm flex items-center justify-center gap-2 transform transition hover:scale-105 whitespace-nowrap"
- >
- Ocakbaşı & Expo (KDS)
- </button>
- {kermes.sponsor === 'tuna' && (
-   <div className="h-10 px-4 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg text-sm font-bold flex items-center justify-center gap-2 border border-blue-600/30 whitespace-nowrap">
-     <img src="/tuna_logo_pill.png" alt="TUNA" className="h-5 drop-shadow-sm" /> TUNA
-   </div>
- )}
+  {(hasPermission('kds_screen') || hasPermission('take_orders')) && (
+    <button onClick={() => setActiveTab('kds')} className="flex items-center justify-center h-10 px-4 rounded-lg text-sm font-bold transition bg-orange-600 hover:bg-orange-500 text-white shadow-sm transform transition hover:scale-105 whitespace-nowrap">
+      KDS Ekranı
+    </button>
+  )}
+  {(hasPermission('kds_screen') || hasPermission('take_orders') || hasPermission('manage_tables')) && (
+    <button onClick={() => setActiveTab('masalar')} className="flex items-center justify-center h-10 px-4 rounded-lg text-sm font-bold transition bg-amber-600 hover:bg-amber-500 text-white shadow-sm transform transition hover:scale-105 whitespace-nowrap">
+      Stant (Tezgah)
+    </button>
+  )}
+  {kermes.sponsor === 'tuna' && (
+    <div className="h-10 px-4 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg text-sm font-bold flex items-center justify-center gap-2 border border-blue-600/30 whitespace-nowrap">
+      <img src="/tuna_logo_pill.png" alt="TUNA" className="h-5 drop-shadow-sm" /> TUNA
+    </div>
+  )}
  {kermes.sponsor === 'akdeniz_toros' && (
    <div className="h-10 px-4 bg-amber-600/20 text-amber-800 dark:text-amber-400 rounded-lg text-sm font-bold flex items-center justify-center gap-2 border border-amber-600/30 whitespace-nowrap">
      <img src="/akdeniz_toros_logo_pill.png" alt="TOROS" className="h-5 drop-shadow-sm" /> TOROS
@@ -2266,12 +2281,7 @@ export default function KermesDetailPage() {
  <Activity className="w-4 h-4" /> Dashboard
  </button>
  )}
- {hasPermission('manage_settings') && (
- <button onClick={() => setActiveTab('bilgi')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
- Bilgiler
- </button>
- )}
+
  {hasPermission('manage_products') && (
  <button onClick={() => setActiveTab('menu')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
@@ -2305,7 +2315,7 @@ export default function KermesDetailPage() {
  {hasPermission('manage_tables') && (
  <button onClick={() => setActiveTab('masalar')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
- Masalar
+ Masalar & ODS
  </button>
  )}
  {(hasPermission('manage_orders') || hasPermission('take_orders') || hasPermission('kds_screen')) && (
@@ -2314,30 +2324,15 @@ export default function KermesDetailPage() {
  Siparişler
  </button>
  )}
- {hasPermission('kds_screen') && (
- <button onClick={() => setActiveTab('kds')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-2 ${activeTab === 'kds' ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
- <AlertCircle className="w-4 h-4" /> KDS Ekranı
- </button>
- )}
- {hasPermission('view_reports') && (
- <button onClick={() => setActiveTab('tahsilat')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
- Tahsilat
- </button>
- )}
+
+
  {hasPermission('manage_settings') && (
  <button onClick={() => setActiveTab('tedarik')}
  className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tedarik' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Tedarik
  </button>
  )}
- {hasPermission('send_notifications') && (
- <button onClick={() => setActiveTab('bildirimler')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
- Bildirimler
- </button>
- )}
+
  </div>
 
  {/* Tab Content - Dashboard */}
@@ -2848,7 +2843,7 @@ export default function KermesDetailPage() {
  <input type="checkbox" checked={editForm.hasTakeaway !== false} // Varsayılan açık
  onChange={(e) => setEditForm({ ...editForm, hasTakeaway: e.target.checked })}
  className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
- <span className="text-foreground">Gel-Al İmkanı (Takeaway)</span>
+ <span className="text-foreground">Stant Teslimatı (Takeaway)</span>
  </label>
  <label className="flex items-center gap-3 cursor-pointer">
  <input type="checkbox" checked={editForm.hasDineIn}
@@ -2894,7 +2889,7 @@ export default function KermesDetailPage() {
  ) : (
  <div className="flex flex-wrap gap-2 text-sm mt-2">
  <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasTakeaway !== false ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-red-600/30 text-red-800 dark:text-red-400'}`}>
- {kermes.hasTakeaway !== false ? 'Gel-Al (Var)' : 'Gel-Al (Yok)'}
+ {kermes.hasTakeaway !== false ? 'Stant (Var)' : 'Stant (Yok)'}
  </span>
  <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasDineIn ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-red-600/30 text-red-800 dark:text-red-400'}`}>
  {kermes.hasDineIn ? 'Masa (Var)' : 'Masa (Yok)'}
@@ -6688,12 +6683,22 @@ export default function KermesDetailPage() {
  )}
 
  {activeTab === "tahsilat" && (
+  hasPermission('view_reports') ? (
   <KermesTahsilatTab
     kermesId={kermesId as string}
     kermesAdmins={kermesAdmins}
     workspaceStaff={assignedStaffDetails}
     isAdmin={canManageStaff}
   />
+  ) : (
+    <div className="flex items-center justify-center p-12">
+      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 text-center max-w-md">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-white mb-2">Yetkisiz Erişim</h3>
+        <p className="text-slate-400">Bu sayfayı görüntüleme yetkiniz bulunmamaktadır.</p>
+      </div>
+    </div>
+  )
  )}
 
  {activeTab === "tedarik" && (
