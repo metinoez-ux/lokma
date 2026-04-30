@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp, where, setDoc, documentId, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -23,6 +23,7 @@ import KermesRosterTab from './KermesRosterTab';
 import KermesTedarikTab from './KermesTedarikTab';
 import CategoryManagementModal from '@/components/admin/CategoryManagementModal';
 import { compressLokmaImage } from "@/lib/imageCompression";
+import { Activity, AlertCircle } from 'lucide-react';
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
 interface KermesFeature {
  id: string;
@@ -452,7 +453,7 @@ export default function KermesDetailPage() {
       if (!roleObj) {
         roleObj = globalSystemRoles.find((r:any) => r.id === rId);
       }
-      if (roleObj && roleObj.permissions && roleObj.permissions.includes(permId)) {
+      if (roleObj && (roleObj as any).permissions && (roleObj as any).permissions.includes(permId)) {
         return true;
       }
     }
@@ -1014,7 +1015,10 @@ export default function KermesDetailPage() {
           getDocs(query(collection(db, 'users'), where('fullName', '>=', qCap), where('fullName', '<=', qCap + '\uf8ff'), limit(10))),
           getDocs(query(collection(db, 'users'), where('fullName', '>=', q), where('fullName', '<=', q + '\uf8ff'), limit(10))),
           getDocs(query(collection(db, 'users'), where('firstName', '>=', qCap), where('firstName', '<=', qCap + '\uf8ff'), limit(10))),
-          getDocs(query(collection(db, 'users'), where('firstName', '>=', q), where('firstName', '<=', q + '\uf8ff'), limit(10)))
+          getDocs(query(collection(db, 'users'), where('firstName', '>=', q), where('firstName', '<=', q + '\uf8ff'), limit(10))),
+          getDocs(query(collection(db, 'users'), where('email', '>=', qLower), where('email', '<=', qLower + '\uf8ff'), limit(10))),
+          getDocs(query(collection(db, 'users'), where('phone', '>=', q), where('phone', '<=', q + '\uf8ff'), limit(10))),
+          getDocs(query(collection(db, 'users'), where('phoneNumber', '>=', q), where('phoneNumber', '<=', q + '\uf8ff'), limit(10)))
         );
       }
 
@@ -1557,10 +1561,7 @@ export default function KermesDetailPage() {
  }
 
  // Rol listesi build
- const roles: string[] = [];
- if (newStaffRoles.isStaff) roles.push('kermes_staff');
- if (newStaffRoles.isDriver) roles.push('kermes_driver');
- if (newStaffRoles.isWaiter) roles.push('kermes_waiter');
+ const roles: string[] = ['kermes_staff'];
  if (newStaffRoles.isKermesAdmin && isSuperAdmin) roles.push('kermes_admin');
 
  setIsCreatingUser(true);
@@ -1615,9 +1616,9 @@ export default function KermesDetailPage() {
 
  const newUid = data.user?.uid || data.uid;
  // Roller guncelle
- const newStaff = newStaffRoles.isStaff ? [...assignedStaff, newUid] : [...assignedStaff];
- const newDrivers = newStaffRoles.isDriver ? [...assignedDrivers, newUid] : [...assignedDrivers];
- const newWaiters = newStaffRoles.isWaiter ? [...assignedWaiters, newUid] : [...assignedWaiters];
+ const newStaff = [...assignedStaff, newUid];
+ const newDrivers = [...assignedDrivers];
+ const newWaiters = [...assignedWaiters];
  const newKAdmins = (newStaffRoles.isKermesAdmin && isSuperAdmin) ? [...kermesAdmins, newUid] : [...kermesAdmins];
 
  setAssignedStaff(newStaff);
@@ -1651,9 +1652,9 @@ export default function KermesDetailPage() {
  if (!kermes?.id || !user?.id) return;
  setIsCreatingUser(true);
  try {
- const newStaff = newStaffRoles.isStaff && !assignedStaff.includes(user.id) ? [...assignedStaff, user.id] : [...assignedStaff];
- const newDrivers = newStaffRoles.isDriver && !assignedDrivers.includes(user.id) ? [...assignedDrivers, user.id] : [...assignedDrivers];
- const newWaiters = newStaffRoles.isWaiter && !assignedWaiters.includes(user.id) ? [...assignedWaiters, user.id] : [...assignedWaiters];
+ const newStaff = !assignedStaff.includes(user.id) ? [...assignedStaff, user.id] : [...assignedStaff];
+ const newDrivers = [...assignedDrivers];
+ const newWaiters = [...assignedWaiters];
  const newKAdmins = (newStaffRoles.isKermesAdmin && isSuperAdmin && !kermesAdmins.includes(user.id)) ? [...kermesAdmins, user.id] : [...kermesAdmins];
 
  setAssignedStaff(newStaff);
@@ -1665,10 +1666,7 @@ export default function KermesDetailPage() {
  // Firestore'da kullaniciya kermes atamasi ekle
  const userRef = doc(db, 'users', user.id);
  const adminRef = doc(db, 'admins', user.id);
- const roles: string[] = [];
- if (newStaffRoles.isStaff) roles.push('personel');
- if (newStaffRoles.isDriver) roles.push('surucu');
- if (newStaffRoles.isWaiter) roles.push('garson');
+ const roles: string[] = ['personel'];
  if (newStaffRoles.isKermesAdmin && isSuperAdmin) roles.push('kermes_admin');
 
  const assignmentData = {
@@ -2226,7 +2224,9 @@ export default function KermesDetailPage() {
  {/* Header */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-4">
- <Link href="/admin/kermes" className="text-muted-foreground hover:text-white">← Geri</Link>
+ {isSuperAdmin && (
+   <Link href="/admin/kermes" className="text-muted-foreground hover:text-white">← Geri</Link>
+ )}
  <div>
  <h1 className="text-xl font-bold text-foreground flex items-center gap-2">{kermes.title}</h1>
  {kermes.organizationName && <p className="text-muted-foreground text-sm">{kermes.organizationName}</p>}
@@ -2252,83 +2252,83 @@ export default function KermesDetailPage() {
  </div>
  </div>
 
- {/* Tabs */}
- <div className="flex gap-2 mb-6 bg-card p-1 rounded-xl w-full sm:w-fit mx-auto overflow-x-auto custom-scrollbar">
+ {/* Tabs - Kermes Management Navigation */}
+ <div className="flex flex-wrap gap-2 mb-6 bg-slate-900 border border-slate-800 p-2 rounded-xl w-full shadow-lg justify-center sm:justify-start">
  {hasPermission('view_dashboard') && (
  <button onClick={() => setActiveTab('dashboard')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
- <FiActivity className="w-4 h-4" /> Dashboard
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+ <Activity className="w-4 h-4" /> Dashboard
  </button>
  )}
  {hasPermission('manage_settings') && (
  <button onClick={() => setActiveTab('bilgi')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Bilgiler
  </button>
  )}
  {hasPermission('manage_products') && (
  <button onClick={() => setActiveTab('menu')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Menü ({products.length})
  </button>
  )}
  {hasPermission('manage_staff') && (
  <button onClick={() => setActiveTab('personel')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Personel
  </button>
  )}
  {hasPermission('manage_staff') && (
  <button onClick={() => setActiveTab('vardiya')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'vardiya' ? 'bg-cyan-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'vardiya' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Vardiya
  </button>
  )}
  {(hasPermission('manage_staff') || hasPermission('manage_custom_roles')) && (
  <button onClick={() => setActiveTab('gorevler')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'gorevler' ? 'bg-purple-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'gorevler' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Görevler
  </button>
  )}
  {hasPermission('manage_prepzones') && (
  <button onClick={() => setActiveTab('mutfak')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'mutfak' ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Ocakbaşı
  </button>
  )}
  {hasPermission('manage_tables') && (
  <button onClick={() => setActiveTab('masalar')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'masalar' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Masalar
  </button>
  )}
  {(hasPermission('manage_orders') || hasPermission('take_orders') || hasPermission('kds_screen')) && (
  <button onClick={() => setActiveTab('siparisler')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'siparisler' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Siparişler
  </button>
  )}
  {hasPermission('kds_screen') && (
  <button onClick={() => setActiveTab('kds')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-2 ${activeTab === 'kds' ? 'bg-red-600 text-white shadow-md' : 'text-muted-foreground hover:text-white'}`}>
- <FiAlertCircle className="w-4 h-4" /> KDS Ekranı
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-2 ${activeTab === 'kds' ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+ <AlertCircle className="w-4 h-4" /> KDS Ekranı
  </button>
  )}
  {hasPermission('view_reports') && (
  <button onClick={() => setActiveTab('tahsilat')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tahsilat' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Tahsilat
  </button>
  )}
  {hasPermission('manage_settings') && (
  <button onClick={() => setActiveTab('tedarik')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tedarik' ? 'bg-rose-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'tedarik' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Tedarik
  </button>
  )}
  {hasPermission('send_notifications') && (
  <button onClick={() => setActiveTab('bildirimler')}
- className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+ className={`h-10 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'bildirimler' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
  Bildirimler
  </button>
  )}
@@ -3740,43 +3740,15 @@ export default function KermesDetailPage() {
   {(matchedUser.phone || matchedUser.phoneNumber) && <p className="text-xs text-muted-foreground">{matchedUser.phone || matchedUser.phoneNumber}</p>}
   </div>
   </div>
-
-  {/* Rol Checkboxlari */}
-  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-  {([
-  { key: 'isStaff', label: 'Personel', color: 'cyan' },
-  { key: 'isDriver', label: 'Surucu', color: 'amber' },
-  { key: 'isWaiter', label: 'Garson', color: 'emerald' },
-  ] as const).map(role => (
-  <label key={role.key} className="flex items-center gap-2 cursor-pointer select-none">
-  <input
-  type="checkbox"
-  aria-label={`${role.label} olarak ata`}
-  checked={newStaffRoles[role.key]}
-  onChange={e => setNewStaffRoles(r => ({...r, [role.key]: e.target.checked}))}
-  className="w-4 h-4 accent-cyan-500 rounded"
-  />
-  <span className="text-xs text-foreground">{role.label}</span>
-  </label>
-  ))}
-  {isSuperAdmin && (
-  <label className="flex items-center gap-2 cursor-pointer select-none col-span-2 mt-1 p-2 rounded-lg bg-purple-900/20 border border-purple-700/30">
-  <input
-  type="checkbox"
-  aria-label="Kermes Admin olarak ata"
-  checked={newStaffRoles.isKermesAdmin}
-  onChange={e => setNewStaffRoles(r => ({...r, isKermesAdmin: e.target.checked}))}
-  className="w-4 h-4 accent-purple-500 rounded"
-  />
-  <span className="text-xs font-semibold text-purple-300">Kermes Admin olarak ata (Personel yonetim yetkisi verir)</span>
-  </label>
-  )}
-  </div>
+  
+  <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
+  {t('kermes_personel_gorev_uyarisi') || 'Oluşturduğunuz kermes gönüllü personeline, bir sonraki adımda (Kermes Uygulaması üzerinden) istediğiniz görevleri (garson, sürücü vb.) verebilirsiniz. Buradan eklenen kişiler otomatikman Personel olarak yetkilendirilir.'}
+  </p>
 
   <button
   type="button"
   onClick={() => handleAssignExistingUser(matchedUser)}
-  disabled={isCreatingUser || (!newStaffRoles.isStaff && !newStaffRoles.isDriver && !newStaffRoles.isWaiter && !newStaffRoles.isKermesAdmin)}
+  disabled={isCreatingUser}
   className="mt-3 w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
   >
   {isCreatingUser ? 'Ataniyor...' : `${matchedUser.displayName || matchedUser.name || 'Kullanici'} kermes kadrosuna ekle`}
@@ -3792,19 +3764,10 @@ export default function KermesDetailPage() {
 
   {/* Rol Checkboxlari - yoksa da goster (yeni kayit icin) */}
   {!matchedUser && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-  <label className="flex items-center gap-2 cursor-pointer select-none">
-  <input type="checkbox" aria-label="Personel olarak ata" checked={newStaffRoles.isStaff} onChange={e => setNewStaffRoles(r => ({...r, isStaff: e.target.checked}))} className="w-4 h-4 accent-cyan-500 rounded" />
-  <span className="text-xs text-foreground">Personel</span>
-  </label>
-  <label className="flex items-center gap-2 cursor-pointer select-none">
-  <input type="checkbox" aria-label="Surucu olarak ata" checked={newStaffRoles.isDriver} onChange={e => setNewStaffRoles(r => ({...r, isDriver: e.target.checked}))} className="w-4 h-4 accent-amber-500 rounded" />
-  <span className="text-xs text-foreground">Surucu</span>
-  </label>
-  <label className="flex items-center gap-2 cursor-pointer select-none">
-  <input type="checkbox" aria-label="Garson olarak ata" checked={newStaffRoles.isWaiter} onChange={e => setNewStaffRoles(r => ({...r, isWaiter: e.target.checked}))} className="w-4 h-4 accent-emerald-500 rounded" />
-  <span className="text-xs text-foreground">Garson</span>
-  </label>
+  <div className="grid grid-cols-1 gap-2 my-3">
+  <p className="text-xs text-muted-foreground leading-relaxed">
+  {t('kermes_personel_gorev_uyarisi') || 'Oluşturduğunuz kermes gönüllü personeline, bir sonraki adımda (Kermes Uygulaması üzerinden) istediğiniz görevleri (garson, sürücü vb.) verebilirsiniz. Buradan eklenen kişiler otomatikman Personel olarak yetkilendirilir.'}
+  </p>
   {isSuperAdmin && (
   <label className="flex items-center gap-2 cursor-pointer select-none p-2 rounded-lg bg-purple-900/20 border border-purple-700/30">
   <input type="checkbox" aria-label="Kermes Admin olarak ata" checked={newStaffRoles.isKermesAdmin} onChange={e => setNewStaffRoles(r => ({...r, isKermesAdmin: e.target.checked}))} className="w-4 h-4 accent-purple-500 rounded" />
@@ -3867,24 +3830,7 @@ export default function KermesDetailPage() {
   {user.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
   {/* Rol secim checkboxlari - super admin arama sonucunda */}
   <div className="flex flex-wrap gap-3 mt-2">
-  {(['Personel', 'Surucu', 'Garson'] as const).map((rol, idx) => {
-  const keys = ['isStaff', 'isDriver', 'isWaiter'] as const;
-  return (
-  <label key={rol} className="flex items-center gap-1 cursor-pointer select-none">
-  <input
-  type="checkbox"
-  aria-label={`${user.displayName || user.name} - ${rol} olarak ata`}
-  defaultChecked={idx === 0}
-  id={`search-role-${user.id}-${rol}`}
-  className="w-3.5 h-3.5 accent-cyan-500 rounded"
-  onChange={e => {
-  setNewStaffRoles(r => ({...r, [keys[idx]]: e.target.checked}));
-  }}
-  />
-  <span className="text-xs text-foreground">{rol}</span>
-  </label>
-  );
-  })}
+  <span className="text-xs text-muted-foreground mr-2">Otomatik olarak 'Personel' eklenecektir.</span>
   <label className="flex items-center gap-1 cursor-pointer select-none">
   <input
   type="checkbox"
