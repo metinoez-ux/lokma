@@ -3,14 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/kermes_group_order_model.dart';
 import '../../models/kermes_model.dart';
 import '../../providers/group_order_provider.dart';
 import '../../widgets/kermes/group_order_share_sheet.dart';
 import '../../widgets/kermes/kermes_category_chips.dart';
 import '../../widgets/kermes/kermes_menu_item_tile.dart';
+import '../../widgets/kermes/payment_method_dialog.dart';
+import '../../widgets/kermes/delivery_type_dialog.dart';
+import '../../widgets/kermes/order_qr_dialog.dart';
 import '../../widgets/lokma_network_image.dart';
 import '../../utils/cart_warning_utils.dart';
+import '../../providers/kermes_cart_provider.dart';
+import 'kermes_courier_tracking_screen.dart';
+import '../../widgets/kermes/courier_order_success_dialog.dart';
 
 /// Kermes Grup Siparis Ekrani
 /// 3-tab layout: Menu | Benim Siparisim | Toplam
@@ -37,6 +44,7 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
   String _searchQuery = '';
   final ValueNotifier<String> _selectedCategory = ValueNotifier('Tumu');
   StreamSubscription? _orderSub;
+  bool _isSubmitting = false;
 
   static const Color _accent = Color(0xFFEA184A);
 
@@ -91,6 +99,7 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
 
   void _fetchProducts() {
     if (_currentEvent == null) return;
+    _productsSub?.cancel();
     _productsSub = FirebaseFirestore.instance
         .collection('kermes_events')
         .doc(_currentEvent!.id)
@@ -104,6 +113,11 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
           final d = doc.data();
           return KermesMenuItem.fromJson(d);
         }).toList();
+      });
+    }, onError: (e) {
+      // Listener hatasi - 2 sn sonra yeniden dene
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) _fetchProducts();
       });
     });
   }
@@ -1017,6 +1031,7 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
       kermesId: widget.event?.id ?? '',
       kermesName: widget.event?.title ?? widget.event?.city ?? 'Kermes',
       hostName: name,
+      hostUserId: FirebaseAuth.instance.currentUser?.uid,
       initialItems: [],
     );
 
@@ -1470,9 +1485,11 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: order.allParticipantsReady ? _submitOrder : null,
-                icon: const Icon(Icons.send, size: 18),
-                label: const Text('Siparisi Gonder'),
+                onPressed: (order.allParticipantsReady && !_isSubmitting) ? _submitOrder : null,
+                icon: _isSubmitting
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.send, size: 18),
+                label: Text(_isSubmitting ? 'Gonderiliyor...' : 'Siparisi Gonder'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _accent,
                   disabledBackgroundColor:
@@ -1508,31 +1525,257 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
   }
 
   Future<void> _submitOrder() async {
+    if (_isSubmitting) return;
     HapticFeedback.mediumImpact();
-    final success = await ref.read(groupOrderProvider.notifier).completeOrder();
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Siparis gonderildi!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+
+    final order = ref.read(groupOrderProvider).currentOrder;
+    if (order == null) return;
+
+    // 1. Odeme secimi dialog'u goster
+    PaymentMethodType? paymentMethod;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PaymentMethodDialog(
+        totalAmount: order.totalAmount,
+        kermesName: order.kermesName,
+        onSelected: (method) {
+          paymentMethod = method;
+        },
+      ),
+    );
+
+    // Kullanici iptal etti
+    if (paymentMethod == null || !mounted) return;
+    final selectedPayment = paymentMethod!;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final orderNum = await ref.read(groupOrderProvider.notifier).completeOrder(
+        paymentMethod: selectedPayment,
       );
-      Navigator.pop(context);
-    } else if (!success && mounted) {
-      final error = ref.read(groupOrderProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Hata: ${error ?? "Bilinmeyen hata"}'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      debugPrint('[GROUP] completeOrder result: $orderNum');
+      if (orderNum != null && mounted) {
+        // Provider state'i temizle
+        ref.read(groupOrderProvider.notifier).clearOrder();
+        // Sepeti temizle
+        ref.read(kermesCartProvider.notifier).clearCart();
+        
+        final fullOrderId = '${order.kermesId}_$orderNum';
+        final deliveryType = order.delivery?.type ?? DeliveryType.gelAl;
+        
+        // Bireysel siparisteki gibi: once bu ekrani kapat, sonra dogru ekrani goster
+        final rootNavContext = Navigator.of(context, rootNavigator: true).context;
+        Navigator.pop(context);
+        
+        if (deliveryType == DeliveryType.kurye) {
+          // Kurye: once basarili dialog goster, sonra takip ekranina yonlendir
+          final goToTracking = await showCourierOrderSuccessDialog(
+            rootNavContext,
+            orderNumber: orderNum,
+            kermesName: order.kermesName,
+            totalAmount: order.totalAmount,
+            isPaid: selectedPayment == PaymentMethodType.card,
+          );
+          if (goToTracking && rootNavContext.mounted) {
+            Navigator.push(
+              rootNavContext,
+              MaterialPageRoute(
+                builder: (ctx) => KermesCourierTrackingScreen(orderId: fullOrderId),
+              ),
+            );
+          }
+        } else {
+          // GelAl / Masa: QR dialog goster
+          showOrderQRDialog(
+            rootNavContext,
+            orderId: fullOrderId,
+            orderNumber: orderNum,
+            kermesId: order.kermesId,
+            kermesName: order.kermesName,
+            totalAmount: order.totalAmount,
+            isPaid: selectedPayment == PaymentMethodType.card,
+          );
+        }
+        return;
+      } else if (mounted) {
+        final error = ref.read(groupOrderProvider).error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: ${error ?? "Bilinmeyen hata"}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  /// Siparis onay ekrani - numara buyuk fontla gosterilir
+  Future<void> _showOrderConfirmation({
+    required String orderNum,
+    required PaymentMethodType paymentMethod,
+    required double totalAmount,
+    required String kermesName,
+    required int participantCount,
+  }) async {
+    HapticFeedback.heavyImpact();
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 380),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Basarili header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade500, Colors.green.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Siparis Alindi!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Siparis numarasi
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
+                child: Column(
+                  children: [
+                    Text(
+                      'Siparis Numaraniz',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Text(
+                        orderNum,
+                        style: TextStyle(
+                          color: Colors.green.shade800,
+                          fontSize: 48,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Detaylar
+                    _confirmRow(Icons.people_outline, '$participantCount kisi'),
+                    const SizedBox(height: 6),
+                    _confirmRow(
+                      paymentMethod == PaymentMethodType.cash 
+                          ? Icons.money 
+                          : Icons.credit_card,
+                      paymentMethod == PaymentMethodType.cash 
+                          ? 'Nakit Odeme' 
+                          : 'Kart ile Odeme',
+                    ),
+                    const SizedBox(height: 6),
+                    _confirmRow(Icons.euro, '${totalAmount.toStringAsFixed(2)}'),
+                    const SizedBox(height: 6),
+                    _confirmRow(Icons.store, kermesName),
+                  ],
+                ),
+              ),
+              // Kapat butonu
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Tamam',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _confirmRow(IconData icon, String text) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey.shade500),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+      ],
+    );
   }
 
   void _cancelGroup() {

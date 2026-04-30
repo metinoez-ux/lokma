@@ -37,6 +37,7 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
   // Business location from Firestore
   LatLng? _businessPosition;
   String? _businessName;
+  String? _businessLogoUrl;
   bool _businessFetched = false;
   
   // Auto-refresh
@@ -106,7 +107,7 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
     
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('kermes')
+          .collection('kermes_events')
           .doc(kermesId)
           .get();
       
@@ -120,10 +121,11 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
               (lat as num).toDouble(),
               (lng as num).toDouble(),
             );
-            _businessName = data['name'] as String? ?? data['businessName'] as String?;
+            _businessName = data['name'] as String? ?? data['businessName'] as String? ?? data['title'] as String?;
+            _businessLogoUrl = data['logoUrl'] as String? ?? data['imageUrl'] as String?;
           });
           _centerMapOnAvailablePositions();
-          debugPrint('[CourierTracking] Business location: $lat, $lng, name: $_businessName');
+          debugPrint('[CourierTracking] Business: $_businessName, logo: $_businessLogoUrl');
         }
       }
     } catch (e) {
@@ -273,48 +275,308 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
   }
 
   Widget _buildNotOnTheWayView(KermesOrder order) {
-    String statusMessage;
-    IconData statusIcon;
-    Color statusColor;
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF121212) : Colors.grey[50]!;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    
+    // Status step data
+    final steps = [
+      _StatusStep('Siparis Alindi', Icons.receipt_long_rounded, KermesOrderStatus.pending),
+      _StatusStep('Hazirlaniyor', Icons.restaurant_rounded, KermesOrderStatus.preparing),
+      _StatusStep('Hazir', Icons.check_circle_rounded, KermesOrderStatus.ready),
+      _StatusStep('Yolda', Icons.delivery_dining_rounded, KermesOrderStatus.onTheWay),
+      _StatusStep('Teslim Edildi', Icons.home_rounded, KermesOrderStatus.delivered),
+    ];
+    
+    int currentStepIndex = steps.indexWhere((s) => s.status == order.status);
+    if (currentStepIndex < 0) currentStepIndex = 0;
+    
+    // Status-specific message
+    String statusTitle;
+    String statusSubtitle;
+    Color accentColor;
+    IconData headerIcon;
+    
     switch (order.status) {
-      case KermesOrderStatus.delivered:
-        statusMessage = 'Siparişiniz teslim edildi!';
-        statusIcon = Icons.check_circle;
-        statusColor = Colors.green;
-        break;
-      case KermesOrderStatus.ready:
-        statusMessage = 'Siparişiniz hazır, kurye bekleniyor...';
-        statusIcon = Icons.access_time;
-        statusColor = Colors.amber;
+      case KermesOrderStatus.pending:
+        statusTitle = 'Siparisimiz Alindi';
+        statusSubtitle = 'Siparisimiz mutfaga iletildi, kisa surede hazirlanmaya baslanacak.';
+        accentColor = _brandColor;
+        headerIcon = Icons.receipt_long_rounded;
         break;
       case KermesOrderStatus.preparing:
-        statusMessage = 'Siparişiniz hazırlanıyor...';
-        statusIcon = Icons.restaurant;
-        statusColor = Colors.blue;
+        statusTitle = 'Hazirlaniyor';
+        statusSubtitle = 'Siparisimiz su an mutfakta ozenle hazirlaniyor.';
+        accentColor = Colors.orange;
+        headerIcon = Icons.restaurant_rounded;
+        break;
+      case KermesOrderStatus.ready:
+        statusTitle = 'Hazir, Kurye Bekleniyor';
+        statusSubtitle = 'Siparisimiz hazir! Kurye gelip alacak ve size ulastiracak.';
+        accentColor = Colors.amber;
+        headerIcon = Icons.access_time_rounded;
+        break;
+      case KermesOrderStatus.delivered:
+        statusTitle = 'Teslim Edildi';
+        statusSubtitle = 'Siparisimiz basariyla teslim edildi. Afiyet olsun!';
+        accentColor = Colors.green;
+        headerIcon = Icons.check_circle_rounded;
+        break;
+      case KermesOrderStatus.cancelled:
+        statusTitle = 'Iptal Edildi';
+        statusSubtitle = 'Siparisimiz iptal edildi.';
+        accentColor = Colors.red;
+        headerIcon = Icons.cancel_rounded;
         break;
       default:
-        statusMessage = 'Sipariş durumu: ${order.status.name}';
-        statusIcon = Icons.info;
-        statusColor = Colors.grey;
+        statusTitle = 'Siparis Durumu';
+        statusSubtitle = 'Siparisimiz isleniyor...';
+        accentColor = Colors.grey;
+        headerIcon = Icons.info_rounded;
     }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(statusIcon, size: 80, color: statusColor),
-          const SizedBox(height: 24),
-          Text(
-            statusMessage,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: statusColor,
+    
+    return Container(
+      color: bgColor,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Status header card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 72, height: 72,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(headerIcon, color: accentColor, size: 36),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(statusTitle, style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : Colors.black87,
+                  )),
+                  const SizedBox(height: 8),
+                  Text(statusSubtitle, textAlign: TextAlign.center, style: TextStyle(
+                    fontSize: 14, color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    height: 1.4,
+                  )),
+                  const SizedBox(height: 16),
+                  // Order number badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('#', style: TextStyle(fontSize: 18, color: accentColor.withValues(alpha: 0.5))),
+                        const SizedBox(width: 4),
+                        Text(
+                          order.orderNumber ?? order.id.substring(0, 6).toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.w900,
+                            color: accentColor, letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            
+            const SizedBox(height: 16),
+            
+            // Progress steps
+            if (order.status != KermesOrderStatus.cancelled &&
+                order.status != KermesOrderStatus.delivered)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Siparis Durumu', style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    )),
+                    const SizedBox(height: 16),
+                    ...List.generate(steps.length, (i) {
+                      final step = steps[i];
+                      final isActive = i <= currentStepIndex;
+                      final isCurrent = i == currentStepIndex;
+                      final isLast = i == steps.length - 1;
+                      
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Dot + line
+                          Column(
+                            children: [
+                              Container(
+                                width: isCurrent ? 28 : 20,
+                                height: isCurrent ? 28 : 20,
+                                decoration: BoxDecoration(
+                                  color: isActive ? accentColor : (isDark ? Colors.grey[700] : Colors.grey[300]),
+                                  shape: BoxShape.circle,
+                                  border: isCurrent ? Border.all(color: accentColor.withValues(alpha: 0.3), width: 3) : null,
+                                ),
+                                child: Icon(
+                                  step.icon,
+                                  size: isCurrent ? 14 : 10,
+                                  color: isActive ? Colors.white : Colors.grey,
+                                ),
+                              ),
+                              if (!isLast)
+                                Container(
+                                  width: 2,
+                                  height: 24,
+                                  color: isActive && i < currentStepIndex
+                                      ? accentColor
+                                      : (isDark ? Colors.grey[700] : Colors.grey[300]),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          // Label
+                          Padding(
+                            padding: EdgeInsets.only(top: isCurrent ? 4 : 0),
+                            child: Text(
+                              step.label,
+                              style: TextStyle(
+                                fontSize: isCurrent ? 15 : 13,
+                                fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
+                                color: isActive
+                                    ? (isDark ? Colors.white : Colors.black87)
+                                    : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            
+            const SizedBox(height: 16),
+            
+            // Order items summary
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.shopping_bag_rounded, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Text('Siparis Detayi', style: TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      )),
+                      const Spacer(),
+                      Text('${order.items.length} urun', style: TextStyle(
+                        fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[500],
+                      )),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...order.items.map((item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _brandColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text('${item.quantity}x', style: const TextStyle(
+                            color: _brandColor, fontWeight: FontWeight.w700, fontSize: 13,
+                          )),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(item.name, style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ))),
+                        Text('${item.totalPrice.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(
+                          fontSize: 13, color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        )),
+                      ],
+                    ),
+                  )),
+                  Divider(color: isDark ? Colors.grey[700] : Colors.grey[200]),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Toplam', style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      )),
+                      Text('${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}', style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w700, color: Colors.green,
+                      )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            // Delivery address
+            if (order.address != null && order.address!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.location_on_rounded, color: Colors.blue, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(order.address!, style: TextStyle(
+                      fontSize: 13, color: isDark ? Colors.grey[300] : Colors.grey[700],
+                      height: 1.3,
+                    ))),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -546,29 +808,45 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
                           Marker(
                             point: businessPosition,
                             width: 120,
-                            height: 64,
+                            height: 72,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // GPS Pin with logo inside
                                 Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 48,
+                                  height: 48,
                                   decoration: BoxDecoration(
-                                    color: _brandColor,
+                                    color: Colors.white,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                                    border: Border.all(color: _brandColor, width: 3),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        blurRadius: 6,
+                                        color: _brandColor.withOpacity(0.3),
+                                        blurRadius: 10,
+                                        spreadRadius: 2,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
-                                  child: const Icon(
-                                    Icons.storefront,
-                                    color: Colors.white,
-                                    size: 20,
+                                  child: ClipOval(
+                                    child: _businessLogoUrl != null && _businessLogoUrl!.isNotEmpty
+                                        ? Image.network(
+                                            _businessLogoUrl!,
+                                            width: 42,
+                                            height: 42,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => const Icon(
+                                              Icons.storefront,
+                                              color: _brandColor,
+                                              size: 24,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.storefront,
+                                            color: _brandColor,
+                                            size: 24,
+                                          ),
                                   ),
                                 ),
                                 if (_businessName != null)
@@ -655,7 +933,7 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
                                       ],
                                     ),
                                     child: const Icon(
-                                      Icons.moped,
+                                      Icons.delivery_dining,
                                       color: Colors.white,
                                       size: 30,
                                     ),
@@ -892,4 +1170,11 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
       await launchUrl(uri);
     }
   }
+}
+
+class _StatusStep {
+  final String label;
+  final IconData icon;
+  final KermesOrderStatus status;
+  const _StatusStep(this.label, this.icon, this.status);
 }

@@ -755,6 +755,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           context.go('/login');
                         }
                         try {
+                          await _googleSignIn.disconnect();
+                        } catch (_) {}
+                        try {
                           await _googleSignIn.signOut();
                         } catch (_) {
                           // Google ile giris yapilmamissa hata verir, sessizce gec

@@ -18,6 +18,7 @@ import '../../utils/currency_utils.dart';
 import 'notification_trash_screen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../kermes/kermes_menu_wrapper.dart';
+import '../kermes/kermes_courier_tracking_screen.dart';
 import '../../widgets/kermes/order_qr_dialog.dart';
 
 class NotificationHistoryScreen extends ConsumerStatefulWidget {
@@ -3342,7 +3343,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                     ),
                   ),
                 ],
-                // "Harita Aç" — only when onTheWay
+                // "Harita Ac" — only when onTheWay
                 if (latestStatus == 'onTheWay') ...[
                   const SizedBox(width: 8),
                   Expanded(
@@ -3353,11 +3354,13 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CourierTrackingScreen(orderId: group.orderId),
+                              builder: (_) => group.isKermes
+                                  ? KermesCourierTrackingScreen(orderId: group.orderId)
+                                  : CourierTrackingScreen(orderId: group.orderId),
                             ),
                           );
                         },
-                        icon: const Icon(Icons.map_rounded, size: 16),
+                        icon: const Icon(Icons.delivery_dining_rounded, size: 16),
                         label: Text(
                           'notification.open_map'.tr(),
                           maxLines: 1,

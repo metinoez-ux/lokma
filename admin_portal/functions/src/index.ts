@@ -3708,7 +3708,7 @@ export { onUserAccountDeleted } from "./accountDeletion";
 // Kermes: Garson/Kurye Atama & Timeout
 export { kermesWaiterTimeoutCheck, onKermesOrderReady } from "./kermesWaiterFunctions";
 export { onKermesOrderPaidStock, onKermesOrderCancelledStock } from "./kermesStockFunctions";
-export { onKermesOrderCreatedNotif, onKermesOrderPaidNotif, cancelStaleCashOrders } from "./kermesCustomerNotifications";
+export { onKermesOrderCreatedNotif, onKermesOrderPaidNotif, cancelStaleCashOrders, onKermesOrderStatusChangedNotif } from "./kermesCustomerNotifications";
 export { onKermesRosterCreated } from "./kermesRosterFunctions";
 export * from "./kermesRosterFunctions";
 export * from './kermesTvFunctions';

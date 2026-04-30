@@ -29,11 +29,11 @@ export default function KermesTezgahTab({ kermesId, locale = 'tr' }: KermesTezga
   useEffect(() => {
     if (!kermesId) return;
 
-    // Sadece hazırlanıyor ve hazır siparişleri getir
+    // Hazirlaniyor, hazir ve yolda (kurye) siparisleri getir
     const q = query(
       collection(db, 'kermes_orders'), 
       where('kermesId', '==', kermesId),
-      where('status', 'in', ['preparing', 'ready'])
+      where('status', 'in', ['preparing', 'ready', 'onTheWay'])
     );
 
     const unsub = onSnapshot(q, (snap) => {
@@ -64,18 +64,27 @@ export default function KermesTezgahTab({ kermesId, locale = 'tr' }: KermesTezga
     }
   };
 
-  // Siparişi Kuryeye Teslim Et
+  // Siparisi Kuryeye Hazir Olarak Isaretle -> status: onTheWay
+  // Kurye teslim ettikten sonra delivered olacak
   const markReadyForCourier = async (orderId: string) => {
     try {
+      // Once siparis verisini al (kurye bilgisi icin)
+      const orderDoc = orders.find(o => o.id === orderId);
+      
       await updateDoc(doc(db, 'kermes_orders', orderId), {
-        status: 'delivered', 
+        status: 'onTheWay',
         updatedAt: Timestamp.now(),
-        deliveredAt: Timestamp.now()
+        courierPickedUpAt: Timestamp.now()
       });
-      toast.success('Kuryeye teslim edildi!');
+      
+      // Kuryeye push bildirim gonder (Cloud Function tetiklenir)
+      // onKermesOrderStatusChange tetiklenir
+      
+      const courierName = orderDoc?.assignedCourierName || 'Kurye';
+      toast.success(`Siparis kuryeye verildi! (${courierName})`);
     } catch (e) {
       console.error(e);
-      toast.error('İşlem başarısız');
+      toast.error('Islem basarisiz');
     }
   };
 
@@ -95,9 +104,10 @@ export default function KermesTezgahTab({ kermesId, locale = 'tr' }: KermesTezga
   // Filter orders by active tab
   const tabOrders = orders.filter(o => o.deliveryType === activeTab);
   
-  // Split into Ready and Preparing
+  // Split into Ready, Preparing, and OnTheWay (kurye)
   const readyOrders = tabOrders.filter(o => o.status === 'ready');
   const preparingOrders = tabOrders.filter(o => o.status === 'preparing');
+  const onTheWayOrders = tabOrders.filter(o => o.status === 'onTheWay');
 
   return (
     <div className="bg-[#0B0F19] min-h-[600px] rounded-xl text-white shadow-inner border border-slate-800/50 flex flex-col h-full">
@@ -192,6 +202,29 @@ export default function KermesTezgahTab({ kermesId, locale = 'tr' }: KermesTezga
               </div>
             </div>
           )}
+          {/* YOLDA SECTION (Kurye) */}
+          {onTheWayOrders.length > 0 && (
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-4 py-2 rounded-lg w-max">
+                <Bike className="w-5 h-5 animate-pulse" />
+                <span className="font-bold tracking-wide">YOLDA ({onTheWayOrders.length})</span>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {onTheWayOrders.map(order => (
+                  <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    isReady={false}
+                    isOnTheWay={true}
+                    urgencyClass={getUrgencyColor(order.courierPickedUpAt || order.createdAt)} 
+                    waitMins={getWaitMinutes(order.courierPickedUpAt || order.createdAt)} 
+                    onAction={() => markAsDelivered(order.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
       )}
@@ -199,17 +232,17 @@ export default function KermesTezgahTab({ kermesId, locale = 'tr' }: KermesTezga
   );
 }
 
-function OrderCard({ order, isReady, urgencyClass, waitMins, onAction }: { order: any, isReady: boolean, urgencyClass: string, waitMins: number, onAction: () => void }) {
+function OrderCard({ order, isReady, isOnTheWay = false, urgencyClass, waitMins, onAction }: { order: any, isReady: boolean, isOnTheWay?: boolean, urgencyClass: string, waitMins: number, onAction: () => void }) {
   
   const readyItems = (order.items || []).filter((i:any) => i.itemStatus === 'ready').length;
   const totalItems = (order.items || []).length;
   const progress = totalItems > 0 ? (readyItems / totalItems) * 100 : 0;
 
   return (
-    <div className={`bg-[#1A1D24] rounded-2xl overflow-hidden flex flex-col border-2 ${isReady ? 'border-green-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : waitMins >= 15 ? 'border-red-500/50' : 'border-transparent'}`}>
+    <div className={`bg-[#1A1D24] rounded-2xl overflow-hidden flex flex-col border-2 ${isReady ? 'border-green-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : isOnTheWay ? 'border-blue-500/40 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : waitMins >= 15 ? 'border-red-500/50' : 'border-transparent'}`}>
       
       {/* Card Header */}
-      <div className={`px-4 py-3 flex items-center justify-between ${isReady ? 'bg-green-500/10' : 'bg-pink-500/10'}`}>
+      <div className={`px-4 py-3 flex items-center justify-between ${isReady ? 'bg-green-500/10' : isOnTheWay ? 'bg-blue-500/10' : 'bg-pink-500/10'}`}>
         <div className="flex items-center gap-3">
           <span className="text-2xl font-black text-white">#{order.orderNumber}</span>
           <div className={`px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 ${
@@ -304,8 +337,24 @@ function OrderCard({ order, isReady, urgencyClass, waitMins, onAction }: { order
             className="w-full py-3.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-600/20"
           >
             <CheckCircle className="w-5 h-5" />
-            {order.deliveryType === 'masada' ? 'TESLİM EDİLDİ' : order.deliveryType === 'kurye' ? 'KURYE HAZIR' : 'TESLİM ET'}
+            {order.deliveryType === 'masada' ? 'TESLIM EDILDI' : order.deliveryType === 'kurye' ? 'KURYE HAZIR' : 'TESLIM ET'}
           </button>
+        ) : isOnTheWay ? (
+          <div className="space-y-3">
+            {order.assignedCourierName && (
+              <div className="flex items-center gap-2 text-blue-400 text-sm">
+                <Bike className="w-4 h-4" />
+                <span className="font-medium">{order.assignedCourierName}</span>
+              </div>
+            )}
+            <button 
+              onClick={onAction}
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-600/20"
+            >
+              <CheckCircle className="w-5 h-5" />
+              TESLIM EDILDI
+            </button>
+          </div>
         ) : (
           <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
             <div 

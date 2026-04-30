@@ -30,8 +30,15 @@ class AuthService {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Force account selection dialog by signing out first
+      // Force account chooser: disconnect() fully clears cached credentials
+      // signOut() alone does NOT show the account picker on iOS
+      try {
+        await _googleSignIn.disconnect();
+      } catch (_) {
+        // disconnect can throw if no previous session exists - safe to ignore
+      }
       await _googleSignIn.signOut();
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null; // User canceled
 

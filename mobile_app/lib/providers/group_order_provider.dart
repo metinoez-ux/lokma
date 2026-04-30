@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lokma_app/models/kermes_group_order_model.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
+import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
 import '../models/kermes_model.dart';
 
 /// Persistence keys
@@ -48,6 +50,7 @@ class GroupOrderState {
 /// Grup siparişi notifier
 class GroupOrderNotifier extends Notifier<GroupOrderState> {
   final _uuid = const Uuid();
+  StreamSubscription? _orderListener;
 
   @override
   GroupOrderState build() {
@@ -451,10 +454,11 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
     state = state.copyWith(currentOrder: updatedOrder);
   }
 
-  /// Siparişi tamamla (sadece host)
-  Future<bool> completeOrder() async {
+  /// Siparisi tamamla (sadece host)
+  /// Basarili olursa siparis numarasini (orderNum) doner, hata olursa null
+  Future<String?> completeOrder({PaymentMethodType paymentMethod = PaymentMethodType.cash}) async {
     final order = state.currentOrder;
-    if (order == null) return false;
+    if (order == null) return null;
 
     try {
       // 1. Generate real order number using KermesOrderService
@@ -463,41 +467,56 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
       // Determine tableSection for sequential numbering logic
       String? section;
       if (order.delivery?.type == DeliveryType.masada) {
-        section = 'masa'; // This is a general flag, service handles actual section mapping
+        section = 'masa';
       }
 
-      final orderNum = await orderService.generateSequentialOrderId(
-        order.kermesId,
-        tableSection: section,
-      );
+      // Sequential ID with timeout + fallback
+      String orderNum;
+      try {
+        orderNum = await orderService.generateSequentialOrderId(
+          order.kermesId,
+          tableSection: section,
+        ).timeout(const Duration(seconds: 8));
+      } catch (_) {
+        // Transaction timeout - fallback ID kullan
+        orderNum = orderService.generateFallbackOrderId();
+      }
       
       final fullOrderId = '${order.kermesId}_$orderNum';
 
+      // Odeme yontemi mapping
+      final pmEnum = paymentMethod == PaymentMethodType.card 
+          ? PaymentMethod.stripe 
+          : PaymentMethod.cash;
+
       // 2. Convert to KermesOrder and save
-      final kermesOrder = order.toKermesOrder(
+      final orderWithPayment = order.copyWith(paymentMethod: pmEnum);
+      final kermesOrder = orderWithPayment.toKermesOrder(
         orderNumber: orderNum,
         fullId: fullOrderId,
       );
 
-      await orderService.createOrder(kermesOrder);
+      await orderService.createOrder(kermesOrder)
+          .timeout(const Duration(seconds: 10));
 
       // 3. Update group order status in Firestore
-      final updatedOrder = order.copyWith(status: GroupOrderStatus.ordered);
+      final updatedOrder = order.copyWith(
+        status: GroupOrderStatus.ordered,
+        paymentMethod: pmEnum,
+      );
 
       await _groupOrdersCollection.doc(order.id).update({
         'status': GroupOrderStatus.ordered.name,
-        'kermesOrderId': fullOrderId, // Link to the real order
-      });
-
-      // 4. Optionally: Notify other participants? 
-      // (For now, creating the kermesOrder will trigger host notification via Cloud Functions)
+        'kermesOrderId': fullOrderId,
+        'paymentMethod': pmEnum.name,
+      }).timeout(const Duration(seconds: 10));
 
       state = state.copyWith(currentOrder: updatedOrder);
       await _clearPersistedSession();
-      return true;
+      return orderNum;
     } catch (e) {
       state = state.copyWith(error: e.toString());
-      return false;
+      return null;
     }
   }
 
@@ -520,18 +539,30 @@ class GroupOrderNotifier extends Notifier<GroupOrderState> {
     }
   }
 
-  /// Real-time listener başlat
+  /// Real-time listener baslat
   void startListening(String orderId) {
-    _groupOrdersCollection.doc(orderId).snapshots().listen((snapshot) {
+    _orderListener?.cancel();
+    _orderListener = _groupOrdersCollection.doc(orderId).snapshots().listen((snapshot) {
       if (snapshot.exists) {
         final order = KermesGroupOrder.fromDocument(snapshot);
+        // Tamamlanmis veya iptal edilmis siparisleri dinlemeyi birak
+        if (order.status == GroupOrderStatus.ordered ||
+            order.status == GroupOrderStatus.cancelled) {
+          _orderListener?.cancel();
+          _orderListener = null;
+          _clearPersistedSession();
+          state = GroupOrderState();
+          return;
+        }
         state = state.copyWith(currentOrder: order);
       }
     });
   }
 
-  /// Mevcut siparişi temizle
+  /// Mevcut siparisi temizle
   void clearOrder() {
+    _orderListener?.cancel();
+    _orderListener = null;
     _clearPersistedSession();
     state = GroupOrderState();
   }

@@ -19,6 +19,7 @@ import '../../utils/currency_utils.dart';
 import '../../widgets/qr_scanner_screen.dart';
 import '../../services/chat_service.dart';
 import 'kermes_courier_tracking_screen.dart';
+import '../../widgets/kermes/courier_order_success_dialog.dart';
 import '../../services/staff_role_service.dart';
 import 'kermes_customization_sheet.dart';
 import 'package:lokma_app/screens/auth/login_bottom_sheet.dart';
@@ -786,13 +787,22 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               abbreviatedName: posName.isNotEmpty ? _abbreviateName(posName) : null,
               tableInfo: subtitle);
         } else if (_deliveryType == DeliveryType.kurye) {
-          // Normal yemek siparişi gibi Kurye takip ekranına gönder
-          Navigator.push(
+          // Kurye: once basarili dialog goster, sonra takip ekranina yonlendir
+          final goToTracking = await showCourierOrderSuccessDialog(
             rootNavContext,
-            MaterialPageRoute(
-              builder: (ctx) => KermesCourierTrackingScreen(orderId: docId),
-            ),
+            orderNumber: orderNumber,
+            kermesName: widget.event.city,
+            totalAmount: totalAmount,
+            isPaid: _paymentMethod == PaymentMethodType.card,
           );
+          if (goToTracking && rootNavContext.mounted) {
+            Navigator.push(
+              rootNavContext,
+              MaterialPageRoute(
+                builder: (ctx) => KermesCourierTrackingScreen(orderId: docId),
+              ),
+            );
+          }
         } else {
           showOrderQRDialog(
             rootNavContext,

@@ -51,9 +51,10 @@ class _FloatingGroupOrderButtonState
   Widget build(BuildContext context) {
     final groupState = ref.watch(groupOrderProvider);
 
-    // Aktif veya tamamlanmis grup siparisi varsa goster
+    // Aktif grup siparisi yoksa veya tamamlanmis/iptal edilmisse gizle
     if (groupState.currentOrder == null ||
-        groupState.currentOrder!.status == GroupOrderStatus.cancelled) {
+        groupState.currentOrder!.status == GroupOrderStatus.cancelled ||
+        groupState.currentOrder!.status == GroupOrderStatus.ordered) {
       return const SizedBox.shrink();
     }
 
