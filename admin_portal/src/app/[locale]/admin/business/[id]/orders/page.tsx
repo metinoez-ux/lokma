@@ -262,20 +262,61 @@ const params = useParams();
  };
 
  // Update order status
- const updateOrderStatus = async (orderId: string, newStatus: string, reason?: string) => {
- // Find the order for logging
- const order = orders.find(o => o.id === orderId);
+ const updateOrderStatus = async (orderId: string, newStatus: string, reason?: string, unavailableItemsList?: any[]) => {
+    // Find the order for logging
+    const order = orders.find(o => o.id === orderId);
 
- try {
- const updateData: Record<string, unknown> = {
- status: newStatus,
- updatedAt: new Date(),
- };
- if (reason) {
- updateData.rejectionReason = reason;
- updateData.butcherPhone = butcher?.phone || '';
- }
- await updateDoc(doc(db, 'meat_orders', orderId), updateData);
+    try {
+      const updateData: Record<string, unknown> = {
+        status: newStatus,
+        updatedAt: new Date(),
+      };
+      if (reason) {
+        updateData.rejectionReason = reason;
+        updateData.butcherPhone = butcher?.phone || '';
+      }
+      
+      // Save unavailable items when reporting missing items
+      if (unavailableItemsList && unavailableItemsList.length > 0) {
+        const existingUnavailable = Array.isArray(order?.unavailableItems) ? order.unavailableItems : [];
+        const newUnavailable = unavailableItemsList.map(i => ({
+          positionNumber: i.idx + 1,
+          productName: i.name,
+          quantity: i.quantity,
+          price: i.price || 0,
+        }));
+        updateData.unavailableItems = [...existingUnavailable, ...newUnavailable];
+      }
+
+      await updateDoc(doc(db, 'meat_orders', orderId), updateData);
+
+      // Send push notification + partial refund when order has unavailable items
+      if (unavailableItemsList && unavailableItemsList.length > 0) {
+        try {
+          let refundAmount = 0;
+          unavailableItemsList.forEach((item: any) => {
+            refundAmount += (item.price || 0) * (item.quantity || 1);
+          });
+          
+          if (order && order.userId) {
+            await fetch('/api/orders/notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: order.userId,
+                orderId: order.id,
+                status: 'order_accepted_with_unavailable',
+                title: 'Siparişinizde Değişiklik',
+                body: `${unavailableItemsList.length} ürün stokta kalmadığı için iptal edildi. ${refundAmount > 0 ? refundAmount.toFixed(2) + ' € iade edilecek.' : ''}`,
+                type: 'order_accepted_with_unavailable',
+                locale: 'tr'
+              })
+            });
+          }
+        } catch (e) {
+          console.error('Failed to send unavailable items notification', e);
+        }
+      }
 
  // Log the activity
  if (order) {

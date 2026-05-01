@@ -1542,7 +1542,7 @@
     "urun_ara_placeholder": "Produkt suchen... (Name, SKU, Kategorie)",
     "urun_detaylari": "Produktdetails",
     "urun_sablonu": "Produktvorlage",
-    "urunler": "Produkte (",
+     "urunler": "Produkte",
     "urunler1": "Produkte",
     "urunler_th": "Produkte",
     "urunleriniziDuzenlemekIcinKategoriEkleyin": "Fügen Sie Kategorien hinzu, um Ihre Produkte zu organisieren.",
@@ -6726,7 +6726,7 @@
     "teslim_edildi": "Zugestellt",
     "teslimat_adresi": "Lieferadresse",
     "tum_durumlar": "Alle Gelegenheiten",
-    "urunler": "Produkte ("
+     "urunler": "Produkte"
   },
   "AdminSidebar": {
     "adi": "Vorname",

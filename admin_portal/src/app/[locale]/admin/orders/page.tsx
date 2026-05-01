@@ -1089,8 +1089,7 @@ export default function OrdersPage() {
  updateData.servedAt = new Date();
  }
  }
-
- // Add cancellation metadata if cancelled
+// Add cancellation metadata if cancelled
  if (newStatus === 'cancelled') {
  if (cancellationReason) {
  updateData.cancelReason = cancellationReason;
@@ -1103,14 +1102,16 @@ export default function OrdersPage() {
  }
  }
 
- // Save unavailable items when accepting with missing items
- if (newStatus === 'accepted' && unavailableItemsList && unavailableItemsList.length > 0) {
- updateData.unavailableItems = unavailableItemsList.map(i => ({
+ // Save unavailable items when reporting missing items
+ if (unavailableItemsList && unavailableItemsList.length > 0) {
+ const existingUnavailable = Array.isArray(order?.unavailableItems) ? order.unavailableItems : [];
+ const newUnavailable = unavailableItemsList.map(i => ({
  positionNumber: i.idx + 1,
  productName: i.name,
  quantity: i.quantity,
  price: i.price || 0,
  }));
+ updateData.unavailableItems = [...existingUnavailable, ...newUnavailable];
  }
 
   // Route to correct collection
@@ -1168,8 +1169,8 @@ export default function OrdersPage() {
  }
  }
 
- // Send push notification + partial refund when order is accepted with unavailable items
- if (newStatus === 'accepted' && unavailableItemsList && unavailableItemsList.length > 0) {
+ // Send push notification + partial refund when order has unavailable items
+ if (unavailableItemsList && unavailableItemsList.length > 0) {
  try {
  const order = orders.find(o => o.id === orderId);
  let refundAmount = 0;

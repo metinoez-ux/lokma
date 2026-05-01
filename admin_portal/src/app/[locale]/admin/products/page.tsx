@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
+import { 
+  ClipboardList, CircleDollarSign, Package, Image as ImageIcon, 
+  FileCheck, Smartphone, ShoppingBag, Store, ShieldAlert, 
+  Truck, AlertTriangle, Leaf, Award, FileText, History, Info
+} from "lucide-react";
 import { useSearchParams } from 'next/navigation';
 import { getCurrencySymbol } from "@/utils/currency";
 import {
@@ -2740,25 +2745,29 @@ function GlobalProductsPageContent() {
  {/* Tab Bar */}
  <div className="flex gap-1 overflow-x-auto pb-0 -mb-px">
  {([
- { key: 'general' as ProductEditTab, label: '📋 Genel', icon: '📋' },
- { key: 'pricing' as ProductEditTab, label: '💰 Fiyat & Vergi', icon: '💰' },
- { key: 'stock' as ProductEditTab, label: '📦 Stok & Tedarik', icon: '📦' },
- { key: 'media' as ProductEditTab, label: '🖼️ Medya', icon: '🖼️' },
- { key: 'contentCompliance' as ProductEditTab, label: '🧪 İçerik & Uyum', icon: '🧪' },
- { key: 'app' as ProductEditTab, label: '📱 App', icon: '📱' },
- ] as const).map(tab => (
+ { key: 'general' as ProductEditTab, label: 'Genel', Icon: ClipboardList },
+ { key: 'pricing' as ProductEditTab, label: 'Fiyat & Vergi', Icon: CircleDollarSign },
+ { key: 'stock' as ProductEditTab, label: 'Stok & Tedarik', Icon: Package },
+ { key: 'media' as ProductEditTab, label: 'Medya', Icon: ImageIcon },
+ { key: 'contentCompliance' as ProductEditTab, label: 'İçerik & Uyum', Icon: FileCheck },
+ { key: 'app' as ProductEditTab, label: 'App', Icon: Smartphone },
+ ] as const).map(tab => {
+ const Icon = tab.Icon;
+ return (
  <button
  key={tab.key}
  type="button"
  onClick={() => setProductEditTab(tab.key)}
- className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-t-lg transition-all border-b-2 ${productEditTab === tab.key
- ? 'bg-gray-700/80 text-white border-blue-500'
- : 'text-muted-foreground hover:text-gray-200 hover:bg-gray-700/40 border-transparent'
+ className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all border-b-2 flex items-center gap-2 ${productEditTab === tab.key
+ ? 'text-blue-400 border-blue-500 bg-blue-900/10'
+ : 'text-muted-foreground hover:text-foreground hover:bg-gray-800/40 border-transparent'
  }`}
  >
+ <Icon className="w-4 h-4" />
  {tab.label}
  </button>
- ))}
+ );
+ })}
  </div>
  </div>
 
@@ -2770,7 +2779,10 @@ function GlobalProductsPageContent() {
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
  {/* Temel Bilgiler */}
  <div className="border-b border-border pb-4">
- <h3 className="text-sm font-medium text-blue-800 dark:text-blue-400 mb-3">📋 Temel Bilgiler</h3>
+ <h3 className="text-sm font-medium text-blue-800 dark:text-blue-400 mb-3 flex items-center gap-2">
+ <Info className="w-4 h-4" />
+ Temel Bilgiler
+ </h3>
  <div className="grid grid-cols-3 gap-4">
  <div>
  <label className="block text-sm text-muted-foreground mb-1">
@@ -2812,7 +2824,10 @@ function GlobalProductsPageContent() {
 
  {/* Ürün Detay */}
  <div className="border-b border-border pb-4">
- <h3 className="text-sm font-medium text-green-800 dark:text-green-400 mb-4">🛍️ {t('urunDetaylari')}</h3>
+ <h3 className="text-sm font-medium text-green-800 dark:text-green-400 mb-4 flex items-center gap-2">
+ <ShoppingBag className="w-4 h-4" />
+ {t('urunDetaylari')}
+ </h3>
 
  {/* Row 1: Ürün Adı + Üretici Markası */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -2918,7 +2933,10 @@ function GlobalProductsPageContent() {
  <div className="space-y-6">
  {/* Ürün Görselleri */}
  <div className="border-b border-border pb-4">
- <h3 className="text-sm font-medium text-purple-800 dark:text-purple-400 mb-3">{t('urunGorselleriMax5')}</h3>
+ <h3 className="text-sm font-medium text-purple-800 dark:text-purple-400 mb-3 flex items-center gap-2">
+ <ImageIcon className="w-4 h-4" />
+ {t('urunGorselleriMax5')}
+ </h3>
  <div className="space-y-3">
  {/* Image Preview Grid */}
  {((formData as any).images || []).length > 0 && (
@@ -2983,7 +3001,10 @@ function GlobalProductsPageContent() {
  onClick={() => setFormData(prev => ({ ...prev, _tedarikOpen: !(prev as any)._tedarikOpen } as any))}
  className="flex items-center justify-between w-full text-sm font-medium text-amber-800 dark:text-amber-400 mb-1 hover:text-amber-300 transition-colors"
  >
- <span>{t('tedarikIzlenebilirlik')}</span>
+ <span className="flex items-center gap-2">
+ <Truck className="w-4 h-4" />
+ {t('tedarikIzlenebilirlik')}
+ </span>
  <span className="text-xs text-muted-foreground/80">{(formData as any)._tedarikOpen ? '▲ Kapat' : t('ac')}</span>
  </button>
  {(formData as any)._tedarikOpen && <div className="grid grid-cols-2 gap-3 mt-3">
@@ -3040,7 +3061,7 @@ function GlobalProductsPageContent() {
  {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
  <div>
  <h4 className="text-xs font-semibold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
- <span>📋</span> İçerik Listesi (Zutaten)
+ <FileText className="w-4 h-4" /> İçerik Listesi (Zutaten)
  </h4>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  <div className="md:col-span-2">
@@ -3073,7 +3094,7 @@ function GlobalProductsPageContent() {
  {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
  <div>
  <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
- <span>⚠️</span> Alerjenler — EU 1169/2011 Annex II (14 Pflichtallergen)
+ <AlertTriangle className="w-4 h-4" /> Alerjenler — EU 1169/2011 Annex II (14 Pflichtallergen)
  </h4>
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
  {[
@@ -3120,7 +3141,7 @@ function GlobalProductsPageContent() {
  {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
  <div>
  <h4 className="text-xs font-semibold text-green-800 dark:text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
- <span>🥗</span> Besin Değerleri — Nährwerte pro 100g (Big 7 + Ek)
+ <Leaf className="w-4 h-4" /> Besin Değerleri — Nährwerte pro 100g (Big 7 + Ek)
  </h4>
  <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
  {[
@@ -3164,7 +3185,7 @@ function GlobalProductsPageContent() {
  {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
  <div>
  <h4 className="text-xs font-semibold text-purple-800 dark:text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
- <span>🏅</span> Sertifikalar & Etiketler (Zertifikate)
+ <Award className="w-4 h-4" /> Sertifikalar & Etiketler (Zertifikate)
  </h4>
  <div className="flex flex-wrap gap-2">
  {[
@@ -3233,7 +3254,7 @@ function GlobalProductsPageContent() {
  {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
  <div>
  <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
- <span>📝</span> Dahili Notlar & Etiketler
+ <FileText className="w-4 h-4" /> Dahili Notlar & Etiketler
  </h4>
  <div className="space-y-3">
  <div>
@@ -3286,7 +3307,7 @@ function GlobalProductsPageContent() {
  {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
  <div>
  <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
- <span>🕒</span> Denetim İzi
+ <History className="w-4 h-4" /> Denetim İzi
  </h4>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
  <div className="bg-background/30 rounded p-3 border border-border/50">
@@ -3313,7 +3334,7 @@ function GlobalProductsPageContent() {
  {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
  <div>
  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
- <span>📦</span> Fiziksel Bilgiler & Saklama (Produktdaten)
+ <Package className="w-4 h-4" /> Fiziksel Bilgiler & Saklama (Produktdaten)
  </h4>
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
  <div>
@@ -3361,7 +3382,9 @@ function GlobalProductsPageContent() {
  <div className="bg-orange-900/20 border border-orange-200 dark:border-orange-700/30 rounded-xl p-4 mb-4">
  <div className="flex items-center justify-between">
  <div>
- <h3 className="text-sm font-medium text-orange-800 dark:text-orange-400">🚫 Stokta Yok İşareti</h3>
+ <h3 className="text-sm font-medium text-orange-800 dark:text-orange-400 flex items-center gap-2">
+ <ShieldAlert className="w-4 h-4" /> Stokta Yok İşareti
+ </h3>
  <p className="text-xs text-muted-foreground mt-1">Aktif edildiğinde ürün uygulamada gri tonla gösterilir, silinmez.</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer">
@@ -3458,7 +3481,9 @@ function GlobalProductsPageContent() {
  <div className="space-y-6">
  {/* App Ayarları Başlık */}
  <div className="bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/30 rounded-xl p-4">
- <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-400 mb-1">📱 Mobil Uygulama Ayarları</h3>
+ <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-400 mb-1 flex items-center gap-2">
+ <Smartphone className="w-4 h-4" /> Mobil Uygulama Ayarları
+ </h3>
  <p className="text-xs text-muted-foreground">Bu bölümdeki ayarlar doğrudan mobil uygulama görünümünü etkiler.</p>
  </div>
 
@@ -3725,7 +3750,9 @@ function GlobalProductsPageContent() {
  {/* Vergi Oranı — Üstte */}
  <div className="border-b border-border pb-4">
  <div className="flex items-center justify-between mb-3">
- <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">🏦 Vergi Oranı</h3>
+ <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400 flex items-center gap-2">
+ <Store className="w-4 h-4" /> Vergi Oranı
+ </h3>
  <span className="text-xs text-muted-foreground/80">Netto/Brutto hesaplaması bu orana göre yapılır</span>
  </div>
  <div className="flex items-center gap-3">
@@ -3744,7 +3771,9 @@ function GlobalProductsPageContent() {
  {/* Fiyatlandırma + Netto/Brutto Toggle */}
  <div className="border-b border-border pb-4">
  <div className="flex items-center justify-between mb-4">
- <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">💰 Fiyatlandırma</h3>
+ <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400 flex items-center gap-2">
+ <CircleDollarSign className="w-4 h-4" /> Fiyatlandırma
+ </h3>
  <div className="flex items-center bg-card rounded-lg p-0.5 border border-gray-600">
  <button type="button" onClick={() => setFormData({ ...formData, _priceInputMode: 'netto' } as any)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
  Netto girişi

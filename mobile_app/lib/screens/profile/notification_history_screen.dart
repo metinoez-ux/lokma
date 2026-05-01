@@ -3725,13 +3725,31 @@ void showChatBottomSheetGlobal(
                       ],
                       const SizedBox(height: 16),
                       // Items header
-                      Text(
-                        'notifications.products_header'.tr(),
-                        style: TextStyle(
-                          color: colorScheme.onSurface,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'notifications.products_header'.tr(),
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (order.unavailableItems.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                              ),
+                              child: Text(
+                                'notifications.has_missing_items'.tr() == 'notifications.has_missing_items' ? 'Teilweise nicht auf Lager' : 'notifications.has_missing_items'.tr(),
+                                style: const TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       // Items
@@ -3739,6 +3757,8 @@ void showChatBottomSheetGlobal(
                         final idx = entry.key;
                         final item = entry.value;
                         final posNum = item.positionNumber ?? (idx + 1);
+                        final isUnavailable = order.unavailableItems.any((u) => u['positionNumber'] == posNum);
+                        
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: Row(
@@ -3748,12 +3768,17 @@ void showChatBottomSheetGlobal(
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                 margin: const EdgeInsets.only(right: 8, top: 1),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.grey[700] : Colors.grey[800],
+                                  color: isUnavailable ? Colors.red[800] : (isDark ? Colors.grey[700] : Colors.grey[800]),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   '#$posNum',
-                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                    color: Colors.white, 
+                                    fontSize: 11, 
+                                    fontWeight: FontWeight.w600,
+                                    decoration: isUnavailable ? TextDecoration.lineThrough : null,
+                                  ),
                                 ),
                               ),
                               Expanded(
@@ -3763,9 +3788,10 @@ void showChatBottomSheetGlobal(
                                     Text(
                                       item.name,
                                       style: TextStyle(
-                                        color: colorScheme.onSurface,
+                                        color: isUnavailable ? Colors.grey[500] : colorScheme.onSurface,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
+                                        decoration: isUnavailable ? TextDecoration.lineThrough : null,
                                       ),
                                     ),
                                     if (item.itemNote != null && item.itemNote!.isNotEmpty)
@@ -3773,20 +3799,31 @@ void showChatBottomSheetGlobal(
                                         item.itemNote!,
                                         style: TextStyle(color: Colors.grey[500], fontSize: 12, fontStyle: FontStyle.italic),
                                       ),
+                                    if (isUnavailable)
+                                      Text(
+                                        'notifications.item_unavailable'.tr() == 'notifications.item_unavailable' ? 'Nicht verfügbar' : 'notifications.item_unavailable'.tr(),
+                                        style: const TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
                                   ],
                                 ),
                               ),
                               Text(
                                 '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
-                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey[400] : Colors.grey[700], 
+                                  fontSize: 14, 
+                                  fontWeight: FontWeight.w700,
+                                  decoration: isUnavailable ? TextDecoration.lineThrough : null,
+                                ),
                               ),
                               const SizedBox(width: 10),
                               Text(
                                 '${(item.price * item.quantity).toStringAsFixed(2)} €',
                                 style: TextStyle(
-                                  color: colorScheme.onSurface,
+                                  color: isUnavailable ? Colors.grey[500] : colorScheme.onSurface,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
+                                  decoration: isUnavailable ? TextDecoration.lineThrough : null,
                                 ),
                               ),
                             ],
@@ -3806,13 +3843,40 @@ void showChatBottomSheetGlobal(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Text(
-                            '${order.totalAmount.toStringAsFixed(2)} €',
-                            style: TextStyle(
-                              color: colorScheme.onSurface,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          Builder(
+                            builder: (context) {
+                              double deduction = 0;
+                              for (final item in order.items) {
+                                final posNum = item.positionNumber ?? (order.items.indexOf(item) + 1);
+                                if (order.unavailableItems.any((u) => u['positionNumber'] == posNum)) {
+                                  deduction += item.price * item.quantity;
+                                }
+                              }
+                              final adjustedTotal = (order.totalAmount - deduction).clamp(0.0, double.infinity);
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  if (deduction > 0)
+                                    Text(
+                                      '${order.totalAmount.toStringAsFixed(2)} €',
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                  Text(
+                                    '${adjustedTotal.toStringAsFixed(2)} €',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
                           ),
                         ],
                       ),
@@ -4355,7 +4419,7 @@ class _OrderStatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusLabel = {
+    String statusLabel = {
       OrderStatus.pending: 'notifications.order_placed'.tr(),
       OrderStatus.accepted: 'notifications.confirmed'.tr(),
       OrderStatus.preparing: 'notifications.preparing'.tr(),
@@ -4365,6 +4429,10 @@ class _OrderStatusRow extends StatelessWidget {
       OrderStatus.served: 'notifications.served'.tr(),
       OrderStatus.cancelled: 'notifications.cancelled'.tr(),
     }[order.status] ?? order.status.name;
+
+    if (order.unavailableItems.isNotEmpty && order.status != OrderStatus.cancelled) {
+      statusLabel += ' (' + ('notifications.has_missing_items'.tr() == 'notifications.has_missing_items' ? 'Teilweise' : 'notifications.has_missing_items'.tr()) + ')';
+    }
 
     final statusColor = {
       OrderStatus.pending: const Color(0xFFFF9800),

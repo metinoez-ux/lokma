@@ -48,6 +48,7 @@ export default function OrderDetailsModal({
  const [cancelReason, setCancelReason] = useState('');
  const [showUnavailableModal, setShowUnavailableModal] = useState(false);
  const [unavailableItems, setUnavailableItems] = useState<any[]>([]);
+ const [nextActionStatus, setNextActionStatus] = useState<OrderStatus | null>(null);
  const [resLoading, setResLoading] = useState(false);
 
  // Reservation Rejection/Cancellation Modal States
@@ -96,21 +97,24 @@ export default function OrderDetailsModal({
 
  // Derived values
  const totalItems = order.items?.length || 0;
+ const alreadyUnavailableCount = order.unavailableItems?.length || 0;
  const checkedCount = Object.values(checkedItems || {}).filter(Boolean).length;
- const allChecked = totalItems > 0 && checkedCount >= totalItems;
+ const allChecked = totalItems > 0 && (checkedCount + alreadyUnavailableCount) >= totalItems;
  const hasItems = totalItems > 0;
 
- // Helper: Get unchecked (unavailable) items for an order
+ // Helper: Get unchecked (unavailable) items for an order that haven't been reported yet
  const getUncheckedItems = () => {
+ const alreadyUnavailableIndices = (order.unavailableItems || []).map((i: any) => i.positionNumber - 1);
  return (order.items || [])
  .map((item: any, idx: number) => ({
  idx,
  name: item.productName || item.name,
  quantity: item.quantity,
  price: item.price || 0,
- checked: !!(checkedItems || {})[idx]
+ checked: !!(checkedItems || {})[idx],
+ alreadyReported: alreadyUnavailableIndices.includes(idx)
  }))
- .filter((i: any) => !i.checked);
+ .filter((i: any) => !i.checked && !i.alreadyReported);
  };
 
  // Helper: Get the next logical status action button config
@@ -129,11 +133,11 @@ export default function OrderDetailsModal({
  }
 
  if (status === 'accepted' || (status === 'confirmed' && hasItems && allChecked)) {
- return { label: t('hazirlamaya_basla'), action: 'preparing' as OrderStatus, style: 'bg-amber-600 hover:bg-amber-700', hasUnavailable: false };
+ return { label: t('hazirlamaya_basla'), action: 'preparing' as OrderStatus, style: 'bg-amber-600 hover:bg-amber-700', hasUnavailable: !allChecked };
  }
 
  if (status === 'preparing') {
- return { label: t('siparis_hazir'), action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: false };
+ return { label: t('siparis_hazir'), action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: !allChecked };
  }
 
  // For dine-in ready orders, mark as delivered (= completed/served)
@@ -451,6 +455,7 @@ export default function OrderDetailsModal({
  if (action.hasUnavailable) {
  const unchecked = getUncheckedItems();
  setUnavailableItems(unchecked);
+ setNextActionStatus(action.action);
  setShowUnavailableModal(true);
  } else {
  onUpdateOrderStatus(order.id, action.action);
@@ -829,9 +834,10 @@ export default function OrderDetailsModal({
  </button>
  <button
  onClick={() => {
- onUpdateOrderStatus(order.id, 'accepted', undefined, unavailableItems);
+ onUpdateOrderStatus(order.id, nextActionStatus || order.status, undefined, unavailableItems);
  setShowUnavailableModal(false);
  setUnavailableItems([]);
+ setNextActionStatus(null);
  }}
  className="flex-1 px-4 py-3 bg-yellow-600 text-foreground rounded-xl hover:bg-yellow-500 transition shadow-sm font-bold flex items-center justify-center gap-2"
  >

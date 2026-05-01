@@ -1566,7 +1566,7 @@
     "urun_ara_placeholder": "Search product... (name, SKU, category)",
     "urun_detaylari": "Product Details",
     "urun_sablonu": "Product Template",
-    "urunler": "Products (",
+     "urunler": "Products",
     "urunler1": "Products",
     "urunler_th": "Products",
     "urunleriniziDuzenlemekIcinKategoriEkleyin": "Add categories to organize your products.",
@@ -6715,7 +6715,7 @@
     "teslim_edildi": "Delivered",
     "teslimat_adresi": "Delivery Address",
     "tum_durumlar": "All Occasions",
-    "urunler": "Products ("
+     "urunler": "Products"
   },
   "AdminSidebar": {
     "adi": "First Name",
