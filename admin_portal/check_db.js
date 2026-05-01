@@ -1,41 +1,31 @@
-require('dotenv').config({ path: '.env.local' });
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
+const serviceAccount = require('./serviceAccountKey.json'); // assuming it's here
 
-const serviceAccountRaw = process.env.ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-let parsedServiceAccount;
-try {
-  parsedServiceAccount = JSON.parse(serviceAccountRaw);
-} catch(e) {
-  const sanitized = serviceAccountRaw.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-  try {
-      parsedServiceAccount = JSON.parse(sanitized);
-  } catch (err2) {
-      const realNewlinesSanitized = serviceAccountRaw.replace(/\n/g, '\\n');
-      parsedServiceAccount = JSON.parse(realNewlinesSanitized);
-  }
+if (!getFirestore) {
+  console.log("Firebase not init");
 }
 
 initializeApp({
-  credential: cert(parsedServiceAccount)
+  credential: cert(serviceAccount)
 });
 
 const db = getFirestore();
 
-async function check() {
-  const users = await db.collection('users').limit(100).get();
-  for (const user of users.docs) {
-    const hist = await db.collection('users').doc(user.id).collection('notifications')
-      .where('type', '==', 'kermes_parking')
-      .limit(10).get();
-    
-    for (const doc of hist.docs) {
-        if (doc.data().imageUrl) {
-            console.log("Image URL:", doc.data().imageUrl);
-            return;
-        }
+async function run() {
+  const usersRef = db.collection('users');
+  const q = await usersRef.where('displayName', '>=', 'Sevket').limit(5).get();
+  q.forEach(doc => {
+    console.log('User:', doc.id, doc.data().displayName);
+  });
+  
+  const adminsRef = db.collection('admins');
+  const a = await adminsRef.get();
+  a.forEach(doc => {
+    const data = doc.data();
+    if (data.name && data.name.includes('Sevket') || data.displayName && data.displayName.includes('Sevket')) {
+      console.log('Admin:', doc.id, data);
     }
-  }
+  });
 }
-
-check().catch(console.error);
+run().then(() => process.exit(0));
