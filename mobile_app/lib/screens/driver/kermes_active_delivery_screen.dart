@@ -1187,7 +1187,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                         width: double.infinity,
                         child: isOnTheWay 
                           ? ElevatedButton.icon(
-                              onPressed: _completeDelivery,
+                              onPressed: () => _completeDelivery(order!),
                               icon: const Icon(Icons.check_circle, color: Colors.white, size: 24),
                               label: const Text(
                                 'TESLİMAT TAMAMLANDI',

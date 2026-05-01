@@ -661,6 +661,63 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               ),
             ),
           ),
+          // Active Delivery Resume Button
+          StreamBuilder<List<dynamic>>(
+            stream: _getCombinedDeliveriesStream(businessIds, kermesIds, FirebaseAuth.instance.currentUser?.uid),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                final activeOrders = snapshot.data!.where((o) {
+                  final status = (o is LokmaOrder) ? o.status.name : (o as KermesOrder).status.name;
+                  final courierId = (o as dynamic).courierId;
+                  final isMyOrder = courierId == FirebaseAuth.instance.currentUser?.uid;
+                  return isMyOrder && (status == 'accepted' || status == 'onTheWay');
+                }).toList();
+
+                if (activeOrders.isNotEmpty) {
+                  final activeOrder = activeOrders.first;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: IconButton(
+                      icon: Stack(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.motorcycle, size: 20, color: Colors.white),
+                          ),
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      tooltip: 'Aktif Teslimata Devam Et',
+                      onPressed: () {
+                        if (activeOrder is LokmaOrder) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveDeliveryScreen(orderId: activeOrder.id)));
+                        } else {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => KermesActiveDeliveryScreen(orderId: activeOrder.id)));
+                        }
+                      },
+                    ),
+                  );
+                }
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
       body: driverState.isLoading

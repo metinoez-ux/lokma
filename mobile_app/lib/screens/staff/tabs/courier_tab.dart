@@ -7,6 +7,7 @@ import 'package:rxdart/rxdart.dart';
 import '../../../models/kermes_order_model.dart';
 import '../../driver/active_delivery_screen.dart';
 import '../../driver/kermes_active_delivery_screen.dart';
+import '../../driver/driver_earnings_screen.dart';
 
 class CourierTab extends ConsumerWidget {
   final List<String> businessIds;
@@ -67,6 +68,26 @@ class CourierTab extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Kurye Paneli', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const DriverEarningsScreen()));
+                    },
+                    icon: const Icon(Icons.monetization_on_outlined, size: 18),
+                    label: const Text('Kazançlarım'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               // Status counts
               Row(
                 children: [
@@ -78,11 +99,17 @@ class CourierTab extends ConsumerWidget {
                   const SizedBox(width: 8),
                   _orderStatCard('Yolda', onWay.length, Icons.local_shipping, Colors.blue, onTap: () {
                     if (onWay.isNotEmpty) {
-                      final order = onWay.first;
-                      if (order is LokmaOrder) {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveDeliveryScreen(orderId: order.id)));
-                      } else if (order is KermesOrder) {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => KermesActiveDeliveryScreen(orderId: order.id)));
+                      final dynamic order = onWay.first;
+                      try {
+                        final String id = order.id;
+                        final String typeName = order.runtimeType.toString();
+                        if (typeName.contains('Kermes')) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => KermesActiveDeliveryScreen(orderId: id)));
+                        } else {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveDeliveryScreen(orderId: id)));
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
                       }
                     } else {
                       context.push('/staff-delivery?businessId=${businessIds.first}');
@@ -168,30 +195,34 @@ class CourierTab extends ConsumerWidget {
 
   Widget _orderStatCard(String label, int count, IconData icon, Color color, {bool dominant = false, VoidCallback? onTap}) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: dominant ? color : color.withOpacity(isDark ? 0.2 : 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: dominant ? null : Border.all(color: color.withOpacity(0.5)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: dominant ? Colors.white : color, size: 24),
-              const SizedBox(height: 6),
-              Text(
-                '$count',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: dominant ? Colors.white : color),
-              ),
-              Text(
-                label,
-                style: TextStyle(fontSize: 10, color: dominant ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700])),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-              ),
-            ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: dominant ? color : color.withOpacity(isDark ? 0.2 : 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: dominant ? null : Border.all(color: color.withOpacity(0.5)),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, color: dominant ? Colors.white : color, size: 24),
+                const SizedBox(height: 6),
+                Text(
+                  '$count',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: dominant ? Colors.white : color),
+                ),
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 10, color: dominant ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700])),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                ),
+              ],
+            ),
           ),
         ),
       ),
