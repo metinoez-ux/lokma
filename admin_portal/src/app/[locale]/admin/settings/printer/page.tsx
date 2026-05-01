@@ -178,6 +178,42 @@ export default function PrinterSettingsPage() {
  )}
  </div>
  </div>
+ 
+ {/* ─── Druckoptionen (Auto-Print & Kopien) ─── */}
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-border">
+ {/* Auto-Print Toggle */}
+ <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border">
+ <div>
+ <h3 className="font-semibold text-foreground">Automatischer Druck (Auto-Print)</h3>
+ <p className="text-xs text-muted-foreground/80 mt-0.5">Neue Bestellungen sofort drucken</p>
+ </div>
+ <button
+ onClick={() => save({ ...settings, autoPrint: !settings.autoPrint })}
+ className={`relative w-14 h-7 rounded-full transition-colors ${settings.autoPrint ? 'bg-amber-500' : 'bg-gray-600'}`}
+ >
+ <div className={`absolute top-0.5 w-6 h-6 bg-card rounded-full shadow transition-transform ${settings.autoPrint ? 'translate-x-7' : 'translate-x-0.5'}`} />
+ </button>
+ </div>
+
+ {/* Copies */}
+ <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border">
+ <div>
+ <h3 className="font-semibold text-foreground">Anzahl Kopien</h3>
+ <p className="text-xs text-muted-foreground/80 mt-0.5">Wie oft jeder Bon gedruckt wird</p>
+ </div>
+ <select
+ value={settings.printCopies || 1}
+ onChange={(e) => save({ ...settings, printCopies: parseInt(e.target.value) || 1 })}
+ className="px-4 py-2 bg-card text-foreground rounded-xl border border-gray-600 focus:border-blue-500 outline-none transition"
+ >
+ <option value={1}>1 Kopie</option>
+ <option value={2}>2 Kopien</option>
+ <option value={3}>3 Kopien</option>
+ </select>
+ </div>
+ </div>
+
+ </div>
 
 
  {/* ─── Status Card ─── */}
@@ -271,7 +307,7 @@ export default function PrinterSettingsPage() {
  <li>• Unterstützt werden ESC/POS-kompatible Thermodrucker (Epson, Star, etc.)</li>
  <li>• Der Drucker muss im gleichen WLAN-Netzwerk wie dieses Gerät sein</li>
  <li>• Der Drucker-Status wird alle 30 Sekunden automatisch geprüft</li>
- <li>• Auto-Print und Kopien werden auf der Bestellungen-Seite konfiguriert</li>
+ <li>• Auto-Print kann in diesen Einstellungen oder direkt auf der Bestellungen-Seite umgeschaltet werden</li>
  <li>• Bei Verbindungsproblemen: Drucker neustarten und IP-Adresse prüfen</li>
  </ul>
  </div>
