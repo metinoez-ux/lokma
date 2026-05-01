@@ -1380,6 +1380,14 @@ return (
  else timeDisplay = `${dateObj.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })} ${timeStr}`;
  }
  
+ return (
+ <Link 
+ href={nextReservation.businessId ? `/${locale}/admin/business/${nextReservation.businessId}?tab=reservations` : `/${locale}/admin/reservations`}
+ className="flex items-center gap-2 px-3 py-1 text-sm bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800/60 transition-colors shadow-sm cursor-pointer animate-in fade-in zoom-in duration-300"
+ >
+ <span className="font-semibold">📅 Sıradaki Rzv:</span>
+ <span>{timeDisplay} - {nextReservation.customerName || nextReservation.userName || 'Misafir'} ({nextReservation.partySize || '-'} Kişi)</span>
+ </Link>
  );
  })()}
  </div>
