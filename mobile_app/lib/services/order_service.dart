@@ -533,34 +533,22 @@ class OrderService {
       return false;
     }
 
-    // Capture GPS at claim time for km tracking
-    Map<String, dynamic>? claimLocation;
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 1),
-        ),
-      );
-      claimLocation = {
-        'lat': position.latitude,
-        'lng': position.longitude,
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-    } catch (e) {
-      // Fallback to last known
-      try {
-        final lastPos = await Geolocator.getLastKnownPosition();
+    // Capture GPS asynchronously (fire-and-forget) to not block UI
+    Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: Duration(seconds: 3)),
+    ).then((position) {
+      _db.collection(_collection).doc(orderId).update({
+        'claimLocation': {'lat': position.latitude, 'lng': position.longitude, 'timestamp': DateTime.now().toIso8601String()}
+      });
+    }).catchError((e) {
+      Geolocator.getLastKnownPosition().then((lastPos) {
         if (lastPos != null) {
-          claimLocation = {
-            'lat': lastPos.latitude,
-            'lng': lastPos.longitude,
-            'isApproximate': true,
-            'timestamp': DateTime.now().toIso8601String(),
-          };
+          _db.collection(_collection).doc(orderId).update({
+            'claimLocation': {'lat': lastPos.latitude, 'lng': lastPos.longitude, 'isApproximate': true, 'timestamp': DateTime.now().toIso8601String()}
+          });
         }
-      } catch (_) {}
-    }
+      }).catchError((_) {});
+    });
     
     // Build update data - always assign courier
     final updateData = <String, dynamic>{
@@ -570,10 +558,6 @@ class OrderService {
       'claimedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
-
-    if (claimLocation != null) {
-      updateData['claimLocation'] = claimLocation;
-    }
     
     // Only change status to onTheWay if order is already ready
     if (currentStatus == OrderStatus.ready.name) {
@@ -664,11 +648,11 @@ class OrderService {
     double? deliveryLng;
     
     try {
-      // Try to get current live position first
+      // Try to get current live position first (fast, low accuracy)
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 1),
+          accuracy: LocationAccuracy.low,
+          timeLimit: Duration(seconds: 2),
         ),
       );
       deliveryLat = position.latitude;
@@ -735,12 +719,28 @@ class OrderService {
       deliveryProof['photoUrl'] = proofPhotoUrl;
     }
     
-    await _db.collection(_collection).doc(orderId).update({
+    final updateData = <String, dynamic>{
       'status': OrderStatus.delivered.name,
       'deliveryProof': deliveryProof,
       'deliveredAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    };
+    
+    final paymentMethod = orderData?['paymentMethod'] ?? 'cash';
+    final isPaid = orderData?['isPaid'] ?? false;
+    final courierId = orderData?['courierId'];
+    
+    // Nakit ise kuryenin uzerine zimmetle
+    if (!isPaid && (paymentMethod == 'cash' || paymentMethod == 'nakit')) {
+      updateData['isPaid'] = true;
+      updateData['paymentStatus'] = 'paid';
+      if (courierId != null) {
+        updateData['collectedBy'] = courierId;
+      }
+      updateData['collectedAt'] = FieldValue.serverTimestamp();
+    }
+    
+    await _db.collection(_collection).doc(orderId).update(updateData);
     
     return true;
   }

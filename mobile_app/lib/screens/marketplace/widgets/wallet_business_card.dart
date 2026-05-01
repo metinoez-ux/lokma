@@ -293,7 +293,7 @@ class WalletBusinessCard extends ConsumerWidget {
                             children: [
                               Builder(
                                 builder: (ctx) {
-                                  final actuallySellsTuna = data['sellsTunaProducts'] == true;
+                                  final actuallySellsTuna = data['sellsTunaProducts'] == true || isTunaPartner;
                                   final actuallySellsToros = data['sellsTorosProducts'] == true;
                                   
                                   if (actuallySellsTuna) {

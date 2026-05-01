@@ -410,7 +410,7 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
                 final dynamic activeOrder = (snapshot.data as List).first;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
-                  child: ElevatedButton.icon(
+                  child: IconButton(
                     onPressed: () {
                       final String typeName = activeOrder.runtimeType.toString();
                       if (typeName.contains('Kermes')) {
@@ -429,13 +429,11 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
                         );
                       }
                     },
-                    icon: const Icon(Icons.motorcycle, size: 18),
-                    label: const Text('Devam', style: TextStyle(fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
+                    icon: const Icon(Icons.motorcycle, size: 24, color: Colors.white),
+                    tooltip: 'Aktif Teslimata Git',
+                    style: IconButton.styleFrom(
                       backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 );
