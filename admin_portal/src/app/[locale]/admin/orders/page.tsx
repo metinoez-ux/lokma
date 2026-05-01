@@ -1380,18 +1380,6 @@ return (
  else timeDisplay = `${dateObj.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })} ${timeStr}`;
  }
  
- const hasPreOrder = nextReservation.items?.length > 0 || nextReservation.hasPreOrder || nextReservation.tabStatus === 'pre_ordered';
- const icon = hasPreOrder ? '🍽️' : '🪑';
- 
- return (
- <Link 
- href={`/${locale}/admin/reservations`}
- className="flex items-center gap-2 px-3 py-1 text-sm bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800/60 transition-colors shadow-sm cursor-pointer animate-in fade-in zoom-in duration-300"
- >
- <span>{icon}</span>
- <span className="font-semibold">Sıradaki Rzv:</span>
- <span>{timeDisplay} - {nextReservation.customerName || nextReservation.userName || 'Misafir'} ({nextReservation.partySize || '-'} Kişi)</span>
- </Link>
  );
  })()}
  </div>
@@ -1447,12 +1435,14 @@ return (
  </select>
 
  {/* Cancelled & Completed Modals Buttons */}
- <button onClick={() => setShowCancelledModal(true)} className="px-3 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 dark:hover:bg-red-900/60 shadow-sm transition-colors flex items-center gap-1.5">
-   <span>İptal ({stats.cancelled})</span>
- </button>
- <button onClick={() => setShowCompletedModal(true)} className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-200 dark:hover:bg-emerald-900/60 shadow-sm transition-colors flex items-center gap-1.5">
-   <span>Geçmiş Siparişler</span>
- </button>
+ <div className="flex items-center gap-2 shrink-0">
+  <button onClick={() => setShowCancelledModal(true)} className="px-3 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 dark:hover:bg-red-900/60 shadow-sm transition-colors flex items-center gap-1.5">
+    <span>İptal ({stats.cancelled})</span>
+  </button>
+  <button onClick={() => setShowCompletedModal(true)} className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-200 dark:hover:bg-emerald-900/60 shadow-sm transition-colors flex items-center gap-1.5">
+    <span>Geçmiş Siparişler</span>
+  </button>
+ </div>
 
  {/* Business Filter - Only show to Super Admins */}
  {admin?.adminType === 'super' && (
@@ -1528,8 +1518,7 @@ return (
 
  {/* Printer Toggle + Pause Pills */}
  <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
- {/* Printer Toggle Pill (Hidden for non-super admins temporarily) */}
- {admin?.adminType === 'super' && (
+ {/* Printer Toggle Pill */}
  <button
  onClick={() => setShowPrinterPanel(!showPrinterPanel)}
  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${
@@ -1561,76 +1550,75 @@ return (
  </span>
  )}
  </button>
- )}
 
- {/* ─── Pause Pill Buttons (only when business selected) ─── */}
+ {/* ─── Unified Pause Pill Button (only when business selected) ─── */}
  {businessFilter !== 'all' && (
- <div className="flex items-center gap-2">
- {/* Delivery Pause Pill */}
  <div ref={deliveryTimerRef} className="relative">
  <button
- onClick={() => deliveryPaused ? handleResumePause('delivery') : setShowDeliveryTimerMenu(!showDeliveryTimerMenu)}
- className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${deliveryPaused
- ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white ring-2 ring-amber-400/50 animate-pulse'
- : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500'
- }`}
- >
- <span>{t(deliveryPaused ? 'status_paused' : 'type_delivery')}</span>
- {deliveryPaused && (
-   <PauseTimerDisplay pauseUntil={deliveryPauseUntil} onExpire={() => handleResumePause('delivery')} />
- )}
- </button>
- {/* Timer Selection Dropdown */}
- {showDeliveryTimerMenu && (
- <div className="absolute top-full left-0 mt-2 bg-background dark:bg-gray-800 border border-border/50 dark:border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
- <p className="text-muted-foreground text-xs px-2 pb-2 border-b border-border mb-2">{t('kurye_sure_secin')}</p>
- <div className="flex flex-wrap gap-1.5">
- {PAUSE_DURATIONS.map(d => (
- <button
- key={d.label}
- onClick={() => handlePause('delivery', d.minutes)}
- className="px-3 py-1.5 bg-muted/50 dark:bg-gray-700 hover:bg-amber-500 dark:hover:bg-amber-600 text-foreground/90 hover:text-white text-xs rounded-lg transition font-medium"
- >
- {d.label}
- </button>
- ))}
- </div>
- </div>
- )}
- </div>
-
- {/* Pickup Pause Pill */}
- <div ref={pickupTimerRef} className="relative">
- <button
- onClick={() => pickupPaused ? handleResumePause('pickup') : setShowPickupTimerMenu(!showPickupTimerMenu)}
- className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${pickupPaused
+ onClick={() => setShowDeliveryTimerMenu(!showDeliveryTimerMenu)}
+ className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${
+ deliveryPaused || pickupPaused
  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white ring-2 ring-red-400/50 animate-pulse'
- : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500'
+ : 'bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 text-gray-800 dark:text-gray-200 hover:from-gray-300 hover:to-gray-400'
  }`}
  >
- <span>{t(pickupPaused ? 'status_paused' : 'pickup_label')}</span>
- {pickupPaused && (
-   <PauseTimerDisplay pauseUntil={pickupPauseUntil} onExpire={() => handleResumePause('pickup')} />
- )}
+ <span>🛑 Servis Durdur</span>
+ {(deliveryPaused || pickupPaused) && <span className="w-2 h-2 rounded-full bg-white animate-pulse shadow-sm"></span>}
  </button>
- {/* Timer Selection Dropdown */}
- {showPickupTimerMenu && (
- <div className="absolute top-full left-0 mt-2 bg-background dark:bg-gray-800 border border-border/50 dark:border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
- <p className="text-muted-foreground text-xs px-2 pb-2 border-b border-border mb-2">{t('select_pause_duration')}</p>
+ 
+ {/* Unified Timer Selection Dropdown */}
+ {showDeliveryTimerMenu && (
+ <div className="absolute top-full right-0 mt-2 bg-background dark:bg-gray-800 border border-border/50 dark:border-gray-600 rounded-xl shadow-2xl z-50 p-4 min-w-[280px]">
+ <h4 className="text-sm font-bold mb-3 border-b border-border pb-2">Servis Duraklatma</h4>
+ 
+ {/* Delivery Section */}
+ <div className="mb-4">
+ <div className="flex justify-between items-center mb-2">
+ <span className="font-semibold text-sm flex items-center gap-1.5">🛵 {t('type_delivery')}</span>
+ {deliveryPaused && (
+ <button onClick={() => { handleResumePause('delivery'); setShowDeliveryTimerMenu(false); }} className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-2 py-1 rounded font-medium hover:bg-emerald-200 transition">▶️ Başlat</button>
+ )}
+ </div>
+ {deliveryPaused ? (
+ <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg flex items-center gap-2">
+ <PauseTimerDisplay pauseUntil={deliveryPauseUntil} onExpire={() => handleResumePause('delivery')} />
+ </div>
+ ) : (
  <div className="flex flex-wrap gap-1.5">
  {PAUSE_DURATIONS.map(d => (
- <button
- key={d.label}
- onClick={() => handlePause('pickup', d.minutes)}
- className="px-3 py-1.5 bg-muted/50 dark:bg-gray-700 hover:bg-red-500 dark:hover:bg-red-600 text-foreground/90 hover:text-white text-xs rounded-lg transition font-medium"
- >
+ <button key={d.label} onClick={() => { handlePause('delivery', d.minutes); setShowDeliveryTimerMenu(false); }} className="px-2 py-1.5 bg-muted/50 dark:bg-gray-700 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-600 text-foreground/90 text-xs rounded-lg transition font-medium">
  {d.label}
  </button>
  ))}
  </div>
+ )}
+ </div>
+ 
+ {/* Pickup Section */}
+ <div>
+ <div className="flex justify-between items-center mb-2">
+ <span className="font-semibold text-sm flex items-center gap-1.5">🛍️ {t('pickup_label')}</span>
+ {pickupPaused && (
+ <button onClick={() => { handleResumePause('pickup'); setShowDeliveryTimerMenu(false); }} className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-2 py-1 rounded font-medium hover:bg-emerald-200 transition">▶️ Başlat</button>
+ )}
+ </div>
+ {pickupPaused ? (
+ <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg flex items-center gap-2">
+ <PauseTimerDisplay pauseUntil={pickupPauseUntil} onExpire={() => handleResumePause('pickup')} />
+ </div>
+ ) : (
+ <div className="flex flex-wrap gap-1.5">
+ {PAUSE_DURATIONS.map(d => (
+ <button key={d.label} onClick={() => { handlePause('pickup', d.minutes); setShowDeliveryTimerMenu(false); }} className="px-2 py-1.5 bg-muted/50 dark:bg-gray-700 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 text-foreground/90 text-xs rounded-lg transition font-medium">
+ {d.label}
+ </button>
+ ))}
  </div>
  )}
  </div>
+ 
+ </div>
+ )}
  </div>
  )}
 
@@ -1805,36 +1793,7 @@ return (
  <h3 className="text-foreground font-bold">
  {t('siparis_durumlari_anlik')}
  </h3>
- {/* Upcoming Reservation Chip */}
- {nextReservation ? (
- <Link
- href={`/admin/business/${nextReservation.businessId}?tab=reservations`}
- className="cursor-pointer flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 rounded-full text-white text-xs font-semibold shadow-sm transition-all transform hover:scale-[1.02] border border-red-500/30"
- >
- <span className="relative flex h-2 w-2">
- <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
- <span className="relative inline-flex rounded-full h-2 w-2 bg-background"></span>
- </span>
- <span>
- 🍽️ {nextReservation.userName || nextReservation.customerName || 'Misafir'} - {(() => {
- const today = new Date();
- const resDate = new Date(nextReservation.resDateObject || nextReservation.computedTime);
- const isToday = resDate.getDate() === today.getDate() && resDate.getMonth() === today.getMonth() && resDate.getFullYear() === today.getFullYear();
- const dateStr = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: 'short' }).format(resDate);
- const timeStr = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(resDate);
- return isToday ? timeStr : `${dateStr} ${timeStr}`;
- })()}
- </span>
- </Link>
- ) : (
- <Link
- href={adminBusinessId ? `/admin/business/${adminBusinessId}?tab=reservations` : '#'}
- className="cursor-pointer flex items-center gap-1.5 px-3 py-1 bg-muted/40 text-muted-foreground border border-border rounded-full text-xs font-medium hover:bg-muted/60 transition"
- >
- <span>🗓️</span>
- <span>Rezervasyon Yok</span>
- </Link>
- )}
+
  </div>
  <span className="text-muted-foreground text-sm">
  {t('su_anki_siparisler')}
