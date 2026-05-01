@@ -459,10 +459,17 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                                 ),
                               ),
                             ),
-                            if (!isKermesOrder && items != null && items.isNotEmpty) ...[
+                            if (!isKermesOrder) ...[
                               const SizedBox(width: 16),
                               GestureDetector(
                                 onTap: () {
+                                  if (items == null || items.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Bu sipariş çok eski olduğu için içeriği okunamadı ve tekrar sipariş edilemiyor.')),
+                                    );
+                                    return;
+                                  }
+
                                   final cartNotifier = ref.read(cartProvider.notifier);
                                   cartNotifier.clearCart();
 
