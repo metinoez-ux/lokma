@@ -177,43 +177,107 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       final cashConfirm = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: Text(tr('payments.step1_payment_collection')),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEA184A).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFEA184A), width: 2),
+        builder: (ctx) {
+          double? givenAmount;
+          
+          return StatefulBuilder(
+            builder: (context, setStateDialog) {
+              final parsedAmount = double.tryParse(amount) ?? 0.0;
+              final double change = givenAmount != null ? (givenAmount! - parsedAmount) : 0.0;
+              
+              // Define quick amounts based on total
+              List<double> quickAmounts = [];
+              if (parsedAmount <= 10) quickAmounts = [10, 20, 50];
+              else if (parsedAmount <= 20) quickAmounts = [20, 50, 100];
+              else if (parsedAmount <= 50) quickAmounts = [50, 100, 200];
+              else quickAmounts = [100, 200];
+              
+              return AlertDialog(
+                title: Text(tr('payments.step1_payment_collection')),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEA184A).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFEA184A), width: 2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.payments, color: Color(0xFFEA184A), size: 32),
+                            const SizedBox(width: 12),
+                            Text(
+                              '$amount${CurrencyUtils.getCurrencySymbol()}',
+                              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFFEA184A)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(tr('Müşteri ne kadar verdi?'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      
+                      // Quick buttons
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Tam Verdi'),
+                            selected: givenAmount == parsedAmount,
+                            onSelected: (val) => setStateDialog(() => givenAmount = parsedAmount),
+                            selectedColor: const Color(0xFFEA184A).withOpacity(0.2),
+                          ),
+                          ...quickAmounts.map((q) => ChoiceChip(
+                            label: Text('${q.toStringAsFixed(0)}€'),
+                            selected: givenAmount == q,
+                            onSelected: (val) => setStateDialog(() => givenAmount = q),
+                            selectedColor: const Color(0xFFEA184A).withOpacity(0.2),
+                          )).toList(),
+                        ],
+                      ),
+                      
+                      if (givenAmount != null && givenAmount! > parsedAmount) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green.withOpacity(0.5)),
+                          ),
+                          child: Column(
+                            children: [
+                              const Text('Para Üstü', style: TextStyle(color: Colors.green, fontSize: 14)),
+                              Text(
+                                '${change.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                                style: const TextStyle(color: Colors.green, fontSize: 24, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.payments, color: Color(0xFFEA184A), size: 32),
-                    const SizedBox(width: 12),
-                    Text(
-                      '$amount${CurrencyUtils.getCurrencySymbol()}',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFFEA184A)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(tr('Parayı müşteriden tahsil ettiniz mi?'), style: const TextStyle(fontSize: 16)),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('common.cancel'))),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
-              child: const Text('✓ Evet, Tahsil Ettim', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('common.cancel'))),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
+                    child: const Text('✓ Tahsil Ettim', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              );
+            }
+          );
+        },
       );
       if (cashConfirm != true) {
         setState(() => _isCompleting = false);
@@ -240,13 +304,28 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     }
 
     final deliveryType = result['deliveryType'] as String;
-    final photoUrl = result['photoUrl'] as String?;
+    final photoPath = result['photoPath'] as String?;
 
     await _orderService.completeDeliveryWithProof(
       widget.orderId,
       deliveryType: deliveryType,
-      proofPhotoUrl: photoUrl,
     );
+    
+    // Upload photo in background if provided
+    if (photoPath != null) {
+      FirebaseStorage.instance
+          .ref()
+          .child('delivery_proofs')
+          .child('delivery_proof_${widget.orderId}_${DateTime.now().millisecondsSinceEpoch}.jpg')
+          .putFile(File(photoPath))
+          .then((task) async {
+            final url = await task.ref.getDownloadURL();
+            await FirebaseFirestore.instance.collection('meat_orders').doc(widget.orderId).update({
+              'deliveryProof.photoUrl': url,
+            });
+          })
+          .catchError((e) => debugPrint('Background photo upload failed: $e'));
+    }
     
     if (mounted && !_hasPopped) {
       _hasPopped = true;
@@ -761,8 +840,40 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       body: StreamBuilder<LokmaOrder?>(
         stream: _orderService.getOrderStream(widget.orderId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text('Sipariş yüklenirken hata oluştu:\n${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.warning_amber_rounded, size: 64, color: Colors.amber),
+                  const SizedBox(height: 16),
+                  const Text('Sipariş bulunamadı veya silinmiş.', style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Geri Dön'),
+                  ),
+                ],
+              ),
+            );
           }
 
           final order = snapshot.data!;

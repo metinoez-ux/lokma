@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,26 +31,15 @@ class _ProofOfDeliverySheetState extends State<ProofOfDeliverySheet> {
       
       if (photo == null) return;
       
-      setState(() {
-        _localPhoto = File(photo.path);
-        _isUploading = true;
-      });
-      
-      final fileName = 'delivery_proof_${widget.orderId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final ref = FirebaseStorage.instance.ref().child('delivery_proofs').child(fileName);
-      
-      await ref.putFile(_localPhoto!);
-      final url = await ref.getDownloadURL();
-      
-      setState(() {
-        _photoUrl = url;
-        _isUploading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _localPhoto = File(photo.path);
+        });
+      }
     } catch (e) {
-      setState(() => _isUploading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fotoğraf yüklenemedi.')),
+          const SnackBar(content: Text('Fotoğraf seçilemedi veya çekilemedi.')),
         );
       }
     }
@@ -63,7 +53,7 @@ class _ProofOfDeliverySheetState extends State<ProofOfDeliverySheet> {
       return;
     }
     
-    if ((_selectedType == 'left_at_door' || _selectedType == 'handed_to_other') && _photoUrl == null) {
+    if ((_selectedType == 'left_at_door' || _selectedType == 'handed_to_other') && _localPhoto == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bu teslimat tipi için kanıt fotoğrafı zorunludur!'), backgroundColor: Colors.red),
       );
@@ -72,7 +62,7 @@ class _ProofOfDeliverySheetState extends State<ProofOfDeliverySheet> {
     
     Navigator.pop(context, {
       'deliveryType': _selectedType,
-      'photoUrl': _photoUrl,
+      'photoPath': _localPhoto?.path,
     });
   }
 
@@ -111,20 +101,16 @@ class _ProofOfDeliverySheetState extends State<ProofOfDeliverySheet> {
                     borderRadius: BorderRadius.circular(8),
                     child: Image.file(_localPhoto!, height: 120, width: double.infinity, fit: BoxFit.cover),
                   ),
-                  if (_isUploading)
-                    const CircularProgressIndicator(color: Colors.white),
-                  if (!_isUploading)
-                    Positioned(
-                      right: 8, top: 8,
-                      child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        style: IconButton.styleFrom(backgroundColor: Colors.black54),
-                        onPressed: () => setState(() {
-                          _localPhoto = null;
-                          _photoUrl = null;
-                        }),
-                      ),
+                  Positioned(
+                    right: 8, top: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                      onPressed: () => setState(() {
+                        _localPhoto = null;
+                      }),
                     ),
+                  ),
                 ],
               )
             else
@@ -144,16 +130,14 @@ class _ProofOfDeliverySheetState extends State<ProofOfDeliverySheet> {
             
             const SizedBox(height: 16),
             
-            ElevatedButton(
-              onPressed: _isUploading ? null : _complete,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+              ElevatedButton(
+                onPressed: _complete,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Teslimatı Onayla', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
-              child: _isUploading 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Teslimatı Onayla', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
           ],
         ],
       ),

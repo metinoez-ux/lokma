@@ -211,13 +211,29 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
     if (result == null) return; // User cancelled
 
     final deliveryType = result['deliveryType'] as String;
-    final photoUrl = result['photoUrl'] as String?;
+    final photoPath = result['photoPath'] as String?;
 
     await _orderService.completeDeliveryWithProof(
       widget.orderId,
       deliveryType: deliveryType,
-      proofPhotoUrl: photoUrl,
     );
+    
+    // Upload photo in background if provided
+    if (photoPath != null) {
+      FirebaseStorage.instance
+          .ref()
+          .child('delivery_proofs')
+          .child('delivery_proof_${widget.orderId}_${DateTime.now().millisecondsSinceEpoch}.jpg')
+          .putFile(File(photoPath))
+          .then((task) async {
+            final url = await task.ref.getDownloadURL();
+            // Note: Kermes orders are stored in 'kermes_orders'
+            await FirebaseFirestore.instance.collection('kermes_orders').doc(widget.orderId).update({
+              'deliveryProof.photoUrl': url,
+            });
+          })
+          .catchError((e) => debugPrint('Background photo upload failed: $e'));
+    }
     if (mounted) {
       _hasPopped = true;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -728,8 +744,25 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
       body: StreamBuilder<KermesOrder?>(
         stream: _orderService.getOrderStream(widget.orderId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.warning_amber_rounded, size: 64, color: Colors.amber),
+                  const SizedBox(height: 16),
+                  const Text('Sipariş bulunamadı veya silinmiş.', style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Geri Dön'),
+                  ),
+                ],
+              ),
+            );
           }
 
           final order = snapshot.data!;
