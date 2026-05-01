@@ -305,42 +305,7 @@ class _OrderSetupBottomSheetState extends State<OrderSetupBottomSheet> {
                       ),
                       const SizedBox(height: 8),
 
-                      // Manuel masa girisi linki
-                      if (!_showManualInput)
-                        Center(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _showManualInput = true),
-                            child: Text(
-                              'QR kod yok mu? Masa numarasini girin',
-                              style: TextStyle(
-                                color: isDark ? Colors.grey[400] : Colors.grey[500],
-                                fontSize: 12,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ),
 
-                      // Manuel masa no girisi
-                      if (_showManualInput) ...[
-                        const SizedBox(height: 4),
-                        TextField(
-                          controller: _manualTableController,
-                          keyboardType: TextInputType.text,
-                          style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15),
-                          onChanged: (_) => setState(() {}),
-                          decoration: InputDecoration(
-                            hintText: 'Masa No (orn: 5, A3)',
-                            hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
-                            prefixIcon: const Icon(Icons.tag, size: 18, color: Color(0xFFE50D6B)),
-                            filled: true,
-                            fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE50D6B), width: 1.5)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                        ),
-                      ],
                     ],
                   ],
 
