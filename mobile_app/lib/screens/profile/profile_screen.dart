@@ -965,7 +965,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               }
               // Add delay inside the bottom sheet callback
               Future.delayed(const Duration(milliseconds: 100), () {
-                if (context.mounted) context.push('/staff-hub');
+                if (context.mounted) {
+                  // If base business selected and role is driver, route to legacy driver screen
+                  if (id.isEmpty && roleService.role == 'surucu') {
+                    context.push('/driver-deliveries');
+                  } else {
+                    context.push('/staff-hub');
+                  }
+                }
               });
             },
           ),
@@ -977,7 +984,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       } else if (hasBaseRestaurant || roleService.businessId != null) {
         // Default behavior: ONLY a restaurant (or base kermes without active assignments)
         roleService.clearOverride();
-        context.push('/staff-hub');
+        if (roleService.role == 'surucu') {
+          context.push('/driver-deliveries');
+        } else {
+          context.push('/staff-hub');
+        }
       } else {
         // isStaff is false and no kermeses found — user is not staff
         ScaffoldMessenger.of(context).showSnackBar(

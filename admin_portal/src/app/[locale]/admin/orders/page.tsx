@@ -728,6 +728,7 @@ export default function OrdersPage() {
  })(),
  createdAt: d.createdAt,
  scheduledAt: d.scheduledDeliveryTime || d.deliveryDate || d.scheduledDateTime || d.pickupTime,
+            isScheduledOrder: !!d.isScheduledOrder,
  isScheduledOrder: !!d.isScheduledOrder,
  address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
  notes: d.notes || d.orderNote || d.customerNote || '',
@@ -787,8 +788,8 @@ export default function OrdersPage() {
  return {
  id: change.doc.id,
  orderNumber: d.orderNumber || change.doc.id.slice(0, 6).toUpperCase(),
- businessId: d.businessId || d.butcherId || '',
- businessName: d.businessName || d.butcherName || '',
+ businessId: d.businessId || d.butcherId || d.kermesId || '',
+ businessName: d.businessName || d.butcherName || d.kermesName || '',
  items: d.items || [],
  total: d.totalPrice || d.totalAmount || d.total || 0,
  status: d.status || 'pending',
@@ -804,13 +805,14 @@ export default function OrdersPage() {
  tableNumber: d.tableNumber,
  paymentMethod: d.paymentMethod,
  scheduledAt: d.scheduledDeliveryTime || d.deliveryDate || d.scheduledDateTime || d.pickupTime,
+            isScheduledOrder: !!d.isScheduledOrder,
  } as any;
  })
  .filter((o: any) => {
  if (autoPrintedRef.current.has(o.id)) return false;
  if (o.status !== 'pending') return false;
  if (bf !== 'all' && o.businessId !== bf) return false;
- if (o.scheduledAt) return false;
+ if (o.isScheduledOrder && o.scheduledAt) return false;
  return true;
  });
 
