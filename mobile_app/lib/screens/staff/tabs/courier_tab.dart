@@ -44,23 +44,23 @@ class CourierTab extends ConsumerWidget {
         final orders = snapshot.data ?? [];
         
         final pending = orders.where((o) => 
-          (o is LokmaOrder && o.status == OrderStatus.pending) ||
-          (o is KermesOrder && o.status == KermesOrderStatus.pending)
+          (o.runtimeType.toString() == 'LokmaOrder' && o.status == OrderStatus.pending) ||
+          (o.runtimeType.toString().contains('KermesOrder') && o.status == KermesOrderStatus.pending)
         ).toList();
         
         final preparing = orders.where((o) => 
-          (o is LokmaOrder && o.status == OrderStatus.preparing) ||
-          (o is KermesOrder && o.status == KermesOrderStatus.preparing)
+          (o.runtimeType.toString() == 'LokmaOrder' && o.status == OrderStatus.preparing) ||
+          (o.runtimeType.toString().contains('KermesOrder') && o.status == KermesOrderStatus.preparing)
         ).toList();
         
         final ready = orders.where((o) => 
-          (o is LokmaOrder && o.status == OrderStatus.ready) ||
-          (o is KermesOrder && o.status == KermesOrderStatus.ready)
+          (o.runtimeType.toString() == 'LokmaOrder' && o.status == OrderStatus.ready) ||
+          (o.runtimeType.toString().contains('KermesOrder') && o.status == KermesOrderStatus.ready)
         ).toList();
         
         final onWay = orders.where((o) => 
-          (o is LokmaOrder && (o.status == OrderStatus.onTheWay || o.status == OrderStatus.accepted)) ||
-          (o is KermesOrder && (o.status == KermesOrderStatus.onTheWay))
+          (o.runtimeType.toString() == 'LokmaOrder' && (o.status == OrderStatus.onTheWay || o.status == OrderStatus.accepted)) ||
+          (o.runtimeType.toString().contains('KermesOrder') && (o.status == KermesOrderStatus.onTheWay))
         ).toList();
 
         return SingleChildScrollView(
@@ -104,9 +104,15 @@ class CourierTab extends ConsumerWidget {
                         final String id = order.id;
                         final String typeName = order.runtimeType.toString();
                         if (typeName.contains('Kermes')) {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => KermesActiveDeliveryScreen(orderId: id)));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => KermesActiveDeliveryScreen(
+                            orderId: id,
+                            initialOrder: order,
+                          )));
                         } else {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveDeliveryScreen(orderId: id)));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveDeliveryScreen(
+                            orderId: id,
+                            initialOrder: order,
+                          )));
                         }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
@@ -175,18 +181,21 @@ class CourierTab extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            ...readyOrders.map((o) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                children: [
-                  const Icon(Icons.receipt_long, size: 16, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Text('#${(o is LokmaOrder ? o.id : (o as KermesOrder).id).substring(0, 5)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const Spacer(),
-                  Text('${(o is LokmaOrder ? o.totalAmount : (o as KermesOrder).totalAmount).toStringAsFixed(2)} €'),
-                ],
-              ),
-            )),
+            ...readyOrders.map((o) {
+              final dynamic dynO = o;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.receipt_long, size: 16, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text('#${dynO.id.substring(0, 5)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    Text('${dynO.totalAmount.toStringAsFixed(2)} €'),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),

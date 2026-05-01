@@ -511,7 +511,7 @@ class KermesOrderService {
   Stream<List<KermesOrder>> getReadyDeliveriesStream(String kermesId) {
     return _ordersCollection
         .where('kermesId', isEqualTo: kermesId)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((snapshot) {
           final validStatuses = ['ready', 'preparing', 'pending'];
           
@@ -637,45 +637,59 @@ class KermesOrderService {
     required String courierName,
     required String courierPhone,
   }) async {
-    final doc = await _ordersCollection.doc(orderId).get();
-    if (!doc.exists) return false;
-    
-    final data = doc.data() as Map<String, dynamic>;
-    final currentStatus = data['status'] as String?;
-    
-    if (data['courierId'] != null) {
-      return false;
-    }
-
-    // Capture GPS
-    Map<String, dynamic>? claimLocation;
     try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)),
-      );
-      claimLocation = {'lat': position.latitude, 'lng': position.longitude, 'timestamp': DateTime.now().toIso8601String()};
-    } catch (e) {
+      String? currentStatus;
+      
+      // Try to read locally first, to avoid network hang
       try {
-        final lastPos = await Geolocator.getLastKnownPosition();
-        if (lastPos != null) {
-          claimLocation = {'lat': lastPos.latitude, 'lng': lastPos.longitude, 'isApproximate': true, 'timestamp': DateTime.now().toIso8601String()};
+        final doc = await _ordersCollection.doc(orderId).get(const GetOptions(source: Source.cache));
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          currentStatus = data['status'] as String?;
+          if (data['courierId'] != null && data['courierId'] != courierId) {
+            return false; // Already claimed
+          }
         }
-      } catch (_) {}
+      } catch (_) {
+        // Cache miss, ignore
+      }
+
+      // Capture GPS asynchronously (fire-and-forget) to not block UI
+      Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: Duration(seconds: 3)),
+      ).then((position) {
+        _ordersCollection.doc(orderId).update({
+          'claimLocation': {'lat': position.latitude, 'lng': position.longitude, 'timestamp': DateTime.now().toIso8601String()}
+        });
+      }).catchError((_) {});
+      
+      // Build update data
+      final updateData = <String, dynamic>{
+        'courierId': courierId,
+        'courierName': courierName,
+        'courierPhone': courierPhone,
+        'claimedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      
+      if (currentStatus == KermesOrderStatus.ready.name) {
+        updateData['status'] = KermesOrderStatus.onTheWay.name;
+      }
+
+      await _ordersCollection.doc(orderId).update(updateData).timeout(const Duration(seconds: 8));
+      return true;
+    } catch (e) {
+      debugPrint('claimDelivery timed out or failed: $e. Using offline sync.');
+      // Fire and forget offline update
+      _ordersCollection.doc(orderId).update({
+        'courierId': courierId,
+        'courierName': courierName,
+        'courierPhone': courierPhone,
+        'claimedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
     }
-    
-    final updateData = <String, dynamic>{
-      'courierId': courierId,
-      'courierName': courierName,
-      'courierPhone': courierPhone,
-      'claimedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-
-    if (claimLocation != null) updateData['claimLocation'] = claimLocation;
-    if (currentStatus == KermesOrderStatus.ready.name) updateData['status'] = KermesOrderStatus.onTheWay.name;
-
-    await _ordersCollection.doc(orderId).update(updateData);
-    return true;
   }
 
   /// Cancel delivery claim
@@ -720,10 +734,11 @@ class KermesOrderService {
     String orderId, {
     required String deliveryType,
     String? proofPhotoUrl,
+    Map<String, dynamic>? claimLocation,
+    String paymentMethod = 'cash',
+    bool isPaid = false,
+    String? courierId,
   }) async {
-    final orderDoc = await _ordersCollection.doc(orderId).get();
-    final orderData = orderDoc.data() as Map<String, dynamic>?;
-    final claimLocation = orderData?['claimLocation'] as Map<String, dynamic>?;
 
     Map<String, dynamic>? gpsData;
     double? deliveryLat;
@@ -731,8 +746,8 @@ class KermesOrderService {
     
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)),
-      );
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: Duration(seconds: 2)),
+      ).timeout(const Duration(seconds: 3));
       deliveryLat = position.latitude;
       deliveryLng = position.longitude;
       gpsData = {
@@ -741,7 +756,7 @@ class KermesOrderService {
       };
     } catch (e) {
       try {
-        final lastPosition = await Geolocator.getLastKnownPosition();
+        final lastPosition = await Geolocator.getLastKnownPosition().timeout(const Duration(seconds: 1));
         if (lastPosition != null) {
           deliveryLat = lastPosition.latitude; deliveryLng = lastPosition.longitude;
           gpsData = {
@@ -772,12 +787,29 @@ class KermesOrderService {
     if (distanceKm != null) deliveryProof['distanceKm'] = double.parse(distanceKm.toStringAsFixed(2));
     if (proofPhotoUrl != null) deliveryProof['photoUrl'] = proofPhotoUrl;
     
-    await _ordersCollection.doc(orderId).update({
+    final updateData = <String, dynamic>{
       'status': KermesOrderStatus.delivered.name,
       'deliveryProof': deliveryProof,
       'deliveredAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    };
+    
+    // Nakit ise kuryenin uzerine zimmetle
+    if (!isPaid && (paymentMethod == 'cash' || paymentMethod == 'nakit')) {
+      updateData['isPaid'] = true;
+      updateData['paymentStatus'] = 'paid';
+      if (courierId != null) {
+        updateData['collectedBy'] = courierId;
+      }
+      updateData['collectedAt'] = FieldValue.serverTimestamp();
+    }
+    
+    try {
+      await _ordersCollection.doc(orderId).update(updateData).timeout(const Duration(seconds: 8));
+    } catch (e) {
+      debugPrint('Firestore update timed out or failed: $e. The app will sync automatically when online.');
+      _ordersCollection.doc(orderId).update(updateData);
+    }
     
     return true;
   }
@@ -798,14 +830,14 @@ class KermesOrderService {
 
   /// Courier tracking & active logic
   Stream<KermesOrder?> getOrderStream(String orderId) {
-    return _ordersCollection.doc(orderId).snapshots().map(
+    return _ordersCollection.doc(orderId).snapshots(includeMetadataChanges: true).map(
       (doc) => doc.exists ? (KermesOrder.fromDocument(doc)) : null,
     );
   }
 
   Stream<KermesOrder?> getMyActiveDeliveryStream(String courierId) {
     final activeStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
-    return _ordersCollection.where('courierId', isEqualTo: courierId).snapshots().map((snapshot) {
+    return _ordersCollection.where('courierId', isEqualTo: courierId).snapshots(includeMetadataChanges: true).map((snapshot) {
       final activeDocs = snapshot.docs.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
         final status = data['status']?.toString() ?? '';
@@ -826,7 +858,7 @@ class KermesOrderService {
 
   Stream<List<KermesOrder>> getMyActiveDeliveriesStream(String courierId) {
     final activeStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
-    return _ordersCollection.where('courierId', isEqualTo: courierId).snapshots().map((snapshot) {
+    return _ordersCollection.where('courierId', isEqualTo: courierId).snapshots(includeMetadataChanges: true).map((snapshot) {
       final activeDocs = snapshot.docs.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
         final status = data['status']?.toString() ?? '';

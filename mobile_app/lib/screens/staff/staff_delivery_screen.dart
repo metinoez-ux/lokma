@@ -62,7 +62,10 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ActiveDeliveryScreen(orderId: activeDelivery.id),
+          builder: (_) => ActiveDeliveryScreen(
+            orderId: activeDelivery.id,
+            initialOrder: activeDelivery,
+          ),
         ),
       );
       return;
@@ -380,7 +383,10 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ActiveDeliveryScreen(orderId: order.id),
+          builder: (_) => ActiveDeliveryScreen(
+            orderId: order.id,
+            initialOrder: order as LokmaOrder,
+          ),
         ),
       );
     } else if (mounted) {
@@ -401,13 +407,13 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
         backgroundColor: const Color(0xFFEA184A),
         foregroundColor: Colors.white,
         actions: [
-          StreamBuilder<dynamic>(
+          StreamBuilder<LokmaOrder?>(
             stream: FirebaseAuth.instance.currentUser != null 
               ? _orderService.getMyActiveDeliveryStream(FirebaseAuth.instance.currentUser!.uid)
-              : Stream.value([]),
+              : Stream.value(null),
             builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data != null && (snapshot.data as List).isNotEmpty) {
-                final dynamic activeOrder = (snapshot.data as List).first;
+              if (snapshot.hasData && snapshot.data != null) {
+                final activeOrder = snapshot.data!;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: IconButton(
@@ -417,14 +423,20 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => KermesActiveDeliveryScreen(orderId: activeOrder.id),
+                            builder: (_) => KermesActiveDeliveryScreen(
+                              orderId: activeOrder.id,
+                              // initialOrder for Kermes is not easily castable here since activeOrder is LokmaOrder from the stream
+                            ),
                           ),
                         );
                       } else {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ActiveDeliveryScreen(orderId: activeOrder.id),
+                            builder: (_) => ActiveDeliveryScreen(
+                              orderId: activeOrder.id,
+                              initialOrder: activeOrder,
+                            ),
                           ),
                         );
                       }
@@ -452,7 +464,7 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
                   child: StreamBuilder<List<LokmaOrder>>(
                     stream: _orderService.getReadyDeliveriesStream(widget.businessId),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
+                      if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
                       }
 

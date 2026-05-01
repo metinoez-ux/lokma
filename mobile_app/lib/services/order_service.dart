@@ -161,7 +161,7 @@ class LokmaOrder {
       userName: data['userName'] ?? '',
       userPhone: data['userPhone'] ?? '',
       items: (data['items'] as List<dynamic>?)
-          ?.map((i) => OrderItem.fromMap(i))
+          ?.map((i) => OrderItem.fromMap(Map<String, dynamic>.from(i as Map)))
           .toList() ?? [],
       totalAmount: (data['totalAmount'] ?? 0).toDouble(),
       currency: data['currency'] ?? 'EUR',
@@ -479,7 +479,7 @@ class OrderService {
     return _db
         .collection(_collection)
         .where('butcherId', isEqualTo: businessId)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((snapshot) {
           // Show all delivery orders: pending, preparing, ready
           final validStatuses = ['ready', 'preparing', 'pending'];
@@ -522,50 +522,59 @@ class OrderService {
     required String courierName,
     required String courierPhone,
   }) async {
-    final doc = await _db.collection(_collection).doc(orderId).get();
-    if (!doc.exists) return false;
-    
-    final data = doc.data() as Map<String, dynamic>;
-    final currentStatus = data['status'] as String?;
-    
-    // Can only claim if not already claimed by someone else
-    if (data['courierId'] != null) {
-      return false;
-    }
-
-    // Capture GPS asynchronously (fire-and-forget) to not block UI
-    Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: Duration(seconds: 3)),
-    ).then((position) {
-      _db.collection(_collection).doc(orderId).update({
-        'claimLocation': {'lat': position.latitude, 'lng': position.longitude, 'timestamp': DateTime.now().toIso8601String()}
-      });
-    }).catchError((e) {
-      Geolocator.getLastKnownPosition().then((lastPos) {
-        if (lastPos != null) {
-          _db.collection(_collection).doc(orderId).update({
-            'claimLocation': {'lat': lastPos.latitude, 'lng': lastPos.longitude, 'isApproximate': true, 'timestamp': DateTime.now().toIso8601String()}
-          });
+    try {
+      String? currentStatus;
+      
+      // Try to read locally first, to avoid network hang
+      try {
+        final doc = await _db.collection(_collection).doc(orderId).get(const GetOptions(source: Source.cache));
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          currentStatus = data['status'] as String?;
+          if (data['courierId'] != null && data['courierId'] != courierId) {
+            return false; // Already claimed
+          }
         }
-      }).catchError((_) {});
-    });
-    
-    // Build update data - always assign courier
-    final updateData = <String, dynamic>{
-      'courierId': courierId,
-      'courierName': courierName,
-      'courierPhone': courierPhone,
-      'claimedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-    
-    // Only change status to onTheWay if order is already ready
-    if (currentStatus == OrderStatus.ready.name) {
-      updateData['status'] = OrderStatus.onTheWay.name;
-    }
+      } catch (_) {
+        // Cache miss, ignore
+      }
 
-    await _db.collection(_collection).doc(orderId).update(updateData);
-    return true;
+      // Capture GPS asynchronously (fire-and-forget) to not block UI
+      Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: Duration(seconds: 3)),
+      ).then((position) {
+        _db.collection(_collection).doc(orderId).update({
+          'claimLocation': {'lat': position.latitude, 'lng': position.longitude, 'timestamp': DateTime.now().toIso8601String()}
+        });
+      }).catchError((_) {});
+      
+      // Build update data
+      final updateData = <String, dynamic>{
+        'courierId': courierId,
+        'courierName': courierName,
+        'courierPhone': courierPhone,
+        'claimedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      
+      if (currentStatus == OrderStatus.ready.name) {
+        updateData['status'] = OrderStatus.onTheWay.name;
+      }
+
+      await _db.collection(_collection).doc(orderId).update(updateData).timeout(const Duration(seconds: 8));
+      return true;
+    } catch (e) {
+      debugPrint('claimDelivery timed out or failed: $e. Using offline sync.');
+      // Fire and forget offline update
+      _db.collection(_collection).doc(orderId).update({
+        'courierId': courierId,
+        'courierName': courierName,
+        'courierPhone': courierPhone,
+        'claimedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    }
   }
 
   /// Mark a dine-in order as served by waiter
@@ -636,11 +645,11 @@ class OrderService {
     String orderId, {
     required String deliveryType,
     String? proofPhotoUrl,
+    Map<String, dynamic>? claimLocation,
+    String paymentMethod = 'cash',
+    bool isPaid = false,
+    String? courierId,
   }) async {
-    // Fetch order to get claimLocation for km calculation
-    final orderDoc = await _db.collection(_collection).doc(orderId).get();
-    final orderData = orderDoc.data();
-    final claimLocation = orderData?['claimLocation'] as Map<String, dynamic>?;
 
     // Get current GPS location with fallback to last known position
     Map<String, dynamic>? gpsData;
@@ -654,7 +663,7 @@ class OrderService {
           accuracy: LocationAccuracy.low,
           timeLimit: Duration(seconds: 2),
         ),
-      );
+      ).timeout(const Duration(seconds: 3));
       deliveryLat = position.latitude;
       deliveryLng = position.longitude;
       gpsData = {
@@ -669,7 +678,7 @@ class OrderService {
       
       // Fallback: Get last known position (cached)
       try {
-        final lastPosition = await Geolocator.getLastKnownPosition();
+        final lastPosition = await Geolocator.getLastKnownPosition().timeout(const Duration(seconds: 1));
         if (lastPosition != null) {
           deliveryLat = lastPosition.latitude;
           deliveryLng = lastPosition.longitude;
@@ -726,10 +735,6 @@ class OrderService {
       'updatedAt': FieldValue.serverTimestamp(),
     };
     
-    final paymentMethod = orderData?['paymentMethod'] ?? 'cash';
-    final isPaid = orderData?['isPaid'] ?? false;
-    final courierId = orderData?['courierId'];
-    
     // Nakit ise kuryenin uzerine zimmetle
     if (!isPaid && (paymentMethod == 'cash' || paymentMethod == 'nakit')) {
       updateData['isPaid'] = true;
@@ -740,7 +745,14 @@ class OrderService {
       updateData['collectedAt'] = FieldValue.serverTimestamp();
     }
     
-    await _db.collection(_collection).doc(orderId).update(updateData);
+    try {
+      await _db.collection(_collection).doc(orderId).update(updateData).timeout(const Duration(seconds: 8));
+    } catch (e) {
+      debugPrint('Firestore update timed out or failed: $e. The app will sync automatically when online.');
+      // Proceed returning true so the UI doesn't hang. Firebase will sync offline.
+      // Note: We bypass the timeout exception to let the driver continue working.
+      _db.collection(_collection).doc(orderId).update(updateData);
+    }
     
     return true;
   }
@@ -786,7 +798,7 @@ class OrderService {
     return _db
         .collection(_collection)
         .doc(orderId)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((doc) => doc.exists ? LokmaOrder.fromFirestore(doc) : null);
   }
 
@@ -799,7 +811,7 @@ class OrderService {
     return _db
         .collection(_collection)
         .where('courierId', isEqualTo: courierId)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((snapshot) {
           final activeDocs = snapshot.docs.where((doc) {
             final data = doc.data();
@@ -834,7 +846,7 @@ class OrderService {
     return _db
         .collection(_collection)
         .where('courierId', isEqualTo: courierId)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((snapshot) {
           final activeDocs = snapshot.docs.where((doc) {
             final data = doc.data();
