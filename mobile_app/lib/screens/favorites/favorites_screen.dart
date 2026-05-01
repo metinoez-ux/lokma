@@ -19,6 +19,9 @@ import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../widgets/order_bottom_sheet_helper.dart';
+import '../../providers/cart_provider.dart';
+import '../../models/butcher_product.dart';
+import '../../models/product_option.dart';
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -436,23 +439,104 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // "Siparisi Goruntule" button
-                        GestureDetector(
-                          onTap: () {
-                            if (orderId.isNotEmpty) {
-                              // Instant bottom sheet popup without navigation
-                              OrderBottomSheetHelper.showOrderDetailGlobal(context, orderId);
-                            }
-                          },
-                          child: Text(
-                            tr('common.siparisi_goruntule'),
-                            style: TextStyle(
-                              color: textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                        // Butonlar: "Siparisi Goruntule" ve "Tekrar Sipariş Ver"
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                if (orderId.isNotEmpty) {
+                                  // Instant bottom sheet popup without navigation
+                                  OrderBottomSheetHelper.showOrderDetailGlobal(context, orderId);
+                                }
+                              },
+                              child: Text(
+                                tr('common.siparisi_goruntule'),
+                                style: TextStyle(
+                                  color: textPrimary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
                             ),
-                          ),
+                            if (!isKermesOrder && items != null && items.isNotEmpty) ...[
+                              const SizedBox(width: 16),
+                              GestureDetector(
+                                onTap: () {
+                                  final cartNotifier = ref.read(cartProvider.notifier);
+                                  cartNotifier.clearCart();
+
+                                  for (final item in items) {
+                                    if (item is! Map) continue;
+                                    
+                                    final qty = (item['quantity'] as num?)?.toDouble() ?? 1.0;
+                                    final price = (item['price'] as num?)?.toDouble() ?? 0.0;
+                                    final unit = item['unit']?.toString() ?? item['unitType']?.toString() ?? 'adet';
+                                    final sku = item['sku']?.toString() ?? item['id']?.toString() ?? '';
+                                    final nameData = item['name']?.toString() ?? item['productName']?.toString() ?? '';
+                                    final img = item['imageUrl']?.toString() ?? item['image']?.toString() ?? '';
+                                    
+                                    final product = ButcherProduct(
+                                      butcherId: businessId,
+                                      id: sku,
+                                      sku: sku,
+                                      masterId: '',
+                                      name: nameData,
+                                      nameData: nameData,
+                                      description: '',
+                                      category: '',
+                                      price: price,
+                                      unitType: unit,
+                                      imageUrl: img,
+                                      minQuantity: unit == 'kg' ? 0.5 : 1.0,
+                                      stepQuantity: unit == 'kg' ? 0.5 : 1.0,
+                                    );
+
+                                    final rawOpts = item['selectedOptions'] as List<dynamic>? ?? [];
+                                    final selectedOpts = rawOpts.map((o) {
+                                      if (o is Map<String, dynamic>) {
+                                        return SelectedOption.fromMap(o);
+                                      }
+                                      return SelectedOption(name: '', priceAdjustment: 0);
+                                    }).where((o) => o.name.isNotEmpty).toList();
+
+                                    cartNotifier.addToCart(
+                                      product,
+                                      qty,
+                                      businessId,
+                                      businessName,
+                                      selectedOptions: selectedOpts,
+                                      note: item['itemNote']?.toString() ?? item['note']?.toString(),
+                                    );
+                                  }
+
+                                  context.push('/cart');
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF3A3A3C) : const Color(0xFF1A1A1A),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.refresh, color: Colors.white, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'orders.reorder'.tr(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
