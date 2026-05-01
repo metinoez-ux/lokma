@@ -5,6 +5,8 @@ import '../../../services/order_service.dart';
 import '../../../services/kermes_order_service.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../models/kermes_order_model.dart';
+import '../../driver/active_delivery_screen.dart';
+import '../../driver/kermes_active_delivery_screen.dart';
 
 class CourierTab extends ConsumerWidget {
   final List<String> businessIds;
@@ -74,7 +76,18 @@ class CourierTab extends ConsumerWidget {
                   const SizedBox(width: 8),
                   _orderStatCard('Hazır', ready.length, Icons.check_circle, Colors.green, dominant: true),
                   const SizedBox(width: 8),
-                  _orderStatCard('Yolda', onWay.length, Icons.local_shipping, Colors.blue),
+                  _orderStatCard('Yolda', onWay.length, Icons.local_shipping, Colors.blue, onTap: () {
+                    if (onWay.isNotEmpty) {
+                      final order = onWay.first;
+                      if (order is LokmaOrder) {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveDeliveryScreen(orderId: order.id)));
+                      } else if (order is KermesOrder) {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => KermesActiveDeliveryScreen(orderId: order.id)));
+                      }
+                    } else {
+                      context.push('/staff-delivery?businessId=${businessIds.first}');
+                    }
+                  }),
                 ],
               ),
               const SizedBox(height: 20),
@@ -153,30 +166,33 @@ class CourierTab extends ConsumerWidget {
     );
   }
 
-  Widget _orderStatCard(String label, int count, IconData icon, Color color, {bool dominant = false}) {
+  Widget _orderStatCard(String label, int count, IconData icon, Color color, {bool dominant = false, VoidCallback? onTap}) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: dominant ? color : color.withOpacity(isDark ? 0.2 : 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: dominant ? null : Border.all(color: color.withOpacity(0.5)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: dominant ? Colors.white : color, size: 24),
-            const SizedBox(height: 6),
-            Text(
-              '$count',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: dominant ? Colors.white : color),
-            ),
-            Text(
-              label,
-              style: TextStyle(fontSize: 10, color: dominant ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700])),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-            ),
-          ],
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: dominant ? color : color.withOpacity(isDark ? 0.2 : 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: dominant ? null : Border.all(color: color.withOpacity(0.5)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: dominant ? Colors.white : color, size: 24),
+              const SizedBox(height: 6),
+              Text(
+                '$count',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: dominant ? Colors.white : color),
+              ),
+              Text(
+                label,
+                style: TextStyle(fontSize: 10, color: dominant ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700])),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+              ),
+            ],
+          ),
         ),
       ),
     );

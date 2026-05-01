@@ -107,18 +107,12 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     super.dispose();
   }
 
-  Future<void> _completeDelivery() async {
+  Future<void> _completeDelivery(LokmaOrder orderSnapshot) async {
     // Guard against multiple taps
     if (_isCompleting) return;
     setState(() => _isCompleting = true);
 
     try {
-    // Get order to check payment method
-    final orderSnapshot = await _orderService.getOrder(widget.orderId);
-    if (orderSnapshot == null) {
-      setState(() => _isCompleting = false);
-      return;
-    }
     
     final paymentMethod = orderSnapshot.paymentMethod ?? 'cash';
     final isCash = paymentMethod == 'cash' || paymentMethod == 'nakit';
@@ -1241,7 +1235,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                         width: double.infinity,
                         child: isOnTheWay 
                           ? ElevatedButton.icon(
-                              onPressed: _isCompleting ? null : _completeDelivery,
+                              onPressed: _isCompleting ? null : () => _completeDelivery(order),
                               icon: _isCompleting
                                   ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                   : const Icon(Icons.check_circle, color: Colors.white, size: 24),

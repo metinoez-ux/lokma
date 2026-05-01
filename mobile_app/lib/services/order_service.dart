@@ -539,7 +539,7 @@ class OrderService {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 4),
+          timeLimit: Duration(seconds: 1),
         ),
       );
       claimLocation = {
@@ -668,7 +668,7 @@ class OrderService {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 4),
+          timeLimit: Duration(seconds: 1),
         ),
       );
       deliveryLat = position.latitude;

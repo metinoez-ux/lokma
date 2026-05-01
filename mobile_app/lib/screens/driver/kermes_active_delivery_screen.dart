@@ -43,6 +43,8 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
   double? _distanceToPin; // meters
   double? _bearingToPin; // degrees
   bool _compassActive = false;
+  bool _isCompleting = false; // Guard against double-tap
+  bool _hasPopped = false; // Guard against double pop
 
   @override
   void initState() {
@@ -82,10 +84,12 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
     super.dispose();
   }
 
-  Future<void> _completeDelivery() async {
-    // Get order to check payment method
-    final orderSnapshot = await _orderService.getOrder(widget.orderId);
-    if (orderSnapshot == null) return;
+  Future<void> _completeDelivery(KermesOrder orderSnapshot) async {
+    // Guard against multiple taps
+    if (_isCompleting) return;
+    setState(() => _isCompleting = true);
+    
+    try {
     
     final paymentMethod = orderSnapshot.paymentMethod ?? 'cash';
     final isCash = paymentMethod == 'cash' || paymentMethod == 'nakit';
@@ -214,12 +218,22 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
       deliveryType: deliveryType,
       proofPhotoUrl: photoUrl,
     );
-    
     if (mounted) {
-      Navigator.pop(context);
+      _hasPopped = true;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(tr('driver.delivery_completed_success')), backgroundColor: Colors.green),
       );
+      Navigator.pop(context);
+    }
+    } catch (e) {
+      debugPrint('[ActiveDelivery] _completeDelivery error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isCompleting = false);
     }
   }
   
@@ -501,10 +515,6 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
 
   /// Build compass widget for last-mile precision navigation
   Widget _buildCompassWidget(KermesOrder order, bool isDark) {
-    if (!false || null == null || null == null) {
-      return const SizedBox.shrink();
-    }
-    
     final distText = _distanceToPin != null
         ? (_distanceToPin! < 1000
             ? '${_distanceToPin!.round()}m'
@@ -512,7 +522,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
         : '...';
     
     final isClose = _compassActive; // < 200m
-    final pinCode = null ?? '';
+    final pinCode = '';
     
     return Card(
       color: isClose

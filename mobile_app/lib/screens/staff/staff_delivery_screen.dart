@@ -18,18 +18,19 @@ import '../orders/order_chat_screen.dart';
 import '../../services/chat_service.dart';
 import '../shared/tap_to_pay_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Staff Delivery Screen - Shows pending deliveries for staff to claim
-class StaffDeliveryScreen extends StatefulWidget {
+class StaffDeliveryScreen extends ConsumerStatefulWidget {
   final String businessId;
   
   const StaffDeliveryScreen({super.key, required this.businessId});
 
   @override
-  State<StaffDeliveryScreen> createState() => _StaffDeliveryScreenState();
+  ConsumerState<StaffDeliveryScreen> createState() => _StaffDeliveryScreenState();
 }
 
-class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
+class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
   final OrderService _orderService = OrderService();
   String? _staffName;
   String? _staffPhone;
@@ -59,14 +60,13 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ActiveDeliveryScreen(orderId: activeDelivery.id),
+          builder: (_) => StaffActiveDeliveryScreen(orderId: activeDelivery.id),
         ),
       );
-    } else {
-      if (mounted) {
-        setState(() => _checkedActiveDelivery = true);
-      }
+      return;
     }
+
+    setState(() => _isLoading = false);
   }
 
   Future<void> _loadStaffInfo() async {
@@ -79,7 +79,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       if (doc.exists) {
         final data = doc.data()!;
         setState(() {
-          _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
+          _staffName = data['name'] ?? data['displayName'] ?? tr('driver.surucu');
           _staffPhone = data['phone'] ?? data['phoneNumber'] ?? '';
         });
       }
@@ -88,29 +88,92 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
 
   Future<void> _claimDelivery(LokmaOrder order) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || _staffName == null) return;
+    final driverState = ref.read(driverProvider);
+    final driverName = _staffName ?? driverState.driverInfo?.name ?? 'Personel';
+    final driverPhone = _staffPhone ?? driverState.driverInfo?.phone ?? '';
+    
+    if (user == null) return;
 
     // Check if staff is on break — ask to end break first
     final shiftService = ShiftService();
     if (shiftService.shiftStatus == 'paused') {
-      final endBreak = await showDialog<bool>(
+      final endBreak = await showModalBottomSheet<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(tr('staff.break_continues')),
-          content: Text(
-            tr('staff.break_end_for_delivery_prompt'),
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(tr('common.cancel')),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.coffee, size: 40, color: Colors.amber),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  tr('staff.break_continues'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${tr('driver.teslimat_ustlenmek_icin_molani').replaceAll(r'\\n', '').replaceAll(r'\n', '')}\nDevam etmek istiyor musunuz?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.4),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: Text(tr('common.cancel'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text(tr('driver.molayi_bitir_ve_ustlen'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
-              child: Text(tr('staff.end_break_and_take'), style: const TextStyle(color: Colors.white)),
-            ),
-          ],
+          ),
         ),
       );
 
@@ -129,27 +192,159 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       }
     }
 
-    // Confirm dialog
-    final confirm = await showDialog<bool>(
+    if (!mounted) return;
+
+    // Confirm dialog via Bottom Sheet
+    final confirm = await showModalBottomSheet<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('driver.take_delivery')),
-        content: Text(
-          '${tr('driver.confirm_take_delivery')}\n\n'
-          '${order.deliveryAddress ?? tr('common.no_address')}\n'
-          '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              spreadRadius: 5,
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(tr('common.cancel')),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.delivery_dining, size: 48, color: Colors.amber),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                tr('driver.take_delivery'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                tr('driver.bu_siparisi_ustlenmek_istedigi').replaceAll(r'\\n', '').replaceAll(r'\n', ''),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.4),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.location_on, color: Colors.red, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Teslimat Adresi', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                              Text(
+                                order.deliveryAddress ?? "Adres yok",
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.payments, color: Colors.green, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Toplam Tutar', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                              Text(
+                                '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      child: Text(tr('common.cancel'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(tr('driver.ustlen'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
-            child: Text(tr('driver.take_delivery_btn'), style: const TextStyle(color: Colors.white)),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -160,20 +355,21 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     final success = await _orderService.claimDelivery(
       orderId: order.id,
       courierId: user.uid,
-      courierName: _staffName!,
-      courierPhone: _staffPhone ?? '',
+      courierName: driverName,
+      courierPhone: driverPhone,
     );
 
     setState(() => _isLoading = false);
 
     if (success && mounted) {
+      // Show appropriate message based on whether break was ended
       final breakEnded = shiftService.shiftStatus == 'active' && shiftService.isOnShift;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             breakEnded
-                ? tr('driver.break_stopped_delivery_ready')
-                : tr('driver.delivery_claimed_tracking_started'),
+                ? '☕ Molanız durduruldu. Teslimatınızı teslim edebilirsiniz!'
+                : tr('driver.teslimat_ustlenildi_konum_taki'),
           ),
           backgroundColor: Colors.green,
         ),
@@ -182,7 +378,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ActiveDeliveryScreen(orderId: order.id),
+          builder: (_) => StaffActiveDeliveryScreen(orderId: order.id),
         ),
       );
     } else if (mounted) {
@@ -641,16 +837,16 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
 }
 
 /// Active Delivery Screen - For courier who claimed the order
-class ActiveDeliveryScreen extends StatefulWidget {
+class StaffActiveDeliveryScreen extends StatefulWidget {
   final String orderId;
   
-  const ActiveDeliveryScreen({super.key, required this.orderId});
+  const StaffActiveDeliveryScreen({super.key, required this.orderId});
 
   @override
-  State<ActiveDeliveryScreen> createState() => _ActiveDeliveryScreenState();
+  State<StaffActiveDeliveryScreen> createState() => _StaffActiveDeliveryScreenState();
 }
 
-class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
+class _StaffActiveDeliveryScreenState extends State<StaffActiveDeliveryScreen> {
   final OrderService _orderService = OrderService();
   final LocationTrackingService _locationService = LocationTrackingService();
 
