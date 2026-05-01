@@ -3320,7 +3320,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                               ),
                             ),
                             label: Text(
-                              unread > 0 ? 'Mesaj ($unread)' : 'Mesaj',
+                              unread > 0 ? '${'common.message'.tr()} ($unread)' : 'common.message'.tr(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -4867,7 +4867,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Henüz mesaj yok',
+                          'common.no_messages'.tr(),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.4),
                             fontSize: 15,
@@ -4875,7 +4875,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Kuryenize mesaj gönderin',
+                          'common.send_first_message'.tr(),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.25),
                             fontSize: 13,
@@ -4937,7 +4937,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                       decoration: InputDecoration(
-                        hintText: 'Mesaj yazın...',
+                        hintText: 'common.write_message'.tr(),
                         hintStyle: TextStyle(color: Colors.white.withOpacity(0.25)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         border: InputBorder.none,
