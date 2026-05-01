@@ -501,14 +501,36 @@ export default function KermesDetailPage() {
         assignedDrivers: newDrivers,
       };
 
-      const sendNotif = async (uid: string, title: string, body: string) => {
+      const sendNotif = async (uid: string, title: string, body: string, roleName: string) => {
         try {
           await fetch('/api/admin/notify-staff', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: uid, title, body, type: 'kermes_assignment' })
           });
-        } catch (e) { }
+          
+          // Send email notification too
+          const uDoc = await getDoc(doc(db, 'users', uid));
+          if (uDoc.exists()) {
+            const uData = uDoc.data();
+            await fetch('/api/kermes/notify-assignment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: uid,
+                userName: uData.displayName || uData.firstName || '',
+                userEmail: uData.email || '',
+                userPhone: uData.phoneNumber || uData.phone || '',
+                kermesId: kermesId,
+                kermesTitle: kermes?.title || editForm.title || 'Kermes',
+                roles: [roleName],
+                isKermesAdmin: roleName === 'Kermes Admin',
+                assignerName: admin ? `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.displayName : 'Admin',
+                locale: params.locale || 'de',
+              }),
+            });
+          }
+        } catch (e) { console.error('Notif error:', e); }
       };
 
       const toNotify: { uid: string, role: string }[] = [];
@@ -524,8 +546,18 @@ export default function KermesDetailPage() {
         newWaiters.forEach(uid => { if (!assignedWaiters.includes(uid)) toNotify.push({ uid, role: 'Garson' }); });
       } else updatePayload.assignedWaiters = assignedWaiters;
 
-      if (newKermesAdmins !== undefined) updatePayload.kermesAdmins = newKermesAdmins;
-      else updatePayload.kermesAdmins = kermesAdmins;
+      // Kermes Admins
+      if (newKermesAdmins !== undefined) {
+        updatePayload.kermesAdmins = newKermesAdmins;
+        newKermesAdmins.forEach(uid => { if (!kermesAdmins.includes(uid)) toNotify.push({ uid, role: 'Kermes Admin' }); });
+      } else {
+        updatePayload.kermesAdmins = kermesAdmins;
+      }
+
+      // Staff
+      if (newStaff) {
+        newStaff.forEach(uid => { if (!assignedStaff.includes(uid)) toNotify.push({ uid, role: 'Personel' }); });
+      }
 
       // Custom Roles - hem atamalari hem de rol tanimi kaydet
       if (newCustomRoleAssignments !== undefined) {
@@ -550,7 +582,7 @@ export default function KermesDetailPage() {
 
       // Trigger Notifications
       for (const n of toNotify) {
-        await sendNotif(n.uid, 'Yeni Görev Ataması', `"${kermes?.title || editForm.title || 'Kermes'}" kermesinde "${n.role}" görevine atandınız.`);
+        await sendNotif(n.uid, 'Yeni Görev Ataması', `"${kermes?.title || editForm.title || 'Kermes'}" kermesinde "${n.role}" görevine atandınız.`, n.role);
       }
 
     } catch (error) {
