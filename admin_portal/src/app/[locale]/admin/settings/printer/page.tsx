@@ -213,8 +213,6 @@ export default function PrinterSettingsPage() {
  </div>
  </div>
 
- </div>
-
 
  {/* ─── Status Card ─── */}
  {settings.enabled && settings.printerIp && (
