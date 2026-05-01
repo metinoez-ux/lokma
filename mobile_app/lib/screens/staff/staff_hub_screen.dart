@@ -1552,7 +1552,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                setState(() {
                   _selectedNavIndex = index;
                   if (allDestinations[index]['label'] == 'Cüzdanım') {
-                    ScreenProtector.preventScreenshotOn();
+                    if (roleService.businessType == 'kermes') {
+                      ScreenProtector.preventScreenshotOn();
+                    } else {
+                      ScreenProtector.preventScreenshotOff();
+                    }
                   } else {
                     ScreenProtector.preventScreenshotOff();
                   }

@@ -25,8 +25,9 @@ import 'package:lokma_app/widgets/lokma_network_image.dart';
 
 class ActiveDeliveryScreen extends StatefulWidget {
   final String orderId;
+  final LokmaOrder? initialOrder;
   
-  const ActiveDeliveryScreen({super.key, required this.orderId});
+  const ActiveDeliveryScreen({super.key, required this.orderId, this.initialOrder});
 
   @override
   State<ActiveDeliveryScreen> createState() => _ActiveDeliveryScreenState();
@@ -44,6 +45,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
   double? _bearingToPin; // degrees
   bool _compassActive = false;
   bool _isCompleting = false; // Guard against double-tap on complete button
+  bool _isStarting = false;   // Guard against double-tap on Yol Al button
   bool _hasPopped = false; // Guard against double Navigator.pop (completeDelivery + StreamBuilder)
 
   @override
@@ -387,37 +389,54 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
 
 
   Future<void> _startDelivery() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('driver.head_out')),
-        content: Text(tr('driver.did_you_take_order_and_head_out')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(tr('common.no')),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
-            child: Text('staff.yes_on_my_way'.tr(), 
-                              style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+    if (_isStarting) return;
+    setState(() => _isStarting = true);
+    try {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr('driver.head_out')),
+          content: Text(tr('driver.did_you_take_order_and_head_out')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(tr('common.no')),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
+              child: Text('staff.yes_on_my_way'.tr(),
+                                style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
 
-    if (confirm == true) {
-      _locationService.startTracking(widget.orderId, isKermes: false);
-      await _orderService.startDelivery(widget.orderId);
+      if (confirm == true) {
+        _locationService.startTracking(widget.orderId, isKermes: false);
+        await _orderService.startDelivery(widget.orderId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr('driver.you_are_on_the_way')),
+              backgroundColor: const Color(0xFFEA184A),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[ActiveDelivery] _startDelivery error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr('driver.you_are_on_the_way')),
-            backgroundColor: const Color(0xFFEA184A),
+          const SnackBar(
+            content: Text('Hata: Yola çıkış kaydedilemedi. Tekrar deneyin.'),
+            backgroundColor: Colors.red,
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isStarting = false);
     }
   }
 
@@ -838,6 +857,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
         ],
       ),
       body: StreamBuilder<LokmaOrder?>(
+        initialData: widget.initialOrder,
         stream: _orderService.getOrderStream(widget.orderId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -855,7 +875,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               ),
             );
           }
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data == null) {
@@ -889,7 +909,24 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                 }
               });
             }
-            return const Center(child: CircularProgressIndicator());
+            // Show delivery success briefly instead of a spinner
+            return Scaffold(
+              backgroundColor: Colors.green.shade900,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white, size: 80),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr('driver.delivery_completed_success'),
+                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           // Use enum comparison, not string comparison (LokmaOrderStatus is an enum)
@@ -1361,14 +1398,16 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                             )
                           : isReady
                             ? ElevatedButton.icon(
-                                onPressed: _startDelivery,
-                                icon: const Icon(Icons.motorcycle, color: Colors.white, size: 24),
-                                label: const Text(
-                                  '🚗 YOL AL',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
+                                onPressed: _isStarting ? null : _startDelivery,
+                                icon: _isStarting
+                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                    : const Icon(Icons.motorcycle, color: Colors.white, size: 24),
+                                label: Text(
+                                  _isStarting ? 'BAŞLATILIYOR...' : '🚗 YOL AL',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFEA184A),
+                                  backgroundColor: _isStarting ? Colors.grey : const Color(0xFFEA184A),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                                 ),
                               )

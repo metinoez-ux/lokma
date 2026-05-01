@@ -180,9 +180,9 @@ class LocationTrackingService {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 30),
+          timeLimit: Duration(seconds: 10),
         ),
-      );
+      ).timeout(const Duration(seconds: 15));
       _lastPosition = position;
       await _writeLocationToFirestore(position);
     } catch (e) {
@@ -212,9 +212,9 @@ class LocationTrackingService {
       return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 30),
+          timeLimit: Duration(seconds: 10),
         ),
-      );
+      ).timeout(const Duration(seconds: 15));
     } catch (e) {
       debugPrint('[LocationTracking] Error getting position: $e');
       return null;

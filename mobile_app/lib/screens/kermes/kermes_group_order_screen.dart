@@ -73,7 +73,10 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
     } else {
       _fetchEventAndProducts();
     }
-    // Pill init
+    // Pill init and listener
+    _selectedCategory.addListener(() {
+      if (mounted) _updatePillPosition();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updatePillPosition(_selectedCategory.value);
     });
@@ -189,10 +192,8 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
     final groupState = ref.watch(groupOrderProvider);
     final order = groupState.currentOrder;
 
-    // Force pill recalculation after every build to fix stale positioning (e.g. when chips grow with badges)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _updatePillPosition();
-    });
+    // Build metodu icinde surekli post frame cagirarak animasyonu bozmamak icin kaldirdik.
+    //_updatePillPosition();
 
     return PopScope(
       canPop: true,
@@ -706,7 +707,7 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
     );
   }
 
-  // Menu tab - sadece urun listesi (search ve categories header'da)
+  // Menu tab - kategorilere ayrilmis urun listesi
   Widget _buildMenuProductList(bool isDark) {
     if (_filteredProducts.isEmpty) {
       return CustomScrollView(
@@ -731,6 +732,15 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
       );
     }
 
+    // Kategorileri grupla (Arama varsa sadece filtrelenenleri goster)
+    final grouped = <String, List<KermesMenuItem>>{};
+    for (final item in _filteredProducts) {
+      final cat = item.category ?? 'Diger';
+      grouped.putIfAbsent(cat, () => []).add(item);
+    }
+
+    final categoriesToDisplay = grouped.keys.toList()..sort();
+
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
@@ -738,20 +748,67 @@ class _KermesGroupOrderScreenState extends ConsumerState<KermesGroupOrderScreen>
           padding: const EdgeInsets.only(bottom: 80),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
-              (_, i) {
-                final item = _filteredProducts[i];
-                return KermesMenuItemTile(
-                  item: item,
-                  onAdd: () => _addItemToGroup(item),
-                  onTap: () => _addItemToGroup(item),
+              (context, index) {
+                final category = categoriesToDisplay[index];
+                final categoryItems = grouped[category]!;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Kirmizi yazili kategori basligi (aynen bireysel siparisteki gibi)
+                    Container(
+                      width: double.infinity,
+                      color: isDark
+                          ? const Color(0xFF2C2C2C).withOpacity(0.6)
+                          : const Color(0xFFF2EEE9),
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                      child: Text(
+                        category,
+                        style: const TextStyle(
+                          color: Color(0xFFF41C54), // Her zaman kirmizi (Lokma Pink)
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                    // Urunler
+                    ...categoryItems.map((item) {
+                      final cartQty = _getCartQuantityInGroup(item);
+                      return KermesMenuItemTile(
+                        item: item,
+                        cartQuantity: cartQty,
+                        onAdd: () => _addItemToGroup(item),
+                        onTap: () => _addItemToGroup(item),
+                      );
+                    }),
+                    if (index < categoriesToDisplay.length - 1)
+                      const SizedBox(height: 16),
+                  ],
                 );
               },
-              childCount: _filteredProducts.length,
+              childCount: categoriesToDisplay.length,
             ),
           ),
         ),
       ],
     );
+  }
+
+  int _getCartQuantityInGroup(KermesMenuItem item) {
+    final groupState = ref.read(groupOrderProvider);
+    final myOrder = groupState.currentOrder;
+    final myPid = groupState.currentParticipantId;
+    if (myOrder == null || myPid == null) return 0;
+
+    final me = myOrder.participants
+        .cast<GroupOrderParticipant?>()
+        .firstWhere((p) => p?.oderId == myPid, orElse: () => null);
+    if (me == null) return 0;
+
+    return me.items
+        .where((ci) => ci.menuItemName == item.name)
+        .fold<int>(0, (sum, ci) => sum + ci.quantity);
   }
 
   int _myItemCount(KermesGroupOrder? order) {

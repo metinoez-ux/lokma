@@ -411,10 +411,17 @@ export default function BusinessesPage() {
 
  // Brand/Label filter - check both brandLabel and brand fields
  const businessLabel = (b.brandLabel || (b as any).brand || '').toLowerCase();
+ const isTunaPartner = (b as any).isTuna === true ||
+   (b as any).isTunaPartner === true ||
+   (b as any).isTunaApproved === true ||
+   businessLabel === 'tuna' ||
+   (b.companyName || '').toLowerCase().includes('tuna') ||
+   ((b as any).name || '').toLowerCase().includes('tuna');
+
  const matchesBrand = brandFilter === 'all' ||
- (brandFilter === 'tuna' && businessLabel === 'tuna') ||
+ (brandFilter === 'tuna' && isTunaPartner) ||
  (brandFilter === 'akdeniz_toros' && businessLabel === 'akdeniz_toros') ||
- (brandFilter === 'none' && !businessLabel);
+ (brandFilter === 'none' && !businessLabel && !isTunaPartner);
 
  return matchesSearch && matchesType && matchesStatus && matchesBrand;
  });
@@ -1284,18 +1291,23 @@ export default function BusinessesPage() {
  <p className="text-foreground font-medium">{business.companyName}</p>
  </td>
  {/* Brand Label Column */}
- <td className="px-4 py-4">
- {((business.brandLabel || (business as any).brand) === 'tuna') && (
- <span className="text-red-500 dark:text-red-400 font-bold text-sm tracking-wide">
- TUNA
+ <td className="px-4 py-4 flex flex-col gap-1 items-start justify-center h-full">
+ {((business as any).isTuna === true ||
+   (business as any).isTunaPartner === true ||
+   (business as any).isTunaApproved === true ||
+   (business.brandLabel || (business as any).brand) === 'tuna' ||
+   (business.companyName || '').toLowerCase().includes('tuna') ||
+   ((business as any).name || '').toLowerCase().includes('tuna')) && (
+ <span className="inline-flex items-center gap-1 bg-[#EA184A]/10 text-[#EA184A] px-2 py-1 rounded-md font-bold text-xs tracking-wide border border-[#EA184A]/20">
+   TUNA
  </span>
  )}
  {((business.brandLabel || (business as any).brand) === 'akdeniz_toros') && (
- <span className="text-green-600 dark:text-green-500 font-bold text-sm tracking-wide">
+ <span className="inline-flex items-center gap-1 bg-green-600/10 text-green-600 px-2 py-1 rounded-md font-bold text-xs tracking-wide border border-green-600/20">
  Akdeniz Toros
  </span>
  )}
- {!business.brandLabel && !(business as any).brand && (
+ {!((business as any).isTuna === true || (business as any).isTunaPartner === true || (business as any).isTunaApproved === true || (business.brandLabel || (business as any).brand) === 'tuna' || (business.companyName || '').toLowerCase().includes('tuna') || ((business as any).name || '').toLowerCase().includes('tuna')) && ((business.brandLabel || (business as any).brand) !== 'akdeniz_toros') && (
  <span className="text-muted-foreground/80 text-sm">-</span>
  )}
  </td>

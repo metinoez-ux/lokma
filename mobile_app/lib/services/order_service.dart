@@ -622,11 +622,21 @@ class OrderService {
   /// Start delivery - changes status from 'ready' to 'onTheWay'
   /// Called when driver picks up the order and heads to customer
   Future<bool> startDelivery(String orderId) async {
-    await _db.collection(_collection).doc(orderId).update({
-      'status': OrderStatus.onTheWay.name,
-      'startedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    try {
+      await _db.collection(_collection).doc(orderId).update({
+        'status': OrderStatus.onTheWay.name,
+        'startedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 8));
+    } catch (e) {
+      debugPrint('[OrderService] startDelivery timed out or failed: $e. Using offline sync.');
+      // Fire-and-forget offline write — Firestore SDK will sync when reconnected
+      _db.collection(_collection).doc(orderId).update({
+        'status': OrderStatus.onTheWay.name,
+        'startedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
     return true;
   }
 
@@ -882,7 +892,7 @@ class OrderService {
     return _db
         .collection(_collection)
         .where('butcherId', whereIn: businessIds.take(30).toList())
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((snapshot) {
           final validStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
           

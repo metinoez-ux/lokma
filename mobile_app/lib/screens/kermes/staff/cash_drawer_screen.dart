@@ -48,7 +48,8 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
           .where('status', isEqualTo: 'pending')
           .orderBy('createdAt', descending: true)
           .limit(1)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 10));
 
       if (pendingSnap.docs.isNotEmpty) {
         _activeHandover = pendingSnap.docs.first;
@@ -64,7 +65,8 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
           .where('status', isEqualTo: 'completed')
           .orderBy('completedAt', descending: true)
           .limit(1)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 10));
 
       Timestamp? lastAcceptedTime;
       if (acceptedSnap.docs.isNotEmpty) {
@@ -77,14 +79,16 @@ class _CashDrawerScreenState extends ConsumerState<CashDrawerScreen> {
           .where('kermesId', isEqualTo: widget.kermesId)
           .where('createdByStaffId', isEqualTo: widget.staffId)
           .where('paymentMethod', isEqualTo: 'cash')
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 10));
 
       final collectedOrdersSnap = await FirebaseFirestore.instance
           .collection('kermes_orders')
           .where('kermesId', isEqualTo: widget.kermesId)
           .where('collectedByStaffId', isEqualTo: widget.staffId)
           .where('paymentMethod', isEqualTo: 'cash')
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 10));
 
       final List<DocumentSnapshot> allOrders = [];
       final Set<String> processedIds = {};

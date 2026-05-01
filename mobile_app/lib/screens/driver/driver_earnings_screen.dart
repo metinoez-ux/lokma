@@ -31,18 +31,40 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
 
   Future<void> _loadDriverProfile() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    final doc = await _db.collection('admins').doc(uid).get();
-    if (doc.exists && mounted) {
-      final data = doc.data()!;
-      setState(() {
-        _bankAccount = data['bankAccount'] as Map<String, dynamic>?;
-        _payoutPrefs = data['payoutPreferences'] as Map<String, dynamic>?;
-        _isLoadingProfile = false;
-      });
-    } else {
+    if (uid == null) {
       setState(() => _isLoadingProfile = false);
+      return;
+    }
+
+    // Try cache first for instant render
+    try {
+      final cached = await _db.collection('admins').doc(uid).get(const GetOptions(source: Source.cache));
+      if (cached.exists && mounted) {
+        final data = cached.data()!;
+        setState(() {
+          _bankAccount = data['bankAccount'] as Map<String, dynamic>?;
+          _payoutPrefs = data['payoutPreferences'] as Map<String, dynamic>?;
+          _isLoadingProfile = false;
+        });
+        return; // Done from cache, background refresh will update
+      }
+    } catch (_) { /* cache miss — continue to network */ }
+
+    // Network fallback
+    try {
+      final doc = await _db.collection('admins').doc(uid).get();
+      if (doc.exists && mounted) {
+        final data = doc.data()!;
+        setState(() {
+          _bankAccount = data['bankAccount'] as Map<String, dynamic>?;
+          _payoutPrefs = data['payoutPreferences'] as Map<String, dynamic>?;
+          _isLoadingProfile = false;
+        });
+      } else {
+        setState(() => _isLoadingProfile = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingProfile = false);
     }
   }
 
@@ -104,28 +126,37 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
               stream: _db
                   .collection('meat_orders')
                   .where('courierId', isEqualTo: uid)
-                  .where('status', isEqualTo: 'delivered')
-                  .snapshots(),
+                  .snapshots(includeMetadataChanges: true),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                // Show spinner only while no data at all
+                if (!snapshot.hasData && !snapshot.hasError) {
                   return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  // Query error (e.g. missing index) — show empty state
+                  debugPrint('[Earnings] Stream error: ${snapshot.error}');
+                  return _buildEmptyState(isDark);
                 }
 
                 final allDocs = snapshot.data?.docs ?? [];
                 final startDate = _getStartDate();
 
-                // Filter by period + only deliveries with valid deliveredAt
+                // Filter delivered orders client-side (avoids compound index requirement)
                 final orders = allDocs.where((doc) {
                   final data = doc.data() as Map<String, dynamic>;
-                  final deliveredAt = (data['deliveredAt'] as Timestamp?)?.toDate();
-                  if (deliveredAt == null) return false;
-                  return deliveredAt.isAfter(startDate);
+                  // Only delivered orders
+                  if ((data['status'] as String?) != 'delivered') return false;
+                  // Accept deliveredAt or updatedAt as the completion timestamp
+                  final ts = (data['deliveredAt'] as Timestamp?) ?? (data['updatedAt'] as Timestamp?);
+                  if (ts == null) return true; // Include if no date — will be grouped as current period
+                  return ts.toDate().isAfter(startDate);
                 }).map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
+                  final deliveredTs = (data['deliveredAt'] as Timestamp?) ?? (data['updatedAt'] as Timestamp?);
                   return _EarningsEntry(
                     orderId: doc.id,
                     orderNumber: data['orderNumber']?.toString() ?? doc.id.substring(0, 6).toUpperCase(),
-                    deliveredAt: (data['deliveredAt'] as Timestamp).toDate(),
+                    deliveredAt: deliveredTs?.toDate() ?? DateTime.now(),
                     totalAmount: (data['totalAmount'] ?? 0).toDouble(),
                     tipAmount: (data['tipAmount'] ?? data['tip'] ?? 0).toDouble(),
                     city: _extractCity(data['deliveryAddress'] as String?),

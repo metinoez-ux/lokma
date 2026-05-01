@@ -9,6 +9,15 @@
       ]
     },
     {
+      "collectionGroup": "meat_orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "courierId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "deliveredAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "messages",
       "queryScope": "COLLECTION",
       "fields": [

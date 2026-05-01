@@ -629,6 +629,95 @@ exports.onKermesOrderStatusChangedNotif = (0, firestore_1.onDocumentUpdated)({
             }
         }
     }
+    // ── Geri Alma (Revert) veya Havuza Dusme Bildirimi ──
+    const wasClosed = before.status === "delivered" || before.status === "cancelled" || before.status === "rejected";
+    const isOpen = newStatus === "ready" || newStatus === "preparing" || newStatus === "pending";
+    if (wasClosed && isOpen && !after.assignedCourierId) {
+        const kermesId = after.kermesId;
+        if (kermesId) {
+            try {
+                const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
+                if (kermesDoc.exists) {
+                    const kData = kermesDoc.data();
+                    const kermesName = kData?.kermesName || kData?.city || "Kermes";
+                    const staffUids = new Set();
+                    ['kermesAdmins', 'assignedStaff', 'assignedWaiters', 'assignedDrivers'].forEach(field => {
+                        if (Array.isArray(kData?.[field])) {
+                            kData[field].forEach((uid) => staffUids.add(uid));
+                        }
+                    });
+                    if (kData?.prepZoneAssignments) {
+                        Object.values(kData.prepZoneAssignments).forEach((uids) => {
+                            if (Array.isArray(uids)) {
+                                uids.forEach((uid) => staffUids.add(uid));
+                            }
+                        });
+                    }
+                    if (staffUids.size > 0) {
+                        const adminPromises = Array.from(staffUids).map(uid => db.collection("admins").doc(uid).get());
+                        const adminDocs = await Promise.all(adminPromises);
+                        const mobileTokens = [];
+                        const webTokens = [];
+                        adminDocs.forEach(doc => {
+                            if (doc.exists) {
+                                const data = doc.data();
+                                if (data?.fcmToken && typeof data.fcmToken === 'string')
+                                    mobileTokens.push(data.fcmToken);
+                                if (data?.fcmTokens && Array.isArray(data.fcmTokens))
+                                    mobileTokens.push(...data.fcmTokens);
+                                if (data?.webFcmTokens && Array.isArray(data.webFcmTokens))
+                                    webTokens.push(...data.webFcmTokens);
+                            }
+                        });
+                        const staffLang = "tr";
+                        const trans = await (0, translation_1.getPushTranslations)(staffLang);
+                        const totalAmount = after.totalAmount || 0;
+                        const staffTitle = (trans.kermesNewStaffTitle || `🔔 Yeni Sipariş ({{kermesName}})!`).replace("{{kermesName}}", kermesName);
+                        let staffBody = (trans.kermesNewStaffBody || `#{{orderNumber}} - {{amount}}€ [{{deliveryType}}]`)
+                            .replace("{{orderNumber}}", orderNumber)
+                            .replace("{{amount}}", totalAmount.toFixed(2));
+                        if (deliveryType) {
+                            staffBody = staffBody.replace("{{deliveryType}}", deliveryType);
+                        }
+                        else {
+                            staffBody = staffBody.replace(" [{{deliveryType}}]", "").replace("[{{deliveryType}}]", "");
+                        }
+                        const sendObj = (tokens, isWeb) => ({
+                            notification: { title: staffTitle, body: staffBody },
+                            data: { type: "kermes_new_order", orderId, orderNumber, kermesId },
+                            tokens,
+                            android: { priority: "high", notification: { channelId: "kermes_orders", sound: "notification_sound" } },
+                            apns: { payload: { aps: { sound: "notification_sound.wav", badge: 1 } } },
+                            webpush: isWeb ? { fcmOptions: { link: `/kermes/orders` } } : undefined,
+                        });
+                        if (mobileTokens.length > 0)
+                            admin.messaging().sendEachForMulticast(sendObj(mobileTokens, false));
+                        if (webTokens.length > 0)
+                            admin.messaging().sendEachForMulticast(sendObj(webTokens, true));
+                        const batch = db.batch();
+                        for (const uid of staffUids) {
+                            const notifRef = db.collection("users").doc(uid).collection("personnel_notifications").doc();
+                            batch.set(notifRef, {
+                                title: staffTitle,
+                                body: staffBody,
+                                type: "kermes_new_order",
+                                orderId,
+                                orderNumber,
+                                kermesId,
+                                read: false,
+                                createdAt: new Date().toISOString(),
+                            });
+                        }
+                        await batch.commit();
+                        console.log(`[RevertOrderNotif] Re-sent new order notification to ${staffUids.size} staff`);
+                    }
+                }
+            }
+            catch (e) {
+                console.error("[RevertOrderNotif] Failed to notify Kermes staff on revert:", e);
+            }
+        }
+    }
     // ── Musteri bildirimi: userId olmayan veya guest siparisleri atla ──
     if (!userId || userId.startsWith("guest_"))
         return;
@@ -637,6 +726,7 @@ exports.onKermesOrderStatusChangedNotif = (0, firestore_1.onDocumentUpdated)({
     let title = "";
     let body = "";
     let notifType = "kermes_order_update";
+    let podImageUrl = null;
     if (newStatus === "preparing") {
         title = trans.kermesOrderPreparingTitle || "Siparisimiz Hazirlaniyor";
         body = (trans.kermesOrderPreparingBody || "#{{orderNumber}} numarali siparisimiz mutfakta hazirlanmaya basladi!").replace("{{orderNumber}}", orderNumber);
@@ -662,6 +752,8 @@ exports.onKermesOrderStatusChangedNotif = (0, firestore_1.onDocumentUpdated)({
         title = trans.kermesOrderDeliveredTitle || "Siparis Teslim Edildi!";
         body = (trans.kermesOrderDeliveredBody || "#{{orderNumber}} numarali siparisimiz teslim edildi. Afiyet olsun!").replace("{{orderNumber}}", orderNumber);
         notifType = "kermes_order_delivered";
+        // PoD resmi varsa ekle
+        podImageUrl = (after.deliveryProof && after.deliveryProof.photoUrl) || after.podImageUrl || after.deliveryProofUrl || null;
     }
     else if (newStatus === "cancelled") {
         title = trans.orderCancelledTitle || "Siparis Iptal Edildi";
@@ -673,7 +765,7 @@ exports.onKermesOrderStatusChangedNotif = (0, firestore_1.onDocumentUpdated)({
     }
     // In-app bildirim kaydet
     try {
-        await db.collection("users").doc(userId).collection("notifications").add({
+        const notifData = {
             title,
             body,
             type: notifType,
@@ -682,7 +774,10 @@ exports.onKermesOrderStatusChangedNotif = (0, firestore_1.onDocumentUpdated)({
             status: newStatus,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             read: false,
-        });
+        };
+        if (podImageUrl)
+            notifData.podImageUrl = podImageUrl;
+        await db.collection("users").doc(userId).collection("notifications").add(notifData);
     }
     catch (e) {
         console.error("[OrderStatusNotif] DB write failed", e);
@@ -694,13 +789,27 @@ exports.onKermesOrderStatusChangedNotif = (0, firestore_1.onDocumentUpdated)({
             const userData = userDoc.data();
             const fcmToken = userData?.fcmToken;
             if (fcmToken) {
-                await admin.messaging().send({
+                const pushPayload = {
                     token: fcmToken,
                     notification: { title, body },
                     data: { type: notifType, orderId, orderNumber },
                     android: { priority: "high", notification: { channelId: "kermes_orders", sound: "default" } },
                     apns: { payload: { aps: { sound: "default", badge: 1 } } },
-                });
+                };
+                // PoD resmi rich notification olarak ekle
+                if (podImageUrl) {
+                    pushPayload.apns = {
+                        fcmOptions: { imageUrl: podImageUrl },
+                        payload: { aps: { "mutable-content": 1, sound: "default", badge: 1 } },
+                    };
+                    pushPayload.android = {
+                        priority: "high",
+                        notification: { imageUrl: podImageUrl, channelId: "kermes_orders", sound: "default" },
+                    };
+                    pushPayload.data.podImageUrl = podImageUrl;
+                    console.log(`[POD] Attaching POD image to kermes delivered notification: ${podImageUrl}`);
+                }
+                await admin.messaging().send(pushPayload);
             }
         }
     }

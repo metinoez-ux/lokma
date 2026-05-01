@@ -626,6 +626,99 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
       }
     }
 
+    // ── Geri Alma (Revert) veya Havuza Dusme Bildirimi ──
+    const wasClosed = before.status === "delivered" || before.status === "cancelled" || before.status === "rejected";
+    const isOpen = newStatus === "ready" || newStatus === "preparing" || newStatus === "pending";
+    
+    if (wasClosed && isOpen && !after.assignedCourierId) {
+      const kermesId = after.kermesId as string | undefined;
+      if (kermesId) {
+        try {
+          const kermesDoc = await db.collection("kermes_events").doc(kermesId).get();
+          if (kermesDoc.exists) {
+            const kData = kermesDoc.data();
+            const kermesName = kData?.kermesName || kData?.city || "Kermes";
+            
+            const staffUids = new Set<string>();
+            ['kermesAdmins', 'assignedStaff', 'assignedWaiters', 'assignedDrivers'].forEach(field => {
+              if (Array.isArray(kData?.[field])) {
+                kData![field].forEach((uid: string) => staffUids.add(uid));
+              }
+            });
+            if (kData?.prepZoneAssignments) {
+              Object.values(kData.prepZoneAssignments).forEach((uids: any) => {
+                if (Array.isArray(uids)) {
+                  uids.forEach((uid: string) => staffUids.add(uid));
+                }
+              });
+            }
+
+            if (staffUids.size > 0) {
+              const adminPromises = Array.from(staffUids).map(uid => db.collection("admins").doc(uid).get());
+              const adminDocs = await Promise.all(adminPromises);
+
+              const mobileTokens: string[] = [];
+              const webTokens: string[] = [];
+
+              adminDocs.forEach(doc => {
+                if (doc.exists) {
+                  const data = doc.data();
+                  if (data?.fcmToken && typeof data.fcmToken === 'string') mobileTokens.push(data.fcmToken);
+                  if (data?.fcmTokens && Array.isArray(data.fcmTokens)) mobileTokens.push(...data.fcmTokens);
+                  if (data?.webFcmTokens && Array.isArray(data.webFcmTokens)) webTokens.push(...data.webFcmTokens);
+                }
+              });
+
+              const staffLang = "tr";
+              const trans = await getPushTranslations(staffLang);
+              const totalAmount = after.totalAmount as number || 0;
+              const staffTitle = (trans.kermesNewStaffTitle || `🔔 Yeni Sipariş ({{kermesName}})!`).replace("{{kermesName}}", kermesName);
+              let staffBody = (trans.kermesNewStaffBody || `#{{orderNumber}} - {{amount}}€ [{{deliveryType}}]`)
+                  .replace("{{orderNumber}}", orderNumber)
+                  .replace("{{amount}}", totalAmount.toFixed(2));
+              
+              if (deliveryType) {
+                staffBody = staffBody.replace("{{deliveryType}}", deliveryType);
+              } else {
+                staffBody = staffBody.replace(" [{{deliveryType}}]", "").replace("[{{deliveryType}}]", "");
+              }
+
+              const sendObj = (tokens: string[], isWeb: boolean) => ({
+                notification: { title: staffTitle, body: staffBody },
+                data: { type: "kermes_new_order", orderId, orderNumber, kermesId },
+                tokens,
+                android: { priority: "high" as const, notification: { channelId: "kermes_orders", sound: "notification_sound" } },
+                apns: { payload: { aps: { sound: "notification_sound.wav", badge: 1 } } },
+                webpush: isWeb ? { fcmOptions: { link: `/kermes/orders` } } : undefined,
+              });
+
+              if (mobileTokens.length > 0) admin.messaging().sendEachForMulticast(sendObj(mobileTokens, false));
+              if (webTokens.length > 0) admin.messaging().sendEachForMulticast(sendObj(webTokens, true));
+
+              const batch = db.batch();
+              for (const uid of staffUids) {
+                const notifRef = db.collection("users").doc(uid).collection("personnel_notifications").doc();
+                batch.set(notifRef, {
+                  title: staffTitle,
+                  body: staffBody,
+                  type: "kermes_new_order",
+                  orderId,
+                  orderNumber,
+                  kermesId,
+                  read: false,
+                  createdAt: new Date().toISOString(),
+                });
+              }
+              await batch.commit();
+              console.log(`[RevertOrderNotif] Re-sent new order notification to ${staffUids.size} staff`);
+            }
+          }
+        } catch (e) {
+          console.error("[RevertOrderNotif] Failed to notify Kermes staff on revert:", e);
+        }
+      }
+    }
+
     // ── Musteri bildirimi: userId olmayan veya guest siparisleri atla ──
     if (!userId || userId.startsWith("guest_")) return;
 

@@ -553,18 +553,6 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
         ),
         centerTitle: true,
       ),
-      bottomNavigationBar: GlassBottomBar(
-        currentIndex: 0, // 'Yemek' is index 0
-        cartItemCount: cartItemCount,
-        onTap: (index) {
-          HapticFeedback.lightImpact();
-          // Because ReservationBookingScreen is pushed inside a navigation stack
-          // we should pop until first route and use go_router for navigation
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          context.go(MainScaffold.items[index].path);
-        },
-        items: MainScaffold.items,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -824,10 +812,13 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                       ),
                     )
                   else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _availableTimeSlots.map((time) {
+                    SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _availableTimeSlots.map((time) {
                         final isSelected = _selectedTime == time;
                         final isFull = _isSlotFull(time);
                         final remaining = _slotRemainingCount(time);
@@ -924,6 +915,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                         );
                       }).toList(),
                     ),
+                  ),
                 ],
               ),
             ),

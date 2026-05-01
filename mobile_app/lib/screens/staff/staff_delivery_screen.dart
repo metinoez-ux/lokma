@@ -464,7 +464,10 @@ class _StaffDeliveryScreenState extends ConsumerState<StaffDeliveryScreen> {
                   child: StreamBuilder<List<LokmaOrder>>(
                     stream: _orderService.getReadyDeliveriesStream(widget.businessId),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                      if (!snapshot.hasData) {
+                        if (snapshot.hasError) {
+                          return Center(child: Icon(Icons.wifi_off, size: 60, color: Colors.grey[400]));
+                        }
                         return const Center(child: CircularProgressIndicator());
                       }
 

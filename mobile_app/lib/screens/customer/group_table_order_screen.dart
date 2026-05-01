@@ -58,12 +58,20 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   // LOKMA brand accent (Rose-500)
   static const Color _accent = Color(0xFFEA184A);
 
+  late final Stream<QuerySnapshot> _productsStream;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _autoResumeIfNeeded();
     _startIdleTimer();
+    _productsStream = FirebaseFirestore.instance
+        .collection('businesses')
+        .doc(widget.businessId)
+        .collection('products')
+        .where('isActive', isEqualTo: true)
+        .snapshots();
     // Fetch business name from Firestore if not provided via constructor
     if (widget.businessName.isEmpty) {
       _fetchBusinessName();
@@ -796,12 +804,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   Widget _buildCategoryChips() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('businesses')
-          .doc(widget.businessId)
-          .collection('products')
-          .where('isActive', isEqualTo: true)
-          .snapshots(),
+      stream: _productsStream,
       builder: (context, snapshot) {
         final categories = <String>{tr('customer.tumu')};
         if (snapshot.hasData) {
@@ -906,12 +909,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final dividerColor = isDark ? Colors.white.withOpacity(0.06) : Colors.grey.withOpacity(0.15);
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('businesses')
-          .doc(widget.businessId)
-          .collection('products')
-          .where('isActive', isEqualTo: true)
-          .snapshots(),
+      stream: _productsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: _accent));
@@ -975,61 +973,63 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           );
         }
 
-        // Group by category (like normal ordering screen)
+        // Flatten categories and products for a fully lazy ListView
+        final List<dynamic> flattened = [];
         final Map<String, List<ButcherProduct>> grouped = {};
         for (final p in filtered) {
           final cat = p.category.isNotEmpty ? p.category : tr('customer.diger');
           grouped.putIfAbsent(cat, () => []).add(p);
         }
 
+        for (final category in grouped.keys) {
+          flattened.add(category); // Add category header as string
+          flattened.addAll(grouped[category]!); // Add products
+        }
+
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(0, 4, 0, 100),
-          itemCount: grouped.length,
-          itemBuilder: (context, sectionIndex) {
-            final category = grouped.keys.elementAt(sectionIndex);
-            final categoryProducts = grouped[category]!;
+          itemCount: flattened.length,
+          itemBuilder: (context, index) {
+            final item = flattened[index];
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Category header - Lieferando style
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
-                  color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF8F8F8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 3,
-                        height: 22,
-                        margin: const EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: _accent,
-                          borderRadius: BorderRadius.circular(2),
+            if (item is String) {
+              // Category header - Lieferando style
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
+                color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF8F8F8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 22,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: _accent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: textPrimary,
+                          letterSpacing: -0.3,
                         ),
                       ),
-                      Expanded(
-                        child: Text(
-                          category,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: textPrimary,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                // Products in category
-                ...categoryProducts.asMap().entries.map((entry) {
-                  final product = entry.value;
-                  final isLast = entry.key == categoryProducts.length - 1;
-                  return _buildProductCard(product, isDark, textPrimary, textSecondary, dividerColor, isLast);
-                }),
-              ],
-            );
+              );
+            } else if (item is ButcherProduct) {
+              // Product card
+              final isLast = index == flattened.length - 1 || flattened[index + 1] is String;
+              return _buildProductCard(item, isDark, textPrimary, textSecondary, dividerColor, isLast);
+            }
+
+            return const SizedBox.shrink();
           },
         );
       },
@@ -1149,85 +1149,108 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           ),
           const SizedBox(width: 14),
 
-          // Image + Add Button Stack (Right) - Lieferando-style larger image
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Product Image
-                if (hasImage)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: LokmaNetworkImage(
-                        imageUrl: product.imageUrl!,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(
-                          color: isDark ? Colors.white10 : Colors.grey[100],
-                        ),
-                        errorWidget: (_, __, ___) => Container(
-                          color: isDark ? Colors.white10 : Colors.grey[100],
-                          child: Icon(Icons.image_not_supported, color: textSecondary, size: 28),
+          // Image & Add Button (Right)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (hasImage)
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: 100,
+                        height: 100,
+                        child: LokmaNetworkImage(
+                          imageUrl: product.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                            color: isDark ? Colors.white10 : Colors.grey[100],
+                          ),
+                          errorWidget: (_, __, ___) => Container(
+                            color: isDark ? Colors.white10 : Colors.grey[100],
+                            child: Icon(Icons.image_not_supported, color: textSecondary, size: 28),
+                          ),
                         ),
                       ),
                     ),
-                  )
-                else
-                  Container(
-                    width: 100,
-                    height: 100,
+                    if (!inCart)
+                      Positioned(
+                        bottom: -4,
+                        right: -4,
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            groupNotifier.addItem(TableGroupItem(
+                              productId: product.id,
+                              productName: product.name,
+                              quantity: isByWeight ? product.minQuantity.toInt() : 1,
+                              unitPrice: product.price,
+                              totalPrice: product.price * (isByWeight ? product.minQuantity : 1),
+                              imageUrl: product.imageUrl,
+                            ));
+                          },
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: _accent,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _accent.withOpacity(0.35),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.add, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ),
+                  ],
+                )
+              else if (!inCart)
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    groupNotifier.addItem(TableGroupItem(
+                      productId: product.id,
+                      productName: product.name,
+                      quantity: isByWeight ? product.minQuantity.toInt() : 1,
+                      unitPrice: product.price,
+                      totalPrice: product.price * (isByWeight ? product.minQuantity : 1),
+                      imageUrl: product.imageUrl,
+                    ));
+                  },
+                  child: Container(
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
+                      color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Icon(
-                      isByWeight ? Icons.scale : Icons.inventory_2_outlined,
-                      color: textSecondary,
-                      size: 28,
+                      Icons.add,
+                      color: _accent,
+                      size: 24,
                     ),
                   ),
-
-                // Floating + button (bottom-right, overlapping image)
-                if (!inCart)
-                  Positioned(
-                    bottom: -8,
-                    right: -8,
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        groupNotifier.addItem(TableGroupItem(
-                          productId: product.id,
-                          productName: product.name,
-                          quantity: isByWeight ? product.minQuantity.toInt() : 1,
-                          unitPrice: product.price,
-                          totalPrice: product.price * (isByWeight ? product.minQuantity : 1),
-                          imageUrl: product.imageUrl,
-                        ));
-                      },
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: _accent,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: _accent.withOpacity(0.35),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 20),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+                ),
+            ],
           ),
         ],
       ),

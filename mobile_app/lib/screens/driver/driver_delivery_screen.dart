@@ -69,8 +69,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           final dynamic dx = x;
           final dynamic dy = y;
           
-          final xStatus = (x is LokmaOrder) ? x.status.name : (x as KermesOrder).status.name;
-          final yStatus = (y is LokmaOrder) ? y.status.name : (y as KermesOrder).status.name;
+          final xStatus = (x.runtimeType.toString() == 'LokmaOrder') ? (x as dynamic).status.name : (x as dynamic).status.name;
+          final yStatus = (y.runtimeType.toString() == 'LokmaOrder') ? (y as dynamic).status.name : (y as dynamic).status.name;
           
           final xCourierId = dx.courierId;
           final yCourierId = dy.courierId;
@@ -121,8 +121,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       (List<LokmaOrder> meat, List<KermesOrder> kermes) {
         final combined = [...meat, ...kermes];
         combined.sort((x, y) {
-          final xStatus = (x is LokmaOrder) ? x.status.name : (x as KermesOrder).status.name;
-          final yStatus = (y is LokmaOrder) ? y.status.name : (y as KermesOrder).status.name;
+          final xStatus = (x.runtimeType.toString() == 'LokmaOrder') ? (x as dynamic).status.name : (x as dynamic).status.name;
+          final yStatus = (y.runtimeType.toString() == 'LokmaOrder') ? (y as dynamic).status.name : (y as dynamic).status.name;
           const priority = {'pending': 0, 'preparing': 1, 'ready': 2, 'accepted': 3, 'onTheWay': 4};
           final xPriority = priority[xStatus] ?? 5;
           final yPriority = priority[yStatus] ?? 5;
@@ -151,8 +151,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         combined.sort((a, b) {
           final dynamic da = a;
           final dynamic db = b;
-          final aDate = (a is LokmaOrder) ? (da.deliveredAt ?? DateTime.now()) : (da.completedAt ?? DateTime.now());
-          final bDate = (b is LokmaOrder) ? (db.deliveredAt ?? DateTime.now()) : (db.completedAt ?? DateTime.now());
+          final aDate = (a.runtimeType.toString() == 'LokmaOrder') ? (da.deliveredAt ?? DateTime.now()) : (da.completedAt ?? DateTime.now());
+          final bDate = (b.runtimeType.toString() == 'LokmaOrder') ? (db.deliveredAt ?? DateTime.now()) : (db.completedAt ?? DateTime.now());
           return bDate.compareTo(aDate); // descending
         });
         return combined;
@@ -383,7 +383,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                             children: [
                               Text('İşletme', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                               Text(
-                                (order is LokmaOrder) ? order.butcherName : 'Kermes',
+                                (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).butcherName : 'Kermes',
                                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                               ),
                             ],
@@ -406,7 +406,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                             children: [
                               Text('Teslimat Adresi', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                               Text(
-                                (order is LokmaOrder) ? (order.deliveryAddress ?? "Adres yok") : "Kermes Alanı",
+                                (order.runtimeType.toString() == 'LokmaOrder') ? ((order as dynamic).deliveryAddress ?? "Adres yok") : "Kermes Alanı",
                                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                               ),
                             ],
@@ -480,7 +480,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     setState(() => _isLoading = true);
 
     bool success = false;
-    if (order is LokmaOrder) {
+    if (order.runtimeType.toString() == 'LokmaOrder') {
       success = await _orderService.claimDelivery(
         orderId: order.id,
         courierId: user.uid,
@@ -667,7 +667,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                 final activeOrders = snapshot.data!.where((o) {
-                  final status = (o is LokmaOrder) ? o.status.name : (o as KermesOrder).status.name;
+                  final status = (o.runtimeType.toString() == 'LokmaOrder') ? (o as dynamic).status.name : (o as dynamic).status.name;
                   final courierId = (o as dynamic).courierId;
                   final isMyOrder = courierId == FirebaseAuth.instance.currentUser?.uid;
                   return isMyOrder && (status == 'accepted' || status == 'onTheWay');
@@ -705,7 +705,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       ),
                       tooltip: 'Aktif Teslimata Devam Et',
                       onPressed: () {
-                        if (activeOrder is LokmaOrder) {
+                        if (activeOrder.runtimeType.toString() == 'LokmaOrder') {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveDeliveryScreen(orderId: activeOrder.id)));
                         } else {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => KermesActiveDeliveryScreen(orderId: activeOrder.id)));
@@ -870,7 +870,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         // Group by status
         final statusGroups = <String, List<dynamic>>{};
         for (final order in orders) {
-          final key = (order is LokmaOrder) ? order.status.name : (order as KermesOrder).status.name;
+          final key = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).status.name : (order as dynamic).status.name;
           statusGroups.putIfAbsent(key, () => []).add(order);
         }
 
@@ -1260,7 +1260,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     
     // Extract PLZ and city from delivery address
     String locationInfo = '';
-    final String? deliveryAddr = (order is LokmaOrder) ? order.deliveryAddress : null;
+    final String? deliveryAddr = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).deliveryAddress : null;
     if (deliveryAddr != null && deliveryAddr.isNotEmpty) {
       // Try to extract PLZ and city from address string (e.g., "Straße 123, 44135 Dortmund")
       final addressParts = deliveryAddr.split(',');
@@ -1278,8 +1278,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     // Order number (first 6 chars)
     final orderNumber = order.orderNumber ?? order.id.substring(0, 6).toUpperCase();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final businessName = (order is LokmaOrder) ? order.butcherName : '🏢 ${(order as KermesOrder).kermesId.split('_').first.toUpperCase()} Kermesi';
-    final deliveredAt = (order is LokmaOrder) ? (order as dynamic).deliveredAt : (order as KermesOrder).completedAt;
+    final businessName = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).butcherName : '🏢 ${(order as dynamic).kermesId.split('_').first.toUpperCase()} Kermesi';
+    final deliveredAt = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).deliveredAt : (order as dynamic).completedAt;
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1398,7 +1398,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                           (order as dynamic).courierId == currentUserId;
     
     // Status determination
-    final orderStatus = (order is LokmaOrder) ? order.status.name : (order as KermesOrder).status.name;
+    final orderStatus = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).status.name : (order as dynamic).status.name;
     final isOnTheWay = orderStatus == 'onTheWay' || orderStatus == 'accepted';
     final isReady = orderStatus == 'ready';
     final isPreparing = orderStatus == 'preparing';
@@ -1428,8 +1428,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     }
     
     // Extract PLZ + City for cleaner display
-    final String? deliveryAddr = (order is LokmaOrder) ? order.deliveryAddress : null;
-    String shortAddress = deliveryAddr ?? ((order is LokmaOrder) ? 'Adres yok' : 'Kermes Alanı');
+    final String? deliveryAddr = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).deliveryAddress : null;
+    String shortAddress = deliveryAddr ?? ((order.runtimeType.toString() == 'LokmaOrder') ? 'Adres yok' : 'Kermes Alanı');
     if (deliveryAddr != null && deliveryAddr.contains(',')) {
       final parts = deliveryAddr.split(',');
       if (parts.length >= 2) {
@@ -1523,7 +1523,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 children: [
                   // Business name
                   Text(
-                    (order is LokmaOrder) ? order.butcherName : '🏢 ${(order as KermesOrder).kermesId.split('_').first.toUpperCase()} Kermesi',
+                    (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).butcherName : '🏢 ${(order as dynamic).kermesId.split('_').first.toUpperCase()} Kermesi',
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
@@ -1632,14 +1632,14 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                                 final result = await TapToPaySheet.show(
                                   context: context,
                                   amount: (order.totalAmount as num).toDouble(),
-                                  businessId: (order is LokmaOrder) ? order.butcherId : (order as KermesOrder).kermesId,
+                                  businessId: (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).butcherId : (order as dynamic).kermesId,
                                   orderId: order.id,
                                   courierId: FirebaseAuth.instance.currentUser?.uid,
                                   label: tr('driver.kapida_kart_odemesi'),
                                 );
                               if (result != null && result.success && mounted) {
                                   // Firestore'da ödeme durumunu güncelle
-                                  final collectionPath = (order is LokmaOrder) ? 'orders' : 'kermes_orders';
+                                  final collectionPath = (order.runtimeType.toString() == 'LokmaOrder') ? 'orders' : 'kermes_orders';
                                   await FirebaseFirestore.instance
                                       .collection(collectionPath)
                                       .doc(order.id)

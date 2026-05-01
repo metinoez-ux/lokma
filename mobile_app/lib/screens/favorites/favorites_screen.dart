@@ -500,12 +500,28 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                                     );
 
                                     final rawOpts = item['selectedOptions'] as List<dynamic>? ?? [];
-                                    final selectedOpts = rawOpts.map((o) {
+                                    final List<SelectedOption> selectedOpts = rawOpts.map((o) {
                                       if (o is Map<String, dynamic>) {
-                                        return SelectedOption.fromMap(o);
+                                        // Support legacy map format if needed
+                                        final groupName = o['groupName'] ?? o['group'] ?? '';
+                                        final optionName = o['optionName'] ?? o['name'] ?? '';
+                                        final priceModifier = (o['priceModifier'] ?? o['priceAdjustment'] ?? 0).toDouble();
+                                        return SelectedOption(
+                                          groupId: o['groupId'] ?? '',
+                                          groupName: groupName,
+                                          optionId: o['optionId'] ?? '',
+                                          optionName: optionName,
+                                          priceModifier: priceModifier,
+                                        );
                                       }
-                                      return SelectedOption(name: '', priceAdjustment: 0);
-                                    }).where((o) => o.name.isNotEmpty).toList();
+                                      return const SelectedOption(
+                                        groupId: '',
+                                        groupName: '',
+                                        optionId: '',
+                                        optionName: '',
+                                        priceModifier: 0.0,
+                                      );
+                                    }).where((o) => o.optionName.isNotEmpty).toList();
 
                                     cartNotifier.addToCart(
                                       product,

@@ -71,7 +71,7 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "deliveryPickedUpTitle": "🛵 Bestellung unterwegs!",
             "deliveryPickedUpBody": "Unser Kurier hat Ihre Bestellung abgeholt.",
             "orderDeliveredTitle": "🍽️ Guten Appetit!",
-            "orderDeliveredBody": "Ihre Bestellung wurde geliefert.",
+            "orderDeliveredBody": "Ihre Bestellung wurde geliefert. Guten Appetit!",
             "orderCancelledTitle": "❌ Bestellung storniert",
             "orderCancelledBody": "Ihre Bestellung wurde storniert.",
             "orderPendingTitle": "Bestellung aktualisiert",
@@ -100,6 +100,8 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "kermesNewStaffBody": "#{{orderNumber}} - {{amount}}€ [{{deliveryType}}]",
             "kermesPaymentStaffTitle": "💳 Zahlung erhalten!",
             "kermesPaymentStaffBody": "Die Zahlung für Bestellung #{{orderNumber}} wurde getätigt.",
+            "kermesOrderDeliveredTitle": "🍽️ Guten Appetit!",
+            "kermesOrderDeliveredBody": "Ihre Bestellung #{{orderNumber}} wurde geliefert. Guten Appetit!",
         },
         tr: {
             "orderPrefix": "Sipariş",
@@ -121,7 +123,7 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "deliveryPickedUpTitle": "🛵 Siparişiniz Yolda!",
             "deliveryPickedUpBody": "Kuryemiz siparişinizi yola çıkardı.",
             "orderDeliveredTitle": "🍽️ Afiyet Olsun!",
-            "orderDeliveredBody": "Siparişiniz teslim edildi.",
+            "orderDeliveredBody": "Siparişiniz teslim edildi. Afiyet olsun!",
             "orderCancelledTitle": "❌ Siparişiniz İptal Edildi",
             "orderCancelledBody": "Siparişiniz iptal edilmiştir.",
             "orderPendingTitle": "Sipariş Güncellendi",
@@ -150,6 +152,8 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "kermesNewStaffBody": "#{{orderNumber}} - {{amount}}€ [{{deliveryType}}]",
             "kermesPaymentStaffTitle": "💳 Ödeme Alındı!",
             "kermesPaymentStaffBody": "#{{orderNumber}} numaralı siparişin ödemesi yapıldı.",
+            "kermesOrderDeliveredTitle": "🍽️ Afiyet Olsun!",
+            "kermesOrderDeliveredBody": "#{{orderNumber}} numaralı siparişiniz teslim edildi. Afiyet olsun!",
         },
         en: {
             "orderPrefix": "Order",
@@ -171,7 +175,7 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "deliveryPickedUpTitle": "🛵 Order On Its Way!",
             "deliveryPickedUpBody": "Our courier has picked up your order.",
             "orderDeliveredTitle": "🍽️ Enjoy Your Meal!",
-            "orderDeliveredBody": "Your order has been delivered.",
+            "orderDeliveredBody": "Your order has been delivered. Enjoy your meal!",
             "orderCancelledTitle": "❌ Order Cancelled",
             "orderCancelledBody": "Your order has been cancelled.",
             "orderPendingTitle": "Order Updated",
@@ -200,6 +204,8 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "kermesNewStaffBody": "#{{orderNumber}} - {{amount}}€ [{{deliveryType}}]",
             "kermesPaymentStaffTitle": "💳 Payment Received!",
             "kermesPaymentStaffBody": "Payment for order #{{orderNumber}} has been made.",
+            "kermesOrderDeliveredTitle": "🍽️ Enjoy Your Meal!",
+            "kermesOrderDeliveredBody": "Your order #{{orderNumber}} has been delivered. Enjoy your meal!",
         },
     };
 

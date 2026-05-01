@@ -25,8 +25,9 @@ import 'package:lokma_app/widgets/lokma_network_image.dart';
 
 class KermesActiveDeliveryScreen extends StatefulWidget {
   final String orderId;
+  final KermesOrder? initialOrder;
   
-  const KermesActiveDeliveryScreen({super.key, required this.orderId});
+  const KermesActiveDeliveryScreen({super.key, required this.orderId, this.initialOrder});
 
   @override
   State<KermesActiveDeliveryScreen> createState() => _KermesActiveDeliveryScreenState();
@@ -742,9 +743,10 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
         ],
       ),
       body: StreamBuilder<KermesOrder?>(
+        initialData: widget.initialOrder,
         stream: _orderService.getOrderStream(widget.orderId),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data == null) {

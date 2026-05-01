@@ -3084,8 +3084,23 @@ export default function BusinessDetailsPage() {
                       </div>
                     )}
                     <div>
-                      <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                      <h2 className="text-2xl font-bold text-foreground flex items-center flex-wrap gap-3">
                         {business.companyName}
+                        {((business as any).isTuna === true ||
+                          (business as any).isTunaPartner === true ||
+                          (business as any).isTunaApproved === true ||
+                          (business.brandLabel || (business as any).brand) === 'tuna' ||
+                          (business.companyName || '').toLowerCase().includes('tuna') ||
+                          ((business as any).name || '').toLowerCase().includes('tuna')) && (
+                          <span className="inline-flex items-center gap-1 bg-[#EA184A]/10 text-[#EA184A] px-2.5 py-0.5 rounded-md font-bold text-xs tracking-wide border border-[#EA184A]/20 shadow-sm">
+                            TUNA
+                          </span>
+                        )}
+                        {((business.brandLabel || (business as any).brand) === 'akdeniz_toros') && (
+                          <span className="inline-flex items-center gap-1 bg-green-600/10 text-green-600 px-2.5 py-0.5 rounded-md font-bold text-xs tracking-wide border border-green-600/20 shadow-sm">
+                            Akdeniz Toros
+                          </span>
+                        )}
                         <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ${business.isActive ? "bg-green-500 text-white border-green-600" : "bg-red-500 text-white border-red-600"}`}>
                           {business.isActive ? t('aktifMusteri') : t('pasifMusteri')}
                         </span>
