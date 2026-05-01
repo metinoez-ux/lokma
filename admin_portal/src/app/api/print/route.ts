@@ -286,6 +286,92 @@ function buildReceipt(order: any, businessName?: string): Buffer {
  parts.push(CMD.FEED_5);
  parts.push(CMD.PARTIAL_CUT);
 
+ // --- GROUP ORDER CUSTOMER BREAKDOWN ---
+ const hasParticipants = order.items && order.items.some((item: any) => item.participantName);
+ if (hasParticipants) {
+  // Group items by participantName
+  const groupedItems: Record<string, any[]> = {};
+  for (const item of order.items) {
+   const pName = item.participantName || 'Ortak / Gemeinsam';
+   if (!groupedItems[pName]) groupedItems[pName] = [];
+   groupedItems[pName].push(item);
+  }
+  
+  // Start second receipt
+  parts.push(CMD.ALIGN_CENTER);
+  parts.push(CMD.BOLD_ON);
+  parts.push(CMD.FONT_DOUBLE_H);
+  parts.push(textLine('GRUP SIPARISI DAGILIMI'));
+  parts.push(textLine('GRUPPEN-AUFTEILUNG'));
+  parts.push(CMD.FONT_NORMAL);
+  parts.push(CMD.BOLD_OFF);
+  parts.push(CMD.ALIGN_LEFT);
+  parts.push(separator('='));
+  
+  // Print Table Info if any
+  if (orderType === 'dine_in' && (order.tableNumber || order.tableName)) {
+   parts.push(CMD.ALIGN_CENTER);
+   parts.push(CMD.BOLD_ON);
+   parts.push(CMD.FONT_DOUBLE);
+   parts.push(textLine(`MASA / TISCH: ${order.tableName || order.tableNumber}`));
+   parts.push(CMD.FONT_NORMAL);
+   parts.push(CMD.BOLD_OFF);
+   parts.push(CMD.ALIGN_LEFT);
+   parts.push(separator());
+  }
+
+  // Print items per participant
+  for (const [pName, items] of Object.entries(groupedItems)) {
+   parts.push(CMD.ALIGN_CENTER);
+   parts.push(CMD.BOLD_ON);
+   parts.push(CMD.FONT_DOUBLE_H);
+   parts.push(textLine(`>> ${pName.toUpperCase()} <<`));
+   parts.push(CMD.FONT_NORMAL);
+   parts.push(CMD.BOLD_OFF);
+   parts.push(CMD.ALIGN_LEFT);
+   parts.push(separator('-'));
+   
+   for (const item of items) {
+    const qty = item.quantity || 1;
+    const name = item.name || item.productName || 'Unbekannt';
+    const rawUnit = item.unit || '';
+    const unit = (rawUnit.toLowerCase() === 'adet' || rawUnit.toLowerCase() === 'stueck') ? '' : rawUnit;
+    const unitStr = unit ? ` ${unit}` : '';
+    const itemText = `${qty}x${unitStr} ${name}`;
+    
+    parts.push(CMD.BOLD_ON);
+    parts.push(textLine(itemText));
+    parts.push(CMD.BOLD_OFF);
+    
+    const opts = item.selectedOptions || item.options;
+    if (opts && Array.isArray(opts) && opts.length > 0) {
+     for (const opt of opts) {
+      const optName = opt.optionName || opt.name || opt;
+      const groupName = opt.groupName || '';
+      const label = groupName ? `${groupName}: ${optName}` : optName;
+      parts.push(textLine(` > ${label}`));
+     }
+    }
+    if (item.note) {
+     parts.push(textLine(` * ${item.note}`));
+    }
+    parts.push(Buffer.from([ESC, 0x4A, 20]));
+   }
+   parts.push(textLine('')); // empty line
+  }
+  
+  // Footer for the second receipt
+  parts.push(separator('='));
+  parts.push(CMD.ALIGN_CENTER);
+  parts.push(textLine(`${dateStr} ${timeStr}`));
+  parts.push(textLine('--- LOKMA SERVIS BILGISI ---'));
+  parts.push(CMD.ALIGN_LEFT);
+
+  // Feed and cut for the second receipt
+  parts.push(CMD.FEED_5);
+  parts.push(CMD.PARTIAL_CUT);
+ }
+
  return Buffer.concat(parts);
 }
 

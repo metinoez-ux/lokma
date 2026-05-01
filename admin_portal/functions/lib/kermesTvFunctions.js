@@ -184,13 +184,13 @@ exports.onScheduledTvMonitor = (0, scheduler_1.onSchedule)({
                                     </div>
                                     <div style="padding: 20px;">
                                         <p style="font-size: 16px; color: #e0e0e0;">Merhaba,</p>
-                                        <p style="font-size: 16px; color: #e0e0e0;"><strong>${kermesName}</strong> etkinliğindeki bazı TV (ODS - Mutfak/Stant Ekranları) cihazlarından sinyal alınamıyor. Ekranda tarayıcı kapanmış veya internet kopmuş olabilir.</p>
+                                        <p style="font-size: 16px; color: #e0e0e0;"><strong>${kermesName}</strong> etkinliğindeki bazı TV (ODS - Mutfak/Tezgah Ekranları) cihazlarından sinyal alınamıyor. Ekranda tarayıcı kapanmış veya internet kopmuş olabilir.</p>
                                         <div style="background: #2a2a2a; border-left: 4px solid #e53935; padding: 15px; margin: 20px 0;">
                                             <ul style="margin: 0; color: #ff8a80; padding-left: 20px;">
                                                 ${offlineTvs.map(t => `<li style="margin-bottom: 5px;"><strong>${t.tvName}</strong> (${t.diffMinutes} dakikadır çevrimdışı)</li>`).join("")}
                                             </ul>
                                         </div>
-                                        <p style="font-size: 14px; color: #aaaaaa;">Lütfen ilgili stanttaki ekranı Refresh ediniz veya TV'nin açık olduğundan emin olunuz.</p>
+                                        <p style="font-size: 14px; color: #aaaaaa;">Lütfen ilgili tezgahtaki ekranı Refresh ediniz veya TV'nin açık olduğundan emin olunuz.</p>
                                     </div>
                                 </div>
                             `;

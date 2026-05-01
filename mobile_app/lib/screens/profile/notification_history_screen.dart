@@ -276,18 +276,18 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
   void _showNotificationDetailSheet(BuildContext context, Map<String, dynamic> data) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final type = data['type'] as String?;
-    String title = data['title'] as String? ?? '';
+    final type = data['type']?.toString();
+    String title = data['title']?.toString() ?? '';
     title = title.replaceAll('Malzeme Tamamlandı', 'Malzeme İsteği Tamamlandı').replaceAll('Malzeme Yola Çıktı', 'Malzeme İsteği Yola Çıktı');
     title = title.replaceAll('🏃‍♂️', '').replaceAll('🏃‍♀️', '').replaceAll('🏃', '').replaceAll('✅', '').replaceAll('❌', '').replaceAll('🚨', '').replaceAll('🔥', '').trim();
-    final body = data['body'] as String? ?? '';
-    final imageUrl = data['imageUrl'] as String?;
-    final vehiclePlate = data['vehiclePlate'] as String? ?? '';
-    final vehicleColor = data['vehicleColor'] as String? ?? '';
-    final vehicleBrand = data['vehicleBrand'] as String? ?? '';
-    final kermesId = data['kermesId'] as String? ?? '';
+    final body = data['body']?.toString() ?? '';
+    final imageUrl = data['imageUrl']?.toString() ?? data['podImageUrl']?.toString();
+    final vehiclePlate = data['vehiclePlate']?.toString() ?? '';
+    final vehicleColor = data['vehicleColor']?.toString() ?? '';
+    final vehicleBrand = data['vehicleBrand']?.toString() ?? '';
+    final kermesId = data['kermesId']?.toString() ?? '';
     final kermesTitle = title.replaceAll(' - Acil Arac Anonsu', '').trim();
-    final supplyStatus = data['status'] as String? ?? '';
+    final supplyStatus = data['status']?.toString() ?? '';
     final isParking = type == 'kermes_parking';
     final isDeleted = type == 'roster_deleted' || (type == 'supply_alarm_status' && supplyStatus == 'rejected');
     final isParkingOrDeleted = isParking || isDeleted;
@@ -1258,11 +1258,11 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             // Skip trashed notifications
             if (data['trashedAt'] != null) continue;
 
-            final type = data['type'] as String?;
-            final orderId = data['orderId'] as String?;
-            final reservationId = data['reservationId'] as String?;
+            final type = data['type']?.toString();
+            final orderId = data['orderId']?.toString();
+            final reservationId = data['reservationId']?.toString();
 
-            if ((type == 'order_status' || type == 'kermes_order_created' || type == 'kermes_order_paid') && orderId != null && orderId.isNotEmpty) {
+            if ((type == 'order_status' || type == 'kermes_order_created' || type == 'kermes_order_paid' || type == 'kermes_courier_assigned') && orderId != null && orderId.isNotEmpty) {
               orderMap.putIfAbsent(orderId, () => []);
               orderDocIds.putIfAbsent(orderId, () => []);
               orderMap[orderId]!.add(data);
@@ -1289,10 +1289,10 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
             // The latest status determines the card sort key
             final latestTime = (statuses.last['createdAt'] is Timestamp ? statuses.last['createdAt'] /*cast*/ : null);
-            final rawNum = statuses.first['rawOrderNumber'] as String? ?? 
-                           statuses.last['rawOrderNumber'] as String? ??
-                           statuses.first['orderNumber'] as String? ?? 
-                           statuses.last['orderNumber'] as String? ?? '';
+            final rawNum = statuses.first['rawOrderNumber']?.toString() ?? 
+                           statuses.last['rawOrderNumber']?.toString() ??
+                           statuses.first['orderNumber']?.toString() ?? 
+                           statuses.last['orderNumber']?.toString() ?? '';
             final bName = statuses.last['businessName'] as String? ??
                           statuses.first['businessName'] as String? ?? '';
 
@@ -4563,9 +4563,9 @@ class _GenericNotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String title = data['title'] as String? ?? 'notifications.notification'.tr();
-    String body = data['body'] as String? ?? '';
-    final type = data['type'] as String? ?? '';
+    String title = data['title']?.toString() ?? 'notifications.notification'.tr();
+    String body = data['body']?.toString() ?? '';
+    final type = data['type']?.toString() ?? '';
     
     if (type == 'supply_alarm' || type == 'supply_alarm_status') {
        title = title.replaceAll('🏃‍♂️', '').replaceAll('🏃‍♀️', '').replaceAll('🏃', '').replaceAll('❌', '').replaceAll('✅', '').replaceAll('🚨', '').trim();
@@ -4576,7 +4576,7 @@ class _GenericNotificationCard extends StatelessWidget {
     
     final createdAt = (data['createdAt'] is Timestamp ? data['createdAt'] /*cast*/ : null);
     final isRead = data['read'] as bool? ?? true;
-    final imageUrl = data['imageUrl'] as String?;
+    final imageUrl = (data['imageUrl'] as String?) ?? (data['podImageUrl'] as String?);
 
     String timeString = '';
     if (createdAt != null) {

@@ -611,6 +611,7 @@ export default function OrdersPage() {
  unit: item.unit,
  selectedOptions: (item as any).selectedOptions || (item as any).options,
  note: (item as any).itemNote || (item as any).note,
+ participantName: (item as any).participantName,
  })),
  total: order.total,
  grandTotal: order.total,

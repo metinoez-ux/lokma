@@ -729,58 +729,65 @@ export default function BenutzerverwaltungPage() {
  }
  }
 
- const payload = {
- email: newUserData.email,
- password: newUserData.password,
- displayName: `${newUserData.firstName} ${newUserData.lastName}`,
- phone: `${newUserData.dialCode}${newUserData.phone}`,
- role: newUserData.role !== 'user' ? 'admin' : 'user',
- adminType: newUserData.role !== 'user' 
- ? (newUserData.role === 'business_admin' 
- ? (() => {
- const b = businesses.find(bz => bz.id === newUserData.businessId);
- const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
- if (k) return 'kermes_admin';
- return 'lokma_admin';
- })()
- : newUserData.role) 
- : undefined,
- location: `${newUserData.address || ''} ${newUserData.houseNumber || ''}, ${newUserData.city || ''}, ${newUserData.country || ''}`.trim(),
- butcherId: newUserData.businessId || undefined,
- butcherName: assignedBusinessName || undefined,
- createdBy: admin?.email || admin?.id,
- createdBySource: admin?.adminType === 'super' ? 'super_admin' : 'business_admin',
- assignerName: admin?.displayName || admin?.firstName ? `${admin?.firstName || ''} ${admin?.lastName || ''}`.trim() : 'Admin',
- assignerEmail: admin?.email || '',
- assignerPhone: admin?.phone || '',
- assignerRole: admin?.adminType || 'admin',
- firstName: newUserData.firstName,
- lastName: newUserData.lastName,
- gender: newUserData.gender,
- addressDetails: {
- address: newUserData.address,
- houseNumber: newUserData.houseNumber,
- addressLine2: newUserData.addressLine2,
- city: newUserData.city,
- postalCode: newUserData.postalCode,
- country: newUserData.country,
- },
- sector: (() => {
- const b = businesses.find(bz => bz.id === newUserData.businessId);
- const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
- if (b) return (b as any).type || '';
- if (k) return 'kermes';
- return '';
- })(),
- isDriver: newUserIsDriver,
- driverType: newUserDriverType,
- assignedBusinesses: newUserSelectedBusinessIds,
- assignedKermesEvents: newUserSelectedKermesIds,
- assignments: newUserAssignments,
- businessId: newUserData.businessId || undefined,
- };
+  let finalAssignedBusinesses = [...newUserSelectedBusinessIds];
+  let finalAssignedKermes = [...newUserSelectedKermesIds];
 
- const response = await fetch('/api/admin/create-user', {
+  if (!isSuperAdmin && newUserIsDriver && newUserData.businessId) {
+    const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
+    if (k && !finalAssignedKermes.includes(newUserData.businessId)) finalAssignedKermes.push(newUserData.businessId);
+    if (!k && !finalAssignedBusinesses.includes(newUserData.businessId)) finalAssignedBusinesses.push(newUserData.businessId);
+  }
+
+  const payload = {
+  adminEmail: admin?.email,
+  email: newUserData.email,
+  password: newUserData.password,
+  phone: `${newUserData.dialCode}${newUserData.phone}`,
+  roles: (() => {
+  const rs = [newUserData.role];
+  if (newUserIsDriver) rs.push('driver');
+  return rs;
+  })(),
+  adminType: newUserData.role === 'customer' || newUserData.role === 'user' ? null : (newUserData.role === 'business_admin' ? (() => {
+  const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
+  if (k) return 'kermes_admin';
+  return 'lokma_admin';
+  })() : newUserData.role),
+  butcherId: newUserData.businessId || undefined,
+  butcherName: assignedBusinessName || undefined,
+  createdBy: admin?.email || admin?.id,
+  createdBySource: admin?.adminType === 'super' ? 'super_admin' : 'business_admin',
+  assignerName: admin?.displayName || admin?.firstName ? `${admin?.firstName || ''} ${admin?.lastName || ''}`.trim() : 'Admin',
+  assignerEmail: admin?.email || '',
+  assignerPhone: admin?.phone || '',
+  assignerRole: admin?.adminType || 'admin',
+  firstName: newUserData.firstName,
+  lastName: newUserData.lastName,
+  gender: newUserData.gender,
+  addressDetails: {
+  address: newUserData.address,
+  houseNumber: newUserData.houseNumber,
+  addressLine2: newUserData.addressLine2,
+  city: newUserData.city,
+  postalCode: newUserData.postalCode,
+  country: newUserData.country,
+  },
+  sector: (() => {
+  const b = businesses.find(bz => bz.id === newUserData.businessId);
+  const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
+  if (b) return (b as any).type || '';
+  if (k) return 'kermes';
+  return '';
+  })(),
+  isDriver: newUserIsDriver,
+  driverType: newUserIsDriver ? (finalAssignedBusinesses.length > 0 ? 'business' : 'platform') : null,
+  assignedBusinesses: finalAssignedBusinesses,
+  assignedKermesEvents: finalAssignedKermes,
+  assignments: newUserAssignments,
+  businessId: newUserData.businessId || undefined,
+  };
+
+  const response = await fetch('/api/admin/create-user', {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
  body: JSON.stringify(payload)
@@ -894,8 +901,19 @@ const handleSaveUser = async () => {
       finalRoles.push(a.role);
     }
   });
- const assignedBusinessNames = businesses.filter(b => selectedBusinessIds.includes(b.id)).map(b => b.name);
- const assignedKermesNames = kermesEvents.filter(k => selectedKermesIds.includes(k.id)).map(k => k.name);
+
+ let derivedBusinessIds = editAssignments.filter(a => a.entityType === 'business' || (a as any).type === 'business').map(a => a.id);
+ let derivedKermesIds = editAssignments.filter(a => a.entityType === 'kermes' || (a as any).type === 'kermes').map(a => a.id);
+ 
+ // Ensure non-super admins can assign drivers to their own business
+ if (!isSuperAdmin && isDriver && editBusinessId) {
+    const k = kermesEvents.find(ke => ke.id === editBusinessId);
+    if (k && !derivedKermesIds.includes(editBusinessId)) derivedKermesIds.push(editBusinessId);
+    if (!k && !derivedBusinessIds.includes(editBusinessId)) derivedBusinessIds.push(editBusinessId);
+ }
+
+ const assignedBusinessNames = businesses.filter(b => derivedBusinessIds.includes(b.id)).map(b => b.name);
+ const assignedKermesNames = kermesEvents.filter(k => derivedKermesIds.includes(k.id)).map(k => k.name);
  
  // Determine adminType from editRole and/or kermes assignments
  let currentAdminType = editRole !== 'customer' && editRole !== 'user' 
@@ -919,7 +937,7 @@ const handleSaveUser = async () => {
 
  // Build kermes event IDs from both driver selection and assignments
  const allKermesIds = [...new Set([
- ...(isDriver ? selectedKermesIds : []),
+ ...(isDriver ? derivedKermesIds : []),
  ...kermesAssignmentIds
  ])];
  const allKermesNames = kermesEvents.filter(k => allKermesIds.includes(k.id)).map(k => k.name);
@@ -945,9 +963,9 @@ const handleSaveUser = async () => {
  butcherId: editBusinessId || undefined,
  butcherName: undefined as string | undefined, // Fixed by logic below
  isDriver: isDriver,
- driverType: isDriver ? (selectedBusinessIds.length > 0 ? 'business' : 'platform') : null,
- assignedBusinesses: isDriver ? selectedBusinessIds : [],
- assignedBusinessNames: isDriver ? assignedBusinessNames : [],
+ driverType: isDriver ? (derivedBusinessIds.length > 0 ? 'business' : 'platform') : null,
+ assignedBusinesses: derivedBusinessIds,
+ assignedBusinessNames: assignedBusinessNames,
  assignedKermesEvents: allKermesIds,
  assignedKermesNames: allKermesNames,
  adminEmail: admin?.email,
@@ -1360,87 +1378,85 @@ const getKermesBadgeInfo = (role: string) => {
  <td className="px-3 py-2.5 align-top">
  <div className="flex flex-col gap-1.5 max-w-[280px]">
  {(() => {
-    const businessRolesAndNames = new Map<string, Set<string>>();
+    const assignedBusinessNames = new Set<string>();
     
     if (user.businessId && user.businessId !== 'NONE') {
       const b = businesses.find(b => b.id === user.businessId);
-      if (b) {
-        if (!businessRolesAndNames.has('staff')) businessRolesAndNames.set('staff', new Set());
-        businessRolesAndNames.get('staff')!.add(b.name);
-      }
+      if (b) assignedBusinessNames.add(b.name);
     }
     
     if (user.assignments) {
       user.assignments.filter((a: any) => a.entityType === 'business').forEach((a: any) => {
         const b = businesses.find(b => b.id === a.id);
-        if (b) {
-          const role = a.role || 'staff';
-          if (!businessRolesAndNames.has(role)) businessRolesAndNames.set(role, new Set());
-          businessRolesAndNames.get(role)!.add(b.name);
-        }
+        if (b) assignedBusinessNames.add(b.name);
       });
     }
 
-    if (businessRolesAndNames.size === 0) return null;
+    if (assignedBusinessNames.size === 0) return null;
 
-    return Array.from(businessRolesAndNames.entries()).map(([role, namesSet], idx) => {
-      const businessNamesText = Array.from(namesSet).join(', ');
+    return Array.from(assignedBusinessNames).map((bName, idx) => {
       return (
-        <span key={`business-${role}-${idx}`} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 border border-orange-100 dark:border-orange-500/20">
-          <span className="truncate">Şube: {businessNamesText}</span>
+        <span key={`business-${idx}`} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 border border-orange-100 dark:border-orange-500/20">
+          <span className="truncate">Şube: {bName}</span>
         </span>
       );
     });
   })()}
  {(() => {
-   const kermesRolesAndNames = new Map<string, Set<string>>();
-   
-   if (user.kermesId && user.kermesId !== 'NONE') {
-     const k = kermesEvents.find(k => k.id === user.kermesId);
-     if (k) {
-       const kName = k.city ? `${k.name} (${k.city})` : k.name;
-       if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
-       kermesRolesAndNames.get('staff')!.add(kName);
-     }
-   }
-   
-   if (user.kermesAssignments && user.kermesAssignments.length > 0) {
-     user.kermesAssignments.forEach((ka: any) => {
-       const kId = ka.kermesId || ka;
-       const k = kermesEvents.find(k => k.id === kId);
-       if (k) {
-         const kName = k.city ? `${k.name} (${k.city})` : k.name;
-         if (!kermesRolesAndNames.has('staff')) kermesRolesAndNames.set('staff', new Set());
-         kermesRolesAndNames.get('staff')!.add(kName);
-       }
-     });
-   }
-   
-   if (user.assignments) {
-     user.assignments.filter((a: any) => a.entityType === 'kermes').forEach((a: any) => {
-       const k = kermesEvents.find(k => k.id === a.id);
-       if (k) {
-         if (!kermesRolesAndNames.has(a.role)) kermesRolesAndNames.set(a.role, new Set());
-         const kName = k.city ? `${k.name} (${k.city})` : k.name;
-         kermesRolesAndNames.get(a.role)!.add(kName);
-       }
-     });
-   }
-   
-   if (kermesRolesAndNames.size === 0) return null;
+    const kermesNamesToRoles = new Map<string, Set<string>>();
+    
+    const addKermesRole = (kName: string, role: string) => {
+       const normalizedRole = role === 'kermes_staff' ? 'staff' : role;
+       if (!kermesNamesToRoles.has(kName)) kermesNamesToRoles.set(kName, new Set());
+       kermesNamesToRoles.get(kName)!.add(normalizedRole);
+    };
 
-   return Array.from(kermesRolesAndNames.entries()).map(([role, namesSet], idx) => {
-     const roleInfo = getKermesBadgeInfo(role);
-     const kermesNamesText = Array.from(namesSet).join(', ');
-     return (
-      <span key={`kermes-${role}-${idx}`} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20" title={`${roleInfo.label} - ${kermesNamesText}`}>
+    if (user.kermesId && user.kermesId !== 'NONE') {
+      const k = kermesEvents.find(k => k.id === user.kermesId);
+      if (k) {
+        const kName = k.city ? `${k.name} (${k.city})` : k.name;
+        addKermesRole(kName, 'staff');
+      }
+    }
+    
+    if (user.kermesAssignments && user.kermesAssignments.length > 0) {
+      user.kermesAssignments.forEach((ka: any) => {
+        const kId = ka.kermesId || ka;
+        const k = kermesEvents.find(k => k.id === kId);
+        if (k) {
+          const kName = k.city ? `${k.name} (${k.city})` : k.name;
+          addKermesRole(kName, 'staff');
+        }
+      });
+    }
+    
+    if (user.assignments) {
+      user.assignments.filter((a: any) => a.entityType === 'kermes').forEach((a: any) => {
+        const k = kermesEvents.find(k => k.id === a.id);
+        if (k) {
+          const kName = k.city ? `${k.name} (${k.city})` : k.name;
+          addKermesRole(kName, a.role || 'staff');
+        }
+      });
+    }
+    
+    if (kermesNamesToRoles.size === 0) return null;
+
+    return Array.from(kermesNamesToRoles.entries()).map(([kName, rolesSet], idx) => {
+      const rolesArray = Array.from(rolesSet);
+      // Sort roles to be deterministic
+      rolesArray.sort();
+      const roleInfos = rolesArray.map(r => getKermesBadgeInfo(r));
+      const roleLabels = roleInfos.map(ri => ri.label).join(' & ');
       
-       <span className="truncate max-w-[170px]">{kermesNamesText}</span>
-       <span className="text-[9px] opacity-70 ml-auto border-l border-blue-200 dark:border-blue-500/30 pl-1.5">{roleInfo.label}</span>
-      </span>
-     );
-   });
- })()}
+      return (
+       <span key={`kermes-${idx}`} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20" title={`${roleLabels} - ${kName}`}>
+        <span className="truncate max-w-[170px]">{kName}</span>
+        <span className="text-[9px] opacity-70 ml-auto border-l border-blue-200 dark:border-blue-500/30 pl-1.5">{roleLabels}</span>
+       </span>
+      );
+    });
+  })()}
  </div>
  </td>
  </tr>
@@ -1682,6 +1698,22 @@ const getKermesBadgeInfo = (role: string) => {
  <option value="customer">{"Normal Kullanıcı / Müşteri (Kunde)"}</option>
  </select>
  </div>
+
+ <div className="bg-muted/30 border border-border rounded-xl p-4 flex items-center justify-between mt-2">
+    <div>
+      <h4 className="font-semibold text-sm text-foreground">Sürücü / Kurye Yetkisi</h4>
+      <p className="text-xs text-muted-foreground mt-1">Bu kullanıcının kurye görevleri almasını sağlar.</p>
+    </div>
+    <label className="relative inline-flex items-center cursor-pointer ml-4">
+      <input 
+        type="checkbox" 
+        className="sr-only peer"
+        checked={isDriver}
+        onChange={(e) => setIsDriver(e.target.checked)}
+      />
+      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-500"></div>
+    </label>
+  </div>
 
  {isSuperAdmin && editRole !== 'customer' && (
  <WorkspaceAssignmentsList
@@ -2042,7 +2074,7 @@ const getKermesBadgeInfo = (role: string) => {
  )}
 
  {/* Businesses Assignment Block if newUserIsDriver is true */}
- {newUserIsDriver && (
+ {isSuperAdmin && newUserIsDriver && (
  <div className="space-y-6 animate-in fade-in slide-in-from-top-2 mt-2">
  {/* Atanan İşletmeler */}
  <div className="space-y-3">

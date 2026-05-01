@@ -379,7 +379,7 @@ export const onKermesOrderPaidNotif = onDocumentUpdated(
       body = (trans.kermesOrderDeliveredBody || "#{{orderNumber}} numarali siparisimiz teslim edildi. Afiyet olsun!").replace("{{orderNumber}}", orderNumber);
       notifType = "kermes_order_delivered";
       // PoD resmi varsa ekle
-      podImageUrl = after.podImageUrl || after.deliveryProofUrl || null;
+      podImageUrl = (after.deliveryProof && after.deliveryProof.photoUrl) || after.podImageUrl || after.deliveryProofUrl || null;
     } else if (newStatus === "cancelled") {
       title = trans.orderCancelledTitle || "Siparis Iptal Edildi";
       body = (trans.kermesOrderCancelledBody || "#{{orderNumber}} numarali siparisimiz iptal edildi.").replace("{{orderNumber}}", orderNumber);
@@ -589,8 +589,8 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
             await admin.messaging().send({
               token: courierToken,
               notification: {
-                title: "Yeni Kurye Siparisi!",
-                body: `#${orderNumber} numarali siparis size atandi. Tezgahtan teslim alin.`,
+                title: "Yeni Kurye Siparişi!",
+                body: `#${orderNumber} numaralı sipariş size atandı. Tezgahtan teslim alın.`,
               },
               data: {
                 type: "kermes_courier_assigned",
@@ -603,6 +603,22 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
             console.log(`[CourierPush] Kurye ${courierId} bilgilendirildi - siparis #${orderNumber}`);
           } else {
             console.log(`[CourierPush] Kurye ${courierId} icin FCM token bulunamadi`);
+          }
+
+          // In-app bildirim kaydet
+          try {
+            await db.collection("users").doc(courierId).collection("notifications").add({
+              title: "Yeni Kurye Siparişi!",
+              body: `#${orderNumber} numaralı sipariş size atandı. Tezgahtan teslim alın.`,
+              type: "kermes_courier_assigned",
+              orderId,
+              orderNumber,
+              status: "ready",
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              read: false,
+            });
+          } catch (e) {
+            console.error("[CourierPush] In-app notification write failed", e);
           }
         } catch (courierPushErr) {
           console.error("[CourierPush] Kuryeye push gonderilemedi:", courierPushErr);
@@ -619,6 +635,7 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
     let title = "";
     let body = "";
     let notifType = "kermes_order_update";
+    let podImageUrl: string | null = null;
 
     if (newStatus === "preparing") {
       title = trans.kermesOrderPreparingTitle || "Siparisimiz Hazirlaniyor";
@@ -641,6 +658,8 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
       title = trans.kermesOrderDeliveredTitle || "Siparis Teslim Edildi!";
       body = (trans.kermesOrderDeliveredBody || "#{{orderNumber}} numarali siparisimiz teslim edildi. Afiyet olsun!").replace("{{orderNumber}}", orderNumber);
       notifType = "kermes_order_delivered";
+      // PoD resmi varsa ekle
+      podImageUrl = (after.deliveryProof && after.deliveryProof.photoUrl) || after.podImageUrl || after.deliveryProofUrl || null;
     } else if (newStatus === "cancelled") {
       title = trans.orderCancelledTitle || "Siparis Iptal Edildi";
       body = (trans.kermesOrderCancelledBody || "#{{orderNumber}} numarali siparisimiz iptal edildi.").replace("{{orderNumber}}", orderNumber);
@@ -651,7 +670,7 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
 
     // In-app bildirim kaydet
     try {
-      await db.collection("users").doc(userId).collection("notifications").add({
+      const notifData: Record<string, any> = {
         title,
         body,
         type: notifType,
@@ -660,7 +679,10 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
         status: newStatus,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         read: false,
-      });
+      };
+      if (podImageUrl) notifData.podImageUrl = podImageUrl;
+
+      await db.collection("users").doc(userId).collection("notifications").add(notifData);
     } catch (e) {
       console.error("[OrderStatusNotif] DB write failed", e);
     }
@@ -672,13 +694,27 @@ export const onKermesOrderStatusChangedNotif = onDocumentUpdated(
         const userData = userDoc.data();
         const fcmToken = userData?.fcmToken;
         if (fcmToken) {
-          await admin.messaging().send({
+          const pushPayload: any = {
             token: fcmToken,
             notification: { title, body },
             data: { type: notifType, orderId, orderNumber },
             android: { priority: "high", notification: { channelId: "kermes_orders", sound: "default" } },
             apns: { payload: { aps: { sound: "default", badge: 1 } } },
-          });
+          };
+          // PoD resmi rich notification olarak ekle
+          if (podImageUrl) {
+            pushPayload.apns = {
+              fcmOptions: { imageUrl: podImageUrl },
+              payload: { aps: { "mutable-content": 1, sound: "default", badge: 1 } },
+            };
+            pushPayload.android = {
+              priority: "high",
+              notification: { imageUrl: podImageUrl, channelId: "kermes_orders", sound: "default" },
+            };
+            pushPayload.data.podImageUrl = podImageUrl;
+            console.log(`[POD] Attaching POD image to kermes delivered notification: ${podImageUrl}`);
+          }
+          await admin.messaging().send(pushPayload);
         }
       }
     } catch (pushErr) {

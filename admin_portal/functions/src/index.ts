@@ -797,7 +797,8 @@ export const onOrderStatusChange = onDocumentUpdated(
 
                     console.log(`[Driver Gate] Business ${butcherId}: lokmaDriverEnabled=${lokmaDriverEnabled}, deliveryPreference=${deliveryPreference}, notifyOwn=${notifyOwnStaff}, notifyLokma=${notifyLokmaDrivers}`);
 
-                    // SHIFT GATING: Only notify staff who are on an active shift
+                    // DRIVER NOTIFICATION: Drivers always get notified (shift is optional for couriers)
+                    // Only in-store staff uses shift gating
                     try {
                         const staffTokens: string[] = [];
                         const processedIds = new Set<string>();
@@ -809,7 +810,7 @@ export const onOrderStatusChange = onDocumentUpdated(
 
                             const data = doc.data();
 
-                            // Skip staff on break (paused shift)
+                            // Skip staff on break (paused shift) - they asked not to be disturbed
                             if (data.shiftStatus === "paused") {
                                 skippedPaused++;
                                 return;
@@ -821,7 +822,18 @@ export const onOrderStatusChange = onDocumentUpdated(
                             }
                         };
 
-                        // Query 1: Own staff with direct businessId match + on shift
+                        // Query 1: LOKMA/external DRIVERS assigned to this business (NO shift gate)
+                        // Drivers should ALWAYS get delivery notifications regardless of shift status
+                        if (notifyLokmaDrivers) {
+                            const driversSnapshot = await db.collection("admins")
+                                .where("isDriver", "==", true)
+                                .where("assignedBusinesses", "array-contains", butcherId)
+                                .get();
+                            driversSnapshot.docs.forEach(doc => collectTokens(doc));
+                            console.log(`[Driver Notify] Found ${driversSnapshot.docs.length} assigned drivers for business ${butcherId}`);
+                        }
+
+                        // Query 2: Own staff with direct businessId match + on shift (shift gate for in-store staff only)
                         if (notifyOwnStaff) {
                             const staffSnapshot = await db.collection("admins")
                                 .where("businessId", "==", butcherId)
@@ -830,24 +842,14 @@ export const onOrderStatusChange = onDocumentUpdated(
                             staffSnapshot.docs.forEach(doc => collectTokens(doc));
                         }
 
-                        // Query 2: LOKMA/external drivers assigned via assignedBusinesses array + on shift
-                        if (notifyLokmaDrivers) {
-                            const driversSnapshot = await db.collection("admins")
-                                .where("isDriver", "==", true)
-                                .where("assignedBusinesses", "array-contains", butcherId)
-                                .where("isOnShift", "==", true)
-                                .get();
-                            driversSnapshot.docs.forEach(doc => collectTokens(doc));
-                        }
-
                         if (skippedPaused > 0) {
-                            console.log(`[Shift Gate] Skipped ${skippedPaused} paused staff for business ${butcherId}`);
+                            console.log(`[Driver Notify] Skipped ${skippedPaused} paused staff for business ${butcherId}`);
                         }
 
                         if (staffTokens.length > 0) {
                             const staffMessage = {
                                 notification: {
-                                    title: trans.deliveryPendingTitle || "🚚 Lieferung ausstehend!",
+                                    title: trans.deliveryPendingTitle || "Lieferung ausstehend!",
                                     body: `${orderNumber} - ${deliveryAddress.substring(0, 50)}${deliveryAddress.length > 50 ? "..." : ""}`,
                                 },
                                 data: {
@@ -858,9 +860,9 @@ export const onOrderStatusChange = onDocumentUpdated(
                                 tokens: staffTokens,
                             };
                             const response = await messaging.sendEachForMulticast({...staffMessage, ...buildSoundConfig(notifSound)});
-                            console.log(`[Shift Gate] Sent delivery notification to ${response.successCount}/${staffTokens.length} on-shift drivers/staff`);
+                            console.log(`[Shift Gate] Sent delivery notification to ${response.successCount}/${staffTokens.length} drivers/staff`);
                         } else {
-                            console.log(`[Shift Gate] No on-shift driver tokens found for business ${butcherId} (${processedIds.size} total staff, ${skippedPaused} paused)`);
+                            console.log(`[Driver Notify] No driver tokens found for business ${butcherId} (${processedIds.size} total staff, ${skippedPaused} paused)`);
                         }
                     } catch (staffErr) {
                         console.error("Error notifying drivers:", staffErr);
@@ -1115,7 +1117,7 @@ export const onOrderStatusChange = onDocumentUpdated(
             try {
                 // POD (Proof of Delivery) image — attach to "delivered" notification if available
                 const podImageUrl: string | null = (newStatus === "delivered" || newStatus === "completed")
-                    ? (after.podImageUrl || after.deliveryProofUrl || null)
+                    ? ((after.deliveryProof && after.deliveryProof.photoUrl) || after.podImageUrl || after.deliveryProofUrl || null)
                     : null;
 
                 const messagePayload: any = {

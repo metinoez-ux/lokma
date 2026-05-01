@@ -43,7 +43,7 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
   // Auto-refresh
   Timer? _refreshTimer;
   int _refreshKey = 0;
-  bool _showOrderDetails = false;
+  bool _initialLoadDone = false;
   
   // Animation for hopping motorcycle marker
   late AnimationController _hopController;
@@ -61,11 +61,12 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
       CurvedAnimation(parent: _hopController, curve: Curves.easeInOut),
     );
     
-    // Auto-refresh every 30 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Auto-refresh every 5 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (mounted) {
         setState(() {
           _refreshKey++;
+          if (!_initialLoadDone) _initialLoadDone = true;
         });
         debugPrint('[CourierTracking] Auto-refresh #$_refreshKey');
       }
@@ -179,7 +180,7 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
           ),
           IconButton(
             icon: StreamBuilder<int>(
-              stream: ChatService().getUnreadCountStream(widget.orderId, FirebaseAuth.instance.currentUser?.uid ?? ''),
+              stream: ChatService().getUnreadCountStream(widget.orderId, FirebaseAuth.instance.currentUser?.uid ?? '', isKermes: true),
               builder: (context, badgeSnap) {
                 final unreadCount = badgeSnap.data ?? 0;
                 return Stack(
@@ -583,7 +584,6 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
 
   Widget _buildTrackingView(KermesOrder order) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Default center if no location yet (Istanbul)
     LatLng courierPosition = const LatLng(41.0082, 28.9784);
     bool hasLocation = false;
 
@@ -595,214 +595,41 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
       hasLocation = true;
     }
 
-    // Business location from Firestore (fetched via _fetchBusinessLocation)
     final businessPosition = _businessPosition;
 
-    // Calculate distance and ETA from courier to delivery
     double? distanceKm;
     int? etaMinutes;
     if (hasLocation && _deliveryPosition != null) {
       final distanceMeters = Geolocator.distanceBetween(
-        courierPosition.latitude,
-        courierPosition.longitude,
-        _deliveryPosition!.latitude,
-        _deliveryPosition!.longitude,
+        courierPosition.latitude, courierPosition.longitude,
+        _deliveryPosition!.latitude, _deliveryPosition!.longitude,
       );
       distanceKm = distanceMeters / 1000;
-      // Estimate ~30 km/h average city delivery speed
       etaMinutes = ((distanceKm / 30) * 60).ceil();
       if (etaMinutes < 1) etaMinutes = 1;
     }
 
-    return Column(
+    return Stack(
       children: [
-        // Courier info header
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Courier avatar
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: _brandColor.withOpacity(0.15),
-                child: const Icon(Icons.person, color: _brandColor, size: 32),
-              ),
-              const SizedBox(width: 16),
-              
-              // Courier info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      order.courierName ?? tr('orders.courier'),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.delivery_dining, 
-                                   size: 16, color: Colors.green.shade700),
-                              const SizedBox(width: 4),
-                              Text(
-                                tr('orders.on_the_way'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green.shade700,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (order.etaMinutes != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            '~${order.etaMinutes} dk',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    // Distance & ETA info
-                    if (distanceKm != null && etaMinutes != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.route, size: 13, color: Colors.blue.shade700),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${distanceKm.toStringAsFixed(1)} km',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.blue.shade700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.timer_outlined, size: 13, color: Colors.amber.shade700),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '~$etaMinutes dk',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.amber.shade700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              
-              // Call button
-              if (order.courierPhone != null && order.courierPhone!.isNotEmpty)
-                IconButton(
-                  onPressed: () => _callCourier(order.courierPhone!),
-                  icon: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: const Icon(Icons.phone, color: Colors.white),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        
-        // Last update info
-        if (order.lastLocationUpdate != null)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: isDark ? Colors.grey[850] : Colors.grey[100],
-            child: Text(
-              'Son güncelleme: ${_formatTime(order.lastLocationUpdate!)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-              ),
+        // Full-screen map
+        SizedBox.expand(
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: hasLocation
+                  ? courierPosition
+                  : (businessPosition ?? _deliveryPosition ?? const LatLng(41.0082, 28.9784)),
+              initialZoom: 14,
             ),
-          ),
-        
-        // Map
-        Expanded(
-          child: Stack(
             children: [
-              SizedBox.expand(
-                child: FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: hasLocation
-                        ? courierPosition
-                        : (businessPosition ?? _deliveryPosition ?? const LatLng(41.0082, 28.9784)),
-                    initialZoom: 14,
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.lokma.app',
-                    ),
-                    // Static markers (business + delivery)
-                    MarkerLayer(
-                      rotate: true,
-                      markers: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.lokma.app',
+              ),
+              // Static markers (business + delivery)
+              MarkerLayer(
+                rotate: true,
+                markers: [
                         // Business marker (where order was picked up)
                         if (businessPosition != null)
                           Marker(
@@ -947,8 +774,8 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
                   ],
                 ),
               ),
-              // Info banner when courier location is not available
-              if (!hasLocation)
+              // Info banner - only show after initial load, softer message
+              if (!hasLocation && _initialLoadDone)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -957,171 +784,308 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
                     margin: const EdgeInsets.all(12),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.shade700,
+                      color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                        Icon(Icons.gps_fixed, color: Colors.amber.shade700, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            tr('orders.courier_location_unavailable'),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            'Kurye konumu guncelleniyor...',
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.amber.shade700,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
+        // Re-center FAB
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 12,
+          right: 12,
+          child: Column(
+            children: [
+              _mapFAB(Icons.my_location, () {
+                if (hasLocation) {
+                  _mapController.move(courierPosition, 15);
+                }
+              }, isDark),
+              const SizedBox(height: 8),
+              _mapFAB(Icons.fit_screen, () {
+                _centerMapOnAvailablePositions();
+              }, isDark),
             ],
           ),
         ),
 
-        // Collapsible order details panel
-        _buildCollapsibleOrderPanel(order, isDark),
-      ],
-    );
-  }
-
-  Widget _buildCollapsibleOrderPanel(KermesOrder order, bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Legend row (always visible, compact)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            color: isDark ? Colors.grey[850] : Colors.grey[50],
-            child: Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                children: [
-                _buildLegendItem(Colors.red.shade600, Icons.moped, tr('orders.courier'), isDark),
-                _buildLegendItem(_brandColor, Icons.storefront, tr('orders.business'), isDark),
-                _buildLegendItem(Colors.blue.shade700, Icons.home, tr('orders.delivery'), isDark),
-              ],
-            ),
-          ),
-          // Tappable order summary header
-          GestureDetector(
-            onTap: () => setState(() => _showOrderDetails = !_showOrderDetails),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.receipt_long, color: _brandColor, size: 20),
-                  const SizedBox(width: 10),
-                  Text(
-                    '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${order.items.length} ürün',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedRotation(
-                    turns: _showOrderDetails ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_up, color: Colors.grey),
+        // Modern bottom sheet overlay
+        DraggableScrollableSheet(
+          initialChildSize: 0.32,
+          minChildSize: 0.15,
+          maxChildSize: 0.65,
+          snap: true,
+          snapSizes: const [0.15, 0.32, 0.65],
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
                   ),
                 ],
               ),
-            ),
-          ),
-          // Expandable order items
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Container(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                itemCount: order.items.length,
-                separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
-                itemBuilder: (context, index) {
-                  final item = order.items[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+              child: ListView(
+                controller: scrollController,
+                padding: EdgeInsets.zero,
+                children: [
+                  // Drag handle
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 10, bottom: 12),
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[600] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // Courier info row
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        // Avatar
+                        Container(
+                          width: 52, height: 52,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [_brandColor, _brandColor.withOpacity(0.7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.delivery_dining, color: Colors.white, size: 28),
+                        ),
+                        const SizedBox(width: 14),
+                        // Name + status
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _formatCourierName(order.courierName),
+                                style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w700,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8, height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.green,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    tr('orders.on_the_way'),
+                                    style: TextStyle(
+                                      fontSize: 13, color: Colors.green.shade600,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (order.lastLocationUpdate != null) ...[
+                                    Text(
+                                      '  ·  ${_formatTime(order.lastLocationUpdate!)}',
+                                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Action buttons
+                        if (order.courierPhone != null && order.courierPhone!.isNotEmpty)
+                          _actionCircle(Icons.phone, Colors.green, () => _callCourier(order.courierPhone!)),
+                        const SizedBox(width: 8),
+                        _actionCircle(Icons.chat_bubble_outline, Colors.blue, () {
+                          if (_order != null) {
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => OrderChatScreen(
+                                orderId: widget.orderId,
+                                orderNumber: _order!.orderNumber ?? widget.orderId.substring(0, 6).toUpperCase(),
+                                recipientName: tr('orders.courier'),
+                                recipientRole: 'courier',
+                              ),
+                            ));
+                          }
+                        }),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ETA + Distance pills
+                  if (distanceKm != null && etaMinutes != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          _infoPill(Icons.timer_outlined, '~$etaMinutes dk', Colors.amber),
+                          const SizedBox(width: 10),
+                          _infoPill(Icons.route, '${distanceKm.toStringAsFixed(1)} km', Colors.blue),
+                        ],
+                      ),
+                    ),
+
+                  Divider(height: 28, color: isDark ? Colors.grey[800] : Colors.grey[200], indent: 20, endIndent: 20),
+
+                  // Legend
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Wrap(
+                      spacing: 16, runSpacing: 8,
+                      children: [
+                        _buildLegendItem(Colors.red.shade600, Icons.moped, tr('orders.courier'), isDark),
+                        _buildLegendItem(_brandColor, Icons.storefront, tr('orders.business'), isDark),
+                        _buildLegendItem(Colors.blue.shade700, Icons.home, tr('orders.delivery'), isDark),
+                      ],
+                    ),
+                  ),
+
+                  Divider(height: 28, color: isDark ? Colors.grey[800] : Colors.grey[200], indent: 20, endIndent: 20),
+
+                  // Order summary header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.receipt_long, color: _brandColor, size: 18),
+                        const SizedBox(width: 8),
+                        Text('#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15,
+                            color: isDark ? Colors.white : Colors.black87)),
+                        const SizedBox(width: 8),
+                        Text('${order.items.length} urun',
+                          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[500])),
+                        const Spacer(),
+                        Text('${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.green)),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Order items
+                  ...order.items.map((item) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                     child: Row(
                       children: [
                         Container(
-                          width: 24,
-                          height: 24,
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
                             color: _brandColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Center(
-                            child: Text(
-                              '${item.quantity}x',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: _brandColor,
-                              ),
-                            ),
-                          ),
+                          child: Text('${item.quantity}x', style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700, color: _brandColor)),
                         ),
                         const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: const TextStyle(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          '${(item.price * item.quantity).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.grey[300] : Colors.grey[700],
-                          ),
-                        ),
+                        Expanded(child: Text(item.name, style: TextStyle(
+                          fontSize: 13, color: isDark ? Colors.white : Colors.black87))),
+                        Text('${(item.price * item.quantity).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600])),
                       ],
                     ),
-                  );
-                },
+                  )),
+
+                  const SizedBox(height: 20),
+                ],
               ),
-            ),
-            crossFadeState: _showOrderDetails
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 250),
-          ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _mapFAB(IconData icon, VoidCallback onTap, bool isDark) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44, height: 44,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Icon(icon, size: 22, color: isDark ? Colors.white : Colors.black87),
+      ),
+    );
+  }
+
+  Widget _actionCircle(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 42, height: 42,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
+  Widget _infoPill(IconData icon, String text, MaterialColor color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color.shade700),
+          const SizedBox(width: 5),
+          Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color.shade700)),
         ],
       ),
     );
@@ -1146,8 +1110,19 @@ class _KermesCourierTrackingScreenState extends State<KermesCourierTrackingScree
     );
   }
 
+  String _formatCourierName(String? fullName) {
+    if (fullName == null || fullName.trim().isEmpty) return tr('orders.courier');
+    final parts = fullName.trim().split(' ');
+    if (parts.isEmpty) return tr('orders.courier');
+    String mask(String word) {
+      if (word.length <= 1) return word;
+      if (word.length == 2) return '${word[0]}*';
+      return '${word[0]}${'*' * (word.length - 2)}${word[word.length - 1]}';
+    }
+    return parts.map((p) => mask(p)).join(' ');
+  }
+
   String _formatTime(DateTime time) {
-    // Ensure both times are in UTC for accurate comparison
     final nowUtc = DateTime.now().toUtc();
     final timeUtc = time.toUtc();
     final diff = nowUtc.difference(timeUtc);

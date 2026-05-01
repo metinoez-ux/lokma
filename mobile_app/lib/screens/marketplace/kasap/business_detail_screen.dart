@@ -7100,10 +7100,10 @@ class _StickyCategoryTabsState extends State<_StickyCategoryTabs> {
               final catName = cat['name'] as String;
               final isSelected = widget.selectedCategory == catName;
               final catCartCount = catName == 'marketplace.category_all'.tr()
-                  ? widget.cartItems.fold<int>(0, (int sum, ci) => sum + ci.quantity.toInt())
+                  ? widget.cartItems.fold<int>(0, (int sum, ci) => sum + (ci.quantity as num).toInt())
                   : widget.cartItems
                       .where((ci) => ci.product.category == catName)
-                      .fold<int>(0, (int sum, ci) => sum + ci.quantity.toInt());
+                      .fold<int>(0, (int sum, ci) => sum + (ci.quantity as num).toInt());
 
               return Padding(
                 padding: const EdgeInsets.only(right: 6),

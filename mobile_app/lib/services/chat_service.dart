@@ -45,9 +45,10 @@ class ChatService {
     required String senderName,
     required String senderRole,
     required String text,
+    bool isKermes = false,
   }) async {
     await _db
-        .collection('meat_orders')
+        .collection(isKermes ? 'kermes_orders' : 'meat_orders')
         .doc(orderId)
         .collection('messages')
         .add({
@@ -60,7 +61,7 @@ class ChatService {
     });
 
     // Update order document with last message info for quick preview
-    await _db.collection('meat_orders').doc(orderId).update({
+    await _db.collection(isKermes ? 'kermes_orders' : 'meat_orders').doc(orderId).update({
       'lastMessage': text,
       'lastMessageAt': FieldValue.serverTimestamp(),
       'lastMessageBy': senderRole,
@@ -68,9 +69,9 @@ class ChatService {
   }
 
   /// Get real-time message stream for an order
-  Stream<List<ChatMessage>> getMessagesStream(String orderId) {
+  Stream<List<ChatMessage>> getMessagesStream(String orderId, {bool isKermes = false}) {
     return _db
-        .collection('meat_orders')
+        .collection(isKermes ? 'kermes_orders' : 'meat_orders')
         .doc(orderId)
         .collection('messages')
         .orderBy('createdAt', descending: false)
@@ -81,9 +82,9 @@ class ChatService {
   }
 
   /// Mark all messages as read for a specific user
-  Future<void> markAllAsRead(String orderId, String userId) async {
+  Future<void> markAllAsRead(String orderId, String userId, {bool isKermes = false}) async {
     final unread = await _db
-        .collection('meat_orders')
+        .collection(isKermes ? 'kermes_orders' : 'meat_orders')
         .doc(orderId)
         .collection('messages')
         .where('read', isEqualTo: false)
@@ -98,9 +99,9 @@ class ChatService {
   }
 
   /// Get unread message count for an order (for badge display)
-  Stream<int> getUnreadCountStream(String orderId, String userId) {
+  Stream<int> getUnreadCountStream(String orderId, String userId, {bool isKermes = false}) {
     return _db
-        .collection('meat_orders')
+        .collection(isKermes ? 'kermes_orders' : 'meat_orders')
         .doc(orderId)
         .collection('messages')
         .where('read', isEqualTo: false)

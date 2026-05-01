@@ -11,12 +11,15 @@ class StaffRoleService {
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   
+  bool _isChecking = false;
+  String? _lastCheckedUid;
   bool _isStaff = false;
   String? _businessId;
   String? _businessName;
   String? _businessType;
   String? _staffName;
   String? _role;
+  bool _isDriver = false;
   DateTime? _lastCashSettlement;
   List<String> _kermesAllowedSections = [];
 
@@ -34,6 +37,7 @@ class StaffRoleService {
   String? get businessType => _overrideBusinessType ?? _businessType;
   String? get staffName => _staffName;
   String? get role => _role;
+  bool get isDriver => _isDriver;
   DateTime? get lastCashSettlement => _lastCashSettlement;
   List<String> get kermesAllowedSections => _kermesAllowedSections;
 
@@ -50,21 +54,39 @@ class StaffRoleService {
   }
 
   /// Check if current user is a staff member
+  /// Preserves existing valid session if fresh check fails (network timeout etc.)
   Future<bool> checkStaffStatus() async {
-    _resetStatus(); // Ensure no stale data bleeds across sessions
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
+      _resetStatus();
       return false;
     }
 
-    // Try server first, then fall back to cache if offline
-    final result = await _tryCheckStaff(user, null) ||
-                   await _tryCheckStaff(user, Source.cache);
-    
-    if (!result) {
-      _resetStatus();
+    // Prevent concurrent checks
+    if (_isChecking) {
+      debugPrint('[StaffRole] Check already in progress, returning current: $_isStaff');
+      return _isStaff;
     }
-    return result;
+    _isChecking = true;
+
+    try {
+      // Try server first, then fall back to cache if offline
+      final result = await _tryCheckStaff(user, null) ||
+                     await _tryCheckStaff(user, Source.cache);
+      
+      if (!result) {
+        // Only reset if we had a clean check and user genuinely isn't staff
+        _resetStatus();
+      }
+      _lastCheckedUid = user.uid;
+      return result;
+    } catch (e) {
+      // On unexpected error, preserve existing state to avoid logout-on-timeout
+      debugPrint('[StaffRole] checkStaffStatus error, preserving existing state ($_isStaff): $e');
+      return _isStaff;
+    } finally {
+      _isChecking = false;
+    }
   }
 
   /// Attempt staff detection from given source (null = default/server, Source.cache = offline)
@@ -80,23 +102,26 @@ class StaffRoleService {
       if (adminDoc.exists) {
         final data = adminDoc.data()!;
         final docBusinessId = data['businessId'] as String?;
+        final assignedBusinesses = data['assignedBusinesses'] as List<dynamic>?;
+        final resolvedBusinessId = docBusinessId ?? (assignedBusinesses != null && assignedBusinesses.isNotEmpty ? assignedBusinesses.first as String : null);
         final docRole = data['role'] as String?;
         
         // Only treat as valid staff if doc has a real businessId or role
         // (set(merge:true) from ShiftService creates sparse docs with only shift fields)
-        if (docBusinessId != null || (docRole != null && docRole != 'admin')) {
+        if (resolvedBusinessId != null || (docRole != null && docRole != 'admin')) {
           _isStaff = true;
-          _businessId = docBusinessId;
+          _businessId = resolvedBusinessId;
           _businessName = data['businessName'];
           _businessType = data['businessType'];
           _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
           _role = docRole ?? 'admin';
+          _isDriver = data['isDriver'] == true || _role == 'surucu' || _role == 'kurye';
           _lastCashSettlement = (data['lastCashSettlement'] as Timestamp?)?.toDate();
           _kermesAllowedSections = List<String>.from(data['kermesAllowedSections'] ?? []);
           
-          // Register FCM token for delivery notifications (skip if offline)
+          // Register FCM token for delivery notifications (fire-and-forget, skip if offline)
           if (source == null) {
-            await _registerFcmToken(user.uid);
+            _registerFcmToken(user.uid); // Non-blocking: don't await to speed up login
           }
           
           debugPrint('[StaffRole] User is staff: $_staffName, businessId: $_businessId (source: ${source ?? "server"})');
@@ -125,7 +150,7 @@ class StaffRoleService {
         _role = 'kermes_staff';
         _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
         
-        if (source == null) await _registerFcmToken(user.uid);
+        if (source == null) _registerFcmToken(user.uid);
         debugPrint('[StaffRole] User is Kermes staff: $_staffName, kermesId: $_businessId (source: ${source ?? "server"})');
         return true;
       }
@@ -149,7 +174,7 @@ class StaffRoleService {
         _role = 'kermes_driver';
         _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
         
-        if (source == null) await _registerFcmToken(user.uid);
+        if (source == null) _registerFcmToken(user.uid);
         debugPrint('[StaffRole] User is Kermes driver: $_staffName, kermesId: $_businessId (source: ${source ?? "server"})');
         return true;
       }
@@ -173,7 +198,7 @@ class StaffRoleService {
         _role = 'kermes_waiter';
         _kermesAllowedSections = List<String>.from(kermesData['kermesAllowedSections'] ?? []);
 
-        if (source == null) await _registerFcmToken(user.uid);
+        if (source == null) _registerFcmToken(user.uid);
         debugPrint('[StaffRole] User is Kermes waiter: $_staffName, kermesId: $_businessId (source: ${source ?? "server"})');
         return true;
       }
@@ -210,17 +235,25 @@ class StaffRoleService {
     _businessType = null;
     _staffName = null;
     _role = null;
+    _isDriver = false;
     _lastCashSettlement = null;
     _kermesAllowedSections = [];
     clearOverride();
   }
 
   /// Listen to auth changes and update status
+  /// Debounced: skips re-check if the same user is already authenticated
   void listenToAuthChanges() {
     FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
+        // Skip re-check if same user is already verified as staff
+        if (_lastCheckedUid == user.uid && _isStaff) {
+          debugPrint('[StaffRole] Auth event for same user ${user.uid}, skipping re-check (already staff)');
+          return;
+        }
         checkStaffStatus();
       } else {
+        _lastCheckedUid = null;
         _resetStatus();
       }
     });

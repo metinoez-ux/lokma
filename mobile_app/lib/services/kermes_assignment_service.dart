@@ -21,68 +21,62 @@ class KermesAssignmentService {
     final Map<String, KermesAssignment> assignmentMap = {};
 
     try {
-      // Staff query
-      final staffQuery = await _db
-          .collection('kermes_events')
-          .where('isActive', isEqualTo: true)
-          .where('assignedStaff', arrayContains: uid)
-          .get();
+      // Run ALL 4 queries in PARALLEL instead of serial (was causing 40s+ timeout)
+      final results = await Future.wait([
+        _db.collection('kermes_events')
+            .where('isActive', isEqualTo: true)
+            .where('assignedStaff', arrayContains: uid)
+            .get(),
+        _db.collection('kermes_events')
+            .where('isActive', isEqualTo: true)
+            .where('assignedDrivers', arrayContains: uid)
+            .get(),
+        _db.collection('kermes_events')
+            .where('isActive', isEqualTo: true)
+            .where('assignedWaiters', arrayContains: uid)
+            .get(),
+        _db.collection('kermes_events')
+            .where('isActive', isEqualTo: true)
+            .where('kermesAdmins', arrayContains: uid)
+            .get(),
+      ]);
 
-      for (var doc in staffQuery.docs) {
-        final existing = assignmentMap[doc.id];
-        assignmentMap[doc.id] = KermesAssignment(
-          id: doc.id,
-          title: doc.data()['title'] ?? 'Kermes',
-          roles: [...(existing?.roles ?? []), 'personel'],
-        );
+      final roleNames = ['personel', 'surucu', 'garson', 'kermes_admin'];
+      for (int i = 0; i < results.length; i++) {
+        for (var doc in results[i].docs) {
+          final existing = assignmentMap[doc.id];
+          assignmentMap[doc.id] = KermesAssignment(
+            id: doc.id,
+            title: doc.data()['title'] ?? 'Kermes',
+            roles: [...(existing?.roles ?? []), roleNames[i]],
+          );
+        }
       }
 
-      // Driver query
-      final driverQuery = await _db
-          .collection('kermes_events')
-          .where('isActive', isEqualTo: true)
-          .where('assignedDrivers', arrayContains: uid)
-          .get();
-
-      for (var doc in driverQuery.docs) {
-        final existing = assignmentMap[doc.id];
-        assignmentMap[doc.id] = KermesAssignment(
-          id: doc.id,
-          title: doc.data()['title'] ?? 'Kermes',
-          roles: [...(existing?.roles ?? []), 'surucu'],
-        );
-      }
-
-      // Waiter query
-      final waiterQuery = await _db
-          .collection('kermes_events')
-          .where('isActive', isEqualTo: true)
-          .where('assignedWaiters', arrayContains: uid)
-          .get();
-
-      for (var doc in waiterQuery.docs) {
-        final existing = assignmentMap[doc.id];
-        assignmentMap[doc.id] = KermesAssignment(
-          id: doc.id,
-          title: doc.data()['title'] ?? 'Kermes',
-          roles: [...(existing?.roles ?? []), 'garson'],
-        );
-      }
-
-      // Kermes Admin query
-      final adminQuery = await _db
-          .collection('kermes_events')
-          .where('isActive', isEqualTo: true)
-          .where('kermesAdmins', arrayContains: uid)
-          .get();
-
-      for (var doc in adminQuery.docs) {
-        final existing = assignmentMap[doc.id];
-        assignmentMap[doc.id] = KermesAssignment(
-          id: doc.id,
-          title: doc.data()['title'] ?? 'Kermes',
-          roles: [...(existing?.roles ?? []), 'kermes_admin'],
-        );
+      // Fallback: admins doc'undaki assignedKermesEvents (veri tutarsizligi icin)
+      if (assignmentMap.isEmpty) {
+        try {
+          final adminDoc = await _db.collection('admins').doc(uid).get()
+              .timeout(const Duration(seconds: 3));
+          if (adminDoc.exists) {
+            final kermesEvents = adminDoc.data()?['assignedKermesEvents'] as List<dynamic>?;
+            if (kermesEvents != null && kermesEvents.isNotEmpty) {
+              for (final kId in kermesEvents) {
+                if (kId is String && kId.isNotEmpty && !assignmentMap.containsKey(kId)) {
+                  final kDoc = await _db.collection('kermes_events').doc(kId).get()
+                      .timeout(const Duration(seconds: 2));
+                  if (kDoc.exists && kDoc.data()?['isActive'] == true) {
+                    assignmentMap[kId] = KermesAssignment(
+                      id: kId,
+                      title: kDoc.data()?['title'] ?? 'Kermes',
+                      roles: ['personel'],
+                    );
+                  }
+                }
+              }
+            }
+          }
+        } catch (_) {}
       }
 
       return assignmentMap.values.toList();

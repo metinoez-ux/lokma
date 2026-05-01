@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../services/order_service.dart';
+import '../../../services/kermes_order_service.dart';
 import '../../../providers/driver_provider.dart';
+import 'package:lokma_app/models/kermes_order_model.dart';
 
 enum CourierStatus { idle, activeDelivery, trackingLost }
 
@@ -87,14 +89,30 @@ class CourierNotifier extends Notifier<CourierState> {
     if (user == null) return;
     
     try {
-      await FirebaseFirestore.instance.collection('orders').doc(order.id).update({
+      await FirebaseFirestore.instance.collection('meat_orders').doc(order.id).update({
         'courierId': user.uid,
         'status': OrderStatus.onTheWay.toString().split('.').last,
         'courierName': ref.read(driverProvider).driverInfo?.name ?? '',
         'pickedUpAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw Exception('Sipariş görevi alınamadı: \$e');
+      throw Exception('Sipariş görevi alınamadı: $e');
+    }
+  }
+
+  Future<void> claimKermesDelivery(KermesOrder order) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    try {
+      await FirebaseFirestore.instance.collection('kermes_orders').doc(order.id).update({
+        'courierId': user.uid,
+        'status': KermesOrderStatus.onTheWay.toString().split('.').last,
+        'courierName': ref.read(driverProvider).driverInfo?.name ?? '',
+        'pickedUpAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Sipariş görevi alınamadı: $e');
     }
   }
 
@@ -109,12 +127,32 @@ class CourierNotifier extends Notifier<CourierState> {
         updateData['proofPhotoUrl'] = proofPhotoUrl;
       }
 
-      await FirebaseFirestore.instance.collection('orders').doc(order.id).update(updateData);
+      await FirebaseFirestore.instance.collection('meat_orders').doc(order.id).update(updateData);
       
       state = state.copyWith(status: CourierStatus.idle, activeOrder: null);
       _stopTracking();
     } catch (e) {
-      throw Exception('Sipariş tamamlanamadı: \$e');
+      throw Exception('Sipariş tamamlanamadı: $e');
+    }
+  }
+
+  Future<void> completeKermesDelivery(KermesOrder order, {String? proofPhotoUrl}) async {
+    try {
+      final updateData = <String, dynamic>{
+        'status': KermesOrderStatus.delivered.toString().split('.').last,
+        'deliveredAt': FieldValue.serverTimestamp(),
+      };
+      
+      if (proofPhotoUrl != null) {
+        updateData['proofPhotoUrl'] = proofPhotoUrl;
+      }
+
+      await FirebaseFirestore.instance.collection('kermes_orders').doc(order.id).update(updateData);
+      
+      state = state.copyWith(status: CourierStatus.idle, activeOrder: null);
+      _stopTracking();
+    } catch (e) {
+      throw Exception('Sipariş tamamlanamadı: $e');
     }
   }
 

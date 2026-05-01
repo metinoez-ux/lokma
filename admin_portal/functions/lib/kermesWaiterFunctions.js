@@ -51,9 +51,9 @@ const db = admin.firestore();
  *
  * Siparisler butun bolumlerden (Kadin/Erkek/Aile) gelen itemlari
  * kendi bolumlerinin PrepZone'larinda hazirlanir, sonra o bolumun
- * Stant'inda (genel alma noktasi) toplanir.
- * - Masada: Garson Stant'tan alip masaya goturur
- * - GelAl: Musteri push notification ile Stant'a gelip alir
+ * Tezgah'inda (genel alma noktasi) toplanir.
+ * - Masada: Garson Tezgah'tan alip masaya goturur
+ * - GelAl: Musteri push notification ile Tezgah'a gelip alir
  */
 exports.kermesWaiterTimeoutCheck = (0, scheduler_1.onSchedule)({
     schedule: "every 1 minutes",
@@ -225,10 +225,10 @@ exports.kermesWaiterTimeoutCheck = (0, scheduler_1.onSchedule)({
  * Kermes siparisi ready oldugunda otomatik garson atamasi
  *
  * Siparis KDS'de tum itemlari "ready" olarak isaretlendiginde tetiklenir.
- * - Masa siparisi: en az mesgul aktif garsona atar. Garson Stant'tan alip masaya goturur.
- * - Gel-Al (McDonald's usulu): push notification gonderir. Musteri Stant'a gelip alir.
+ * - Masa siparisi: en az mesgul aktif garsona atar. Garson Tezgah'tan alip masaya goturur.
+ * - Gel-Al (McDonald's usulu): push notification gonderir. Musteri Tezgah'a gelip alir.
  *
- * Her bolumun kendi Stant/alma noktasi vardir. Siparis o bolumun Stant'ina duser.
+ * Her bolumun kendi Tezgah/alma noktasi vardir. Siparis o bolumun Tezgah'ina duser.
  */
 exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
     document: "kermes_orders/{orderId}",
@@ -249,44 +249,69 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
     const tableSection = after.tableSection;
     console.log(`[OrderReady] Siparis ${orderId} hazir, tip: ${deliveryType}`);
     if (deliveryType === "masada") {
-        // Masa siparisi: en az mesgul garsona ata
-        // Garson bu siparisi ilgili bolumun Stant'indan alip masaya goturecek
+        // Masa siparişi: İlgili bölümdeki tüm aktif garsonlara bildirim gönder (Sahiplenme modeli)
         let query = db
             .collection("kermes_staff_status")
             .where("kermesId", "==", kermesId)
-            .where("status", "==", "active");
+            .where("status", "==", "active")
+            .where("role", "==", "waiter");
         if (tableSection) {
             query = query.where("assignedSection", "==", tableSection);
         }
-        const candidates = await query
-            .orderBy("currentOrderCount", "asc")
-            .limit(1)
-            .get();
-        if (candidates.empty) {
+        const activeWaiters = await query.get();
+        if (activeWaiters.empty) {
             console.log(`[OrderReady] Siparis ${orderId}: aktif garson yok`);
             return;
         }
-        const waiter = candidates.docs[0].data();
-        const waiterId = waiter.staffId;
-        const waiterName = waiter.staffName;
-        // Siparisi garsona ata
-        await event.data.after.ref.update({
-            assignedWaiterId: waiterId,
-            assignedWaiterName: waiterName,
-            waiterAssignedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        // Garson sayacini artir
-        const staffDocId = `${kermesId}__${waiterId}`;
-        await db
-            .collection("kermes_staff_status")
-            .doc(staffDocId)
-            .update({
-            currentOrderCount: admin.firestore.FieldValue.increment(1),
-            lastAssignedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        console.log(`[OrderReady] Siparis ${orderId} -> garson ${waiterName} (${waiterId})`);
+        // Aktif garsonların user dökümanlarını bulup FCM tokenlarını al
+        const tokens = [];
+        const waiterIds = activeWaiters.docs.map(doc => doc.data().staffId);
+        for (const wId of waiterIds) {
+            const userDoc = await db.collection("users").doc(wId).get();
+            if (userDoc.exists) {
+                const fcmToken = userDoc.data()?.fcmToken;
+                if (fcmToken) {
+                    tokens.push(fcmToken);
+                }
+            }
+        }
+        const tableNo = after.tableNo || "Bilinmiyor";
+        if (tokens.length > 0) {
+            try {
+                await admin.messaging().sendEachForMulticast({
+                    tokens: tokens,
+                    notification: {
+                        title: `Masa ${tableNo} Siparişi Hazır!`,
+                        body: "Teslimat bekliyor. Sahiplenmek için dokunun.",
+                    },
+                    data: {
+                        type: "kermes_waiter_order_ready",
+                        orderId: orderId,
+                        tableNo: tableNo,
+                        tableSection: tableSection || "",
+                    },
+                    android: {
+                        priority: "high",
+                        notification: {
+                            channelId: "kermes_orders",
+                            sound: "notification_sound",
+                        },
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                sound: "notification_sound",
+                                badge: 1,
+                            },
+                        },
+                    },
+                });
+                console.log(`[OrderReady] Masa ${tableNo} siparişi için ${tokens.length} garsona bildirim gönderildi.`);
+            }
+            catch (pushErr) {
+                console.error(`[OrderReady] Garsonlara push gönderilemedi:`, pushErr);
+            }
+        }
     }
     else if (deliveryType === "kurye") {
         // Kurye siparisi: en az mesgul aktif surucu atanir
@@ -328,7 +353,7 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
     }
     else if (deliveryType === "gelAl") {
         // Gel-Al (McDonald's usulu): "Siparisiz hazir!" push notification
-        // Musteri ilgili bolumun Stant'ina gidip siparisini alacak
+        // Musteri ilgili bolumun Tezgah'ina gidip siparisini alacak
         const userId = after.userId;
         if (!userId) {
             console.log(`[OrderReady] Siparis ${orderId}: userId yok, push gonderilemez`);
@@ -345,8 +370,8 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
             return;
         }
         const orderNumber = after.orderNumber;
-        // Bolumun Stant ismini bul (genel alma noktasi)
-        let tezgahLabel = "Stant";
+        // Bolumun Tezgah ismini bul (genel alma noktasi)
+        let tezgahLabel = "Tezgah";
         if (tableSection && kermesId) {
             try {
                 const eventDoc = await db.collection("kermes_events").doc(kermesId).get();
@@ -361,13 +386,13 @@ exports.onKermesOrderReady = (0, firestore_1.onDocumentUpdated)({
                             tezgahLabel = `${sectionLabel} - ${tezgahlar[0]}`;
                         }
                         else {
-                            tezgahLabel = `${sectionLabel} Stantı`;
+                            tezgahLabel = `${sectionLabel} Tezgahi`;
                         }
                     }
                 }
             }
             catch (e) {
-                console.warn(`[OrderReady] Bolum stant bilgisi alinamadi: ${e}`);
+                console.warn(`[OrderReady] Bolum tezgah bilgisi alinamadi: ${e}`);
             }
         }
         try {

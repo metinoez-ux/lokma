@@ -5,12 +5,14 @@ import 'package:easy_localization/easy_localization.dart';
 
 class WorkplaceSelectorSheet extends StatelessWidget {
   final String? baseBusinessName;
+  final List<Map<String, String>> businesses; // Coklu isletme destegi
   final List<KermesAssignment> kermeses;
   final Function(String id, String name, String type) onSelected;
 
   const WorkplaceSelectorSheet({
     super.key,
-    required this.baseBusinessName,
+    this.baseBusinessName,
+    this.businesses = const [],
     required this.kermeses,
     required this.onSelected,
   });
@@ -46,7 +48,7 @@ class WorkplaceSelectorSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Bugün nerede görev alıyorsunuz?',
+            'Nerede gorev aliyorsunuz?',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -55,7 +57,7 @@ class WorkplaceSelectorSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Lütfen giriş yapmak istediğiniz işletmeyi veya kermesi seçin.',
+            'Giris yapmak istediginiz isletmeyi veya kermesi secin.',
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -63,12 +65,29 @@ class WorkplaceSelectorSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           
-          if (baseBusinessName != null) ...[
+          // Coklu isletme: businesses listesini goster
+          if (businesses.isNotEmpty) ...[
+            ...businesses.map((biz) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildOption(
+                context,
+                icon: Icons.storefront_outlined,
+                title: biz['name'] ?? 'Isletme',
+                subtitle: 'Isletme',
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.pop(context);
+                  onSelected(biz['id'] ?? '', biz['name'] ?? 'Isletme', 'business');
+                },
+              ),
+            )),
+          ] else if (baseBusinessName != null) ...[
+            // Tek isletme fallback
             _buildOption(
               context,
               icon: Icons.storefront_outlined,
               title: baseBusinessName!,
-              subtitle: 'Restoran / İşletme',
+              subtitle: 'Isletme',
               onTap: () {
                 HapticFeedback.lightImpact();
                 Navigator.pop(context);

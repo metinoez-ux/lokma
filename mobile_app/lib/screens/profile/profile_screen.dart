@@ -532,9 +532,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ...assignments.map((a) => GestureDetector(
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            final roleService = StaffRoleService();
-                            roleService.setOverrideWorkplace(a.id, a.title, 'kermes');
-                            context.push('/staff-hub');
+                            // Her zaman secici goster - _handleStaffLogin
+                            // icinde base business + kermes kontrol edilir
+                            _handleStaffLogin(context);
                           },
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 8),
@@ -907,25 +907,77 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     try {
+      // Run BOTH checks in PARALLEL (was sequential = 10s+ worst case)
       final roleService = StaffRoleService();
-
-      // Refresh staff status — timeout after 10s so offline doesn't block
-      try {
-        await roleService.checkStaffStatus().timeout(
-          const Duration(seconds: 10),
-        );
-      } catch (e) {
-        // Network or timeout — continue with cached state from last session
-        debugPrint('[StaffLogin] checkStaffStatus soft-failed: $e');
-      }
-
-      // Fetch any active kermes assignments — also soft-fail on error
+      // Onceki session'dan kalan override'i temizle ki base degerler gorunsun
+      roleService.clearOverride();
       List<KermesAssignment> kermeses = [];
+      
+      await Future.wait([
+        // Staff status check
+        roleService.checkStaffStatus()
+            .timeout(const Duration(seconds: 5))
+            .catchError((e) {
+              debugPrint('[StaffLogin] checkStaffStatus soft-failed: $e');
+              return false;
+            }),
+        // Kermes assignments check
+        KermesAssignmentService.getActiveAssignedKermeses()
+            .timeout(const Duration(seconds: 5))
+            .then((result) => kermeses = result)
+            .catchError((e) {
+              debugPrint('[StaffLogin] getActiveAssignedKermeses soft-failed: $e');
+              return <KermesAssignment>[];
+            }),
+      ]);
+
+      // Fetch ALL assigned businesses from the admins doc
+      // businessId ve assignedBusinesses farkli isletmeleri tutabiliyor
+      List<Map<String, String>> assignedBusinessList = [];
       try {
-        kermeses = await KermesAssignmentService.getActiveAssignedKermeses()
-            .timeout(const Duration(seconds: 10));
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final adminDoc = await FirebaseFirestore.instance
+              .collection('admins').doc(user.uid).get()
+              .timeout(const Duration(seconds: 3));
+          if (adminDoc.exists) {
+            final data = adminDoc.data()!;
+            final docBusinessId = data['businessId'] as String?;
+            final assignedBusinesses = data['assignedBusinesses'] as List<dynamic>?;
+            
+            // Unique set olustur: businessId + assignedBusinesses birlestir
+            final allBizIds = <String>{};
+            if (docBusinessId != null && docBusinessId.isNotEmpty) allBizIds.add(docBusinessId);
+            if (assignedBusinesses != null) {
+              for (final id in assignedBusinesses) {
+                if (id is String && id.isNotEmpty) allBizIds.add(id);
+              }
+            }
+            
+            debugPrint('[StaffLogin] Unique business IDs: ${allBizIds.length} -> $allBizIds');
+            
+            if (allBizIds.length > 1) {
+              // Birden fazla isletme var - hepsinin adini al
+              for (final bizId in allBizIds) {
+                try {
+                  final bizDoc = await FirebaseFirestore.instance
+                      .collection('businesses').doc(bizId).get()
+                      .timeout(const Duration(seconds: 2));
+                  if (bizDoc.exists) {
+                    assignedBusinessList.add({
+                      'id': bizId,
+                      'name': (bizDoc.data()?['name'] ?? bizDoc.data()?['businessName'] ?? 'Isletme') as String,
+                    });
+                  }
+                } catch (_) {
+                  assignedBusinessList.add({'id': bizId, 'name': 'Isletme'});
+                }
+              }
+            }
+          }
+        }
       } catch (e) {
-        debugPrint('[StaffLogin] getActiveAssignedKermeses soft-failed: $e');
+        debugPrint('[StaffLogin] assignedBusinesses fetch soft-failed: $e');
       }
       
       // Remove loading overlay properly
@@ -937,41 +989,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      final hasBaseRestaurant = roleService.businessId != null && roleService.businessType != 'kermes';
-      // Deduplicate: remove kermes entries that match the base businessId
+      debugPrint('[StaffLogin] After checks: isStaff=${roleService.isStaff}, businessId=${roleService.businessId}, businessType=${roleService.businessType}, kermeses=${kermeses.length}, businesses=${assignedBusinessList.length}');
+      
+      // hasBaseRestaurant: isStaff true ise BASE restaurant var demektir
+      final hasBaseRestaurant = roleService.isStaff && (roleService.businessType == null || roleService.businessType != 'kermes');
+      // Deduplicate: remove kermes entries that match any business ID
       final baseId = roleService.businessId;
       if (baseId != null) {
         kermeses.removeWhere((k) => k.id == baseId);
       }
-      final totalOptions = (hasBaseRestaurant ? 1 : 0) + kermeses.length;
+      for (final biz in assignedBusinessList) {
+        kermeses.removeWhere((k) => k.id == biz['id']);
+      }
+      
+      // totalOptions: coklu isletme varsa onlari say, yoksa tek base restaurant
+      final int businessCount = assignedBusinessList.length > 1 ? assignedBusinessList.length : (hasBaseRestaurant ? 1 : 0);
+      final totalOptions = businessCount + kermeses.length;
+
+      debugPrint('[StaffLogin] hasBaseRestaurant=$hasBaseRestaurant, businessCount=$businessCount, totalOptions=$totalOptions');
 
       if (!context.mounted) return;
 
       if (totalOptions > 1) {
-        // User has multiple workplaces (e.g. restaurant + kermes, or multiple kermeses)
+        // User has multiple workplaces
+        debugPrint('[StaffLogin] Showing workplace selector');
         showModalBottomSheet(
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
           builder: (ctx) => WorkplaceSelectorSheet(
-            baseBusinessName: hasBaseRestaurant ? (roleService.businessName ?? 'İşletme') : null,
+            baseBusinessName: (assignedBusinessList.isEmpty && hasBaseRestaurant) ? (roleService.businessName ?? 'Isletme') : null,
+            businesses: assignedBusinessList,
             kermeses: kermeses,
             onSelected: (id, name, type) {
-              if (id.isEmpty) {
-                // Return to base business
-                roleService.clearOverride();
+              if (type == 'kermes') {
+                roleService.setOverrideWorkplace(id, name, 'kermes');
+              } else if (type == 'business' && id.isNotEmpty) {
+                // Coklu isletme secimi - secilen isletmeyi override olarak ayarla
+                roleService.setOverrideWorkplace(id, name, 'business');
               } else {
-                roleService.setOverrideWorkplace(id, name, type);
+                // Tek base isletme - override temizle
+                roleService.clearOverride();
               }
               // Add delay inside the bottom sheet callback
               Future.delayed(const Duration(milliseconds: 100), () {
                 if (context.mounted) {
-                  // If base business selected and role is driver, route to legacy driver screen
-                  if (id.isEmpty && roleService.role == 'surucu') {
-                    context.push('/driver-deliveries');
-                  } else {
-                    context.push('/staff-hub');
-                  }
+                  context.push('/staff-hub');
                 }
               });
             },
@@ -979,21 +1042,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         );
       } else if (kermeses.isNotEmpty) {
         // User has exactly 1 kermes and no base restaurant
+        debugPrint('[StaffLogin] Direct to kermes: ${kermeses.first.title}');
         roleService.setOverrideWorkplace(kermeses.first.id, kermeses.first.title, 'kermes');
         context.push('/staff-hub');
       } else if (hasBaseRestaurant || roleService.businessId != null) {
         // Default behavior: ONLY a restaurant (or base kermes without active assignments)
+        debugPrint('[StaffLogin] Direct to base restaurant');
         roleService.clearOverride();
-        if (roleService.role == 'surucu') {
-          context.push('/driver-deliveries');
-        } else {
-          context.push('/staff-hub');
-        }
+        context.push('/staff-hub');
       } else {
         // isStaff is false and no kermeses found — user is not staff
+        debugPrint('[StaffLogin] Not staff, showing error');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Bu hesap personel olarak tanımlı değil. Lütfen yöneticinizle iletişime geçin.'),
+            content: Text('Bu hesap personel olarak tanimli degil. Lutfen yoneticinizle iletisime gecin.'),
             duration: Duration(seconds: 4),
           ),
         );

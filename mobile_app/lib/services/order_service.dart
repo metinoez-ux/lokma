@@ -493,7 +493,7 @@ class OrderService {
                 
                 // Filter: valid status + delivery method + unclaimed
                 final isValidStatus = validStatuses.contains(status);
-                final isDelivery = deliveryMethod == 'delivery';
+                final isDelivery = (deliveryMethod == 'delivery' || deliveryMethod == 'kurye');
                 final isUnclaimed = courierId == null || courierId.toString().isEmpty;
                 
                 return isValidStatus && isDelivery && isUnclaimed;
@@ -539,7 +539,7 @@ class OrderService {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
+          timeLimit: Duration(seconds: 4),
         ),
       );
       claimLocation = {
@@ -668,7 +668,7 @@ class OrderService {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
+          timeLimit: Duration(seconds: 4),
         ),
       );
       deliveryLat = position.latitude;
@@ -808,7 +808,7 @@ class OrderService {
                                    data['orderType']?.toString() ?? '';
             
             // Must be a delivery order with active status
-            return activeStatuses.contains(status) && deliveryMethod == 'delivery';
+            return activeStatuses.contains(status) && (deliveryMethod == 'delivery' || deliveryMethod == 'kurye');
           }).toList();
           
           if (activeDocs.isEmpty) return null;
@@ -842,7 +842,7 @@ class OrderService {
             final deliveryMethod = data['deliveryMethod']?.toString() ?? 
                                    data['orderType']?.toString() ?? '';
             
-            return activeStatuses.contains(status) && deliveryMethod == 'delivery';
+            return activeStatuses.contains(status) && (deliveryMethod == 'delivery' || deliveryMethod == 'kurye');
           }).toList();
           
           // Sort by claimedAt, most recent first
@@ -866,9 +866,10 @@ class OrderService {
       return Stream.value([]);
     }
 
-    // Query all delivery orders, filter client-side for business + status
+    // Optimization: Pre-filter by butcherId so we don't scan the entire collection
     return _db
         .collection(_collection)
+        .where('butcherId', whereIn: businessIds.take(30).toList())
         .snapshots()
         .map((snapshot) {
           final validStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
@@ -883,14 +884,18 @@ class OrderService {
                 
                 final isAssignedBusiness = businessIds.contains(butcherId);
                 final isValidStatus = validStatuses.contains(status);
-                final isDelivery = deliveryMethod == 'delivery';
+                final isDelivery = (deliveryMethod == 'delivery' || deliveryMethod == 'kurye');
                 final isUnclaimed = orderCourierId.isEmpty;
                 final isClaimedByMe = courierId != null && orderCourierId == courierId;
                 
                 // Include: unclaimed orders from assigned businesses OR orders claimed by this driver
-                return isValidStatus && isDelivery && (
+                bool isMatch = isValidStatus && isDelivery && (
                   (isAssignedBusiness && isUnclaimed) || isClaimedByMe
                 );
+                if (isMatch) {
+                  print('DEBUG ORDER MATCH: id=${doc.id}, status=$status, method=$deliveryMethod, isUnclaimed=$isUnclaimed, isAssignedBiz=$isAssignedBusiness (businessIds=$businessIds)');
+                }
+                return isMatch;
               })
               .map((doc) => LokmaOrder.fromFirestore(doc))
               .toList();
@@ -925,6 +930,7 @@ class OrderService {
 
     return _db
         .collection(_collection)
+        .where('butcherId', whereIn: businessIds.take(30).toList())
         .snapshots()
         .map((snapshot) {
           final validStatuses = ['pending', 'preparing', 'ready', 'accepted', 'onTheWay'];
@@ -938,7 +944,7 @@ class OrderService {
 
                 return businessIds.contains(butcherId) &&
                        validStatuses.contains(status) &&
-                       deliveryMethod == 'delivery';
+                       (deliveryMethod == 'delivery' || deliveryMethod == 'kurye');
               })
               .map((doc) => LokmaOrder.fromFirestore(doc))
               .toList();

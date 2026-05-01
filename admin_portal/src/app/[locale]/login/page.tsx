@@ -52,8 +52,8 @@ export default function LoginPage() {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [confirmationResult, setConfirmationResult] =
     useState<ConfirmationResult | null>(null);
-  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const isLoggingInRef = useRef(false);
 
   // Common state
   const [error, setError] = useState("");
@@ -152,24 +152,70 @@ export default function LoginPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        if (isLoggingInRef.current) {
+          console.log("Login in progress, skipping auto auth check");
+          return;
+        }
+
         // User is already logged in, redirect them
         console.log("Login page - User already logged in:", user.email);
         if (isSuperAdmin(user.email)) {
           console.log("Login page - Redirecting super admin to analytics");
           router.push("/admin/analytics");
         } else {
-          const adminDoc = await getDoc(doc(db, "admins", user.uid));
-          if (adminDoc.exists() && adminDoc.data().isActive) {
-            const data = adminDoc.data();
-            router.push(getAdminRedirectPath(data));
-          } else {
-            // Not an admin/worker — sign out and show error
-            const { signOut } = await import("firebase/auth");
-            await signOut(auth);
-            setAccessDenied({
-              email: user.email || undefined,
-              reason: adminDoc.exists() ? "not_active" : "no_account",
-            });
+          try {
+            const { getDoc, doc, collection, query, where, getDocs } = await import("firebase/firestore");
+            let adminData = null;
+            let hasAccount = false;
+            
+            // 1. Check by UID
+            const adminDoc = await getDoc(doc(db, "admins", user.uid));
+            if (adminDoc.exists()) {
+              hasAccount = true;
+              if (adminDoc.data().isActive !== false) {
+                adminData = adminDoc.data();
+              }
+            }
+
+            // 2. Check by firebaseUid
+            if (!adminData) {
+              const uidQuery = query(collection(db, "admins"), where("firebaseUid", "==", user.uid));
+              const uidSnapshot = await getDocs(uidQuery);
+              if (!uidSnapshot.empty) {
+                hasAccount = true;
+                const docData = uidSnapshot.docs[0].data();
+                if (docData.isActive !== false) {
+                  adminData = docData;
+                }
+              }
+            }
+
+            // 3. Check users collection linking
+            if (!adminData) {
+              const userDoc = await getDoc(doc(db, "users", user.uid));
+              if (userDoc.exists() && userDoc.data().adminId) {
+                hasAccount = true;
+                const linkedAdminDoc = await getDoc(doc(db, "admins", userDoc.data().adminId));
+                if (linkedAdminDoc.exists() && linkedAdminDoc.data().isActive !== false) {
+                  adminData = linkedAdminDoc.data();
+                }
+              }
+            }
+
+            if (adminData) {
+              router.push(getAdminRedirectPath(adminData));
+            } else {
+              // Not an admin/worker — sign out and show error
+              const { signOut } = await import("firebase/auth");
+              await signOut(auth);
+              setAccessDenied({
+                email: user.email || undefined,
+                reason: hasAccount ? "not_active" : "no_account",
+              });
+              setCheckingAuth(false);
+            }
+          } catch (e) {
+            console.error("Auth check error:", e);
             setCheckingAuth(false);
           }
         }
@@ -320,6 +366,12 @@ export default function LoginPage() {
       return;
     }
 
+    // IMPORTANT: Fix infinite loading if no matches found
+    setLoading(false);
+    setAccessDenied({
+      email: userEmail || undefined,
+      reason: "no_account",
+    });
     setCheckingAuth(false);
   };
 
@@ -327,6 +379,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    isLoggingInRef.current = true;
 
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -355,6 +408,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setError("");
     setLoading(true);
+    isLoggingInRef.current = true;
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -369,6 +423,7 @@ export default function LoginPage() {
   const handleAppleLogin = async () => {
     setError("");
     setLoading(true);
+    isLoggingInRef.current = true;
     try {
       const provider = new OAuthProvider("apple.com");
       provider.addScope("email");

@@ -519,11 +519,11 @@ class KermesOrderService {
               .where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 final status = data['status']?.toString() ?? '';
-                final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+                final deliveryType = data['deliveryType']?.toString() ?? data['deliveryMethod']?.toString() ?? '';
                 final courierId = data['courierId'];
                 
                 final isValidStatus = validStatuses.contains(status);
-                final isDelivery = deliveryMethod == 'delivery';
+                final isDelivery = (deliveryType == 'kurye' || deliveryType == 'delivery');
                 final isUnclaimed = courierId == null || courierId.toString().isEmpty;
                 
                 return isValidStatus && isDelivery && isUnclaimed;
@@ -547,8 +547,10 @@ class KermesOrderService {
     if (kermesIds.isEmpty) {
       return Stream.value([]);
     }
+    final idsToQuery = kermesIds.take(30).toList();
 
     return _ordersCollection
+        .where('kermesId', whereIn: idsToQuery)
         .snapshots()
         .map((snapshot) {
           final validStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
@@ -558,12 +560,12 @@ class KermesOrderService {
                 final data = doc.data() as Map<String, dynamic>;
                 final eventId = data['kermesId']?.toString() ?? '';
                 final status = data['status']?.toString() ?? '';
-                final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+                final deliveryType = data['deliveryType']?.toString() ?? data['deliveryMethod']?.toString() ?? '';
                 final orderCourierId = data['courierId']?.toString() ?? '';
                 
                 final isAssignedEvent = kermesIds.contains(eventId);
                 final isValidStatus = validStatuses.contains(status);
-                final isDelivery = deliveryMethod == 'delivery';
+                final isDelivery = (deliveryType == 'kurye' || deliveryType == 'delivery');
                 final isUnclaimed = orderCourierId.isEmpty;
                 final isClaimedByMe = courierId != null && orderCourierId == courierId;
                 
@@ -595,8 +597,10 @@ class KermesOrderService {
     if (kermesIds.isEmpty) {
       return Stream.value([]);
     }
+    final idsToQuery = kermesIds.take(30).toList();
 
     return _ordersCollection
+        .where('kermesId', whereIn: idsToQuery)
         .snapshots()
         .map((snapshot) {
           final validStatuses = ['pending', 'preparing', 'ready', 'accepted', 'onTheWay'];
@@ -606,11 +610,11 @@ class KermesOrderService {
                 final data = doc.data() as Map<String, dynamic>;
                 final eventId = data['kermesId']?.toString() ?? '';
                 final status = data['status']?.toString() ?? '';
-                final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+                final deliveryType = data['deliveryType']?.toString() ?? data['deliveryMethod']?.toString() ?? '';
 
                 return kermesIds.contains(eventId) &&
                        validStatuses.contains(status) &&
-                       deliveryMethod == 'delivery';
+                       (deliveryType == 'kurye' || deliveryType == 'delivery');
               })
               .map((doc) => KermesOrder.fromDocument(doc))
               .toList();
@@ -805,8 +809,8 @@ class KermesOrderService {
       final activeDocs = snapshot.docs.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
         final status = data['status']?.toString() ?? '';
-        final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
-        return activeStatuses.contains(status) && deliveryMethod == 'delivery';
+        final deliveryType = data['deliveryType']?.toString() ?? data['deliveryMethod']?.toString() ?? '';
+        return activeStatuses.contains(status) && (deliveryType == 'kurye' || deliveryType == 'delivery');
       }).toList();
       
       if (activeDocs.isEmpty) return null;
@@ -826,8 +830,8 @@ class KermesOrderService {
       final activeDocs = snapshot.docs.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
         final status = data['status']?.toString() ?? '';
-        final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
-        return activeStatuses.contains(status) && deliveryMethod == 'delivery';
+        final deliveryType = data['deliveryType']?.toString() ?? data['deliveryMethod']?.toString() ?? '';
+        return activeStatuses.contains(status) && (deliveryType == 'kurye' || deliveryType == 'delivery');
       }).toList();
       
       activeDocs.sort((a, b) {

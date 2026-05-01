@@ -10,7 +10,8 @@ class OrderChatScreen extends StatefulWidget {
   final String orderId;
   final String orderNumber;
   final String recipientName; // "Kurye: Mehmet" or "İşletme: LOKMA"
-  final String recipientRole; // 'courier' or 'business'
+  final String recipientRole;
+  final bool isKermes; // 'courier' or 'business'
 
   const OrderChatScreen({
     super.key,
@@ -18,6 +19,7 @@ class OrderChatScreen extends StatefulWidget {
     required this.orderNumber,
     required this.recipientName,
     this.recipientRole = 'courier',
+    this.isKermes = false,
   });
 
   @override
@@ -46,8 +48,9 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
       _currentUserId = user.uid;
 
       // Check if user is the courier for this order
+      final collection = widget.isKermes ? 'kermes_orders' : 'meat_orders';
       final orderDoc = await FirebaseFirestore.instance
-          .collection('meat_orders')
+          .collection(collection)
           .doc(widget.orderId)
           .get();
 
@@ -66,7 +69,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
       }
 
       // Mark messages as read
-      _chatService.markAllAsRead(widget.orderId, user.uid);
+      _chatService.markAllAsRead(widget.orderId, user.uid, isKermes: widget.isKermes);
     }
     if (mounted) setState(() {});
   }
@@ -89,6 +92,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
       senderName: _currentUserName ?? tr('common.user'),
       senderRole: _currentUserRole,
       text: text,
+      isKermes: widget.isKermes,
     );
 
     _messageController.clear();
@@ -143,8 +147,21 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
           // Messages list
           Expanded(
             child: StreamBuilder<List<ChatMessage>>(
-              stream: _chatService.getMessagesStream(widget.orderId),
+              stream: _chatService.getMessagesStream(widget.orderId, isKermes: widget.isKermes),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  print('Chat stream error: ${snapshot.error}');
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        const SizedBox(height: 16),
+                        Text('Mesajlar yüklenemedi: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  );
+                }
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),

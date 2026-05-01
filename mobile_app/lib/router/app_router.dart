@@ -32,6 +32,7 @@ import '../screens/driver/driver_delivery_screen.dart';
 import '../screens/profile/my_reservations_screen.dart';
 import '../screens/staff/staff_reservations_screen.dart';
 import '../screens/staff/staff_hub_screen.dart';
+import '../screens/staff/staff_delivery_screen.dart';
 import '../screens/staff/waiter_order_screen.dart';
 import '../screens/customer/table_order_view_screen.dart';
 import '../screens/customer/group_link_join_screen.dart';
@@ -315,6 +316,14 @@ class AppRouter {
         GoRoute(
           path: '/driver-deliveries',
           builder: (context, state) => const DriverDeliveryScreen(),
+        ),
+        // Staff Deliveries - Modern delivery UI for single business
+        GoRoute(
+          path: '/staff-delivery',
+          builder: (context, state) {
+            final businessId = state.uri.queryParameters['businessId'];
+            return StaffDeliveryScreen(businessId: businessId ?? '');
+          },
         ),
         // My Reservations - User's table reservations
         GoRoute(

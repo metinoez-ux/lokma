@@ -2,6 +2,7 @@ import '../../services/shift_service.dart';
 import '../../services/order_service.dart';
 import 'package:flutter/material.dart';
 import 'kermes_active_delivery_screen.dart';
+import 'active_delivery_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -39,13 +40,30 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   Stream<List<dynamic>> _getCombinedDeliveriesStream(List<String> businessIds, List<String> kermesIds, String? courierId) {
     if (businessIds.isEmpty && kermesIds.isEmpty) return Stream.value([]);
     
-    final meatStream = businessIds.isEmpty ? Stream.value(<LokmaOrder>[]) : _orderService.getDriverDeliveriesStream(businessIds, courierId: courierId);
-    final kermesStream = kermesIds.isEmpty ? Stream.value(<KermesOrder>[]) : _kermesOrderService.getDriverDeliveriesStream(kermesIds, courierId: courierId);
+    final allKermesIds = [...kermesIds, ...businessIds].toSet().toList();
+
+    final meatStream = businessIds.isEmpty 
+        ? Stream.value(<LokmaOrder>[]) 
+        : _orderService.getDriverDeliveriesStream(businessIds, courierId: courierId)
+            .onErrorReturnWith((e, _) {
+              debugPrint('DEBUG STREAM: meatStream error: $e');
+              return <LokmaOrder>[];
+            })
+            .startWith(<LokmaOrder>[]);
+    final kermesStream = allKermesIds.isEmpty 
+        ? Stream.value(<KermesOrder>[]) 
+        : _kermesOrderService.getDriverDeliveriesStream(allKermesIds, courierId: courierId)
+            .onErrorReturnWith((e, _) {
+              debugPrint('DEBUG STREAM: kermesStream error: $e');
+              return <KermesOrder>[];
+            })
+            .startWith(<KermesOrder>[]);
     
     return Rx.combineLatest2(
       meatStream,
       kermesStream,
       (List<LokmaOrder> meat, List<KermesOrder> kermes) {
+        print('DEBUG STREAM: meat=${meat.length}, kermes=${kermes.length}');
         final combined = [...meat, ...kermes];
         combined.sort((x, y) {
           final dynamic dx = x;
@@ -77,8 +95,25 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   Stream<List<dynamic>> _getAllCombinedOrdersStream(List<String> businessIds, List<String> kermesIds) {
     if (businessIds.isEmpty && kermesIds.isEmpty) return Stream.value([]);
     
-    final meatStream = businessIds.isEmpty ? Stream.value(<LokmaOrder>[]) : _orderService.getAllBusinessOrdersStream(businessIds);
-    final kermesStream = kermesIds.isEmpty ? Stream.value(<KermesOrder>[]) : _kermesOrderService.getAllKermesOrdersStream(kermesIds);
+    // Combine businessIds and kermesIds for querying kermes_orders (since unified businesses store orders there)
+    final allKermesIds = [...kermesIds, ...businessIds].toSet().toList();
+
+    final meatStream = businessIds.isEmpty 
+        ? Stream.value(<LokmaOrder>[]) 
+        : _orderService.getAllBusinessOrdersStream(businessIds)
+            .onErrorReturnWith((e, _) {
+              debugPrint('DEBUG STREAM: meatStream all error: $e');
+              return <LokmaOrder>[];
+            })
+            .startWith(<LokmaOrder>[]);
+    final kermesStream = allKermesIds.isEmpty 
+        ? Stream.value(<KermesOrder>[]) 
+        : _kermesOrderService.getAllKermesOrdersStream(allKermesIds)
+            .onErrorReturnWith((e, _) {
+              debugPrint('DEBUG STREAM: kermesStream all error: $e');
+              return <KermesOrder>[];
+            })
+            .startWith(<KermesOrder>[]);
     
     return Rx.combineLatest2(
       meatStream,
@@ -102,8 +137,11 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   Stream<List<dynamic>> _getCombinedCompletedDeliveriesTodayStream(String courierId) {
     if (courierId.isEmpty) return Stream.value([]);
     
-    final meatStream = _orderService.getMyCompletedDeliveriesToday(courierId);
-    final kermesStream = _kermesOrderService.getMyCompletedDeliveriesToday(courierId);
+    // Always query both for completed deliveries for a specific driver
+    final meatStream = _orderService.getMyCompletedDeliveriesToday(courierId)
+        .startWith(<LokmaOrder>[]);
+    final kermesStream = _kermesOrderService.getMyCompletedDeliveriesToday(courierId)
+        .startWith(<KermesOrder>[]);
     
     return Rx.combineLatest2(
       meatStream,
@@ -154,30 +192,92 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
 
   Future<void> _claimDelivery(dynamic order) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || _driverName == null) return;
+    final driverState = ref.read(driverProvider);
+    final driverName = _driverName ?? driverState.driverInfo?.name ?? 'Kurye';
+    final driverPhone = _driverPhone ?? driverState.driverInfo?.phone ?? '';
+    
+    if (user == null) return;
 
     // Check if driver is on break — ask to end break first
     final shiftService = ShiftService();
     if (shiftService.shiftStatus == 'paused') {
-      final endBreak = await showDialog<bool>(
+      final endBreak = await showModalBottomSheet<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(tr('staff.break_continues')),
-          content: Text(
-            '${tr('driver.teslimat_ustlenmek_icin_molani')}\n'
-            'Devam etmek istiyor musunuz?',
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(tr('common.cancel')),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.coffee, size: 40, color: Colors.amber),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  tr('staff.break_continues'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${tr('driver.teslimat_ustlenmek_icin_molani').replaceAll(r'\\n', '').replaceAll(r'\n', '')}\nDevam etmek istiyor musunuz?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.4),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: Text(tr('common.cancel'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text(tr('driver.molayi_bitir_ve_ustlen'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-              child: Text(tr('driver.molayi_bitir_ve_ustlen'), style: TextStyle(color: Colors.white)),
-            ),
-          ],
+          ),
         ),
       );
 
@@ -198,28 +298,180 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
 
     if (!mounted) return;
 
-    // Confirm dialog
-    final confirm = await showDialog<bool>(
+    // Confirm dialog via Bottom Sheet
+    final confirm = await showModalBottomSheet<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('driver.take_delivery')),
-        content: Text(
-          '${tr('driver.bu_siparisi_ustlenmek_istedigi')}\n'
-          '🏪 ${order.butcherName}\n'
-          '📍 ${order.deliveryAddress ?? "Adres yok"}\n'
-          '💰 ${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              spreadRadius: 5,
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(tr('common.cancel')),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.delivery_dining, size: 48, color: Colors.amber),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                tr('driver.take_delivery'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                tr('driver.bu_siparisi_ustlenmek_istedigi').replaceAll(r'\\n', '').replaceAll(r'\n', ''),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.4),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.store, color: Colors.blue, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('İşletme', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                              Text(
+                                (order is LokmaOrder) ? order.butcherName : 'Kermes',
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.location_on, color: Colors.red, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Teslimat Adresi', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                              Text(
+                                (order is LokmaOrder) ? (order.deliveryAddress ?? "Adres yok") : "Kermes Alanı",
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.payments, color: Colors.green, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Toplam Tutar', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                              Text(
+                                '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      child: Text(tr('common.cancel'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(tr('driver.ustlen'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-            child: Text(tr('driver.ustlen'), style: TextStyle(color: Colors.white)),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -232,15 +484,15 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       success = await _orderService.claimDelivery(
         orderId: order.id,
         courierId: user.uid,
-        courierName: _driverName!,
-        courierPhone: _driverPhone ?? '',
+        courierName: driverName,
+        courierPhone: driverPhone,
       );
     } else if (order is KermesOrder) {
       success = await _kermesOrderService.claimDelivery(
         orderId: order.id,
         courierId: user.uid,
-        courierName: _driverName!,
-        courierPhone: _driverPhone ?? '',
+        courierName: driverName,
+        courierPhone: driverPhone,
       );
     }
 
@@ -260,12 +512,21 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         ),
       );
       // Navigate to active delivery screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => KermesActiveDeliveryScreen(orderId: order.id),
-        ),
-      );
+      if (order is KermesOrder) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => KermesActiveDeliveryScreen(orderId: order.id),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ActiveDeliveryScreen(orderId: order.id),
+          ),
+        );
+      }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -455,6 +716,10 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     return StreamBuilder<List<dynamic>>(
       stream: _getCombinedDeliveriesStream(businessIds, kermesIds, FirebaseAuth.instance.currentUser?.uid),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          debugPrint('DEBUG STREAM: _buildMyDeliveriesView error: ${snapshot.error}');
+          return Center(child: Text('Hata: ${snapshot.error}'));
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -515,6 +780,10 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     return StreamBuilder<List<dynamic>>(
       stream: _getAllCombinedOrdersStream(businessIds, kermesIds),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          debugPrint('DEBUG STREAM: _buildAllOrdersView error: ${snapshot.error}');
+          return Center(child: Text('Hata: ${snapshot.error}'));
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -934,16 +1203,19 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     
     // Extract PLZ and city from delivery address
     String locationInfo = '';
-    if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty) {
+    final String? deliveryAddr = (order is LokmaOrder) ? order.deliveryAddress : null;
+    if (deliveryAddr != null && deliveryAddr.isNotEmpty) {
       // Try to extract PLZ and city from address string (e.g., "Straße 123, 44135 Dortmund")
-      final addressParts = order.deliveryAddress!.split(',');
+      final addressParts = deliveryAddr.split(',');
       if (addressParts.length >= 2) {
         // Take the last part which usually contains PLZ + City
         locationInfo = addressParts.last.trim();
       } else {
         // Just use the full address
-        locationInfo = order.deliveryAddress!;
+        locationInfo = deliveryAddr;
       }
+    } else if (order is! LokmaOrder) {
+      locationInfo = 'Kermes Alanı';
     }
     
     // Order number (first 6 chars)
@@ -1099,9 +1371,10 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     }
     
     // Extract PLZ + City for cleaner display
-    String shortAddress = order.deliveryAddress ?? 'Adres yok';
-    if (order.deliveryAddress != null && order.deliveryAddress!.contains(',')) {
-      final parts = order.deliveryAddress!.split(',');
+    final String? deliveryAddr = (order is LokmaOrder) ? order.deliveryAddress : null;
+    String shortAddress = deliveryAddr ?? ((order is LokmaOrder) ? 'Adres yok' : 'Kermes Alanı');
+    if (deliveryAddr != null && deliveryAddr.contains(',')) {
+      final parts = deliveryAddr.split(',');
       if (parts.length >= 2) {
         shortAddress = parts.sublist(1).join(',').trim();
       }
@@ -1121,7 +1394,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => KermesActiveDeliveryScreen(orderId: order.id),
+              builder: (_) => ActiveDeliveryScreen(orderId: order.id),
             ),
           );
         }
@@ -1349,7 +1622,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => KermesActiveDeliveryScreen(orderId: order.id),
+                                        builder: (_) => ActiveDeliveryScreen(orderId: order.id),
                                       ),
                                     );
                                   }

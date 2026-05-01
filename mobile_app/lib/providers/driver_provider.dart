@@ -31,6 +31,21 @@ class DriverInfo {
 
   factory DriverInfo.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    
+    // Ensure primary businessId is included in assignedBusinesses
+    final assignedBiz = List<String>.from(data['assignedBusinesses'] ?? []);
+    final primaryBizId = data['businessId'] as String? ?? data['butcherId'] as String?;
+    if (primaryBizId != null && primaryBizId.isNotEmpty && !assignedBiz.contains(primaryBizId)) {
+      assignedBiz.insert(0, primaryBizId);
+    }
+    
+    // Ensure primary businessName is included in assignedBusinessNames
+    final assignedBizNames = List<String>.from(data['assignedBusinessNames'] ?? []);
+    final primaryBizName = data['businessName'] as String? ?? data['butcherName'] as String?;
+    if (primaryBizName != null && primaryBizName.isNotEmpty && !assignedBizNames.contains(primaryBizName)) {
+      assignedBizNames.insert(0, primaryBizName);
+    }
+
     return DriverInfo(
       id: doc.id,
       email: data['email'] ?? '',
@@ -38,8 +53,8 @@ class DriverInfo {
       phone: data['phone'],
       role: data['role'] ?? 'driver',
       driverType: data['driverType'] ?? 'business',
-      assignedBusinesses: List<String>.from(data['assignedBusinesses'] ?? []),
-      assignedBusinessNames: List<String>.from(data['assignedBusinessNames'] ?? []),
+      assignedBusinesses: assignedBiz,
+      assignedBusinessNames: assignedBizNames,
       assignedKermesIds: List<String>.from(data['assignedKermesIds'] ?? []), // Note: In case we save directly to user, though we fetch separately most times
       isActive: data['isActive'] ?? true,
     );
@@ -128,29 +143,57 @@ class DriverNotifier extends Notifier<DriverState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Check if user is a driver in the admins collection
-      final adminDoc = await FirebaseFirestore.instance
-          .collection('admins')
-          .doc(uid)
-          .get();
+      // Use cache first since StaffRoleService already fetched from server
+      DocumentSnapshot? adminDoc;
+      try {
+        adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(uid)
+            .get(const GetOptions(source: Source.cache))
+            .timeout(const Duration(seconds: 2));
+      } catch (_) {
+        // Cache miss - fall back to server
+        adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(uid)
+            .get()
+            .timeout(const Duration(seconds: 6));
+      }
 
       if (adminDoc.exists) {
-        final data = adminDoc.data();
+        final data = adminDoc.data() as Map<String, dynamic>?;
         if (data != null) {
           // HYBRID ROLE CHECK: User is a driver if:
           // 1. They have isDriver: true (staff/admin who is also a driver)
           // 2. OR they have role == 'driver' (dedicated driver)
-          final isDriver = data['isDriver'] == true || data['role'] == 'driver';
+          final isDriver = data['isDriver'] == true || 
+                           data['role'] == 'driver' || 
+                           data['role'] == 'surucu' || 
+                           data['role'] == 'kurye';
           
           if (isDriver) {
             DriverInfo driverInfo = DriverInfo.fromFirestore(adminDoc);
             
-            // Check for Kermes assignments
+            // Set driver state IMMEDIATELY - don't wait for kermes query
+            if (driverInfo.assignedBusinesses.isNotEmpty) {
+              state = DriverState(
+                driverInfo: driverInfo,
+                isLoading: false,
+                isDriver: true,
+              );
+              
+              // Fetch kermes assignments in background and merge if found
+              _loadKermesAssignments(uid, driverInfo);
+              return;
+            }
+
+            // No regular businesses - must check kermes (blocking)
             try {
               final kermesQuery = await FirebaseFirestore.instance
                   .collection('kermes_events')
                   .where('assignedDrivers', arrayContains: uid)
-                  .get();
+                  .get()
+                  .timeout(const Duration(seconds: 4));
                   
               final kermesIds = kermesQuery.docs.map((doc) => doc.id).toList();
               if (kermesIds.isNotEmpty) {
@@ -181,6 +224,28 @@ class DriverNotifier extends Notifier<DriverState> {
         error: e.toString(),
         isDriver: false,
       );
+    }
+  }
+
+  /// Background loader for kermes assignments - merges into existing state
+  Future<void> _loadKermesAssignments(String uid, DriverInfo currentInfo) async {
+    try {
+      final kermesQuery = await FirebaseFirestore.instance
+          .collection('kermes_events')
+          .where('assignedDrivers', arrayContains: uid)
+          .get()
+          .timeout(const Duration(seconds: 4));
+          
+      final kermesIds = kermesQuery.docs.map((doc) => doc.id).toList();
+      if (kermesIds.isNotEmpty && state.isDriver) {
+        state = DriverState(
+          driverInfo: currentInfo.copyWith(assignedKermesIds: kermesIds),
+          isLoading: false,
+          isDriver: true,
+        );
+      }
+    } catch (_) {
+      // Non-critical - kermes assignments can be loaded later
     }
   }
 

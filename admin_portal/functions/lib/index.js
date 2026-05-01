@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.optimizeLokmaVideos = exports.optimizeLokmaImages = exports.onKermesRosterCreated = exports.cancelStaleCashOrders = exports.onKermesOrderPaidNotif = exports.onKermesOrderCreatedNotif = exports.onKermesOrderCancelledStock = exports.onKermesOrderPaidStock = exports.onKermesOrderReady = exports.kermesWaiterTimeoutCheck = exports.onUserAccountDeleted = exports.onNewChatMessage = exports.cleanupTestData = exports.preOrderReminder = exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
+exports.optimizeLokmaVideos = exports.optimizeLokmaImages = exports.onKermesRosterCreated = exports.onKermesOrderStatusChangedNotif = exports.cancelStaleCashOrders = exports.onKermesOrderPaidNotif = exports.onKermesOrderCreatedNotif = exports.onKermesOrderCancelledStock = exports.onKermesOrderPaidStock = exports.onKermesOrderReady = exports.kermesWaiterTimeoutCheck = exports.onUserAccountDeleted = exports.onNewChatMessage = exports.cleanupTestData = exports.preOrderReminder = exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
@@ -1082,7 +1082,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
         try {
             // POD (Proof of Delivery) image — attach to "delivered" notification if available
             const podImageUrl = (newStatus === "delivered" || newStatus === "completed")
-                ? (after.podImageUrl || after.deliveryProofUrl || null)
+                ? ((after.deliveryProof && after.deliveryProof.photoUrl) || after.podImageUrl || after.deliveryProofUrl || null)
                 : null;
             const messagePayload = {
                 notification: { title, body },
@@ -3398,6 +3398,7 @@ var kermesCustomerNotifications_1 = require("./kermesCustomerNotifications");
 Object.defineProperty(exports, "onKermesOrderCreatedNotif", { enumerable: true, get: function () { return kermesCustomerNotifications_1.onKermesOrderCreatedNotif; } });
 Object.defineProperty(exports, "onKermesOrderPaidNotif", { enumerable: true, get: function () { return kermesCustomerNotifications_1.onKermesOrderPaidNotif; } });
 Object.defineProperty(exports, "cancelStaleCashOrders", { enumerable: true, get: function () { return kermesCustomerNotifications_1.cancelStaleCashOrders; } });
+Object.defineProperty(exports, "onKermesOrderStatusChangedNotif", { enumerable: true, get: function () { return kermesCustomerNotifications_1.onKermesOrderStatusChangedNotif; } });
 var kermesRosterFunctions_1 = require("./kermesRosterFunctions");
 Object.defineProperty(exports, "onKermesRosterCreated", { enumerable: true, get: function () { return kermesRosterFunctions_1.onKermesRosterCreated; } });
 __exportStar(require("./kermesRosterFunctions"), exports);

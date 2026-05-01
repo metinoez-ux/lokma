@@ -19,6 +19,7 @@ import '../../providers/driver_provider.dart';
 import '../../utils/currency_utils.dart';
 import '../orders/order_chat_screen.dart';
 import '../../services/chat_service.dart';
+import 'proof_of_delivery_sheet.dart';
 import '../shared/tap_to_pay_sheet.dart';
 import 'package:lokma_app/widgets/lokma_network_image.dart';
 
@@ -46,64 +47,31 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
   @override
   void initState() {
     super.initState();
-    // Auto-resume tracking if order is already onTheWay
-    _resumeTrackingIfNeeded();
-    _startCompassIfNeeded();
+    _initializeScreen();
   }
 
-  /// Start listening to driver position for compass mode (only for precise pin orders)
-  Future<void> _startCompassIfNeeded() async {
-    try {
-      final order = await _orderService.getOrder(widget.orderId);
-      if (order == null || !false) return;
-      if (null == null || null == null) return;
+  Future<void> _initializeScreen() async {
+    // Run initialization after first frame to prevent blocking UI build
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final order = await _orderService.getOrder(widget.orderId);
+        if (order == null) return;
 
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) return;
+        // 1. Resume tracking if needed
+        if (!_locationService.isTracking || _locationService.activeOrderId != widget.orderId) {
+          if (order.status == KermesOrderStatus.onTheWay) {
+            debugPrint('[ActiveDelivery] Resuming tracking for onTheWay order ${widget.orderId}');
+            await _locationService.startTracking(widget.orderId, isKermes: true);
+          }
+        }
 
-      _positionSubscription = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5),
-      ).listen((pos) {
-        if (!mounted) return;
-        final dist = Geolocator.distanceBetween(
-          pos.latitude, pos.longitude,
-          null!, null!,
-        );
-        final bearing = Geolocator.bearingBetween(
-          pos.latitude, pos.longitude,
-          null!, null!,
-        );
-        setState(() {
-          _driverLat = pos.latitude;
-          _driverLng = pos.longitude;
-          _distanceToPin = dist;
-          _bearingToPin = bearing;
-          _compassActive = dist < 200; // Activate compass when < 200m
-        });
-      });
-    } catch (e) {
-      debugPrint('[ActiveDelivery] Compass init error: $e');
-    }
-  }
-
-  /// Resume tracking if the order is already onTheWay but tracking stopped
-  /// (e.g., app was killed and reopened, or user navigated away and back)
-  Future<void> _resumeTrackingIfNeeded() async {
-    if (_locationService.isTracking && _locationService.activeOrderId == widget.orderId) {
-      debugPrint('[ActiveDelivery] Already tracking order ${widget.orderId}');
-      return;
-    }
-    
-    // Check Firestore for current order status
-    try {
-      final order = await _orderService.getOrder(widget.orderId);
-      if (order != null && order.status == KermesOrderStatus.onTheWay) {
-        debugPrint('[ActiveDelivery] Resuming tracking for onTheWay order ${widget.orderId}');
-        await _locationService.startTracking(widget.orderId, isKermes: true);
+        // 2. Start compass if order has precise pin (Kermes currently does not have precise pin lat/lng)
+        // returning early for now.
+        return;
+      } catch (e) {
+        debugPrint('[ActiveDelivery] Init error: $e');
       }
-    } catch (e) {
-      debugPrint('[ActiveDelivery] Error resuming tracking: $e');
-    }
+    });
   }
 
   @override
@@ -226,32 +194,24 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
     // Stop tracking immediately
     _locationService.stopTracking();
     
-    // Complete delivery with PoD option
-    final confirmPhoto = await showDialog<bool>(
+    // Complete delivery with PoD option via Bottom Sheet
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Teslimat Kanıtı (PoD)'),
-        content: const Text('Teslimatı tamamlamak için kanıt fotoğrafı çekmek ister misiniz?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hayır, Atla')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Evet, Fotoğraf Çek', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (ctx) => ProofOfDeliverySheet(orderId: widget.orderId),
     );
 
-    String? photoUrl;
-    if (confirmPhoto == true) {
-      photoUrl = await _captureProofPhoto();
-    }
+    if (result == null) return; // User cancelled
+
+    final deliveryType = result['deliveryType'] as String;
+    final photoUrl = result['photoUrl'] as String?;
 
     await _orderService.completeDeliveryWithProof(
       widget.orderId,
-      deliveryType: orderSnapshot.deliveryType.name,
+      deliveryType: deliveryType,
       proofPhotoUrl: photoUrl,
     );
     
@@ -693,7 +653,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
               final order = snap.data;
               return IconButton(
                 icon: StreamBuilder<int>(
-                  stream: ChatService().getUnreadCountStream(widget.orderId, FirebaseAuth.instance.currentUser?.uid ?? ''),
+                  stream: ChatService().getUnreadCountStream(widget.orderId, FirebaseAuth.instance.currentUser?.uid ?? '', isKermes: true),
                   builder: (context, badgeSnap) {
                     final unreadCount = badgeSnap.data ?? 0;
                     return Stack(
@@ -736,6 +696,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                       MaterialPageRoute(
                         builder: (_) => OrderChatScreen(
                           orderId: widget.orderId,
+                          isKermes: true,
                           orderNumber: order.orderNumber ?? widget.orderId.substring(0, 6).toUpperCase(),
                           recipientName: 'Müşteri: ${order.customerName}',
                           recipientRole: 'customer',

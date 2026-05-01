@@ -1798,10 +1798,7 @@ export default function BusinessDetailsPage() {
  }
  }
  
- const isKermesAdmin = admin?.businessType === 'kermes' || !!admin?.kermesId || ['kermes', 'kermes_staff', 'mutfak', 'garson', 'teslimat', 'kds', 'kasa', 'vezne', 'volunteer'].includes(admin?.adminType || '');
- const orderRef = isKermesAdmin 
- ? doc(db, 'kermes_orders', orderId) 
- : doc(db, 'meat_orders', orderId);
+ const orderRef = doc(db, 'meat_orders', orderId);
  
  await updateDoc(orderRef, updateData);
  

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../services/order_service.dart';
+import '../../../services/kermes_order_service.dart';
+import 'package:rxdart/rxdart.dart';
+import '../../../models/kermes_order_model.dart';
 
 class CourierTab extends ConsumerWidget {
   final List<String> businessIds;
@@ -21,15 +24,41 @@ class CourierTab extends ConsumerWidget {
       return const Center(child: Text('Aktif kurye yetkiniz yok.'));
     }
 
-    return StreamBuilder<List<LokmaOrder>>(
-      stream: OrderService().getDriverDeliveriesStream(businessIds, courierId: userId),
+    final meatStream = OrderService().getDriverDeliveriesStream(businessIds, courierId: userId);
+    final kermesStream = KermesOrderService().getDriverDeliveriesStream(businessIds, courierId: userId);
+
+    return StreamBuilder<List<dynamic>>(
+      stream: Rx.combineLatest2(
+        meatStream,
+        kermesStream,
+        (List<LokmaOrder> meat, List<KermesOrder> kermes) {
+          final combined = [...meat, ...kermes];
+          return combined;
+        },
+      ),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final orders = snapshot.data ?? [];
-        final pending = orders.where((o) => o.status == OrderStatus.pending).toList();
-        final preparing = orders.where((o) => o.status == OrderStatus.preparing).toList();
-        final ready = orders.where((o) => o.status == OrderStatus.ready).toList();
-        final onWay = orders.where((o) => o.status == OrderStatus.onTheWay || o.status == OrderStatus.accepted).toList();
+        
+        final pending = orders.where((o) => 
+          (o is LokmaOrder && o.status == OrderStatus.pending) ||
+          (o is KermesOrder && o.status == KermesOrderStatus.pending)
+        ).toList();
+        
+        final preparing = orders.where((o) => 
+          (o is LokmaOrder && o.status == OrderStatus.preparing) ||
+          (o is KermesOrder && o.status == KermesOrderStatus.preparing)
+        ).toList();
+        
+        final ready = orders.where((o) => 
+          (o is LokmaOrder && o.status == OrderStatus.ready) ||
+          (o is KermesOrder && o.status == KermesOrderStatus.ready)
+        ).toList();
+        
+        final onWay = orders.where((o) => 
+          (o is LokmaOrder && (o.status == OrderStatus.onTheWay || o.status == OrderStatus.accepted)) ||
+          (o is KermesOrder && (o.status == KermesOrderStatus.onTheWay))
+        ).toList();
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -58,7 +87,7 @@ class CourierTab extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => context.push('/driver-deliveries'),
+                  onPressed: () => context.push('/staff-delivery?businessId=${businessIds.first}'),
                   icon: const Icon(Icons.delivery_dining, size: 28),
                   label: const Text('Tüm Siparişleri Görevlen'),
                   style: ElevatedButton.styleFrom(
@@ -76,9 +105,9 @@ class CourierTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildReadySection(BuildContext context, List<LokmaOrder> readyOrders) {
+  Widget _buildReadySection(BuildContext context, List<dynamic> readyOrders) {
     return GestureDetector(
-      onTap: () => context.push('/driver-deliveries'),
+      onTap: () => context.push('/staff-delivery?businessId=${businessIds.first}'),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -112,9 +141,9 @@ class CourierTab extends ConsumerWidget {
                 children: [
                   const Icon(Icons.receipt_long, size: 16, color: Colors.green),
                   const SizedBox(width: 8),
-                  Text('#${o.id.substring(0, 5)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('#${(o is LokmaOrder ? o.id : (o as KermesOrder).id).substring(0, 5)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                   const Spacer(),
-                  Text('${o.totalAmount.toStringAsFixed(2)} €'),
+                  Text('${(o is LokmaOrder ? o.totalAmount : (o as KermesOrder).totalAmount).toStringAsFixed(2)} €'),
                 ],
               ),
             )),

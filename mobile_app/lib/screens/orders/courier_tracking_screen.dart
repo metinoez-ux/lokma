@@ -16,7 +16,7 @@ import '../../services/chat_service.dart';
 /// Courier Tracking Screen - Customer views courier location on map
 class CourierTrackingScreen extends StatefulWidget {
   final String orderId;
-  
+
   const CourierTrackingScreen({super.key, required this.orderId});
 
   @override
@@ -28,21 +28,22 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
   final OrderService _orderService = OrderService();
   final MapController _mapController = MapController();
   LokmaOrder? _order;
-  
+
   // Geocoded delivery address
   LatLng? _deliveryPosition;
   bool _geocodingAttempted = false;
-  
+
   // Business location from Firestore
   LatLng? _businessPosition;
   String? _businessName;
   bool _businessFetched = false;
-  
+
   // Auto-refresh
   Timer? _refreshTimer;
   int _refreshKey = 0;
   bool _showOrderDetails = false;
-  
+  bool _initialLoadDone = false;
+
   // Animation for hopping motorcycle marker
   late AnimationController _hopController;
   late Animation<double> _hopAnimation;
@@ -54,16 +55,17 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _hopAnimation = Tween<double>(begin: 0, end: -8).animate(
       CurvedAnimation(parent: _hopController, curve: Curves.easeInOut),
     );
-    
-    // Auto-refresh every 30 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+
+    // Auto-refresh every 5 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (mounted) {
         setState(() {
           _refreshKey++;
+          if (!_initialLoadDone) _initialLoadDone = true;
         });
         debugPrint('[CourierTracking] Auto-refresh #$_refreshKey');
       }
@@ -81,7 +83,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
   Future<void> _geocodeDeliveryAddress(String address) async {
     if (_geocodingAttempted) return;
     _geocodingAttempted = true;
-    
+
     try {
       final locations = await locationFromAddress(address);
       if (locations.isNotEmpty && mounted) {
@@ -102,13 +104,13 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
   Future<void> _fetchBusinessLocation(String butcherId) async {
     if (_businessFetched) return;
     _businessFetched = true;
-    
+
     try {
       final doc = await FirebaseFirestore.instance
           .collection('businesses')
           .doc(butcherId)
           .get();
-      
+
       if (doc.exists && mounted) {
         final data = doc.data()!;
         final lat = data['lat'];
@@ -119,10 +121,12 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
               (lat as num).toDouble(),
               (lng as num).toDouble(),
             );
-            _businessName = data['name'] as String? ?? data['businessName'] as String?;
+            _businessName =
+                data['name'] as String? ?? data['businessName'] as String?;
           });
           _centerMapOnAvailablePositions();
-          debugPrint('[CourierTracking] Business location: $lat, $lng, name: $_businessName');
+          debugPrint(
+              '[CourierTracking] Business location: $lat, $lng, name: $_businessName');
         }
       }
     } catch (e) {
@@ -132,26 +136,39 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
 
   void _centerMapOnAvailablePositions() {
     if (!mounted) return;
-    
+
     final hasB = _businessPosition != null;
     final hasD = _deliveryPosition != null;
     
-    if (hasB && hasD) {
-      final bounds = LatLngBounds.fromPoints([_businessPosition!, _deliveryPosition!]);
-      try {
-        _mapController.fitCamera(
-          CameraFit.bounds(
-            bounds: bounds,
-            padding: const EdgeInsets.all(60),
-          ),
-        );
-      } catch (_) {
-        _mapController.move(_businessPosition!, 14);
+    LatLng? courierPos;
+    if (_order?.courierLocation != null) {
+      courierPos = LatLng(
+        (_order!.courierLocation!['lat'] as num).toDouble(),
+        (_order!.courierLocation!['lng'] as num).toDouble(),
+      );
+    }
+    
+    final points = <LatLng>[];
+    if (_businessPosition != null) points.add(_businessPosition!);
+    if (_deliveryPosition != null) points.add(_deliveryPosition!);
+    if (courierPos != null) points.add(courierPos);
+    
+    if (points.isNotEmpty) {
+      if (points.length == 1) {
+        _mapController.move(points.first, 15);
+      } else {
+        final bounds = LatLngBounds.fromPoints(points);
+        try {
+          _mapController.fitCamera(
+            CameraFit.bounds(
+              bounds: bounds,
+              padding: const EdgeInsets.all(60),
+            ),
+          );
+        } catch (_) {
+          _mapController.move(points.last, 14);
+        }
       }
-    } else if (hasB) {
-      _mapController.move(_businessPosition!, 14);
-    } else if (hasD) {
-      _mapController.move(_deliveryPosition!, 14);
     }
   }
 
@@ -162,78 +179,6 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(tr('orders.courier_tracking')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: tr('orders.refresh'),
-            onPressed: () {
-              setState(() {
-                _refreshKey++;
-              });
-              // Simple haptic for refresh
-              // HapticFeedback.lightImpact(); (If we import services)
-            },
-          ),
-          IconButton(
-            icon: StreamBuilder<int>(
-              stream: ChatService().getUnreadCountStream(widget.orderId, FirebaseAuth.instance.currentUser?.uid ?? ''),
-              builder: (context, badgeSnap) {
-                final unreadCount = badgeSnap.data ?? 0;
-                return Stack(
-                  children: [
-                    const Icon(Icons.chat_bubble_outline),
-                    if (unreadCount > 0)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 12,
-                            minHeight: 12,
-                          ),
-                          child: Text(
-                            '$unreadCount',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-            tooltip: tr('orders.send_message'),
-            onPressed: () {
-              if (_order != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OrderChatScreen(
-                      orderId: widget.orderId,
-                      orderNumber: _order!.orderNumber ?? widget.orderId.substring(0, 6).toUpperCase(),
-                      recipientName: _order!.courierName != null ? '${tr('orders.courier')}: ${_order!.courierName}' : tr('orders.messaging'),
-                      recipientRole: 'courier',
-                    ),
-                  ),
-                );
-              }
-            },
-          ),
-          if (_order?.courierPhone != null)
-            IconButton(
-              icon: const Icon(Icons.phone),
-              onPressed: () => _callCourier(_order!.courierPhone!),
-            ),
-        ],
       ),
       body: StreamBuilder<LokmaOrder?>(
         key: ValueKey(_refreshKey),
@@ -353,171 +298,6 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
 
     return Column(
       children: [
-        // Courier info header
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Courier avatar
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: _brandColor.withOpacity(0.15),
-                child: const Icon(Icons.person, color: _brandColor, size: 32),
-              ),
-              const SizedBox(width: 16),
-              
-              // Courier info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      order.courierName ?? tr('orders.courier'),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.delivery_dining, 
-                                   size: 16, color: Colors.green.shade700),
-                              const SizedBox(width: 4),
-                              Text(
-                                tr('orders.on_the_way'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green.shade700,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (order.etaMinutes != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            '~${order.etaMinutes} dk',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    // Distance & ETA info
-                    if (distanceKm != null && etaMinutes != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.route, size: 13, color: Colors.blue.shade700),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${distanceKm.toStringAsFixed(1)} km',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.blue.shade700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.timer_outlined, size: 13, color: Colors.amber.shade700),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '~$etaMinutes dk',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.amber.shade700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              
-              // Call button
-              if (order.courierPhone != null && order.courierPhone!.isNotEmpty)
-                IconButton(
-                  onPressed: () => _callCourier(order.courierPhone!),
-                  icon: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: const Icon(Icons.phone, color: Colors.white),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        
-        // Last update info
-        if (order.lastLocationUpdate != null)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: isDark ? Colors.grey[850] : Colors.grey[100],
-            child: Text(
-              'Son güncelleme: ${_formatTime(order.lastLocationUpdate!)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-          ),
-        
         // Map
         Expanded(
           child: Stack(
@@ -528,12 +308,16 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                   options: MapOptions(
                     initialCenter: hasLocation
                         ? courierPosition
-                        : (businessPosition ?? _deliveryPosition ?? const LatLng(41.0082, 28.9784)),
+                        : (businessPosition ??
+                            _deliveryPosition ??
+                            const LatLng(41.0082, 28.9784)),
                     initialZoom: 14,
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate:
+                          'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                      subdomains: const ['a', 'b', 'c', 'd'],
                       userAgentPackageName: 'com.lokma.app',
                     ),
                     // Static markers (business + delivery)
@@ -555,7 +339,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                   decoration: BoxDecoration(
                                     color: _brandColor,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                                    border: Border.all(
+                                        color: Colors.white, width: 2),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.3),
@@ -573,7 +358,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                 if (_businessName != null)
                                   Container(
                                     margin: const EdgeInsets.only(top: 2),
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(8),
@@ -608,7 +394,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                               decoration: BoxDecoration(
                                 color: Colors.blue.shade700,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border:
+                                    Border.all(color: Colors.white, width: 2),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.3),
@@ -644,7 +431,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                     decoration: BoxDecoration(
                                       color: Colors.red.shade600,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.3),
@@ -669,7 +457,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                 ),
               ),
               // Info banner when courier location is not available
-              if (!hasLocation)
+              if (!hasLocation && _initialLoadDone)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -678,70 +466,199 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                     margin: const EdgeInsets.all(12),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.shade700,
+                      color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                        Icon(Icons.gps_fixed, color: Colors.amber.shade700, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            tr('orders.courier_location_unavailable'),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            'Kurye konumu guncelleniyor...',
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.amber.shade700,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
+
+              // Re-center button
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Colors.white,
+                  onPressed: _centerMapOnAvailablePositions,
+                  child: Icon(Icons.my_location, color: Colors.blue.shade700),
+                ),
+              ),
             ],
           ),
         ),
 
         // Collapsible order details panel
-        _buildCollapsibleOrderPanel(order, isDark),
+        _buildCollapsibleOrderPanel(order, isDark, distanceKm, etaMinutes),
       ],
     );
   }
 
-  Widget _buildCollapsibleOrderPanel(LokmaOrder order, bool isDark) {
+  Widget _buildCollapsibleOrderPanel(
+      LokmaOrder order, bool isDark, double? distanceKm, int? etaMinutes) {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, -2),
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 10, bottom: 6),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // Courier info header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                // Courier avatar
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: _brandColor.withOpacity(0.15),
+                  child: const Icon(Icons.person, color: _brandColor, size: 28),
+                ),
+                const SizedBox(width: 16),
+
+                // Courier info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _formatCourierName(order.courierName),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.delivery_dining,
+                                    size: 14, color: Colors.green.shade700),
+                                const SizedBox(width: 4),
+                                Text(
+                                  tr('orders.on_the_way'),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Distance & ETA info
+                          if (distanceKm != null && etaMinutes != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '~${etaMinutes} dk (${distanceKm.toStringAsFixed(1)} km)',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Call button
+                if (order.courierPhone != null &&
+                    order.courierPhone!.isNotEmpty)
+                  IconButton(
+                    onPressed: () => _callCourier(order.courierPhone!),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(Icons.phone,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          Divider(
+              height: 1, color: isDark ? Colors.grey[800] : Colors.grey[200]),
+
           // Legend row (always visible, compact)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             color: isDark ? Colors.grey[850] : Colors.grey[50],
             child: Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                children: [
-                _buildLegendItem(Colors.red.shade600, Icons.moped, tr('orders.courier'), isDark),
-                _buildLegendItem(_brandColor, Icons.storefront, tr('orders.business'), isDark),
-                _buildLegendItem(Colors.blue.shade700, Icons.home, tr('orders.delivery'), isDark),
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _buildLegendItem(Colors.red.shade600, Icons.moped,
+                    tr('orders.courier'), isDark),
+                _buildLegendItem(_brandColor, Icons.storefront,
+                    tr('orders.business'), isDark),
+                _buildLegendItem(Colors.blue.shade700, Icons.home,
+                    tr('orders.delivery'), isDark),
               ],
             ),
           ),
@@ -756,7 +673,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                   const SizedBox(width: 10),
                   Text(
                     '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -776,7 +694,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                   AnimatedRotation(
                     turns: _showOrderDetails ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_up, color: Colors.grey),
+                    child:
+                        const Icon(Icons.keyboard_arrow_up, color: Colors.grey),
                   ),
                 ],
               ),
@@ -791,7 +710,9 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                 shrinkWrap: true,
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 itemCount: order.items.length,
-                separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
+                separatorBuilder: (_, __) => Divider(
+                    height: 1,
+                    color: isDark ? Colors.grey[700] : Colors.grey[200]),
                 itemBuilder: (context, index) {
                   final item = order.items[index];
                   return Padding(
@@ -848,7 +769,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
     );
   }
 
-  Widget _buildLegendItem(Color color, IconData icon, String label, bool isDark) {
+  Widget _buildLegendItem(
+      Color color, IconData icon, String label, bool isDark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -862,9 +784,38 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
           child: Icon(icon, color: Colors.white, size: 12),
         ),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: isDark ? Colors.grey[300] : Colors.grey[800])),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.grey[300] : Colors.grey[800])),
       ],
     );
+  }
+
+  String _formatCourierName(String? fullName) {
+    if (fullName == null || fullName.trim().isEmpty)
+      return tr('orders.courier');
+    final parts = fullName.trim().split(' ');
+    if (parts.isEmpty) return '';
+
+    String mask(String word) {
+      if (word.length <= 1) return word;
+      if (word.length == 2) return '${word[0]}*';
+      return '${word[0]}${'*' * (word.length - 2)}${word[word.length - 1]}';
+    }
+
+    return parts.map((p) => mask(p)).join(' ');
+  }
+
+  String _formatDateAndTime(DateTime time) {
+    final local = time.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final year = local.year.toString();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final min = local.minute.toString().padLeft(2, '0');
+    return '$day.$month.$year | $hour:$min';
   }
 
   String _formatTime(DateTime time) {
@@ -872,7 +823,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
     final nowUtc = DateTime.now().toUtc();
     final timeUtc = time.toUtc();
     final diff = nowUtc.difference(timeUtc);
-    
+
     if (diff.isNegative || diff.inSeconds < 30) {
       return tr('orders.just_now');
     } else if (diff.inMinutes < 1) {

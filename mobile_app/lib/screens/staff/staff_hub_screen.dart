@@ -1376,6 +1376,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     final unreadCount = unreadCountAsync.value ?? 0;
 
     final bool isOnShift = _shiftService.isOnShift;
+    final roleService = StaffRoleService();
     final bool showQr = capabilities.kermesAllowedSections.isNotEmpty || capabilities.hasFinanceRole || capabilities.hasKermesAdminRole || capabilities.hasPosRole;
 
     List<Map<String, dynamic>> allDestinations = [];
@@ -1435,29 +1436,66 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       });
     }
 
-    // 5. Garson (Sipariş Alma)
+    // 5. Garson (Siparis Alma)
     if (capabilities.hasTablesRole && capabilities.businessId != null) {
-      allDestinations.add({
-        'widget': isOnShift ? StaffPosWrapperTab(
-          kermesId: capabilities.businessId!,
-          staffId: capabilities.userId,
-          staffName: capabilities.staffName,
-          allowedSections: capabilities.kermesAllowedSections,
-        ) : _buildShiftLockedPlaceholder(isDark), 
-        'icon': Icons.room_service, 'label': 'Garson', 'color': Colors.pink
-      });
+      final isKermesMode = roleService.businessType == 'kermes';
+      if (isKermesMode) {
+        // Kermes: POS siparis sistemi
+        allDestinations.add({
+          'widget': isOnShift ? StaffPosWrapperTab(
+            kermesId: capabilities.businessId!,
+            staffId: capabilities.userId,
+            staffName: capabilities.staffName,
+            allowedSections: capabilities.kermesAllowedSections,
+          ) : _buildShiftLockedPlaceholder(isDark), 
+          'icon': Icons.room_service, 'label': 'Garson', 'color': Colors.pink
+        });
 
-      // 5.5 Teslimatlar (Garsonlar için)
-      allDestinations.add({
-        'widget': isOnShift ? WaiterDeliveriesTab(
-          kermesId: capabilities.businessId!,
-          staffId: capabilities.userId,
-          staffName: capabilities.staffName,
-          allowedSections: capabilities.kermesAllowedSections,
-          isDark: isDark,
-        ) : _buildShiftLockedPlaceholder(isDark),
-        'icon': Icons.room_service, 'label': 'Teslimatlar', 'color': Colors.deepOrange
-      });
+        // Teslimatlar (Garsonlar icin - sadece kermes)
+        allDestinations.add({
+          'widget': isOnShift ? WaiterDeliveriesTab(
+            kermesId: capabilities.businessId!,
+            staffId: capabilities.userId,
+            staffName: capabilities.staffName,
+            allowedSections: capabilities.kermesAllowedSections,
+            isDark: isDark,
+          ) : _buildShiftLockedPlaceholder(isDark),
+          'icon': Icons.room_service, 'label': 'Teslimatlar', 'color': Colors.deepOrange
+        });
+      } else {
+        // Normal isletme: Masa tabanlI garson sistemi
+        allDestinations.add({
+          'widget': isOnShift ? WaiterTablesTab(
+            businessId: capabilities.businessId!,
+            isDark: isDark,
+            isKermes: false,
+            onTableSelected: (session, num) {
+              final query = Uri(path: '/waiter-order', queryParameters: {
+                'businessId': capabilities.businessId,
+                'businessName': capabilities.businessName,
+                'tableNumber': num.toString(),
+              }).toString();
+              context.push(query);
+            },
+            onEmptyTableSelected: (num) {
+              final query = Uri(path: '/waiter-order', queryParameters: {
+                'businessId': capabilities.businessId,
+                'businessName': capabilities.businessName,
+                'tableNumber': num.toString(),
+              }).toString();
+              context.push(query);
+            },
+            onWalkinOrderSelected: () {
+              final query = Uri(path: '/waiter-order', queryParameters: {
+                'businessId': capabilities.businessId,
+                'businessName': capabilities.businessName,
+              }).toString();
+              context.push(query);
+            },
+          ) : _buildShiftLockedPlaceholder(isDark), 
+          'icon': Icons.table_restaurant, 'label': 'Garson', 'color': Colors.pink
+        });
+      }
     }
 
     // 6. Rezervasyon

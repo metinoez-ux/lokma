@@ -267,7 +267,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildAssignmentCard(capabilities, isDark),
-              _buildKermesAdminManagementCard(capabilities, isDark),
+              if (StaffRoleService().businessType == 'kermes') _buildKermesAdminManagementCard(capabilities, isDark),
               _buildStatsCard(isDark),
               _buildTvUrlCard(capabilities, isDark),
               const SizedBox(height: 24),
@@ -804,6 +804,11 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
     if (capabilities.businessId == null || capabilities.businessId!.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    // Normal isletme: kermes_events stream'ine gerek yok
+    if (StaffRoleService().businessType != 'kermes') {
+      return _renderAssignmentCardInner(capabilities, isDark);
+    }
     
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('kermes_events').doc(capabilities.businessId).snapshots(),
@@ -903,12 +908,13 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   }
 
   Widget _renderAssignmentCardInner(StaffCapabilities capabilities, bool isDark, {List<Map<String, dynamic>> dynamicRoles = const [], List<String> kermesAdmins = const [], DateTime? startDate, DateTime? endDate, String? openingTime, String? closingTime}) {
+    final isKermesMode = StaffRoleService().businessType == 'kermes';
     List<String> gorevler = [];
-    if (capabilities.isBusinessAdmin) gorevler.add("Kermes Admini");
-    if (capabilities.isDriver) gorevler.add("Sürücü");
+    if (capabilities.isBusinessAdmin) gorevler.add(isKermesMode ? "Kermes Admini" : "Isletme Admini");
+    if (capabilities.isDriver) gorevler.add("Surucu");
     if (capabilities.hasTablesRole) gorevler.add("Garson");
     if (gorevler.isEmpty && capabilities.kermesAllowedSections.isEmpty && dynamicRoles.isEmpty) {
-      gorevler.add("Kermes Görevlisi");
+      gorevler.add(isKermesMode ? "Kermes Gorevlisi" : "Personel");
     }
 
     String bolumText = "Genel Alan";
@@ -1026,7 +1032,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
             const SizedBox(height: 15),
           ],
           
-          if (capabilities.businessId != null) ...[
+          if (capabilities.businessId != null && StaffRoleService().businessType == 'kermes') ...[
             Padding(
                padding: const EdgeInsets.symmetric(vertical: 8),
                child: Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
@@ -1063,7 +1069,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
           const SizedBox(height: 15),
 
           // Vardiya Navigation Buttons
-          if (capabilities.businessId != null) ...[
+          if (capabilities.businessId != null && StaffRoleService().businessType == 'kermes') ...[
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -1568,8 +1574,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   }
 
   Widget _buildKermesAdminManagementCard(StaffCapabilities capabilities, bool isDark) {
-    // Only visible if user is an Admin of this Kermes
-    if (!capabilities.isBusinessAdmin || capabilities.businessId == null) {
+    if (!capabilities.isBusinessAdmin || capabilities.businessId == null || StaffRoleService().businessType != 'kermes') {
       return const SizedBox.shrink();
     }
     return Container(
@@ -1667,8 +1672,7 @@ class _ShiftDashboardTabState extends ConsumerState<ShiftDashboardTab> {
   }
 
   Widget _buildTvUrlCard(StaffCapabilities capabilities, bool isDark) {
-    // Sadece kermes adminleri gorebilir
-    if (!capabilities.isBusinessAdmin || capabilities.businessId == null) {
+    if (!capabilities.isBusinessAdmin || capabilities.businessId == null || StaffRoleService().businessType != 'kermes') {
       return const SizedBox.shrink();
     }
 
