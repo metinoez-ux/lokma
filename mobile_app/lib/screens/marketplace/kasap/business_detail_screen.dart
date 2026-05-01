@@ -33,21 +33,37 @@ import '../../../utils/cart_warning_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 Widget buildKasapProductMedia(String url, BoxFit fit, bool isDark) {
+  // Always use a white background for products to prevent transparent PNGs 
+  // from blending poorly with dark mode backgrounds, as the URL might not always 
+  // contain '.png' depending on the storage provider structure.
+  final bgColor = Colors.white;
+
+  Widget imageWidget;
   if (url.startsWith('assets/')) {
-    return Image.asset(url,
+    imageWidget = Image.asset(url,
         fit: fit,
         errorBuilder: (_, __, ___) => Icon(Icons.restaurant_menu,
             color: isDark ? Colors.white24 : Colors.grey[400], size: 40));
+  } else {
+    imageWidget = LokmaNetworkImage(
+      imageUrl: url,
+      fit: fit,
+      placeholder: (_, __) => Container(
+          color: Colors.white,
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
+      errorWidget: (_, __, ___) => Icon(Icons.restaurant_menu,
+          color: isDark ? Colors.white24 : Colors.grey[400], size: 40),
+    );
   }
-  return LokmaNetworkImage(
-    imageUrl: url,
-    fit: fit,
-    placeholder: (_, __) => Container(
-        color: isDark ? Colors.grey[900] : Colors.grey[100],
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
-    errorWidget: (_, __, ___) => Icon(Icons.restaurant_menu,
-        color: isDark ? Colors.white24 : Colors.grey[400], size: 40),
-  );
+
+  return Container(
+    color: bgColor,
+    width: double.infinity,
+      height: double.infinity,
+      child: imageWidget,
+    );
+  }
+  return imageWidget;
 }
 
 class BusinessDetailScreen extends ConsumerStatefulWidget {
@@ -4401,116 +4417,105 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: Container(
                         key: _categoryKeys.putIfAbsent(
                             catName, () => GlobalKey()),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Category Header with cart count badge
-                            Builder(builder: (context) {
-                              final catCartCount = ref
-                                  .watch(cartProvider)
-                                  .items
-                                  .where((ci) => ci.product.category == catName)
-                                  .fold<int>(0,
-                                      (sum, ci) => sum + ci.quantity.toInt());
-                              return Container(
-                                width: double.infinity,
-                                color: isDark
-                                    ? const Color(0xFF2C2C2C).withOpacity(0.6)
-                                    : const Color(0xFFF2EEE9),
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        _formatCategoryKey(catName),
-                                        style: TextStyle(
-                                          color: isDark ? accent : textPrimary,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                    ),
-                                    if (catCartCount > 0)
-                                      Container(
-                                        width: 24,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          color: isDark
-                                              ? Colors.white
-                                              : Colors.black87,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '$catCartCount',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: isDark
-                                                ? Colors.black
-                                                : Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            }),
-                            // Products: Grid for market, List for restoran
-                            _isMarketType
-                                // 🛒 MARKET: 2-column grid
-                                ? Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
-                                    child: GridView.builder(
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      shrinkWrap: true,
-                                      padding: EdgeInsets.zero,
-                                      gridDelegate:
-                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        childAspectRatio: 0.52,
-                                        crossAxisSpacing: 10,
-                                        mainAxisSpacing: 10,
-                                      ),
-                                      itemCount: catProducts.length,
-                                      itemBuilder: (context, index) =>
-                                          _buildMarketGridCard(
-                                        catProducts[index],
-                                        ref.watch(cartProvider),
-                                        isDark: isDark,
-                                        accent: accent,
-                                        cardBg: cardBg,
-                                        textPrimary: textPrimary,
-                                        textSecondary: textSecondary,
-                                      ),
-                                    ),
-                                  )
-                                // 🍽️ RESTORAN: Vertical list
-                                : ListView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    shrinkWrap: true,
-                                    padding: EdgeInsets.zero,
-                                    itemCount: catProducts.length,
-                                    itemBuilder: (context, index) =>
-                                        _buildLieferandoProductCard(
-                                      catProducts[index],
-                                      ref.watch(cartProvider),
-                                      isDark: isDark,
-                                      accent: accent,
-                                      cardBg: cardBg,
-                                      textPrimary: textPrimary,
-                                      textSecondary: textSecondary,
+                        // Category Header with cart count badge
+                        child: Builder(builder: (context) {
+                          final catCartCount = ref
+                              .watch(cartProvider)
+                              .items
+                              .where((ci) => ci.product.category == catName)
+                              .fold<int>(0,
+                                  (sum, ci) => sum + ci.quantity.toInt());
+                          return Container(
+                            width: double.infinity,
+                            color: isDark
+                                ? const Color(0xFF2C2C2C).withOpacity(0.6)
+                                : const Color(0xFFF2EEE9),
+                            padding:
+                                const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _formatCategoryKey(catName),
+                                    style: TextStyle(
+                                      color: isDark ? accent : textPrimary,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -0.5,
                                     ),
                                   ),
-                          ],
-                        ),
+                                ),
+                                if (catCartCount > 0)
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '$catCartCount',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark
+                                            ? Colors.black
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        }),
                       ),
                     ),
+                    // Products: Grid for market, List for restoran
+                    _isMarketType
+                        // 🛒 MARKET: 2-column grid
+                        ? SliverPadding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            sliver: SliverGrid(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.52,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) => _buildMarketGridCard(
+                                  catProducts[index],
+                                  ref.watch(cartProvider),
+                                  isDark: isDark,
+                                  accent: accent,
+                                  cardBg: cardBg,
+                                  textPrimary: textPrimary,
+                                  textSecondary: textSecondary,
+                                ),
+                                childCount: catProducts.length,
+                              ),
+                            ),
+                          )
+                        // 🍽️ RESTORAN: Vertical list
+                        : SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => _buildLieferandoProductCard(
+                                catProducts[index],
+                                ref.watch(cartProvider),
+                                isDark: isDark,
+                                accent: accent,
+                                cardBg: cardBg,
+                                textPrimary: textPrimary,
+                                textSecondary: textSecondary,
+                              ),
+                              childCount: catProducts.length,
+                            ),
+                          ),
                   ];
                 }),
               ],
