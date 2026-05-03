@@ -95,6 +95,8 @@ class LokmaOrder {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  bool get isPaid => paymentStatus == 'paid' || paymentStatus == 'collected' || paymentStatus == 'completed';
+
   LokmaOrder({
     required this.id,
     this.orderNumber,
