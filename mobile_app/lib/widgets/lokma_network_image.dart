@@ -27,6 +27,8 @@ class LokmaNetworkImage extends StatelessWidget {
   final Alignment alignment;
   final FilterQuality filterQuality;
 
+  final Color? backgroundColor;
+
   const LokmaNetworkImage({
     super.key,
     required this.imageUrl,
@@ -47,6 +49,7 @@ class LokmaNetworkImage extends StatelessWidget {
     this.colorBlendMode,
     this.alignment = Alignment.center,
     this.filterQuality = FilterQuality.low,
+    this.backgroundColor,
   });
 
   @override
@@ -74,30 +77,17 @@ class LokmaNetworkImage extends StatelessWidget {
             ? placeholder(context, imageUrl) 
             : _buildShimmerPlaceholder(),
       );
-      
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: imageWidget,
-      );
     } else {
       int? finalMemCacheWidth = memCacheWidth;
       int? finalMemCacheHeight = memCacheHeight;
 
       if (finalMemCacheWidth == null && finalMemCacheHeight == null) {
-        // Safe multiplier to ensure crisp images while avoiding OOM
-        // We use a fixed scale (like 2.0) if devicePixelRatio isn't easily accessible
-        // without LayoutBuilder. Since we have context, we can use MediaQuery if available,
-        // but to avoid depending on layout rebuilds or context availability issues,
-        // a static multiplier of 2.0 works perfectly for most modern devices.
         const double dpr = 2.0;
-
         if (width != null && width! > 0 && width! < double.infinity) {
           finalMemCacheWidth = (width! * dpr).toInt();
         } else if (height != null && height! > 0 && height! < double.infinity) {
           finalMemCacheHeight = (height! * dpr).toInt();
         } else {
-          // Fallback for list items without explicit size. 
-          // 800 is a safe upper bound for most cards without explicit dimensions.
           finalMemCacheHeight = 800;
         }
       }
@@ -119,12 +109,21 @@ class LokmaNetworkImage extends StatelessWidget {
         placeholder: (context, url) => placeholder != null ? placeholder(context, url) : _buildShimmerPlaceholder(),
         errorWidget: (context, url, error) => errorWidget != null ? errorWidget(context, url, error) : _buildErrorPlaceholder(),
       );
+    }
 
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
+    // Wrap with background color if provided
+    Widget result = imageWidget;
+    if (backgroundColor != null) {
+      result = Container(
+        color: backgroundColor,
         child: imageWidget,
       );
     }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: result,
+    );
   }
 
   Widget _buildShimmerPlaceholder() {
@@ -134,7 +133,7 @@ class LokmaNetworkImage extends StatelessWidget {
       child: Container(
         width: width ?? double.infinity,
         height: height ?? double.infinity,
-        color: Colors.white,
+        color: backgroundColor ?? Colors.white,
       ),
     );
   }

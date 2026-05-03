@@ -34,9 +34,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 Widget buildKasapProductMedia(String url, BoxFit fit, bool isDark) {
   // Always use a white background for products to prevent transparent PNGs 
-  // from blending poorly with dark mode backgrounds, as the URL might not always 
-  // contain '.png' depending on the storage provider structure.
-  final bgColor = Colors.white;
+  // from blending poorly with dark mode backgrounds.
+  const bgColor = Colors.white;
 
   Widget imageWidget;
   if (url.startsWith('assets/')) {
@@ -48,8 +47,9 @@ Widget buildKasapProductMedia(String url, BoxFit fit, bool isDark) {
     imageWidget = LokmaNetworkImage(
       imageUrl: url,
       fit: fit,
+      backgroundColor: bgColor,
       placeholder: (_, __) => Container(
-          color: Colors.white,
+          color: bgColor,
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
       errorWidget: (_, __, ___) => Icon(Icons.restaurant_menu,
           color: isDark ? Colors.white24 : Colors.grey[400], size: 40),
@@ -59,11 +59,9 @@ Widget buildKasapProductMedia(String url, BoxFit fit, bool isDark) {
   return Container(
     color: bgColor,
     width: double.infinity,
-      height: double.infinity,
-      child: imageWidget,
-    );
-  }
-  return imageWidget;
+    height: double.infinity,
+    child: imageWidget,
+  );
 }
 
 class BusinessDetailScreen extends ConsumerStatefulWidget {
@@ -393,29 +391,38 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   // 🔍 Store all loaded products for instant search
   List<ButcherProduct> _allProducts = [];
+  bool _isLoadingProducts = true;
+  String? _productsError;
 
-  late final Stream<QuerySnapshot> _productsStream;
+  // Pagination & Lazy Loading
+  final int _productsLimit = 30;
+  bool _isLoadingMoreProducts = false;
+  bool _hasMoreProducts = true;
+  DocumentSnapshot? _lastProductDocument;
 
   @override
   void initState() {
     super.initState();
     _deliveryModeIndex = widget.initialDeliveryMode;
-    _productsStream = FirebaseFirestore.instance
-        .collection('businesses')
-        .doc(widget.businessId)
-        .collection('products')
-        // Removing server-side where('isActive') so legacy Market products without the field still load
-        .snapshots();
+    _fetchProducts(isRefresh: true);
     _loadButcherAndReviews();
     _setupCategoriesListener(); // 🔄 Real-time listener for categories
 
-    // Listen to scroll to show/hide search bar
+    // Listen to scroll to show/hide search bar and handle lazy loading
     _scrollController.addListener(() {
       final shouldShow = _scrollController.offset > 150; // After hero image
       if (shouldShow != _showSearchBar) {
         setState(() => _showSearchBar = shouldShow);
       }
       _onMenuScroll(); // Sync sticky headers
+
+      // Lazy Loading: Load more products when scrolling near bottom
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 300 &&
+          !_isLoadingMoreProducts &&
+          _hasMoreProducts) {
+        _loadMoreProducts();
+      }
     });
   }
 
@@ -424,6 +431,110 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     _businessSubscription?.cancel();
     _minOrderSuccessTimer?.cancel();
     super.dispose();
+  }
+
+  // 🔄 Fetch products with Pagination (Lazy Loading)
+  Future<void> _fetchProducts({bool isRefresh = false}) async {
+    if (isRefresh) {
+      _lastProductDocument = null;
+      _hasMoreProducts = true;
+      if (mounted) {
+        setState(() {
+          _isLoadingProducts = true;
+          _allProducts = [];
+        });
+      }
+    } else {
+      if (_isLoadingMoreProducts || !_hasMoreProducts) return;
+      if (mounted) {
+        setState(() {
+          _isLoadingMoreProducts = true;
+        });
+      }
+    }
+
+    try {
+      Query query = FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(widget.businessId)
+          .collection('products')
+          .orderBy('category') // Ensures categories load sequentially
+          .limit(_productsLimit);
+
+      if (_lastProductDocument != null) {
+        query = query.startAfterDocument(_lastProductDocument!);
+      }
+
+      final snapshot = await query.get();
+      if (!mounted) return;
+
+      List<ButcherProduct> newProducts = [];
+      for (final doc in snapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+
+          // Client-side fallback: if 'isActive' is totally missing, assume true
+          final bool isActive = data['isActive'] ?? true;
+          if (!isActive) continue;
+
+          final sku = data['masterProductId'] ?? data['masterProductSku'];
+          final masterData = MASTER_PRODUCT_CATALOG[sku];
+
+          final masterMap = masterData != null
+              ? {
+                  'name': masterData.name,
+                  'description': masterData.description,
+                  'category': masterData.category,
+                  'unit': masterData.unitType,
+                  'imageAsset': masterData.imagePath,
+                  'tags': masterData.tags,
+                }
+              : null;
+
+          final productObj = ButcherProduct.fromFirestore(data, doc.id,
+              butcherId: widget.businessId, masterData: masterMap);
+
+          if (productObj.imageUrl == null || productObj.imageUrl!.isEmpty) {
+            debugPrint(
+                '🔴 [LOKMA] Product image missing! Raw data keys: ${data.keys.toList()}');
+          }
+          newProducts.add(productObj);
+        } catch (e) {
+          debugPrint('🔴 [LOKMA] Error parsing product ${doc.id}: $e');
+        }
+      }
+
+      debugPrint(
+          '🟢 [LOKMA] Loaded ${newProducts.length} new products for ${widget.businessId}');
+
+      if (snapshot.docs.isNotEmpty) {
+        _lastProductDocument = snapshot.docs.last;
+      }
+
+      setState(() {
+        if (isRefresh) {
+          _allProducts = newProducts;
+        } else {
+          _allProducts.addAll(newProducts);
+        }
+        _isLoadingProducts = false;
+        _isLoadingMoreProducts = false;
+        _hasMoreProducts = snapshot.docs.length >= _productsLimit;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _productsError = error.toString();
+        _isLoadingProducts = false;
+        _isLoadingMoreProducts = false;
+      });
+      debugPrint('🔴 [LOKMA] Products fetch error: $error');
+    }
+  }
+
+  // Fetch more products by expanding the limit
+  void _loadMoreProducts() {
+    _fetchProducts();
   }
 
   // 🔄 Real-time subscription for categories
@@ -675,7 +786,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         data?['businessName'] ?? data?['companyName'] ?? 'common.business'.tr();
 
     // Multi-hour display logic
-    String? _formatNextOpen(dynamic hoursData, {bool isShop = false}) {
+    String? formatNextOpen(dynamic hoursData, {bool isShop = false}) {
       if (hoursData == null) return null;
       try {
         final helper = OpeningHoursHelper(hoursData);
@@ -732,11 +843,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       }
     }
 
-    final shopText = _formatNextOpen(data?['openingHours'], isShop: true);
-    final deliveryText = _formatNextOpen(data?['deliveryHours']);
-    final pickupText = _formatNextOpen(data?['pickupHours']);
+    final shopText = formatNextOpen(data?['openingHours'], isShop: true);
+    final deliveryText = formatNextOpen(data?['deliveryHours']);
+    final pickupText = formatNextOpen(data?['pickupHours']);
 
-    Widget _buildTimeRow(
+    Widget buildTimeRow(
         IconData icon, String label, String time, BuildContext ctx) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -787,7 +898,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(12), // Reduced
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.1),
+                      color: accent.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.storefront_outlined,
@@ -822,19 +933,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         color: Theme.of(dialogCtx)
                             .colorScheme
                             .surfaceContainerHighest
-                            .withOpacity(0.35),
+                            .withValues(alpha: 0.35),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Theme.of(dialogCtx)
                               .colorScheme
                               .outlineVariant
-                              .withOpacity(0.5),
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                       child: Column(
                         children: [
                           if (shopText != null)
-                            _buildTimeRow(Icons.storefront,
+                            buildTimeRow(Icons.storefront,
                                 'common.dine_in'.tr(), shopText, dialogCtx),
                           if (shopText != null &&
                               (deliveryText != null || pickupText != null))
@@ -844,9 +955,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 color: Theme.of(dialogCtx)
                                     .colorScheme
                                     .outlineVariant
-                                    .withOpacity(0.4)),
+                                    .withValues(alpha: 0.4)),
                           if (deliveryText != null)
-                            _buildTimeRow(
+                            buildTimeRow(
                                 Icons.delivery_dining,
                                 'common.delivery'.tr(),
                                 deliveryText,
@@ -858,9 +969,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 color: Theme.of(dialogCtx)
                                     .colorScheme
                                     .outlineVariant
-                                    .withOpacity(0.4)),
+                                    .withValues(alpha: 0.4)),
                           if (pickupText != null)
-                            _buildTimeRow(Icons.shopping_bag_outlined,
+                            buildTimeRow(Icons.shopping_bag_outlined,
                                 'common.pickup'.tr(), pickupText, dialogCtx),
                         ],
                       ),
@@ -882,7 +993,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       color: Theme.of(dialogCtx)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.9),
+                          .withValues(alpha: 0.9),
                       height: 1.3,
                     ),
                   ),
@@ -929,7 +1040,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         foregroundColor: Theme.of(dialogCtx)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.9),
+                            .withValues(alpha: 0.9),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
                       ),
@@ -1001,7 +1112,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       final parts = <String>[];
       if (street.toString().isNotEmpty) {
         final streetFull = houseNumber.toString().isNotEmpty
-            ? '${street} ${houseNumber}'
+            ? '$street $houseNumber'
             : street.toString();
         parts.add(streetFull);
       }
@@ -1378,7 +1489,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                        color: Colors.amber.withOpacity(0.1),
+                                        color: Colors.amber.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(4)),
                                     child: Row(
                                       children: [
@@ -1731,9 +1842,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: color.withOpacity(0.3), width: 2),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
           ),
           child: Icon(icon, color: color, size: 28),
         ),
@@ -1950,7 +2061,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
+                                          color: Colors.black.withValues(alpha: 0.2),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
@@ -2079,7 +2190,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                         vertical: 4),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.9),
+                                                      .withValues(alpha: 0.9),
                                                   borderRadius:
                                                       BorderRadius.circular(6),
                                                 ),
@@ -2223,7 +2334,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.12),
+                                        color: Colors.blue.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Icon(Icons.phone,
@@ -2294,15 +2405,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           // ═══ CLOSING SOON INDICATOR ═══
                           Builder(builder: (context) {
                             final closingSoonText = _getClosingSoonText();
-                            if (closingSoonText == null)
+                            if (closingSoonText == null) {
                               return const SizedBox.shrink();
+                            }
                             return Padding(
                               padding: const EdgeInsets.only(top: 6),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.12),
+                                  color: Colors.orange.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -2444,7 +2556,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
     final city = address is Map ? (address['city'] ?? '') : '';
     final streetFull = houseNumber.toString().trim().isNotEmpty
-        ? '${street} ${houseNumber}'
+        ? '$street $houseNumber'
         : street.toString();
     final fullAddress = streetFull.toString().trim().isNotEmpty
         ? '$streetFull\n$postalCode $city'
@@ -2547,12 +2659,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
         // Professional tagline
         const SizedBox(height: 14),
-        Divider(color: subtitleColor.withOpacity(0.2), height: 1),
+        Divider(color: subtitleColor.withValues(alpha: 0.2), height: 1),
         const SizedBox(height: 10),
         Text(
           _getImpressumTagline(),
           style: GoogleFonts.inter(
-              color: subtitleColor.withOpacity(0.7),
+              color: subtitleColor.withValues(alpha: 0.7),
               fontSize: 10,
               fontWeight: FontWeight.w300,
               height: 1.5),
@@ -2850,8 +2962,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   .replaceAll('$dayNameTr:', '')
                   .replaceAll(dayNameTr, '')
                   .trim();
-              if (content.isEmpty || content == 'Kapalı')
+              if (content.isEmpty || content == 'Kapalı') {
                 content = 'common.closed'.tr();
+              }
 
               return _buildDayRow(dayNameDisplay, content, isToday, isDark,
                   textColor, subtitleColor, accent,
@@ -3073,7 +3186,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       margin: const EdgeInsets.only(bottom: 2),
       decoration: isToday
           ? BoxDecoration(
-              color: todayColor.withOpacity(0.05),
+              color: todayColor.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(6),
             )
           : null,
@@ -3100,7 +3213,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   String _formatCategoryKey(String key) {
     if (key == 'marketplace.category_all'.tr() ||
         key == 'Diğer' ||
-        key.contains(' ')) return key;
+        key.contains(' ')) {
+      return key;
+    }
     return key
         .replaceAll('_', ' ')
         .split(' ')
@@ -3218,7 +3333,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final activeBrandIds = List<String>.from(data?['activeBrandIds'] ?? []);
     final List<Map<String, dynamic>> activeBadges = [];
     debugPrint(
-        '🔍 [DetailScreen] ${data?['companyName'] ?? 'NoName'}: checking brand resolution. activeBrandIds = ${activeBrandIds}');
+        '🔍 [DetailScreen] ${data?['companyName'] ?? 'NoName'}: checking brand resolution. activeBrandIds = $activeBrandIds');
     if (platformBrandsAsync.value != null && activeBrandIds.isNotEmpty) {
       // KURAL 1: Platform Badge (activeBrandIds) = Admin karari, isletme tipi farketmez
       for (final brand in platformBrandsAsync.value!) {
@@ -3468,8 +3583,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         future: BusinessDealsService.getActiveDeals(
                             _butcherDoc!.id),
                         builder: (context, dealSnap) {
-                          if (!dealSnap.hasData || dealSnap.data!.isEmpty)
+                          if (!dealSnap.hasData || dealSnap.data!.isEmpty) {
                             return const SizedBox.shrink();
+                          }
                           final deals = dealSnap.data!;
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -3479,14 +3595,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    const Color(0xFFEA184A).withOpacity(0.08),
-                                    const Color(0xFFFF6B6B).withOpacity(0.04)
+                                    const Color(0xFFEA184A).withValues(alpha: 0.08),
+                                    const Color(0xFFFF6B6B).withValues(alpha: 0.04)
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                     color: const Color(0xFFEA184A)
-                                        .withOpacity(0.25)),
+                                        .withValues(alpha: 0.25)),
                               ),
                               child: Row(
                                 children: [
@@ -3552,7 +3668,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.2),
+                                            .withValues(alpha: 0.2),
                                         blurRadius: 8)
                                   ],
                                 ),
@@ -3612,7 +3728,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               if (!hasIcon)
                                                 BoxShadow(
                                                   color: Colors.black
-                                                      .withOpacity(0.3),
+                                                      .withValues(alpha: 0.3),
                                                   blurRadius: 4,
                                                   offset: const Offset(0, 2),
                                                 ),
@@ -3682,8 +3798,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               bool actuallySellsToros =
                                   data?['sellsTorosProducts'] == true;
 
-                              if (activeBadges.isNotEmpty)
+                              if (activeBadges.isNotEmpty) {
                                 return const SizedBox.shrink();
+                              }
 
                               if (actuallySellsTuna || actuallySellsToros) {
                                 return Positioned(
@@ -3795,8 +3912,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             top: 12,
                             child: Material(
                               color: isFavorite
-                                  ? accent.withOpacity(0.9)
-                                  : Colors.black.withOpacity(0.4),
+                                  ? accent.withValues(alpha: 0.9)
+                                  : Colors.black.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(20),
                               child: InkWell(
                                 onTap: () {
@@ -3865,7 +3982,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.6),
+                                            .withValues(alpha: 0.6),
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -3895,7 +4012,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.7),
+                                          .withValues(alpha: 0.7),
                                       size: 16,
                                     ),
                                     const SizedBox(width: 4),
@@ -3905,7 +4022,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -3944,7 +4061,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.8),
+                                            .withValues(alpha: 0.8),
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -3967,7 +4084,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.8),
+                                            .withValues(alpha: 0.8),
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -4050,7 +4167,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.7),
+                                    .withValues(alpha: 0.7),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -4075,7 +4192,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.7),
+                                    .withValues(alpha: 0.7),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -4181,7 +4298,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.6)),
+                                        .withValues(alpha: 0.6)),
                                 const SizedBox(width: 3),
                                 Text(
                                   parseSafelyDouble(data?['deliveryFee']) == 0
@@ -4195,7 +4312,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         : Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                     fontSize: 14,
                                     fontWeight: parseSafelyDouble(
                                                 data?['deliveryFee']) ==
@@ -4228,7 +4345,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -4241,7 +4358,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                     BlendMode.srcIn,
                                   ),
                                 ),
@@ -4252,7 +4369,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -4428,7 +4545,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           return Container(
                             width: double.infinity,
                             color: isDark
-                                ? const Color(0xFF2C2C2C).withOpacity(0.6)
+                                ? const Color(0xFF2C2C2C).withValues(alpha: 0.6)
                                 : const Color(0xFFF2EEE9),
                             padding:
                                 const EdgeInsets.fromLTRB(16, 10, 16, 10),
@@ -4632,7 +4749,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       color: accent,
       borderRadius: BorderRadius.circular(28),
       elevation: 4,
-      shadowColor: accent.withOpacity(0.4),
+      shadowColor: accent.withValues(alpha: 0.4),
       child: InkWell(
         borderRadius: BorderRadius.circular(28),
         onTap: () {
@@ -4928,7 +5045,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   height: 72,
                   decoration: BoxDecoration(
                     color: (isDark ? Colors.white : const Color(0xFF1C1C1E))
-                        .withOpacity(0.08),
+                        .withValues(alpha: 0.08),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -4956,7 +5073,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -4983,7 +5100,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       border: Border.all(
                         color: isDark
                             ? Colors.white12
-                            : Colors.black.withOpacity(0.06),
+                            : Colors.black.withValues(alpha: 0.06),
                       ),
                     ),
                     child: Row(
@@ -5107,7 +5224,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEA184A).withOpacity(0.12),
+                    color: const Color(0xFFEA184A).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(36),
                   ),
                   child: const Icon(
@@ -5402,7 +5519,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: product.outOfStock
-                                  ? Colors.orange.withOpacity(0.15)
+                                  ? Colors.orange.withValues(alpha: 0.15)
                                   : (isDark
                                       ? Colors.white10
                                       : Colors.grey[200]!),
@@ -5488,13 +5605,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             horizontal: 12, vertical: 10),
                                         decoration: BoxDecoration(
                                           color: isDark
-                                              ? Colors.white.withOpacity(0.06)
+                                              ? Colors.white.withValues(alpha: 0.06)
                                               : const Color(0xFFF5F0E8),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                           border: Border.all(
                                             color: isDark
-                                                ? Colors.white.withOpacity(0.08)
+                                                ? Colors.white.withValues(alpha: 0.08)
                                                 : Colors.grey[200]!,
                                             width: 0.5,
                                           ),
@@ -5504,7 +5621,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             Icon(Icons.edit_outlined,
                                                 size: 12,
                                                 color: textSecondary
-                                                    .withOpacity(0.5)),
+                                                    .withValues(alpha: 0.5)),
                                             const SizedBox(width: 6),
                                             Expanded(
                                               child: Text(
@@ -5638,7 +5755,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             boxShadow: [
                                               BoxShadow(
                                                 color: Colors.black
-                                                    .withOpacity(0.15),
+                                                    .withValues(alpha: 0.15),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -5673,7 +5790,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             boxShadow: [
                                               BoxShadow(
                                                 color: Colors.black
-                                                    .withOpacity(0.1),
+                                                    .withValues(alpha: 0.1),
                                                 blurRadius: 6,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -5729,7 +5846,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
+                                        color: Colors.black.withValues(alpha: 0.05),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       )
@@ -5754,8 +5871,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           height: 1,
           thickness: 0.5,
           color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.grey.withOpacity(0.2),
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.grey.withValues(alpha: 0.2),
         ),
       ],
     );
@@ -5797,7 +5914,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Convert kg to grams/kg for display
     final displayQtyText = isByWeight
         ? (displayQty >= 1.0
-            ? '${displayQty.toStringAsFixed(displayQty == displayQty.roundToDouble() ? 0 : 1)}'
+            ? displayQty.toStringAsFixed(displayQty == displayQty.roundToDouble() ? 0 : 1)
             : '${(displayQty * 1000).toInt()}')
         : '${displayQty.toInt()}';
 
@@ -5921,8 +6038,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: product.outOfStock
-                                  ? Colors.orange.withOpacity(0.85)
-                                  : Colors.red.withOpacity(0.85),
+                                  ? Colors.orange.withValues(alpha: 0.85)
+                                  : Colors.red.withValues(alpha: 0.85),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -5950,7 +6067,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: accent.withOpacity(0.4),
+                                  color: accent.withValues(alpha: 0.4),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -6062,7 +6179,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isDark
-                                ? Colors.white.withOpacity(0.04)
+                                ? Colors.white.withValues(alpha: 0.04)
                                 : Colors.grey.shade200,
                             width: 1,
                           ),
@@ -6107,7 +6224,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
                                         color: isDark
-                                            ? Colors.white.withOpacity(0.15)
+                                            ? Colors.white.withValues(alpha: 0.15)
                                             : Colors.grey.shade300,
                                         width: 1,
                                       ),
@@ -6119,7 +6236,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         color: (inCart ||
                                                 (selectedQty > defaultQty))
                                             ? textPrimary
-                                            : textSecondary.withOpacity(0.3),
+                                            : textSecondary.withValues(alpha: 0.3),
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -6199,7 +6316,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
                                         color: isDark
-                                            ? Colors.white.withOpacity(0.15)
+                                            ? Colors.white.withValues(alpha: 0.15)
                                             : Colors.grey.shade300,
                                         width: 1,
                                       ),
@@ -6264,7 +6381,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   boxShadow: [
                                     BoxShadow(
                                       color: (inCart ? Colors.green : accent)
-                                          .withOpacity(0.3),
+                                          .withValues(alpha: 0.3),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -6606,7 +6723,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                                     horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: isDark
-                                      ? Colors.white.withOpacity(0.04)
+                                      ? Colors.white.withValues(alpha: 0.04)
                                       : const Color(0xFFF2EEE9),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -6662,7 +6779,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     final isAvailable = product.inStock || product.allowBackorder;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final dividerColor =
-        isDark ? Colors.white.withOpacity(0.06) : Colors.grey.withOpacity(0.15);
+        isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.withValues(alpha: 0.15);
 
     return Opacity(
       opacity: isAvailable ? 1.0 : 0.5,
@@ -6758,7 +6875,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         height: 72,
                         decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.white.withOpacity(0.05)
+                              ? Colors.white.withValues(alpha: 0.05)
                               : Colors.grey[100],
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -6812,7 +6929,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: accent.withOpacity(0.3),
+                                color: accent.withValues(alpha: 0.3),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -6909,7 +7026,7 @@ class _FavoriteHeartAnimationState extends State<_FavoriteHeartAnimation>
                     size: 100,
                     shadows: [
                       Shadow(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         blurRadius: 24,
                       ),
                     ],
@@ -7090,7 +7207,7 @@ class _StickyCategoryTabsState extends State<_StickyCategoryTabs> {
                   borderRadius: BorderRadius.circular(50),
                   boxShadow: [
                     BoxShadow(
-                      color: (widget.isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                      color: (widget.isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

@@ -107,7 +107,7 @@ class LocationTrackingService {
       locationSettings = AppleSettings(
         accuracy: LocationAccuracy.high,
         activityType: ActivityType.automotiveNavigation,
-        distanceFilter: 50, // Update every 50 meters moved
+        distanceFilter: 10, // Update every 10 meters moved
         pauseLocationUpdatesAutomatically: false, // Don't auto-pause
         showBackgroundLocationIndicator: true, // Blue bar on iOS
         allowBackgroundLocationUpdates: true, // Critical for background
@@ -115,7 +115,7 @@ class LocationTrackingService {
     } else {
       locationSettings = const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 50,
+        distanceFilter: 10,
       );
     }
 

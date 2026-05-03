@@ -487,7 +487,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         courierName: driverName,
         courierPhone: driverPhone,
       );
-    } else if (order is KermesOrder) {
+    } else if (order.runtimeType.toString() == 'KermesOrder') {
       success = await _kermesOrderService.claimDelivery(
         orderId: order.id,
         courierId: user.uid,
@@ -512,7 +512,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         ),
       );
       // Navigate to active delivery screen
-      if (order is KermesOrder) {
+      if (order.runtimeType.toString() == 'KermesOrder') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -937,15 +937,14 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     return chips;
   }
 
-  /// Read-only order card for the all-orders view
   Widget _buildAllOrderCard(dynamic order) {
-    final statusName = (order is LokmaOrder) ? order.status.name : (order as KermesOrder).status.name;
+    final statusName = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).status.name : (order as dynamic).status.name;
     final statusConfig = _getStatusConfig(statusName);
-    final businessName = (order is LokmaOrder) ? order.butcherName : '🏢 ${(order as KermesOrder).kermesId.split('_').first.toUpperCase()} Kermesi';
+    final businessName = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).butcherName : '🏢 ${(order as dynamic).kermesId.split('_').first.toUpperCase()} Kermesi';
     final courierId = (order as dynamic).courierId ?? '';
     final isClaimed = courierId.isNotEmpty;
     final isMyOrder = courierId == FirebaseAuth.instance.currentUser?.uid;
-    final orderIdTrimmed = (order.orderNumber != null) ? order.orderNumber.toString() : order.id.substring(0, 6).toUpperCase();
+    final orderIdTrimmed = ((order as dynamic).orderNumber != null) ? (order as dynamic).orderNumber.toString() : (order as dynamic).id.substring(0, 6).toUpperCase();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1271,12 +1270,12 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         // Just use the full address
         locationInfo = deliveryAddr;
       }
-    } else if (order is! LokmaOrder) {
+    } else if (order.runtimeType.toString() != 'LokmaOrder') {
       locationInfo = 'Kermes Alanı';
     }
     
     // Order number (first 6 chars)
-    final orderNumber = order.orderNumber ?? order.id.substring(0, 6).toUpperCase();
+    final orderNumber = (order as dynamic).orderNumber ?? (order as dynamic).id.substring(0, 6).toUpperCase();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final businessName = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).butcherName : '🏢 ${(order as dynamic).kermesId.split('_').first.toUpperCase()} Kermesi';
     final deliveredAt = (order.runtimeType.toString() == 'LokmaOrder') ? (order as dynamic).deliveredAt : (order as dynamic).completedAt;
@@ -1440,7 +1439,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     return GestureDetector(
       onTap: isClaimedByMe ? () {
         // Navigate to active delivery screen for claimed orders
-        if (order is KermesOrder) {
+        if (order.runtimeType.toString() == 'KermesOrder') {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -1668,7 +1667,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                         child: ElevatedButton(
                           onPressed: isClaimedByMe 
                               ? () {
-                                  if (order is KermesOrder) {
+                                  if (order.runtimeType.toString() == 'KermesOrder') {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(

@@ -22,11 +22,19 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
   Map<String, dynamic>? _bankAccount;
   Map<String, dynamic>? _payoutPrefs;
   bool _isLoadingProfile = true;
+  Stream<QuerySnapshot>? _earningsStream;
 
   @override
   void initState() {
     super.initState();
     _loadDriverProfile();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      _earningsStream = _db
+          .collection('meat_orders')
+          .where('courierId', isEqualTo: uid)
+          .snapshots(includeMetadataChanges: true);
+    }
   }
 
   Future<void> _loadDriverProfile() async {
@@ -123,10 +131,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
           // Content
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _db
-                  .collection('meat_orders')
-                  .where('courierId', isEqualTo: uid)
-                  .snapshots(includeMetadataChanges: true),
+              stream: _earningsStream,
               builder: (context, snapshot) {
                 // Show spinner only while no data at all
                 if (!snapshot.hasData && !snapshot.hasError) {
@@ -153,12 +158,20 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                 }).map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   final deliveredTs = (data['deliveredAt'] as Timestamp?) ?? (data['updatedAt'] as Timestamp?);
+                  
+                  double parseDouble(dynamic value) {
+                    if (value == null) return 0.0;
+                    if (value is num) return value.toDouble();
+                    if (value is String) return double.tryParse(value) ?? 0.0;
+                    return 0.0;
+                  }
+
                   return _EarningsEntry(
                     orderId: doc.id,
                     orderNumber: data['orderNumber']?.toString() ?? doc.id.substring(0, 6).toUpperCase(),
                     deliveredAt: deliveredTs?.toDate() ?? DateTime.now(),
-                    totalAmount: (data['totalAmount'] ?? 0).toDouble(),
-                    tipAmount: (data['tipAmount'] ?? data['tip'] ?? 0).toDouble(),
+                    totalAmount: parseDouble(data['totalAmount']),
+                    tipAmount: parseDouble(data['tipAmount'] ?? data['tip']),
                     city: _extractCity(data['deliveryAddress'] as String?),
                     paymentMethod: data['paymentMethod'] as String? ?? 'unknown',
                   );

@@ -1732,7 +1732,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       },
                       icon: const Icon(Icons.chat_bubble_outline, size: 18),
                       label: StreamBuilder<int>(
-                        stream: ChatService().getUnreadCountStream(order.id, ref.read(authProvider).user?.uid ?? '', isKermes: order is KermesOrder),
+                        stream: ChatService().getUnreadCountStream(order.id, ref.read(authProvider).user?.uid ?? '', isKermes: order.runtimeType.toString() == 'KermesOrder'),
                         builder: (context, snapshot) {
                           final unreadCount = snapshot.data ?? 0;
                           return Row(

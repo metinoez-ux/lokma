@@ -307,10 +307,14 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
 
     final deliveryType = result['deliveryType'] as String;
     final photoPath = result['photoPath'] as String?;
+    final isOrderPaid = orderSnapshot.isPaid == true || orderSnapshot.paymentStatus == 'paid' || orderSnapshot.paymentStatus == 'collected';
 
     await _orderService.completeDeliveryWithProof(
       widget.orderId,
       deliveryType: deliveryType,
+      paymentMethod: paymentMethod,
+      isPaid: isOrderPaid,
+      courierId: orderSnapshot.courierId,
     );
     
     // Upload photo in background if provided

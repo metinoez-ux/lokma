@@ -561,19 +561,16 @@ class OrderService {
         updateData['status'] = OrderStatus.onTheWay.name;
       }
 
-      await _db.collection(_collection).doc(orderId).update(updateData).timeout(const Duration(seconds: 8));
+      // Optimistic update (fire-and-forget) to ensure instant UI transition
+      // We don't await so the loading spinner stops immediately.
+      _db.collection(_collection).doc(orderId).update(updateData).catchError((e) {
+        debugPrint('claimDelivery async update error: $e');
+      });
+      
       return true;
     } catch (e) {
-      debugPrint('claimDelivery timed out or failed: $e. Using offline sync.');
-      // Fire and forget offline update
-      _db.collection(_collection).doc(orderId).update({
-        'courierId': courierId,
-        'courierName': courierName,
-        'courierPhone': courierPhone,
-        'claimedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      return true;
+      debugPrint('claimDelivery general error: $e');
+      return false;
     }
   }
 
@@ -622,21 +619,14 @@ class OrderService {
   /// Start delivery - changes status from 'ready' to 'onTheWay'
   /// Called when driver picks up the order and heads to customer
   Future<bool> startDelivery(String orderId) async {
-    try {
-      await _db.collection(_collection).doc(orderId).update({
-        'status': OrderStatus.onTheWay.name,
-        'startedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }).timeout(const Duration(seconds: 8));
-    } catch (e) {
-      debugPrint('[OrderService] startDelivery timed out or failed: $e. Using offline sync.');
-      // Fire-and-forget offline write — Firestore SDK will sync when reconnected
-      _db.collection(_collection).doc(orderId).update({
-        'status': OrderStatus.onTheWay.name,
-        'startedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    }
+    // Optimistic update (fire-and-forget) to prevent UI hang
+    _db.collection(_collection).doc(orderId).update({
+      'status': OrderStatus.onTheWay.name,
+      'startedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }).catchError((e) {
+      debugPrint('[OrderService] startDelivery error: $e');
+    });
     return true;
   }
 
@@ -756,12 +746,12 @@ class OrderService {
     }
     
     try {
-      await _db.collection(_collection).doc(orderId).update(updateData).timeout(const Duration(seconds: 8));
+      // Optimistic update (fire-and-forget) to ensure instant UI transition
+      _db.collection(_collection).doc(orderId).update(updateData).catchError((e) {
+        debugPrint('Firestore update error (offline sync will handle it): $e');
+      });
     } catch (e) {
-      debugPrint('Firestore update timed out or failed: $e. The app will sync automatically when online.');
-      // Proceed returning true so the UI doesn't hang. Firebase will sync offline.
-      // Note: We bypass the timeout exception to let the driver continue working.
-      _db.collection(_collection).doc(orderId).update(updateData);
+      debugPrint('Firestore update general error: $e');
     }
     
     return true;
